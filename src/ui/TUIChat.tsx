@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import React, { useEffect, useState } from "react";
+import { introMessage } from "../intro.js";
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -75,6 +76,25 @@ const TUIChat: React.FC<TUIChatProps> = ({
       console.error("Failed to start file indexing:", error);
     });
   }, []);
+
+  // Display intro message when services are ready (only in non-remote mode)
+  useEffect(() => {
+    if (
+      !isRemoteMode &&
+      allServicesReady &&
+      services.config?.config &&
+      services.model?.model &&
+      services.mcp?.mcpService
+    ) {
+      introMessage(
+        services.config.config,
+        services.model.model,
+        services.mcp.mcpService
+      ).catch((error) => {
+        console.error("Failed to display intro message:", error);
+      });
+    }
+  }, [isRemoteMode, allServicesReady, services.config?.config, services.model?.model, services.mcp?.mcpService]);
 
   // Custom login prompt handler for TUI
   const handleLoginPrompt = (promptText: string): Promise<string> => {

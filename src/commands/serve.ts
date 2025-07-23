@@ -6,6 +6,7 @@ import path from "path";
 import { promisify } from "util";
 import {
   ensureOrganization,
+  getAssistantSlug,
   getOrganizationId,
   loadAuthConfig,
 } from "../auth/workos.js";
@@ -70,6 +71,18 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       }
     }
   }
+
+  // Log configuration information
+  const organizationId = getOrganizationId(finalAuthConfig || authConfig) || 'personal';
+  const assistantName = config.name;
+  const assistantSlug = getAssistantSlug(finalAuthConfig || authConfig);
+  const modelProvider = model.provider;
+  const modelName = model.model;
+  
+  console.log(chalk.blue(`\nConfiguration:`));
+  console.log(chalk.dim(`  Organization: ${organizationId}`));
+  console.log(chalk.dim(`  Assistant: ${assistantName}${assistantSlug ? ` (${assistantSlug})` : ''}`));
+  console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
 
   // Initialize chat history
   let chatHistory: ChatCompletionMessageParam[] = [];

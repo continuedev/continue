@@ -2,8 +2,10 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
+import { loadAuthConfig } from "../auth/workos.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
+import { initializeWithOnboarding } from "../onboarding.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
@@ -15,7 +17,6 @@ import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
-import { getVersion } from "../version.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -152,17 +153,28 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Start active time tracking
     telemetryService.startActiveTime();
 
-    // If not in headless mode, start the TUI chat (default)
+    // If not in headless mode, check for onboarding first
     if (!options.headless) {
-      // Show ASCII art and version for TUI mode
-      console.log(chalk.white(CONTINUE_ASCII_ART));
-      console.info(
-        chalk.gray(
-          `${" ".repeat(
-            CONTINUE_ASCII_ART.trimEnd().split("\n").pop()!.length
-          )}v${getVersion()}\n`
-        )
+      // Load auth config to check for onboarding
+      const authConfig = loadAuthConfig();
+
+      // Run onboarding check - this will handle first-time setup
+      const onboardingResult = await initializeWithOnboarding(
+        authConfig,
+        options.config,
+        options.rule
       );
+
+      // If onboarding was completed (user just went through setup), exit gracefully
+      if (onboardingResult.wasOnboarded) {
+        console.log(
+          chalk.green("✓ Setup complete! Run 'cn' again to start chatting.")
+        );
+        return;
+      }
+
+      // Show ASCII art and version for TUI mode
+      console.log(CONTINUE_ASCII_ART);
 
       // Start TUI immediately - it will handle service loading
       await startTUIChat(prompt, options.resume, options.config, options.rule);
