@@ -23,6 +23,7 @@ export const sharedConfigSchema = z
     enableExperimentalTools: z.boolean(),
     onlyUseSystemMessageTools: z.boolean(),
     codebaseToolCallingOnly: z.boolean(),
+    enableStaticContextualization: z.boolean(),
 
     // `ui` in `ContinueConfig`
     showSessionTabs: z.boolean(),
@@ -193,6 +194,10 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.codebaseToolCallingOnly !== undefined) {
     configCopy.experimental.codebaseToolCallingOnly =
       sharedConfig.codebaseToolCallingOnly;
+  }
+  if (sharedConfig.enableStaticContextualization !== undefined) {
+    configCopy.experimental.enableStaticContextualization =
+      sharedConfig.enableStaticContextualization;
   }
 
   return configCopy;

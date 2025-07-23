@@ -88,7 +88,48 @@ config.json
 config.yaml
 
 ```
-models:  - name: GPT-4    provider: openai    model: gpt-4    apiKey: <YOUR_OPENAI_KEY>    defaultCompletionOptions:      temperature: 0.5      maxTokens: 2000    roles:      - chat      - edit  - name: My Voyage Reranker    provider: voyage    apiKey: <YOUR_VOYAGE_KEY>    roles:      - rerank  - name: My Starcoder    provider: ollama    model: starcoder2:3b    roles:      - autocomplete  - name: My Ada Embedder    provider: openai    apiKey: <YOUR_ADA_API_KEY>    roles:      - embed    embedOptions:      - maxChunkSize: 256      - maxBatchSize: 5  - name: Ollama Autodetect    provider: ollama    model: AUTODETECT  - name: My Open AI Compatible Model - Apply    provider: openai    model: my-openai-compatible-model    apiBase: http://3.3.3.3/v1    requestOptions:      headers:        X-Auth-Token: <MY_API_KEY>    roles:      - chat      - apply
+models:
+  - name: GPT-4
+    provider: openai
+    model: gpt-4
+    apiKey: <YOUR_OPENAI_KEY>
+    defaultCompletionOptions:
+      temperature: 0.5
+      maxTokens: 2000
+    roles:
+      - chat
+      - edit
+  - name: My Voyage Reranker
+    provider: voyage
+    apiKey: <YOUR_VOYAGE_KEY>
+    roles:
+      - rerank
+  - name: My Starcoder
+    provider: ollama
+    model: starcoder2:3b
+    roles:
+      - autocomplete
+  - name: My Ada Embedder
+    provider: openai
+    apiKey: <YOUR_ADA_API_KEY>
+    roles:
+      - embed
+    embedOptions:
+      - maxChunkSize: 256
+      - maxBatchSize: 5
+  - name: Ollama Autodetect
+    provider: ollama
+    model: AUTODETECT
+  - name: My Open AI Compatible Model - Apply
+    provider: openai
+    model: my-openai-compatible-model
+    apiBase: http://3.3.3.3/v1
+    requestOptions:
+      headers:
+        X-Auth-Token: <MY_API_KEY>
+    roles:
+      - chat
+      - apply
 ```
 
 Note that the `repoMapFileSelection` experimental model role has been deprecated and is only available in `config.json`.
@@ -119,7 +160,13 @@ config.json
 config.yaml
 
 ```
-context:  - provider: docs  - provider: codebase    params:      nRetrieve: 30      nFinal: 3  - provider: diff
+context:
+  - provider: docs
+  - provider: codebase
+    params:
+      nRetrieve: 30
+      nFinal: 3
+  - provider: diff
 ```
 
 ### System Message
@@ -139,7 +186,8 @@ config.json
 config.yaml
 
 ```
-rules:  - Always give concise responses
+rules:
+  - Always give concise responses
 ```
 
 ### Prompts
@@ -167,7 +215,17 @@ config.json
 config.yaml
 
 ```
-prompts:  - name: check    description: Check for mistakes in my code    prompt: |      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:        - Syntax errors        - Logic errors        - Security vulnerabilities        - Performance issues        - Anything else that looks wrong      Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found.
+prompts:
+  - name: check
+    description: Check for mistakes in my code
+    prompt: |
+      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
+        - Syntax errors
+        - Logic errors
+        - Security vulnerabilities
+        - Performance issues
+        - Anything else that looks wrong
+      Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found.
 ```
 
 ### Documentation
@@ -192,7 +250,11 @@ config.json
 config.yaml
 
 ```
-docs:  - name: nest.js    startUrl: https://docs.nestjs.com/  - name: My site    startUrl: https://mysite.com/docs/
+docs:
+  - name: nest.js
+    startUrl: https://docs.nestjs.com/
+  - name: My site
+    startUrl: https://mysite.com/docs/
 ```
 
 ### MCP Servers
@@ -231,7 +293,15 @@ config.json
 config.yaml
 
 ```
-mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sqlite      - --db-path      - /Users/NAME/test.db    env:      KEY: <VALUE>
+mcpServers:
+  - name: My MCP Server
+    command: uvx
+    args:
+      - mcp-server-sqlite
+      - --db-path
+      - /Users/NAME/test.db
+    env:
+      KEY: <VALUE>
 ```
 
 ---

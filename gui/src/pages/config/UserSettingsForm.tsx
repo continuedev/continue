@@ -71,6 +71,10 @@ export function UserSettingsForm() {
     handleUpdate({ optInNextEditFeature: value });
   };
 
+  const handleEnableStaticContextualizationToggle = (value: boolean) => {
+    handleUpdate({ enableStaticContextualization: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -94,6 +98,8 @@ export function UserSettingsForm() {
     config.experimental?.optInNextEditFeature ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
+  const enableStaticContextualization =
+    config.experimental?.enableStaticContextualization ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -445,6 +451,12 @@ export function UserSettingsForm() {
                   <ContinueFeaturesMenu
                     optInNextEditFeature={optInNextEditFeature}
                     handleOptInNextEditToggle={handleOptInNextEditToggle}
+                    enableStaticContextualization={
+                      enableStaticContextualization
+                    }
+                    handleEnableStaticContextualizationToggle={
+                      handleEnableStaticContextualizationToggle
+                    }
                   />
                 )}
               </div>
