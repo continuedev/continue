@@ -16,7 +16,7 @@ export const createRuleBlock: Tool = {
       'Creates a "rule" that can be referenced in future conversations. This should be used whenever you want to establish code standards / preferences that should be applied consistently, or when you want to avoid making a mistake again. To modify existing rules, use the edit tool instead.\n\nRule Types:\n- Always: Include only "rule" (always included in model context)\n- Auto Attached: Include "rule", "globs", and/or "regex" (included when files match patterns)\n- Agent Requested: Include "rule" and "description" (AI decides when to apply based on description)\n- Manual: Include only "rule" (only included when explicitly mentioned using @ruleName)',
     parameters: {
       type: "object",
-      required: ["name", "rule", "description"],
+      required: ["name", "rule"],
       properties: {
         name: {
           type: "string",
