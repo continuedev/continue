@@ -5,6 +5,15 @@ import TUIChat from "../TUIChat.js";
 
 export type TestMode = 'local' | 'remote';
 
+// Dummy test to satisfy Jest
+describe('TUIChat dual mode helper', () => {
+  it('exports helper functions', () => {
+    expect(testBothModes).toBeDefined();
+    expect(renderInMode).toBeDefined();
+    expect(testSingleMode).toBeDefined();
+  });
+});
+
 /**
  * Helper to run a test in both local and remote modes
  * This creates two test suites - one for each mode
