@@ -7,6 +7,7 @@ export class NextEditSelectors {
    * Get the SVG decoration element if present (for next edit).
    */
   public static async getSvgDecoration(driver: WebDriver) {
+    console.log("===")
     return SelectorUtils.getElementByClassName(
       driver,
       "TextEditorDecorationType",
