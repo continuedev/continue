@@ -165,12 +165,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         options.rule
       );
 
-      // If onboarding was completed (user just went through setup), exit gracefully
+      // If onboarding was completed (user just went through setup), show success message
       if (onboardingResult.wasOnboarded) {
-        console.log(
-          chalk.green("✓ Setup complete! Run 'cn' again to start chatting.")
-        );
-        return;
+        console.log(chalk.green("✓ Setup complete! Starting chat..."));
       }
 
       // Show ASCII art and version for TUI mode
