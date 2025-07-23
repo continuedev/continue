@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# oneper directory
+.continue-oneper
+
 # Distribution / packaging
 .Python
 build/

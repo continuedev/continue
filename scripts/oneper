@@ -1,0 +1,698 @@
+#!/bin/bash
+
+# oneper - Continue VS Code Extension PR Testing Tool
+#
+# Easily checkout, build, and test VS Code extensions from different git refs
+# using isolated worktrees with separate node_modules installations.
+#
+# OVERVIEW:
+# ---------
+# oneper allows you to quickly test PRs and different git refs without disrupting
+# your main development environment. It creates isolated git worktrees with their
+# own node_modules, builds the VS Code extension, and provides install commands.
+#
+# USAGE:
+# ------
+# ./scripts/oneper checkout <ref> [flags]   # Checkout and build a git ref
+# ./scripts/oneper list                     # Show active worktrees  
+# ./scripts/oneper clean <ref>              # Clean build artifacts
+# ./scripts/oneper rm <ref>                 # Remove worktree
+# ./scripts/oneper prune                    # Interactive cleanup
+#
+# EXAMPLES:
+# ---------
+# # Test a PR (fetches refs/pull/6/head automatically)
+# ./scripts/oneper checkout pr6
+#
+# # Test main branch with full rebuild
+# ./scripts/oneper checkout main --full-build
+#
+# # Test a feature branch
+# ./scripts/oneper checkout feature-branch
+#
+# # Test a specific commit
+# ./scripts/oneper checkout 12345abcd
+#
+# # See what's active
+# ./scripts/oneper list
+#
+# # Clean up when done
+# ./scripts/oneper rm pr6
+# ./scripts/oneper prune  # Interactive cleanup of multiple worktrees
+#
+# FLAGS:
+# ------
+# --full-build    Force complete rebuild, ignore incremental optimizations
+# --no-install    Build but don't echo VS Code install command
+#
+# HOW IT WORKS:
+# -------------
+# 1. Creates git worktree in .continue-oneper/worktree-<ref>/
+# 2. Installs npm dependencies for all workspace packages  
+# 3. Builds GUI (incremental - skips if unchanged since main)
+# 4. Builds VS Code extension with prepackage step
+# 5. Creates versioned VSIX: continue-<version>-<ref>-<hash>.vsix
+# 6. Provides install command: code --install-extension <path> --force
+#
+# INCREMENTAL BUILDS:
+# -------------------
+# By default, oneper uses incremental builds to save time:
+# - Skips GUI build if gui/ unchanged since main branch
+# - Always runs extension build (fast TypeScript compilation)
+# - Always runs prepackage (copies GUI dist, binaries, etc.)
+# - Use --full-build to force complete rebuild
+#
+# STATE MANAGEMENT:
+# -----------------
+# - Tracks active worktrees in .continue-oneper/state.json
+# - Automatically stashes/pops your main branch work
+# - Supports multiple concurrent worktrees for testing multiple PRs
+#
+# CLEANUP:
+# --------
+# - Use 'rm <ref>' to remove specific worktrees
+# - Use 'prune' for interactive cleanup (skips main-like branches)
+# - Use 'clean <ref>' to remove build artifacts but keep source
+#
+# DEPENDENCIES:
+# -------------
+# Requires: git, node, npm, jq
+# Works with: VS Code, Continue monorepo npm workspaces
+
+set -e
+
+# Configuration
+ONEPER_DIR=".continue-oneper"
+STATE_FILE="$ONEPER_DIR/state.json"
+REPO_ROOT=$(git rev-parse --show-toplevel)
+EXTENSION_PATH="extensions/vscode"
+
+# Ensure we're running from repo root
+cd "$REPO_ROOT"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Print colored output
+print_info() { echo -e "${BLUE}[oneper]${NC} $1"; }
+print_success() { echo -e "${GREEN}[oneper]${NC} $1"; }
+print_warning() { echo -e "${YELLOW}[oneper]${NC} $1"; }
+print_error() { echo -e "${RED}[oneper]${NC} $1"; }
+
+# Show usage
+show_usage() {
+    cat << EOF
+Usage: $0 <command> [options]
+
+Commands:
+  checkout <ref> [--full-build] [--no-install]  Checkout and build a git ref
+  list                                          Show active worktrees
+  clean [ref]                                   Clean build artifacts
+  rm [ref]                                      Remove worktree  
+  prune                                         Interactive cleanup (keep main)
+
+Examples:
+  $0 checkout pr6                    # Checkout PR #6 and build
+  $0 checkout main --full-build      # Full rebuild of main branch
+  $0 checkout feature-branch         # Checkout feature branch
+  $0 checkout 12345abcd             # Checkout specific commit
+  $0 list                           # Show all active worktrees
+  $0 rm pr6                         # Remove pr6 worktree
+  $0 prune                          # Interactive cleanup
+
+Flags:
+  --full-build    Force complete rebuild, ignore incremental optimizations
+  --no-install    Build but don't echo VS Code install command
+EOF
+}
+
+# Initialize oneper directory and state
+init_oneper() {
+    if [[ ! -d "$ONEPER_DIR" ]]; then
+        mkdir -p "$ONEPER_DIR"
+        print_info "Created $ONEPER_DIR directory"
+    fi
+    
+    if [[ ! -f "$STATE_FILE" ]]; then
+        echo '{"worktrees": {}, "stashes": []}' > "$STATE_FILE"
+        print_info "Initialized state file"
+    fi
+}
+
+# Get current git branch
+get_current_branch() {
+    git branch --show-current 2>/dev/null || echo "detached"
+}
+
+# Resolve git ref to full commit hash  
+resolve_ref() {
+    local ref="$1"
+    
+    # Handle PR references (pr6 -> refs/pull/6/head)
+    if [[ "$ref" =~ ^pr([0-9]+)$ ]]; then
+        local pr_num="${BASH_REMATCH[1]}"
+        ref="refs/pull/$pr_num/head"
+        
+        # Fetch the PR if it doesn't exist locally
+        if ! git rev-parse --verify "$ref" >/dev/null 2>&1; then
+            print_info "Fetching PR $pr_num from remote"
+            git fetch origin "pull/$pr_num/head:refs/remotes/origin/pr/$pr_num" 2>/dev/null || {
+                # Try the standard fetch
+                git fetch origin "+refs/pull/$pr_num/head:refs/pull/$pr_num/head" 2>/dev/null || {
+                    print_error "Failed to fetch PR $pr_num"
+                    return 1
+                }
+            }
+        fi
+    fi
+    
+    # Resolve to commit hash
+    git rev-parse --verify "$ref" 2>/dev/null
+}
+
+# Get short commit hash
+get_short_hash() {
+    local commit="$1"
+    git rev-parse --short "$commit"
+}
+
+# Get package version from package.json
+get_package_version() {
+    local worktree_path="$1"
+    node -p "require('$worktree_path/$EXTENSION_PATH/package.json').version" 2>/dev/null || echo "unknown"
+}
+
+# Update state file
+update_state() {
+    local worktree_name="$1"
+    local ref="$2" 
+    local commit="$3"
+    local action="$4" # add or remove
+    
+    local temp_file=$(mktemp)
+    
+    if [[ "$action" == "add" ]]; then
+        jq --arg name "$worktree_name" --arg ref "$ref" --arg commit "$commit" \
+           '.worktrees[$name] = {ref: $ref, commit: $commit, created: now}' \
+           "$STATE_FILE" > "$temp_file"
+    else
+        jq --arg name "$worktree_name" 'del(.worktrees[$name])' \
+           "$STATE_FILE" > "$temp_file"
+    fi
+    
+    mv "$temp_file" "$STATE_FILE"
+}
+
+# Stash current work if needed
+stash_current_work() {
+    print_info "Checking git status"
+    if ! git diff-index --quiet HEAD --; then
+        local stash_msg="oneper: $(date '+%Y-%m-%d %H:%M:%S') - $(get_current_branch)"
+        print_info "Stashing current work: $stash_msg"
+        git stash push -u -m "$stash_msg"
+        
+        # Add to state
+        print_info "Updating state file"
+        local temp_file=$(mktemp)
+        if jq --arg msg "$stash_msg" '.stashes += [$msg]' "$STATE_FILE" > "$temp_file"; then
+            mv "$temp_file" "$STATE_FILE"
+        else
+            print_warning "Failed to update state file"
+        fi
+        print_info "Stash complete"
+    else
+        print_info "No changes to stash"
+    fi
+    print_info "Exiting stash function"
+}
+
+# Pop stash if it belongs to oneper
+pop_oneper_stash() {
+    local stash_list=$(git stash list --grep="oneper:" --format="%gd")
+    if [[ -n "$stash_list" ]]; then
+        local latest_stash=$(echo "$stash_list" | head -1)
+        print_info "Restoring stashed work: $latest_stash"
+        git stash pop "$latest_stash"
+        
+        # Remove from state
+        local temp_file=$(mktemp)
+        jq '.stashes = (.stashes | .[1:])' "$STATE_FILE" > "$temp_file"
+        mv "$temp_file" "$STATE_FILE"
+    fi
+}
+
+# Check if changes exist in specific directories since main
+has_changes_since_main() {
+    local commit="$1"
+    local path="$2"
+    
+    # Compare with main branch
+    local main_commit=$(git rev-parse main 2>/dev/null || git rev-parse origin/main 2>/dev/null || echo "HEAD")
+    
+    if git diff --quiet "$main_commit..$commit" -- "$path" 2>/dev/null; then
+        return 1  # No changes
+    else
+        return 0  # Has changes
+    fi
+}
+
+# Build GUI with incremental logic
+build_gui() {
+    local worktree_path="$1"
+    local commit="$2"
+    local force_build="$3"
+    
+    # We should already be in the worktree directory
+    print_info "Building GUI from $(pwd)"
+    
+    if [[ "$force_build" == "true" ]] || has_changes_since_main "$commit" "gui/"; then
+        print_info "Building GUI (changes detected or forced)"
+        cd gui 
+        if npm run build; then
+            print_success "GUI build completed"
+        else
+            print_warning "GUI build failed, but continuing with extension build"
+        fi
+        cd ..
+    else
+        print_info "GUI unchanged, checking if build exists"
+        if [[ -d "gui/dist" ]] && [[ -f "gui/dist/assets/index.js" ]]; then
+            print_success "Using existing GUI build"
+        else
+            print_info "GUI build missing, attempting build"
+            cd gui
+            if npm run build; then
+                print_success "GUI build completed"
+            else
+                print_warning "GUI build failed, but continuing with extension build"
+            fi
+            cd ..
+        fi
+    fi
+}
+
+# Build extension with incremental logic  
+build_extension() {
+    local worktree_path="$1"
+    local commit="$2" 
+    local force_build="$3"
+    
+    # Change to extension directory
+    print_info "Building extension from $(pwd)/$EXTENSION_PATH"
+    cd "$EXTENSION_PATH"
+    
+    # Always run prepackage (copies GUI, binaries, etc.)
+    print_info "Running prepackage step"
+    npm run prepackage
+    
+    # Build extension
+    if [[ "$force_build" == "true" ]] || has_changes_since_main "$commit" "core/" || has_changes_since_main "$commit" "$EXTENSION_PATH/src/"; then
+        print_info "Building extension (changes detected or forced)"
+        npm run vscode:prepublish
+    else
+        print_info "Extension source unchanged, doing quick build"
+        npm run esbuild
+    fi
+    
+    # Package VSIX  
+    print_info "Packaging VSIX"
+    npm run package
+}
+
+# Main checkout command
+cmd_checkout() {
+    local ref="$1"
+    local force_build="false"
+    local no_install="false"
+    
+    # Parse flags
+    shift
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --full-build)
+                force_build="true"
+                shift
+                ;;
+            --no-install)
+                no_install="true"  
+                shift
+                ;;
+            *)
+                print_error "Unknown flag: $1"
+                exit 1
+                ;;
+        esac
+    done
+    
+    if [[ -z "$ref" ]]; then
+        print_error "No ref specified"
+        show_usage
+        exit 1
+    fi
+    
+    # Resolve ref to commit
+    local commit
+    if ! commit=$(resolve_ref "$ref"); then
+        print_error "Could not resolve ref: $ref"
+        exit 1
+    fi
+    
+    if [[ -z "$commit" ]]; then
+        print_error "Could not resolve ref: $ref"
+        exit 1
+    fi
+    
+    local short_hash=$(get_short_hash "$commit")
+    local worktree_name="worktree-$ref"
+    local worktree_path="$ONEPER_DIR/$worktree_name"
+    
+    print_info "Checking out $ref ($short_hash)"
+    
+    # Initialize oneper
+    print_info "Initializing oneper"
+    init_oneper
+    
+    # Stash current work if needed
+    print_info "Checking for work to stash"
+    stash_current_work
+    print_info "Stash check complete"
+    
+    # Create or update worktree
+    print_info "Checking if worktree exists at $worktree_path"
+    if [[ -d "$worktree_path" ]]; then
+        print_info "Worktree already exists, updating"
+        (cd "$worktree_path" && git fetch origin && git reset --hard "$commit")
+    else
+        print_info "Creating new worktree"
+        if git worktree add "$worktree_path" "$commit"; then
+            print_info "Worktree created, updating state"
+            update_state "$worktree_name" "$ref" "$commit" "add"
+            print_success "Created worktree at $worktree_path"
+        else
+            print_error "Failed to create worktree"
+            exit 1
+        fi
+    fi
+    
+    print_info "Changing to worktree directory: $worktree_path"
+    cd "$worktree_path"
+    
+    # Install dependencies using npm workspaces (preserves hoisted structure)
+    print_info "Installing dependencies for all workspaces"
+    npm install
+    
+    # Verify workspace structure is correct
+    if [[ ! -d "node_modules" ]]; then
+        print_error "Root node_modules not created - workspace install failed"
+        exit 1
+    fi
+    
+    # Build internal packages that other packages depend on
+    print_info "Building internal packages (@continuedev/* packages)"
+    bash scripts/build-packages.sh
+    
+    # Install devDependencies for VS Code extension (needed for build scripts)
+    print_info "Installing VS Code extension dependencies"
+    cd "$EXTENSION_PATH" && npm install && cd ../..
+    
+    # Build GUI
+    build_gui "$worktree_path" "$commit" "$force_build"
+    
+    # Build extension  
+    build_extension "$worktree_path" "$commit" "$force_build"
+    
+    # Find the built VSIX
+    local vsix_pattern="$worktree_path/$EXTENSION_PATH/build/continue-*.vsix"
+    local vsix_file=$(ls $vsix_pattern 2>/dev/null | head -1)
+    
+    if [[ -z "$vsix_file" ]]; then
+        print_error "No VSIX file found after build"
+        exit 1
+    fi
+    
+    # Create versioned filename
+    local version=$(get_package_version "$worktree_path")
+    local new_name="continue-$version-$ref-$short_hash.vsix"
+    local new_path="$worktree_path/$EXTENSION_PATH/build/$new_name"
+    
+    if [[ "$vsix_file" != "$new_path" ]]; then
+        mv "$vsix_file" "$new_path"
+        print_success "Created $new_name"
+    fi
+    
+    # Show install command
+    if [[ "$no_install" != "true" ]]; then
+        print_success "Build complete! Install with:"
+        echo ""
+        echo "  code --install-extension \"$new_path\" --force"
+        echo ""
+    else
+        print_success "Build complete!"
+    fi
+}
+
+# List active worktrees
+cmd_list() {
+    init_oneper
+    
+    if [[ ! -f "$STATE_FILE" ]]; then
+        print_info "No active worktrees"
+        return
+    fi
+    
+    local worktrees=$(jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null)
+    
+    if [[ -z "$worktrees" ]]; then
+        print_info "No active worktrees"
+        return
+    fi
+    
+    echo ""
+    echo "Active worktrees:"
+    echo "=================="
+    
+    while IFS= read -r worktree; do
+        local ref=$(jq -r ".worktrees[\"$worktree\"].ref" "$STATE_FILE")
+        local commit=$(jq -r ".worktrees[\"$worktree\"].commit" "$STATE_FILE")
+        local short_hash=$(get_short_hash "$commit")
+        local path="$ONEPER_DIR/$worktree"
+        
+        if [[ -d "$path" ]]; then
+            echo "  $ref ($short_hash) → $path"
+        else
+            echo "  $ref ($short_hash) → $path [MISSING]"
+        fi
+    done <<< "$worktrees"
+    
+    echo ""
+    
+    # Show stashes
+    local stashes=$(jq -r '.stashes[]?' "$STATE_FILE" 2>/dev/null)
+    if [[ -n "$stashes" ]]; then
+        echo "Oneper stashes:"
+        echo "==============="
+        while IFS= read -r stash; do
+            echo "  $stash"
+        done <<< "$stashes"
+        echo ""
+    fi
+}
+
+# Clean build artifacts
+cmd_clean() {
+    local ref="$1"
+    
+    if [[ -z "$ref" ]]; then
+        print_error "No ref specified"
+        exit 1
+    fi
+    
+    local worktree_name="worktree-$ref"
+    local worktree_path="$ONEPER_DIR/$worktree_name"
+    
+    if [[ ! -d "$worktree_path" ]]; then
+        print_error "Worktree not found: $ref"
+        exit 1
+    fi
+    
+    print_info "Cleaning build artifacts for $ref"
+    
+    # Clean common build artifacts
+    rm -rf "$worktree_path/node_modules"
+    rm -rf "$worktree_path/gui/dist"
+    rm -rf "$worktree_path/gui/node_modules"
+    rm -rf "$worktree_path/core/node_modules"
+    rm -rf "$worktree_path/$EXTENSION_PATH/node_modules"
+    rm -rf "$worktree_path/$EXTENSION_PATH/out"
+    rm -rf "$worktree_path/$EXTENSION_PATH/build"
+    rm -rf "$worktree_path/$EXTENSION_PATH/gui"
+    
+    print_success "Cleaned $ref"
+}
+
+# Remove worktree
+cmd_rm() {
+    local ref="$1"
+    
+    if [[ -z "$ref" ]]; then
+        print_error "No ref specified"
+        exit 1
+    fi
+    
+    local worktree_name="worktree-$ref"
+    local worktree_path="$ONEPER_DIR/$worktree_name"
+    
+    if [[ ! -d "$worktree_path" ]]; then
+        print_error "Worktree not found: $ref"
+        exit 1
+    fi
+    
+    print_info "Removing worktree: $ref"
+    
+    # Remove git worktree
+    git worktree remove "$worktree_path" --force
+    
+    # Update state
+    update_state "$worktree_name" "" "" "remove"
+    
+    print_success "Removed $ref"
+    
+    # Check if this was the last worktree, pop stash if so
+    local remaining=$(jq '.worktrees | length' "$STATE_FILE")
+    if [[ "$remaining" == "0" ]]; then
+        pop_oneper_stash
+    fi
+}
+
+# Interactive cleanup
+cmd_prune() {
+    init_oneper
+    
+    local worktrees=$(jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null)
+    
+    if [[ -z "$worktrees" ]]; then
+        print_info "No worktrees to prune"
+        return
+    fi
+    
+    echo ""
+    echo "Select worktrees to remove (main branches will be skipped):"
+    echo "==========================================================="
+    
+    local to_remove=()
+    
+    while IFS= read -r worktree; do
+        local ref=$(jq -r ".worktrees[\"$worktree\"].ref" "$STATE_FILE")
+        
+        # Skip main-like branches
+        if [[ "$ref" == "main" || "$ref" == "master" || "$ref" == "develop" ]]; then
+            echo "  [SKIP] $ref (main branch)"
+            continue
+        fi
+        
+        local commit=$(jq -r ".worktrees[\"$worktree\"].commit" "$STATE_FILE")
+        local short_hash=$(get_short_hash "$commit")
+        
+        echo -n "  Remove $ref ($short_hash)? [y/N]: "
+        read -r answer
+        
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+            to_remove+=("$ref")
+        fi
+    done <<< "$worktrees"
+    
+    if [[ ${#to_remove[@]} -eq 0 ]]; then
+        print_info "No worktrees selected for removal"
+        return
+    fi
+    
+    echo ""
+    echo "Removing ${#to_remove[@]} worktree(s)..."
+    
+    for ref in "${to_remove[@]}"; do
+        cmd_rm "$ref"
+    done
+    
+    print_success "Pruning complete"
+}
+
+# Main command dispatcher
+main() {
+    if [[ $# -eq 0 ]]; then
+        show_usage
+        exit 1
+    fi
+    
+    local command="$1"
+    shift
+    
+    case "$command" in
+        checkout)
+            cmd_checkout "$@"
+            ;;
+        list)
+            cmd_list "$@"
+            ;;
+        clean)
+            cmd_clean "$@"
+            ;;
+        rm)
+            cmd_rm "$@"
+            ;;
+        prune)
+            cmd_prune "$@"
+            ;;
+        -h|--help|help)
+            show_usage
+            ;;
+        *)
+            print_error "Unknown command: $command"
+            show_usage
+            exit 1
+            ;;
+    esac
+}
+
+# Check dependencies
+check_dependencies() {
+    local missing=()
+    
+    if ! command -v git >/dev/null 2>&1; then
+        missing+=("git")
+    fi
+    
+    if ! command -v node >/dev/null 2>&1; then
+        missing+=("node")
+    fi
+    
+    if ! command -v npm >/dev/null 2>&1; then
+        missing+=("npm")
+    fi
+    
+    if ! command -v jq >/dev/null 2>&1; then
+        missing+=("jq")
+    fi
+    
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        print_error "Missing dependencies: ${missing[*]}"
+        print_error "Please install the missing tools and try again"
+        exit 1
+    fi
+}
+
+# Verify we're in a git repo
+check_git_repo() {
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+        print_error "Not in a git repository"
+        exit 1
+    fi
+}
+
+# Entry point
+check_dependencies
+check_git_repo
+main "$@"
