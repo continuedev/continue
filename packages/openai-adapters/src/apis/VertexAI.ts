@@ -194,8 +194,10 @@ export class VertexAIApi implements BaseLlmApi {
   }
 
   private convertAnthropicBody(oaiBody: ChatCompletionCreateParams): object {
+    const body = this.anthropicInstance._convertToCleanAnthropicBody(oaiBody);
+    const { model, ...exceptModel } = body;
     return {
-      ...this.anthropicInstance._convertToCleanAnthropicBody(oaiBody),
+      ...exceptModel,
       anthropic_version: "vertex-2023-10-16",
     };
   }
