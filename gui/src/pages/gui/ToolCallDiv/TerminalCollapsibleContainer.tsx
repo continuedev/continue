@@ -51,9 +51,7 @@ export function TerminalCollapsibleContainer({
       >
         {/* Gradient overlay on top of content - only when collapsed */}
         {!isExpanded && hiddenLinesCount > 0 && (
-          <div
-            className="pointer-events-none absolute left-[9px] right-[9px] top-4 z-[5] h-[100px] rounded-t-md bg-gradient-to-b from-editor to-transparent"
-          />
+          <div className="from-editor pointer-events-none absolute left-[9px] right-[9px] top-4 z-[5] h-[100px] rounded-t-md bg-gradient-to-b to-transparent" />
         )}
 
         {isExpanded ? expandedContent : collapsedContent}

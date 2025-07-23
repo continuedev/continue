@@ -133,7 +133,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
 
       {/* Status information */}
       {(statusMessage || isRunning) && (
-        <div className="mt-2 flex items-center px-2 text-xs text-description">
+        <div className="text-description mt-2 flex items-center px-2 text-xs">
           <StatusIcon status={statusType} />
           {isRunning ? "Running" : statusMessage}
           {isRunning && props.toolCallId && (
@@ -146,7 +146,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
                   }),
                 );
               }}
-              className="ml-3 cursor-pointer text-xs text-link no-underline hover:underline"
+              className="text-link ml-3 cursor-pointer text-xs no-underline hover:underline"
             >
               Move to background
             </span>
