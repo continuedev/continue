@@ -1,16 +1,6 @@
 import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { ServiceContainer } from './ServiceContainer.js';
 
-// Mock logger to avoid console output during tests
-const mockLogger = {
-  debug: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-};
-
-// Mock the logger import using jest mock hoisting
-jest.mock('../util/logger.js', () => mockLogger, { virtual: true });
-
 describe('ServiceContainer', () => {
   let container: ServiceContainer;
 

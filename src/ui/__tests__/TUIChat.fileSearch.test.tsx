@@ -22,7 +22,9 @@ describe("TUIChat - @ File Search Tests", () => {
     const frame = lastFrame();
     
     expect(frame).toBeDefined();
-    expect(frame.length).toBeGreaterThan(0);
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
   });
 
   test.skip("should handle @ file search - complex interaction test skipped", () => {

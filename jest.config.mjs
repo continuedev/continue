@@ -7,10 +7,10 @@ export default {
   },
 
   moduleNameMapper: {
+    "^(\\.{1,2}/.+)\\.js$": "$1",
     "^highlight\\.js/lib/languages/(.+)$":
       "<rootDir>/src/ui/__mocks__/highlightLanguage.js",
     "^lowlight$": "<rootDir>/src/ui/__mocks__/lowlight.js",
-    "^(\\.{1,2}/.+)\\.js$": "$1",
     "^ink-testing-library$":
       "<rootDir>/node_modules/ink-testing-library/build/index.js",
     "^./SyntaxHighlighter\\.js$":
@@ -30,4 +30,5 @@ export default {
     __dirname: path.dirname(fileURLToPath(import.meta.url)),
     __filename: path.resolve(fileURLToPath(import.meta.url)),
   },
+  resolver: "<rootDir>/jest.resolver.cjs",
 };

@@ -76,20 +76,8 @@ export function createUITestContext(options: {
     setMaxListeners: jest.fn(),
   };
 
-  // Apply the mocks
-  jest.mock("../hooks/useService.js", () => ({
-    useService: mockUseService,
-    useServices: mockUseServices,
-  }));
-
-  jest.mock("../services/ServiceContainer.js", () => ({
-    ServiceContainer: jest.fn().mockImplementation(() => mockServiceContainer),
-    serviceContainer: mockServiceContainer,
-  }));
-
-  jest.mock("../ui/hooks/useChat.js", () => ({
-    useChat: mockUseChat,
-  }));
+  // Note: Jest mocks need to be hoisted, so they can't be called inside functions
+  // The actual mocking should be done at the top of test files
 
   const cleanup = () => {
     jest.clearAllMocks();

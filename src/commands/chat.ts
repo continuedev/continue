@@ -4,6 +4,7 @@ import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
 import { loadAuthConfig } from "../auth/workos.js";
 import { configureLogger } from "../logger.js";
+import { introMessage } from "../intro.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
@@ -117,8 +118,7 @@ async function runHeadlessMode(
   const { config, llmApi, model, mcpService } = result;
 
   // Show intro message for headless mode
-  const { introMessage } = await import("../intro.js");
-  introMessage(config, model, mcpService);
+  await introMessage(config, model, mcpService);
 
   // Initialize chat history
   const chatHistory = await initializeChatHistory(options);

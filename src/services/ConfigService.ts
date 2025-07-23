@@ -1,5 +1,6 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
+import { processRule } from '../args.js';
 import { loadConfig } from '../config.js';
 import { AuthConfig, updateAssistantSlug } from '../auth/workos.js';
 import logger from '../util/logger.js';
@@ -139,7 +140,6 @@ export class ConfigService {
       return config;
     }
 
-    const { processRule } = await import('../args.js');
     let processedRules: string[] = [];
     
     for (const ruleSpec of rules) {

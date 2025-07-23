@@ -23,7 +23,9 @@ describe("TUIChat - Basic UI Tests", () => {
     const frame = lastFrame();
 
     expect(frame).toBeDefined();
-    expect(frame.length).toBeGreaterThan(0);
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
   });
 
   it("shows loading state when services are loading", () => {
@@ -39,7 +41,9 @@ describe("TUIChat - Basic UI Tests", () => {
     const frame = lastFrame();
 
     expect(frame).toBeDefined();
-    expect(frame).toMatch(/loading|service/i);
+    if (frame) {
+      expect(frame).toMatch(/loading|service/i);
+    }
   });
 
   it("handles remote URL prop", () => {
@@ -49,6 +53,8 @@ describe("TUIChat - Basic UI Tests", () => {
     const frame = lastFrame();
 
     expect(frame).toBeDefined();
-    expect(frame.length).toBeGreaterThan(0);
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
   });
 });

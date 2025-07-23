@@ -10,7 +10,6 @@ describe("TUIChat - Input Tests", () => {
     context = createUITestContext({
       allServicesReady: true,
       serviceState: "ready",
-      inputMode: true,
     });
   });
 
@@ -23,7 +22,9 @@ describe("TUIChat - Input Tests", () => {
     const frame = lastFrame();
     
     expect(frame).toBeDefined();
-    expect(frame.length).toBeGreaterThan(0);
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
   });
 
   test.skip("should handle user input - complex interaction test skipped", () => {

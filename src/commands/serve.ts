@@ -11,7 +11,7 @@ import {
 } from "../auth/workos.js";
 import { runNormalFlow } from "../onboarding.js";
 import { saveSession } from "../session.js";
-import type { StreamCallbacks } from "../streamChatResponse.js";
+import { streamChatResponse, type StreamCallbacks } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import { getToolDisplayName } from "../tools.js";
@@ -349,8 +349,6 @@ async function streamChatResponseWithInterruption(
   shouldInterrupt: () => boolean
 ): Promise<string> {
   // Import the original streamChatResponse logic but add interruption checks
-  const { streamChatResponse } = await import("../streamChatResponse.js");
-
   // Create a wrapper that checks for interruption
   const originalSignal = abortController.signal;
   const checkInterruption = () => {

@@ -76,12 +76,12 @@ export function runTest(
             value: null,
             state: "idle",
             error: null,
-            reload: jest.fn(),
+            reload: jest.fn(() => Promise.resolve()),
           });
 
           const server = new MockRemoteServer();
           const port = await server.start();
-          const remoteUrl = server.getUrl(port);
+          const remoteUrl = `http://localhost:${port}`;
 
           // Apply any server setup
           if (serverSetup) {
@@ -126,7 +126,7 @@ export function runTest(
             allReady: true,
           });
 
-          mockUseService.mockImplementation((serviceName: string) => ({
+          mockUseService.mockImplementation(<T extends any>(serviceName: string) => ({
             value: (() => {
               switch (serviceName) {
                 case "auth":
@@ -146,10 +146,10 @@ export function runTest(
                   return null;
               }
             })(),
-            state: "ready",
+            state: "ready" as const,
             error: null,
-            reload: jest.fn(),
-          }));
+            reload: jest.fn(() => Promise.resolve()),
+          } as any));
 
           let renderResult: RenderResult | null = null;
           try {
@@ -193,7 +193,7 @@ export function runTestSuite(
     describe(`${suiteName} [${mode.toUpperCase()} MODE]`, () => {
       // Store original functions to restore later
       const originalRunTest = global.runTest;
-      const originalDescribe = global.describe;
+      const originalDescribe = global.describe as any;
 
       beforeAll(async () => {
         const { useServices, useService } = await import(
@@ -229,12 +229,12 @@ export function runTestSuite(
                   value: null,
                   state: "idle",
                   error: null,
-                  reload: jest.fn(),
+                  reload: jest.fn(() => Promise.resolve()),
                 });
 
                 const server = new MockRemoteServer();
                 const port = await server.start();
-                const remoteUrl = server.getUrl(port);
+                const remoteUrl = `http://localhost:${port}`;
 
                 // Apply any server setup
                 if (options.serverSetup) {
@@ -282,7 +282,7 @@ export function runTestSuite(
                   allReady: true,
                 });
 
-                mockUseService.mockImplementation((serviceName: string) => ({
+                mockUseService.mockImplementation(<T extends any>(serviceName: string) => ({
                   value: (() => {
                     switch (serviceName) {
                       case "auth":
@@ -302,10 +302,10 @@ export function runTestSuite(
                         return null;
                     }
                   })(),
-                  state: "ready",
+                  state: "ready" as const,
                   error: null,
-                  reload: jest.fn(),
-                }));
+                  reload: jest.fn(() => Promise.resolve()),
+                } as any));
 
                 let renderResult: RenderResult | null = null;
                 try {
@@ -332,7 +332,7 @@ export function runTestSuite(
         global.describe = ((name: string, fn: () => void) => {
           // Just run the function directly, don't create another describe block
           fn();
-        }) as jest.Describe;
+        }) as any;
       });
 
       afterAll(() => {
@@ -356,14 +356,14 @@ export async function waitForServerState(
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeout) {
-    const state = server.getState();
+    const state = (server as any).state || {};
     if (predicate(state)) {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
-  const finalState = server.getState();
+  const finalState = (server as any).state || {};
   throw new Error(
     `Timeout waiting for server state: ${JSON.stringify(finalState)}`
   );
@@ -388,7 +388,7 @@ export async function sendMessage(
       await waitForServerState(
         ctx.server,
         (state) =>
-          state.messages.some(
+          state.messages?.some?.(
             (m: any) => m.content === message && m.role === "user"
           ),
         2000

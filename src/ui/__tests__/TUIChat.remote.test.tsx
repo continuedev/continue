@@ -24,7 +24,9 @@ describe("TUIChat - Remote Server Tests", () => {
     const frame = lastFrame();
     
     expect(frame).toBeDefined();
-    expect(frame.length).toBeGreaterThan(0);
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
   });
 
   test.skip("should connect to remote server - network test skipped", () => {

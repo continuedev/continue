@@ -2,12 +2,6 @@ import { jest } from "@jest/globals";
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
 import { withExponentialBackoff } from "./exponentialBackoff.js";
 
-// Mock the logging module at the top level with correct relative path
-jest.mock("../logging.js", () => ({
-  warn: jest.fn(),
-  error: jest.fn(),
-}));
-
 describe("withExponentialBackoff", () => {
   let context: any;
   let abortController: AbortController;
