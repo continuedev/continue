@@ -46,7 +46,7 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
-  totalConfigLoads: number = 0;
+  totalConfigReloads: number = 0;
 
   public isInitialized: Promise<void>;
   private initter: EventEmitter;
@@ -136,21 +136,20 @@ export class ConfigHandler {
       // note, ignoring case of zero orgs since should never happen
 
       let selectedOrg: OrgWithProfiles;
-      if (!currentSelection) {
-        selectedOrg = fallback;
-      } else {
+      if (currentSelection) {
         const match = orgs.find((org) => org.id === currentSelection);
         if (match) {
           selectedOrg = match;
         } else {
           selectedOrg = fallback;
         }
+      } else {
+        selectedOrg = fallback;
       }
 
       if (signal.aborted) {
         return; // local only case, no`fetch to throw abort error
       }
-      this.initter.emit("init");
 
       this.globalContext.update("lastSelectedOrgIdForWorkspace", {
         ...selectedOrgs,
@@ -163,10 +162,10 @@ export class ConfigHandler {
 
       await this.reloadConfig(reason);
     } catch (e) {
-      if (e instanceof Error && e.message.includes("AbortError")) {
+      if (signal.aborted) {
         return;
       } else {
-        this.initter.emit("init"); // Error case counts for initialization
+        this.initter.emit("init"); // Error case counts as init
         throw e;
       }
     }
@@ -175,12 +174,17 @@ export class ConfigHandler {
   private async getOrgs(): Promise<OrgWithProfiles[]> {
     const isSignedIn = await this.controlPlaneClient.isSignedIn();
     if (isSignedIn) {
-      const orgDescs = await this.controlPlaneClient.listOrganizations();
-      const orgs = await Promise.all([
-        this.getPersonalHubOrg(),
-        ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
-      ]);
-      return orgs;
+      try {
+        const orgDescs = await this.controlPlaneClient.listOrganizations();
+        const orgs = await Promise.all([
+          this.getPersonalHubOrg(),
+          ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+        ]);
+        return orgs;
+      } catch (e) {
+        console.error("Failed to get Continue hub assistants");
+        return [await this.getLocalOrg()];
+      }
     } else {
       return [await this.getLocalOrg()];
     }
@@ -276,9 +280,7 @@ export class ConfigHandler {
       firstNonLocal ?? (profiles.length > 0 ? profiles[0] : null);
 
     let currentProfile: ProfileLifecycleManager | null;
-    if (!currentSelection) {
-      currentProfile = fallback;
-    } else {
+    if (currentSelection) {
       const match = profiles.find(
         (profile) => profile.profileDescription.id === currentSelection,
       );
@@ -287,6 +289,8 @@ export class ConfigHandler {
       } else {
         currentProfile = fallback;
       }
+    } else {
+      currentProfile = fallback;
     }
 
     if (currentProfile) {
@@ -433,7 +437,7 @@ export class ConfigHandler {
   // Could improve this
   async reloadConfig(reason: string) {
     const startTime = performance.now();
-    this.totalConfigLoads += 1;
+    this.totalConfigReloads += 1;
     // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
       return {
@@ -459,13 +463,15 @@ export class ConfigHandler {
 
     this.notifyConfigListeners({ config, errors, configLoadInterrupted });
 
+    this.initter.emit("init");
+
     // Track config loading telemetry
     const endTime = performance.now();
     const duration = endTime - startTime;
     void Telemetry.capture("config_reload", {
       duration,
       reason,
-      totalConfigLoads: this.totalConfigLoads,
+      totalConfigLoads: this.totalConfigReloads,
       configLoadInterrupted,
     });
 
