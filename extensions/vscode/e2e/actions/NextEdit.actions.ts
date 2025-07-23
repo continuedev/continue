@@ -51,17 +51,19 @@ export class NextEditActions {
     await new Workbench().executeCommand("Continue: Force Next Edit");
     console.log("Executed 'Force Next Edit' command");
     
-    console.log("Waiting for SVG decoration to appear...");
-    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XXL);
-    console.log("Wait completed, looking for decoration...");
+    // console.log("Waiting for SVG decoration to appear...");
+    // await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XXL);
+    // console.log("Wait completed, looking for decoration...");
+    console.log("Looking for decoration...")
 
     const svgDecoration = await TestUtils.waitForSuccess(
       () => NextEditSelectors.getSvgDecoration(VSBrowser.instance.driver),
       DEFAULT_TIMEOUT.XXL,
     );
 
-    console.log("SVG decoration search result:", svgDecoration !== null);
-    return svgDecoration !== null;
+    const result = svgDecoration !== null;
+    console.log("SVG decoration search result:", result);
+    return result;
   }
 
   public static async reload(): Promise<void> {
