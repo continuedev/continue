@@ -2,46 +2,95 @@ import { jest } from "@jest/globals";
 import { render } from "ink-testing-library";
 import React from "react";
 import TUIChat from "../TUIChat.js";
-import { useService, useServices } from "../../hooks/useService.js";
+import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 
-// Get the mocked functions
-const mockUseService = useService as jest.MockedFunction<typeof useService>;
-const mockUseServices = useServices as jest.MockedFunction<typeof useServices>;
+describe("TUIChat - Slash Commands Tests", () => {
+  let context: any;
 
-describe.skip("TUIChat - Slash Commands Tests", () => {
   beforeEach(() => {
-    // Reset mock implementations
-    mockUseService.mockReturnValue({
-      value: null,
-      state: "idle",
-      error: null,
-      reload: jest.fn(() => Promise.resolve()),
-    });
-
-    mockUseServices.mockReturnValue({
-      services: {},
-      loading: false,
-      error: null,
-      allReady: true,
+    context = createUITestContext({
+      allServicesReady: true,
+      serviceState: "ready",
     });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    context.cleanup();
   });
 
-  test("should render TUIChat component", async () => {
-    const { lastFrame } = render(React.createElement(TUIChat));
+  it("shows slash when user types /", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type / to trigger slash command
+    stdin.write("/");
+
+    // Wait a bit for the UI to update
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     const frame = lastFrame();
+
+    // Should show the slash character
+    expect(frame).toContain("/");
+  });
+
+  it("filters slash commands when typing /log", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type /log to trigger slash command filtering
+    stdin.write("/log");
+
+    // Wait a bit for the UI to update
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const frame = lastFrame();
+
+    // Should show the typed command
+    expect(frame).toContain("/log");
     
-    expect(frame).toBeDefined();
-    if (frame) {
-      expect(frame.length).toBeGreaterThan(0);
+    // UI should remain stable
+    expect(frame).toContain("Remote Mode");
+  });
+
+  it("handles tab key after slash command", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type /log and then tab
+    stdin.write("/log");
+    
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    
+    stdin.write("\t");
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const frameAfterTab = lastFrame();
+
+    // Should not crash after tab
+    expect(frameAfterTab).toBeDefined();
+    if (frameAfterTab) {
+      expect(frameAfterTab.length).toBeGreaterThan(0);
     }
   });
 
-  test.skip("should handle slash commands - complex interaction test skipped", () => {
-    // Slash command testing requires complex input simulation
-    // Skip for now to focus on basic rendering tests
+  it("shows slash command menu when typing /", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type just /
+    stdin.write("/");
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const frame = lastFrame();
+
+    // Should show the slash
+    expect(frame).toContain("/");
+    
+    // Should show slash command menu
+    expect(frame).toContain("/exit");
+    expect(frame).toContain("Use ↑/↓ to navigate, Enter to select, Tab to complete");
   });
 });

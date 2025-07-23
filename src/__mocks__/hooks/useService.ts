@@ -8,7 +8,13 @@ export const useService = jest.fn(() => ({
 }));
 
 export const useServices = jest.fn(() => ({
-  services: {},
+  services: {
+    auth: { isAuthenticated: true },
+    config: { config: { name: "test-assistant" } },
+    model: { model: "test-model", llmApi: {} },
+    mcp: {},
+    apiClient: { apiClient: {} },
+  },
   loading: false,
   error: null,
   allReady: true,

@@ -17,18 +17,75 @@ describe("TUIChat - @ File Search Tests", () => {
     context.cleanup();
   });
 
-  test("should render TUIChat component", async () => {
-    const { lastFrame } = render(React.createElement(TUIChat));
-    const frame = lastFrame();
+  it("shows @ character when user types @", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type the @ character to trigger file search
+    stdin.write("@");
+
+    // Wait for file search to initialize and display files
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const frame = lastFrame()!;
+
+    // Should show @ character in input
+    expect(frame).toContain("@");
     
-    expect(frame).toBeDefined();
-    if (frame) {
-      expect(frame.length).toBeGreaterThan(0);
-    }
+    // Should still show the interface
+    expect(frame).toContain("Remote Mode");
   });
 
-  test.skip("should handle @ file search - complex interaction test skipped", () => {
-    // File search interactions require complex input simulation
-    // Skip for now to focus on basic rendering tests
+  it("shows search text when user types after @", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type @ followed by text to filter files
+    stdin.write("@READ");
+
+    // Wait for file search to filter and display results
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const frame = lastFrame()!;
+
+    // Should show the typed text
+    expect(frame).toContain("@READ");
+    
+    // Should still be in remote mode
+    expect(frame).toContain("Remote Mode");
+  });
+
+  it("handles multiple @ characters", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type multiple @ characters
+    stdin.write("@@test");
+
+    // Wait for UI update
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const frame = lastFrame();
+
+    // Should handle multiple @ without crashing
+    expect(frame).toBeDefined();
+    expect(frame).toContain("@@test");
+  });
+
+  it("handles @ character input without crashing", async () => {
+    // Use remote mode to bypass service loading
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    // Type @ to trigger file search
+    stdin.write("@");
+
+    // Wait for potential async operations
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const frame = lastFrame()!;
+
+    // Should not crash and show something
+    expect(frame).toBeDefined();
+    expect(frame.length).toBeGreaterThan(0);
   });
 });
