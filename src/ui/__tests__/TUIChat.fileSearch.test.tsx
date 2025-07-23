@@ -17,9 +17,9 @@ describe("TUIChat - @ File Search Tests", () => {
     context.cleanup();
   });
 
-  it("shows @ character when user types @", async () => {
-    // Use remote mode to bypass service loading
-    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+  it("shows @ character when user types @ in local mode", async () => {
+    // Test local mode - file search should work
+    const { lastFrame, stdin } = render(<TUIChat />);
 
     // Wait a bit for initial render
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -37,13 +37,16 @@ describe("TUIChat - @ File Search Tests", () => {
     const hasAtSymbol = frame.includes("@") || frame.includes("◉ @");
     expect(hasAtSymbol).toBe(true);
     
-    // Should still show the interface
-    expect(frame).toContain("Remote Mode");
+    // Should NOT show remote mode
+    expect(frame).not.toContain("Remote Mode");
+    
+    // Should show local mode UI elements
+    expect(frame).toContain("Continue CLI");
   });
 
-  it("shows search text when user types after @", async () => {
-    // Use remote mode to bypass service loading
-    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+  it("shows search text when user types after @ in local mode", async () => {
+    // Test local mode
+    const { lastFrame, stdin } = render(<TUIChat />);
 
     // Type @ followed by text to filter files
     stdin.write("@READ");
@@ -56,13 +59,17 @@ describe("TUIChat - @ File Search Tests", () => {
     // Should show the typed text
     expect(frame).toContain("@READ");
     
-    // Should still be in remote mode
-    expect(frame).toContain("Remote Mode");
+    // Should be in local mode
+    expect(frame).not.toContain("Remote Mode");
+    
+    // When typing after @, we're in file search mode
+    // Should show file navigation hints
+    expect(frame).toContain("Use ↑/↓ to navigate");
   });
 
-  it("handles multiple @ characters", async () => {
-    // Use remote mode to bypass service loading
-    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+  it("handles multiple @ characters in local mode", async () => {
+    // Test local mode
+    const { lastFrame, stdin } = render(<TUIChat />);
 
     // Type multiple @ characters
     stdin.write("@@test");
@@ -75,11 +82,14 @@ describe("TUIChat - @ File Search Tests", () => {
     // Should handle multiple @ without crashing
     expect(frame).toBeDefined();
     expect(frame).toContain("@@test");
+    
+    // Should be in local mode with all features
+    expect(frame).toContain("Continue CLI");
   });
 
-  it("handles @ character input without crashing", async () => {
-    // Use remote mode to bypass service loading
-    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+  it("handles @ character input without crashing in local mode", async () => {
+    // Test local mode
+    const { lastFrame, stdin } = render(<TUIChat />);
 
     // Type @ to trigger file search
     stdin.write("@");
@@ -92,5 +102,26 @@ describe("TUIChat - @ File Search Tests", () => {
     // Should not crash and show something
     expect(frame).toBeDefined();
     expect(frame.length).toBeGreaterThan(0);
+    
+    // When @ is typed, we're in file search mode
+    // Should show file search UI with navigation hints
+    expect(frame).toContain("Use ↑/↓ to navigate");
+  });
+
+  it("@ file search still works in remote mode", async () => {
+    // Remote mode should still support file search
+    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    stdin.write("@test");
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const frame = lastFrame();
+    
+    // Should show remote mode
+    expect(frame).toContain("Remote Mode");
+    
+    // Should show the @ input
+    expect(frame).toContain("@test");
   });
 });

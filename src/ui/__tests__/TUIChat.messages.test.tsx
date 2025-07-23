@@ -4,6 +4,10 @@ import type { ChatCompletionMessageParam } from "openai/resources/index.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import TUIChat from "../TUIChat.js";
 
+// Import our new test utilities (they will work with mocked modules)
+import { renderWithServices } from "../../test-helpers/renderWithServices.js";
+import { createTestServiceContainer } from "../../test-helpers/testServiceContainer.js";
+
 describe("TUIChat - Message Display Tests", () => {
   let context: any;
 
@@ -18,9 +22,9 @@ describe("TUIChat - Message Display Tests", () => {
     context.cleanup();
   });
 
-  it("displays empty chat correctly", () => {
-    // Use remote mode to bypass service loading
-    const { lastFrame } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+  it("displays empty chat correctly in local mode", () => {
+    // Test local mode - services are mocked to be ready
+    const { lastFrame } = render(<TUIChat />);
 
     const frame = lastFrame();
 
@@ -30,11 +34,14 @@ describe("TUIChat - Message Display Tests", () => {
     // Should have box borders (using the actual characters)
     expect(frame).toContain("│");
 
-    // Should show remote mode indicator
-    expect(frame).toContain("Remote Mode");
+    // Should NOT show remote mode indicator in local mode
+    expect(frame).not.toContain("Remote Mode");
+    
+    // Should show Continue CLI branding
+    expect(frame).toContain("Continue CLI");
   });
 
-  it("displays messages in correct order", () => {
+  it("displays messages in correct order in local mode", () => {
     // Set up chat history in context
     context = createUITestContext({
       allServicesReady: true,
@@ -47,30 +54,48 @@ describe("TUIChat - Message Display Tests", () => {
       ],
     });
 
-    // Use remote mode to bypass service loading
-    const { lastFrame } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+    // Test local mode
+    const { lastFrame } = render(<TUIChat />);
 
-    // For now, just verify the component renders
+    // Verify the component renders
     const frame = lastFrame();
     expect(frame).toContain("Ask anything");
     
-    // The messages should be displayed if the component renders them
-    // Note: The exact rendering of messages depends on the component implementation
+    // In local mode, we have access to more UI elements
+    expect(frame).toContain("@ for context");
+    expect(frame).toContain("/ for slash commands");
   });
 
-  it("shows input prompt in remote mode", () => {
-    // Use remote mode to bypass service loading
-    const { lastFrame } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+  it("shows input prompt in local mode", () => {
+    // Test local mode
+    const { lastFrame } = render(<TUIChat />);
 
     const frame = lastFrame();
 
     // Should show the default prompt
     expect(frame).toContain("Ask anything");
 
+    // Should show context hint
+    expect(frame).toContain("@ for context");
+
     // Should show slash commands hint
     expect(frame).toContain("/ for slash commands");
 
-    // Should indicate remote mode
+    // Should NOT indicate remote mode
+    expect(frame).not.toContain("Remote Mode");
+  });
+
+  // Additional test to demonstrate remote mode still works
+  it("still supports remote mode for remote server testing", () => {
+    // Remote mode should still work for testing remote connections
+    const { lastFrame } = render(<TUIChat remoteUrl="http://localhost:3000" />);
+
+    const frame = lastFrame();
+
+    // Should show remote mode indicator
     expect(frame).toContain("Remote Mode");
+    
+    // Should still have the UI
+    expect(frame).toContain("Ask anything");
   });
 });
