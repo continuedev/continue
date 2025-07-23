@@ -1,26 +1,9 @@
 import { jest } from "@jest/globals";
-import { render } from "ink-testing-library";
-import React from "react";
-import TUIChat from "../TUIChat.js";
-import { createUITestContext } from "../../test-helpers/ui-test-context.js";
+import { testBothModes, renderInMode } from "./TUIChat.dualModeHelper.js";
 
 describe("TUIChat - Slash Commands Tests", () => {
-  let context: any;
-
-  beforeEach(() => {
-    context = createUITestContext({
-      allServicesReady: true,
-      serviceState: "ready",
-    });
-  });
-
-  afterEach(() => {
-    context.cleanup();
-  });
-
-  it("shows slash when user types / in local mode", async () => {
-    // Test local mode - slash commands should work
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("shows slash when user types /", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type / to trigger slash command
     stdin.write("/");
@@ -33,13 +16,17 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Should show the slash character
     expect(frame).toContain("/");
     
-    // Should NOT show remote mode
-    expect(frame).not.toContain("Remote Mode");
+    // Mode-specific assertions
+    if (mode === 'remote') {
+      expect(frame).toContain("Remote Mode");
+    } else {
+      expect(frame).not.toContain("Remote Mode");
+      expect(frame).toContain("Continue CLI");
+    }
   });
 
-  it("filters slash commands when typing /log in local mode", async () => {
-    // Test local mode
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("filters slash commands when typing /log", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type /log to trigger slash command filtering
     stdin.write("/log");
@@ -52,16 +39,17 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Should show the typed command
     expect(frame).toContain("/log");
     
-    // UI should remain stable in local mode
-    expect(frame).not.toContain("Remote Mode");
-    
-    // Should show Continue CLI branding
-    expect(frame).toContain("Continue CLI");
+    // Mode-specific UI elements
+    if (mode === 'remote') {
+      expect(frame).toContain("Remote Mode");
+    } else {
+      expect(frame).not.toContain("Remote Mode");
+      expect(frame).toContain("Continue CLI");
+    }
   });
 
-  it("handles tab key after slash command in local mode", async () => {
-    // Test local mode
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("handles tab key after slash command", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type /log and then tab
     stdin.write("/log");
@@ -78,14 +66,18 @@ describe("TUIChat - Slash Commands Tests", () => {
     expect(frameAfterTab).toBeDefined();
     if (frameAfterTab) {
       expect(frameAfterTab.length).toBeGreaterThan(0);
-      // Should be in local mode
-      expect(frameAfterTab).not.toContain("Remote Mode");
+      
+      // Mode-specific checks
+      if (mode === 'remote') {
+        expect(frameAfterTab).toContain("Remote Mode");
+      } else {
+        expect(frameAfterTab).not.toContain("Remote Mode");
+      }
     }
   });
 
-  it("shows slash command menu when typing / in local mode", async () => {
-    // Test local mode - should have more slash commands available
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("shows slash command menu when typing /", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type just /
     stdin.write("/");
@@ -97,29 +89,16 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Should show the slash
     expect(frame).toContain("/");
     
-    // In local mode, slash command might be in input
-    // The / should be visible in the UI
-    const hasSlashCommand = frame ? (frame.includes("/") && !frame.includes("Remote Mode")) : false;
-    expect(hasSlashCommand).toBe(true);
-    
-    // Should show Continue CLI branding
-    expect(frame).toContain("Continue CLI");
-  });
-
-  it("slash commands still work in remote mode", async () => {
-    // Remote mode should still support basic slash commands
-    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
-
-    stdin.write("/");
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    const frame = lastFrame();
-    
-    // Should show remote mode
-    expect(frame).toContain("Remote Mode");
-    
-    // Should show slash command menu
-    expect(frame).toContain("/exit");
+    // In remote mode, slash command menu shows immediately
+    if (mode === 'remote') {
+      expect(frame).toContain("/exit");
+      expect(frame).toContain("Remote Mode");
+    } else {
+      // In local mode, the / is shown in the input
+      expect(frame).toContain("Continue CLI");
+      // The slash should be visible in the input area
+      const hasSlash = frame ? (frame.includes("● /") || frame.includes("> /")) : false;
+      expect(hasSlash).toBe(true);
+    }
   });
 });

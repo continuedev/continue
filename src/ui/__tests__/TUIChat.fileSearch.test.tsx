@@ -1,25 +1,8 @@
-import { render } from "ink-testing-library";
-import React from "react";
-import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import TUIChat from "../TUIChat.js";
+import { testBothModes, renderInMode } from "./TUIChat.dualModeHelper.js";
 
 describe("TUIChat - @ File Search Tests", () => {
-  let context: any;
-
-  beforeEach(() => {
-    context = createUITestContext({
-      allServicesReady: true,
-      serviceState: "ready",
-    });
-  });
-
-  afterEach(() => {
-    context.cleanup();
-  });
-
-  it("shows @ character when user types @ in local mode", async () => {
-    // Test local mode - file search should work
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("shows @ character when user types @", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Wait a bit for initial render
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -37,16 +20,17 @@ describe("TUIChat - @ File Search Tests", () => {
     const hasAtSymbol = frame.includes("@") || frame.includes("◉ @");
     expect(hasAtSymbol).toBe(true);
     
-    // Should NOT show remote mode
-    expect(frame).not.toContain("Remote Mode");
-    
-    // Should show local mode UI elements
-    expect(frame).toContain("Continue CLI");
+    // Mode-specific UI
+    if (mode === 'remote') {
+      expect(frame).toContain("Remote Mode");
+    } else {
+      expect(frame).not.toContain("Remote Mode");
+      expect(frame).toContain("Continue CLI");
+    }
   });
 
-  it("shows search text when user types after @ in local mode", async () => {
-    // Test local mode
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("shows search text when user types after @", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type @ followed by text to filter files
     stdin.write("@READ");
@@ -59,17 +43,21 @@ describe("TUIChat - @ File Search Tests", () => {
     // Should show the typed text
     expect(frame).toContain("@READ");
     
-    // Should be in local mode
-    expect(frame).not.toContain("Remote Mode");
+    // Navigation hints only show in local mode
+    if (mode === 'local') {
+      expect(frame).toContain("Use ↑/↓ to navigate");
+    }
     
-    // When typing after @, we're in file search mode
-    // Should show file navigation hints
-    expect(frame).toContain("Use ↑/↓ to navigate");
+    // Mode-specific checks
+    if (mode === 'remote') {
+      expect(frame).toContain("Remote Mode");
+    } else {
+      expect(frame).not.toContain("Remote Mode");
+    }
   });
 
-  it("handles multiple @ characters in local mode", async () => {
-    // Test local mode
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("handles multiple @ characters", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type multiple @ characters
     stdin.write("@@test");
@@ -83,13 +71,16 @@ describe("TUIChat - @ File Search Tests", () => {
     expect(frame).toBeDefined();
     expect(frame).toContain("@@test");
     
-    // Should be in local mode with all features
-    expect(frame).toContain("Continue CLI");
+    // Mode-specific UI elements
+    if (mode === 'remote') {
+      expect(frame).toContain("Remote Mode");
+    } else {
+      expect(frame).toContain("Continue CLI");
+    }
   });
 
-  it("handles @ character input without crashing in local mode", async () => {
-    // Test local mode
-    const { lastFrame, stdin } = render(<TUIChat />);
+  testBothModes("handles @ character input without crashing", async (mode) => {
+    const { lastFrame, stdin } = renderInMode(mode);
 
     // Type @ to trigger file search
     stdin.write("@");
@@ -103,25 +94,9 @@ describe("TUIChat - @ File Search Tests", () => {
     expect(frame).toBeDefined();
     expect(frame.length).toBeGreaterThan(0);
     
-    // When @ is typed, we're in file search mode
-    // Should show file search UI with navigation hints
-    expect(frame).toContain("Use ↑/↓ to navigate");
-  });
-
-  it("@ file search still works in remote mode", async () => {
-    // Remote mode should still support file search
-    const { lastFrame, stdin } = render(<TUIChat remoteUrl="http://localhost:3000" />);
-
-    stdin.write("@test");
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const frame = lastFrame();
-    
-    // Should show remote mode
-    expect(frame).toContain("Remote Mode");
-    
-    // Should show the @ input
-    expect(frame).toContain("@test");
+    // Navigation hints only show in local mode
+    if (mode === 'local') {
+      expect(frame).toContain("Use ↑/↓ to navigate");
+    }
   });
 });
