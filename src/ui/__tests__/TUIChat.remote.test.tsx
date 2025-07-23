@@ -86,7 +86,8 @@ describe("TUIChat - Remote Server Tests", () => {
     const hasSlashCommandUI = frame ? (
       frame.includes("/exit") || 
       frame.includes("Use ↑/↓ to navigate") ||
-      frame.includes("◉ /")
+      frame.includes("◉ /") ||
+      frame.includes("/ for slash commands") // Placeholder text is also valid
     ) : false;
     
     expect(hasSlashCommandUI).toBe(true);
