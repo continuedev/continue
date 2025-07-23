@@ -18,7 +18,7 @@ export class NextEditActions {
     );
 
     // Check if HELLO is written into the editor.
-    const editorText = await editor.getTextAtLine(1);
+    const editorText = await editor.getTextAtLine(2);
 
     return editorText === "HELLO";
   }
