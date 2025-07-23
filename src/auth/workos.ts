@@ -596,6 +596,17 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
+  const onboardingFlagPath = path.join(
+    os.homedir(),
+    ".continue",
+    ".onboarding_complete"
+  );
+
+  // Remove onboarding completion flag so user will go through onboarding again
+  if (fs.existsSync(onboardingFlagPath)) {
+    fs.unlinkSync(onboardingFlagPath);
+  }
+
   if (process.env.CONTINUE_API_KEY) {
     console.info(
       chalk.yellow(
