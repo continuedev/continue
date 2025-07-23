@@ -135,10 +135,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showOrganizationSelector,
   } = useOrganizationSelector({
     configPath,
-    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
-      // These will be updated automatically by the service system
-      // We just need to trigger a reload which will cause services to update
-    },
+    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {},
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
@@ -152,10 +149,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showConfigSelectorUI,
   } = useConfigSelector({
     configPath,
-    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {
-      // These will be updated automatically by the service system
-      // We just need to trigger a reload which will cause services to update
-    },
+    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {},
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },

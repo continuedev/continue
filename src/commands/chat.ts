@@ -3,6 +3,7 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
 import { configureLogger } from "../logger.js";
+import * as logging from "../logging.js";
 import { loadSession, saveSession } from "../session.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
@@ -138,6 +139,9 @@ async function runHeadlessMode(
 export async function chat(prompt?: string, options: ChatOptions = {}) {
   // Configure logger based on headless mode
   configureLogger(options.headless ?? false);
+  
+  // Configure headless-aware logging system
+  logging.configureLogger({ headless: options.headless ?? false });
 
   try {
     // Record session start
@@ -157,10 +161,11 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       return;
     }
 
-    // Run headless mode with old initialization pattern
+    // Run headless mode
     await runHeadlessMode(prompt, options);
   } catch (error: any) {
-    logger.error(chalk.red(`Fatal error: ${formatError(error)}`));
+    // Use headless-aware error logging to ensure fatal errors are shown in headless mode
+    logging.error(chalk.red(`Fatal error: ${formatError(error)}`));
     process.exit(1);
   } finally {
     // Stop active time tracking
