@@ -288,7 +288,7 @@ describe("GUI Test", () => {
 
     it("should render tool call", async () => {
       // all tool's toolSettings here defaults to ?
-      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
+      // await GUIActions.toggleToolPolicy(view, "view_diff", 0);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -308,7 +308,7 @@ describe("GUI Test", () => {
 
     it("should call tool after approval", async () => {
       // all tool's toolSettings here defaults to ?
-      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
+      // await GUIActions.toggleToolPolicy(view, "view_diff", 1);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -330,7 +330,7 @@ describe("GUI Test", () => {
 
     it("should cancel tool", async () => {
       // all tool's toolSettings here defaults to ?
-      // await GUIActions.toggleToolPolicy(view, "view_diff", 1);
+      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");

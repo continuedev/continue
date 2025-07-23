@@ -87,6 +87,13 @@ export const uiSlice = createSlice({
     ) => {
       state.isExploreDialogOpen = action.payload;
     },
+    // Initialize when there is no toolSetting data in the cache
+    initTool: (state, action: PayloadAction<Tool>) => {
+      if (!state.toolSettings[action.payload.function.name]) {
+        state.toolSettings[action.payload.function.name] =
+          action.payload.toolPolicy ?? DEFAULT_TOOL_SETTING;
+      }
+    },
     // Tools
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
@@ -166,6 +173,7 @@ export const {
   clearToolPolicy,
   toggleToolGroupSetting,
   addTool,
+  initTool,
   addRule,
   toggleRuleSetting,
   setTTSActive,
