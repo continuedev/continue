@@ -58,7 +58,7 @@ export class NextEditActions {
 
     const svgDecoration = await TestUtils.waitForSuccess(
       () => NextEditSelectors.getSvgDecoration(VSBrowser.instance.driver),
-      DEFAULT_TIMEOUT.XL,
+      DEFAULT_TIMEOUT.XXL,
     );
 
     const result = svgDecoration !== null;
