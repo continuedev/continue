@@ -10,6 +10,15 @@ export function addToolCallDeltaToState(
 ): ToolCallState {
   const currentCall = currentState?.toolCall;
 
+  // If we have a current state and the delta has a different ID, ignore the delta
+  if (
+    currentState &&
+    toolCallDelta.id &&
+    currentCall?.id !== toolCallDelta.id
+  ) {
+    return currentState;
+  }
+
   // These will/should not be partially streamed
   const callType = toolCallDelta.type ?? "function";
   const callId = currentCall?.id || toolCallDelta.id || "";
@@ -21,9 +30,28 @@ export function addToolCallDeltaToState(
   const nameDelta = toolCallDelta.function?.name ?? "";
   const argsDelta = toolCallDelta.function?.arguments ?? "";
 
-  const mergedName =
-    currentName === nameDelta ? currentName : currentName + nameDelta; // Some models may include the name repeatedly. This doesn't account for an edge case where the name is like "dothisdothis" and it happens to stream name in chunks "dothis" and "dothis" but that's a super edge case
-  const mergedArgs = currentArgs + argsDelta;
+  let mergedName = currentName;
+  if (nameDelta.startsWith(currentName)) {
+    // Case where model progresssively streams name but full name each time e.g. "readFi" -> "readFil" -> "readFile"
+    mergedName = nameDelta;
+  } else if (!currentName.startsWith(nameDelta)) {
+    mergedName = currentName + nameDelta;
+  }
+
+  // Similar logic for args, with an extra JSON check
+  let mergedArgs = currentArgs;
+  try {
+    // If args is JSON parseable, it is complete, don't add to it
+    JSON.parse(currentArgs);
+  } catch (e) {
+    if (argsDelta.startsWith(currentArgs)) {
+      // Case where model progresssively streams args but full args each time e.g. "{"file": "file1"}" -> "{"file": "file1", "line": 1}"
+      mergedArgs = argsDelta;
+    } else if (!currentArgs.startsWith(argsDelta)) {
+      // Case where model streams in args in parts e.g. "{"file": "file1"" -> ", "line": 1}"
+      mergedArgs = currentArgs + argsDelta;
+    }
+  }
 
   const [_, parsedArgs] = incrementalParseJson(mergedArgs || "{}");
 

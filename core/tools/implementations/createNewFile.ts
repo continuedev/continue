@@ -17,6 +17,10 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
     }
     await extras.ide.writeFile(resolvedFileUri, args.contents);
     await extras.ide.openFile(resolvedFileUri);
+    await extras.ide.saveFile(resolvedFileUri);
+    if (extras.codeBaseIndexer) {
+      void extras.codeBaseIndexer?.refreshCodebaseIndexFiles([resolvedFileUri]);
+    }
     return [
       {
         name: getUriPathBasename(resolvedFileUri),

@@ -1,5 +1,6 @@
 import {
   AutocompleteClipboardSnippet,
+  AutocompleteCodeSnippet,
   AutocompleteSnippet,
   AutocompleteSnippetType,
 } from "../snippets/types";
@@ -23,6 +24,14 @@ export const isValidSnippet = (snippet: AutocompleteSnippet): boolean => {
 
   if (snippet.type === AutocompleteSnippetType.Clipboard) {
     return isValidClipboardSnippet(snippet);
+  }
+
+  if (
+    (snippet as AutocompleteCodeSnippet).filepath?.startsWith(
+      "output:extension-output-Continue.continue",
+    )
+  ) {
+    return false;
   }
 
   return true;

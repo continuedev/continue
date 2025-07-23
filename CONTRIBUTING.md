@@ -123,6 +123,12 @@ version of Node.js for this project by running the following command in the root
 nvm use
 ```
 
+Then, install Vite globally
+
+```bash
+npm i -g vite
+```
+
 #### Fork the Continue Repository
 
 1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account.

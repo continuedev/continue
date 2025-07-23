@@ -1,23 +1,21 @@
-import { useDispatch } from "react-redux";
+import { OnboardingModes } from "core/protocol/core";
 import { useNavigate } from "react-router-dom";
-import { TabTitle } from "../components/OnboardingCardTabs";
+import { OnboardingCardState } from "..";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   setDialogMessage,
   setOnboardingCard,
   setShowDialog,
 } from "../../../redux/slices/uiSlice";
-import { OnboardingCardState } from "..";
 import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { saveCurrentSession } from "../../../redux/thunks/session";
 
 const disableContinueOnboarding = true;
 
 export interface UseOnboardingCard {
   show: OnboardingCardState["show"];
   activeTab: OnboardingCardState["activeTab"];
-  setActiveTab: (tab: TabTitle) => void;
-  open: (tab: TabTitle) => void;
+  setActiveTab: (tab: OnboardingModes) => void;
+  open: (tab?: OnboardingModes) => void;
   close: (isDialog?: boolean) => void;
 }
 
@@ -42,12 +40,17 @@ export function useOnboardingCard(): UseOnboardingCard {
     show = onboardingStatus !== "Completed" && !hasDismissedOnboardingCard;
   }
 
-  async function open(tab: TabTitle) {
+  async function open(tab?: OnboardingModes) {
     if (disableContinueOnboarding) {
       return;
     }
     navigate("/");
-    dispatch(setOnboardingCard({ show: true, activeTab: tab }));
+    dispatch(
+      setOnboardingCard({
+        show: true,
+        activeTab: tab ?? OnboardingModes.API_KEY,
+      }),
+    );
   }
 
   function close(isDialog = false) {
@@ -59,7 +62,7 @@ export function useOnboardingCard(): UseOnboardingCard {
     }
   }
 
-  function setActiveTab(tab: TabTitle) {
+  function setActiveTab(tab: OnboardingModes) {
     dispatch(setOnboardingCard({ show: true, activeTab: tab }));
   }
 

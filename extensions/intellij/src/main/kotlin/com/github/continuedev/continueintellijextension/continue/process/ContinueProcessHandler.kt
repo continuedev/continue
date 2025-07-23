@@ -1,0 +1,61 @@
+package com.github.continuedev.continueintellijextension.`continue`.process
+
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.intellij.openapi.components.service
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+
+class ContinueProcessHandler(
+    parentScope: CoroutineScope,
+    private val process: ContinueProcess,
+    handleMessage: (String) -> (Unit)
+) {
+    private val innerJob = Job()
+    private val scope = CoroutineScope(parentScope.coroutineContext + innerJob)
+    private val pendingWrites = Channel<String>(Channel.UNLIMITED)
+    private val writer = OutputStreamWriter(process.output)
+    private val reader = BufferedReader(InputStreamReader(process.input))
+
+    init {
+        scope.launch(Dispatchers.IO) {
+            try {
+                while (isActive) {
+                    val line = reader.readLine()
+                    if (line != null && line.isNotEmpty()) {
+                        try {
+                            handleMessage(line)
+                        } catch (e: Exception) {
+                            service<ContinueErrorService>().report(e, "Error handling message: $line")
+                        }
+                    } else
+                        delay(100)
+                }
+            } catch (e: IOException) {
+                service<ContinueErrorService>().report(e)
+            }
+        }
+        scope.launch(Dispatchers.IO) {
+            for (message in pendingWrites) {
+                writer.write(message)
+                writer.write("\r\n")
+                writer.flush()
+            }
+        }
+    }
+
+    fun write(message: String) =
+        pendingWrites.trySend(message)
+
+    fun close() {
+        innerJob.cancel()
+        scope.launch(Dispatchers.IO) {
+            reader.close()
+            writer.close()
+            process.close()
+        }
+    }
+}

@@ -4,13 +4,13 @@ import { CompletionOptions } from "../..";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
+import { getUriPathBasename } from "../../util/uri";
 import { SnippetPayload } from "../snippets";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getSnippets } from "./filtering";
-import { getUriPathBasename } from "../../util/uri";
 import { formatSnippets } from "./formatting";
 import { getStopTokens } from "./getStopTokens";
 

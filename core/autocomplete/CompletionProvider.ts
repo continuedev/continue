@@ -114,11 +114,12 @@ export class CompletionProvider {
     this.loggingService.markDisplayed(completionId, outcome);
   }
 
-  private async _getAutocompleteOptions() {
+  private async _getAutocompleteOptions(llm: ILLM) {
     const { config } = await this.configHandler.loadConfig();
     const options = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
       ...config?.tabAutocompleteOptions,
+      ...llm.autocompleteOptions,
     };
     return options;
   }
@@ -126,6 +127,7 @@ export class CompletionProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
+    force?: boolean,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
       // Create abort signal if not given
@@ -136,16 +138,21 @@ export class CompletionProvider {
         token = controller.signal;
       }
       const startTime = Date.now();
-      const options = await this._getAutocompleteOptions();
-
-      // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
-        return undefined;
-      }
 
       const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
+      }
+
+      const options = await this._getAutocompleteOptions(llm);
+
+      // Debounce
+      if (!force) {
+        if (
+          await this.debouncer.delayAndShouldDebounce(options.debounceDelay)
+        ) {
+          return undefined;
+        }
       }
 
       if (llm.promptTemplates?.autocomplete) {
@@ -247,7 +254,7 @@ export class CompletionProvider {
         completionId: helper.input.completionId,
         gitRepo: await this.ide.getRepoName(helper.filepath),
         uniqueId: await this.ide.getUniqueId(),
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
         ...helper.options,
       };
 

@@ -14,9 +14,11 @@ import {
   GlobeAltIcon,
   MagnifyingGlassIcon,
   PaperClipIcon,
+  PencilIcon,
   PlusIcon,
   SparklesIcon,
   TrashIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { DiscordIcon } from "../svg/DiscordIcon";
 import { GithubIcon } from "../svg/GithubIcon";
@@ -42,6 +44,7 @@ export const NAMED_ICONS: { [key: string]: any } = {
   debugger: BugAntIcon,
   os: CpuChipIcon,
   tree: Bars3BottomLeftIcon,
+  rules: PencilIcon,
   "prompt-files": DocumentTextIcon,
   "repo-map": FolderIcon,
   "/clear": TrashIcon,
@@ -53,4 +56,5 @@ export const NAMED_ICONS: { [key: string]: any } = {
   "gitlab-mr": GitlabIcon,
   http: GlobeAltIcon,
   trash: TrashIcon,
+  toolCall: WrenchScrewdriverIcon,
 };

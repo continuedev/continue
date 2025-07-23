@@ -1,22 +1,25 @@
-import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import {
+  AtSymbolIcon,
+  LightBulbIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import {
-  selectCurrentToolCall,
-  selectCurrentToolCallApplyState,
-} from "../../redux/selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
+import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
 import { exitEdit } from "../../redux/thunks/edit";
 import { getAltKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { cn } from "../../util/cn";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
+import { Button } from "../ui";
 import { useFontSize } from "../ui/font";
-import { EnterButton } from "./InputToolbar/EnterButton";
+import ContextStatus from "./ContextStatus";
 import HoverItem from "./InputToolbar/HoverItem";
 
 export interface ToolbarOptions {
@@ -47,17 +50,12 @@ function InputToolbar(props: InputToolbarProps) {
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
-  const toolCallState = useAppSelector(selectCurrentToolCall);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
+  const hasReasoningEnabled = useAppSelector(
+    (store) => store.session.hasReasoningEnabled,
   );
 
   const isEnterDisabled =
-    props.disabled ||
-    (isInEdit && codeToEdit.length === 0) ||
-    toolCallState?.status === "generated" ||
-    (currentToolCallApplyState &&
-      currentToolCallApplyState.status !== "closed");
+    props.disabled || (isInEdit && codeToEdit.length === 0);
 
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
@@ -143,6 +141,27 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
+            {defaultModel?.provider === "anthropic" && (
+              <HoverItem
+                onClick={() =>
+                  dispatch(setHasReasoningEnabled(!hasReasoningEnabled))
+                }
+              >
+                <LightBulbIcon
+                  data-tooltip-id="model-reasoning-tooltip"
+                  className={cn(
+                    "h-3 w-3 hover:brightness-150",
+                    hasReasoningEnabled && "brightness-200",
+                  )}
+                />
+
+                <ToolTip id="model-reasoning-tooltip" place="top">
+                  {hasReasoningEnabled
+                    ? "Disable model reasoning"
+                    : "Enable model reasoning"}
+                </ToolTip>
+              </HoverItem>
+            )}
           </div>
         </div>
 
@@ -152,6 +171,7 @@ function InputToolbar(props: InputToolbarProps) {
             fontSize: tinyFont,
           }}
         >
+          {!isInEdit && <ContextStatus />}
           {!props.toolbarOptions?.hideUseCodebase && !isInEdit && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
@@ -191,10 +211,10 @@ function InputToolbar(props: InputToolbarProps) {
               </span>
             </HoverItem>
           )}
-
-          <EnterButton
+          <Button
             data-tooltip-id="enter-tooltip"
-            isPrimary={props.isMainInput}
+            variant={props.isMainInput ? "primary" : "secondary"}
+            size="sm"
             data-testid="submit-input-button"
             onClick={async (e) => {
               if (props.onEnter) {
@@ -213,7 +233,7 @@ function InputToolbar(props: InputToolbarProps) {
             <ToolTip id="enter-tooltip" place="top">
               Send (⏎)
             </ToolTip>
-          </EnterButton>
+          </Button>
         </div>
       </div>
     </>

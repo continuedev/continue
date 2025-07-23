@@ -1,9 +1,8 @@
-import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
 
 import { isGraniteOnboardingComplete } from "./granite/utils/extensionUtils";
 import { getTheme } from "./util/getTheme";
-import { getExtensionVersion } from "./util/util";
+import { getExtensionVersion, getvsCodeUriScheme } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -24,6 +23,7 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ): void | Thenable<void> {
+    this.webviewProtocol.webview = webviewView.webview;
     this._webviewView = webviewView;
     this._webview = webviewView.webview;
     webviewView.webview.html = this.getSidebarContent(
@@ -59,16 +59,10 @@ export class ContinueGUIWebviewViewProvider
   }
 
   constructor(
-    private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
   ) {
-    this.webviewProtocol = new VsCodeWebviewProtocol(
-      (async () => {
-        const configHandler = await this.configHandlerPromise;
-        return configHandler.reloadConfig();
-      }).bind(this),
-    );
+    this.webviewProtocol = new VsCodeWebviewProtocol();
   }
 
   getSidebarContent(
@@ -162,6 +156,7 @@ export class ContinueGUIWebviewViewProvider
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", '"vscode"')</script>
+        <script>localStorage.setItem("vsCodeUriScheme", '"${getvsCodeUriScheme()}"')</script>
         <script>localStorage.setItem("extensionVersion", '"${getExtensionVersion()}"')</script>
         <script>window.windowId = "${this.windowId}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>

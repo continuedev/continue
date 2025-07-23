@@ -1,19 +1,34 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage } from "core";
-import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
-import { getBaseSystemMessage } from "../../util";
-import { selectSelectedChatModel } from "../slices/configSlice";
 import {
-  addContextItemsAtIndex,
-  setActive,
+  ChatHistoryItemWithMessageId,
+  resetNextCodeBlockToApplyIndex,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { findToolCall } from "../util";
-import { resetStateForNewMessage } from "./resetStateForNewMessage";
+import { findToolCallById } from "../util";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
+
+/**
+ * Determines if we should continue streaming based on tool call completion status.
+ */
+function areAllToolsDoneStreaming(
+  assistantMessage: ChatHistoryItemWithMessageId | undefined,
+): boolean {
+  // This might occur because of race conditions, if so, the tools are completed
+  if (!assistantMessage?.toolCallStates) {
+    return true;
+  }
+
+  // Only continue if all tool calls are complete
+  const completedToolCalls = assistantMessage.toolCallStates.filter(
+    (tc) => tc.status === "done",
+  );
+
+  return completedToolCalls.length === assistantMessage.toolCallStates.length;
+}
 
 export const streamResponseAfterToolCall = createAsyncThunk<
   void,
@@ -25,62 +40,40 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const initialHistory = state.session.history;
-        const selectedChatModel = selectSelectedChatModel(state);
 
-        if (!selectedChatModel) {
-          throw new Error("No model selected");
-        }
-
-        const toolCallState = findToolCall(state.session.history, toolCallId);
+        const toolCallState = findToolCallById(
+          state.session.history,
+          toolCallId,
+        );
 
         if (!toolCallState) {
-          throw new Error("Tool call not found");
+          return; // in cases where edit tool is cancelled mid apply, this will be triggered
         }
 
         const toolOutput = toolCallState.output ?? [];
 
-        resetStateForNewMessage();
-
+        dispatch(resetNextCodeBlockToApplyIndex());
         await new Promise((resolve) => setTimeout(resolve, 0));
 
+        // Create and dispatch the tool message
         const newMessage: ChatMessage = {
           role: "tool",
           content: renderContextItems(toolOutput),
           toolCallId,
         };
         dispatch(streamUpdate([newMessage]));
-        dispatch(
-          addContextItemsAtIndex({
-            index: initialHistory.length,
-            contextItems: toolOutput.map((contextItem) => ({
-              ...contextItem,
-              id: {
-                providerTitle: "toolCall",
-                itemId: toolCallId,
-              },
-            })),
-          }),
+
+        // Check if we should continue streaming based on tool call completion
+        const history = getState().session.history;
+        const assistantMessage = history.find(
+          (item) =>
+            item.message.role === "assistant" &&
+            item.toolCallStates?.some((tc) => tc.toolCallId === toolCallId),
         );
 
-        dispatch(setActive());
-
-        const updatedHistory = getState().session.history;
-        const messageMode = getState().session.mode;
-
-        const baseChatOrAgentSystemMessage = getBaseSystemMessage(
-          selectedChatModel,
-          messageMode,
-        );
-
-        const messages = constructMessages(
-          messageMode,
-          [...updatedHistory],
-          baseChatOrAgentSystemMessage,
-          state.config.config.rules,
-        );
-
-        unwrapResult(await dispatch(streamNormalInput({ messages })));
+        if (areAllToolsDoneStreaming(assistantMessage)) {
+          unwrapResult(await dispatch(streamNormalInput({})));
+        }
       }),
     );
   },

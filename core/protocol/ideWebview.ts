@@ -4,6 +4,7 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import {
   AcceptOrRejectDiffPayload,
   ApplyState,
+  ApplyToFilePayload,
   ExtensionConflictReport,
   HighlightedCodePayload,
   MessageContent,
@@ -14,15 +15,7 @@ import {
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
-  applyToFile: [
-    {
-      text: string;
-      streamId: string;
-      filepath?: string;
-      toolCallId?: string;
-    },
-    void,
-  ];
+  applyToFile: [ApplyToFilePayload, void];
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showSetupWizard: [undefined, void];
@@ -80,7 +73,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
   "jetbrains/isOSREnabled": [boolean, void];
-  addApiKey: [undefined, void];
+  setupApiKey: [undefined, void];
   setupLocalConfig: [undefined, void];
   incrementFtc: [undefined, void];
   openOnboardingCard: [undefined, void];
@@ -90,4 +83,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusEdit: [undefined, void];
   setShowGraniteOnboardingCard: [boolean, void];
   updateIncompatibleExtensions: [ExtensionConflictReport | null, void];
+  generateRule: [undefined, void];
 };

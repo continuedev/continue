@@ -11,6 +11,7 @@ import OpenAI from "../OpenAI.js";
 
 import type { Chunk, LLMOptions } from "../../../index.js";
 import { LLMConfigurationStatuses } from "../../constants.js";
+import { LlmApiRequestType } from "../../openaiTypeConverters.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -23,6 +24,8 @@ class ContinueProxy extends OpenAI {
     }
   }
 
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [];
+
   // The apiKey and apiBase are set to the values for the proxy,
   // but we need to keep track of the actual values that the proxy will use
   // to call whatever LLM API is chosen
@@ -34,8 +37,13 @@ class ContinueProxy extends OpenAI {
   constructor(options: LLMOptions) {
     super(options);
     this.configEnv = options.env;
+    // This it set to `undefined` to handle the case where we are proxying requests to Azure. We pass the correct env vars
+    // needed to do this in `extraBodyProperties` below, but if we don't set `apiType` to `undefined`, we end up proxying to
+    // `/openai/deployments/` which is invalid since that URL construction happens on the proxy.
+    this.apiType = undefined;
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
+    this.envSecretLocations = options.envSecretLocations;
     this.orgScopeId = options.orgScopeId;
     this.onPremProxyUrl = options.onPremProxyUrl;
     if (this.onPremProxyUrl) {
@@ -56,6 +64,7 @@ class ContinueProxy extends OpenAI {
   protected extraBodyProperties(): Record<string, any> {
     const continueProperties: ContinueProperties = {
       apiKeyLocation: this.apiKeyLocation,
+      envSecretLocations: this.envSecretLocations,
       apiBase: this.actualApiBase,
       orgScopeId: this.orgScopeId ?? null,
       env: this.configEnv,
@@ -66,13 +75,24 @@ class ContinueProxy extends OpenAI {
   }
 
   getConfigurationStatus() {
-    if (!this.apiKeyLocation) {
+    if (!this.apiKeyLocation && !this.envSecretLocations) {
       return LLMConfigurationStatuses.VALID;
     }
 
-    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
-    if (secretLocation.secretType === SecretType.NotFound) {
-      return LLMConfigurationStatuses.MISSING_API_KEY;
+    if (this.apiKeyLocation) {
+      const secretLocation = decodeSecretLocation(this.apiKeyLocation);
+      if (secretLocation.secretType === SecretType.NotFound) {
+        return LLMConfigurationStatuses.MISSING_API_KEY;
+      }
+    }
+
+    if (this.envSecretLocations) {
+      for (const secretLocation of Object.values(this.envSecretLocations)) {
+        const decoded = decodeSecretLocation(secretLocation);
+        if (decoded.secretType === SecretType.NotFound) {
+          return LLMConfigurationStatuses.MISSING_ENV_SECRET;
+        }
+      }
     }
 
     return LLMConfigurationStatuses.VALID;

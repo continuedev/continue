@@ -15,9 +15,8 @@ import { vscBadgeForeground } from "../../..";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
+import FreeTrialButton from "../../../FreeTrialButton";
 import { ToolTip } from "../../../gui/Tooltip";
-import AssistantSelect from "../../../modelSelection/platform/AssistantSelect";
-import FreeTrialButton from "../../../modelSelection/platform/FreeTrialButton";
 import { useFontSize } from "../../../ui/font";
 import HoverItem from "../../InputToolbar/HoverItem";
 import { useLump } from "../LumpContext";
@@ -25,8 +24,10 @@ import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
 import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
 import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
 
+import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
-import { usesFreeTrialApiKey } from "../../../../util/freeTrialHelpers";
+import { getLocalStorage } from "../../../../util/localStorage";
+import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
 interface BlockSettingsToolbarIcon {
   title: string;
@@ -106,7 +107,7 @@ function BlockSettingsToolbarIcon(
                 ? "bg-error"
                 : "bg-badge"
               : undefined
-          } relative flex select-none items-center rounded-full px-[3px] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
+          } relative flex select-none items-center rounded-full px-[3px] py-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
         >
           <props.icon
             className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
@@ -153,18 +154,35 @@ export function BlockSettingsTopToolbar() {
 
   const [freeTrialStatus, setFreeTrialStatus] =
     useState<FreeTrialStatus | null>(null);
-  const isUsingFreeTrial = usesFreeTrialApiKey(config);
+  const hasExitedFreeTrial = getLocalStorage("hasExitedFreeTrial");
+  const isUsingFreeTrial = usesFreeTrialApiKey(config) && !hasExitedFreeTrial;
 
   useEffect(() => {
-    ideMessenger
-      .request("controlPlane/getFreeTrialStatus", undefined)
-      .then((resp) => {
-        if (resp.status === "success") {
-          setFreeTrialStatus(resp.content);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const fetchFreeTrialStatus = () => {
+      ideMessenger
+        .request("controlPlane/getFreeTrialStatus", undefined)
+        .then((resp) => {
+          if (resp.status === "success") {
+            setFreeTrialStatus(resp.content);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchFreeTrialStatus();
+
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (isUsingFreeTrial) {
+      intervalId = setInterval(fetchFreeTrialStatus, 15000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [ideMessenger, isUsingFreeTrial]);
 
   const handleEllipsisClick = () => {
     if (isToolbarExpanded) {
@@ -189,7 +207,7 @@ export function BlockSettingsTopToolbar() {
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex flex-row">
-        <div className="xs:flex text-description hidden items-center justify-center">
+        <div className="xs:flex text-description hidden items-center justify-center gap-0.5">
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
@@ -229,7 +247,7 @@ export function BlockSettingsTopToolbar() {
           {isUsingFreeTrial ? (
             <FreeTrialButton freeTrialStatus={freeTrialStatus} />
           ) : (
-            <AssistantSelect />
+            <AssistantAndOrgListbox />
           )}
           <ToolTip id="assistant-select-tooltip" place="top">
             {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}

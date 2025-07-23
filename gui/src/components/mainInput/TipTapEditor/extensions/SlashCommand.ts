@@ -15,6 +15,9 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
   addOptions() {
     return {
       suggestion: {
+        allow: ({ editor }) =>
+          // the first character is "/". we want to avoid slash commands when there is a space after it
+          editor.getText().at(1) !== " ",
         char: "/",
         pluginKey: new PluginKey(this.name),
         startOfLine: true,
@@ -22,11 +25,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
           // First delete the slash character and any text after it
           editor.chain().focus().deleteRange(range).run();
 
-          editor.commands.insertPrompt({
-            name: props.title,
-            description: props.description,
-            prompt: props.content,
-          });
+          editor.commands.insertPrompt(props);
         },
       },
     };

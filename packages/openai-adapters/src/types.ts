@@ -53,7 +53,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("sambanova"),
     z.literal("text-gen-webui"),
     z.literal("vllm"),
-    z.literal("x-ai"),
+    z.literal("xAI"),
     z.literal("scaleway"),
     z.literal("ncompass"),
     z.literal("relace"),
@@ -71,9 +71,41 @@ export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
 
+export const BedrockConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("bedrock"),
+  // cacheBehavior: z.object({
+  //   cacheSystemMessage: z.boolean().optional(),
+  //   cacheConversation: z.boolean().optional(),
+  // }).optional(),
+  env: z.object({
+    region: z.string().optional(),
+    accessKeyId: z.string().optional(),
+    secretAccessKey: z.string().optional(),
+    profile: z.string().optional(),
+  }),
+});
+export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;
+
+export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("llamastack"),
+});
+export type LlamastackConfig = z.infer<typeof LlamastackConfigSchema>;
+
+export const ContinueProxyConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("continue-proxy"),
+  env: z.object({
+    apiKeyLocation: z.string().optional(),
+    envSecretLocations: z.record(z.string(), z.string()).optional(),
+    orgScopeId: z.string().nullable(),
+    proxyUrl: z.string().optional(),
+  }),
+});
+export type ContinueProxyConfig = z.infer<typeof ContinueProxyConfigSchema>;
+
 export const MockConfigSchema = BasePlusConfig.extend({
   provider: z.literal("mock"),
 });
+
 export type MockConfig = z.infer<typeof MockConfigSchema>;
 
 // Other APIs
@@ -84,6 +116,19 @@ export type CohereConfig = z.infer<typeof CohereConfigSchema>;
 
 export const AzureConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("azure"),
+  env: z
+    .object({
+      apiVersion: z.string().optional(),
+      apiType: z
+        .union([
+          z.literal("azure-foundry"),
+          z.literal("azure-openai"),
+          z.literal("azure"), // Legacy
+        ])
+        .optional(),
+      deployment: z.string().optional(),
+    })
+    .optional(),
 });
 export type AzureConfig = z.infer<typeof AzureConfigSchema>;
 
@@ -123,6 +168,7 @@ export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
+  BedrockConfigSchema,
   MoonshotConfigSchema,
   DeepseekConfigSchema,
   CohereConfigSchema,
@@ -133,5 +179,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  LlamastackConfigSchema,
+  ContinueProxyConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

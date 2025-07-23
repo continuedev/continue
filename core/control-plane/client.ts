@@ -10,7 +10,7 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IdeSettings, ModelDescription } from "../index.js";
+import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
@@ -40,6 +40,7 @@ export class ControlPlaneClient {
       ControlPlaneSessionInfo | undefined
     >,
     private readonly ideSettingsPromise: Promise<IdeSettings>,
+    private readonly ideInfoPromise: Promise<IdeInfo>,
   ) {}
 
   async resolveFQSNs(
@@ -86,11 +87,17 @@ export class ControlPlaneClient {
 
     const env = await getControlPlaneEnv(this.ideSettingsPromise);
     const url = new URL(path, env.CONTROL_PLANE_URL).toString();
+    const ideInfo = await this.ideInfoPromise;
+
     const resp = await fetch(url, {
       ...init,
       headers: {
         ...init.headers,
         Authorization: `Bearer ${accessToken}`,
+        ...{
+          "x-extension-version": ideInfo.extensionVersion,
+          "x-is-prerelease": String(ideInfo.isPrerelease),
+        },
       },
     });
 
@@ -178,6 +185,40 @@ export class ControlPlaneClient {
         method: "GET",
       });
       return (await resp.json()) as FreeTrialStatus;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * JetBrains does not support deep links, so we only check for `vsCodeUriScheme`
+   * @param vsCodeUriScheme
+   * @returns
+   */
+  public async getModelsAddOnCheckoutUrl(
+    vsCodeUriScheme?: string,
+  ): Promise<{ url: string } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        // LocalProfileLoader ID
+        profile_id: "local",
+      });
+
+      if (vsCodeUriScheme) {
+        params.set("vscode_uri_scheme", vsCodeUriScheme);
+      }
+
+      const resp = await this.request(
+        `ide/get-models-add-on-checkout-url?${params.toString()}`,
+        {
+          method: "GET",
+        },
+      );
+      return (await resp.json()) as { url: string };
     } catch (e) {
       return null;
     }

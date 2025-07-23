@@ -48,6 +48,7 @@ export async function getContextProvidersString(
           selectedCode: [],
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          isInAgentMode: false,
         });
       }) || [],
     )

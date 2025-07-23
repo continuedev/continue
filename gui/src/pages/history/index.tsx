@@ -11,12 +11,7 @@ export default function HistoryPage() {
       className="flex flex-1 flex-col overflow-auto"
       style={{ fontSize: getFontSize() }}
     >
-      <PageHeader
-        showBorder
-        onTitleClick={() => navigate("/")}
-        title="Chat"
-        //rightContent={<AccountButton />}
-      />
+      <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
       <History />
     </div>
   );

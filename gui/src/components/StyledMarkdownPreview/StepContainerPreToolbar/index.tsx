@@ -1,50 +1,24 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { useContext, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  vscCommandCenterInactiveBorder,
-  vscEditorBackground,
-} from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useIdeMessengerRequest } from "../../../hooks";
+import { useIdeMessengerRequest } from "../../../hooks/useIdeMessengerRequest";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../../../redux/selectors/selectCurrentToolCall";
-import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
+import {
+  selectApplyStateByStreamId,
+  selectApplyStateByToolCallId,
+} from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { isTerminalCodeBlock } from "../utils";
 import { ApplyActions } from "./ApplyActions";
+import { CollapsibleContainer } from "./CollapsibleContainer";
 import { CopyButton } from "./CopyButton";
 import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import { InsertButton } from "./InsertButton";
 import { RunInTerminalButton } from "./RunInTerminalButton";
-
-const TopDiv = styled.div`
-  display: flex;
-  flex-direction: column;
-  outline: 1px solid ${vscCommandCenterInactiveBorder};
-  outline-offset: -0.5px;
-  border-radius: ${defaultBorderRadius};
-  margin-bottom: 8px !important;
-  margin-top: 8px !important;
-  background-color: ${vscEditorBackground};
-  min-width: 0;
-`;
-
-const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: ${getFontSize() - 2}px;
-  padding: 4px 6px;
-  margin: 0;
-  border-bottom: ${({ isExpanded }) =>
-    isExpanded ? `1px solid ${vscCommandCenterInactiveBorder}` : "inherit"};
-`;
 
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
@@ -54,10 +28,12 @@ export interface StepContainerPreToolbarProps {
   codeBlockIndex: number; // To track which codeblock we are applying
   isLastCodeblock: boolean;
   codeBlockStreamId: string;
+  forceToolCallId?: string; // If this is defined, we will use this streamId instead of the one from the codeBlock
   range?: string;
   children: any;
   expanded?: boolean;
   disableManualApply?: boolean;
+  collapsible?: boolean;
 }
 
 export function StepContainerPreToolbar({
@@ -68,10 +44,12 @@ export function StepContainerPreToolbar({
   codeBlockIndex,
   isLastCodeblock,
   codeBlockStreamId,
+  forceToolCallId,
   range,
   children,
   expanded,
   disableManualApply,
+  collapsible,
 }: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((state) => state.session.history);
@@ -99,8 +77,8 @@ export function StepContainerPreToolbar({
   const applyState = useAppSelector((state) =>
     selectApplyStateByStreamId(state, codeBlockStreamId),
   );
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
+  const toolCallApplyState = useAppSelector((state) =>
+    selectApplyStateByToolCallId(state, forceToolCallId),
   );
 
   /**
@@ -147,7 +125,7 @@ export function StepContainerPreToolbar({
         setRelativeFilepathUri(resolvedUri);
       }
     };
-    getRelativeFilepathUri();
+    void getRelativeFilepathUri();
   }, [relativeFilepath, ideMessenger.ide]);
 
   async function getFileUriToApplyTo() {
@@ -173,7 +151,7 @@ export function StepContainerPreToolbar({
   async function onClickApply() {
     const fileUri = await getFileUriToApplyTo();
     if (!fileUri) {
-      ideMessenger.ide.showToast(
+      void ideMessenger.ide.showToast(
         "error",
         "Could not resolve filepath to apply changes",
       );
@@ -188,7 +166,7 @@ export function StepContainerPreToolbar({
     });
 
     setAppliedFileUri(fileUri);
-    refreshFileExists();
+    void refreshFileExists();
   }
 
   function onClickInsertAtCursor() {
@@ -198,7 +176,7 @@ export function StepContainerPreToolbar({
   async function handleDiffAction(action: "accept" | "reject") {
     const filepath = await getFileUriToApplyTo();
     if (!filepath) {
-      ideMessenger.ide.showToast(
+      void ideMessenger.ide.showToast(
         "error",
         `Could not resolve filepath to ${action} changes`,
       );
@@ -233,10 +211,7 @@ export function StepContainerPreToolbar({
   }
 
   const renderActionButtons = () => {
-    const isPendingToolCall =
-      currentToolCallApplyState &&
-      currentToolCallApplyState.streamId === applyState?.streamId &&
-      currentToolCallApplyState.status === "not-started";
+    const isPendingToolCall = toolCallApplyState?.status === "not-started";
 
     if (isGeneratingCodeBlock || isPendingToolCall) {
       const numLines = codeBlockContent.split("\n").length;
@@ -244,7 +219,6 @@ export function StepContainerPreToolbar({
       if (isGeneratingCodeBlock) {
         return (
           <span className="text-lightgray inline-flex items-center gap-2 text-right">
-            {!isExpanded ? `${numLines} line${plural}` : "Generating"}{" "}
             <div>
               <Spinner />
             </div>
@@ -271,7 +245,7 @@ export function StepContainerPreToolbar({
       return (
         <ApplyActions
           disableManualApply={disableManualApply}
-          applyState={applyState}
+          applyState={toolCallApplyState ?? applyState}
           onClickApply={onClickApply}
           onClickAccept={() => handleDiffAction("accept")}
           onClickReject={() => handleDiffAction("reject")}
@@ -289,10 +263,14 @@ export function StepContainerPreToolbar({
   }
 
   return (
-    <TopDiv>
-      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
-        <div className="flex max-w-72 flex-row items-center">
+    <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mb-2 mt-2 flex min-w-0 flex-col outline outline-1">
+      <div
+        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
+        style={{ fontSize: `${getFontSize() - 2}px` }}
+      >
+        <div className="flex max-w-[50%] flex-row items-center">
           <ChevronDownIcon
+            data-testid="toggle-codeblock"
             onClick={() => setIsExpanded(!isExpanded)}
             className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
@@ -321,11 +299,12 @@ export function StepContainerPreToolbar({
 
           {renderActionButtons()}
         </div>
-      </ToolbarDiv>
-
+      </div>
       {isExpanded && (
-        <div className="overflow-hidden overflow-y-auto">{children}</div>
+        <CollapsibleContainer collapsible={collapsible}>
+          {children}
+        </CollapsibleContainer>
       )}
-    </TopDiv>
+    </div>
   );
 }

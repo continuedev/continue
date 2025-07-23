@@ -109,6 +109,19 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("cohere", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["cohere"];
+
+    it("should return true for Command models", () => {
+      expect(supportsFn("command-r")).toBe(true);
+      expect(supportsFn("command-a")).toBe(true);
+    });
+
+    it("should return false for other models", () => {
+      expect(supportsFn("c4ai-aya-expanse-32b")).toBe(false);
+    });
+  });
+
   describe("gemini", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["gemini"];
 
@@ -221,6 +234,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("qwen2")).toBe(true);
       expect(supportsFn("mixtral-8x7b")).toBe(true);
       expect(supportsFn("command-r")).toBe(true);
+      expect(supportsFn("command-a")).toBe(true);
       expect(supportsFn("smollm2")).toBe(true);
       expect(supportsFn("hermes3")).toBe(true);
       expect(supportsFn("athene-v2")).toBe(true);

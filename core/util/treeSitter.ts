@@ -181,7 +181,7 @@ export async function getQueryForFile(
   }
 
   const sourcePath = path.join(
-    __dirname,
+    process.env.NODE_ENV === "test" ? process.cwd() : __dirname,
     "..",
     ...(process.env.NODE_ENV === "test"
       ? ["extensions", "vscode", "tree-sitter"]
@@ -201,7 +201,7 @@ async function loadLanguageForFileExt(
   fileExtension: string,
 ): Promise<Language> {
   const wasmPath = path.join(
-    __dirname,
+    process.env.NODE_ENV === "test" ? process.cwd() : __dirname,
     ...(process.env.NODE_ENV === "test"
       ? ["node_modules", "tree-sitter-wasms", "out"]
       : ["tree-sitter-wasms"]),

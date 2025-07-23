@@ -1,4 +1,8 @@
-import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { useCallback, useEffect, useMemo } from "react";
@@ -6,13 +10,9 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
+import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
-import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "../ui/Listbox";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
 
 export function ModeSelect() {
@@ -32,14 +32,23 @@ export function ModeSelect() {
     if (!selectedModel) {
       return;
     }
-    if (mode === "agent" && !agentModeSupported) {
+    if (mode !== "chat" && !agentModeSupported) {
       dispatch(setMode("chat"));
     }
   }, [mode, agentModeSupported, dispatch, selectedModel]);
 
   const cycleMode = useCallback(() => {
-    dispatch(setMode(mode === "chat" ? "agent" : "chat"));
-    mainEditor?.commands.focus();
+    if (mode === "chat") {
+      dispatch(setMode("plan"));
+    } else if (mode === "plan") {
+      dispatch(setMode("agent"));
+    } else {
+      dispatch(setMode("chat"));
+    }
+    // Only focus main editor if another one doesn't already have focus
+    if (!document.activeElement?.classList?.contains("ProseMirror")) {
+      mainEditor?.commands.focus();
+    }
   }, [mode, mainEditor]);
 
   const selectMode = useCallback(
@@ -72,11 +81,11 @@ export function ModeSelect() {
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
-          className="xs:px-2 text-description gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
+          className="xs:px-2 text-description bg-lightgray/20 gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
-            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            {mode === "chat" ? "Chat" : mode === "agent" ? "Agent" : "Plan"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -88,6 +97,18 @@ export function ModeSelect() {
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="chat" />
               <span className="">Chat</span>
+              <InformationCircleIcon
+                data-tooltip-id="chat-tip"
+                className="h-2.5 w-2.5 flex-shrink-0"
+              />
+              <ToolTip
+                id="chat-tip"
+                style={{
+                  zIndex: 200001,
+                }}
+              >
+                All tools disabled
+              </ToolTip>
               <span
                 className={`text-description-muted text-[${getFontSize() - 3}px] mr-auto`}
               >
@@ -96,23 +117,65 @@ export function ModeSelect() {
             </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
-
-          {agentModeSupported && (
           <ListboxOption
-            value="agent"
+            value="plan"
             disabled={!agentModeSupported}
             className={"gap-1"}
           >
             <div className="flex flex-row items-center gap-1.5">
-              <ModeIcon mode="agent" />
-              <span className="">Agent</span>
+              <ModeIcon mode="plan" />
+              <span className="">Plan</span>
+              <InformationCircleIcon
+                data-tooltip-id="plan-tip"
+                className="h-2.5 w-2.5 flex-shrink-0"
+              />
+              <ToolTip
+                id="plan-tip"
+                style={{
+                  zIndex: 200001,
+                }}
+              >
+                Read-only/MCP tools available
+              </ToolTip>
             </div>
             {agentModeSupported ? (
-              mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />
+              <CheckIcon
+                className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
+              />
             ) : (
               <span>(Not supported)</span>
             )}
           </ListboxOption>
+          {agentModeSupported && (
+            <ListboxOption
+              value="agent"
+              disabled={!agentModeSupported}
+              className={"gap-1"}
+            >
+              <div className="flex flex-row items-center gap-1.5">
+                <ModeIcon mode="agent" />
+                <span className="">Agent</span>
+                <InformationCircleIcon
+                  data-tooltip-id="agent-tip"
+                  className="h-2.5 w-2.5 flex-shrink-0"
+                />
+                <ToolTip
+                  id="agent-tip"
+                  style={{
+                    zIndex: 200001,
+                  }}
+                >
+                  All tools available
+                </ToolTip>
+              </div>
+              {agentModeSupported ? (
+                <CheckIcon
+                  className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
+                />
+              ) : (
+                <span>(Not supported)</span>
+              )}
+            </ListboxOption>
           )}
 
           <div className="text-description-muted px-2 py-1">

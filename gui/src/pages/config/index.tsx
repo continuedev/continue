@@ -62,7 +62,6 @@ function ConfigPage() {
           showBorder
           onTitleClick={() => navigate("/")}
           title="Chat"
-          //rightContent={<AccountButton />}
         />
 
         {/* Tab Headers */}

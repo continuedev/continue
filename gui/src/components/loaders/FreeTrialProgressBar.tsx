@@ -1,7 +1,7 @@
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import AddModelForm from "../../forms/AddModelForm";
+import { AddModelForm } from "../../forms/AddModelForm";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { ToolTip } from "../gui/Tooltip";

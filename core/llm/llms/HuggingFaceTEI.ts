@@ -25,16 +25,7 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
       });
   }
 
-  async embed(chunks: string[]) {
-    const batchedChunks = this.getBatchedChunks(chunks);
-
-    const results = await Promise.all(
-      batchedChunks.map((batch) => this.doEmbedRequest(batch)),
-    );
-    return results.flat();
-  }
-
-  async doEmbedRequest(batch: string[]): Promise<number[][]> {
+  async _embed(batch: string[]): Promise<number[][]> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -52,11 +43,16 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
     });
     if (!resp.ok) {
       const text = await resp.text();
-      const embedError = JSON.parse(text) as TEIEmbedErrorResponse;
-      if (!embedError.error_type || !embedError.error) {
-        throw new Error(text);
+      let teiError: TEIEmbedErrorResponse | null = null;
+      try {
+        teiError = JSON.parse(text);
+      } catch (e) {
+        console.log(`Failed to parse TEI embed error response:\n${text}`, e);
       }
-      throw new TEIEmbedError(embedError);
+      if (teiError && (teiError.error_type || teiError.error)) {
+        throw new TEIEmbedError(teiError);
+      }
+      throw new Error(text);
     }
     return (await resp.json()) as number[][];
   }

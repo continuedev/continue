@@ -9,7 +9,7 @@ import com.intellij.diff.contents.DiffContent
 import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -18,7 +18,6 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.awt.Toolkit
 import java.io.File
-import java.net.URI
 import java.nio.file.Paths
 import javax.swing.Action
 import javax.swing.JComponent
@@ -89,11 +88,7 @@ class DiffManager(private val project: Project) : DumbAware {
         FileDocumentManager.getInstance().saveDocument(document)
 
         // Notify server of acceptance
-        val continuePluginService = ServiceManager.getService(
-            project,
-            ContinuePluginService::class.java
-        )
-        continuePluginService.ideProtocolClient?.sendAcceptRejectDiff(true, diffInfo.stepIndex)
+        project.service<ContinuePluginService>().ideProtocolClient?.sendAcceptRejectDiff(true, diffInfo.stepIndex)
 
         // Clean up state
         cleanUpFile(file)
@@ -102,10 +97,7 @@ class DiffManager(private val project: Project) : DumbAware {
     fun rejectDiff(file2: String?) {
         val file = (file2 ?: lastFile2) ?: return
         val diffInfo = diffInfoMap[file] ?: return
-        val continuePluginService = ServiceManager.getService(
-            project,
-            ContinuePluginService::class.java
-        )
+        val continuePluginService = project.service<ContinuePluginService>()
         continuePluginService.ideProtocolClient?.deleteAtIndex(diffInfo.stepIndex)
         continuePluginService.ideProtocolClient?.sendAcceptRejectDiff(false, diffInfo.stepIndex)
         continuePluginService.coreMessenger?.request("cancelApply", null, null) {}

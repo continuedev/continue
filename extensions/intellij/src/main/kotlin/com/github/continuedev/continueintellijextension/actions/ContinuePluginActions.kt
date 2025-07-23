@@ -7,6 +7,12 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 
+class RestartContinueProcess : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val pluginService = getContinuePluginService(e.project) ?: return
+        pluginService.coreMessengerManager?.restart()
+    }
+}
 
 class AcceptDiffAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {

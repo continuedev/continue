@@ -69,7 +69,7 @@ const markFailedInGlobalContext = (siteIndexingConfig: SiteIndexingConfig) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) => !siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d),
   );
   newFailedDocs.push(siteIndexingConfig);
   globalContext.update("failedDocs", newFailedDocs);
@@ -81,7 +81,7 @@ const removeFromFailedGlobalContext = (
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
   const newFailedDocs = failedDocs.filter(
-    (d) => !siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+    (d) => !docConfigsAreEqual(siteIndexingConfig, d),
   );
   globalContext.update("failedDocs", newFailedDocs);
 };
@@ -89,21 +89,69 @@ const removeFromFailedGlobalContext = (
 const hasIndexingFailed = (siteIndexingConfig: SiteIndexingConfig) => {
   const globalContext = new GlobalContext();
   const failedDocs = globalContext.get("failedDocs") ?? [];
-  return failedDocs.find((d) =>
-    siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+  return failedDocs.find((d) => docConfigsAreEqual(siteIndexingConfig, d));
+};
+
+export function embedModelsAreEqual(
+  llm1: ILLM | null | undefined,
+  llm2: ILLM | null | undefined,
+): boolean {
+  return (
+    llm1?.underlyingProviderName === llm2?.underlyingProviderName &&
+    llm1?.title === llm2?.title &&
+    llm1?.maxEmbeddingChunkSize === llm2?.maxEmbeddingChunkSize
+  );
+}
+
+const docConfigsAreEqual = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+) => {
+  return (
+    siteConfig1.faviconUrl === siteConfig2.faviconUrl &&
+    siteConfig1.title === siteConfig2.title &&
+    docConfigsAreEqualExceptTitleAndFavicon(siteConfig1, siteConfig2)
+  );
+};
+
+const docConfigsAreEqualExceptTitleAndFavicon = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+) => {
+  return (
+    siteConfig1.startUrl === siteConfig2.startUrl &&
+    siteConfig1.maxDepth === siteConfig2.maxDepth &&
+    siteConfig1.useLocalCrawling === siteConfig2.useLocalCrawling
   );
 };
 
 const siteIndexingConfigsAreEqual = (
-  config1: SiteIndexingConfig,
-  config2: SiteIndexingConfig,
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+  contConfig1: ContinueConfig | undefined,
+  contConfig2: ContinueConfig,
 ) => {
   return (
-    config1.startUrl === config2.startUrl &&
-    config1.faviconUrl === config2.faviconUrl &&
-    config1.title === config2.title &&
-    config1.maxDepth === config2.maxDepth &&
-    config1.useLocalCrawling === config2.useLocalCrawling
+    docConfigsAreEqual(siteConfig1, siteConfig2) &&
+    embedModelsAreEqual(
+      contConfig1?.selectedModelByRole.embed,
+      contConfig2.selectedModelByRole.embed,
+    )
+  );
+};
+
+const siteIndexingConfigsAreEqualExceptTitleAndFavicon = (
+  siteConfig1: SiteIndexingConfig,
+  siteConfig2: SiteIndexingConfig,
+  contConfig1: ContinueConfig | undefined,
+  contConfig2: ContinueConfig,
+) => {
+  return (
+    docConfigsAreEqualExceptTitleAndFavicon(siteConfig1, siteConfig2) &&
+    embedModelsAreEqual(
+      contConfig1?.selectedModelByRole.embed,
+      contConfig2.selectedModelByRole.embed,
+    )
   );
 };
 
@@ -186,7 +234,9 @@ export default class DocsService {
   private async init(configHandler: ConfigHandler) {
     const result = await configHandler.loadConfig();
     await this.handleConfigUpdate(result);
-    configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
+    configHandler.onConfigUpdate(
+      this.handleConfigUpdate.bind(this) as (arg: any) => void,
+    );
   }
 
   readonly statuses: Map<string, IndexingStatus> = new Map();
@@ -393,6 +443,21 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
   ): Promise<boolean> {
     try {
+      // Set a initial status when retrieving cache
+      this.handleStatusUpdate({
+        type: "docs",
+        id: startUrl,
+        embeddingsProviderId: embeddingId,
+        isReindexing: false,
+        title: siteIndexingConfig.title,
+        debugInfo: "Loaded from cache",
+        icon: siteIndexingConfig.faviconUrl,
+        url: startUrl,
+        progress: 0,
+        description: "Try to retrieve cache",
+        status: "indexing",
+      });
+
       const cacheHit = await this.tryFetchFromCache(startUrl, embeddingId);
 
       if (cacheHit) {
@@ -427,7 +492,8 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     forceReindex: boolean = false,
   ): Promise<void> {
-    const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
+    const { startUrl, useLocalCrawling, maxDepth, faviconUrl } =
+      siteIndexingConfig;
 
     // First, if indexing is already in process, don't attempt
     // This queue is necessary because indexAndAdd is invoked circularly by config edits
@@ -683,7 +749,9 @@ export default class DocsService {
         await this.deleteIndexes(startUrl);
       }
 
-      const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
+      const favicon =
+        faviconUrl ||
+        (await fetchFavicon(new URL(siteIndexingConfig.startUrl)));
 
       if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
@@ -715,10 +783,6 @@ export default class DocsService {
       if (forceReindex) {
         void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
       }
-
-      this.messenger?.send("refreshSubmenuItems", {
-        providers: ["docs"],
-      });
 
       removeFromFailedGlobalContext(siteIndexingConfig);
     } catch (e) {
@@ -764,14 +828,22 @@ export default class DocsService {
       const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
 
       // Try to get a favicon for the site
-      const favicon = await fetchFavicon(new URL(startUrl));
+      const favicon =
+        this.statuses.get(startUrl)?.icon ||
+        (await fetchFavicon(new URL(startUrl)));
+
+      // Always try to make the title match what users set in the config
+      const title =
+        this.statuses.get(startUrl)?.title ||
+        siteEmbeddings.title ||
+        new URL(startUrl).hostname;
 
       // Add the cached embeddings to our database
       await this.add({
         favicon,
         siteIndexingConfig: {
           startUrl,
-          title: siteEmbeddings.title || new URL(startUrl).hostname,
+          title,
         },
         chunks: siteEmbeddings.chunks,
         embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
@@ -908,6 +980,10 @@ export default class DocsService {
         );
 
         if (cacheHit) {
+          // If cache hit, refresh the submenu items for docs
+          this.messenger?.send("refreshSubmenuItems", {
+            providers: ["docs"],
+          });
           // If cache hit, retry the search once
           return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
         }
@@ -929,7 +1005,6 @@ export default class DocsService {
 
       await db.exec("PRAGMA busy_timeout = 3000;");
 
-      await runSqliteMigrations(db);
       // First create the table if it doesn't exist
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -938,6 +1013,8 @@ export default class DocsService {
             favicon STRING,
             embeddingsProviderId STRING
         )`);
+
+      await runSqliteMigrations(db);
 
       this.sqliteDb = db;
     }
@@ -979,20 +1056,13 @@ export default class DocsService {
       // Otherwise sync the index based on config changes
       const oldConfigDocs = oldConfig?.docs || [];
       const newConfigDocs = newConfig.docs || [];
-      const newConfigStartUrls = newConfigDocs.map((doc) => doc.startUrl);
 
       // NOTE since listMetadata filters by embeddings provider id embedding model changes are accounted for here
       const currentlyIndexedDocs = await this.listMetadata();
       const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
 
-      // Anything found in sqlite but not in new config should be deleted
-      const deletedDocs = currentlyIndexedDocs.filter(
-        (doc) => !newConfigStartUrls.includes(doc.startUrl),
-      );
-
       // Anything found in old config, new config, AND sqlite that doesn't match should be reindexed
-      // TODO if only favicon and title change, only update, don't embed
-      // Otherwise anything found in new config that isn't in sqlite should be added/indexed
+      // Anything found in new config that isn't in sqlite should be added/indexed
       const addedDocs: SiteIndexingConfig[] = [];
       const changedDocs: SiteIndexingConfig[] = [];
       for (const doc of newConfigDocs) {
@@ -1003,12 +1073,36 @@ export default class DocsService {
             (d) => d.startUrl === doc.startUrl,
           );
 
-          if (oldConfigDoc && !siteIndexingConfigsAreEqual(oldConfigDoc, doc)) {
-            changedDocs.push(doc);
+          // TODO: Changes to the docs config made while Continue isn't running won't be caught
+          if (
+            oldConfigDoc &&
+            !siteIndexingConfigsAreEqual(
+              oldConfigDoc,
+              doc,
+              oldConfig,
+              newConfig,
+            )
+          ) {
+            // When only the title or faviconUrl changed, Update the sqlite metadate instead of reindexing
+            if (
+              siteIndexingConfigsAreEqualExceptTitleAndFavicon(
+                oldConfigDoc,
+                doc,
+                oldConfig,
+                newConfig,
+              )
+            ) {
+              await this.updateMetadataInSqlite(doc);
+            } else {
+              changedDocs.push(doc);
+            }
           } else {
             if (forceReindex) {
               changedDocs.push(doc);
             } else {
+              // This is a temperary fix to catch the changes to the docs config that were made when Continue isn't running
+              // We only update title and faviconUrl here
+              await this.updateMetadataInSqlite(doc);
               // if get's here, not changed, no update needed, mark as complete
               this.handleStatusUpdate({
                 type: "docs",
@@ -1036,14 +1130,14 @@ export default class DocsService {
         ...changedDocs.map((doc) => this.indexAndAdd(doc, true)),
         ...addedDocs.map((doc) => this.indexAndAdd(doc)),
       ]);
-
-      for (const doc of deletedDocs) {
-        await this.deleteIndexes(doc.startUrl);
-      }
     } catch (e) {
       console.error("Error syncing docs index on config update", e);
     } finally {
       this.isSyncing = false;
+      // Refresh the submenu items for docs
+      this.messenger?.send("refreshSubmenuItems", {
+        providers: ["docs"],
+      });
     }
   }
 
@@ -1190,11 +1284,32 @@ export default class DocsService {
     );
   }
 
+  private async updateMetadataInSqlite(siteIndexingConfig: SiteIndexingConfig) {
+    const { startUrl, title, faviconUrl } = siteIndexingConfig;
+    const favicon = faviconUrl || (await fetchFavicon(new URL(startUrl)));
+    if (!this.config.selectedModelByRole.embed) {
+      console.warn(
+        `Attempting to add metadata for ${startUrl} without embeddings provider specified`,
+      );
+      return;
+    }
+
+    const db = await this.getOrCreateSqliteDb();
+
+    await db.run(
+      `UPDATE ${DocsService.sqlitebTableName} SET title = ?, favicon = ? WHERE startUrl = ? AND embeddingsProviderId = ?`,
+      title,
+      favicon,
+      startUrl,
+      this.config.selectedModelByRole.embed.embeddingId,
+    );
+  }
+
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
     const doesEquivalentDocExist = this.config.docs?.some((doc) =>
-      siteIndexingConfigsAreEqual(doc, siteIndexingConfig),
+      docConfigsAreEqual(doc, siteIndexingConfig),
     );
 
     if (!doesEquivalentDocExist) {
@@ -1294,5 +1409,6 @@ export default class DocsService {
     this.messenger?.send("refreshSubmenuItems", {
       providers: ["docs"],
     });
+    this.statuses.delete(startUrl);
   }
 }

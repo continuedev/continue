@@ -2,7 +2,7 @@ import { ExtensionConflictReport } from "core";
 import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { CustomScrollbarDiv, defaultBorderRadius } from ".";
+import { CustomScrollbarDiv } from ".";
 import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
@@ -10,7 +10,7 @@ import GraniteOnboardingCard from "../granite/GraniteOnboardingCard";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
-import { setShowDialog } from "../redux/slices/uiSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
@@ -18,7 +18,7 @@ import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
-import Footer from "./Footer";
+import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import IncompatibleExtensionsOverlay from "./IncompatibleExtensionsOverlay";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
@@ -27,7 +27,6 @@ import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
-  border-radius: ${defaultBorderRadius};
   position: relative;
   overflow-x: hidden;
 `;
@@ -46,6 +45,7 @@ const Layout = () => {
   const ideMessenger = useContext(IdeMessengerContext);
   const [showGraniteOnboardingCard, setShowGraniteOnboardingCard] =
     useState<boolean>(window.showGraniteCodeOnboarding ?? false);
+  const currentSessionId = useAppSelector((state) => state.session.id);
 
   const { mainEditor } = useMainEditor();
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
@@ -176,12 +176,20 @@ const Layout = () => {
     setConflictingInfo(data);
   });
 
+  useWebviewListener(
+    "generateRule",
+    async () => {
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<GenerateRuleDialog />));
+    },
+    [],
+  );
+
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
-          // Copy to clipboard
           setTimeout(() => {
             void navigator.clipboard.writeText(selection);
           }, 100);
@@ -205,45 +213,44 @@ const Layout = () => {
     <GraniteOnboardingCard />
   ) : (
     <>
-    {conflictingInfo !== null && (
-      <IncompatibleExtensionsOverlay conflictingInfo={conflictingInfo} />
-    )}
-    <LocalStorageProvider>
-      <AuthProvider>
-        <LayoutTopDiv>
-          <LumpProvider>
-            <OSRContextMenu />
-            <div
-              style={{
-                scrollbarGutter: "stable both-edges",
-                minHeight: "100%",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
-              }}
-            >
-              <TextDialog
-                showDialog={showDialog}
-                onEnter={() => {
-                  dispatch(setShowDialog(false));
+      {conflictingInfo !== null && (
+        <IncompatibleExtensionsOverlay conflictingInfo={conflictingInfo} />
+      )}
+      <LocalStorageProvider>
+        <AuthProvider>
+          <LayoutTopDiv>
+            <LumpProvider>
+              <OSRContextMenu />
+              <div
+                style={{
+                  scrollbarGutter: "stable both-edges",
+                  minHeight: "100%",
+                  display: "grid",
+                  gridTemplateRows: "1fr auto",
                 }}
-                onClose={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                message={dialogMessage}
-              />
+              >
+                <TextDialog
+                  showDialog={showDialog}
+                  onEnter={() => {
+                    dispatch(setShowDialog(false));
+                  }}
+                  onClose={() => {
+                    dispatch(setShowDialog(false));
+                  }}
+                  message={dialogMessage}
+                />
 
-              <GridDiv className="">
-                <PostHogPageView />
-                <Outlet />
-                <FatalErrorIndicator />
-                <Footer />
-              </GridDiv>
-            </div>
-            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LumpProvider>
-        </LayoutTopDiv>
-      </AuthProvider>
-    </LocalStorageProvider>
+                <GridDiv className="">
+                  <PostHogPageView />
+                  <Outlet />
+                  <FatalErrorIndicator />
+                </GridDiv>
+              </div>
+              <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+            </LumpProvider>
+          </LayoutTopDiv>
+        </AuthProvider>
+      </LocalStorageProvider>
     </>
   );
 };

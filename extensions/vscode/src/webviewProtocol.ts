@@ -129,7 +129,7 @@ export class VsCodeWebviewProtocol
               .showInformationMessage(message, "Add API Key", "Use Local Model")
               .then((selection) => {
                 if (selection === "Add API Key") {
-                  this.request("addApiKey", undefined);
+                  this.request("setupApiKey", undefined);
                 } else if (selection === "Use Local Model") {
                   this.request("setupLocalConfig", undefined);
                 }
@@ -152,7 +152,7 @@ export class VsCodeWebviewProtocol
     this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
   }
 
-  constructor(private readonly reloadConfig: () => void) {}
+  constructor() {}
 
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,

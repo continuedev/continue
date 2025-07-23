@@ -3,7 +3,7 @@ import { ModelDescription } from "core";
 import { useAuth } from "../../../../context/Auth";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { updateSelectedModelByRole } from "../../../../redux/thunks";
+import { updateSelectedModelByRole } from "../../../../redux/thunks/updateSelectedModelByRole";
 import { isJetBrains } from "../../../../util";
 
 export function ModelsSection() {
@@ -18,7 +18,7 @@ export function ModelsSection() {
       return;
     }
 
-    dispatch(
+    void dispatch(
       updateSelectedModelByRole({
         role,
         selectedProfile,
@@ -29,13 +29,14 @@ export function ModelsSection() {
 
   return (
     <div>
-      <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 pb-2 sm:grid-cols-[auto_1fr]">
+      <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-[auto_1fr]">
         <ModelRoleSelector
           displayName="Chat"
           description="Used in the chat interface"
           models={config.modelsByRole.chat}
           selectedModel={config.selectedModelByRole.chat}
           onSelect={(model) => handleRoleUpdate("chat", model)}
+          setupURL="https://docs.continue.dev/chat/model-setup"
         />
         <ModelRoleSelector
           displayName="Autocomplete"
@@ -43,6 +44,7 @@ export function ModelsSection() {
           models={config.modelsByRole.autocomplete}
           selectedModel={config.selectedModelByRole.autocomplete}
           onSelect={(model) => handleRoleUpdate("autocomplete", model)}
+          setupURL="https://docs.continue.dev/autocomplete/model-setup"
         />
         {/* Jetbrains has a model selector inline */}
         {!jetbrains && (
@@ -52,6 +54,7 @@ export function ModelsSection() {
             models={config.modelsByRole.edit}
             selectedModel={config.selectedModelByRole.edit}
             onSelect={(model) => handleRoleUpdate("edit", model)}
+            setupURL="https://docs.continue.dev/edit/model-setup"
           />
         )}
         <ModelRoleSelector
@@ -60,6 +63,7 @@ export function ModelsSection() {
           models={config.modelsByRole.apply}
           selectedModel={config.selectedModelByRole.apply}
           onSelect={(model) => handleRoleUpdate("apply", model)}
+          setupURL="https://docs.continue.dev/customize/model-roles/apply"
         />
         <ModelRoleSelector
           displayName="Embed"
@@ -67,6 +71,7 @@ export function ModelsSection() {
           models={config.modelsByRole.embed}
           selectedModel={config.selectedModelByRole.embed}
           onSelect={(model) => handleRoleUpdate("embed", model)}
+          setupURL="https://docs.continue.dev/customize/model-roles/embeddings"
         />
         {config.modelsByRole.rerank.length > 0 && (
           <ModelRoleSelector
@@ -75,10 +80,10 @@ export function ModelsSection() {
             models={config.modelsByRole.rerank}
             selectedModel={config.selectedModelByRole.rerank}
             onSelect={(model) => handleRoleUpdate("rerank", model)}
+            setupURL="https://docs.continue.dev/customize/model-roles/reranking"
           />
         )}
       </div>
-      {/* <ExploreBlocksButton blockType={"models"} /> */}
     </div>
   );
 }

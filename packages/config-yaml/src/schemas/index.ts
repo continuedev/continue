@@ -1,7 +1,11 @@
 import * as z from "zod";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
-import { modelSchema, partialModelSchema } from "./models.js";
+import {
+  modelSchema,
+  partialModelSchema,
+  requestOptionsSchema,
+} from "./models.js";
 
 export const contextSchema = z.object({
   name: z.string().optional(),
@@ -13,12 +17,14 @@ export const contextSchema = z.object({
 const mcpServerSchema = z.object({
   name: z.string(),
   command: z.string().optional(),
-  type: z.enum(["sse", "stdio"]).optional(),
+  type: z.enum(["sse", "stdio", "streamable-http"]).optional(),
   url: z.string().optional(),
   faviconUrl: z.string().optional(),
   args: z.array(z.string()).optional(),
   env: z.record(z.string()).optional(),
+  cwd: z.string().optional(),
   connectionTimeout: z.number().gt(0).optional(),
+  requestOptions: requestOptionsSchema.optional(),
 });
 
 export type MCPServer = z.infer<typeof mcpServerSchema>;
@@ -36,20 +42,39 @@ const docSchema = z.object({
   startUrl: z.string(),
   rootUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
+  maxDepth: z.number().optional(),
+  useLocalCrawling: z.boolean().optional(),
 });
 
 export type DocsConfig = z.infer<typeof docSchema>;
+
 const ruleObjectSchema = z.object({
   name: z.string(),
   rule: z.string(),
   description: z.string().optional(),
   globs: z.union([z.string(), z.array(z.string())]).optional(),
+  regex: z.union([z.string(), z.array(z.string())]).optional(),
   alwaysApply: z.boolean().optional(),
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
+/**
+ * A schema for rules.json files
+ */
+export const rulesJsonSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  author: z.string().optional(),
+  license: z.string().optional(),
+  rules: z.record(z.string(), z.string()).optional(),
+});
+
 export type Rule = z.infer<typeof ruleSchema>;
 export type RuleObject = z.infer<typeof ruleObjectSchema>;
+/**
+ * A schema for rules.json files
+ */
+export type RulesJson = z.infer<typeof rulesJsonSchema>;
 
 const defaultUsesSchema = z.string();
 

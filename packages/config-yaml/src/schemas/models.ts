@@ -45,6 +45,9 @@ export const completionOptionsSchema = z.object({
   temperature: z.number().optional(),
   topP: z.number().optional(),
   topK: z.number().optional(),
+  minP: z.number().optional(),
+  presencePenalty: z.number().optional(),
+  frequencyPenalty: z.number().optional(),
   stop: z.array(z.string()).optional(),
   n: z.number().optional(),
   reasoning: z.boolean().optional(),
@@ -82,6 +85,7 @@ export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 export const chatOptionsSchema = z.object({
   baseSystemMessage: z.string().optional(),
   baseAgentSystemMessage: z.string().optional(),
+  basePlanSystemMessage: z.string().optional(),
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 
@@ -105,6 +109,17 @@ const templateSchema = z.enum([
   "llama3",
   "codestral",
 ]);
+
+export const autocompleteOptionsSchema = z.object({
+  disable: z.boolean().optional(),
+  maxPromptTokens: z.number().optional(),
+  debounceDelay: z.number().optional(),
+  modelTimeout: z.number().optional(),
+  maxSuffixPercentage: z.number().optional(),
+  prefixPercentage: z.number().optional(),
+  template: z.string().optional(),
+  onlyMyCode: z.boolean().optional(),
+});
 
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
@@ -133,13 +148,15 @@ const baseModelFields = {
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),
+  autocompleteOptions: autocompleteOptionsSchema.optional(),
 };
 
 export const modelSchema = z.union([
   z.object({
     ...baseModelFields,
     provider: z.literal("continue-proxy"),
-    apiKeyLocation: z.string(),
+    apiKeyLocation: z.string().optional(),
+    envSecretLocations: z.record(z.string(), z.string()).optional(),
     orgScopeId: z.string().nullable(),
     onPremProxyUrl: z.string().nullable(),
   }),
@@ -154,7 +171,8 @@ export const partialModelSchema = z.union([
     .object({
       ...baseModelFields,
       provider: z.literal("continue-proxy"),
-      apiKeyLocation: z.string(),
+      apiKeyLocation: z.string().optional(),
+      envSecretLocations: z.record(z.string(), z.string()).optional(),
     })
     .partial(),
   z

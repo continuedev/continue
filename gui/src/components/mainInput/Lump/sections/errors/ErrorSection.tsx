@@ -24,9 +24,9 @@ export function ErrorSection() {
             }`}
           >
             {error.fatal ? (
-              <ExclamationCircleIcon className="mr-2 mt-1 h-3.5 w-3.5" />
+              <ExclamationCircleIcon className="mr-2 mt-1 h-3.5 w-3.5 shrink-0" />
             ) : (
-              <ExclamationTriangleIcon className="mr-2 mt-1 h-3.5 w-3.5" />
+              <ExclamationTriangleIcon className="mr-2 mt-1 h-3.5 w-3.5 shrink-0" />
             )}
             <p
               className="m-0 whitespace-pre-wrap text-wrap"

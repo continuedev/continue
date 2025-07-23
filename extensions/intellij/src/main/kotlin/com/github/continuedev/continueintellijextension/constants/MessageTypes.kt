@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
-        val ideMessageTypes = listOf(
+        val IDE_MESSAGE_TYPES = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",
             "getUniqueId",
@@ -41,11 +41,12 @@ class MessageTypes {
             "getTerminalContents",
             "showToast",
             "openUrl",
-            
+            "isWorkspaceRemote",
+
             // These only come from the GUI for now but should be here to prevent confusion
             "toggleDevTools",
             "showTutorial",
-            
+
             // These are jetbrains only and only come from the GUI for now
             // But again including for consistency
             "copyText",
@@ -92,6 +93,7 @@ class MessageTypes {
             "config/updateSharedConfig",
             "config/updateSelectedModel",
             "mcp/reloadServer",
+            "mcp/getPrompt",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -101,12 +103,17 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
+            "nextEdit/predict",
+            "nextEdit/reject",
+            "nextEdit/accept",
             "tts/kill",
             "llm/complete",
             "llm/streamChat",
             "llm/listModels",
+            "llm/compileChat",
             "streamDiffLines",
             "chatDescriber/describe",
+            "conversation/compact",
             "stats/getTokensPerDay",
             "stats/getTokensPerModel",
             // Codebase
@@ -121,7 +128,7 @@ class MessageTypes {
             "docs/initStatuses",
             "docs/getDetails",
             //
-            "completeOnboarding",
+            "onboarding/complete",
             "addAutocompleteModel",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",

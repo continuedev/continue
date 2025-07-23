@@ -1,3 +1,8 @@
-export * from "./OnboardingCard";
-export * from "./utils";
-export * from "./hooks/useOnboardingCard";
+export { useOnboardingCard } from "./hooks/useOnboardingCard";
+export { useSubmitOnboarding } from "./hooks/useSubmitOnboarding";
+export { OnboardingCard, type OnboardingCardState } from "./OnboardingCard";
+export {
+  defaultOnboardingCardState,
+  isNewUserOnboarding,
+  type OnboardingStatus,
+} from "./utils";

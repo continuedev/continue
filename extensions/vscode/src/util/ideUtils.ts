@@ -269,14 +269,13 @@ export class VsCodeIdeUtils {
 
   getOpenFiles(): vscode.Uri[] {
     return vscode.window.tabGroups.all
-      .map((group) => {
-        return group.tabs.map((tab) => {
-          return (tab.input as any)?.uri;
-        });
-      })
-      .flat()
-      .filter(Boolean) // filter out undefined values
-      .filter((uri) => this.documentIsCode(uri)); // Filter out undesired documents
+      .flatMap((group) => group.tabs)
+      .filter(
+        (tab) =>
+          tab.input instanceof vscode.TabInputText &&
+          this.documentIsCode((tab.input as vscode.TabInputText).uri),
+      )
+      .map((tab) => (tab.input as vscode.TabInputText).uri);
   }
 
   saveFile(uri: vscode.Uri) {

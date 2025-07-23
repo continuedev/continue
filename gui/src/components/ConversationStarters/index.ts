@@ -1,1 +1,1 @@
-export * from "./ConversationStarterCards";
+export { ConversationStarterCards } from "./ConversationStarterCards";

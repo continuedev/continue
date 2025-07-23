@@ -2,9 +2,10 @@ import { RequestOptions } from "@continuedev/config-types";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import fetch, { BodyInit, RequestInit, Response } from "node-fetch";
+import { BodyInit, RequestInit, Response } from "node-fetch";
 import { getAgentOptions } from "./getAgentOptions.js";
-import { getProxyFromEnv, shouldBypassProxy } from "./util.js";
+import patchedFetch from "./node-fetch-patch.js";
+import { getProxy, shouldBypassProxy } from "./util.js";
 
 const { http, https } = (followRedirects as any).default;
 
@@ -88,18 +89,13 @@ export async function fetchwithRequestOptions(
     url.host = "127.0.0.1";
   }
 
-  const agentOptions = getAgentOptions(requestOptions);
+  const agentOptions = await getAgentOptions(requestOptions);
 
   // Get proxy from options or environment variables
-  let proxy = requestOptions?.proxy;
-  if (!proxy) {
-    proxy = getProxyFromEnv(url.protocol);
-  }
+  const proxy = getProxy(url.protocol, requestOptions);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
-  const shouldBypass =
-    requestOptions?.noProxy?.includes(url.hostname) ||
-    shouldBypassProxy(url.hostname);
+  const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);
 
   // Create agent
   const protocol = url.protocol === "https:" ? https : http;
@@ -148,7 +144,7 @@ export async function fetchwithRequestOptions(
 
   // fetch the request with the provided options
   try {
-    const resp = await fetch(url, {
+    const resp = await patchedFetch(url, {
       ...init,
       body: finalBody,
       headers: headers,

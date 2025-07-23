@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { exitEdit } from "../../../../redux/thunks";
+import { exitEdit } from "../../../../redux/thunks/edit";
 import { getEditFilenameAndRangeText } from "../../util";
 
 export function EditToolbar() {
@@ -28,7 +28,7 @@ export function EditToolbar() {
         Back to {mode.charAt(0).toUpperCase() + mode.slice(1)}
       </span>
       <span className="truncate">
-        Editing{" "}
+        Editing:{" "}
         <span className="italic">
           {getEditFilenameAndRangeText(codeToEdit)}
         </span>

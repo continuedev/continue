@@ -55,7 +55,6 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     for (let i = 0; i < results.compute.length; i++) {
       const item = results.compute[i];
-
       // Insert chunks
       const chunks = await db.all(
         "SELECT * FROM chunks WHERE path = ? AND cacheKey = ?",
@@ -68,7 +67,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
           [item.path, chunk.content],
         );
         await db.run(
-          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) 
+          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId)
            VALUES (?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
            path = excluded.path,
