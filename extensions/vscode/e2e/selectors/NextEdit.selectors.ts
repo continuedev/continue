@@ -18,7 +18,6 @@ export class NextEditSelectors {
 
       return decorations;
     } catch (error) {
-      console.error("Error finding SVG decoration:", error);
       throw error;
     }
   }
