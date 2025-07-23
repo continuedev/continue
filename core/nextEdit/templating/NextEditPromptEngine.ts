@@ -93,6 +93,7 @@ export async function renderPrompt(
 
   // TODO: apply prevOutcome to existing content. we will need the line range.
   // Also display the diff between existing content and applied content.
+  // NOTE: This only runs in fetchFunction.
   if (prevOutcome) {
     // console.log("renderPrompt prevOutcome:", prevOutcome.completion);
     // console.log(
@@ -119,6 +120,8 @@ export async function renderPrompt(
     // Given a previous response, we need to calculate where the cursor would be.
     // I think it's a good idea to calculate this in the response.
 
+    // TODO: handle cases where there are more than one next editable region.
+    // NOTE: we might set it so that we receive the next editable region as an argument.
     const editableRegion = await getNextEditableRegion(editableRegionStrategy, {
       fileLines: appliedContent,
       filepath: helper.filepath,
@@ -129,8 +132,12 @@ export async function renderPrompt(
     editedCodeWithTokens = insertTokens(
       appliedContent,
       prevOutcome.finalCursorPosition,
-      editableRegion?.range.start.line ?? undefined,
-      editableRegion?.range.end.line ?? undefined,
+      editableRegion && editableRegion[0]?.range.start.line !== undefined
+        ? editableRegion[0].range.start.line
+        : undefined,
+      editableRegion && editableRegion[0]?.range.end.line !== undefined
+        ? editableRegion[0].range.end.line
+        : undefined,
     );
     // console.log("new editedCodeWithTokens:", editedCodeWithTokens);
     userEdits = createDiff({

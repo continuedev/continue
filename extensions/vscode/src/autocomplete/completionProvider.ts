@@ -206,29 +206,39 @@ export class ContinueCompletionProvider
         //     chunkSize: 5,
         //   },
         // );
-        const newFileContent = document.getText();
+        // const newFileContent = document.getText();
+        // const nextEditableRegion = await getNextEditableRegion(
+        //   EditableRegionStrategy.StaticRerank,
+        //   {
+        //     oldFileContent: this.oldFileContent,
+        //     newFileContent,
+        //     completionRange: {
+        //       start: {
+        //         line:
+        //           this.nextEditProvider.getPreviousCompletion()
+        //             ?.editableRegionStartLine ?? 0,
+        //         character: 0,
+        //       },
+        //       end: {
+        //         line:
+        //           this.nextEditProvider.getPreviousCompletion()
+        //             ?.editableRegionEndLine ?? document.lineCount - 1,
+        //         character: 0,
+        //       },
+        //     },
+        //     filepath: localPathOrUriToPath(document.uri.toString()),
+        //     ide: this.ide,
+        //     reranker: await this.getRerankModel(),
+        //   },
+        // );
         const nextEditableRegion = await getNextEditableRegion(
           EditableRegionStrategy.Static,
           {
-            oldFileContent: this.oldFileContent,
-            newFileContent,
-            completionRange: {
-              start: {
-                line:
-                  this.nextEditProvider.getPreviousCompletion()
-                    ?.editableRegionStartLine ?? 0,
-                character: 0,
-              },
-              end: {
-                line:
-                  this.nextEditProvider.getPreviousCompletion()
-                    ?.editableRegionEndLine ?? document.lineCount - 1,
-                character: 0,
-              },
-            },
+            fileContent: this.oldFileContent,
+            cursorPosition:
+              this.nextEditProvider.getPreviousCompletion()?.cursorPosition,
             filepath: localPathOrUriToPath(document.uri.toString()),
             ide: this.ide,
-            reranker: await this.getRerankModel(),
           },
         );
 
@@ -237,10 +247,11 @@ export class ContinueCompletionProvider
           JSON.stringify(nextEditableRegion, null, 2),
         );
 
+        // TODO: handle cases where there are more than one next editable region.
         if (nextEditableRegion) {
           pos = {
-            line: nextEditableRegion.range.start.line,
-            character: nextEditableRegion.range.start.character,
+            line: nextEditableRegion[0].range.start.line,
+            character: nextEditableRegion[0].range.start.character,
           };
         }
       } else {
