@@ -11,10 +11,15 @@ export class NextEditSelectors {
         By.css("[class*='TextEditorDecorationType']"),
         // By.css("div[class*='TextEditorDecorationType'][style*='filter']")
       );
-      return decorations ?? null;
+
+      if (!decorations) {
+        throw new Error("SVG decoraton not found");
+      }
+
+      return decorations;
     } catch (error) {
       console.error("Error finding SVG decoration:", error);
-      return null;
+      throw error;
     }
   }
 }

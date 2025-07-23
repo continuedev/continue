@@ -52,12 +52,12 @@ export class NextEditActions {
     console.log("Executed 'Force Next Edit' command");
     
     console.log("Waiting for SVG decoration to appear...");
-    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XL);
+    // await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XL);
     console.log("Wait completed, looking for decoration...");
 
     const svgDecoration = await TestUtils.waitForSuccess(
       () => NextEditSelectors.getSvgDecoration(VSBrowser.instance.driver),
-      DEFAULT_TIMEOUT.XL,
+      DEFAULT_TIMEOUT.XXL,
     );
 
     console.log("SVG decoration search result:", svgDecoration !== null);
