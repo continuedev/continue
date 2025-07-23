@@ -4,10 +4,10 @@ import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
-import { loadSession, saveSession } from "../session.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
-import { SERVICE_NAMES, ModelServiceState } from "../services/types.js";
+import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
+import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
@@ -107,11 +107,13 @@ async function runHeadlessMode(
   await initializeServices({
     configPath: options.config,
     rules: options.rule,
-    headless: true
+    headless: true,
   });
 
   // Get required services from the service container
-  const modelState = await serviceContainer.get<ModelServiceState>(SERVICE_NAMES.MODEL);
+  const modelState = await serviceContainer.get<ModelServiceState>(
+    SERVICE_NAMES.MODEL
+  );
   const { llmApi, model } = modelState;
 
   // Initialize chat history
@@ -139,7 +141,7 @@ async function runHeadlessMode(
 export async function chat(prompt?: string, options: ChatOptions = {}) {
   // Configure logger based on headless mode
   configureLogger(options.headless ?? false);
-  
+
   // Configure headless-aware logging system
   logging.configureLogger({ headless: options.headless ?? false });
 
@@ -154,7 +156,13 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     if (!options.headless) {
       // Show ASCII art and version for TUI mode
       console.log(chalk.white(CONTINUE_ASCII_ART));
-      console.info(chalk.gray(`v${getVersion()}\n`));
+      console.info(
+        chalk.gray(
+          `${" ".repeat(
+            CONTINUE_ASCII_ART.trimEnd().split("\n").pop()!.length
+          )}v${getVersion()}\n`
+        )
+      );
 
       // Start TUI immediately - it will handle service loading
       await startTUIChat(prompt, options.resume, options.config, options.rule);
