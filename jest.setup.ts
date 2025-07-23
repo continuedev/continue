@@ -13,6 +13,7 @@ jest.mock("./src/hooks/useService.js");
 jest.mock("./src/auth/workos.js");
 jest.mock("./src/commands/commands.js");
 jest.mock("./src/services/index.js");
+jest.mock("./src/services/ServiceContainerContext.js");
 
 // Set up global afterEach hook to clear all timers
 afterEach(() => {

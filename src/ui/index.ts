@@ -1,6 +1,7 @@
 import { render } from "ink";
 import React from "react";
 import { initializeServices } from "../services/index.js";
+import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
 import TUIChat from "./TUIChat.js";
 
 export { default as MarkdownRenderer } from "./MarkdownRenderer.js";
@@ -22,11 +23,13 @@ export async function startTUIChat(
 
   // Start the TUI immediately - it will handle loading states
   const { unmount } = render(
-    React.createElement(TUIChat, {
-      configPath,
-      initialPrompt,
-      resume,
-      additionalRules,
+    React.createElement(ServiceContainerProvider, {
+      children: React.createElement(TUIChat, {
+        configPath,
+        initialPrompt,
+        resume,
+        additionalRules,
+      })
     })
   );
 
@@ -45,9 +48,11 @@ export async function startRemoteTUIChat(
 ) {
   // Start the TUI in remote mode - no services needed
   const { unmount } = render(
-    React.createElement(TUIChat, {
-      remoteUrl,
-      initialPrompt,
+    React.createElement(ServiceContainerProvider, {
+      children: React.createElement(TUIChat, {
+        remoteUrl,
+        initialPrompt,
+      })
     })
   );
 

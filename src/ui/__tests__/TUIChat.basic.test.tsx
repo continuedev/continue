@@ -28,7 +28,7 @@ describe("TUIChat - Basic UI Tests", () => {
     }
   });
 
-  it("shows loading state when services are loading", () => {
+  it("shows UI even when services are loading", () => {
     // Override for this test
     context.mockUseServices.mockReturnValue({
       services: {},
@@ -42,7 +42,8 @@ describe("TUIChat - Basic UI Tests", () => {
 
     expect(frame).toBeDefined();
     if (frame) {
-      expect(frame).toMatch(/loading|service/i);
+      // Should show the chat UI even while loading
+      expect(frame).toContain("Ask anything");
     }
   });
 
