@@ -1,4 +1,4 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../control-plane/client.js";
 import {
@@ -121,7 +121,7 @@ export class ConfigHandler {
     this.workspaceDirs = null; // forces workspace dirs reload
 
     try {
-      const orgs = await this.getOrgs();
+      const { orgs, errors } = await this.getOrgs();
 
       // Figure out selected org
       const workspaceId = await this.getWorkspaceId();
@@ -160,7 +160,7 @@ export class ConfigHandler {
       this.currentOrg = selectedOrg;
       this.currentProfile = selectedOrg.currentProfile;
 
-      await this.reloadConfig(reason);
+      await this.reloadConfig(reason, errors);
     } catch (e) {
       if (signal.aborted) {
         return;
@@ -171,7 +171,11 @@ export class ConfigHandler {
     }
   }
 
-  private async getOrgs(): Promise<OrgWithProfiles[]> {
+  private async getOrgs(): Promise<{
+    orgs: OrgWithProfiles[];
+    errors?: ConfigValidationError[];
+  }> {
+    const errors: ConfigValidationError[] = [];
     const isSignedIn = await this.controlPlaneClient.isSignedIn();
     if (isSignedIn) {
       try {
@@ -180,13 +184,28 @@ export class ConfigHandler {
           this.getPersonalHubOrg(),
           ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
         ]);
-        return orgs;
+        // TODO make try/catch more granular here, to catch specific org errors
+        return { orgs };
       } catch (e) {
-        console.error("Failed to get Continue hub assistants");
-        return [await this.getLocalOrg()];
+        errors.push({
+          fatal: false,
+          message: `Error loading Continue Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
+        });
       }
-    } else {
-      return [await this.getLocalOrg()];
+    }
+    // Load local org if not signed in or hub orgs fail
+    try {
+      const orgs = [await this.getLocalOrg()];
+      return { orgs };
+    } catch (e) {
+      errors.push({
+        fatal: true,
+        message: `Error loading local assistants${e instanceof Error ? ":\n" + e.message : ""}`,
+      });
+      return {
+        orgs: [],
+        errors,
+      };
     }
   }
 
@@ -435,14 +454,14 @@ export class ConfigHandler {
   // IMPORTANT - must always refresh when switching profiles
   // Because of e.g. MCP singleton and docs service using things from config
   // Could improve this
-  async reloadConfig(reason: string) {
+  async reloadConfig(reason: string, injectErrors?: ConfigValidationError[]) {
     const startTime = performance.now();
     this.totalConfigReloads += 1;
     // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: injectErrors ?? [],
         configLoadInterrupted: true,
       };
     }
@@ -458,8 +477,11 @@ export class ConfigHandler {
       }
     }
 
-    const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig(this.additionalContextProviders);
+    const {
+      config,
+      errors = [],
+      configLoadInterrupted,
+    } = await this.currentProfile.reloadConfig(this.additionalContextProviders);
 
     this.notifyConfigListeners({ config, errors, configLoadInterrupted });
 
@@ -475,7 +497,15 @@ export class ConfigHandler {
       configLoadInterrupted,
     });
 
-    return { config, errors, configLoadInterrupted };
+    if (injectErrors) {
+      errors.unshift(...injectErrors);
+    }
+
+    return {
+      config,
+      errors: errors.length ? errors : undefined,
+      configLoadInterrupted,
+    };
   }
 
   // Listeners setup - can listen to current profile updates
