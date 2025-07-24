@@ -1,8 +1,8 @@
 import path from "path";
 
-import { Chunk } from "../../index.js";
+import { Chunk, ChunkWithoutID } from "../../index.js";
 import { cleanupAsyncEncoders } from "../../llm/countTokens.js";
-import { chunkDocument, shouldChunk } from "./chunk";
+import { chunkDocument, chunkDocumentWithoutId, shouldChunk } from "./chunk";
 
 describe("shouldChunk", () => {
   test("should chunk a typescript file", () => {
@@ -82,6 +82,70 @@ describe("chunkDocument", () => {
     // Verify that no chunks were created since the content exceeds maxChunkSize
     chunks.forEach((chunk) => {
       expect(chunk.content.length).toBe(0);
+    });
+  });
+});
+
+describe("chunkDocumentWithoutId", () => {
+  afterAll(async () => {
+    await cleanupAsyncEncoders();
+  });
+
+  test("should return no chunks for empty content", async () => {
+    const contents = "";
+    const chunks: ChunkWithoutID[] = [];
+    for await (const chunk of chunkDocumentWithoutId(
+      "file.txt",
+      contents,
+      100,
+    )) {
+      chunks.push(chunk);
+    }
+    expect(chunks).toHaveLength(0);
+  });
+
+  test("should chunk text files", async () => {
+    const contents = "Line 1\nLine 2\nLine 3";
+    const chunks: ChunkWithoutID[] = [];
+    for await (const chunk of chunkDocumentWithoutId(
+      "file.txt",
+      contents,
+      100,
+    )) {
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks[0].content).toContain("Line 1");
+  });
+
+  test("should chunk for code files", async () => {
+    const contents = "function test() {\n  return 42;\n}";
+    const chunks: ChunkWithoutID[] = [];
+    for await (const chunk of chunkDocumentWithoutId(
+      "file.js",
+      contents,
+      100,
+    )) {
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks[0].content).toContain("function test");
+  });
+
+  test("should chunk large content", async () => {
+    const contents = Array(100).fill("short line").join("\n"); // Large content with many lines
+    const maxChunkSize = 50;
+    const chunks: ChunkWithoutID[] = [];
+    for await (const chunk of chunkDocumentWithoutId(
+      "file.txt",
+      contents,
+      maxChunkSize,
+    )) {
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1); // Should create multiple chunks
+    chunks.forEach((chunk) => {
+      expect(chunk.content.length).toBeGreaterThan(0); // Each chunk should have content
     });
   });
 });
