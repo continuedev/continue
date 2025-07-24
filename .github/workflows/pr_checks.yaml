@@ -701,15 +701,24 @@ jobs:
           path: packages/openai-adapters/node_modules
           key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
 
-      - name: Build config-yaml
+      - name: Install and build config-yaml
         run: |
           cd packages/config-yaml
+          if [ ! -d node_modules ]; then npm ci; fi
           npm run build
 
-      - name: Build openai-adapters
+      - name: Install and build openai-adapters
         run: |
           cd packages/openai-adapters
+          if [ ! -d node_modules ]; then npm ci; fi
           npm run build
+
+      - name: Install vscode dependencies if needed
+        run: |
+          cd extensions/vscode
+          if [ ! -d node_modules ]; then npm ci; fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Package extension
         run: |
