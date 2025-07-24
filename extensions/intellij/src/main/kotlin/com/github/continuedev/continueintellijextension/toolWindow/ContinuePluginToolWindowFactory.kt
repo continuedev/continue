@@ -13,6 +13,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI.Borders.empty
 import javax.swing.JComponent
+import javax.swing.JPanel
 
 const val JS_QUERY_POOL_SIZE = "200"
 
@@ -34,15 +35,17 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
     override fun shouldBeAvailable(project: Project) = true
 
-    private fun createNotSupportedPanel() =
-        panel {
+    private fun createNotSupportedPanel(): JPanel {
+        val html = ContinuePluginToolWindowFactory::class.java.classLoader
+            .getResourceAsStream("jcef_error.html")
+            .bufferedReader()
+            .readText()
+        return panel {
             row {
-                label("JCEF not supported").align(AlignX.CENTER)
-            }
-            row {
-                comment("The IDE is started with an alternative JDK that does not include JCEF.").align(AlignX.CENTER)
+                text(html)
             }
         }.withBorder(empty(10))
+    }
 
     class ContinuePluginWindow(project: Project) {
         private val defaultGUIUrl = "http://continue/index.html"
