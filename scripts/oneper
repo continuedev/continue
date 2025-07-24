@@ -180,6 +180,11 @@ install_latest() {
     echo "🚀 Installing latest pre-release Continue extension..."
     if code --install-extension --pre-release Continue.continue; then
         echo "✅ Successfully installed latest pre-release Continue extension"
+        echo ""
+        echo "💡 To use the new extension version, reload your VS Code window:"
+        echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
+        echo "   • Type 'Developer: Reload Window' and press Enter"
+        echo "   • Or restart VS Code entirely"
     else
         echo "❌ Failed to install extension"
         exit 1
