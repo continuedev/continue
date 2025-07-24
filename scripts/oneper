@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+set -e
+
+# oneper - Install Continue VS Code extension from PR builds or latest pre-release
+# Usage: 
+#   oneper install --pr X     - Install VSIX from PR number X
+#   oneper install --latest   - Install latest pre-release from marketplace
+
+REPO="continuedev/continue"
+ONEPER_DIR="$HOME/.continue/.utils/oneper"
+
+show_help() {
+    echo "oneper - Install Continue VS Code extension from PR builds or latest pre-release"
+    echo ""
+    echo "Usage: oneper <command> [options]"
+    echo "       oneper -h | --help"
+    echo ""
+    echo "Commands:"
+    echo "  install --pr <number>    Download and install VSIX from specified PR number"
+    echo "  install --latest         Install latest pre-release from VS Code marketplace"
+    echo "  clean                    Remove all downloaded VSIX files from oneper cache"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help              Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  oneper install --pr 123     # Install VSIX from PR #123"
+    echo "  oneper install --latest     # Install latest pre-release"
+    echo "  oneper clean                # Clear cached VSIX files"
+    echo "  oneper -h                   # Show help"
+    echo ""
+    echo "VSIX files are cached in: ~/.continue/.utils/oneper/"
+}
+
+check_dependencies() {
+    if ! command -v gh &> /dev/null; then
+        echo "❌ GitHub CLI (gh) is required but not installed."
+        echo "   Install with: brew install gh"
+        exit 1
+    fi
+
+    if ! command -v code &> /dev/null; then
+        echo "❌ VS Code CLI (code) is required but not installed."
+        echo "   Install VS Code and ensure 'code' command is in PATH"
+        exit 1
+    fi
+
+    if ! command -v unzip &> /dev/null; then
+        echo "❌ unzip is required but not installed."
+        exit 1
+    fi
+}
+
+ensure_oneper_dir() {
+    if [ ! -d "$ONEPER_DIR" ]; then
+        echo "📁 Creating oneper directory: $ONEPER_DIR"
+        mkdir -p "$ONEPER_DIR"
+    fi
+}
+
+install_from_pr() {
+    local pr_number=$1
+    
+    if [ -z "$pr_number" ]; then
+        echo "❌ PR number is required"
+        show_help
+        exit 1
+    fi
+
+    echo "🔍 Getting branch name for PR #$pr_number..."
+    
+    # First get the branch name for the PR
+    local branch_name=$(gh pr view "$pr_number" --repo "$REPO" --json headRefName --jq '.headRefName')
+    
+    if [ -z "$branch_name" ]; then
+        echo "❌ Could not find PR #$pr_number"
+        exit 1
+    fi
+    
+    echo "🔍 Finding latest workflow run for branch: $branch_name..."
+    
+    # Get the latest successful workflow run for the branch
+    local run_id=$(gh run list \
+        --repo "$REPO" \
+        --workflow="pr_checks.yaml" \
+        --branch="$branch_name" \
+        --json databaseId,status,conclusion \
+        --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+        | head -1)
+    
+    if [ -z "$run_id" ]; then
+        echo "❌ No successful workflow run found for PR #$pr_number"
+        echo "   Make sure the PR exists and has a successful CI run"
+        exit 1
+    fi
+
+    echo "✅ Found workflow run: $run_id"
+    echo "📥 Downloading vscode-extension-build artifact..."
+    
+    # Create temporary directory for download
+    local temp_dir=$(mktemp -d)
+    
+    # Download the artifact
+    if ! gh run download "$run_id" \
+        --repo "$REPO" \
+        --name "vscode-extension-build" \
+        --dir "$temp_dir"; then
+        echo "❌ Failed to download artifact"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Find the VSIX file
+    local vsix_file=$(find "$temp_dir" -name "*.vsix" | head -1)
+    
+    if [ -z "$vsix_file" ]; then
+        echo "❌ No VSIX file found in artifact"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Create standardized VSIX name with PR number
+    local target_path="$ONEPER_DIR/continue-${pr_number}.vsix"
+    
+    # Check if file already exists and notify about overwrite
+    if [ -f "$target_path" ]; then
+        echo "⚠️  Overwriting existing VSIX: $target_path"
+    fi
+    
+    echo "📦 Moving VSIX to: $target_path"
+    mv "$vsix_file" "$target_path"
+    
+    # Clean up temp directory
+    rm -rf "$temp_dir"
+    
+    # Install the extension
+    echo "🚀 Installing VS Code extension..."
+    if code --install-extension "$target_path"; then
+        echo "✅ Successfully installed Continue extension from PR #$pr_number"
+        echo "📄 VSIX file saved to: $target_path"
+    else
+        echo "❌ Failed to install extension"
+        exit 1
+    fi
+}
+
+install_latest() {
+    echo "🚀 Installing latest pre-release Continue extension..."
+    if code --install-extension --pre-release Continue.continue; then
+        echo "✅ Successfully installed latest pre-release Continue extension"
+    else
+        echo "❌ Failed to install extension"
+        exit 1
+    fi
+}
+
+clean_cache() {
+    if [ ! -d "$ONEPER_DIR" ]; then
+        echo "📁 Oneper cache directory doesn't exist: $ONEPER_DIR"
+        return 0
+    fi
+    
+    local file_count=$(find "$ONEPER_DIR" -name "*.vsix" | wc -l | tr -d ' ')
+    
+    if [ "$file_count" -eq 0 ]; then
+        echo "✨ Oneper cache is already empty"
+        return 0
+    fi
+    
+    echo "🧹 Removing $file_count VSIX file(s) from oneper cache..."
+    rm -f "$ONEPER_DIR"/*.vsix
+    
+    echo "✅ Oneper cache cleared successfully"
+    echo "📁 Cache directory: $ONEPER_DIR"
+}
+
+main() {
+    if [ $# -eq 0 ]; then
+        show_help
+        exit 1
+    fi
+
+    # Handle help flags first
+    case "$1" in
+        "-h"|"--help")
+            show_help
+            exit 0
+            ;;
+    esac
+
+    check_dependencies
+    ensure_oneper_dir
+
+    case "$1" in
+        "install")
+            case "$2" in
+                "--pr")
+                    install_from_pr "$3"
+                    ;;
+                "--latest")
+                    install_latest
+                    ;;
+                *)
+                    echo "❌ Unknown install option: $2"
+                    show_help
+                    exit 1
+                    ;;
+            esac
+            ;;
+        "clean")
+            clean_cache
+            ;;
+        *)
+            echo "❌ Unknown command: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
