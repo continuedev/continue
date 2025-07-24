@@ -32,7 +32,7 @@ export abstract class BaseContextProvider implements IContextProvider {
     return [];
   }
 
-  isDeprecated(): boolean {
-    return false;
+  get deprecationMessage(): string | null {
+    return null;
   }
 }

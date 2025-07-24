@@ -417,15 +417,12 @@ async function configYamlToContinueConfig(options: {
       })
       .filter((p) => !!p)
       .filter((p) => {
-        if (p.isDeprecated()) {
+        if (p.deprecationMessage) {
           const providerTitle = p.description.title;
           const shownWarnings =
             globalContext.get("shownDeprecatedProviderWarnings") ?? {};
           if (!shownWarnings[providerTitle]) {
-            ide.showToast(
-              "warning",
-              `Context provider ${providerTitle} is deprecated and will be removed in a future version.`,
-            );
+            ide.showToast("warning", p.deprecationMessage);
             globalContext.update("shownDeprecatedProviderWarnings", {
               ...shownWarnings,
               [providerTitle]: true,

@@ -133,8 +133,8 @@ LIMIT ${sampleRows}`);
     }
   }
 
-  isDeprecated() {
-    return true;
+  get deprecationMessage() {
+    return "The Postgres context provider is deprecated. Please consider using the Postgres MCP (such as github.com/crystaldba/postgres-mcp) instead.";
   }
 }
 
