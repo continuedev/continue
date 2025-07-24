@@ -11,7 +11,7 @@ type SectionKey = Exclude<
 
 interface EditBlockButtonProps<T extends SectionKey> {
   blockType: T;
-  block?: NonNullable<ConfigYaml[T]>[number];
+  block?: NonNullable<Omit<ConfigYaml, "env">[T]>[number];
   className?: string;
   sourceFile?: string;
 }
