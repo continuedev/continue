@@ -104,7 +104,7 @@ ${SEARCH_AND_REPLACE_RULES}
     [
       ["filepath", "path/to/file.ts"],
       [
-        "diff",
+        "diffs",
         `[
 "------- SEARCH
 [exact content to find]

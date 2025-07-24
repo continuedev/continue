@@ -266,4 +266,36 @@ describe("handleToolCallBuffer", () => {
     });
     expect(state.done).toBe(true);
   });
+
+  it("handles JSON array args", () => {
+    state.currentLineIndex = 3;
+    state.currentArgName = "test_arg";
+    state.currentArgLines = [
+      "[\n",
+      '"------- SEARCH\n',
+      "  subtract(number) {\n",
+      "    return this;\n",
+      "  }\n",
+      "=======\n",
+      "  subtract(number) {\n",
+      "    this -= number\n",
+      "    return this;\n",
+      "  }\n",
+      '+++++++ REPLACE"\n',
+      "]\n",
+    ];
+
+    handleToolCallBuffer("END_ARG", state);
+    const newLineResult = handleToolCallBuffer("\n", state);
+
+    expect(newLineResult).toEqual({
+      type: "function",
+      function: {
+        name: "",
+        arguments:
+          '["------- SEARCH\\n  subtract(number) {\\n    return this;\\n  }\\n=======\\n  subtract(number) {\\n    this -= number\\n    return this;\\n  }\\n+++++++ REPLACE"]',
+      },
+      id: expect.any(String),
+    });
+  });
 });

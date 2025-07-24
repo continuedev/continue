@@ -87,12 +87,31 @@ export function handleToolCallBuffer(
         if (isNewLine) {
           const isEndArgTag = line.match(/end_?arg/i);
           if (isEndArgTag) {
-            const trimmedValue = state.currentArgLines.join("").trim();
+            let trimmedValue = state.currentArgLines.join("").trim();
             state.currentArgLines.length = 0;
             state.processedArgNames.add(state.currentArgName);
             state.currentArgName = undefined;
 
             try {
+              if (
+                trimmedValue.startsWith("[") ||
+                trimmedValue.startsWith("{")
+              ) {
+                trimmedValue = trimmedValue.replace(
+                  /"((?:\\[\s\S]|[^"\\])*?)"/g,
+                  (match) => {
+                    const content = match.slice(1, -1);
+                    // Replace unescaped newlines
+                    return (
+                      '"' +
+                      content
+                        .replace(/([^\\])\n/g, "$1\\n")
+                        .replace(/^\n/g, "\\n") +
+                      '"'
+                    );
+                  },
+                );
+              }
               const parsed = JSON.parse(trimmedValue);
               const stringifiedArg = JSON.stringify(parsed);
               return createDelta("", stringifiedArg, state.toolCallId);
