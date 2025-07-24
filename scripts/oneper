@@ -45,10 +45,6 @@ check_dependencies() {
         exit 1
     fi
 
-    if ! command -v unzip &> /dev/null; then
-        echo "❌ unzip is required but not installed."
-        exit 1
-    fi
 }
 
 ensure_oneper_dir() {
