@@ -24,6 +24,7 @@ import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
 import MCPContextProvider from "./MCPContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import OSContextProvider from "./OSContextProvider";
+import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
 import RulesContextProvider from "./RulesContextProvider";
@@ -55,6 +56,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   DocsContextProvider,
   GitLabMergeRequestContextProvider,
   JiraIssuesContextProvider,
+  PostgresContextProvider,
   DatabaseContextProvider,
   CodebaseContextProvider,
   CodeContextProvider,

@@ -2,7 +2,6 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { Remark } from "react-remark";
 import { useAppSelector } from "../../../../../redux/hooks";
 
 export function ErrorSection() {
@@ -33,7 +32,7 @@ export function ErrorSection() {
               className="m-0 whitespace-pre-wrap text-wrap"
               style={{ wordBreak: "break-word" }}
             >
-              <Remark>{error.message}</Remark>
+              {error.message}
             </p>
           </li>
         ))}

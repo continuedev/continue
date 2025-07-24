@@ -9,13 +9,7 @@ import {
 
 export const contextSchema = z.object({
   name: z.string().optional(),
-  provider: z
-    .string()
-    // postgres context provider deprecation message. to be removed in a later version
-    .regex(/^(?!postgres$).*$/, {
-      message:
-        "The **postgres** context provider is no longer supported. Please use the [Postgres MCP server](https://github.com/crystaldba/postgres-mcp) instead.",
-    }),
+  provider: z.string(),
   params: z.any().optional(),
 });
 
