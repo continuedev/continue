@@ -10,44 +10,12 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath } = args;
-  let { diffs } = args;
-
-  // Handle legacy parameter name and system message tools edge cases
-  if (!diffs && (args as any).diff) {
-    diffs = (args as any).diff;
-  }
-
-  if (!diffs) {
-    throw new Error("Missing required parameter: diffs (or diff)");
-  }
+  const { filepath, diffs } = args;
 
   const state = extras.getState();
   const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
 
   const streamId = uuid();
-
-  // Handle the case where system message tools provide diffs as a JSON string
-  // instead of an actual array (due to JSON parsing/stringifying in system message tools)
-  let processedDiffs: string[];
-  if (typeof diffs === "string") {
-    try {
-      const parsed = JSON.parse(diffs);
-      if (Array.isArray(parsed)) {
-        processedDiffs = parsed;
-      } else {
-        processedDiffs = [diffs];
-      }
-    } catch (e) {
-      processedDiffs = [diffs];
-    }
-  } else if (Array.isArray(diffs)) {
-    processedDiffs = diffs;
-  } else {
-    throw new Error(
-      "diffs parameter must be an array of strings or a JSON string representing an array",
-    );
-  }
 
   // Resolve the file path
   const resolvedFilepath = await resolveRelativePathInDir(
@@ -60,16 +28,11 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
 
   // Parse all search/replace blocks from all diff strings
   const allBlocks = [];
-  for (let diffIndex = 0; diffIndex < processedDiffs.length; diffIndex++) {
-    const blocks = parseAllSearchReplaceBlocks(processedDiffs[diffIndex]);
+  for (let diffIndex = 0; diffIndex < diffs.length; diffIndex++) {
+    const blocks = parseAllSearchReplaceBlocks(diffs[diffIndex]);
     if (blocks.length === 0) {
       throw new Error(
-        `No complete search/replace blocks found in diff ${diffIndex + 1}. Each diff must contain at least one complete SEARCH/REPLACE block with the format:
-------- SEARCH
-[content to find]
-=======
-[replacement content]
-+++++++ REPLACE`,
+        `No complete search/replace blocks found in diff ${diffIndex + 1}`,
       );
     }
     allBlocks.push(...blocks);
