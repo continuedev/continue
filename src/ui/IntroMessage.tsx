@@ -11,20 +11,25 @@ interface IntroMessageProps {
   mcpService: MCPService;
 }
 
-const IntroMessage: React.FC<IntroMessageProps> = ({ config, model, mcpService }) => {
+const IntroMessage: React.FC<IntroMessageProps> = ({
+  config,
+  model,
+  mcpService,
+}) => {
   const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
-  
+
   // Get all slash commands from central definition
   const allCommands = getAllSlashCommands(config);
-  
+
   // Show all rules in a single section
   const args = parseArgs();
   const commandLineRules = args.rules || [];
-  const configRules = config.rules?.map((rule: any) => 
-    typeof rule === "string" ? rule : rule?.name || "Unknown"
-  ) || [];
-  
+  const configRules =
+    config.rules?.map((rule: any) =>
+      typeof rule === "string" ? rule : rule?.name || "Unknown"
+    ) || [];
+
   const allRules = [...commandLineRules, ...configRules];
 
   return (
@@ -33,31 +38,33 @@ const IntroMessage: React.FC<IntroMessageProps> = ({ config, model, mcpService }
       <Text bold color="yellow">
         Agent: {config.name}
       </Text>
-      
+
       {/* Model */}
       <Text color="blue">
         Model: <Text color="white">{model.name.split("/").pop()}</Text>
       </Text>
-      
+
       <Text> </Text>
-      
+
       {/* Slash commands */}
       <Text color="blue">Slash commands:</Text>
       {allCommands.map((command, index) => (
         <Text key={index}>
-          - <Text color="white">/{command.name}</Text>: <Text color="gray">{command.description}</Text>
+          - <Text color="white">/{command.name}</Text>:{" "}
+          <Text color="gray">{command.description}</Text>
         </Text>
       ))}
-      
+
       {/* MCP prompts */}
       {mcpPrompts.map((prompt, index) => (
         <Text key={`mcp-${index}`}>
-          - <Text color="white">/{prompt.name}</Text>: <Text color="gray">{prompt.description}</Text>
+          - <Text color="white">/{prompt.name}</Text>:{" "}
+          <Text color="gray">{prompt.description}</Text>
         </Text>
       ))}
-      
+
       <Text> </Text>
-      
+
       {/* Rules */}
       {allRules.length > 0 && (
         <>
@@ -70,7 +77,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({ config, model, mcpService }
           <Text> </Text>
         </>
       )}
-      
+
       {/* MCP Servers */}
       {config.mcpServers?.length && (
         <>
