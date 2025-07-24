@@ -1,15 +1,12 @@
-import { Box, Text, useInput } from "ink";
 import React, { useEffect, useState } from "react";
 import {
   getOrganizationId,
   listUserOrganizations,
   loadAuthConfig,
 } from "../auth/workos.js";
+import Selector, { SelectorOption } from "./Selector.js";
 
-interface Organization {
-  id: string;
-  name: string;
-}
+interface Organization extends SelectorOption {}
 
 interface OrganizationSelectorProps {
   onSelect: (organizationId: string | null, organizationName: string) => void;
@@ -20,7 +17,7 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
   onSelect,
   onCancel,
 }) => {
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [allOptions, setAllOptions] = useState<Organization[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +36,15 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
           return;
         }
 
-        setOrganizations(organizations);
+        const options: Organization[] = [
+          { 
+            id: "personal", 
+            name: "Personal"
+          },
+          ...organizations,
+        ];
+
+        setAllOptions(options);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || "Failed to load organizations");
@@ -50,110 +55,27 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
     loadOrganizations();
   }, []);
 
-  useInput((input, key) => {
-    if (key.escape) {
-      onCancel();
-      return;
+  const handleSelect = (option: Organization) => {
+    if (option.id === "personal") {
+      onSelect(null, "Personal");
+    } else {
+      onSelect(option.id, option.name);
     }
-
-    if (key.return) {
-      const totalOptions = organizations.length + 1; // +1 for personal
-      if (selectedIndex === 0) {
-        onSelect(null, "Personal");
-      } else if (selectedIndex <= organizations.length) {
-        const selectedOrg = organizations[selectedIndex - 1];
-        onSelect(selectedOrg.id, selectedOrg.name);
-      }
-      return;
-    }
-
-    if (key.upArrow) {
-      setSelectedIndex((prev) => Math.max(0, prev - 1));
-    } else if (key.downArrow) {
-      const totalOptions = organizations.length + 1; // +1 for personal
-      setSelectedIndex((prev) => Math.min(totalOptions - 1, prev + 1));
-    }
-  });
-
-  if (loading) {
-    return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="blue"
-      >
-        <Text color="blue" bold>
-          Organization Selector
-        </Text>
-        <Text color="gray">Loading organizations...</Text>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="red"
-      >
-        <Text color="red" bold>
-          Error
-        </Text>
-        <Text color="red">{error}</Text>
-        <Text color="gray" dimColor>
-          Press Escape to cancel
-        </Text>
-      </Box>
-    );
-  }
-
-  const allOptions = [
-    { id: null, name: "Personal", isCurrent: currentOrgId === null },
-    ...organizations.map((org) => ({
-      ...org,
-      isCurrent: currentOrgId === org.id,
-    })),
-  ];
+  };
 
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="blue"
-    >
-      <Text color="blue" bold>
-        Select Organization
-      </Text>
-      <Box flexDirection="column" marginTop={1}>
-        {allOptions.map((option, index) => {
-          const isSelected = index === selectedIndex;
-          const isCurrent = option.isCurrent;
-
-          return (
-            <Box key={option.id || "personal"}>
-              <Text
-                color={isSelected ? "blue" : "white"}
-                bold={isSelected}
-                inverse={isSelected}
-              >
-                {isSelected ? "▶ " : "  "}
-                {option.name}
-                {isCurrent ? " (current)" : ""}
-              </Text>
-            </Box>
-          );
-        })}
-      </Box>
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>
-          Use ↑/↓ to navigate, Enter to select, Escape to cancel
-        </Text>
-      </Box>
-    </Box>
+    <Selector
+      title="Select Organization"
+      options={allOptions}
+      selectedIndex={selectedIndex}
+      loading={loading}
+      error={error}
+      loadingMessage="Loading organizations..."
+      currentId={currentOrgId === null ? "personal" : currentOrgId}
+      onSelect={handleSelect}
+      onCancel={onCancel}
+      onNavigate={setSelectedIndex}
+    />
   );
 };
 

@@ -2,9 +2,10 @@ import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { processRule } from '../args.js';
 import { loadConfig } from '../config.js';
-import { AuthConfig, updateAssistantSlug } from '../auth/workos.js';
+import { AuthConfig, updateAssistantSlug, loadAuthConfig } from '../auth/workos.js';
 import logger from '../util/logger.js';
-import { ConfigServiceState } from './types.js';
+import { ConfigServiceState, SERVICE_NAMES, AuthServiceState, ApiClientServiceState } from './types.js';
+import { serviceContainer } from './ServiceContainer.js';
 
 /**
  * Service for managing configuration state and operations
@@ -169,6 +170,65 @@ export class ConfigService {
     }
 
     return modifiedConfig;
+  }
+
+  /**
+   * Update the configuration path and notify the service container
+   * This triggers automatic dependent service reloads via the reactive system
+   */
+  async updateConfigPath(newConfigPath: string | undefined): Promise<void> {
+    logger.debug('Updating config path', { 
+      from: this.currentState.configPath,
+      to: newConfigPath 
+    });
+
+    try {
+      // Get current auth and API client state needed for config loading
+      const authConfig = loadAuthConfig();
+      const authState = await serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH);
+      const apiClientState = await serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT);
+
+      if (!apiClientState.apiClient) {
+        throw new Error('API client not available');
+      }
+
+      // Load the new configuration
+      let config = await loadConfig(
+        authConfig, 
+        newConfigPath, 
+        authState.organizationId || null, 
+        apiClientState.apiClient
+      );
+
+      // Update internal state
+      this.currentState = {
+        config,
+        configPath: newConfigPath
+      };
+
+      // Save assistant slug to auth config if loading by slug
+      if (newConfigPath && !this.isFilePath(newConfigPath)) {
+        updateAssistantSlug(newConfigPath);
+      } else if (!newConfigPath) {
+        // Clear assistant slug when switching to local config or undefined
+        updateAssistantSlug(null);
+      }
+
+      // Update the CONFIG service in the container
+      serviceContainer.set(SERVICE_NAMES.CONFIG, this.currentState);
+      
+      // Manually reload dependent services (MODEL, MCP) to pick up the new config
+      await serviceContainer.reload(SERVICE_NAMES.MODEL);
+      await serviceContainer.reload(SERVICE_NAMES.MCP);
+
+      logger.debug('Configuration path updated successfully', { 
+        newConfigPath,
+        configName: config.name
+      });
+    } catch (error: any) {
+      logger.error('Failed to update configuration path:', error);
+      throw error;
+    }
   }
 
   /**

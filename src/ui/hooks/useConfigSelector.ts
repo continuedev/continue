@@ -1,12 +1,9 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { exec } from "child_process";
 import * as os from "os";
 import * as path from "path";
 import { useState } from "react";
 import { loadAuthConfig, updateAssistantSlug } from "../../auth/workos.js";
-import { initialize } from "../../config.js";
-import { MCPService } from "../../mcp.js";
+import { reloadService, services, SERVICE_NAMES } from "../../services/index.js";
 
 interface ConfigOption {
   id: string;
@@ -17,12 +14,6 @@ interface ConfigOption {
 
 interface UseConfigSelectorProps {
   configPath?: string;
-  onAssistantChange: (
-    assistant: AssistantUnrolled,
-    model: ModelConfig,
-    llmApi: BaseLlmApi,
-    mcpService: MCPService
-  ) => void;
   onMessage: (message: {
     role: string;
     content: string;
@@ -35,7 +26,6 @@ const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
 export function useConfigSelector({
   configPath,
-  onAssistantChange,
   onMessage,
   onChatReset,
 }: UseConfigSelectorProps) {
@@ -88,30 +78,17 @@ export function useConfigSelector({
         messageType: "system" as const,
       });
 
-      const authConfig = loadAuthConfig();
       let targetConfigPath: string | undefined;
 
       if (config.type === "local") {
         targetConfigPath = CONFIG_PATH;
-        // Clear assistant slug when switching to local config
-        updateAssistantSlug(null);
       } else if (config.type === "assistant" && config.slug) {
-        // Use the slug to load the assistant
         targetConfigPath = config.slug;
-        // Save the assistant slug to auth config
-        updateAssistantSlug(config.slug);
       }
 
-      // Reinitialize with the selected configuration
-      const {
-        config: newConfig,
-        llmApi: newLlmApi,
-        model: newModel,
-        mcpService: newMcpService,
-      } = await initialize(authConfig, targetConfigPath);
-
-      // Update assistant configuration
-      onAssistantChange(newConfig, newModel, newLlmApi, newMcpService);
+      // Use the ConfigService's reactive updateConfigPath method
+      // This will automatically update state and trigger dependent service reloads
+      await services.config.updateConfigPath(targetConfigPath);
 
       // Reset chat history
       onChatReset();

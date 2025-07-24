@@ -83,14 +83,18 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   // Show intro message when services are ready (only in non-remote mode)
   useEffect(() => {
-    if (
-      !isRemoteMode &&
-      allServicesReady &&
-      services.config?.config &&
-      services.model?.model &&
-      services.mcp?.mcpService
-    ) {
-      setShowIntroMessage(true);
+    if (!isRemoteMode) {
+      if (
+        allServicesReady &&
+        services.config?.config &&
+        services.model?.model &&
+        services.mcp?.mcpService
+      ) {
+        setShowIntroMessage(true);
+      } else {
+        // Reset intro message when services are not ready (during transitions)
+        setShowIntroMessage(false);
+      }
     }
   }, [isRemoteMode, allServicesReady, services.config?.config, services.model?.model, services.mcp?.mcpService]);
 
@@ -168,7 +172,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showConfigSelectorUI,
   } = useConfigSelector({
     configPath,
-    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {},
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
@@ -192,6 +195,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   };
 
   // Determine if input should be disabled
+  // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
     showOrgSelector ||
     showConfigSelector ||
