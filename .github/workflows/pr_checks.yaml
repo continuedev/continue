@@ -609,6 +609,32 @@ jobs:
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
 
+  fetch-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: fetch-cache
+        with:
+          path: packages/fetch/node_modules
+          key: ${{ runner.os }}-fetch-node-modules-${{ hashFiles('packages/fetch/package-lock.json') }}
+
+      - name: Install fetch dependencies
+        if: steps.fetch-cache.outputs.cache-hit != 'true'
+        run: |
+          cd packages/fetch
+          npm ci
+
+      - name: Run fetch tests
+        run: |
+          cd packages/fetch
+          npm test
+
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
     needs: [install-root, install-vscode, install-config-yaml]
@@ -1109,6 +1135,7 @@ jobs:
       - install-config-yaml
       - install-openai-adapters
       - openai-adapters-tests
+      - fetch-tests
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed
