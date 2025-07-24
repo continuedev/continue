@@ -4,16 +4,14 @@ import {
   isAuthenticated,
   isAuthenticatedConfig,
   loadAuthConfig,
-  login,
-  logout,
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
+import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-  onLoginPrompt?: (promptText: string) => Promise<string>,
-  onReload?: () => Promise<void>
+  onLoginPrompt?: (promptText: string) => Promise<string>
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -39,37 +37,49 @@ export async function handleSlashCommands(
       case "config":
         return { openConfigSelector: true };
       case "login":
-        login()
-          .then(async (config) => {
-            if (config && isAuthenticatedConfig(config)) {
-              console.info(
-                chalk.green(
-                  `\nLogged in as ${config.userEmail || config.userId}`
-                )
-              );
-            } else {
-              console.info(chalk.green(`\nLogged in successfully`));
-            }
+        try {
+          const newAuthState = await services.auth.login();
 
-            // Reload everything after successful login
-            if (onReload) {
-              await onReload();
-            }
-          })
-          .catch((error) => {
-            console.error(chalk.red(`\nLogin failed: ${error.message}`));
-          });
-        return {
-          exit: false,
-          output: "Starting login process...",
-        };
+          // Automatically cascade reload from auth service - this will reload
+          // API_CLIENT -> CONFIG -> MODEL/MCP in the correct dependency order
+          await reloadService(SERVICE_NAMES.AUTH);
+
+          const userInfo =
+            newAuthState.authConfig &&
+            isAuthenticatedConfig(newAuthState.authConfig)
+              ? newAuthState.authConfig.userEmail ||
+                newAuthState.authConfig.userId
+              : "user";
+
+          console.info(chalk.green(`\nLogged in as ${userInfo}`));
+
+          return {
+            exit: false,
+            output: "Login successful! All services updated automatically.",
+          };
+        } catch (error: any) {
+          console.error(chalk.red(`\nLogin failed: ${error.message}`));
+          return {
+            exit: false,
+            output: `Login failed: ${error.message}`,
+          };
+        }
 
       case "logout":
-        logout();
-        return {
-          exit: true,
-          output: "Logged out successfully",
-        };
+        try {
+          await services.auth.logout();
+
+          // Logout should exit the application since many services will be invalid
+          return {
+            exit: true,
+            output: "Logged out successfully",
+          };
+        } catch (error: any) {
+          return {
+            exit: true,
+            output: "Logged out successfully",
+          };
+        }
 
       case "whoami":
         if (isAuthenticated()) {
@@ -90,6 +100,61 @@ export async function handleSlashCommands(
             exit: false,
             output: "Not logged in. Use /login to authenticate.",
           };
+        }
+
+      case "org":
+        // Organization switching command
+        if (args.length === 0) {
+          return {
+            exit: false,
+            output: "Usage: /org <organization-id> or /org list",
+          };
+        }
+
+        const subCommand = args[0];
+        if (subCommand === "list") {
+          try {
+            const orgs = await services.auth.getAvailableOrganizations();
+            if (!orgs || orgs.length === 0) {
+              return {
+                exit: false,
+                output: "No organizations available or using environment auth",
+              };
+            }
+
+            const orgList = orgs
+              .map((org) => `  ${org.id}: ${org.name}`)
+              .join("\n");
+            return {
+              exit: false,
+              output: `Available organizations:\n${orgList}`,
+            };
+          } catch (error: any) {
+            return {
+              exit: false,
+              output: `Failed to list organizations: ${error.message}`,
+            };
+          }
+        } else {
+          // Switch to specific organization
+          const orgId = subCommand;
+          try {
+            await services.auth.switchOrganization(orgId);
+
+            // Automatically cascade reload from auth service - this will reload
+            // API_CLIENT -> CONFIG -> MODEL/MCP in the correct dependency order
+            await reloadService(SERVICE_NAMES.AUTH);
+
+            return {
+              exit: false,
+              output: `Switched to organization: ${orgId}. All services updated automatically.`,
+            };
+          } catch (error: any) {
+            return {
+              exit: false,
+              output: `Failed to switch organization: ${error.message}`,
+            };
+          }
         }
 
       default:

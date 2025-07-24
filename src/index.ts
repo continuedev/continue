@@ -8,8 +8,8 @@ import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
-import { readStdinSync } from "./util/stdin.js";
 import logger from "./util/logger.js";
+import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
@@ -105,7 +105,10 @@ program
 program
   .command("remote [prompt]")
   .description("Launch a remote instance of the cn agent")
-  .option("--url <url>", "Connect directly to the specified URL instead of creating a new remote environment")
+  .option(
+    "--url <url>",
+    "Connect directly to the specified URL instead of creating a new remote environment"
+  )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
   });

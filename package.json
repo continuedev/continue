@@ -9,7 +9,7 @@
     "cn": "dist/index.js"
   },
   "scripts": {
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "npm run lint && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",

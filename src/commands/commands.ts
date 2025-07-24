@@ -8,7 +8,6 @@ export interface SlashCommand {
 
 export interface SystemCommand extends SlashCommand {
   category: "system";
-  requiresMultipleOrgs?: boolean;
 }
 
 // Central definition of all system slash commands
@@ -47,7 +46,6 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     name: "org",
     description: "Switch organization",
     category: "system",
-    requiresMultipleOrgs: true,
   },
   {
     name: "config",
@@ -70,22 +68,17 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
  */
 export function getAllSlashCommands(
   assistant: AssistantConfig,
-  options: { isRemoteMode?: boolean; hasMultipleOrgs?: boolean } = {}
+  options: { isRemoteMode?: boolean } = {}
 ): SlashCommand[] {
-  const { isRemoteMode = false, hasMultipleOrgs = false } = options;
+  const { isRemoteMode = false } = options;
 
   // In remote mode, only show the exit command
   if (isRemoteMode) {
     return REMOTE_MODE_SLASH_COMMANDS;
   }
 
-  // Filter system commands based on requirements
-  const systemCommands = SYSTEM_SLASH_COMMANDS.filter((cmd) => {
-    if (cmd.requiresMultipleOrgs && !hasMultipleOrgs) {
-      return false;
-    }
-    return true;
-  });
+  // All system commands are available
+  const systemCommands = SYSTEM_SLASH_COMMANDS;
 
   // Get assistant prompt commands
   const assistantCommands: SlashCommand[] =

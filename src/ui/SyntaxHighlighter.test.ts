@@ -202,6 +202,6 @@ interface Props {
     const code = `---
 name: John
 age: 30`;
-    expect(detectLanguage(code)).toBe('javascript');
+    expect(detectLanguage(code)).toBe('yaml');
   });
 });

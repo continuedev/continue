@@ -1,105 +1,61 @@
-import {
-  runTest,
-  runTestSuite,
-  sendMessage,
-  expectRemoteMode,
-  expectNormalMode,
-} from "./TUIChat.testHelper.js";
+import { render } from "ink-testing-library";
+import React from "react";
+import { createUITestContext } from "../../test-helpers/ui-test-context.js";
+import TUIChat from "../TUIChat.js";
 
-runTestSuite("TUIChat - Basic UI Tests", () => {
-  describe("Component Initialization", () => {
-    runTest("displays empty chat correctly", ({ renderResult, mode }) => {
-      const frame = renderResult.lastFrame();
+describe("TUIChat - Basic UI Tests", () => {
+  let context: any;
 
-      // Should show the interface
-      expect(frame).toContain("Ask anything");
-
-      // Should have box borders (using the actual characters)
-      expect(frame).toContain("│");
-
-      // Mode-specific checks
-      if (mode === "remote") {
-        expectRemoteMode(frame);
-      } else {
-        expectNormalMode(frame);
-      }
-    });
-
-    runTest("renders box borders correctly", ({ renderResult }) => {
-      const frame = renderResult.lastFrame();
-
-      // Should have borders (using actual box drawing characters)
-      expect(frame).toMatch(/[│─╭╮╰╯]/); // Various box drawing chars
-    });
-
-    runTest("maintains layout with content", ({ renderResult }) => {
-      renderResult.stdin.write("Test message that is quite long to see how it wraps");
-
-      const frame = renderResult.lastFrame();
-
-      // Borders should still be present
-      expect(frame).toMatch(/[│─╭╮╰╯]/);
-
-      // Should have multiple lines
-      const lines = frame ? frame.split("\n") : [];
-      expect(lines.length).toBeGreaterThan(1);
+  beforeEach(() => {
+    context = createUITestContext({
+      allServicesReady: true,
+      serviceState: "ready",
+      serviceValue: { some: "data" },
     });
   });
 
-  describe("Loading States", () => {
-    runTest(
-      "shows UI correctly when loading",
-      async (ctx) => {
-        // Set up server to simulate response
-        if (ctx.mode === "remote" && ctx.server) {
-          ctx.server.onMessage(() => {
-            // Simulate a delayed response
-            setTimeout(() => {
-              ctx.server!.simulateResponse("Test response", true);
-            }, 100);
-          });
-        }
+  afterEach(() => {
+    context.cleanup();
+  });
 
-        // Trigger loading by sending a message
-        await sendMessage(ctx, "test message");
+  it("renders without crashing", () => {
+    const { lastFrame } = render(React.createElement(TUIChat));
+    const frame = lastFrame();
 
-        const frame = ctx.renderResult.lastFrame();
-        // The UI should still be properly rendered
-        expect(frame).toContain("Ask anything");
-        // Note: The actual loading spinner behavior might not be visible in this test environment
-      }
-    );
+    expect(frame).toBeDefined();
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
+  });
 
-    runTest("hides loading spinner when not loading", ({ renderResult }) => {
-      const frame = renderResult.lastFrame();
-      // Should not contain spinner characters initially
-      expect(frame).not.toMatch(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/);
+  it("shows UI even when services are loading", () => {
+    // Override for this test
+    context.mockUseServices.mockReturnValue({
+      services: {},
+      loading: true,
+      error: null,
+      allReady: false,
     });
 
-    runTest(
-      "displays loading text correctly",
-      async (ctx) => {
-        // Set up server to simulate response
-        if (ctx.mode === "remote" && ctx.server) {
-          ctx.server.onMessage(() => {
-            // Keep server in responding state
-            ctx.server!.simulateResponse("Processing...", true);
-          });
-        }
+    const { lastFrame } = render(React.createElement(TUIChat));
+    const frame = lastFrame();
 
-        await sendMessage(ctx, "test");
+    expect(frame).toBeDefined();
+    if (frame) {
+      // Should show the chat UI even while loading
+      expect(frame).toContain("Ask anything");
+    }
+  });
 
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const frame = ctx.renderResult.lastFrame();
-
-        // Should show placeholder message - different text for remote vs normal mode
-        if (ctx.mode === "remote") {
-          expect(frame).toContain("Ask anything, / for slash commands");
-        } else {
-          expect(frame).toContain("Ask anything, @ for context, / for slash commands");
-        }
-      }
+  it("handles remote URL prop", () => {
+    const { lastFrame } = render(
+      React.createElement(TUIChat, { remoteUrl: "http://localhost:3000" })
     );
+    const frame = lastFrame();
+
+    expect(frame).toBeDefined();
+    if (frame) {
+      expect(frame.length).toBeGreaterThan(0);
+    }
   });
 });

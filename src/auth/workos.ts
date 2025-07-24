@@ -24,14 +24,14 @@ export interface AuthenticatedConfig {
   refreshToken: string;
   expiresAt: number;
   organizationId: string | null; // null means personal organization
-  assistantSlug?: string; // Optional assistant slug
+  configUri?: string; // Optional config URI (file:// or slug://owner/slug)
 }
 
 // Represents configuration when using environment variable auth
 export interface EnvironmentAuthConfig {
   accessToken: string;
   organizationId: null; // Environment auth always uses personal organization
-  assistantSlug?: string; // Optional assistant slug
+  configUri?: string; // Optional config URI (file:// or slug://owner/slug)
 }
 
 // Union type representing the possible authentication states
@@ -72,11 +72,49 @@ export function getOrganizationId(config: AuthConfig): string | null {
 }
 
 /**
- * Gets the assistant slug from any auth config type
+ * Gets the config URI from any auth config type
+ */
+export function getConfigUri(config: AuthConfig): string | null {
+  if (config === null) return null;
+  return config.configUri || null;
+}
+
+/**
+ * Utility functions for config URI conversion
+ */
+export function pathToUri(path: string): string {
+  return `file://${path}`;
+}
+
+export function slugToUri(slug: string): string {
+  return `slug://${slug}`;
+}
+
+export function uriToPath(uri: string): string | null {
+  if (uri.startsWith("file://")) {
+    return uri.slice(7);
+  }
+  return null;
+}
+
+export function uriToSlug(uri: string): string | null {
+  if (uri.startsWith("slug://")) {
+    return uri.slice(7); // Remove 'slug://' prefix
+  }
+  return null;
+}
+
+/**
+ * Legacy functions for backward compatibility
  */
 export function getAssistantSlug(config: AuthConfig): string | null {
-  if (config === null) return null;
-  return config.assistantSlug || null;
+  const uri = getConfigUri(config);
+  return uri ? uriToSlug(uri) : null;
+}
+
+export function getLocalConfigPath(config: AuthConfig): string | null {
+  const uri = getConfigUri(config);
+  return uri ? uriToPath(uri) : null;
 }
 
 /**
@@ -110,7 +148,7 @@ export function loadAuthConfig(): AuthConfig {
           refreshToken: data.refreshToken,
           expiresAt: data.expiresAt,
           organizationId: data.organizationId || null,
-          assistantSlug: data.assistantSlug || undefined,
+          configUri: data.configUri,
         };
       } else {
         console.warn("Invalid auth config found, ignoring.");
@@ -147,9 +185,9 @@ export function saveAuthConfig(config: AuthenticatedConfig): void {
 }
 
 /**
- * Updates the assistant slug in the authentication configuration
+ * Updates the config URI in the authentication configuration
  */
-export function updateAssistantSlug(assistantSlug: string | null): void {
+export function updateConfigUri(configUri: string | null): void {
   // If using CONTINUE_API_KEY environment variable, don't save anything
   if (process.env.CONTINUE_API_KEY) {
     return;
@@ -159,10 +197,21 @@ export function updateAssistantSlug(assistantSlug: string | null): void {
   if (config && isAuthenticatedConfig(config)) {
     const updatedConfig: AuthenticatedConfig = {
       ...config,
-      assistantSlug: assistantSlug || undefined,
+      configUri: configUri || undefined,
     };
     saveAuthConfig(updatedConfig);
   }
+}
+
+/**
+ * Legacy functions for backward compatibility
+ */
+export function updateAssistantSlug(assistantSlug: string | null): void {
+  updateConfigUri(assistantSlug ? slugToUri(assistantSlug) : null);
+}
+
+export function updateLocalConfigPath(localConfigPath: string | null): void {
+  updateConfigUri(localConfigPath ? pathToUri(localConfigPath) : null);
 }
 
 /**
@@ -393,9 +442,9 @@ async function refreshToken(
       organizationId: isAuthenticatedConfig(existingConfig)
         ? existingConfig.organizationId
         : null,
-      // Preserve existing assistantSlug if it exists
-      assistantSlug: isAuthenticatedConfig(existingConfig)
-        ? existingConfig.assistantSlug
+      // Preserve existing configUri if it exists
+      configUri: isAuthenticatedConfig(existingConfig)
+        ? existingConfig.configUri
         : undefined,
     };
 
@@ -493,7 +542,7 @@ export async function ensureOrganization(
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: null, // Default to personal organization
-      assistantSlug: authenticatedConfig.assistantSlug,
+      configUri: authenticatedConfig.configUri,
     };
     saveAuthConfig(updatedConfig);
     return updatedConfig;
@@ -514,7 +563,7 @@ export async function ensureOrganization(
         refreshToken: authenticatedConfig.refreshToken,
         expiresAt: authenticatedConfig.expiresAt,
         organizationId: null,
-        assistantSlug: authenticatedConfig.assistantSlug,
+        configUri: authenticatedConfig.configUri,
       };
       saveAuthConfig(updatedConfig);
       return updatedConfig;
@@ -531,7 +580,7 @@ export async function ensureOrganization(
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: selectedOrgId,
-      assistantSlug: authenticatedConfig.assistantSlug,
+      configUri: authenticatedConfig.configUri,
     };
 
     saveAuthConfig(updatedConfig);
@@ -549,7 +598,7 @@ export async function ensureOrganization(
       refreshToken: authenticatedConfig.refreshToken,
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: null,
-      assistantSlug: authenticatedConfig.assistantSlug,
+      configUri: authenticatedConfig.configUri,
     };
     saveAuthConfig(updatedConfig);
     return updatedConfig;
@@ -596,6 +645,17 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  * Logs the user out by clearing saved credentials
  */
 export function logout(): void {
+  const onboardingFlagPath = path.join(
+    os.homedir(),
+    ".continue",
+    ".onboarding_complete"
+  );
+
+  // Remove onboarding completion flag so user will go through onboarding again
+  if (fs.existsSync(onboardingFlagPath)) {
+    fs.unlinkSync(onboardingFlagPath);
+  }
+
   if (process.env.CONTINUE_API_KEY) {
     console.info(
       chalk.yellow(

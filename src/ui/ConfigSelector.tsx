@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import { Box, Text, useInput } from "ink";
 import * as os from "os";
 import * as path from "path";
 import React, { useEffect, useState } from "react";
@@ -7,12 +6,12 @@ import {
   getAccessToken,
   getOrganizationId,
   loadAuthConfig,
+  getAssistantSlug,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
+import Selector, { SelectorOption } from "./Selector.js";
 
-interface ConfigOption {
-  id: string;
-  name: string;
+interface ConfigOption extends SelectorOption {
   type: "local" | "assistant" | "create";
   slug?: string;
 }
@@ -32,6 +31,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadConfigs = async () => {
@@ -41,6 +41,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         const organizationId = getOrganizationId(authConfig);
 
         const options: ConfigOption[] = [];
+        let currentId: string | null = null;
 
         // Add local config.yaml if it exists
         if (fs.existsSync(CONFIG_PATH)) {
@@ -48,6 +49,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
             id: "local",
             name: "Local config.yaml",
             type: "local",
+            displaySuffix: " (local)",
           });
         }
 
@@ -81,9 +83,21 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
           id: "create",
           name: "Create new assistant",
           type: "create",
+          displaySuffix: " (opens web)",
         });
 
+        // Determine current config by checking auth config
+        const assistantSlug = getAssistantSlug(authConfig);
+        if (assistantSlug) {
+          // Extract packageSlug from the full slug for matching
+          currentId = assistantSlug.split("/")[1];
+        } else if (fs.existsSync(CONFIG_PATH)) {
+          // No assistant slug means local config is current
+          currentId = "local";
+        }
+
         setConfigs(options);
+        setCurrentConfigId(currentId);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || "Failed to load configurations");
@@ -94,99 +108,19 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
     loadConfigs();
   }, []);
 
-  useInput((input, key) => {
-    if (key.escape) {
-      onCancel();
-      return;
-    }
-
-    if (key.return) {
-      const selectedConfig = configs[selectedIndex];
-      if (selectedConfig) {
-        onSelect(selectedConfig);
-      }
-      return;
-    }
-
-    if (key.upArrow) {
-      setSelectedIndex((prev) => Math.max(0, prev - 1));
-    } else if (key.downArrow) {
-      setSelectedIndex((prev) => Math.min(configs.length - 1, prev + 1));
-    }
-  });
-
-  if (loading) {
-    return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="blue"
-      >
-        <Text color="blue" bold>
-          Configuration Selector
-        </Text>
-        <Text color="gray">Loading configurations...</Text>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="red"
-      >
-        <Text color="red" bold>
-          Error
-        </Text>
-        <Text color="red">{error}</Text>
-        <Text color="gray" dimColor>
-          Press Escape to cancel
-        </Text>
-      </Box>
-    );
-  }
-
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="blue"
-    >
-      <Text color="blue" bold>
-        Select Configuration
-      </Text>
-      <Box flexDirection="column" marginTop={1}>
-        {configs.map((config, index) => {
-          const isSelected = index === selectedIndex;
-
-          return (
-            <Box key={config.id}>
-              <Text
-                color={isSelected ? "blue" : "white"}
-                bold={isSelected}
-                inverse={isSelected}
-              >
-                {isSelected ? "▶ " : "  "}
-                {config.name}
-                {config.type === "local" ? " (local)" : ""}
-                {config.type === "create" ? " (opens web)" : ""}
-                {isSelected ? " (current)" : ""}
-              </Text>
-            </Box>
-          );
-        })}
-      </Box>
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>
-          Use ↑/↓ to navigate, Enter to select, Escape to cancel
-        </Text>
-      </Box>
-    </Box>
+    <Selector
+      title="Select Configuration"
+      options={configs}
+      selectedIndex={selectedIndex}
+      loading={loading}
+      error={error}
+      loadingMessage="Loading configurations..."
+      currentId={currentConfigId}
+      onSelect={onSelect}
+      onCancel={onCancel}
+      onNavigate={setSelectedIndex}
+    />
   );
 };
 

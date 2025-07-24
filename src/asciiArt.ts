@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { getVersion } from "./version.js";
 
 const b = chalk.bold.magenta;
 const d = chalk.dim;
@@ -8,7 +9,8 @@ export const CONTINUE_ASCII_ART = `
  ${b("/ ___/")}${d(" __ \\")}${b("/ |/ /")}${d("_  __/  _/ |/ / / / / __/")}
 ${b("/ /__")}${d("/ /_/ ")}${b("/    /")}${d(" / / _/ //    / /_/ / _/  ")}
 ${b("\\___/")}${d("\\____")}${b("/_/|_/")}${d(" /_/ /___/_/|_/\\____/___/")}
-`;
+
+                                   ${d("v" + getVersion())}`;
 // export const CONTINUE_ASCII_ART = `
 //   _________  _  _____________  ____  ______
 //  / ___/ __ \\/ |/ /_  __/  _/ |/ / / / / __/

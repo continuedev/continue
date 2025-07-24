@@ -209,10 +209,10 @@ export function detectLanguage(code: string): string {
     { regex: /^\s*import\s+.*from\s+['"]/, language: "javascript" },
     { regex: /^\s*const\s+\w+\s*=\s*require\s*\(/, language: "javascript" },
     { regex: /^\s*function\s+\w+\s*\(/, language: "javascript" },
-    { regex: /^\s*interface\s+\w+\s*\{/, language: "typescript" },
+    { regex: /^\s*interface\s+\w+/, language: "typescript" },
     { regex: /^\s*type\s+\w+\s*=/, language: "typescript" },
-    { regex: /^\s*def\s+\w+\s*\(/, language: "python" },
-    { regex: /^\s*class\s+\w+\s*:/, language: "python" },
+    { regex: /^\s*def\s+\w+.*:/, language: "python" },
+    { regex: /^\s*class\s+\w+.*:/, language: "python" },
     { regex: /^\s*public\s+class\s+\w+/, language: "java" },
     { regex: /^\s*#include\s*</, language: "c" },
     { regex: /^\s*using\s+namespace\s+/, language: "cpp" },
@@ -221,7 +221,7 @@ export function detectLanguage(code: string): string {
     { regex: /^\s*fn\s+\w+\s*\(/, language: "rust" },
     { regex: /^\s*<\?php/, language: "php" },
     { regex: /^\s*SELECT\s+.*FROM\s+/i, language: "sql" },
-    { regex: /^\s*\{[\s\S]*".*":\s*/, language: "json" },
+    { regex: /^\s*\{\s*$/, language: "json" },
     { regex: /^\s*---\s*$/, language: "yaml" },
     { regex: /^\s*#!/, language: "bash" },
     { regex: /^\s*<(!DOCTYPE html|html)/i, language: "html" },
@@ -229,9 +229,13 @@ export function detectLanguage(code: string): string {
     { regex: /^\s*#\s+/, language: "markdown" },
   ];
 
-  for (const pattern of patterns) {
-    if (pattern.regex.test(code)) {
-      return pattern.language;
+  // Check patterns line by line for multiline code
+  const lines = code.split('\n');
+  for (const line of lines) {
+    for (const pattern of patterns) {
+      if (pattern.regex.test(line)) {
+        return pattern.language;
+      }
     }
   }
 

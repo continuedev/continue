@@ -19,7 +19,6 @@ import { dirname } from "node:path";
 import {
   AuthConfig,
   getAccessToken,
-  getAssistantSlug,
   getOrganizationId,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
@@ -69,7 +68,7 @@ export function getLlmApi(
 
   if (!llmApi) {
     throw new Error(
-      "Failed to initialized LLM. Please check your configuration."
+      "Failed to initialize LLM. Please check your configuration."
     );
   }
 
@@ -135,42 +134,33 @@ export async function loadConfig(
   }
 
   if (!config) {
-    // Check if there's a saved assistant slug in auth config
-    const assistantSlug = getAssistantSlug(authConfig);
-    if (assistantSlug) {
-      // Use the saved assistant slug
-      config = assistantSlug;
-    } else {
-      // Fall back to listing assistants and taking the first one
-      const assistants = await apiClient.listAssistants({
-        alwaysUseProxy: "false",
+    // Fall back to listing assistants and taking the first one
+    const assistants = await apiClient.listAssistants({
+      alwaysUseProxy: "false",
+      organizationId: organizationId ?? undefined,
+    });
+
+    if (assistants.length === 0) {
+      // In case the user doesn't have any assistants, we fall back to a default - TODO
+      const resp = await apiClient.getAssistant({
+        ownerSlug: "continuedev",
+        packageSlug: "default-agent",
         organizationId: organizationId ?? undefined,
       });
 
-      if (assistants.length === 0) {
-        // In case the user doesn't have any assistants, we fall back to a default - TODO
-        const resp = await apiClient.getAssistant({
-          ownerSlug: "continuedev",
-          packageSlug: "default-agent",
-          organizationId: organizationId ?? undefined,
-        });
-
-        if (!resp.configResult.config) {
-          throw new Error("Failed to load default agent.");
-        }
-        return resp.configResult.config as AssistantUnrolled;
+      if (!resp.configResult.config) {
+        throw new Error("Failed to load default agent.");
       }
-
-      const result = assistants[0].configResult;
-
-      if (result.errors?.length || !result.config) {
-        throw new Error(
-          result.errors?.join("\n") ?? "Failed to load assistant."
-        );
-      }
-
-      return result.config as AssistantUnrolled;
+      return resp.configResult.config as AssistantUnrolled;
     }
+
+    const result = assistants[0].configResult;
+
+    if (result.errors?.length || !result.config) {
+      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
+    }
+
+    return result.config as AssistantUnrolled;
   }
 
   if (
