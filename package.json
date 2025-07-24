@@ -96,7 +96,7 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3"
   },
-  "overrides": {
-    "node-domexception": "npm:@remix-run/web-fetch-deprecated-node-domexception@^1.0.0"
+  "engine": {
+    "node": ">=18"
   }
 }
