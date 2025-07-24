@@ -25,7 +25,11 @@ Basic authentication can be done with any provider using the `apiKey` field:
 config.yaml
 
 ```
-models:  - name: Ollama    provider: ollama    model: llama2-7b    apiKey: <YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>
+models:
+  - name: Ollama
+    provider: ollama
+    model: llama2-7b
+    apiKey: <YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>
 ```
 
 config.json
@@ -53,7 +57,13 @@ If you need to send custom headers for authentication, you may use the `requestO
 config.yaml
 
 ```
-models:  - name: Ollama    provider: ollama    model: llama2-7b    requestOptions:      headers:        X-Auth-Token: xxx
+models:
+  - name: Ollama
+    provider: ollama
+    model: llama2-7b
+    requestOptions:
+      headers:
+        X-Auth-Token: xxx
 ```
 
 config.json
@@ -79,7 +89,15 @@ Similarly if your model requires a Certificate for authentication, you may use t
 config.yaml
 
 ```
-models:  - name: Ollama    provider: ollama    model: llama2-7b    requestOptions:      clientCertificate:        cert: C:\tempollama.pem        key: C:\tempollama.key        passphrase: c0nt!nu3
+models:
+  - name: Ollama
+    provider: ollama
+    model: llama2-7b
+    requestOptions:
+      clientCertificate:
+        cert: C:\tempollama.pem
+        key: C:\tempollama.key
+        passphrase: c0nt!nu3
 ```
 
 config.json

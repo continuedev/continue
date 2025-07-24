@@ -31,6 +31,7 @@ const mcpServerSchema = z.object({
   cwd: z.string().optional(),
   connectionTimeout: z.number().gt(0).optional(),
   requestOptions: requestOptionsSchema.optional(),
+  sourceFile: z.string().optional(),
 });
 
 export type MCPServer = z.infer<typeof mcpServerSchema>;
@@ -39,6 +40,7 @@ const promptSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   prompt: z.string(),
+  sourceFile: z.string().optional(),
 });
 
 export type Prompt = z.infer<typeof promptSchema>;
@@ -48,8 +50,8 @@ const docSchema = z.object({
   startUrl: z.string(),
   rootUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
-  maxDepth: z.number().optional(),
   useLocalCrawling: z.boolean().optional(),
+  sourceFile: z.string().optional(),
 });
 
 export type DocsConfig = z.infer<typeof docSchema>;
@@ -61,6 +63,7 @@ const ruleObjectSchema = z.object({
   globs: z.union([z.string(), z.array(z.string())]).optional(),
   regex: z.union([z.string(), z.array(z.string())]).optional(),
   alwaysApply: z.boolean().optional(),
+  sourceFile: z.string().optional(), //TODO refactor RuleWithSource.ruleFile to align with sourceFile
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
