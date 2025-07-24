@@ -132,6 +132,10 @@ LIMIT ${sampleRows}`);
       throw new Error(`Failed to query PostgreSQL database: ${error}`);
     }
   }
+
+  isDeprecated() {
+    return true;
+  }
 }
 
 export default PostgresContextProvider;

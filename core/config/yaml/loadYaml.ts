@@ -394,25 +394,48 @@ async function configYamlToContinueConfig(options: {
     ({ description: { title } }) => title,
   );
 
-  continueConfig.contextProviders = (config.context
-    ?.map((context) => {
-      const cls = contextProviderClassFromName(context.provider) as any;
-      if (!cls) {
-        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
-          localErrors.push({
-            fatal: false,
-            message: `Unknown context provider ${context.provider}`,
-          });
+  const globalContext = new GlobalContext();
+
+  continueConfig.contextProviders =
+    config.context
+      ?.map((context) => {
+        const cls = contextProviderClassFromName(context.provider) as any;
+        if (!cls) {
+          if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
+            localErrors.push({
+              fatal: false,
+              message: `Unknown context provider ${context.provider}`,
+            });
+          }
+          return undefined;
         }
-        return undefined;
-      }
-      const instance: IContextProvider = new cls({
-        name: context.name,
-        ...context.params,
-      });
-      return instance;
-    })
-    .filter((p) => !!p) ?? []) as IContextProvider[];
+        const instance: IContextProvider = new cls({
+          name: context.name,
+          ...context.params,
+        });
+        return instance;
+      })
+      .filter((p) => !!p)
+      .filter((p) => {
+        if (p.isDeprecated()) {
+          const providerTitle = p.description.title;
+          const shownWarnings =
+            globalContext.get("shownDeprecatedProviderWarnings") ?? {};
+          if (!shownWarnings[providerTitle]) {
+            ide.showToast(
+              "warning",
+              `Context provider ${providerTitle} is deprecated and will be removed in a future version.`,
+            );
+            globalContext.update("shownDeprecatedProviderWarnings", {
+              ...shownWarnings,
+              [providerTitle]: true,
+            });
+          }
+          return true;
+        }
+        return false;
+      }) ?? [];
+
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   if (

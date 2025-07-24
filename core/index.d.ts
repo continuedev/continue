@@ -256,6 +256,8 @@ export interface IContextProvider {
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
+
+  isDeprecated(): boolean;
 }
 
 export interface Session {
