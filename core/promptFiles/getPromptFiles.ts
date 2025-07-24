@@ -79,7 +79,7 @@ After creating the .continue/rules/CONTINUE.md file, provide a summary of what y
 
 Also inform the user that they can create additional rules.md files in subdirectories for more specific documentation related to those components.`;
 
-export const DEFAULT_PROMPTS_FOLDER_V2 = ".continue/prompts";
+export const DEFAULT_PROMPTS_FOLDER_V2 = ".granite-code/prompts";
 
 export async function getPromptFilesFromDir(
   ide: IDE,
@@ -131,7 +131,7 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
-  // Also read from ~/.continue/.prompts
+  // Also read from ~/.granite-code/.prompts
   promptFiles.push(...readAllGlobalPromptFiles());
 
   // Add hardcoded init prompt
