@@ -6,6 +6,11 @@ export const editToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
+  if (!args.filepath || !args.changes) {
+    throw new Error(
+      "`filepath` and `changes` arguments are required to edit an existing file.",
+    );
+  }
   const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
     extras.ideMessenger.ide,

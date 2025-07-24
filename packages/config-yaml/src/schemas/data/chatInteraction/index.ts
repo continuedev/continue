@@ -13,6 +13,7 @@ export const chatInteractionEventAllSchema = baseDevDataAllSchema.extend({
       z.object({
         id: z.string(),
         rule: z.string(),
+        slug: z.string().optional(),
       }),
     )
     .optional(),

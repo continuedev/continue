@@ -13,6 +13,7 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       rule: rule.rule,
       globs: rule.globs,
       name: rule.name,
+      ruleFile: rule.sourceFile,
     };
   }
 }
