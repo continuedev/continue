@@ -1,6 +1,20 @@
-import { Chunk, LLMOptions } from "../../index.js";
+import { z } from "zod";
 
+import { Chunk, LLMOptions } from "../../index.js";
 import OpenAI from "./OpenAI.js";
+
+/**used to check a valid response from voyage is received
+ * reference: https://docs.voyageai.com/reference/reranker-api
+ */
+const VoyageRerankSuccessResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      index: z.number(),
+      relevance_score: z.number(),
+      document: z.string(),
+    }),
+  ),
+});
 
 class Voyage extends OpenAI {
   static providerName = "voyage";
@@ -36,6 +50,9 @@ class Voyage extends OpenAI {
     const data = (await resp.json()) as {
       data: Array<{ index: number; relevance_score: number }>;
     };
+
+    VoyageRerankSuccessResponseSchema.parse(data);
+
     const results = data.data.sort((a, b) => a.index - b.index);
     return results.map((result) => result.relevance_score);
   }
