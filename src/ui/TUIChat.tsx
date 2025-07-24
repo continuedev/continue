@@ -12,12 +12,11 @@ import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
 import FreeTrialStatus from "./FreeTrialStatus.js";
 import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
-import IntroMessage from "./IntroMessage.js";
-import ServiceDebugger from "./ServiceDebugger.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
+import IntroMessage from "./IntroMessage.js";
 import LoadingAnimation from "./LoadingAnimation.js";
 import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
@@ -96,7 +95,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
         setShowIntroMessage(false);
       }
     }
-  }, [isRemoteMode, allServicesReady, services.config?.config, services.model?.model, services.mcp?.mcpService]);
+  }, [
+    isRemoteMode,
+    allServicesReady,
+    services.config?.config,
+    services.model?.model,
+    services.mcp?.mcpService,
+  ]);
 
   // Custom login prompt handler for TUI
   const handleLoginPrompt = (promptText: string): Promise<string> => {
@@ -202,13 +207,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
     !!loginPrompt ||
     isShowingFreeTrialTransition;
 
-
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
       <Box flexDirection="column" flexGrow={1} paddingX={1} overflow="hidden">
         {/* Debug component - comment out when not needed */}
-        {!isRemoteMode && (
+        {/* {!isRemoteMode && (
           <ServiceDebugger
             services={services}
             loading={servicesLoading}
@@ -217,16 +221,20 @@ const TUIChat: React.FC<TUIChatProps> = ({
             servicesLoading={servicesLoading}
             servicesError={servicesError}
           />
-        )}
-        
+        )} */}
+
         {/* Show intro message when ready */}
-        {showIntroMessage && !isRemoteMode && services.config?.config && services.model?.model && services.mcp?.mcpService && (
-          <IntroMessage 
-            config={services.config.config}
-            model={services.model.model}
-            mcpService={services.mcp.mcpService}
-          />
-        )}
+        {showIntroMessage &&
+          !isRemoteMode &&
+          services.config?.config &&
+          services.model?.model &&
+          services.mcp?.mcpService && (
+            <IntroMessage
+              config={services.config.config}
+              model={services.model.model}
+              mcpService={services.mcp.mcpService}
+            />
+          )}
         {messages.map(renderMessage)}
       </Box>
 
