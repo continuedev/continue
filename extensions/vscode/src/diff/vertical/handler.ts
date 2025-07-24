@@ -315,11 +315,12 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // newline separated, because myersDiff() would consider
     // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
     // "A\n" and "A\n\n" are unambiguous.
-    const oldFileContent =
-      diffLines
-        .filter((line) => line.type === "same" || line.type === "old")
-        .map((line) => line.line)
-        .join("\n") + "\n";
+    const oldContentWithoutTrailingNewline = diffLines
+      .filter((line) => line.type === "same" || line.type === "old")
+      .map((line) => line.line)
+      .join("\n");
+
+    const oldFileContent = oldContentWithoutTrailingNewline + "\n";
 
     const newFileContent =
       diffLines
@@ -329,9 +330,16 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     const myersDiffs = myersDiff(oldFileContent, newFileContent);
 
-    const replaceContent = myersDiffs
-      .map((diff) => (diff.type === "old" ? "" : diff.line))
-      .join("\n");
+    // Preserve the trailing newline behavior by checking the original document content
+    const originalDocumentContent = this.editor.document.getText(this.range);
+    const originalContentEndsWithNewline =
+      originalDocumentContent.endsWith("\n");
+
+    // Add trailing newline only if the original file had one to prevent line count discrepancies
+    const replaceContent =
+      myersDiffs
+        .map((diff) => (diff.type === "old" ? "" : diff.line))
+        .join("\n") + (originalContentEndsWithNewline ? "\n" : "");
 
     // Then, we insert our diff lines
     await this.editor.edit((editBuilder) => {

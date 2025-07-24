@@ -290,6 +290,7 @@ data class ApplyState(
     val numDiffs: Int? = null,
     val filepath: String? = null,
     val fileContent: String? = null,
+    val originalFileContent: String? = null,
     val toolCallId: String? = null
 )
 
