@@ -16,18 +16,22 @@ show_help() {
     echo "       oneper -h | --help"
     echo ""
     echo "Commands:"
-    echo "  install --pr <number>    Download and install VSIX from specified PR number"
+    echo "  install --pr <number> [--platform <platform>]"
+    echo "                           Download and install VSIX from specified PR number"
+    echo "                           Platform options: macos, linux (default: macos)"
     echo "  install --latest         Install latest pre-release from VS Code marketplace"
     echo "  clean                    Remove all downloaded VSIX files from oneper cache"
     echo ""
     echo "Options:"
     echo "  -h, --help              Show this help message"
+    echo "  --platform <platform>   Specify platform for PR builds (macos, linux)"
     echo ""
     echo "Examples:"
-    echo "  oneper install --pr 123     # Install VSIX from PR #123"
-    echo "  oneper install --latest     # Install latest pre-release"
-    echo "  oneper clean                # Clear cached VSIX files"
-    echo "  oneper -h                   # Show help"
+    echo "  oneper install --pr 123              # Install macOS VSIX from PR #123"
+    echo "  oneper install --pr 123 --platform linux   # Install Linux VSIX from PR #123"
+    echo "  oneper install --latest              # Install latest pre-release"
+    echo "  oneper clean                         # Clear cached VSIX files"
+    echo "  oneper -h                            # Show help"
     echo ""
     echo "VSIX files are cached in: ~/.continue/.utils/oneper/"
 }
@@ -56,12 +60,29 @@ ensure_oneper_dir() {
 
 install_from_pr() {
     local pr_number=$1
+    local platform=${2:-"macos"}  # Default to macOS
     
     if [ -z "$pr_number" ]; then
         echo "❌ PR number is required"
         show_help
         exit 1
     fi
+
+    # Map platform names to GitHub runner OS names
+    local artifact_suffix
+    case "$platform" in
+        "macos")
+            artifact_suffix="macOS"
+            ;;
+        "linux")
+            artifact_suffix="Linux"
+            ;;
+        *)
+            echo "❌ Unknown platform: $platform"
+            echo "   Supported platforms: macos, linux"
+            exit 1
+            ;;
+    esac
 
     echo "🔍 Getting branch name for PR #$pr_number..."
     
@@ -91,7 +112,7 @@ install_from_pr() {
     fi
 
     echo "✅ Found workflow run: $run_id"
-    echo "📥 Downloading vscode-extension-build artifact..."
+    echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
     
     # Create temporary directory for download
     local temp_dir=$(mktemp -d)
@@ -99,14 +120,15 @@ install_from_pr() {
     # Download the artifact
     if ! gh run download "$run_id" \
         --repo "$REPO" \
-        --name "vscode-extension-build" \
+        --name "vscode-extension-build-$artifact_suffix" \
         --dir "$temp_dir"; then
-        echo "❌ Failed to download artifact"
+        echo "❌ Failed to download artifact vscode-extension-build-$artifact_suffix"
+        echo "   Make sure the workflow run completed successfully for $platform"
         rm -rf "$temp_dir"
         exit 1
     fi
 
-    # Find the VSIX file
+    # Find the VSIX file in the downloaded artifact
     local vsix_file=$(find "$temp_dir" -name "*.vsix" | head -1)
     
     if [ -z "$vsix_file" ]; then
@@ -115,8 +137,17 @@ install_from_pr() {
         exit 1
     fi
 
-    # Create standardized VSIX name with PR number
-    local target_path="$ONEPER_DIR/continue-${pr_number}.vsix"
+    # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
+    local original_filename=$(basename "$vsix_file")
+    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+    
+    if [ -z "$version" ]; then
+        echo "⚠️  Could not extract version from filename: $original_filename"
+        version="unknown"
+    fi
+
+    # Create new VSIX name with version and PR number
+    local target_path="$ONEPER_DIR/continue-${version}-${pr_number}.vsix"
     
     # Check if file already exists and notify about overwrite
     if [ -f "$target_path" ]; then
@@ -196,7 +227,16 @@ main() {
         "install")
             case "$2" in
                 "--pr")
-                    install_from_pr "$3"
+                    # Parse PR number and optional platform
+                    local pr_number="$3"
+                    local platform="macos"  # default
+                    
+                    # Check if --platform is specified
+                    if [ "$4" = "--platform" ] && [ -n "$5" ]; then
+                        platform="$5"
+                    fi
+                    
+                    install_from_pr "$pr_number" "$platform"
                     ;;
                 "--latest")
                     install_latest
