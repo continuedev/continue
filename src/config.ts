@@ -22,6 +22,7 @@ import {
   getOrganizationId,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
+import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 
@@ -123,79 +124,6 @@ export function getApiClient(
   );
 }
 
-export async function loadConfig(
-  authConfig: AuthConfig,
-  config: string | undefined,
-  organizationId: string | null,
-  apiClient?: DefaultApiInterface
-): Promise<AssistantUnrolled> {
-  if (!apiClient) {
-    apiClient = getApiClient(authConfig?.accessToken);
-  }
-
-  if (!config) {
-    // Fall back to listing assistants and taking the first one
-    const assistants = await apiClient.listAssistants({
-      alwaysUseProxy: "false",
-      organizationId: organizationId ?? undefined,
-    });
-
-    if (assistants.length === 0) {
-      // In case the user doesn't have any assistants, we fall back to a default - TODO
-      const resp = await apiClient.getAssistant({
-        ownerSlug: "continuedev",
-        packageSlug: "default-agent",
-        organizationId: organizationId ?? undefined,
-      });
-
-      if (!resp.configResult.config) {
-        throw new Error("Failed to load default agent.");
-      }
-      return resp.configResult.config as AssistantUnrolled;
-    }
-
-    const result = assistants[0].configResult;
-
-    if (result.errors?.length || !result.config) {
-      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
-    }
-
-    return result.config as AssistantUnrolled;
-  }
-
-  if (
-    config.startsWith(".") ||
-    config.startsWith("/") ||
-    config.startsWith("~")
-  ) {
-    // Load from file
-    const configYaml = await loadConfigYaml(
-      authConfig?.accessToken ?? null,
-      config,
-      organizationId,
-      apiClient
-    );
-
-    return configYaml;
-  } else {
-    // Load from slug
-    const [ownerSlug, packageSlug] = config.split("/");
-    const resp = await apiClient.getAssistant({
-      ownerSlug,
-      packageSlug,
-      alwaysUseProxy: "false",
-      organizationId: organizationId ?? undefined,
-    });
-
-    const result = resp.configResult;
-    if (result.errors?.length || !result.config) {
-      throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
-    }
-
-    return result.config as AssistantUnrolled;
-  }
-}
-
 export async function initialize(
   authConfig: AuthConfig,
   configPath: string | undefined
@@ -206,14 +134,9 @@ export async function initialize(
   mcpService: MCPService;
   apiClient: DefaultApiInterface;
 }> {
-  const organizationId = getOrganizationId(authConfig);
   const apiClient = getApiClient(authConfig?.accessToken);
-  const config = await loadConfig(
-    authConfig,
-    configPath,
-    organizationId,
-    apiClient
-  );
+  const result = await loadConfiguration(authConfig, configPath, apiClient);
+  const config = result.config;
   const [llmApi, model] = getLlmApi(config, authConfig);
   const mcpService = await MCPService.create(config);
 

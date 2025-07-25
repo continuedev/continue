@@ -84,9 +84,9 @@ describe('Local Config Switching Investigation', () => {
   });
 
   test('hypothesis: local config loading has different behavior', async () => {
-    // The loadConfig function has two different code paths:
+    // The loadConfiguration function has different code paths:
     
-    const { loadConfig } = await import('../config.js');
+    const { loadConfiguration } = await import('../configLoader.js');
     
     // Path 1: Local file loading (lines 176-189 in config.ts)
     // if (config.startsWith(".") || config.startsWith("/") || config.startsWith("~")) {
@@ -101,10 +101,10 @@ describe('Local Config Switching Investigation', () => {
     //   return result.config;
     // }
     
-    // Hypothesis: The loadConfig function works correctly, but something else is different
+    // Hypothesis: The loadConfiguration function works correctly, but something else is different
     // about how local configs are handled in the ConfigService or service container
     
-    expect(typeof loadConfig).toBe('function');
+    expect(typeof loadConfiguration).toBe('function');
     
     // The issue might be:
     // 1. Different state management for local vs remote configs
@@ -125,7 +125,7 @@ describe('Local Config Switching Investigation', () => {
     // Question: Could the assistant slug clearing/setting be interfering 
     // with the config loading process?
     
-    // In loadConfig, when config is undefined, it checks for saved assistant slug:
+    // In loadConfiguration, when config is undefined, it checks for saved assistant slug:
     // const assistantSlug = getAssistantSlug(authConfig);
     // if (assistantSlug) { config = assistantSlug; }
     
@@ -137,7 +137,7 @@ describe('Local Config Switching Investigation', () => {
     const { ConfigService } = await import('../services/ConfigService.js');
     
     // The ConfigService.updateConfigPath method should work the same for both types:
-    // 1. Load new config via loadConfig(authConfig, newConfigPath, ...)
+    // 1. Load new config via loadConfiguration(authConfig, newConfigPath, ...)
     // 2. Update this.currentState = { config, configPath: newConfigPath }
     // 3. Call serviceContainer.set(CONFIG, this.currentState)
     // 4. Call serviceContainer.reload(MODEL) and serviceContainer.reload(MCP)

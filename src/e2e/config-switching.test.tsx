@@ -49,11 +49,11 @@ describe('Config Switching Implementation Test', () => {
     // The updateConfigPath method is key to reactive config switching
   });
 
-  test('loadConfig function exists for configuration loading', async () => {
-    const configModule = await import('../config.js');
+  test('loadConfiguration function exists for configuration loading', async () => {
+    const configLoaderModule = await import('../configLoader.js');
     
-    // Verify loadConfig function exists and is callable
-    expect(typeof configModule.loadConfig).toBe('function');
+    // Verify loadConfiguration function exists and is callable
+    expect(typeof configLoaderModule.loadConfiguration).toBe('function');
     
     // This is what ConfigService.updateConfigPath uses to load new configs
   });
@@ -76,7 +76,7 @@ describe('Config Switching Implementation Test', () => {
       userAction: 'select different configuration',
       codeFlow: [
         'useConfigSelector calls services.config.updateConfigPath(newPath)',
-        'ConfigService.updateConfigPath loads new config via loadConfig()',
+        'ConfigService.updateConfigPath loads new config via loadConfiguration()',
         'ConfigService calls serviceContainer.set(CONFIG, newState)',
         'ConfigService calls serviceContainer.reload(MODEL)',
         'ConfigService calls serviceContainer.reload(MCP)',
@@ -107,7 +107,7 @@ describe('Config Switching Implementation Test', () => {
     expect(updateConfigPathSource).toContain('serviceContainer.reload');
     expect(updateConfigPathSource).toContain('SERVICE_NAMES.MODEL');
     expect(updateConfigPathSource).toContain('SERVICE_NAMES.MCP');
-    expect(updateConfigPathSource).toContain('loadConfig');
+    expect(updateConfigPathSource).toContain('loadConfiguration');
     
     // This confirms our implementation has the right structure for reactive updates
     console.log('✅ ConfigService.updateConfigPath implementation contains required reactive calls');
