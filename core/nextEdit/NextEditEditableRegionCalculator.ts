@@ -1,7 +1,7 @@
 import Parser from "web-tree-sitter";
 import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
 import { getAst } from "../autocomplete/util/ast";
-import { DocumentAstTracker } from "./DocumentAstTracker";
+import { DocumentAstTracker } from "./DocumentHistoryTracker";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
@@ -431,6 +431,7 @@ function findClosestIdentifierNode(
   if (!node) return null;
 
   if (isIdentifierNode(node)) return node;
+  if (isDeclarationNode(node)) return findLeftmostIdentifier(node);
 
   // Check if the parent is an identifier.
   // NOTE: This will probably never get triggered.
@@ -441,9 +442,12 @@ function findClosestIdentifierNode(
   }
 
   if (parent) {
+    if (isDeclarationNode(parent)) return findLeftmostIdentifier(parent);
+
     // Check if one of the siblings is an identifier.
     for (let i = 0; i < parent.childCount; ++i) {
-      const sibling = node.child(i);
+      // const sibling = node.child(i);
+      const sibling = parent.child(i);
       if (sibling && isIdentifierNode(sibling)) {
         // Get the leftmost identifier sibling.
         return sibling;
@@ -452,6 +456,22 @@ function findClosestIdentifierNode(
   }
 
   return findClosestIdentifierNode(parent);
+}
+
+function findLeftmostIdentifier(
+  node: Parser.SyntaxNode,
+): Parser.SyntaxNode | null {
+  if (isIdentifierNode(node)) return node;
+
+  for (let i = 0; i < node.childCount; ++i) {
+    const child = node.child(i);
+    if (child) {
+      const result = findLeftmostIdentifier(child);
+      if (result) return result;
+    }
+  }
+
+  return null;
 }
 
 // Helper function to check if a node is an identifier.
@@ -466,6 +486,43 @@ function isIdentifierNode(node: Parser.SyntaxNode) {
   // Update this as they come.
   const specialIdentifiers = ["name", "constant"];
   return specialIdentifiers.includes(nodeType);
+}
+
+// Helper function to check if a node is a declaration.
+function isDeclarationNode(node: Parser.SyntaxNode) {
+  const nodeType = node.type;
+
+  // Common declaration patterns.
+  if (nodeType.endsWith("_declaration")) return true;
+  if (nodeType.endsWith("_definition")) return true;
+  if (nodeType.endsWith("_item")) return true; // Rust.
+
+  // Language-specific patterns.
+  const declarationTypes = [
+    // Python.
+    "function_definition",
+    "class_definition",
+    "async_function_definition",
+    "decorated_definition",
+
+    // Ruby.
+    "method",
+    "class",
+    "module",
+    "singleton_method",
+
+    // Java.
+    "variable_declarator",
+    "local_variable_declaration",
+
+    // Go.
+    "short_var_declaration",
+
+    // General
+    "method_definition",
+  ];
+
+  return declarationTypes.includes(nodeType);
 }
 
 // // Helper function to find the closest identifier node.
