@@ -25,3 +25,9 @@ cd ..
 cd config-yaml
 $NPM_INSTALL_CMD
 npm run build
+cd ..
+
+# Build llm-info
+cd llm-info
+$NPM_INSTALL_CMD
+npm run build

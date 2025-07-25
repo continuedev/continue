@@ -237,10 +237,7 @@
     },
     {
       "label": "vscode-extension:build-with-packages",
-      "dependsOn": [
-        "build-packages",
-        "vscode-extension:build"
-      ],
+      "dependsOn": ["build-packages", "vscode-extension:build"],
       "type": "shell",
       "problemMatcher": []
     }

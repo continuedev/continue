@@ -25,4 +25,10 @@ Push-Location "config-yaml"
 npm run build
 Pop-Location
 
+# Build llm-info
+Push-Location "llm-info"
+& cmd /c $npmInstallCmd
+npm run build
+Pop-Location
+
 Pop-Location

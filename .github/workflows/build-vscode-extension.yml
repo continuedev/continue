@@ -105,6 +105,12 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
+      - name: Cache fetch node_modules
+        uses: actions/cache@v4
+        with:
+          path: packages/fetch/node_modules
+          key: ${{ runner.os }}-fetch-node-modules-${{ hashFiles('packages/fetch/package-lock.json') }}
+
       - name: Cache config-yaml node_modules
         uses: actions/cache@v4
         with:
@@ -117,12 +123,6 @@ jobs:
           path: packages/openai-adapters/node_modules
           key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
 
-      - name: Cache fetch node_modules
-        uses: actions/cache@v4
-        with:
-          path: packages/fetch/node_modules
-          key: ${{ runner.os }}-fetch-node-modules-${{ hashFiles('packages/fetch/package-lock.json') }}
-
       - name: Build packages (Windows)
         run: ./scripts/build-packages.ps1
         if: matrix.os == 'windows-latest'
@@ -130,6 +130,31 @@ jobs:
       - name: Build packages (Unix)
         run: ./scripts/build-packages.sh
         if: matrix.os != 'windows-latest'
+
+      # Install and build packages in dependency order
+      - name: Install and build fetch
+        run: |
+          cd packages/fetch
+          npm ci
+          npm run build
+
+      - name: Install and build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm ci
+          npm run build
+
+      - name: Install and build openai-adapters
+        run: |
+          cd packages/openai-adapters
+          npm ci
+          npm run build
+
+      - name: Install and build openai-adapters
+        run: |
+          cd packages/openai-adapters
+          npm ci
+          npm run build
 
       - name: Install extension Dependencies
         run: |
@@ -150,21 +175,6 @@ jobs:
           cd core
           npm ci
           npm i vectordb
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
-
-      - name: Build fetch
-        run: |
-          cd packages/fetch
-          npm run build
 
       # 2.5. Pre package
       - name: Set var for environment info
