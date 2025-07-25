@@ -42,7 +42,14 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { getAst } from "core/autocomplete/util/ast";
+import { DocumentAstTracker } from "core/nextEdit/DocumentAstTracker";
+import {
+  EditableRegionStrategy,
+  getNextEditableRegion,
+} from "core/nextEdit/NextEditEditableRegionCalculator";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { localPathOrUriToPath } from "core/util/pathToUri";
 import { JumpManager } from "../activation/JumpManager";
 import setupNextEditWindowManager, {
   NextEditWindowManager,
@@ -71,6 +78,18 @@ export class VsCodeExtension {
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
   private completionProvider: ContinueCompletionProvider;
+  // Track whether the user is currently typing
+  private isTypingSession = false;
+  private typingTimer: NodeJS.Timeout | null = null;
+  private lastDocumentChangeTime = 0;
+
+  // Reset typing session after a delay
+  resetTypingSession = () => {
+    if (this.typingTimer) clearTimeout(this.typingTimer);
+    this.typingTimer = setTimeout(() => {
+      this.isTypingSession = false;
+    }, 2000); // Typing session considered over after 2 seconds of inactivity
+  };
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -320,6 +339,12 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
+      if (event.contentChanges.length > 0) {
+        this.isTypingSession = true;
+        this.lastDocumentChangeTime = Date.now();
+        this.resetTypingSession();
+      }
+
       const editInfo = await handleTextDocumentChange(
         event,
         this.configHandler,
@@ -353,6 +378,19 @@ export class VsCodeExtension {
       this.core.invoke("files/created", {
         uris: event.files.map((uri) => uri.toString()),
       });
+    });
+
+    vscode.workspace.onDidOpenTextDocument(async (event) => {
+      console.log("onDidOpenTextDocument");
+      const ast = await getAst(event.fileName, event.getText());
+      console.log(ast === undefined);
+      if (ast) {
+        DocumentAstTracker.getInstance().addDocument(
+          localPathOrUriToPath(event.fileName),
+          event.getText(),
+          ast,
+        );
+      }
     });
 
     // When GitHub sign-in status changes, reload config
@@ -389,7 +427,7 @@ export class VsCodeExtension {
       // console.log(
       //   "deleteChain from VsCodeExtension.ts: onDidChangeVisibleTextEditors",
       // );
-      NextEditProvider.getInstance().deleteChain();
+      await NextEditProvider.getInstance().deleteChain();
     });
 
     // Listen for selection changes to hide tooltip when cursor moves.
@@ -423,11 +461,27 @@ export class VsCodeExtension {
         return;
       }
 
+      // 4. The selection change is part of a typing session
+      // Check if this selection change is close enough to a document change to be considered typing
+      const timeSinceLastDocChange = Date.now() - this.lastDocumentChangeTime;
+      if (this.isTypingSession && timeSinceLastDocChange < 500) {
+        // This selection change is likely due to typing, don't delete the chain
+        return;
+      }
+
       // Otherwise, delete the chain (for rejection or unrelated movement).
       console.log(
         "deleteChain from VsCodeExtension.ts: onDidChangeTextEditorSelection",
       );
-      NextEditProvider.getInstance().deleteChain();
+      await NextEditProvider.getInstance().deleteChain();
+      NextEditProvider.getInstance().loadNextEditableRegionsInTheCurrentChain(
+        (await getNextEditableRegion(EditableRegionStrategy.Static, {
+          fileContent: e.textEditor.document.getText(),
+          cursorPosition: e.selections[0].anchor,
+          filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
+          ide: this.ide,
+        })) ?? [],
+      );
     });
 
     // Refresh index when branch is changed
