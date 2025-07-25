@@ -33,11 +33,13 @@ cd ..
 
 # Phase 3: Build packages that depend on other local packages
 cd openai-adapters
+rm -rf node_modules
 $NPM_INSTALL_CMD
 npm run build
 cd ..
 
 cd continue-sdk
+rm -rf node_modules
 $NPM_INSTALL_CMD
 npm run build
 cd ..
