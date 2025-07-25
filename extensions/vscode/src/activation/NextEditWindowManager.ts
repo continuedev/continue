@@ -404,9 +404,9 @@ export class NextEditWindowManager {
       // Disable inline suggestions temporarily.
       // This prevents the race condition between vscode's inline completion provider
       // and the next edit window manager's cursor repositioning logic.
-      await vscode.workspace
-        .getConfiguration()
-        .update("editor.inlineSuggest.enabled", false, true);
+      // await vscode.workspace
+      //   .getConfiguration()
+      //   .update("editor.inlineSuggest.enabled", false, true);
     }
 
     if (success) {
@@ -418,9 +418,9 @@ export class NextEditWindowManager {
         );
 
         // Reenable inline suggestions after we move the cursor.
-        await vscode.workspace
-          .getConfiguration()
-          .update("editor.inlineSuggest.enabled", true, true);
+        // await vscode.workspace
+        //   .getConfiguration()
+        //   .update("editor.inlineSuggest.enabled", true, true);
 
         await this.hideAllNextEditWindows();
       }
