@@ -1,6 +1,5 @@
-import { WebDriver } from "vscode-extension-tester";
+import { By, WebDriver } from "vscode-extension-tester";
 
-import { SelectorUtils } from "./SelectorUtils";
 
 export class NextEditSelectors {
   /**
@@ -8,10 +7,44 @@ export class NextEditSelectors {
    */
   public static async getSvgDecoration(driver: WebDriver) {
     console.log("===")
-    return SelectorUtils.getElementByClassName(
-      driver,
-      "TextEditorDecorationType",
-    );
+    // return SelectorUtils.getElementByClassName(
+    //   driver,
+    //   "TextEditorDecorationType",
+    // );
+    return Promise.any(
+      [
+        await driver.findElement(
+          By.css("[class*='TextEditorDecorationType']")
+        ),
+        await driver.findElement(
+          By.css("[class*=TextEditorDecorationType]")
+        ),
+        await driver.findElement(
+          By.css("*[class*='TextEditorDecorationType']")
+        ),
+        await driver.findElement(
+          By.css("*[class*=TextEditorDecorationType]")
+        ),
+        await driver.findElement(
+          By.css("span[class*='TextEditorDecorationType']")
+        ),
+        await driver.findElement(
+          By.css("span[class*=TextEditorDecorationType]")
+        ),
+        await driver.findElement(
+          By.xpath(`//span[contains(@class, 'TextEditorDecorationType')]`)
+        ),
+        await driver.findElement(
+          By.xpath(`//span[contains(@class, TextEditorDecorationType)]`)
+        ),
+        await driver.findElement(
+          By.xpath(`//*[contains(@class, 'TextEditorDecorationType')]`)
+        ),
+        await driver.findElement(
+          By.xpath(`//*[contains(@class, TextEditorDecorationType)]`)
+        ),
+      ]
+    )
     // try {
     //   const decorations = await driver.findElement(
     //     // By.xpath("//*[contains(@class, 'ced-') and matches(@class, 'ced-2-TextEditorDecorationType[0-9]+-4')]")
