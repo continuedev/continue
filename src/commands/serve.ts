@@ -12,6 +12,7 @@ import {
 } from "../auth/workos.js";
 import { runNormalFlow } from "../onboarding.js";
 import { saveSession } from "../session.js";
+import { initializeServices } from "../services/index.js";
 import { streamChatResponse, type StreamCallbacks } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
@@ -19,15 +20,11 @@ import { getToolDisplayName } from "../tools.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 const execAsync = promisify(exec);
 
-interface ServeOptions {
-  config?: string;
-  readonly?: boolean;
-  noTools?: boolean;
-  verbose?: boolean;
-  rule?: string[];
+interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
 }
@@ -49,6 +46,15 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+
+  // Initialize services with tool permission overrides
+  await initializeServices({
+    toolPermissionOverrides: {
+      allow: options.allow,
+      ask: options.ask,
+      exclude: options.exclude,
+    },
+  });
 
   // Initialize authentication
   const authConfig = loadAuthConfig();

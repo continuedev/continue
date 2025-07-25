@@ -5,6 +5,7 @@ import { ConfigService } from "./ConfigService.js";
 import { MCPServiceWrapper } from "./MCPServiceWrapper.js";
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { ToolPermissionService } from "./ToolPermissionService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -19,6 +20,7 @@ const configService = new ConfigService();
 const modelService = new ModelService();
 const apiClientService = new ApiClientService();
 const mcpServiceWrapper = new MCPServiceWrapper();
+const toolPermissionService = new ToolPermissionService();
 
 /**
  * Initialize all services and register them with the service container
@@ -27,6 +29,12 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
   // Register service factories with dependencies
+  serviceContainer.register(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
+    () => toolPermissionService.initialize(options.toolPermissionOverrides),
+    [] // No dependencies - initialize first
+  );
+
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
     () => authService.initialize(),
@@ -160,6 +168,7 @@ export function reloadService(serviceName: string) {
  */
 export function areServicesReady(): boolean {
   return [
+    SERVICE_NAMES.TOOL_PERMISSIONS,
     SERVICE_NAMES.AUTH,
     SERVICE_NAMES.API_CLIENT,
     SERVICE_NAMES.CONFIG,
@@ -184,6 +193,7 @@ export const services = {
   model: modelService,
   apiClient: apiClientService,
   mcp: mcpServiceWrapper,
+  toolPermissions: toolPermissionService,
 } as const;
 
 // Export the service container for advanced usage

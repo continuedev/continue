@@ -51,6 +51,36 @@ program
     },
     [] as string[]
   )
+  .option(
+    "--allow <tool>",
+    "Allow specified tool (overrides default policies). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--ask <tool>",
+    "Ask for permission before using specified tool (overrides default policies). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--exclude <tool>",
+    "Exclude specified tool from use (overrides default policies). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
@@ -124,6 +154,36 @@ program
   .option(
     "--rule <rule>",
     "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--allow <tool>",
+    "Allow specified tool (overrides default policies). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--ask <tool>",
+    "Ask for permission before using specified tool (overrides default policies). Can be specified multiple times.",
+    (value: string, previous: string[] | undefined) => {
+      const array = Array.isArray(previous) ? previous : [];
+      array.push(value);
+      return array;
+    },
+    [] as string[]
+  )
+  .option(
+    "--exclude <tool>",
+    "Exclude specified tool from use (overrides default policies). Can be specified multiple times.",
     (value: string, previous: string[] | undefined) => {
       const array = Array.isArray(previous) ? previous : [];
       array.push(value);

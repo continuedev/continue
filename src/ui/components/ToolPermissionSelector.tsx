@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
 import { getToolDisplayName } from "../../tools.js";
+import { ToolPreview, DetailedToolPreview } from "./ToolPreview.js";
 
 interface PermissionOption {
   id: string;
@@ -90,6 +91,14 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       <Text color="magenta" bold>
         {displayName}({formattedArgs})
       </Text>
+
+      {/* Show preview of what the tool will do */}
+      <Box marginTop={1}>
+        <ToolPreview toolName={toolName} toolArgs={toolArgs} />
+      </Box>
+
+      {/* Show detailed preview if available */}
+      <DetailedToolPreview toolName={toolName} toolArgs={toolArgs} />
 
       <Box marginTop={1} flexDirection="column">
         <Text color="dim">Would you like to continue?</Text>

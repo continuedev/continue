@@ -227,11 +227,11 @@ describe("Permission Checker", () => {
 
     it("should use default policies when no custom permissions provided", () => {
       const result = checkToolPermission({
-        name: "readFile",
+        name: "read_file",
         arguments: { path: "/test.txt" },
       });
 
-      // Should match the default policies (readFile should be "allow")
+      // Should match the default policies (read_file should be "allow")
       expect(result.permission).toBe("allow");
     });
 

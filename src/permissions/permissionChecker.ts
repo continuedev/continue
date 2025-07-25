@@ -1,3 +1,6 @@
+import { getServiceSync } from "../services/index.js";
+import { SERVICE_NAMES } from "../services/types.js";
+import type { ToolPermissionServiceState } from "../services/types.js";
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import {
   PermissionCheckResult,
@@ -54,7 +57,20 @@ export function checkToolPermission(
   toolCall: ToolCallRequest,
   permissions?: ToolPermissions
 ): PermissionCheckResult {
-  const policies = permissions?.policies || DEFAULT_TOOL_POLICIES;
+  // Get permissions from service if not provided
+  let policies = permissions?.policies;
+  
+  if (!policies) {
+    try {
+      const serviceResult = getServiceSync<ToolPermissionServiceState>(
+        SERVICE_NAMES.TOOL_PERMISSIONS
+      );
+      policies = serviceResult.value?.permissions.policies || DEFAULT_TOOL_POLICIES;
+    } catch {
+      // Service not initialized yet, use defaults
+      policies = DEFAULT_TOOL_POLICIES;
+    }
+  }
 
   for (const policy of policies) {
     if (
