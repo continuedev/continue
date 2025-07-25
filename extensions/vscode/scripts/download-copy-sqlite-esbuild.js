@@ -1,83 +1,40 @@
 const { fork } = require("child_process");
 const fs = require("fs");
-const https = require("https");
 const path = require("path");
 
+const { ProxyAgent } = require("undici");
 const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util");
 
 /**
- * download a file using nodejs http
+ * download a file using fetch API
  * @param {string} url
  * @param {string} outputPath
- * @param {number} maxRedirects
  */
-async function downloadFile(url, outputPath, maxRedirects = 5) {
-  return new Promise((resolve, reject) => {
-    const downloadWithRedirects = (currentUrl, redirectCount = 0) => {
-      if (redirectCount > maxRedirects) {
-        return reject(new Error(`Too many redirects (${maxRedirects})`));
-      }
+async function downloadFile(url, outputPath) {
+  // Use proxy if set in environment variables
+  const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
+  const agent = proxy ? new ProxyAgent(proxy) : undefined;
 
-      const request = https.get(currentUrl, (response) => {
-        if (
-          response.statusCode >= 300 &&
-          response.statusCode < 400 &&
-          response.headers.location
-        ) {
-          return downloadWithRedirects(
-            response.headers.location,
-            redirectCount + 1,
-          );
-        }
-
-        if (response.statusCode !== 200) {
-          return reject(
-            new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`),
-          );
-        }
-
-        const outputDir = path.dirname(outputPath);
-        if (!fs.existsSync(outputDir)) {
-          fs.mkdirSync(outputDir, { recursive: true });
-        }
-
-        const writeStream = fs.createWriteStream(outputPath);
-
-        const totalSize = parseInt(response.headers["content-length"], 10);
-        let downloadedSize = 0;
-
-        response.on("data", (chunk) => {
-          downloadedSize += chunk.length;
-          if (totalSize) {
-            const percent = ((downloadedSize / totalSize) * 100).toFixed(1);
-            process.stdout.write(
-              `\rDownloading: ${percent}% (${downloadedSize}/${totalSize} bytes)`,
-            );
-          }
-        });
-
-        response.pipe(writeStream);
-
-        writeStream.on("finish", () => {
-          console.log(`\nDownload completed: ${outputPath}`);
-          resolve(outputPath);
-        });
-
-        writeStream.on("error", reject);
-        response.on("error", reject);
-      });
-
-      request.on("error", reject);
-      request.setTimeout(30000, () => {
-        request.destroy();
-        reject(new Error("Request timeout"));
-      });
-    };
-
-    downloadWithRedirects(url);
+  const response = await fetch(url, {
+    redirect: "follow", // Automatically follow redirects
+    dispatcher: agent,
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download file, status code: ${response.status}`);
+  }
+
+  // Create output directory if it doesn't exist
+  const outputDir = path.dirname(outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // Get the response as an array buffer and write it to the file
+  const buffer = await response.arrayBuffer();
+  fs.writeFileSync(outputPath, Buffer.from(buffer));
 }
 
 /**
