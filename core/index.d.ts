@@ -1396,6 +1396,7 @@ export interface ApplyToFilePayload {
   text: string;
   toolCallId?: string;
   isSearchAndReplace?: boolean;
+  showSaveDialog?: boolean;
 }
 
 export interface RangeInFileWithContents {
