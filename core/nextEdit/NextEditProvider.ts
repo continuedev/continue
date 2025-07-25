@@ -38,7 +38,7 @@ import {
   calculateFinalCursorPosition,
   getOffsetPositionAtLastNewLine,
 } from "./diff/diff.js";
-import { DocumentAstTracker } from "./DocumentAstTracker.js";
+import { DocumentAstTracker } from "./DocumentHistoryTracker.js";
 import {
   EditableRegionStrategy,
   getNextEditableRegion,
@@ -379,6 +379,7 @@ export class NextEditProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
+    withChain: boolean,
   ): Promise<NextEditOutcome | undefined> {
     try {
       this.previousRequest = input;
@@ -395,6 +396,12 @@ export class NextEditProvider {
       // Debounce
       if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
+      }
+
+      // Depending on whether this method is called from provideInlineCompletionItemsWithChain,
+      // shift the next editable regions.
+      if (withChain) {
+        this.shiftNextEditableRegionsInTheCurrentChain();
       }
 
       const llm = await this._prepareLlm();
@@ -451,6 +458,7 @@ export class NextEditProvider {
           // input.recentlyEditedRanges,
         );
         this.promptMetadata = promptMetadata;
+
         prompts.push({
           role: "system",
           content: [
@@ -640,8 +648,13 @@ export class NextEditProvider {
 
       const fileContent = previousOutcome.fileContentsBeforeAccept;
       const filepath = localPathOrUriToPath(previousOutcome.fileUri);
+      console.log(
+        "number of next editable regions:",
+        this.nextEditableRegionsInTheCurrentChain.length,
+      );
 
       if (this.nextEditableRegionsInTheCurrentChain.length === 0) {
+        console.log("empty next editable regions list");
         this.loadNextEditableRegionsInTheCurrentChain(
           (await getNextEditableRegion(EditableRegionStrategy.Static, {
             fileContent,
@@ -659,14 +672,15 @@ export class NextEditProvider {
 
       const input = await this.buildAutocompleteInputFromChain(
         previousOutcome,
-        this.nextEditableRegionsInTheCurrentChain[0],
+        this.nextEditableRegionsInTheCurrentChain[0], // this will be shifted after debouncer check
         ctx,
       );
       if (!input) {
         return undefined;
       }
 
-      return await this.provideInlineCompletionItems(input, token);
+      const WITH_CHAIN = true;
+      return await this.provideInlineCompletionItems(input, token, WITH_CHAIN);
     } catch (e: any) {
       this.onError(e);
     }
@@ -701,7 +715,13 @@ export class NextEditProvider {
   }
 
   public loadNextEditableRegionsInTheCurrentChain(regions: RangeInFile[]) {
+    console.log("regions after load:", regions.length);
     this.nextEditableRegionsInTheCurrentChain = regions;
+  }
+
+  public shiftNextEditableRegionsInTheCurrentChain() {
+    console.log("shift", this.nextEditableRegionsInTheCurrentChain.length);
+    this.nextEditableRegionsInTheCurrentChain.shift();
   }
 
   public async provideNextEditPrediction(
