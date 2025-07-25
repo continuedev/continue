@@ -5,7 +5,7 @@ export default defineConfig({
     environment: "node",
     timeout: 10000,
     globals: true,
-    include: ["**/*.{test,spec,vitest}.?(c|m)[jt]s?(x)"],
+    include: ["**/*.{test,spec}.?(c|m)[jt]s?(x)"],
   },
   resolve: {
     alias: {
