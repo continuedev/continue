@@ -182,7 +182,6 @@ install_from_pr() {
     if code --install-extension "$target_path"; then
         echo "✅ Successfully installed Continue extension from PR #$pr_number"
         echo "📄 VSIX file saved to: $target_path"
-        echo "🔖 Extension version: ${version}-${pr_number} (set by workflow)"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"
         echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
