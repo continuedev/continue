@@ -40,18 +40,34 @@ export function getRangeInFileWithContents(
       return null;
     }
 
-    let selectionRange = new vscode.Range(selection.start, selection.end);
-    const document = editor.document;
-    // Select the context from the beginning of the selection start line to the selection start position
-    const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
-    const textBeforeSelectionStart = document.getText(
-      new vscode.Range(beginningOfSelectionStartLine, selection.start),
-    );
-    // If there are only whitespace before the start of the selection, include the indentation
-    if (textBeforeSelectionStart.trim().length === 0) {
-      selectionRange = selectionRange.with({
-        start: beginningOfSelectionStartLine,
-      });
+    let selectionRange: vscode.Range | undefined;
+    // if the selection is empty and the line is not, then use the entire line
+    if (selection.isEmpty) {
+      const startLine = editor.document.lineAt(selection.start.line);
+      if (startLine.isEmptyOrWhitespace) {
+        // Empty selection on an empty line, nothing else to do here
+        return null;
+      }
+      // Select the whole line
+      selectionRange = new vscode.Range(
+        selection.start.with(undefined, 0),
+        selection.end.with(undefined, startLine.range.end.character),
+      );
+    }
+    if (!selectionRange) {
+      selectionRange = new vscode.Range(selection.start, selection.end);
+      const document = editor.document;
+      // Select the context from the beginning of the selection start line to the selection start position
+      const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
+      const textBeforeSelectionStart = document.getText(
+        new vscode.Range(beginningOfSelectionStartLine, selection.start),
+      );
+      // If there are only whitespace before the start of the selection, include the indentation
+      if (textBeforeSelectionStart.trim().length === 0) {
+        selectionRange = selectionRange.with({
+          start: beginningOfSelectionStartLine,
+        });
+      }
     }
 
     const contents = editor.document.getText(selectionRange);
@@ -78,7 +94,7 @@ export function getRangeInFileWithContents(
 export async function addHighlightedCodeToContext(
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
-  const rangeInFileWithContents = getRangeInFileWithContents();
+  const rangeInFileWithContents = getRangeInFileWithContents(true);
   if (rangeInFileWithContents) {
     webviewProtocol?.request("highlightedCode", {
       rangeInFileWithContents,
