@@ -1,5 +1,5 @@
-import { Box, Text } from "ink";
-import React, { useEffect, useState } from "react";
+import { Box, Text, useApp, useStdout } from "ink";
+import React, { useEffect, useMemo, useState } from "react";
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -22,6 +22,8 @@ import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
 import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
+import { getGitRemoteUrl, getRepoUrl, isGitRepo } from "../util/git.js";
+import useTerminalSize from "./hooks/useTerminalSize.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -42,7 +44,29 @@ const TUIChat: React.FC<TUIChatProps> = ({
   additionalRules,
 }) => {
   // Check if we're in remote mode
-  const isRemoteMode = !!remoteUrl;
+  const isRemoteMode = useMemo(() => {
+    return !!remoteUrl;
+  }, [remoteUrl]);
+
+  const repoURlText = useMemo(() => {
+    let url = remoteUrl ?? "";
+    if (!url) {
+      const isGit = isGitRepo();
+      if (isGit) {
+        const gitUrl = getGitRemoteUrl();
+        if (gitUrl) {
+          url = gitUrl;
+        }
+      }
+    }
+    if (!url) {
+      url = process.cwd();
+    }
+
+    url = url.replace(/\.git$/, "");
+    url = url.replace(/^(https|http):\/\/.*?\//, "");
+    return url;
+  }, [remoteUrl]);
 
   // Get all services reactively - only in normal mode
   const {
@@ -321,6 +345,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
           alignItems="center"
         >
           <Box>
+            <Text color="dim" wrap="truncate-start">
+              {repoURlText}
+            </Text>
+          </Box>
+          <Box>
             {!isRemoteMode && services.model?.model && (
               <FreeTrialStatus
                 apiClient={services.apiClient?.apiClient || undefined}
@@ -329,7 +358,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
               />
             )}
           </Box>
-          <Box marginRight={2}>
+          <Box marginRight={2} marginLeft={2}>
             <UpdateNotification isRemoteMode={isRemoteMode} />
           </Box>
         </Box>
