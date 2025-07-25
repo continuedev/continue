@@ -50,10 +50,7 @@ jobs:
 
   build-packages:
     needs: install-root
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -63,16 +60,6 @@ jobs:
 
       - name: Build packages (Unix)
         run: ./scripts/build-packages.sh
-
-      # Upload built packages as artifacts
-      - name: Upload built packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: built-packages-${{ matrix.os }}
-          path: |
-            packages/*/dist/
-            packages/*/node_modules/
-          retention-days: 1
 
   config-yaml-checks:
     needs: build-packages
@@ -89,15 +76,9 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Check config-yaml
+      - name: Build packages and check config-yaml
         run: |
+          ./scripts/build-packages.sh
           cd packages/config-yaml
           npx tsc --noEmit
           # Tests are currently failing, commenting out for now
@@ -135,7 +116,7 @@ jobs:
           npm ci
 
   core-checks:
-    needs: [install-core, build-packages]
+    needs: install-core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -154,12 +135,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
+      - name: Build packages and install core dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd core
+          npm ci
 
       - name: Type check and lint
         run: |
@@ -170,7 +150,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   install-gui:
-    needs: [install-root, install-core, build-packages]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -195,16 +175,10 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Install gui dependencies
+      - name: Build packages and install gui dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
         run: |
+          ./scripts/build-packages.sh
           cd gui
           npm ci
 
@@ -232,12 +206,11 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
+      - name: Build packages and install gui dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd gui
+          npm ci
 
       - name: Type check and lint
         run: |
@@ -246,7 +219,7 @@ jobs:
           npm run lint
 
   binary-checks:
-    needs: [install-root, install-core, build-packages]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -271,16 +244,10 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Install binary dependencies
+      - name: Build packages and install binary dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
         run: |
+          ./scripts/build-packages.sh
           cd binary
           npm ci
 
@@ -290,7 +257,7 @@ jobs:
           npx tsc --noEmit
 
   install-vscode:
-    needs: [install-root, install-core, build-packages]
+    needs: [install-root, install-core]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -318,16 +285,10 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-${{ matrix.os }}
-          path: .
-
-      - name: Install vscode dependencies
+      - name: Build packages and install vscode dependencies
         if: steps.vscode-cache.outputs.cache-hit != 'true'
         run: |
+          ./scripts/build-packages.sh
           cd extensions/vscode
           npm ci
         env:
@@ -359,12 +320,13 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
+      - name: Build packages and install vscode dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd extensions/vscode
+          npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Type check and lint
         run: |
@@ -379,7 +341,7 @@ jobs:
           npm run vitest
 
   core-tests:
-    needs: [install-core, build-packages]
+    needs: install-core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -393,12 +355,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
+      - name: Build packages and install core dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd core
+          npm ci
 
       - name: Run core tests
         run: |
@@ -417,7 +378,6 @@ jobs:
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
 
   package-tests:
-    needs: build-packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -426,20 +386,13 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Run config-yaml tests
+      - name: Build packages and run tests
         run: |
+          ./scripts/build-packages.sh
           cd packages/config-yaml
           npm test
 
   openai-adapters-tests:
-    needs: build-packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -453,15 +406,9 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Run openai-adapters tests
+      - name: Build packages and run tests
         run: |
+          ./scripts/build-packages.sh
           cd packages/openai-adapters
           npm test
         env:
@@ -478,7 +425,7 @@ jobs:
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [install-root, install-vscode, build-packages]
+    needs: [install-root, install-vscode]
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
@@ -490,16 +437,10 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Get test files
+      - name: Build packages and get test files
         id: vscode-get-test-file-matrix
         run: |
+          ./scripts/build-packages.sh
           cd extensions/vscode
           npm ci
           npm run e2e:compile
@@ -522,7 +463,7 @@ jobs:
           echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
 
   vscode-package-extension:
-    needs: [install-vscode, install-core, build-packages]
+    needs: [install-vscode, install-core]
     uses: ./.github/workflows/build-vscode-extension.yml
     with:
       # Limited platforms for faster PR checks
@@ -547,7 +488,7 @@ jobs:
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest
-    needs: [install-vscode, install-core, build-packages]
+    needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
 
@@ -567,16 +508,10 @@ jobs:
           path: extensions/vscode/e2e/storage
           key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Download Dependencies
+      - name: Build packages and download e2e dependencies
         if: steps.storage-cache.outputs.cache-hit != 'true'
         run: |
+          ./scripts/build-packages.sh
           cd extensions/vscode
           npm run e2e:ci:download
 
@@ -595,7 +530,6 @@ jobs:
         vscode-package-extension,
         install-vscode,
         install-core,
-        build-packages,
       ]
     runs-on: ubuntu-latest
     # Tests requiring secrets need approval from maintainers
@@ -636,12 +570,8 @@ jobs:
           name: vscode-e2e-dependencies
           path: extensions/vscode/e2e/storage
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
+      - name: Build packages
+        run: ./scripts/build-packages.sh
 
       - name: Fix VSCode binary permissions
         run: |
@@ -706,7 +636,7 @@ jobs:
           path: extensions/vscode/e2e.log
 
   gui-tests:
-    needs: [install-gui, install-core, build-packages]
+    needs: [install-gui, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -725,15 +655,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
-
-      - name: Install GUI dependencies
-        run: cd gui && npm ci
+      - name: Build packages and install GUI dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd gui
+          npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
@@ -743,7 +669,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [install-root, core-checks, build-packages]
+    needs: [install-root, core-checks]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -752,12 +678,8 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      # Download built packages
-      - name: Download built packages
-        uses: actions/download-artifact@v4
-        with:
-          name: built-packages-ubuntu-latest
-          path: .
+      - name: Build packages
+        run: ./scripts/build-packages.sh
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
