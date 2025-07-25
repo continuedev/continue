@@ -24,6 +24,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "o3",
         "gemini",
         "claude-opus-4",
+        "gemma",
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
@@ -57,6 +58,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         model.toLowerCase().startsWith("gpt-4") ||
         model.toLowerCase().startsWith("o3")
       ) {
+        return true;
+      }
+      // https://ai.google.dev/gemma/docs/capabilities/function-calling
+      if (model.toLowerCase().startsWith("gemma")) {
         return true;
       }
       // firworks-ai https://docs.fireworks.ai/guides/function-calling
