@@ -17,11 +17,11 @@ class CoreMessenger(
     private val project: Project,
     private val ideProtocolClient: IdeProtocolClient,
     val coroutineScope: CoroutineScope,
-    private val onExit: () -> Unit
+    private val onUnexpectedExit: () -> Unit
 ) {
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
-    private val process = startContinueProcess()
+    private var process = startContinueProcess()
     private val log = Logger.getInstance(CoreMessenger::class.java)
 
     fun request(messageType: String, data: Any?, messageId: String?, onResponse: (Any?) -> Unit) {
@@ -36,7 +36,7 @@ class CoreMessenger(
         val process = if (isTcp)
             ContinueSocketProcess()
         else
-            ContinueBinaryProcess(onExit)
+            ContinueBinaryProcess(onUnexpectedExit)
         return ContinueProcessHandler(coroutineScope, process, ::handleMessage)
     }
 
@@ -81,7 +81,15 @@ class CoreMessenger(
             null
         }
 
-    fun killSubProcess() {
+    fun restart() {
+        log.warn("Restarting Continue process")
+        responseListeners.clear()
+        process.close()
+        process = startContinueProcess()
+    }
+
+    fun close() {
+        log.warn("Closing Continue process")
         process.close()
     }
 }

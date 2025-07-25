@@ -55,7 +55,7 @@ export class AnthropicApi implements BaseLlmApi {
     return cachingStrategy(cleanBody);
   }
 
-  private _convertToCleanAnthropicBody(oaiBody: ChatCompletionCreateParams) {
+  public _convertToCleanAnthropicBody(oaiBody: ChatCompletionCreateParams) {
     let stop = undefined;
     if (oaiBody.stop && Array.isArray(oaiBody.stop)) {
       stop = oaiBody.stop.filter((x) => x.trim() !== "");
@@ -219,27 +219,9 @@ export class AnthropicApi implements BaseLlmApi {
       ],
     };
   }
-  async *chatCompletionStream(
-    body: ChatCompletionCreateParamsStreaming,
-    signal: AbortSignal,
-  ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    body.messages;
-    const response = await customFetch(this.config.requestOptions)(
-      new URL("messages", this.apiBase),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "anthropic-version": "2023-06-01",
-          "anthropic-beta": "prompt-caching-2024-07-31",
-          "x-api-key": this.config.apiKey,
-        },
-        body: JSON.stringify(this._convertBody(body)),
-        signal,
-      },
-    );
 
+  // This is split off so e.g. VertexAI can use it
+  async *handleStreamResponse(response: any, model: string) {
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
 
@@ -272,7 +254,7 @@ export class AnthropicApi implements BaseLlmApi {
             case "text_delta":
               yield chatChunk({
                 content: value.delta.text,
-                model: body.model,
+                model,
               });
               break;
             case "input_json_delta":
@@ -280,7 +262,7 @@ export class AnthropicApi implements BaseLlmApi {
                 throw new Error("No tool use found");
               }
               yield chatChunkFromDelta({
-                model: body.model,
+                model,
                 delta: {
                   tool_calls: [
                     {
@@ -308,12 +290,35 @@ export class AnthropicApi implements BaseLlmApi {
     }
 
     yield usageChatChunk({
-      model: body.model,
+      model,
       usage: {
         ...usage,
         total_tokens: usage.completion_tokens + usage.prompt_tokens,
       },
     });
+  }
+
+  async *chatCompletionStream(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    body.messages;
+    const response = await customFetch(this.config.requestOptions)(
+      new URL("messages", this.apiBase),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "anthropic-version": "2023-06-01",
+          "anthropic-beta": "prompt-caching-2024-07-31",
+          "x-api-key": this.config.apiKey,
+        },
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
+      },
+    );
+    yield* this.handleStreamResponse(response, body.model);
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,

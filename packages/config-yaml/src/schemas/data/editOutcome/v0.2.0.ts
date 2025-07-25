@@ -20,6 +20,7 @@ export const editOutcomeEventSchema_0_2_0 = editOutcomeEventAllSchema.pick({
   previousCodeLines: true,
   newCodeLines: true,
   lineChange: true,
+  filepath: true,
 });
 
 export const editOutcomeEventSchema_0_2_0_noCode =

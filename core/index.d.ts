@@ -1360,6 +1360,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  originalFileContent?: string;
   toolCallId?: string;
 }
 
