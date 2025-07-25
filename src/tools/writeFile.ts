@@ -8,7 +8,7 @@ import {
 } from "../telemetry/utils.js";
 import { Tool } from "./types.js";
 
-function generateDiff(
+export function generateDiff(
   oldContent: string,
   newContent: string,
   filePath: string

@@ -4,6 +4,9 @@ export type ToolParameters = Record<
     type: string;
     description: string;
     required: boolean;
+    items?: {
+      type: string;
+    };
   }
 >;
 
