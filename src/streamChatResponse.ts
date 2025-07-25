@@ -266,13 +266,8 @@ async function processStreamingResponse(
             try {
               toolCall.arguments = JSON.parse(toolCall.argumentsStr);
 
-              // Notify on first successful parse
-              if (!toolCall.startNotified && toolCall.name) {
-                toolCall.startNotified = true;
-                if (callbacks?.onToolStart) {
-                  callbacks.onToolStart(toolCall.name, toolCall.arguments);
-                }
-              }
+              // Don't notify onToolStart here anymore - wait until after permission check
+              toolCall.startNotified = true;
             } catch (e) {
               // JSON not complete yet, continue
             }
@@ -530,6 +525,11 @@ export async function streamChatResponse(
               callbacks.onToolResult(deniedMessage, toolCall.name);
             }
             continue;
+          }
+
+          // Now that permission is approved, notify tool start
+          if (callbacks?.onToolStart) {
+            callbacks.onToolStart(toolCall.name, toolCall.arguments);
           }
 
           logger.debug("Executing tool", {
