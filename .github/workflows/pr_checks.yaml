@@ -618,20 +618,25 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v4
-        id: fetch-cache
-        with:
-          path: packages/fetch/node_modules
-          key: ${{ runner.os }}-fetch-node-modules-${{ hashFiles('packages/fetch/package-lock.json') }}
+      # - uses: actions/cache@v4
+      #   id: fetch-cache
+      #   with:
+      #     path: packages/fetch/node_modules
+      #     key: ${{ runner.os }}-fetch-node-modules-${{ hashFiles('packages/fetch/package-lock.json') }}
 
-      - name: Install fetch dependencies
-        if: steps.fetch-cache.outputs.cache-hit != 'true'
-        run: |
-          cd packages/fetch
-          npm ci
+      # - name: Install fetch dependencies
+      #   if: steps.fetch-cache.outputs.cache-hit != 'true'
+      #   run: |
+      #     cd packages/fetch
+      #     npm ci
 
-      - name: Run fetch tests
+      # - name: Run fetch tests
+      #   run: |
+      #     cd packages/fetch
+      #     npm test
+      - name: Build packages and run tests
         run: |
+          ./scripts/build-packages.sh
           cd packages/fetch
           npm test
 
