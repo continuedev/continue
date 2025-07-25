@@ -11,5 +11,5 @@ jobs:
     with:
       # Uses default platforms (all supported platforms)
       pre-release: false
-      commit-id: ${{ github.sha }}
+      commit-sha: ${{ github.sha }}
     secrets: inherit

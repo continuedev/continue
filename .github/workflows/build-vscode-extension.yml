@@ -63,12 +63,8 @@ on:
         required: false
         type: boolean
         default: false
-      pr-number:
-        description: "PR number for version modification (optional)"
-        required: false
-        type: string
-      commit-id:
-        description: "Commit ID for version modification (optional)"
+      commit-sha:
+        description: "Commit SHA for version modification (optional, uses first 7 chars)"
         required: false
         type: string
 
@@ -186,38 +182,16 @@ jobs:
           cd extensions/vscode
           npm install -f esbuild
 
-      # 3.5. Modify version for PR builds
-      - name: Modify package.json version for PR builds
-        if: inputs.pr-number != ''
+      # 3.5. Modify version with commit SHA
+      - name: Modify package.json version with commit SHA
+        if: inputs.commit-sha != ''
         run: |
           cd extensions/vscode
           # Get current version from package.json
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-          # Create new version with PR number
-          NEW_VERSION="${CURRENT_VERSION}-${{ inputs.pr-number }}"
-
-          echo "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"
-
-          # Update version in package.json
-          sed -i.bak "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
-
-          # Remove backup file
-          rm -f package.json.bak
-
-          # Verify the change
-          echo "✅ New version: $(node -p "require('./package.json').version")"
-
-      # 3.6. Modify version for main builds with commit ID
-      - name: Modify package.json version for main builds
-        if: inputs.commit-id != ''
-        run: |
-          cd extensions/vscode
-          # Get current version from package.json
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-
-          # Create new version with short commit ID
-          COMMIT_SHORT="${{ inputs.commit-id }}"
+          # Create new version with short commit SHA (first 7 chars)
+          COMMIT_SHORT="${{ inputs.commit-sha }}"
           NEW_VERSION="${CURRENT_VERSION}-${COMMIT_SHORT:0:7}"
 
           echo "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"
