@@ -9,7 +9,22 @@ jobs:
   build:
     uses: ./.github/workflows/build-vscode-extension.yml
     with:
-      # Uses default platforms (all supported platforms)
+      # Build only for macOS latest and Ubuntu latest
+      platforms: |
+        [
+          {
+            "os": "ubuntu-latest",
+            "platform": "linux",
+            "arch": "x64",
+            "npm_config_arch": "x64"
+          },
+          {
+            "os": "macos-latest",
+            "platform": "darwin",
+            "arch": "arm64",
+            "npm_config_arch": "arm64"
+          }
+        ]
       pre-release: false
       commit-sha: ${{ github.sha }}
     secrets: inherit
