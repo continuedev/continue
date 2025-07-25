@@ -2,7 +2,7 @@
 set -e
 
 # oneper - Install Continue VS Code extension from PR builds or latest pre-release
-# Usage: 
+# Usage:
 #   oneper install --pr X     - Install VSIX from PR number X
 #   oneper install --latest   - Install latest pre-release from marketplace
 
@@ -18,7 +18,7 @@ show_help() {
     echo "Commands:"
     echo "  install --pr <number> [--platform <platform>]"
     echo "                           Download and install VSIX from specified PR number"
-    echo "                           Platform options: macos, linux (default: macos)"
+    echo "                           Platform options: macos, linux (auto-detected by default)"
     echo "  install --latest         Install latest pre-release from VS Code marketplace"
     echo "  clean                    Remove all downloaded VSIX files from oneper cache"
     echo ""
@@ -27,13 +27,29 @@ show_help() {
     echo "  --platform <platform>   Specify platform for PR builds (macos, linux)"
     echo ""
     echo "Examples:"
-    echo "  oneper install --pr 123              # Install macOS VSIX from PR #123"
+    echo "  oneper install --pr 123              # Install VSIX from PR #123"
     echo "  oneper install --pr 123 --platform linux   # Install Linux VSIX from PR #123"
     echo "  oneper install --latest              # Install latest pre-release"
     echo "  oneper clean                         # Clear cached VSIX files"
     echo "  oneper -h                            # Show help"
     echo ""
     echo "VSIX files are cached in: ~/.continue/.utils/oneper/"
+}
+
+detect_os() {
+    case "$(uname -s)" in
+        "Darwin")
+            echo "macos"
+            ;;
+        "Linux")
+            echo "linux"
+            ;;
+        *)
+            echo "❌ Unsupported operating system: $(uname -s)" >&2
+            echo "   Supported platforms: macOS, Linux" >&2
+            exit 1
+            ;;
+    esac
 }
 
 check_dependencies() {
@@ -60,8 +76,8 @@ ensure_oneper_dir() {
 
 install_from_pr() {
     local pr_number=$1
-    local platform=${2:-"macos"}  # Default to macOS
-    
+    local platform=${2:-$(detect_os)}  # Auto-detect OS if not specified
+
     if [ -z "$pr_number" ]; then
         echo "❌ PR number is required"
         show_help
@@ -85,17 +101,17 @@ install_from_pr() {
     esac
 
     echo "🔍 Getting branch name for PR #$pr_number..."
-    
+
     # First get the branch name for the PR
     local branch_name=$(gh pr view "$pr_number" --repo "$REPO" --json headRefName --jq '.headRefName')
-    
+
     if [ -z "$branch_name" ]; then
         echo "❌ Could not find PR #$pr_number"
         exit 1
     fi
-    
+
     echo "🔍 Finding latest workflow run for branch: $branch_name..."
-    
+
     # Get the latest successful workflow run for the branch
     local run_id=$(gh run list \
         --repo "$REPO" \
@@ -104,7 +120,7 @@ install_from_pr() {
         --json databaseId,status,conclusion \
         --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
         | head -1)
-    
+
     if [ -z "$run_id" ]; then
         echo "❌ No successful workflow run found for PR #$pr_number"
         echo "   Make sure the PR exists and has a successful CI run"
@@ -113,10 +129,10 @@ install_from_pr() {
 
     echo "✅ Found workflow run: $run_id"
     echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
-    
+
     # Create temporary directory for download
     local temp_dir=$(mktemp -d)
-    
+
     # Download the artifact
     if ! gh run download "$run_id" \
         --repo "$REPO" \
@@ -130,7 +146,7 @@ install_from_pr() {
 
     # Find the VSIX file in the downloaded artifact
     local vsix_file=$(find "$temp_dir" -name "*.vsix" | head -1)
-    
+
     if [ -z "$vsix_file" ]; then
         echo "❌ No VSIX file found in artifact"
         rm -rf "$temp_dir"
@@ -140,7 +156,7 @@ install_from_pr() {
     # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
     local original_filename=$(basename "$vsix_file")
     local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
-    
+
     if [ -z "$version" ]; then
         echo "⚠️  Could not extract version from filename: $original_filename"
         version="unknown"
@@ -148,18 +164,18 @@ install_from_pr() {
 
     # Create new VSIX name with version and PR number
     local target_path="$ONEPER_DIR/continue-${version}-${pr_number}.vsix"
-    
+
     # Check if file already exists and notify about overwrite
     if [ -f "$target_path" ]; then
         echo "⚠️  Overwriting existing VSIX: $target_path"
     fi
-    
+
     echo "📦 Moving VSIX to: $target_path"
     mv "$vsix_file" "$target_path"
-    
+
     # Clean up temp directory
     rm -rf "$temp_dir"
-    
+
     # Install the extension
     echo "🚀 Installing VS Code extension..."
     if code --install-extension "$target_path"; then
@@ -196,17 +212,17 @@ clean_cache() {
         echo "📁 Oneper cache directory doesn't exist: $ONEPER_DIR"
         return 0
     fi
-    
+
     local file_count=$(find "$ONEPER_DIR" -name "*.vsix" | wc -l | tr -d ' ')
-    
+
     if [ "$file_count" -eq 0 ]; then
         echo "✨ Oneper cache is already empty"
         return 0
     fi
-    
+
     echo "🧹 Removing $file_count VSIX file(s) from oneper cache..."
     rm -f "$ONEPER_DIR"/*.vsix
-    
+
     echo "✅ Oneper cache cleared successfully"
     echo "📁 Cache directory: $ONEPER_DIR"
 }
@@ -234,13 +250,13 @@ main() {
                 "--pr")
                     # Parse PR number and optional platform
                     local pr_number="$3"
-                    local platform="macos"  # default
-                    
-                    # Check if --platform is specified
+                    local platform=$(detect_os)  # auto-detect OS
+
+                    # Check if --platform is specified to override auto-detection
                     if [ "$4" = "--platform" ] && [ -n "$5" ]; then
                         platform="$5"
                     fi
-                    
+
                     install_from_pr "$pr_number" "$platform"
                     ;;
                 "--latest")
