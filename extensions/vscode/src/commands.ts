@@ -916,7 +916,6 @@ const getCommandsMap: (
           console.log("deleteChain from commands.ts: diffLines.length === 0");
           NextEditProvider.getInstance().deleteChain();
         }
-        console.log("number of difflines:", diffLines.length);
 
         if (NextEditWindowManager.isInstantiated()) {
           const windowManager = NextEditWindowManager.getInstance();
