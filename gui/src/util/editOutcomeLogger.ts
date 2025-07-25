@@ -140,7 +140,7 @@ function extractCodeChanges(applyState: ApplyState): {
 /**
  * Assemble complete edit outcome data from tool call and apply state
  */
-function assembleCompleteEditData(
+export function assembleEditOutcomeData(
   toolCallState: ToolCallState,
   applyState: ApplyState,
   accepted: boolean,
@@ -177,7 +177,7 @@ export async function logAgentModeEditOutcome(
 ): Promise<void> {
   // Use the original file content stored in applyState, captured before edits were applied
 
-  const completeData = assembleCompleteEditData(
+  const editOutcomeData = assembleEditOutcomeData(
     toolCallState,
     applyState,
     accepted,
@@ -185,6 +185,6 @@ export async function logAgentModeEditOutcome(
 
   ideMessenger.post("devdata/log", {
     name: "editOutcome",
-    data: completeData,
+    data: editOutcomeData,
   });
 }
