@@ -3,25 +3,18 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
-  ModelDescription,
   RuleWithSource,
   ThinkingChatMessage,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
 import {
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_PLAN_SYSTEM_MESSAGE,
-} from "core/llm/defaultSystemMessages";
+  CANCELLED_TOOL_CALL_MESSAGE,
+  NO_TOOL_CALL_OUTPUT_MESSAGE,
+} from "core/tools/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  CANCELLED_TOOL_CALL_MESSAGE,
-  constructMessages,
-  getBaseSystemMessage,
-  NO_TOOL_CALL_OUTPUT_MESSAGE,
-} from "./constructMessages";
+import { constructMessages } from "./constructMessages";
 
 // For these tests we will mock the rules to simulate different scenarios
 const CONTEXT_RULE: RuleWithSource = {
@@ -87,44 +80,6 @@ vi.mock("core/llm/rules/getSystemMessageWithRules", async (importOriginal) => {
       return { systemMessage, appliedRules };
     },
   };
-});
-
-test("getBaseSystemMessage should return the correct system message based on mode", () => {
-  const mockModel = {
-    baseChatSystemMessage: "Custom Chat System Message",
-    basePlanSystemMessage: "Custom Plan System Message",
-    baseAgentSystemMessage: "Custom Agent System Message",
-  } as ModelDescription;
-
-  // Test agent mode with custom message
-  expect(getBaseSystemMessage("agent", mockModel)).toBe(
-    "Custom Agent System Message",
-  );
-
-  // Test plan mode with custom message
-  expect(getBaseSystemMessage("plan", mockModel)).toBe(
-    "Custom Plan System Message",
-  );
-
-  // Test chat mode with custom message
-  expect(getBaseSystemMessage("chat", mockModel)).toBe(
-    "Custom Chat System Message",
-  );
-
-  // Test agent mode with default message
-  expect(getBaseSystemMessage("agent", {} as ModelDescription)).toBe(
-    DEFAULT_AGENT_SYSTEM_MESSAGE,
-  );
-
-  // Test agent mode with default message
-  expect(getBaseSystemMessage("plan", {} as ModelDescription)).toBe(
-    DEFAULT_PLAN_SYSTEM_MESSAGE,
-  );
-
-  // Test chat mode with default message
-  expect(getBaseSystemMessage("chat", {} as ModelDescription)).toBe(
-    DEFAULT_CHAT_SYSTEM_MESSAGE,
-  );
 });
 
 describe("constructMessages", () => {

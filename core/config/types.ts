@@ -1123,7 +1123,6 @@ declare global {
      * This is needed to crawl a large number of documentation sites that are dynamically rendered.
      */
     useChromiumForDocsCrawling?: boolean;
-    useTools?: boolean;
     modelContextProtocolServers?: MCPOptions[];
   }
   
