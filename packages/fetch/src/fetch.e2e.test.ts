@@ -17,11 +17,11 @@ const tempDirsToCleanup: string[] = [];
 
 afterEach(() => {
   // Clean up all servers
-  serversToCleanup.forEach(server => server.close());
+  serversToCleanup.forEach((server) => server.close());
   serversToCleanup.length = 0;
-  
+
   // Clean up temp directories
-  tempDirsToCleanup.forEach(tempDir => {
+  tempDirsToCleanup.forEach((tempDir) => {
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
@@ -44,7 +44,7 @@ function createTempDir(): string {
 async function generateCertificate(
   tempDir: string,
   name: string,
-  options: { cn: string; san: string[]; org: string }
+  options: { cn: string; san: string[]; org: string },
 ): Promise<{ certPath: string; keyPath: string; caCertPath: string }> {
   const certPath = path.join(tempDir, `${name}.crt`);
   const keyPath = path.join(tempDir, `${name}.key`);
@@ -52,15 +52,17 @@ async function generateCertificate(
 
   try {
     // Generate a private key
-    execSync(`openssl genrsa -out "${keyPath}" 2048`, { stdio: 'pipe' });
-    
+    execSync(`openssl genrsa -out "${keyPath}" 2048`, { stdio: "pipe" });
+
     // Create config file for certificate
     const configPath = path.join(tempDir, `${name}.conf`);
-    const altNames = options.san.map((san, i) => {
-      return san.match(/^\d+\.\d+\.\d+\.\d+$/) 
-        ? `IP.${i + 1} = ${san}`
-        : `DNS.${i + 1} = ${san}`;
-    }).join('\n');
+    const altNames = options.san
+      .map((san, i) => {
+        return san.match(/^\d+\.\d+\.\d+\.\d+$/)
+          ? `IP.${i + 1} = ${san}`
+          : `DNS.${i + 1} = ${san}`;
+      })
+      .join("\n");
 
     const configContent = `
 [req]
@@ -84,13 +86,16 @@ subjectAltName = @alt_names
 ${altNames}
 `;
     fs.writeFileSync(configPath, configContent);
-    
+
     // Generate a self-signed certificate
-    execSync(`openssl req -new -x509 -key "${keyPath}" -out "${certPath}" -days 365 -config "${configPath}" -extensions v3_req`, { stdio: 'pipe' });
-    
+    execSync(
+      `openssl req -new -x509 -key "${keyPath}" -out "${certPath}" -days 365 -config "${configPath}" -extensions v3_req`,
+      { stdio: "pipe" },
+    );
+
     // Copy the certificate as CA (for testing custom CA scenarios)
     fs.copyFileSync(certPath, caCertPath);
-    
+
     return { certPath, keyPath, caCertPath };
   } catch (error) {
     // Fallback: create minimal test certificates if OpenSSL not available
@@ -109,7 +114,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1L7VLPHCQD1OvF4p
     fs.writeFileSync(keyPath, key);
     fs.writeFileSync(certPath, cert);
     fs.writeFileSync(caCertPath, cert);
-    
+
     return { certPath, keyPath, caCertPath };
   }
 }
@@ -120,10 +125,15 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1L7VLPHCQD1OvF4p
 async function startHttpServer(): Promise<http.Server> {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url!, `http://localhost:${HTTP_PORT}`);
-    
+
     if (url.pathname === "/json") {
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ message: "Hello from HTTP server", method: req.method }));
+      res.end(
+        JSON.stringify({
+          message: "Hello from HTTP server",
+          method: req.method,
+        }),
+      );
     } else if (url.pathname === "/headers") {
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ headers: req.headers }));
@@ -161,24 +171,32 @@ async function startHttpServer(): Promise<http.Server> {
 /**
  * Start an HTTPS server with given certificates
  */
-async function startHttpsServer(certPath: string, keyPath: string): Promise<https.Server> {
-  const server = https.createServer({
-    cert: fs.readFileSync(certPath),
-    key: fs.readFileSync(keyPath),
-  }, (req, res) => {
-    const url = new URL(req.url!, `https://localhost:${HTTPS_PORT}`);
-    
-    if (url.pathname === "/secure") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ message: "Hello from HTTPS server", secure: true }));
-    } else if (url.pathname === "/headers") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ headers: req.headers }));
-    } else {
-      res.writeHead(404);
-      res.end("Not Found");
-    }
-  });
+async function startHttpsServer(
+  certPath: string,
+  keyPath: string,
+): Promise<https.Server> {
+  const server = https.createServer(
+    {
+      cert: fs.readFileSync(certPath),
+      key: fs.readFileSync(keyPath),
+    },
+    (req, res) => {
+      const url = new URL(req.url!, `https://localhost:${HTTPS_PORT}`);
+
+      if (url.pathname === "/secure") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({ message: "Hello from HTTPS server", secure: true }),
+        );
+      } else if (url.pathname === "/headers") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ headers: req.headers }));
+      } else {
+        res.writeHead(404);
+        res.end("Not Found");
+      }
+    },
+  );
 
   await new Promise<void>((resolve) => {
     server.listen(HTTPS_PORT, () => resolve());
@@ -192,26 +210,31 @@ describe("fetchwithRequestOptions E2E tests", () => {
   describe("HTTP requests", () => {
     test("should make basic HTTP GET request", async () => {
       await startHttpServer();
-      
-      const response = await fetchwithRequestOptions(`http://localhost:${HTTP_PORT}/json`);
-      
+
+      const response = await fetchwithRequestOptions(
+        `http://localhost:${HTTP_PORT}/json`,
+      );
+
       expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data).toEqual({ message: "Hello from HTTP server", method: "GET" });
+      expect(data).toEqual({
+        message: "Hello from HTTP server",
+        method: "GET",
+      });
     });
 
     test("should make HTTP POST request with body", async () => {
       await startHttpServer();
-      
+
       const response = await fetchwithRequestOptions(
         `http://localhost:${HTTP_PORT}/json`,
         {
           method: "POST",
           body: JSON.stringify({ test: "data" }),
-          headers: { "Content-Type": "application/json" }
-        }
+          headers: { "Content-Type": "application/json" },
+        },
       );
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.method).toBe("POST");
@@ -219,23 +242,25 @@ describe("fetchwithRequestOptions E2E tests", () => {
 
     test("should handle custom headers", async () => {
       await startHttpServer();
-      
+
       const response = await fetchwithRequestOptions(
         `http://localhost:${HTTP_PORT}/headers`,
         {
-          headers: { "X-Custom-Header": "test-value" }
-        }
+          headers: { "X-Custom-Header": "test-value" },
+        },
       );
-      
+
       const data = await response.json();
       expect(data.headers["x-custom-header"]).toBe("test-value");
     });
 
     test("should handle error responses", async () => {
       await startHttpServer();
-      
-      const response = await fetchwithRequestOptions(`http://localhost:${HTTP_PORT}/status/404`);
-      
+
+      const response = await fetchwithRequestOptions(
+        `http://localhost:${HTTP_PORT}/status/404`,
+      );
+
       expect(response.status).toBe(404);
       expect(response.ok).toBe(false);
     });
@@ -244,19 +269,19 @@ describe("fetchwithRequestOptions E2E tests", () => {
   describe("Request options integration", () => {
     test("should merge extra body properties", async () => {
       await startHttpServer();
-      
+
       const response = await fetchwithRequestOptions(
         `http://localhost:${HTTP_PORT}/body`,
         {
           method: "POST",
           body: JSON.stringify({ original: "data" }),
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         },
         {
-          extraBodyProperties: { extra: "property" }
-        }
+          extraBodyProperties: { extra: "property" },
+        },
       );
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       const body = JSON.parse(data.body);
@@ -265,35 +290,39 @@ describe("fetchwithRequestOptions E2E tests", () => {
 
     test("should handle RequestOptions headers", async () => {
       await startHttpServer();
-      
+
       const response = await fetchwithRequestOptions(
         `http://localhost:${HTTP_PORT}/headers`,
         {},
         {
-          headers: { "X-Request-Options-Header": "from-request-options" }
-        }
+          headers: { "X-Request-Options-Header": "from-request-options" },
+        },
       );
-      
+
       const data = await response.json();
-      expect(data.headers["x-request-options-header"]).toBe("from-request-options");
+      expect(data.headers["x-request-options-header"]).toBe(
+        "from-request-options",
+      );
     });
 
     test("should merge headers from init and requestOptions", async () => {
       await startHttpServer();
-      
+
       const response = await fetchwithRequestOptions(
         `http://localhost:${HTTP_PORT}/headers`,
         {
-          headers: { "X-Init-Header": "from-init" }
+          headers: { "X-Init-Header": "from-init" },
         },
         {
-          headers: { "X-Request-Options-Header": "from-request-options" }
-        }
+          headers: { "X-Request-Options-Header": "from-request-options" },
+        },
       );
-      
+
       const data = await response.json();
       expect(data.headers["x-init-header"]).toBe("from-init");
-      expect(data.headers["x-request-options-header"]).toBe("from-request-options");
+      expect(data.headers["x-request-options-header"]).toBe(
+        "from-request-options",
+      );
     });
   });
 
@@ -303,18 +332,18 @@ describe("fetchwithRequestOptions E2E tests", () => {
       const serverCerts = await generateCertificate(tempDir, "server", {
         cn: "localhost",
         san: ["localhost", "127.0.0.1"],
-        org: "Test"
+        org: "Test",
       });
-      
+
       await startHttpsServer(serverCerts.certPath, serverCerts.keyPath);
-      
+
       // This simulates the customer's "unable to get local issuer certificate" error
       await expect(
         fetchwithRequestOptions(
           `https://localhost:${HTTPS_PORT}/secure`,
           {},
-          { verifySsl: true } // No custom CA provided
-        )
+          { verifySsl: true }, // No custom CA provided
+        ),
       ).rejects.toThrow(); // Should fail with certificate error
     });
 
@@ -323,17 +352,17 @@ describe("fetchwithRequestOptions E2E tests", () => {
       const serverCerts = await generateCertificate(tempDir, "server", {
         cn: "localhost",
         san: ["localhost", "127.0.0.1"],
-        org: "Test"
+        org: "Test",
       });
-      
+
       await startHttpsServer(serverCerts.certPath, serverCerts.keyPath);
-      
+
       const response = await fetchwithRequestOptions(
         `https://localhost:${HTTPS_PORT}/secure`,
         {},
-        { verifySsl: false }
+        { verifySsl: false },
       );
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.secure).toBe(true);
@@ -344,20 +373,20 @@ describe("fetchwithRequestOptions E2E tests", () => {
       const serverCerts = await generateCertificate(tempDir, "server", {
         cn: "localhost",
         san: ["localhost", "127.0.0.1"],
-        org: "Test"
+        org: "Test",
       });
-      
+
       await startHttpsServer(serverCerts.certPath, serverCerts.keyPath);
-      
+
       const response = await fetchwithRequestOptions(
         `https://localhost:${HTTPS_PORT}/secure`,
         {},
         {
           caBundlePath: serverCerts.caCertPath, // Our self-signed cert as CA
-          verifySsl: true
-        }
+          verifySsl: true,
+        },
       );
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.secure).toBe(true);
@@ -368,18 +397,18 @@ describe("fetchwithRequestOptions E2E tests", () => {
       const serverCerts = await generateCertificate(tempDir, "server", {
         cn: "localhost",
         san: ["localhost", "127.0.0.1"],
-        org: "Test"
+        org: "Test",
       });
-      
+
       // Generate a different certificate as the "wrong" CA
       const wrongCaCerts = await generateCertificate(tempDir, "wrong-ca", {
         cn: "wrong-ca",
         san: ["wrong-ca"],
-        org: "Wrong CA"
+        org: "Wrong CA",
       });
-      
+
       await startHttpsServer(serverCerts.certPath, serverCerts.keyPath);
-      
+
       // This should fail because the wrong CA can't validate our server certificate
       await expect(
         fetchwithRequestOptions(
@@ -387,9 +416,9 @@ describe("fetchwithRequestOptions E2E tests", () => {
           {},
           {
             caBundlePath: wrongCaCerts.caCertPath,
-            verifySsl: true
-          }
-        )
+            verifySsl: true,
+          },
+        ),
       ).rejects.toThrow(); // Should fail with certificate validation error
     });
 
@@ -398,20 +427,20 @@ describe("fetchwithRequestOptions E2E tests", () => {
       const serverCerts = await generateCertificate(tempDir, "server", {
         cn: "localhost",
         san: ["localhost", "127.0.0.1"],
-        org: "Test"
+        org: "Test",
       });
-      
+
       // Create a corrupted/invalid certificate file
       const corruptedCaPath = path.join(tempDir, "corrupted-ca.pem");
       const corruptedContent = `-----BEGIN CERTIFICATE-----
 This is not a valid certificate content
 Just some random text that looks like a cert
 -----END CERTIFICATE-----`;
-      
+
       fs.writeFileSync(corruptedCaPath, corruptedContent);
-      
+
       await startHttpsServer(serverCerts.certPath, serverCerts.keyPath);
-      
+
       // This should fail because the corrupted CA file can't be parsed
       await expect(
         fetchwithRequestOptions(
@@ -419,9 +448,9 @@ Just some random text that looks like a cert
           {},
           {
             caBundlePath: corruptedCaPath,
-            verifySsl: true
-          }
-        )
+            verifySsl: true,
+          },
+        ),
       ).rejects.toThrow(); // Should fail with certificate parsing or validation error
     });
 
@@ -430,13 +459,13 @@ Just some random text that looks like a cert
       const serverCerts = await generateCertificate(tempDir, "server", {
         cn: "localhost",
         san: ["localhost", "127.0.0.1"],
-        org: "Test"
+        org: "Test",
       });
-      
+
       const nonExistentCaPath = path.join(tempDir, "does-not-exist.pem");
-      
+
       await startHttpsServer(serverCerts.certPath, serverCerts.keyPath);
-      
+
       // This should handle the missing file gracefully but still fail cert validation
       await expect(
         fetchwithRequestOptions(
@@ -444,9 +473,9 @@ Just some random text that looks like a cert
           {},
           {
             caBundlePath: nonExistentCaPath,
-            verifySsl: true
-          }
-        )
+            verifySsl: true,
+          },
+        ),
       ).rejects.toThrow(); // Should fail with certificate validation error
     });
   });
@@ -455,13 +484,13 @@ Just some random text that looks like a cert
     test("should handle network errors gracefully", async () => {
       // Try to connect to a non-existent server
       await expect(
-        fetchwithRequestOptions("http://localhost:9999/nonexistent")
+        fetchwithRequestOptions("http://localhost:9999/nonexistent"),
       ).rejects.toThrow();
     });
 
     test("should handle malformed URLs", async () => {
       await expect(
-        fetchwithRequestOptions("not-a-valid-url")
+        fetchwithRequestOptions("not-a-valid-url"),
       ).rejects.toThrow();
     });
   });
