@@ -9,25 +9,35 @@ fi
 
 cd packages
 
-# Build fetch first
+# Phase 1: Build config-types (foundation - no dependencies)
+cd config-types
+$NPM_INSTALL_CMD
+npm run build
+cd ..
+
+# Phase 2: Build packages that depend on config-types
 cd fetch
 $NPM_INSTALL_CMD
 npm run build
 cd ..
 
-# After building fetch, reinstall openai-adapters to pick up the new build
-cd openai-adapters
-$NPM_INSTALL_CMD
-npm run build
-cd ..
-
-# Build config-yaml
 cd config-yaml
 $NPM_INSTALL_CMD
 npm run build
 cd ..
 
-# Build llm-info
 cd llm-info
 $NPM_INSTALL_CMD
 npm run build
+cd ..
+
+# Phase 3: Build packages that depend on other local packages
+cd openai-adapters
+$NPM_INSTALL_CMD
+npm run build
+cd ..
+
+cd continue-sdk
+$NPM_INSTALL_CMD
+npm run build
+cd ..

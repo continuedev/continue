@@ -48,12 +48,12 @@ jobs:
       - name: Check code formatting with Prettier
         run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
 
-  install-config-yaml:
+  build-packages:
     needs: install-root
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -61,55 +61,27 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v4
+      # Build all packages using the authoritative build script
+      - name: Build packages (Windows)
+        run: ./scripts/build-packages.ps1
+        if: matrix.os == 'windows-latest'
+
+      - name: Build packages (Unix)
+        run: ./scripts/build-packages.sh
+        if: matrix.os != 'windows-latest'
+
+      # Upload built packages as artifacts
+      - name: Upload built packages
+        uses: actions/upload-artifact@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Install config-yaml dependencies
-        if: steps.config-yaml-cache.outputs.cache-hit != 'true'
-        run: |
-          cd packages/config-yaml
-          npm ci
-
-  install-openai-adapters:
-    needs: install-root
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Install openai-adapters dependencies
-        if: steps.openai-adapters-cache.outputs.cache-hit != 'true'
-        run: |
-          cd packages/openai-adapters
-          npm ci
+          name: built-packages-${{ matrix.os }}
+          path: |
+            packages/*/dist/
+            packages/*/node_modules/
+          retention-days: 1
 
   config-yaml-checks:
-    needs: install-config-yaml
+    needs: build-packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,19 +95,19 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+          name: built-packages-ubuntu-latest
+          path: .
 
-      - name: Build and check config-yaml
+      - name: Check config-yaml
         run: |
           cd packages/config-yaml
           npx tsc --noEmit
           # Tests are currently failing, commenting out for now
-          # npm test 
-          npm run build
+          # npm test
 
   install-core:
     needs: install-root
@@ -169,7 +141,7 @@ jobs:
           npm ci
 
   core-checks:
-    needs: [install-core, install-config-yaml, install-openai-adapters]
+    needs: [install-core, build-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -179,38 +151,22 @@ jobs:
           node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
-        id: root-cache
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
-        id: core-cache
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+          name: built-packages-ubuntu-latest
+          path: .
 
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
       - name: Type check and lint
         run: |
           cd core
@@ -220,8 +176,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   install-gui:
-    needs:
-      [install-root, install-core, install-config-yaml, install-openai-adapters]
+    needs: [install-root, install-core, build-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -246,27 +201,12 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Install gui dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
@@ -294,32 +234,16 @@ jobs:
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - uses: actions/cache@v4
-        id: gui-cache
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Type check and lint
         run: |
@@ -328,8 +252,7 @@ jobs:
           npm run lint
 
   binary-checks:
-    needs:
-      [install-root, install-core, install-config-yaml, install-openai-adapters]
+    needs: [install-root, install-core, build-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -354,27 +277,12 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Install binary dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
@@ -388,8 +296,7 @@ jobs:
           npx tsc --noEmit
 
   install-vscode:
-    needs:
-      [install-root, install-core, install-config-yaml, install-openai-adapters]
+    needs: [install-root, install-core, build-packages]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -417,27 +324,12 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-${{ matrix.os }}
+          path: .
 
       - name: Install vscode dependencies
         if: steps.vscode-cache.outputs.cache-hit != 'true'
@@ -473,27 +365,12 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Type check and lint
         run: |
@@ -508,7 +385,7 @@ jobs:
           npm run vitest
 
   core-tests:
-    needs: [install-core, install-config-yaml, install-openai-adapters]
+    needs: [install-core, build-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -522,27 +399,12 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Run core tests
         run: |
@@ -585,7 +447,7 @@ jobs:
           npm test
 
   openai-adapters-tests:
-    needs: install-openai-adapters
+    needs: build-packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -599,11 +461,12 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Run openai-adapters tests
         run: |
@@ -623,7 +486,7 @@ jobs:
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [install-root, install-vscode, install-config-yaml]
+    needs: [install-root, install-vscode, build-packages]
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
@@ -635,16 +498,12 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Get test files
         id: vscode-get-test-file-matrix
@@ -671,13 +530,7 @@ jobs:
           echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
 
   vscode-package-extension:
-    needs:
-      [
-        install-vscode,
-        install-core,
-        install-config-yaml,
-        install-openai-adapters,
-      ]
+    needs: [install-vscode, install-core, build-packages]
     uses: ./.github/workflows/build-vscode-extension.yml
     with:
       # Limited platforms for faster PR checks
@@ -702,13 +555,7 @@ jobs:
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest
-    needs:
-      [
-        install-vscode,
-        install-core,
-        install-config-yaml,
-        install-openai-adapters,
-      ]
+    needs: [install-vscode, install-core, build-packages]
     steps:
       - uses: actions/checkout@v4
 
@@ -728,16 +575,12 @@ jobs:
           path: extensions/vscode/e2e/storage
           key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Download Dependencies
         if: steps.storage-cache.outputs.cache-hit != 'true'
@@ -760,8 +603,7 @@ jobs:
         vscode-package-extension,
         install-vscode,
         install-core,
-        install-config-yaml,
-        install-openai-adapters,
+        build-packages,
       ]
     runs-on: ubuntu-latest
     # Tests requiring secrets need approval from maintainers
@@ -887,8 +729,7 @@ jobs:
           path: extensions/vscode/e2e.log
 
   gui-tests:
-    needs:
-      [install-gui, install-core, install-config-yaml, install-openai-adapters]
+    needs: [install-gui, install-core, build-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -898,7 +739,6 @@ jobs:
           node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
-        id: gui-cache
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
@@ -908,30 +748,14 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Install GUI dependencies
-        if: steps.gui-cache.outputs.cache-hit != 'true'
         run: cd gui && npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -942,8 +766,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs:
-      [install-root, core-checks, install-config-yaml, install-openai-adapters]
+    needs: [install-root, core-checks, build-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -952,27 +775,12 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
@@ -1087,8 +895,7 @@ jobs:
       - gui-tests
       - jetbrains-tests
       - config-yaml-checks
-      - install-config-yaml
-      - install-openai-adapters
+      - build-packages
       - openai-adapters-tests
 
     steps:

@@ -7,26 +7,35 @@ if ($env:CI -eq "true") {
 
 Push-Location packages
 
-# Build fetch first
+# Phase 1: Build config-types (foundation - no dependencies)
+Push-Location "config-types"
+& cmd /c $npmInstallCmd
+npm run build
+Pop-Location
+
+# Phase 2: Build packages that depend on config-types
 Push-Location "fetch"
 & cmd /c $npmInstallCmd
 npm run build
 Pop-Location
 
-# After building fetch, reinstall openai-adapters to pick up the new build
-Push-Location "openai-adapters"
-& cmd /c $npmInstallCmd
-npm run build
-Pop-Location
-
-# Build config-yaml
 Push-Location "config-yaml"
 & cmd /c $npmInstallCmd
 npm run build
 Pop-Location
 
-# Build llm-info
 Push-Location "llm-info"
+& cmd /c $npmInstallCmd
+npm run build
+Pop-Location
+
+# Phase 3: Build packages that depend on other local packages
+Push-Location "openai-adapters"
+& cmd /c $npmInstallCmd
+npm run build
+Pop-Location
+
+Push-Location "continue-sdk"
 & cmd /c $npmInstallCmd
 npm run build
 Pop-Location
