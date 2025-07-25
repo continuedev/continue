@@ -150,7 +150,11 @@ export function StepContainerPreToolbar({
 
   async function onClickApply() {
     const fileUri = await getFileUriToApplyTo();
-    if (!fileUri) {
+    
+    // Check if we're creating a new file (when fileExists is false or when we don't have a specific file)
+    const isCreatingNewFile = !fileExists && relativeFilepath;
+    
+    if (!fileUri && !isCreatingNewFile) {
       void ideMessenger.ide.showToast(
         "error",
         "Could not resolve filepath to apply changes",
@@ -163,12 +167,15 @@ export function StepContainerPreToolbar({
       streamId: codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
+      showSaveDialog: !!isCreatingNewFile,
+      toolCallId: forceToolCallId,
     });
 
-    setAppliedFileUri(fileUri);
-    void refreshFileExists();
+    if (fileUri) {
+      setAppliedFileUri(fileUri);
+      void refreshFileExists();
+    }
   }
-
   function onClickInsertAtCursor() {
     ideMessenger.post("insertAtCursor", { text: codeBlockContent });
   }
