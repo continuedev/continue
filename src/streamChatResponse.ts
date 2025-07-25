@@ -9,6 +9,11 @@ import type {
 } from "openai/resources.mjs";
 import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
+import {
+  checkToolPermission,
+  filterExcludedTools,
+} from "./permissions/index.js";
+import { toolPermissionManager } from "./permissions/permissionManager.js";
 import telemetryService from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import { executeToolCall } from "./tools.js";
@@ -29,7 +34,24 @@ export function getAllTools() {
     return [];
   }
 
-  const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
+  // Get all available tool names
+  const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
+  const mcpToolNames =
+    MCPService.getInstance()
+      ?.getTools()
+      .map((tool) => tool.name) ?? [];
+  const allToolNames = [...builtinToolNames, ...mcpToolNames];
+
+  // Filter out excluded tools based on permissions
+  const allowedToolNames = filterExcludedTools(allToolNames);
+  const allowedToolNamesSet = new Set(allowedToolNames);
+
+  // Filter builtin tools
+  const allowedBuiltinTools = BUILTIN_TOOLS.filter((tool) =>
+    allowedToolNamesSet.has(tool.name)
+  );
+
+  const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
     type: "function" as const,
     function: {
       name: tool.name,
@@ -49,10 +71,14 @@ export function getAllTools() {
     },
   }));
 
-  // Add MCP tools if not in no-tools mode
+  // Add filtered MCP tools if not in no-tools mode
   const mcpTools = MCPService.getInstance()?.getTools() ?? [];
+  const allowedMcpTools = mcpTools.filter((tool) =>
+    allowedToolNamesSet.has(tool.name)
+  );
+
   allTools.push(
-    ...mcpTools.map((tool) => ({
+    ...allowedMcpTools.map((tool) => ({
       type: "function" as const,
       function: {
         name: tool.name,
@@ -71,6 +97,11 @@ export interface StreamCallbacks {
   onToolStart?: (toolName: string, toolArgs?: any) => void;
   onToolResult?: (result: string, toolName: string) => void;
   onToolError?: (error: string, toolName?: string) => void;
+  onToolPermissionRequest?: (
+    toolName: string,
+    toolArgs: any,
+    requestId: string
+  ) => void;
 }
 
 interface ToolCall {
@@ -423,6 +454,84 @@ export async function streamChatResponse(
       // Execute tool calls
       for (const toolCall of toolCalls) {
         try {
+          logger.debug("Checking tool permissions", {
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+
+          // Check tool permissions
+          const permissionCheck = checkToolPermission({
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+
+          let approved = false;
+
+          if (permissionCheck.permission === "allow") {
+            approved = true;
+          } else if (permissionCheck.permission === "ask") {
+            // Request permission from user
+            if (callbacks?.onToolPermissionRequest) {
+              // Create a promise that resolves when permission is granted/denied
+              const permissionPromise = new Promise<boolean>((resolve) => {
+                const requestId = `tool-request-${toolCall.id}`;
+
+                // Set up listener for permission response
+                const handlePermissionResponse = (result: {
+                  requestId: string;
+                  approved: boolean;
+                }) => {
+                  if (result.requestId === requestId) {
+                    toolPermissionManager.off(
+                      "permissionResponse",
+                      handlePermissionResponse
+                    );
+                    resolve(result.approved);
+                  }
+                };
+
+                toolPermissionManager.on(
+                  "permissionResponse",
+                  handlePermissionResponse
+                );
+
+                // Notify UI about permission request
+                callbacks.onToolPermissionRequest!(
+                  toolCall.name,
+                  toolCall.arguments,
+                  requestId
+                );
+              });
+
+              approved = await permissionPromise;
+            } else {
+              // Fallback: deny if no UI callback available
+              approved = false;
+            }
+          } else if (permissionCheck.permission === "exclude") {
+            // This shouldn't happen as excluded tools are filtered out earlier
+            approved = false;
+          }
+
+          if (!approved) {
+            const deniedMessage = `Permission denied by user`;
+            logger.info("Tool call denied", {
+              name: toolCall.name,
+              arguments: toolCall.arguments,
+            });
+
+            chatHistory.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              content: deniedMessage,
+            });
+
+            if (callbacks?.onToolResult) {
+              callbacks.onToolResult(deniedMessage, toolCall.name);
+            }
+            continue;
+          }
+
           logger.debug("Executing tool", {
             name: toolCall.name,
             arguments: toolCall.arguments,

@@ -8,6 +8,7 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
+import { ToolPermissionSelector } from "./components/ToolPermissionSelector.js";
 import ConfigSelector from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
 import FreeTrialStatus from "./FreeTrialStatus.js";
@@ -134,10 +135,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isWaitingForResponse,
     responseStartTime,
     inputMode,
+    attachedFiles,
+    activePermissionRequest,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleToolPermissionResponse,
   } = useChat({
     assistant: services.config?.config || undefined,
     model: services.model?.model || undefined,
@@ -205,7 +209,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showOrgSelector ||
     showConfigSelector ||
     !!loginPrompt ||
-    isShowingFreeTrialTransition;
+    isShowingFreeTrialTransition ||
+    !!activePermissionRequest;
 
   return (
     <Box flexDirection="column" height="100%">
@@ -302,16 +307,28 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
         {/* Input area - only show when not showing free trial transition */}
         {!isShowingFreeTrialTransition && (
-          <UserInput
-            onSubmit={handleUserMessage}
-            isWaitingForResponse={isWaitingForResponse}
-            inputMode={inputMode}
-            onInterrupt={handleInterrupt}
-            assistant={services.config?.config || undefined}
-            onFileAttached={handleFileAttached}
-            disabled={isInputDisabled}
-            isRemoteMode={isRemoteMode}
-          />
+          <>
+            {/* Show permission selector when there's an active permission request */}
+            {activePermissionRequest ? (
+              <ToolPermissionSelector
+                toolName={activePermissionRequest.toolName}
+                toolArgs={activePermissionRequest.toolArgs}
+                requestId={activePermissionRequest.requestId}
+                onResponse={handleToolPermissionResponse}
+              />
+            ) : (
+              <UserInput
+                onSubmit={handleUserMessage}
+                isWaitingForResponse={isWaitingForResponse}
+                inputMode={inputMode}
+                onInterrupt={handleInterrupt}
+                assistant={services.config?.config || undefined}
+                onFileAttached={handleFileAttached}
+                disabled={isInputDisabled}
+                isRemoteMode={isRemoteMode}
+              />
+            )}
+          </>
         )}
 
         {/* Free trial status and Continue CLI info - always show */}

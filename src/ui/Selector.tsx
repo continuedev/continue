@@ -18,7 +18,11 @@ interface SelectorProps<T extends SelectorOption> {
   onSelect: (option: T) => void;
   onCancel: () => void;
   onNavigate: (newIndex: number) => void;
-  renderOption?: (option: T, isSelected: boolean, isCurrent: boolean) => ReactNode;
+  renderOption?: (
+    option: T,
+    isSelected: boolean,
+    isCurrent: boolean
+  ) => ReactNode;
 }
 
 export default function Selector<T extends SelectorOption>({
@@ -90,13 +94,17 @@ export default function Selector<T extends SelectorOption>({
     );
   }
 
-  const defaultRenderOption = (option: T, isSelected: boolean, isCurrent: boolean) => (
+  const defaultRenderOption = (
+    option: T,
+    isSelected: boolean,
+    isCurrent: boolean
+  ) => (
     <Text
       color={isSelected ? "blue" : "white"}
       bold={isSelected}
       inverse={isSelected}
     >
-      {isSelected ? "▶ " : "  "}
+      {isSelected ? "> " : "  "}
       {option.name}
       {option.displaySuffix || ""}
       {isCurrent ? " (current)" : ""}
@@ -120,9 +128,7 @@ export default function Selector<T extends SelectorOption>({
           const render = renderOption || defaultRenderOption;
 
           return (
-            <Box key={option.id}>
-              {render(option, isSelected, isCurrent)}
-            </Box>
+            <Box key={option.id}>{render(option, isSelected, isCurrent)}</Box>
           );
         })}
       </Box>

@@ -4,6 +4,7 @@ import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
 import { useEffect, useState } from "react";
+import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import {
@@ -114,6 +115,11 @@ export function useChat({
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
+  const [activePermissionRequest, setActivePermissionRequest] = useState<{
+    toolName: string;
+    toolArgs: any;
+    requestId: string;
+  } | null>(null);
 
   // Remote mode polling
   useEffect(() => {
@@ -548,6 +554,18 @@ export function useChat({
             },
           ]);
         },
+        onToolPermissionRequest: (
+          toolName: string,
+          toolArgs: any,
+          requestId: string
+        ) => {
+          // Set the active permission request to show the selector
+          setActivePermissionRequest({
+            toolName,
+            toolArgs,
+            requestId,
+          });
+        },
       };
 
       // Call streamChatResponse with the new history that includes the user message
@@ -652,6 +670,23 @@ export function useChat({
     setMessages([]);
   };
 
+  const handleToolPermissionResponse = (
+    requestId: string,
+    approved: boolean
+  ) => {
+    // Clear the active permission request
+    setActivePermissionRequest(null);
+
+    // Send response to permission manager
+    // The streamChatResponse will handle showing the appropriate message
+    // through its normal onToolStart/onToolError flow
+    if (approved) {
+      toolPermissionManager.approveRequest(requestId);
+    } else {
+      toolPermissionManager.rejectRequest(requestId);
+    }
+  };
+
   return {
     messages,
     setMessages,
@@ -661,9 +696,11 @@ export function useChat({
     responseStartTime,
     inputMode,
     attachedFiles,
+    activePermissionRequest,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleToolPermissionResponse,
   };
 }
