@@ -30,26 +30,8 @@ fi
 echo "Installing root-level dependencies..."
 npm install
 
-echo "Building config-types..."
-pushd packages/config-types
-npm install
-npm run build
-popd
-
 echo "Building packages (fetch, openai-adapters, config-yaml)..."
 ./scripts/build-packages.sh
-
-echo "Building llm-info..."
-pushd packages/llm-info
-npm install
-npm run build
-popd
-
-echo "Building hub..."
-pushd packages/hub
-npm install
-npm run build
-popd
 
 echo "Installing Core extension dependencies..."
 pushd core

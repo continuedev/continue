@@ -175,11 +175,14 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Build packages and install gui dependencies
+      - name: Build packages and install dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd gui
+
+          cd core
+          npm ci
+          cd ../gui
           npm ci
 
   gui-checks:
@@ -206,10 +209,12 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Build packages and install gui dependencies
+      - name: Build packages and install dependencies
         run: |
           ./scripts/build-packages.sh
-          cd gui
+          cd core
+          npm ci
+          cd ../gui
           npm ci
 
       - name: Type check and lint
@@ -244,11 +249,13 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Build packages and install binary dependencies
+      - name: Build packages and install dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd binary
+          cd core
+          npm ci
+          cd ../binary
           npm ci
 
       - name: Type check
@@ -285,11 +292,13 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Build packages and install vscode dependencies
+      - name: Build packages and install dependencies
         if: steps.vscode-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd extensions/vscode
+          cd core
+          npm ci
+          cd ../extensions/vscode
           npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -320,10 +329,12 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Build packages and install vscode dependencies
+      - name: Build packages and install dependencies
         run: |
           ./scripts/build-packages.sh
-          cd extensions/vscode
+          cd core
+          npm ci
+          cd ../extensions/vscode
           npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -441,7 +452,9 @@ jobs:
         id: vscode-get-test-file-matrix
         run: |
           ./scripts/build-packages.sh
-          cd extensions/vscode
+          cd core
+          npm ci
+          cd ../extensions/vscode
           npm ci
           npm run e2e:compile
           if [[ "${{ github.event.pull_request.head.repo.fork }}" == "true" || "${{ github.actor }}" == "dependabot[bot]" ]]; then
@@ -512,7 +525,9 @@ jobs:
         if: steps.storage-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd extensions/vscode
+          cd core
+          npm ci
+          cd ../extensions/vscode
           npm run e2e:ci:download
 
       - name: Upload e2e dependencies
@@ -570,8 +585,11 @@ jobs:
           name: vscode-e2e-dependencies
           path: extensions/vscode/e2e/storage
 
-      - name: Build packages
-        run: ./scripts/build-packages.sh
+      - name: Build packages and install core dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd core
+          npm ci
 
       - name: Fix VSCode binary permissions
         run: |
@@ -655,10 +673,12 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Build packages and install GUI dependencies
+      - name: Build packages and install dependencies
         run: |
           ./scripts/build-packages.sh
-          cd gui
+          cd core
+          npm ci
+          cd ../gui
           npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -678,8 +698,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Build packages
-        run: ./scripts/build-packages.sh
+      - name: Build packages and install core dependencies
+        run: |
+          ./scripts/build-packages.sh
+          cd core
+          npm ci
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
