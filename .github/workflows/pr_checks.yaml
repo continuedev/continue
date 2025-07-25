@@ -723,6 +723,30 @@ jobs:
           cd packages/openai-adapters
           npm run build
 
+      - name: Modify package.json version for PR builds
+        if: github.event_name == 'pull_request'
+        run: |
+          cd extensions/vscode
+          # Extract PR number from GitHub context
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          
+          # Create new version with PR number
+          NEW_VERSION="${CURRENT_VERSION}-${PR_NUMBER}"
+          
+          echo "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"
+          
+          # Update version in package.json
+          sed -i.bak "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+          
+          # Remove backup file
+          rm -f package.json.bak
+          
+          # Verify the change
+          echo "✅ New version: $(node -p "require('./package.json').version")"
+
       - name: Package extension
         run: |
           cd extensions/vscode
