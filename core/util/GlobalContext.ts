@@ -39,6 +39,9 @@ export type GlobalContextType = {
   isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
   failedDocs: SiteIndexingConfig[];
+  shownDeprecatedProviderWarnings: {
+    [providerTitle: string]: boolean;
+  };
 };
 
 /**

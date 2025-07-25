@@ -132,6 +132,10 @@ LIMIT ${sampleRows}`);
       throw new Error(`Failed to query PostgreSQL database: ${error}`);
     }
   }
+
+  get deprecationMessage() {
+    return "The Postgres context provider is deprecated. Please consider using the Postgres MCP (such as github.com/crystaldba/postgres-mcp) instead.";
+  }
 }
 
 export default PostgresContextProvider;
