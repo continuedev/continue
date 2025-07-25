@@ -2,22 +2,6 @@ import { ApplyState, ToolCallState } from "core";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { store } from "../redux/store";
 
-interface EditOutcomeData {
-  streamId: string;
-  timestamp: string;
-  modelProvider: string;
-  modelTitle: string;
-  prompt: string;
-  completion: string;
-  previousCode: string;
-  newCode: string;
-  filepath: string;
-  previousCodeLines: number;
-  newCodeLines: number;
-  lineChange: number;
-  accepted: boolean;
-}
-
 /**
  * Extract model information from tool call state
  */
@@ -160,7 +144,7 @@ function assembleCompleteEditData(
   toolCallState: ToolCallState,
   applyState: ApplyState,
   accepted: boolean,
-): EditOutcomeData {
+) {
   const modelInfo = extractModelInfo(toolCallState);
   const promptAndCompletion = extractPromptAndCompletion(toolCallState);
   const codeChanges = extractCodeChanges(applyState);
