@@ -440,6 +440,7 @@ async function configYamlToContinueConfig(options: {
       timeout: server.connectionTimeout,
     })),
     false,
+    { ide },
   );
 
   return { config: continueConfig, errors: localErrors };

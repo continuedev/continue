@@ -72,6 +72,12 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
+
+    // TODO: this should practically only start listening when user has started an mcp oauth flow. how to do this?
+    this.uriHandler.event((uri) => {
+      console.log("debug1 uri was", uri);
+    });
+
     void this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
 

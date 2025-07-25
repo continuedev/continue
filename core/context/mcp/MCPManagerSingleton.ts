@@ -6,7 +6,7 @@ import {
   StdioOptions,
   TransportOptions,
 } from "../..";
-import MCPConnection from "./MCPConnection";
+import MCPConnection, { MCPExtras } from "./MCPConnection";
 
 export class MCPManagerSingleton {
   private static instance: MCPManagerSingleton;
@@ -48,7 +48,11 @@ export class MCPManagerSingleton {
     this.connections.delete(id);
   }
 
-  setConnections(servers: MCPOptions[], forceRefresh: boolean) {
+  setConnections(
+    servers: MCPOptions[],
+    forceRefresh: boolean,
+    extras?: MCPExtras,
+  ) {
     let refresh = false;
 
     // Remove any connections that are no longer in config
@@ -75,7 +79,7 @@ export class MCPManagerSingleton {
     servers.forEach((server) => {
       if (!this.connections.has(server.id)) {
         refresh = true;
-        this.connections.set(server.id, new MCPConnection(server));
+        this.connections.set(server.id, new MCPConnection(server, extras));
       } else {
         const conn = this.connections.get(server.id);
         if (conn) {

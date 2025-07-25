@@ -7,6 +7,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 
 import {
+  IDE,
   MCPConnectionStatus,
   MCPOptions,
   MCPPrompt,
@@ -16,6 +17,7 @@ import {
   MCPTool,
 } from "../..";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
+import { performAuth } from "./MCPOauth";
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
@@ -29,6 +31,10 @@ const WINDOWS_BATCH_COMMANDS = [
   "nx",
   "bunx",
 ];
+
+export type MCPExtras = {
+  ide: IDE;
+};
 
 class MCPConnection {
   public client: Client;
@@ -46,7 +52,10 @@ class MCPConnection {
     stderr: "",
   };
 
-  constructor(public options: MCPOptions) {
+  constructor(
+    public options: MCPOptions,
+    public extras?: MCPExtras,
+  ) {
     // Don't construct transport in constructor to avoid blocking
     this.transport = {} as Transport; // Will be set in connectClient
 
@@ -105,6 +114,16 @@ class MCPConnection {
 
     this.abortController.abort();
     this.abortController = new AbortController();
+
+    if (this.options.transport.type === "sse") {
+      // currently support oauth for sse transports only
+      console.log("debug1 extras", this.extras);
+      performAuth(this.options.transport.url, this.extras?.ide!).then(
+        (result) => {
+          console.log("debug1 result", result);
+        },
+      );
+    }
 
     this.connectionPromise = Promise.race([
       // If aborted by a refresh or other, cancel and don't do anything
