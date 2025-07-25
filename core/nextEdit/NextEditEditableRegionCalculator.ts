@@ -1,6 +1,7 @@
 import Parser from "web-tree-sitter";
 import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
 import { getAst } from "../autocomplete/util/ast";
+import { DocumentAstTracker } from "./DocumentAstTracker";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
@@ -362,7 +363,9 @@ async function staticJump(ctx: {
 
     // Get the file's AST.
     // Getting this once helps us live-track the current node.
-    const tree = await getAst(filepath, fileContent);
+    const tree =
+      await DocumentAstTracker.getInstance().getMostRecentAst(filepath);
+    // const tree = await getAst(filepath, fileContent);
     if (!tree) return null;
 
     // Convert cursor position to tree-sitter point format (0-based).
@@ -384,6 +387,7 @@ async function staticJump(ctx: {
       console.log("No identifier node found near cursor position");
       return null;
     }
+    console.log("closest identifier:", identifierNode.text);
 
     // Get all references to this identifier using the IDE's API
     const references = await ide.getReferences({
@@ -399,7 +403,19 @@ async function staticJump(ctx: {
       return null;
     }
 
-    return references;
+    console.log(
+      "references:",
+      JSON.stringify(
+        references.map((ref) => ({
+          line: ref.range.start.line,
+          character: ref.range.start.character,
+        })),
+        null,
+        2,
+      ),
+    );
+
+    return references.length > 1 ? references.slice(1) : null;
   } catch (error) {
     console.error("Error in staticJump:", error);
     return null;
