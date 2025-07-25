@@ -79,7 +79,7 @@ export function HistoryTableRow({
         navigate("/");
       }}
     >
-      <div className="flex-1 cursor-pointer space-y-1">
+      <td className="flex-1 cursor-pointer space-y-1">
         {editing ? (
           <div>
             <Input
@@ -114,10 +114,10 @@ export function HistoryTableRow({
                 })}
               </span> */}
         </div>
-      </div>
+      </td>
 
       {hovered && !editing && (
-        <div className="bg-badge absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+        <td className="bg-badge absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
           <HeaderButtonWithToolTip
             text="Edit"
             onClick={async (e) => {
@@ -136,7 +136,7 @@ export function HistoryTableRow({
           >
             <TrashIcon width="1em" height="1em" />
           </HeaderButtonWithToolTip>
-        </div>
+        </td>
       )}
     </tr>
   );

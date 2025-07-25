@@ -1,4 +1,4 @@
-import { Tool } from "core";
+import { MessageModes, Tool } from "core";
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../../../redux/slices/uiSlice";
@@ -43,20 +43,28 @@ export const ToolPoliciesSection = () => {
 
   const allToolsOff = mode === "chat";
 
-  const message =
-    mode === "chat"
-      ? "All tools disabled (Chat)"
-      : mode === "plan"
-        ? "Read-only/MCP tools available (Plan)"
-        : "All tools available (Agent)";
+  const getMessage = (mode: MessageModes) => {
+    switch (mode) {
+      case "chat":
+        return "All tools disabled in Chat, switch to Plan or Agent mode to use tools";
+      case "plan":
+        return "Read-only/MCP tools available in Plan mode";
+      default:
+        return "";
+    }
+  };
+
+  const message = getMessage(mode);
 
   return (
     <>
-      <div className="my-1 mb-3">
-        <Alert type="info" size="sm">
-          <span className="text-2xs italic">{message}</span>
-        </Alert>
-      </div>
+      {(mode === "chat" || mode === "plan") && (
+        <div className="my-1 mb-3">
+          <Alert type="info" size="sm">
+            <span className="text-2xs italic">{message}</span>
+          </Alert>
+        </div>
+      )}
       {toolsByGroup.map(([groupName, tools]) => {
         const isGroupEnabled =
           !allToolsOff && toolGroupSettings[groupName] !== "exclude";

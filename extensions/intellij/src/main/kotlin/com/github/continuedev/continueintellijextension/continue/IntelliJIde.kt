@@ -1,4 +1,3 @@
-
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
@@ -27,12 +26,14 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
+import org.jetbrains.plugins.terminal.ShellTerminalWidget
+import org.jetbrains.plugins.terminal.TerminalView
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
@@ -54,7 +55,7 @@ class IntelliJIDE(
     init {
         try {
             val os = getOS()
-            
+
             if (os == OS.LINUX || os == OS.MAC) {
                 val file = File(ripgrep)
                 if (!file.canExecute()) {
@@ -135,7 +136,33 @@ class IntelliJIDE(
     }
 
     override suspend fun getTerminalContents(): String {
-        return ""
+        return withContext(Dispatchers.EDT) {
+            try {
+                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+
+                val terminalView = TerminalView.getInstance(project)
+                // Find the first terminal widget selected, whatever its state, running command or not.
+                val widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                    toolWindow?.getContentManager()?.getContent(it)?.isSelected ?: false
+                }
+
+                if (widget != null) {
+                    val textBuffer = widget.terminalTextBuffer
+                    val stringBuilder = StringBuilder()
+                    // Iterate through all lines in the buffer (history + screen)
+                    for (i in 0 until textBuffer.historyLinesCount + textBuffer.screenLinesCount) {
+                        stringBuilder.append(textBuffer.getLine(i).text).append('\n')
+                    }
+                    stringBuilder.toString()
+                } else {
+                    "" // Return empty if no terminal is available
+                }
+            } catch (e: Exception) {
+                println("Error getting terminal contents: ${e.message}")
+                e.printStackTrace()
+                "" // Return empty on error
+            }
+        }
     }
 
     override suspend fun getDebugLocals(threadIndex: Int): String {
@@ -220,8 +247,65 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun runCommand(command: String) {
-        throw NotImplementedError("runCommand not implemented in IntelliJ")
+    override suspend fun runCommand(command: String, options: TerminalOptions?) {
+        val terminalOptions =
+            options ?: TerminalOptions(reuseTerminal = true, terminalName = null, waitForCompletion = false)
+
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+                toolWindow?.activate({
+                    try {
+                        val terminalView = TerminalView.getInstance(project)
+                        var widget: ShellTerminalWidget? = null
+
+                        // 1. Handle reuseTerminal option
+                        if (terminalOptions.reuseTerminal == true && terminalView.getWidgets().isNotEmpty()) {
+                            // 2. Find by terminalName if provided
+                            if (terminalOptions.terminalName != null) {
+                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                    .firstOrNull {
+                                        toolWindow.contentManager.getContent(it).tabName == terminalOptions.terminalName
+                                                && !it.hasRunningCommands()
+                                    }
+                            } else {
+                                // 3. Find active terminal, or fall back to the first one
+                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                    .firstOrNull { toolWindow.contentManager.getContent(it).isSelected }
+                                    ?: terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                                        !it.hasRunningCommands()
+                                    }
+                            }
+                        }
+
+                        // 4. Create a new terminal if needed
+                        if (widget == null) {
+                            widget = terminalView.createLocalShellWidget(
+                                project.basePath,
+                                terminalOptions.terminalName,
+                                true
+                            )
+                        } else {
+                            // Ensure the found widget is visible
+                            val content = toolWindow.contentManager.getContent(widget)
+                            if (content != null) {
+                                toolWindow.contentManager.setSelectedContent(content, true)
+                            }
+                        }
+
+                        // 5. Show and send text
+                        widget.ttyConnector?.write(command)
+
+                    } catch (e: Exception) {
+                        println("Error during terminal widget handling: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }, true)
+            } catch (e: Exception) {
+                println("Error activating terminal tool window: ${e.message}")
+                e.printStackTrace()
+            }
+        }
     }
 
     override suspend fun saveFile(filepath: String) {
@@ -258,9 +342,10 @@ class IntelliJIDE(
                         val buffer = ByteArray(sizeToRead)
                         val bytesRead = fis.read(buffer, 0, sizeToRead)
                         if (bytesRead <= 0) return@use ""
-                        String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
-                            // `\r` takes up unnecessary tokens
-                            .lineSequence().joinToString("\n")
+                        val content = String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
+                        // Remove `\r` characters but preserve trailing newlines to prevent line count discrepancies
+                        val contentWithoutCR = content.replace("\r\n", "\n").replace("\r", "\n")
+                        contentWithoutCR
                     }
                 }
             }
@@ -343,7 +428,7 @@ class IntelliJIDE(
                 }
 
                 val command = GeneralCommandLine(commandArgs)
-    
+
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
                 return results.split("\n")
@@ -357,11 +442,12 @@ class IntelliJIDE(
             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
         }
     }
+
     override suspend fun getSearchResults(query: String, maxResults: Int?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                 val commandArgs = mutableListOf(
+                val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
                     "--ignore-file",
@@ -372,20 +458,20 @@ class IntelliJIDE(
                     "2",
                     "--heading"
                 )
-                
+
                 // Conditionally add maxResults flag
                 if (maxResults != null) {
                     commandArgs.add("-m")
                     commandArgs.add(maxResults.toString())
                 }
-                
+
                 // Add the search query and path
                 commandArgs.add("-e")
                 commandArgs.add(query)
                 commandArgs.add(".")
 
                 val command = GeneralCommandLine(commandArgs)
-    
+
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {
@@ -592,6 +678,14 @@ class IntelliJIDE(
 
     override suspend fun gotoDefinition(location: Location): List<RangeInFile> {
         throw NotImplementedError("gotoDefinition not implemented yet")
+    }
+
+    override suspend fun gotoTypeDefinition(location: Location): List<RangeInFile> {
+        throw NotImplementedError("gotoTypeDefinition not implemented yet")
+    }
+
+    override suspend fun getSignatureHelp(location: Location): SignatureHelp? {
+        throw NotImplementedError("getSignatureHelp not implemented yet")
     }
 
     override fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit) {

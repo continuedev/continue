@@ -17,11 +17,7 @@ const ContextStatus = () => {
     return null;
   }
 
-  const barColorClass = isPruned
-    ? "bg-error"
-    : percent > 80
-      ? "bg-warning"
-      : "bg-description";
+  const barColorClass = isPruned ? "bg-error" : "bg-description";
 
   return (
     <div>
@@ -35,28 +31,27 @@ const ContextStatus = () => {
         }}
         clickable
       >
-        <div className="flex flex-col gap-0 text-xs">
+        <div className="flex flex-col gap-0 text-left text-xs">
           <span className="inline-block">
-            {`${percent}% of context filled`}
+            {`${percent}% of context filled.`}
           </span>
           {isPruned && (
             <span className="inline-block">
-              {`Oldest messages are being removed`}
+              {`Oldest messages are being removed.`}
             </span>
           )}
           {history.length > 0 && (
             <div className="flex flex-col gap-1 whitespace-pre">
               <div>
                 <span
-                  className="inline-block cursor-pointer underline"
+                  className="hover:text-link inline-block cursor-pointer underline"
                   onClick={() => compactConversation(history.length - 1)}
                 >
                   Compact conversation
                 </span>
                 {"\n"}
-                <span className="inline-block">or</span> {"\n"}
                 <span
-                  className="inline-block cursor-pointer underline"
+                  className="hover:text-link inline-block cursor-pointer underline"
                   onClick={() => {
                     dispatch(
                       saveCurrentSession({
