@@ -878,7 +878,7 @@ const getCommandsMap: (
       if (isFim) {
         if (!fimText) {
           console.log("deleteChain from commands.ts: !fimText");
-          NextEditProvider.getInstance().deleteChain();
+          await NextEditProvider.getInstance().deleteChain();
         }
         // For FIM edits, create an inline completion item.
         const nextEditCompletionItem = new vscode.InlineCompletionItem(
@@ -914,7 +914,7 @@ const getCommandsMap: (
         const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
         if (diffLines.length === 0) {
           console.log("deleteChain from commands.ts: diffLines.length === 0");
-          NextEditProvider.getInstance().deleteChain();
+          await NextEditProvider.getInstance().deleteChain();
         }
 
         if (NextEditWindowManager.isInstantiated()) {
