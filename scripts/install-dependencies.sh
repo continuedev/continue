@@ -36,26 +36,11 @@ npm install
 npm run build
 popd
 
-echo "Building fetch..."
-pushd packages/fetch
-npm install
-npm run build
-popd
+echo "Building packages (fetch, openai-adapters, config-yaml)..."
+./scripts/build-packages.sh
 
 echo "Building llm-info..."
 pushd packages/llm-info
-npm install
-npm run build
-popd
-
-echo "Building config-yaml..."
-pushd packages/config-yaml
-npm install
-npm run build
-popd
-
-echo "Building openai-adapters..."
-pushd packages/openai-adapters
 npm install
 npm run build
 popd
