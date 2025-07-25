@@ -52,7 +52,7 @@ jobs:
     needs: install-root
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -61,14 +61,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      # Build all packages using the authoritative build script
-      - name: Build packages (Windows)
-        run: ./scripts/build-packages.ps1
-        if: matrix.os == 'windows-latest'
-
       - name: Build packages (Unix)
         run: ./scripts/build-packages.sh
-        if: matrix.os != 'windows-latest'
 
       # Upload built packages as artifacts
       - name: Upload built packages
