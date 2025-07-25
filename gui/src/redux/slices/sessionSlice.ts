@@ -23,7 +23,6 @@ import {
   Tool,
   ToolCallDelta,
   ToolCallState,
-  WarningMessage,
 } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -34,6 +33,7 @@ import {
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
+import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
 import { RootState } from "../store";
@@ -224,8 +224,10 @@ type SessionState = {
   };
   newestToolbarPreviewForInput: Record<string, string>;
   hasReasoningEnabled?: boolean;
+  isPruned?: boolean;
+  contextPercentage?: number;
+  inlineErrorMessage?: InlineErrorMessageType;
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
-  warningMessage?: WarningMessage;
 };
 
 const initialState: SessionState = {
@@ -289,6 +291,7 @@ export const sessionSlice = createSlice({
       if (state.history.length < 2) {
         return;
       }
+
       const lastUserOrToolIdx = findLastIndex(
         state.history,
         (item) => item.message.role === "tool" || item.message.role === "user",
@@ -315,7 +318,14 @@ export const sessionSlice = createSlice({
       }
 
       if (validAssistantMessageIdx === -1) {
-        state.history = state.history.slice(0, lastUserOrToolIdx + 1);
+        const lastMsg = state.history[lastUserOrToolIdx];
+        const lastRole = lastMsg.message.role as "user" | "tool";
+        if (lastRole === "user") {
+          state.mainEditorContentTrigger = lastMsg.editorState;
+          state.history = state.history.slice(0, lastUserOrToolIdx);
+        } else {
+          state.history = state.history.slice(0, lastUserOrToolIdx + 1);
+        }
       } else {
         state.history = state.history.slice(0, validAssistantMessageIdx + 1);
       }
@@ -423,12 +433,27 @@ export const sessionSlice = createSlice({
           },
           contextItems: [],
         });
+        state.inlineErrorMessage = undefined;
+        state.isPruned = false;
+        state.contextPercentage = undefined;
       }
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
-      state.warningMessage = undefined;
+      state.inlineErrorMessage = undefined;
+      state.isPruned = false;
+      state.contextPercentage = undefined;
+    },
+    deleteCompaction: (state, action: PayloadAction<number>) => {
+      // Removes the conversation summary from the specified message
+      const historyItem = state.history[action.payload];
+      if (historyItem?.conversationSummary) {
+        state.history[action.payload] = {
+          ...historyItem,
+          conversationSummary: undefined,
+        };
+      }
     },
     updateHistoryItemAtIndex: (
       state,
@@ -638,6 +663,10 @@ export const sessionSlice = createSlice({
 
       state.isStreaming = false;
       state.symbols = {};
+
+      state.inlineErrorMessage = undefined;
+      state.isPruned = false;
+      state.contextPercentage = undefined;
 
       if (payload) {
         state.history = payload.history as any;
@@ -905,11 +934,17 @@ export const sessionSlice = createSlice({
         delete state.compactionLoading[index];
       }
     },
-    setWarningMessage: (
+    setInlineErrorMessage: (
       state,
-      action: PayloadAction<WarningMessage | undefined>,
+      action: PayloadAction<SessionState["inlineErrorMessage"]>,
     ) => {
-      state.warningMessage = action.payload;
+      state.inlineErrorMessage = action.payload;
+    },
+    setIsPruned: (state, action: PayloadAction<boolean>) => {
+      state.isPruned = action.payload;
+    },
+    setContextPercentage: (state, action: PayloadAction<number>) => {
+      state.contextPercentage = action.payload;
     },
   },
   selectors: {
@@ -975,6 +1010,7 @@ export const {
   clearDanglingMessages,
   setMainEditorContentTrigger,
   deleteMessage,
+  deleteCompaction,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
@@ -994,8 +1030,10 @@ export const {
   setNewestToolbarPreviewForInput,
   setIsInEdit,
   setHasReasoningEnabled,
+  setInlineErrorMessage,
+  setIsPruned,
+  setContextPercentage,
   setCompactionLoading,
-  setWarningMessage,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

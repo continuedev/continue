@@ -10,9 +10,6 @@ import { GradientBorder } from "./GradientBorder";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
-import WarningMessageBox from "./WarningMessageBox";
-import EditConfigAction from "./WarningMessageBox/Actions/EditConfigAction";
-import NewSessionAction from "./WarningMessageBox/Actions/NewSessionAction";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
@@ -43,9 +40,6 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const warningMessage = useAppSelector(
-    (state) => state.session.warningMessage,
-  );
   const availableSlashCommands = useAppSelector(
     selectSlashCommandComboBoxInputs,
   );
@@ -125,19 +119,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           />
         </div>
       )}
-      {props.isLastUserInput &&
-        warningMessage &&
-        (warningMessage.category === "exceeded-context-length" ? (
-          <WarningMessageBox
-            warningMessage={warningMessage}
-            actions={[NewSessionAction]}
-          />
-        ) : (
-          <WarningMessageBox
-            warningMessage={warningMessage}
-            actions={[EditConfigAction]}
-          />
-        ))}
     </div>
   );
 }

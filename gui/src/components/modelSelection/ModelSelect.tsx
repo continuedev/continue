@@ -37,6 +37,7 @@ interface Option {
   value: string;
   title: string;
   apiKey?: string;
+  sourceFile?: string;
 }
 
 function modelSelectTitle(model: any): string {
@@ -56,8 +57,6 @@ function ModelOption({
   showMissingApiKeyMsg,
   isSelected,
 }: ModelOptionProps) {
-  const ideMessenger = useContext(IdeMessengerContext);
-
   function handleOptionClick(e: any) {
     if (showMissingApiKeyMsg) {
       e.preventDefault();
@@ -132,6 +131,7 @@ function ModelSelect() {
           value: model.title,
           title: modelSelectTitle(model),
           apiKey: model.apiKey,
+          sourceFile: model.sourceFile,
         };
       }),
     );
@@ -218,7 +218,7 @@ function ModelSelect() {
             {modelSelectTitle(selectedModel) || "Select model"}
           </span>
           <ChevronDownIcon
-            className="h-2 w-2 flex-shrink-0 hover:brightness-110"
+            className="hidden h-2 w-2 flex-shrink-0 hover:brightness-110 min-[200px]:flex"
             aria-hidden="true"
           />
         </ListboxButton>
@@ -230,6 +230,7 @@ function ModelSelect() {
               onClick={() =>
                 ideMessenger.post("config/openProfile", {
                   profileId: undefined,
+                  element: { sourceFile: selectedModel?.sourceFile },
                 })
               }
             />

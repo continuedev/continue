@@ -1,3 +1,4 @@
+import { CompletionUsage } from "openai/resources/completions.mjs";
 import { BaseLlmApi, constructLlmApi } from "../index.js";
 import { LLMConfig } from "../types.js";
 import { TestConfigOptions } from "./main.test.js";
@@ -88,12 +89,27 @@ export function testChat(
       new AbortController().signal,
     );
     let completion = "";
+    let usage: CompletionUsage | undefined = undefined;
     for await (const result of stream) {
-      completion += result.choices[0].delta.content ?? "";
+      completion += result.choices[0]?.delta.content ?? "";
 
-      expect(result.choices.length).toBeGreaterThan(0);
+      if (result.usage) {
+        usage = result.usage;
+      } else {
+        // At the end we expect a final message without choices that shares usage
+        expect(result.choices.length).toBeGreaterThan(0);
+      }
     }
     expect(completion.length).toBeGreaterThan(0);
+
+    if (options?.expectUsage === true) {
+      expect(usage).toBeDefined();
+      expect(usage!.completion_tokens).toBeGreaterThan(0);
+      expect(usage!.prompt_tokens).toBeGreaterThan(0);
+      expect(usage!.total_tokens).toEqual(
+        usage!.prompt_tokens + usage!.completion_tokens,
+      );
+    }
   });
 
   test("should successfully stream multi-part chat with empty text", async () => {
@@ -122,6 +138,10 @@ export function testChat(
     );
     let completion = "";
     for await (const result of stream) {
+      // Skip usage chunks that have empty choices array
+      if (result.choices.length === 0) {
+        continue;
+      }
       completion += result.choices[0].delta.content ?? "";
 
       expect(result.choices.length).toBeGreaterThan(0);
@@ -246,6 +266,10 @@ export function testChat(
         },
         new AbortController().signal,
       )) {
+        // Skip usage chunks that have empty choices array
+        if (chunk.choices.length === 0) {
+          continue;
+        }
         const toolCall = chunk.choices[0].delta.tool_calls?.[0];
         if (!toolCall) {
           continue;
@@ -317,6 +341,10 @@ export function testChat(
         },
         new AbortController().signal,
       )) {
+        // Skip usage chunks that have empty choices array
+        if (chunk.choices.length === 0) {
+          continue;
+        }
         response += chunk.choices[0].delta.content ?? "";
       }
 
