@@ -7,6 +7,7 @@ import {
   IDE,
   ILLM,
   Position,
+  Range,
   RangeInFile,
 } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
@@ -18,22 +19,30 @@ import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchin
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
 import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
+import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types.js";
 import { GetLspDefinitionsFunction } from "../autocomplete/types.js";
+import { getAst } from "../autocomplete/util/ast.js";
 import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebouncer.js";
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { myersDiff } from "../diff/myers.js";
+import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
+import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import {
   calculateFinalCursorPosition,
   getOffsetPositionAtLastNewLine,
 } from "./diff/diff.js";
-import { EditableRegionStrategy } from "./NextEditEditableRegionCalculator.js";
+import { DocumentAstTracker } from "./DocumentAstTracker.js";
+import {
+  EditableRegionStrategy,
+  getNextEditableRegion,
+} from "./NextEditEditableRegionCalculator.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { NextEditPrefetchQueue } from "./NextEditPrefetchQueue.js";
 import {
@@ -41,7 +50,12 @@ import {
   renderDefaultUserPrompt,
   renderPrompt,
 } from "./templating/NextEditPromptEngine.js";
-import { NextEditOutcome, Prompt, PromptMetadata } from "./types.js";
+import {
+  NextEditOutcome,
+  Prompt,
+  PromptMetadata,
+  RecentlyEditedRange,
+} from "./types.js";
 // import { renderPrompt } from "./templating/NextEditPromptEngine.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -70,7 +84,10 @@ export class NextEditProvider {
   private prefetchQueue: NextEditPrefetchQueue;
   // private refQueue: RangeInFile[] = [];
   private currentEditChainId: string | null = null;
+  private previousRequest: AutocompleteInput | null = null;
   private previousCompletions: NextEditOutcome[] = [];
+  private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
+  // TODO: keep track of the last completion request (at least the file path it came from)
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -176,6 +193,7 @@ export class NextEditProvider {
           workspaceDirUri:
             other.helper.workspaceUris[0] ??
             path.dirname(other.helper.filepath),
+          fileContentsBeforeAccept: other.helper.fileContents,
           prompt: this.promptMetadata!.prompt.content,
           userEdits: this.promptMetadata!.userEdits,
           userExcerpts: this.promptMetadata!.userExcerpts,
@@ -326,9 +344,24 @@ export class NextEditProvider {
     return this.previousCompletions[0];
   }
 
-  public deleteChain(): void {
+  public async deleteChain(): Promise<void> {
     this.currentEditChainId = null;
     this.previousCompletions = [];
+    this.nextEditableRegionsInTheCurrentChain = [];
+
+    if (this.previousRequest) {
+      const fileContent =
+        // await fs.readFile(localPathOrUriToPath(this.previousRequest.filepath)
+        (await this.ide.readFile(this.previousRequest.filepath)).toString();
+      const ast = await getAst(this.previousRequest.filepath, fileContent);
+      if (ast) {
+        DocumentAstTracker.getInstance().pushAst(
+          localPathOrUriToPath(this.previousRequest.filepath),
+          fileContent,
+          ast,
+        );
+      }
+    }
   }
 
   public startChain(id?: string) {
@@ -348,6 +381,7 @@ export class NextEditProvider {
     token: AbortSignal | undefined,
   ): Promise<NextEditOutcome | undefined> {
     try {
+      this.previousRequest = input;
       // Create abort signal if not given
       if (!token) {
         const controller = this.loggingService.createAbortController(
@@ -399,12 +433,34 @@ export class NextEditProvider {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
       } else {
+        const historyDiff = createDiff({
+          beforeContent:
+            DocumentAstTracker.getInstance().getMostRecentDocumentHistory(
+              localPathOrUriToPath(helper.filepath),
+            ) ?? "",
+          afterContent: helper.fileContents,
+          filePath: helper.filepath,
+          diffType: DiffFormatType.Unified,
+          contextLines: 3,
+        });
         const promptMetadata = await renderPrompt(
           helper,
-          this.diffContext,
+          // this.diffContext,
+          historyDiff ?? this.diffContext,
           EditableRegionStrategy.Naive,
+          // input.recentlyEditedRanges,
         );
         this.promptMetadata = promptMetadata;
+        prompts.push({
+          role: "system",
+          content: [
+            "When the user deletes or replaces over previous code, you should respect that decision.",
+            "Respect the new code the user is writing, and complete it.",
+            "For example, if the user is changing a field name, try to autocomplete the new field name. Don't suggest the previous field name.",
+            "Do not roll back to previous content.",
+            "If the user has made a change, make sure you respect that and try to apply it to other parts of the code that used to use the old content.",
+          ].join("\n"),
+        });
         prompts.push(promptMetadata.prompt);
       }
 
@@ -445,6 +501,7 @@ export class NextEditProvider {
             fileUri: helper.filepath,
             workspaceDirUri:
               helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+            fileContentsBeforeAccept: helper.fileContents,
             prompt: prompts.join("\n"),
             userEdits: "",
             userExcerpts: "",
@@ -518,6 +575,7 @@ export class NextEditProvider {
             fileUri: helper.filepath,
             workspaceDirUri:
               helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+            fileContentsBeforeAccept: helper.fileContents,
             prompt: this.promptMetadata!.prompt.content,
             userEdits: this.promptMetadata!.userEdits,
             userExcerpts: this.promptMetadata!.userExcerpts,
@@ -549,6 +607,101 @@ export class NextEditProvider {
     } finally {
       this.loggingService.deleteAbortController(input.completionId);
     }
+  }
+
+  public async provideInlineCompletionItemsWithChain(
+    ctx: {
+      completionId: string;
+      manuallyPassFileContents?: string;
+      manuallyPassPrefix?: string;
+      selectedCompletionInfo?: {
+        text: string;
+        range: Range;
+      };
+      isUntitledFile: boolean;
+      recentlyVisitedRanges: AutocompleteCodeSnippet[];
+      recentlyEditedRanges: RecentlyEditedRange[];
+    },
+    token: AbortSignal | undefined,
+  ) {
+    // TODO:
+    // If we don't have a precomputed list of next editable regions already, compute it.
+    // Store this list as a class attribute.
+    // Pop the frontmost RangeInFile and use that to build an input.
+    try {
+      const previousOutcome = this.getPreviousCompletion();
+      if (!previousOutcome) {
+        return undefined;
+      }
+      // TODO: This is actually getting the contents after the user typed something.
+      // we need the file before the user has typed anything.
+      // console.log("previousOutcome:", previousOutcome.fileContentsBeforeAccept);
+      // console.log("previousCursorPosition:", previousOutcome.cursorPosition);
+
+      const fileContent = previousOutcome.fileContentsBeforeAccept;
+      const filepath = localPathOrUriToPath(previousOutcome.fileUri);
+
+      if (this.nextEditableRegionsInTheCurrentChain.length === 0) {
+        this.loadNextEditableRegionsInTheCurrentChain(
+          (await getNextEditableRegion(EditableRegionStrategy.Static, {
+            fileContent,
+            cursorPosition: previousOutcome.cursorPosition,
+            filepath,
+            ide: this.ide,
+          })) ?? [],
+        );
+
+        if (this.nextEditableRegionsInTheCurrentChain.length === 0) {
+          await this.deleteChain();
+          return undefined;
+        }
+      }
+
+      const input = await this.buildAutocompleteInputFromChain(
+        previousOutcome,
+        this.nextEditableRegionsInTheCurrentChain[0],
+        ctx,
+      );
+      if (!input) {
+        return undefined;
+      }
+
+      return await this.provideInlineCompletionItems(input, token);
+    } catch (e: any) {
+      this.onError(e);
+    }
+  }
+
+  private buildAutocompleteInputFromChain(
+    previousOutcome: NextEditOutcome,
+    nextEditableRegion: RangeInFile,
+    ctx: {
+      completionId: string;
+      manuallyPassFileContents?: string;
+      manuallyPassPrefix?: string;
+      selectedCompletionInfo?: {
+        text: string;
+        range: Range;
+      };
+      isUntitledFile: boolean;
+      recentlyVisitedRanges: AutocompleteCodeSnippet[];
+      recentlyEditedRanges: RecentlyEditedRange[];
+    },
+  ): AutocompleteInput | undefined {
+    const input: AutocompleteInput = {
+      pos: {
+        line: nextEditableRegion.range.start.line,
+        character: nextEditableRegion.range.start.character,
+      },
+      filepath: previousOutcome.fileUri,
+      ...ctx,
+    };
+
+    return input;
+  }
+
+  public loadNextEditableRegionsInTheCurrentChain(regions: RangeInFile[]) {
+    this.nextEditableRegionsInTheCurrentChain = regions;
   }
 
   public async provideNextEditPrediction(
