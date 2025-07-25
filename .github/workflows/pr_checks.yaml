@@ -417,6 +417,7 @@ jobs:
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
 
   package-tests:
+    needs: build-packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -425,15 +426,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v4
+      # Download built packages
+      - name: Download built packages
+        uses: actions/download-artifact@v4
         with:
-          path: core/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Install dependencies
-        run: |
-          cd packages/config-yaml
-          npm ci
+          name: built-packages-ubuntu-latest
+          path: .
 
       - name: Run config-yaml tests
         run: |
