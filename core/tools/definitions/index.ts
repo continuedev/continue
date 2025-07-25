@@ -5,7 +5,7 @@ export { editFileTool } from "./editFile";
 export { fetchUrlContentTool } from "./fetchUrlContent";
 export { globSearchTool } from "./globSearch";
 export { grepSearchTool } from "./grepSearch";
-export { lsTool } from "./lsTool";
+export { lsTool } from "./ls";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";
 export { requestRuleTool } from "./requestRule";
