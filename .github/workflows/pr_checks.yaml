@@ -671,10 +671,6 @@ jobs:
           echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
 
   vscode-package-extension:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
     needs:
       [
         install-vscode,
@@ -682,81 +678,27 @@ jobs:
         install-config-yaml,
         install-openai-adapters,
       ]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        id: vscode-node-modules-cache
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: core-node-modules-cache
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
-
-      - name: Modify package.json version for PR builds
-        if: github.event_name == 'pull_request'
-        run: |
-          cd extensions/vscode
-          # Extract PR number from GitHub context
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          
-          # Get current version from package.json
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          
-          # Create new version with PR number
-          NEW_VERSION="${CURRENT_VERSION}-${PR_NUMBER}"
-          
-          echo "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"
-          
-          # Update version in package.json
-          sed -i.bak "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
-          
-          # Remove backup file
-          rm -f package.json.bak
-          
-          # Verify the change
-          echo "✅ New version: $(node -p "require('./package.json').version")"
-
-      - name: Package extension
-        run: |
-          cd extensions/vscode
-          npm run package
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vscode-extension-build-${{ runner.os }}
-          path: extensions/vscode/build
+    uses: ./.github/workflows/build-vscode-extension.yml
+    with:
+      # Limited platforms for faster PR checks
+      platforms: |
+        [
+          {
+            "os": "ubuntu-latest",
+            "platform": "linux",
+            "arch": "x64",
+            "npm_config_arch": "x64"
+          },
+          {
+            "os": "macos-latest",
+            "platform": "darwin",
+            "arch": "x64",
+            "npm_config_arch": "x64"
+          }
+        ]
+      pre-release: false
+      pr-number: ${{ github.event.pull_request.number }}
+    secrets: inherit
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest

@@ -4,9 +4,60 @@ on:
   workflow_call:
     inputs:
       platforms:
-        description: "JSON array of platform configurations"
-        required: true
+        description: "JSON array of platform configurations (defaults to all platforms)"
+        required: false
         type: string
+        default: |
+          [
+            {
+              "os": "windows-latest",
+              "platform": "win32",
+              "arch": "x64",
+              "npm_config_arch": "x64"
+            },
+            {
+              "os": "windows-latest",
+              "platform": "win32",
+              "arch": "arm64",
+              "npm_config_arch": "arm"
+            },
+            {
+              "os": "ubuntu-latest",
+              "platform": "linux",
+              "arch": "x64",
+              "npm_config_arch": "x64"
+            },
+            {
+              "os": "ubuntu-latest",
+              "platform": "linux",
+              "arch": "arm64",
+              "npm_config_arch": "arm64"
+            },
+            {
+              "os": "ubuntu-latest",
+              "platform": "linux",
+              "arch": "armhf",
+              "npm_config_arch": "arm"
+            },
+            {
+              "os": "ubuntu-latest",
+              "platform": "alpine",
+              "arch": "x64",
+              "npm_config_arch": "x64"
+            },
+            {
+              "os": "macos-13",
+              "platform": "darwin",
+              "arch": "x64",
+              "npm_config_arch": "x64"
+            },
+            {
+              "os": "macos-13",
+              "platform": "darwin",
+              "arch": "arm64",
+              "npm_config_arch": "arm64"
+            }
+          ]
       pre-release:
         description: "Whether to build as pre-release"
         required: false
