@@ -110,7 +110,7 @@ jobs:
         run: ./scripts/build-packages.ps1
         if: matrix.os == 'windows-latest'
 
-      - name: Build packages (Unix)
+      - name: Build packages (Linux/macOS)
         run: ./scripts/build-packages.sh
         if: matrix.os != 'windows-latest'
 
