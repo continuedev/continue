@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useStdout } from "ink";
 
+const DEFAULT_ROWS = 24;
+const DEFAULT_COLS = 80;
+
 const useTerminalSize = (debounce = 100) => {
   const { stdout } = useStdout();
   const [dimensions, setDimensions] = useState({
-    columns: stdout.columns || 80,
-    rows: stdout.rows || 24,
+    columns: stdout.columns || DEFAULT_COLS,
+    rows: stdout.rows || DEFAULT_ROWS,
   });
   const [isResizing, setIsResizing] = useState(false);
 
@@ -21,8 +24,8 @@ const useTerminalSize = (debounce = 100) => {
 
       debounceTimer = setTimeout(() => {
         setDimensions({
-          columns: stdout.columns,
-          rows: stdout.rows,
+          columns: stdout.columns || DEFAULT_COLS,
+          rows: stdout.rows || DEFAULT_ROWS,
         });
         setIsResizing(false);
       }, debounce);
@@ -35,7 +38,7 @@ const useTerminalSize = (debounce = 100) => {
         clearTimeout(debounceTimer);
       }
     };
-  }, [stdout]);
+  }, [stdout, debounce]);
 
   return { ...dimensions, isResizing };
 };
