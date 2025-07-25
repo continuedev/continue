@@ -176,14 +176,14 @@ jobs:
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
       - name: Build packages and install dependencies
-        if: steps.gui-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-
-          cd core
-          npm ci
-          cd ../gui
-          npm ci
+          if [ "${{ steps.gui-cache.outputs.cache-hit }}" != "true" ]; then
+            cd core
+            npm ci
+            cd ../gui
+            npm ci
+          fi
 
   gui-checks:
     needs: install-gui
@@ -250,13 +250,14 @@ jobs:
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
       - name: Build packages and install dependencies
-        if: steps.binary-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd core
-          npm ci
-          cd ../binary
-          npm ci
+          if [ "${{ steps.binary-cache.outputs.cache-hit }}" != "true" ]; then
+            cd core
+            npm ci
+            cd ../binary
+            npm ci
+          fi
 
       - name: Type check
         run: |
@@ -293,13 +294,14 @@ jobs:
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Build packages and install dependencies
-        if: steps.vscode-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd core
-          npm ci
-          cd ../extensions/vscode
-          npm ci
+          if [ "${{ steps.vscode-cache.outputs.cache-hit }}" != "true" ]; then
+            cd core
+            npm ci
+            cd ../extensions/vscode
+            npm ci
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
@@ -522,13 +524,14 @@ jobs:
           key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Build packages and download e2e dependencies
-        if: steps.storage-cache.outputs.cache-hit != 'true'
         run: |
           ./scripts/build-packages.sh
-          cd core
-          npm ci
-          cd ../extensions/vscode
-          npm run e2e:ci:download
+          if [ "${{ steps.storage-cache.outputs.cache-hit }}" != "true" ]; then
+            cd core
+            npm ci
+            cd ../extensions/vscode
+            npm run e2e:ci:download
+          fi
 
       - name: Upload e2e dependencies
         uses: actions/upload-artifact@v4
