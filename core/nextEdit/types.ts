@@ -47,9 +47,10 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   // New for Next Edit.
   fileUri: string;
   workspaceDirUri: string;
+  fileContentsBeforeAccept: string;
   prompt: string;
   userEdits: string;
-  userExcerpts: string;
+  userExcerpts: string; // For now, this is the same as fileContentsBeforeAccept, but that assumption should not be relied on.
   originalEditableRange: string;
   completion: string;
   cursorPosition: { line: number; character: number };
