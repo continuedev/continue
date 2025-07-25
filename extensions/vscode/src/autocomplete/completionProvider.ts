@@ -140,6 +140,14 @@ export class ContinueCompletionProvider
     token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
+    console.log("================================================");
+    console.log(
+      "editor.inlineSuggest.enabled:",
+      vscode.workspace
+        .getConfiguration()
+        .get<boolean>("editor.inlineSuggest.enabled"),
+    );
+    // console.log("trigger!!", token.isCancellationRequested);
     const enableTabAutocomplete =
       getStatusBarStatus() === StatusBarStatus.Enabled;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
@@ -239,7 +247,12 @@ export class ContinueCompletionProvider
       const recentlyVisitedRanges = this.recentlyVisitedRanges.getSnippets();
       let recentlyEditedRanges =
         await this.recentlyEditedTracker.getRecentlyEditedRanges();
-      console.log("one:", JSON.stringify(recentlyEditedRanges, null, 2));
+      // console.log("one:", JSON.stringify(recentlyEditedRanges, null, 2));
+      console.log(
+        this.nextEditProvider.chainExists()
+          ? "chain is alive"
+          : "chain is not alive",
+      );
 
       if (this.nextEditProvider.chainExists()) {
         // If the user has accepted the previous completion, the chain of edits is alive.
@@ -280,9 +293,33 @@ export class ContinueCompletionProvider
           outcome = await this.nextEditProvider.provideInlineCompletionItems(
             input,
             signal,
+            false,
           );
           console.log("outcome.completion:");
           console.log(outcome?.completion);
+          if (!outcome || !outcome.completion) {
+            // TODO: At this point we assume that the user typed something "whole".
+            // AKA, the user's edit was good enough to start an edit chain.
+            // We actually started the chain before getting the outcome. This makes logical sense.
+            // Then all we need to do is to calculate next editable region.
+            // We also need to use the user's edits to create a user edits section in renderPrompt.
+            recentlyEditedRanges =
+              await this.recentlyEditedTracker.getRecentlyEditedRanges();
+            // console.log("two:", JSON.stringify(recentlyEditedRanges, null, 2));
+            outcome =
+              await this.nextEditProvider.provideInlineCompletionItemsWithChain(
+                {
+                  completionId,
+                  manuallyPassFileContents,
+                  manuallyPassPrefix,
+                  selectedCompletionInfo,
+                  isUntitledFile: document.isUntitled,
+                  recentlyVisitedRanges,
+                  recentlyEditedRanges,
+                },
+                signal,
+              );
+          }
         } else {
           outcome = await this.completionProvider.provideInlineCompletionItems(
             input,
@@ -308,30 +345,7 @@ export class ContinueCompletionProvider
       //     );
 
       if (!outcome || !outcome.completion) {
-        // TODO: At this point we assume that the user typed something "whole".
-        // AKA, the user's edit was good enough to start an edit chain.
-        // We actually started the chain before getting the outcome. This makes logical sense.
-        // Then all we need to do is to calculate next editable region.
-        // We also need to use the user's edits to create a user edits section in renderPrompt.
-        recentlyEditedRanges =
-          await this.recentlyEditedTracker.getRecentlyEditedRanges();
-        console.log("two:", JSON.stringify(recentlyEditedRanges, null, 2));
-        outcome =
-          await this.nextEditProvider.provideInlineCompletionItemsWithChain(
-            {
-              completionId,
-              manuallyPassFileContents,
-              manuallyPassPrefix,
-              selectedCompletionInfo,
-              isUntitledFile: document.isUntitled,
-              recentlyVisitedRanges,
-              recentlyEditedRanges,
-            },
-            signal,
-          );
-        if (!outcome || !outcome.completion) {
-          return null;
-        }
+        return null;
       }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)

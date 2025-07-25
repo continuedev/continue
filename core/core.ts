@@ -593,6 +593,7 @@ export class Core {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
         msg.data,
         undefined,
+        false,
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });
