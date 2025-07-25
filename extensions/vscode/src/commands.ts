@@ -829,6 +829,8 @@ const getCommandsMap: (
         return;
       }
 
+      const documentContent = editor.document.getText();
+
       // Calculate the editable region boundaries around the current cursor position/
       const editableRegionStartLine = Math.max(
         currentPosition.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -840,8 +842,7 @@ const getCommandsMap: (
       );
 
       // Get the current text in the editable region.
-      const oldEditRangeSlice = editor.document
-        .getText()
+      const oldEditRangeSlice = documentContent
         .split("\n")
         .slice(editableRegionStartLine, editableRegionEndLine + 1)
         .join("\n");
