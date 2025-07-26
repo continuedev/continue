@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension
 
-import com.github.continuedev.continueintellijextension.editor.RangeInFileWithContents
 import com.google.gson.JsonElement
 
 enum class ToastType(val value: String) {
@@ -290,7 +289,9 @@ data class ApplyState(
     val numDiffs: Int? = null,
     val filepath: String? = null,
     val fileContent: String? = null,
-    val toolCallId: String? = null
+    val toolCallId: String? = null,
+    val acceptedDiffs: Int? = null,
+    val rejectedDiffs: Int? = null
 )
 
 data class HighlightedCodePayload(
@@ -312,7 +313,8 @@ data class StreamDiffLinesPayload(
 
 data class AcceptOrRejectDiffPayload(
     val filepath: String? = null,
-    val streamId: String? = null
+    val streamId: String? = null,
+    val toolCallId: String? = null
 )
 
 data class ShowFilePayload(

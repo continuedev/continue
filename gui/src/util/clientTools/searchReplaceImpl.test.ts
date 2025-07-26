@@ -158,6 +158,21 @@ describe("searchReplaceToolImpl", () => {
         output: undefined,
       });
 
+      // Verify dispatch was called with success output
+      expect(mockExtras.dispatch).toHaveBeenCalledWith({
+        type: "session/updateToolCallOutput",
+        payload: {
+          toolCallId: "tool-call-id",
+          contextItems: [
+            {
+              name: "Search and Replace Results",
+              description: "Successfully applied 1 replacements to test.js",
+              content: expect.stringContaining("Successfully modified test.js"),
+            },
+          ],
+        },
+      });
+
       // Verify applyToFile was called with correct parameters
       expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
         text: expectedFinalContent,
@@ -499,7 +514,7 @@ keep this too`;
   });
 
   describe("error handling", () => {
-    it("should throw error when search content is not found", async () => {
+    it("should handle search content not found errors", async () => {
       mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
       mockParseAllSearchReplaceBlocks.mockReturnValue([
         {
@@ -511,18 +526,43 @@ keep this too`;
       mockIdeMessenger.ide.readFile.mockResolvedValue("some file content");
       mockFindSearchMatch.mockReturnValue(null); // Search content not found
 
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["mock diff content"] },
-          "tool-call-id",
-          mockExtras,
-        ),
-      ).rejects.toThrow(
-        "Search content not found in block 1:\nnonexistent content",
+      const result = await searchReplaceToolImpl(
+        { filepath: "test.txt", diffs: ["mock diff content"] },
+        "tool-call-id",
+        mockExtras,
       );
+
+      // Should return error response immediately
+      expect(result).toEqual({
+        respondImmediately: true,
+        output: [
+          {
+            name: "Search and Replace Error",
+            description: "Failed to apply changes to test.txt",
+            content:
+              "Error: Search content not found in block 1:\nnonexistent content",
+          },
+        ],
+      });
+
+      // Should dispatch error output
+      expect(mockExtras.dispatch).toHaveBeenCalledWith({
+        type: "session/updateToolCallOutput",
+        payload: {
+          toolCallId: "tool-call-id",
+          contextItems: [
+            {
+              name: "Search and Replace Error",
+              description: "Failed to apply changes to test.txt",
+              content:
+                "Error: Search content not found in block 1:\nnonexistent content",
+            },
+          ],
+        },
+      });
     });
 
-    it("should throw error when search content is not found in second block", async () => {
+    it("should handle search content not found in second block", async () => {
       mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
       mockParseAllSearchReplaceBlocks.mockReturnValue([
         {
@@ -549,15 +589,23 @@ keep this too`;
         })
         .mockReturnValueOnce(null); // Second search fails
 
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["mock diff content"] },
-          "tool-call-id",
-          mockExtras,
-        ),
-      ).rejects.toThrow(
-        "Search content not found in block 2:\nmissing content",
+      const result = await searchReplaceToolImpl(
+        { filepath: "test.txt", diffs: ["mock diff content"] },
+        "tool-call-id",
+        mockExtras,
       );
+
+      expect(result).toEqual({
+        respondImmediately: true,
+        output: [
+          {
+            name: "Search and Replace Error",
+            description: "Failed to apply changes to test.txt",
+            content:
+              "Error: Search content not found in block 2:\nmissing content",
+          },
+        ],
+      });
     });
 
     it("should handle file read errors", async () => {
@@ -573,13 +621,22 @@ keep this too`;
         new Error("File read error"),
       );
 
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["mock diff content"] },
-          "tool-call-id",
-          mockExtras,
-        ),
-      ).rejects.toThrow("Failed to apply search and replace: File read error");
+      const result = await searchReplaceToolImpl(
+        { filepath: "test.txt", diffs: ["mock diff content"] },
+        "tool-call-id",
+        mockExtras,
+      );
+
+      expect(result).toEqual({
+        respondImmediately: true,
+        output: [
+          {
+            name: "Search and Replace Error",
+            description: "Failed to apply changes to test.txt",
+            content: "Error: File read error",
+          },
+        ],
+      });
     });
 
     it("should handle applyToFile errors", async () => {
@@ -599,13 +656,22 @@ keep this too`;
       });
       mockIdeMessenger.request.mockRejectedValue(new Error("Apply failed"));
 
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["mock diff content"] },
-          "tool-call-id",
-          mockExtras,
-        ),
-      ).rejects.toThrow("Failed to apply search and replace: Apply failed");
+      const result = await searchReplaceToolImpl(
+        { filepath: "test.txt", diffs: ["mock diff content"] },
+        "tool-call-id",
+        mockExtras,
+      );
+
+      expect(result).toEqual({
+        respondImmediately: true,
+        output: [
+          {
+            name: "Search and Replace Error",
+            description: "Failed to apply changes to test.txt",
+            content: "Error: Apply failed",
+          },
+        ],
+      });
     });
   });
 

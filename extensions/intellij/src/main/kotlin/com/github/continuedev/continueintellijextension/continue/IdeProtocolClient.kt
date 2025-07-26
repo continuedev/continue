@@ -432,6 +432,7 @@ class IdeProtocolClient(
                             AcceptOrRejectDiffPayload::class.java
                         )
                         val filepath = params.filepath;
+                        val toolCallId = params.toolCallId;
 
                         val editor = EditorUtils.getOrOpenEditor(project, filepath)?.editor
 
@@ -448,13 +449,13 @@ class IdeProtocolClient(
                             AcceptOrRejectDiffPayload::class.java
                         )
                         val filepath = params.filepath;
+                        val toolCallId = params.toolCallId;
 
                         val editor = EditorUtils.getOrOpenEditor(project, filepath)?.editor
                         if (editor != null) {
                             diffStreamService.reject(editor)
                         }
                         respond(null)
-
                     }
 
                     "applyToFile" -> {

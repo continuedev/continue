@@ -19,6 +19,8 @@ export interface VerticalDiffHandlerOptions {
     status?: ApplyState["status"],
     numDiffs?: ApplyState["numDiffs"],
     fileContent?: ApplyState["fileContent"],
+    acceptedDiffs?: ApplyState["acceptedDiffs"],
+    rejectedDiffs?: ApplyState["rejectedDiffs"],
   ) => void;
   streamId?: string;
 }
@@ -35,6 +37,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private addedLineDecorations: AddedLineDecorationManager;
   private _diffLinesQueue: DiffLine[] = [];
   private _queueLock = false;
+  private acceptedDiffs = 0;
+  private rejectedDiffs = 0;
 
   constructor(
     private startLine: number,
@@ -97,6 +101,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
       false,
     );
 
+    // Count remaining diffs and track them as accepted/rejected
+    const remainingDiffs =
+      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
+    if (accept) {
+      this.acceptedDiffs += remainingDiffs;
+    } else {
+      this.rejectedDiffs += remainingDiffs;
+    }
+
     const removedRanges = this.removedLineDecorations.ranges;
     if (accept) {
       // Accept all: delete all the red ranges and clear green decorations
@@ -114,8 +127,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     this.options.onStatusUpdate(
       "closed",
-      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
+      0, // numDiffs is now 0 since all are resolved
       this.editor.document.getText(),
+      this.acceptedDiffs,
+      this.rejectedDiffs,
     );
 
     this.cancelled = true;
@@ -186,6 +201,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
         "done",
         this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
         this.editor.document.getText(),
+        this.acceptedDiffs,
+        this.rejectedDiffs,
       );
 
       // Reject on user typing
@@ -208,6 +225,47 @@ export class VerticalDiffHandler implements vscode.Disposable {
     numGreen: number,
     numRed: number,
     skipStatusUpdate?: boolean,
+  ) {
+    // Track acceptance/rejection
+    if (accept) {
+      this.acceptedDiffs++;
+    } else {
+      this.rejectedDiffs++;
+    }
+
+    await this.internalProcessBlock(accept, startLine, numGreen, numRed);
+
+    if (!skipStatusUpdate) {
+      const numDiffs =
+        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
+
+      const status = numDiffs === 0 ? "closed" : undefined;
+
+      this.options.onStatusUpdate(
+        status,
+        numDiffs,
+        this.editor.document.getText(),
+        this.acceptedDiffs,
+        this.rejectedDiffs,
+      );
+    }
+  }
+
+  // Internal cleanup method that doesn't affect user action counters
+  private async internalCleanupBlock(
+    startLine: number,
+    numGreen: number,
+    numRed: number,
+  ) {
+    await this.internalProcessBlock(false, startLine, numGreen, numRed);
+  }
+
+  // Shared logic for processing blocks without affecting counters
+  private async internalProcessBlock(
+    accept: boolean,
+    startLine: number,
+    numGreen: number,
+    numRed: number,
   ) {
     if (numGreen > 0) {
       // Delete the editor decoration
@@ -239,19 +297,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     // Shift the codelens objects
     this.shiftCodeLensObjects(startLine, offset);
-
-    if (!skipStatusUpdate) {
-      const numDiffs =
-        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
-
-      const status = numDiffs === 0 ? "closed" : undefined;
-
-      this.options.onStatusUpdate(
-        status,
-        numDiffs,
-        this.editor.document.getText(),
-      );
-    }
   }
 
   public updateLineDelta(
@@ -297,14 +342,13 @@ export class VerticalDiffHandler implements vscode.Disposable {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // First, we reset the original diff by rejecting all pending diff blocks
+    // We use an internal cleanup that doesn't affect user action counters
     const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
     for (const block of blocks.reverse()) {
-      await this.acceptRejectBlock(
-        false,
+      await this.internalCleanupBlock(
         block.start,
         block.numGreen,
         block.numRed,
-        true,
       );
     }
 

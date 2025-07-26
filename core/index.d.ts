@@ -1361,6 +1361,8 @@ export interface ApplyState {
   filepath?: string;
   fileContent?: string;
   toolCallId?: string;
+  acceptedDiffs?: number;
+  rejectedDiffs?: number;
 }
 
 export interface StreamDiffLinesPayload {
@@ -1383,6 +1385,7 @@ export interface HighlightedCodePayload {
 export interface AcceptOrRejectDiffPayload {
   filepath?: string;
   streamId?: string;
+  toolCallId?: string;
 }
 
 export interface ShowFilePayload {

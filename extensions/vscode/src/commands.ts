@@ -175,7 +175,11 @@ const getCommandsMap: (
   }
 
   return {
-    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
+    "continue.acceptDiff": async (
+      newFileUri?: string,
+      streamId?: string,
+      toolCallId?: string,
+    ) => {
       captureCommandTelemetry("acceptDiff");
       void processDiff(
         "accept",
@@ -185,10 +189,15 @@ const getCommandsMap: (
         verticalDiffManager,
         newFileUri,
         streamId,
+        toolCallId,
       );
     },
 
-    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
+    "continue.rejectDiff": async (
+      newFileUri?: string,
+      streamId?: string,
+      toolCallId?: string,
+    ) => {
       captureCommandTelemetry("rejectDiff");
       void processDiff(
         "reject",
@@ -198,6 +207,7 @@ const getCommandsMap: (
         verticalDiffManager,
         newFileUri,
         streamId,
+        toolCallId,
       );
     },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {

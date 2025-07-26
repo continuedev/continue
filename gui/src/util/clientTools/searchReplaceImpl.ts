@@ -1,8 +1,10 @@
+import { ContextItem } from "core";
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";
+import { updateToolCallOutput } from "../../redux/slices/sessionSlice";
 import { ClientToolImpl } from "./callClientTool";
 
 export const searchReplaceToolImpl: ClientToolImpl = async (
@@ -47,6 +49,7 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     const originalContent =
       await extras.ideMessenger.ide.readFile(resolvedFilepath);
     let currentContent = originalContent;
+    const appliedBlocks: string[] = [];
 
     // Apply all replacements sequentially to build the final content
     for (let i = 0; i < allBlocks.length; i++) {
@@ -71,17 +74,38 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
         );
       }
 
+      // Track what was actually replaced
+      const originalSection = currentContent.substring(
+        match.startIndex,
+        match.endIndex,
+      );
+      const replacementText = replaceContent || "";
+      if (originalSection === replacementText) {
+        appliedBlocks.push(
+          `Block ${i + 1}: No changes needed (content already matches)`,
+        );
+      } else {
+        const originalPreview =
+          originalSection.length > 100
+            ? originalSection.substring(0, 97) + "..."
+            : originalSection;
+        const replacementPreview =
+          replacementText.length > 100
+            ? replacementText.substring(0, 97) + "..."
+            : replacementText;
+        appliedBlocks.push(
+          `Block ${i + 1}: Replaced "${originalPreview}" with "${replacementPreview}"`,
+        );
+      }
+
       // Apply the replacement
       currentContent =
         currentContent.substring(0, match.startIndex) +
-        (replaceContent || "") +
+        replacementText +
         currentContent.substring(match.endIndex);
     }
 
     // Single applyToFile call with all accumulated changes
-    // This works becaues of our logic in `applyCodeBlock` that determines
-    // that the full file rewrite here can be applied instantly, so the diff
-    // lines are just st
     await extras.ideMessenger.request("applyToFile", {
       streamId,
       toolCallId,
@@ -90,14 +114,55 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
       isSearchAndReplace: true,
     });
 
-    // Return success - applyToFile will handle the completion state
+    // Store success information for later LLM feedback
+    const successOutput: ContextItem[] = [
+      {
+        name: "Search and Replace Results",
+        description: `Successfully applied ${allBlocks.length} replacements to ${filepath}`,
+        content: [
+          `Successfully modified ${filepath}`,
+          `Applied ${allBlocks.length} search/replace operations:`,
+          ...appliedBlocks,
+          ``,
+          `File changes are being applied by the IDE.`,
+        ].join("\n"),
+      },
+    ];
+
+    // Store the success output - this will be used when apply state completes
+    extras.dispatch(
+      updateToolCallOutput({
+        toolCallId,
+        contextItems: successOutput,
+      }),
+    );
+
     return {
       respondImmediately: false, // Let apply state handle completion
       output: undefined,
     };
   } catch (error) {
-    throw new Error(
-      `Failed to apply search and replace: ${error instanceof Error ? error.message : String(error)}`,
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorOutput: ContextItem[] = [
+      {
+        name: "Search and Replace Error",
+        description: `Failed to apply changes to ${filepath}`,
+        content: `Error: ${errorMessage}`,
+      },
+    ];
+
+    // Store error output immediately since we won't get apply state updates on failure
+    extras.dispatch(
+      updateToolCallOutput({
+        toolCallId,
+        contextItems: errorOutput,
+      }),
     );
+
+    // For errors, respond immediately so LLM gets feedback right away
+    return {
+      respondImmediately: true,
+      output: errorOutput,
+    };
   }
 };

@@ -2,8 +2,6 @@ import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAppDispatch } from "../redux/hooks";
-import { cancelToolCall } from "../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../util";
 import { ToolTip } from "./gui/Tooltip";
 
@@ -22,26 +20,15 @@ export default function AcceptRejectAllButtons({
     (state) => state.status === "done",
   );
   const ideMessenger = useContext(IdeMessengerContext);
-  const dispatch = useAppDispatch();
-  async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
-    // For reject operations, cancel all tool calls associated with pending apply states
-    if (status === "rejectDiff") {
-      for (const applyState of pendingApplyStates) {
-        if (applyState.toolCallId && applyState.status === "done") {
-          dispatch(
-            cancelToolCall({
-              toolCallId: applyState.toolCallId,
-            }),
-          );
-        }
-      }
-    }
 
-    // Process all pending apply states
-    for (const { filepath = "", streamId } of pendingApplyStates) {
+  async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
+    // Process all pending apply states - let the 3-state logic in ParallelListeners
+    // handle the tool call completion and LLM feedback
+    for (const { filepath = "", streamId, toolCallId } of pendingApplyStates) {
       ideMessenger.post(status, {
         filepath,
         streamId,
+        toolCallId,
       });
     }
 
