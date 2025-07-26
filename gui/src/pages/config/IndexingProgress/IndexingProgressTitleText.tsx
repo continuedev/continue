@@ -1,5 +1,5 @@
 import { IndexingProgressUpdate } from "core";
-import { AnimatedEllipsis } from "../../../components";
+import { AnimatedEllipsis } from "../../../components/AnimatedEllipsis";
 
 export interface IndexingProgressTitleTextProps {
   update: IndexingProgressUpdate;
