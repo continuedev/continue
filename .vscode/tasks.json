@@ -223,23 +223,6 @@
       ],
       "type": "shell",
       "problemMatcher": []
-    },
-    {
-      "label": "build-packages",
-      "type": "shell",
-      "windows": { "command": "./scripts/build-packages.ps1" },
-      "command": "./scripts/build-packages.sh",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "silent",
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "vscode-extension:build-with-packages",
-      "dependsOn": ["build-packages", "vscode-extension:build"],
-      "type": "shell",
-      "problemMatcher": []
     }
   ]
 }
