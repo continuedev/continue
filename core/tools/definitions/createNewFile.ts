@@ -30,4 +30,5 @@ export const createNewFileTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithPermission",
 };

@@ -26,4 +26,5 @@ export const readFileTool: Tool = {
       },
     },
   },
+  toolPolicy: "allowedWithoutPermission",
 };

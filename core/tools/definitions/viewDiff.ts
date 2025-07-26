@@ -19,4 +19,5 @@ export const viewDiffTool: Tool = {
       properties: {},
     },
   },
+  toolPolicy: "allowedWithoutPermission",
 };
