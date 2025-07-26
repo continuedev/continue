@@ -116,21 +116,29 @@ export class VsCodeMessenger {
       vscode.commands.executeCommand("continue.toggleFullScreen");
     });
 
-    this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {
-      await vscode.commands.executeCommand(
-        "continue.acceptDiff",
-        filepath,
-        streamId,
-      );
-    });
+    this.onWebview(
+      "acceptDiff",
+      async ({ data: { filepath, streamId, toolCallId } }) => {
+        await vscode.commands.executeCommand(
+          "continue.acceptDiff",
+          filepath,
+          streamId,
+          toolCallId,
+        );
+      },
+    );
 
-    this.onWebview("rejectDiff", async ({ data: { filepath, streamId } }) => {
-      await vscode.commands.executeCommand(
-        "continue.rejectDiff",
-        filepath,
-        streamId,
-      );
-    });
+    this.onWebview(
+      "rejectDiff",
+      async ({ data: { filepath, streamId, toolCallId } }) => {
+        await vscode.commands.executeCommand(
+          "continue.rejectDiff",
+          filepath,
+          streamId,
+          toolCallId,
+        );
+      },
+    );
 
     this.onWebview("applyToFile", async ({ data }) => {
       const [verticalDiffManager, configHandler] = await Promise.all([

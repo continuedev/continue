@@ -36,29 +36,19 @@ export async function processDiff(
 
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
-  if (action === "reject") {
-    // this is so that IDE reject diff command can also cancel apply
-    core.invoke("cancelApply", undefined);
-  }
+  // Note: We don't call cancelApply for manual diff rejection since the diffs
+  // have completed streaming and we want to record the user's decision
 
   if (streamId) {
-    const fileContent = await ide.readFile(newOrCurrentUri);
-
-    // Record the edit outcome before updating the apply state
+    // Record the edit outcome
     await editOutcomeTracker.recordEditOutcome(
       streamId,
       action === "accept",
       DataLogger.getInstance(),
     );
 
-    await sidebar.webviewProtocol.request("updateApplyState", {
-      fileContent,
-      filepath: newOrCurrentUri,
-      streamId,
-      status: "closed",
-      numDiffs: 0,
-      toolCallId,
-    });
+    // Note: We don't send updateApplyState here because VerticalDiffHandler.clear()
+    // already sent the "closed" status with proper diff tracking data
   }
 
   // Save the file

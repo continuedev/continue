@@ -22,6 +22,7 @@ import {
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
   updateApplyState,
+  updateToolCallOutput,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
@@ -37,7 +38,6 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
-import { logAgentModeEditOutcome } from "../util/editOutcomeLogger";
 import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -232,6 +232,9 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
+  // Track processed toolCallIds to prevent duplicates
+  const processedToolCalls = useRef(new Set<string>());
+
   useWebviewListener(
     "updateApplyState",
     async (state) => {
@@ -261,52 +264,112 @@ function ParallelListeners() {
             });
           }
           if (state.status === "closed") {
+            // Check if we've already processed this toolCallId
+            if (processedToolCalls.current.has(state.toolCallId)) {
+              return;
+            }
+
             // Find the tool call to check if it was canceled
             const toolCallState = findToolCallById(
               store.getState().session.history,
               state.toolCallId,
             );
 
-            if (toolCallState) {
-              const accepted = toolCallState.status !== "canceled";
+            // Only process closed events that have actual diff resolution data (not undefined)
+            const hasValidDiffData =
+              state.acceptedDiffs !== undefined &&
+              state.rejectedDiffs !== undefined;
 
-              logToolUsage(toolCallState, accepted, true, ideMessenger);
+            if (
+              toolCallState &&
+              toolCallState.status !== "canceled" &&
+              toolCallState.status !== "errored" &&
+              hasValidDiffData
+            ) {
+              // Mark this toolCallId as processed
+              processedToolCalls.current.add(state.toolCallId);
+              // Use 3-state feedback based on acceptance/rejection counts
+              const totalDiffs =
+                (state.acceptedDiffs || 0) + (state.rejectedDiffs || 0);
+              let feedbackMessage: string;
 
-              // Log edit outcome for Agent Mode
-              const applyState = store
-                .getState()
-                .session.codeBlockApplyStates.states.find(
-                  (s) => s.streamId === state.streamId,
-                );
+              let finalOutput;
 
-              if (applyState) {
-                void logAgentModeEditOutcome(
-                  toolCallState,
-                  applyState,
-                  accepted,
-                  ideMessenger,
-                );
-              }
-
-              if (accepted) {
+              if (state.rejectedDiffs === totalDiffs && totalDiffs > 0) {
+                // All diffs were rejected - provide explicit stop instruction
+                feedbackMessage =
+                  "The search and replace tool executed successfully, but the user rejected ALL proposed changes. This means:\n\n1. DO NOT attempt any more file modifications\n2. DO NOT try different changes\n3. STOP and ask the user for clarification\n\nYou must now ask the user: 'I see you rejected all my proposed changes. Could you help me understand what you're looking for instead? What specific changes would you like me to make to the file?'";
+                finalOutput = {
+                  name: "Search and Replace Tool - User Rejected All Changes",
+                  description:
+                    "Tool succeeded but user rejected all changes - LLM must stop and consult user",
+                  content: feedbackMessage,
+                  status: "user_rejected_all",
+                };
                 dispatch(
                   acceptToolCall({
                     toolCallId: state.toolCallId,
                   }),
                 );
-                void dispatch(
-                  streamResponseAfterToolCall({
+              } else if (state.acceptedDiffs === totalDiffs && totalDiffs > 0) {
+                // All diffs were accepted
+                feedbackMessage = "User accepted all proposed changes";
+                finalOutput = {
+                  name: "Search and Replace Result",
+                  description: `All proposed changes to ${state.filepath} were accepted by the user`,
+                  content: feedbackMessage,
+                  status: "accepted",
+                };
+                dispatch(
+                  acceptToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+              } else if (totalDiffs > 0) {
+                // Partial acceptance - stop and ask user what to do next
+                feedbackMessage = `User partially accepted changes (${state.acceptedDiffs}/${totalDiffs} accepted, ${state.rejectedDiffs}/${totalDiffs} rejected). Some of your proposed changes were accepted while others were rejected.\n\nPlease ask the user what they would like to do next. For example:\n- Do they want you to try different approaches for the rejected changes?\n- Are they satisfied with the current state?\n- Do they have specific feedback about what they want instead?`;
+                finalOutput = {
+                  name: "Search and Replace Result - Partial Acceptance",
+                  description: `Partial acceptance of changes to ${state.filepath} - LLM should ask user for next steps`,
+                  content: feedbackMessage,
+                  status: "partial",
+                };
+                dispatch(
+                  acceptToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+              } else {
+                // No diffs were processed (shouldn't happen, but handle gracefully)
+                feedbackMessage = "File changes were applied successfully";
+                finalOutput = {
+                  name: "Search and Replace Result",
+                  description: "Changes were applied successfully",
+                  content: feedbackMessage,
+                  status: "success",
+                };
+                dispatch(
+                  acceptToolCall({
                     toolCallId: state.toolCallId,
                   }),
                 );
               }
+
+              // Replace the entire output rather than appending to avoid confusion
+              dispatch(
+                updateToolCallOutput({
+                  toolCallId: state.toolCallId,
+                  contextItems: [finalOutput],
+                }),
+              );
+
+              // Always trigger the response continuation
+              void dispatch(
+                streamResponseAfterToolCall({
+                  toolCallId: state.toolCallId,
+                }),
+              );
             }
-            // const output: ContextItem = {
-            //   name: "Edit tool output",
-            //   content: "Completed edit",
-            //   description: "",
-            // };
-            // dispatch(setToolCallOutput([]));
           }
         }
       }

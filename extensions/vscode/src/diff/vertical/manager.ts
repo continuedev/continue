@@ -227,7 +227,13 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
+        onStatusUpdate: (
+          status,
+          numDiffs,
+          fileContent,
+          acceptedDiffs,
+          rejectedDiffs,
+        ) => {
           void this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
@@ -235,7 +241,10 @@ export class VerticalDiffManager {
             fileContent,
             filepath: fileUri,
             toolCallId,
-          }),
+            acceptedDiffs,
+            rejectedDiffs,
+          });
+        },
         streamId,
       },
     );
@@ -373,16 +382,26 @@ export class VerticalDiffManager {
       {
         instant: isFastApplyModel(llm),
         input,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
-          streamId &&
-          void this.webviewProtocol.request("updateApplyState", {
-            streamId,
-            status,
-            numDiffs,
-            fileContent,
-            filepath: fileUri,
-            toolCallId,
-          }),
+        onStatusUpdate: (
+          status,
+          numDiffs,
+          fileContent,
+          acceptedDiffs,
+          rejectedDiffs,
+        ) => {
+          if (streamId) {
+            void this.webviewProtocol.request("updateApplyState", {
+              streamId,
+              status,
+              numDiffs,
+              fileContent,
+              filepath: fileUri,
+              toolCallId,
+              acceptedDiffs,
+              rejectedDiffs,
+            });
+          }
+        },
         streamId,
       },
     );

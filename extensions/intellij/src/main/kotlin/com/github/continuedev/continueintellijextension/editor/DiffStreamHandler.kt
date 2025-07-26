@@ -43,6 +43,8 @@ class DiffStreamHandler(
     private var hasAcceptedOrRejectedBlock: Boolean = false
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
     private val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+    private var acceptedDiffs = 0
+    private var rejectedDiffs = 0
 
 
     init {
@@ -61,7 +63,9 @@ class DiffStreamHandler(
             numDiffs = diffBlocks.size,
             filepath = virtualFile?.url,
             fileContent = "not implemented",
-            toolCallId = toolCallId
+            toolCallId = toolCallId,
+            acceptedDiffs = acceptedDiffs,
+            rejectedDiffs = rejectedDiffs
         )
 
         project.service<ContinuePluginService>().sendToWebview("updateApplyState", payload)
@@ -69,18 +73,35 @@ class DiffStreamHandler(
 
     fun acceptAll() {
         ApplicationManager.getApplication().invokeLater {
-            diffBlocks.toList().forEach { it.handleAccept() }
+            // Track acceptance of all remaining diffs at once
+            acceptedDiffs += diffBlocks.size
+            
+            // Handle the diffs without double-counting in handleDiffBlockAcceptOrReject
+            diffBlocks.toList().forEach { block ->
+                diffBlocks.remove(block)
+                updatePositionsOnAccept(block.startLine)
+            }
+            
+            setClosed()
         }
     }
 
     fun rejectAll() {
+        // Track rejection of all remaining diffs at once
+        rejectedDiffs += diffBlocks.size
+        
         // The ideal action here is to undo all changes we made to return the user's edit buffer to the state prior
         // to our changes. However, if the user has accepted or rejected one or more diff blocks, there isn't a simple
         // way to undo our changes without also undoing the diff that the user accepted or rejected.
         if (hasAcceptedOrRejectedBlock) {
             ApplicationManager.getApplication().invokeLater {
                 val blocksToReject = diffBlocks.toList()
-                blocksToReject.toList().forEach { it.handleReject() }
+                blocksToReject.forEach { block ->
+                    diffBlocks.remove(block)
+                    updatePositionsOnReject(block.startLine, block.addedLines.size, block.deletedLines.size)
+                    block.handleReject()
+                }
+                setClosed()
             }
         } else {
             undoChanges()
@@ -164,6 +185,13 @@ class DiffStreamHandler(
 
     private fun handleDiffBlockAcceptOrReject(diffBlock: VerticalDiffBlock, didAccept: Boolean) {
         hasAcceptedOrRejectedBlock = true
+
+        // Track acceptance/rejection
+        if (didAccept) {
+            acceptedDiffs++
+        } else {
+            rejectedDiffs++
+        }
 
         diffBlocks.remove(diffBlock)
 
