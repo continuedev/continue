@@ -1,0 +1,18 @@
+name: Test macOS Runner Availability
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  test-macos-runners:
+    strategy:
+      matrix:
+        os: [macos-latest, macos-14, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Test runner availability
+        run: |
+          echo "Runner OS: ${{ matrix.os }}"
+          echo "System info:"
+          uname -a
+          echo "Available at: $(date)"
