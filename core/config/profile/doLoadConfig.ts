@@ -12,6 +12,7 @@ import {
   ContinueConfig,
   ContinueRcJson,
   IDE,
+  IdeInfo,
   IdeSettings,
   ILLMLogger,
   RuleWithSource,
@@ -34,6 +35,7 @@ import { getMCPToolName } from "../../tools/mcpToolName";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
+import { SentryLogger } from "../../util/sentry";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
@@ -42,6 +44,21 @@ import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
+
+/**
+ * Setup telemetry services (PostHog and Sentry) based on allowAnonymousTelemetry config
+ */
+async function setupTelemetryServices(
+  allowAnonymousTelemetry: boolean,
+  uniqueId: string,
+  ideInfo: IdeInfo,
+) {
+  // Setup PostHog telemetry
+  await Telemetry.setup(allowAnonymousTelemetry, uniqueId, ideInfo);
+
+  // Setup Sentry logger with same telemetry settings
+  await SentryLogger.setup(allowAnonymousTelemetry, uniqueId, ideInfo);
+}
 
 async function loadRules(ide: IDE) {
   const rules: RuleWithSource[] = [];
@@ -288,8 +305,8 @@ export default async function doLoadConfig(options: {
   newConfig.allowAnonymousTelemetry =
     newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
 
-  // Setup telemetry only after (and if) we know it is enabled
-  await Telemetry.setup(
+  // Setup telemetry services
+  await setupTelemetryServices(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
     ideInfo,
