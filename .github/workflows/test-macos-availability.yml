@@ -6,10 +6,10 @@ on:
       - test-macos-latest-ci-fix
   
 jobs:
-  test-macos-runners:
+  test-ubuntu-runners:
     strategy:
       matrix:
-        os: [macos-latest, macos-14, macos-15]
+        os: [ubuntu-latest, ubuntu-22.04, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Test runner availability
