@@ -11,6 +11,7 @@ import {
   loadAuthConfig,
 } from "../auth/workos.js";
 import { runNormalFlow } from "../onboarding.js";
+import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { saveSession } from "../session.js";
 import { initializeServices } from "../services/index.js";
 import { streamChatResponse, type StreamCallbacks } from "../streamChatResponse.js";
@@ -29,6 +30,13 @@ interface ServeOptions extends ExtendedCommandOptions {
   port?: string;
 }
 
+interface PendingPermission {
+  toolName: string;
+  toolArgs: any;
+  requestId: string;
+  timestamp: number;
+}
+
 interface ServerState {
   chatHistory: ChatCompletionMessageParam[];
   displayMessages: DisplayMessage[]; // Messages formatted for display with tool info
@@ -40,6 +48,7 @@ interface ServerState {
   currentAbortController: AbortController | null;
   shouldInterrupt: boolean;
   serverRunning: boolean;
+  pendingPermission: PendingPermission | null;
 }
 
 export async function serve(prompt?: string, options: ServeOptions = {}) {
@@ -89,6 +98,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   console.log(chalk.dim(`  Organization: ${organizationId}`));
   console.log(chalk.dim(`  Assistant: ${assistantName}${assistantSlug ? ` (${assistantSlug})` : ''}`));
   console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
+  if (options.config) {
+    console.log(chalk.dim(`  Config file: ${options.config}`));
+  }
 
   // Initialize chat history
   let chatHistory: ChatCompletionMessageParam[] = [];
@@ -109,6 +121,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     currentAbortController: null,
     shouldInterrupt: false,
     serverRunning: true,
+    pendingPermission: null,
   };
 
   // Record session start
@@ -125,6 +138,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       chatHistory: state.displayMessages, // Send display messages with proper formatting
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
+      pendingPermission: state.pendingPermission,
     });
   });
 
@@ -155,6 +169,42 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     if (!state.isProcessing) {
       processMessages(state, llmApi);
     }
+  });
+
+  // POST /permission - Approve or reject pending tool permission
+  app.post("/permission", async (req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    const { requestId, approved } = req.body;
+    
+    if (!state.pendingPermission) {
+      return res.status(400).json({ error: "No pending permission request" });
+    }
+    
+    if (state.pendingPermission.requestId !== requestId) {
+      return res.status(400).json({ error: "Invalid request ID" });
+    }
+    
+    // Remove the permission request message
+    const lastMsg = state.displayMessages[state.displayMessages.length - 1];
+    if (lastMsg && lastMsg.messageType === "tool-permission-request") {
+      state.displayMessages.pop();
+    }
+    
+    // Send the permission response to the toolPermissionManager
+    if (approved) {
+      toolPermissionManager.approveRequest(requestId);
+    } else {
+      toolPermissionManager.rejectRequest(requestId);
+    }
+    
+    // Clear pending permission state
+    state.pendingPermission = null;
+    
+    res.json({
+      success: true,
+      approved,
+    });
   });
 
   // GET /diff - Return git diff against main branch
@@ -237,14 +287,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const server = app.listen(port, () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
-    console.log(chalk.dim("  GET  /state   - Get current agent state"));
+    console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
-      chalk.dim("  POST /message - Send a message (body: { message: string })")
+      chalk.dim("  POST /message    - Send a message (body: { message: string })")
     );
     console.log(
-      chalk.dim("  GET  /diff    - Get git diff against main branch")
+      chalk.dim("  POST /permission - Approve/reject tool (body: { requestId, approved })")
     );
-    console.log(chalk.dim("  POST /exit    - Gracefully shut down the server"));
+    console.log(
+      chalk.dim("  GET  /diff       - Get git diff against main branch")
+    );
+    console.log(chalk.dim("  POST /exit       - Gracefully shut down the server"));
     console.log(
       chalk.dim(
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
@@ -476,6 +529,29 @@ async function streamChatResponseWithInterruption(
         messageType: "tool-error",
         toolName,
       });
+    },
+    onToolPermissionRequest: (
+      toolName: string,
+      toolArgs: any,
+      requestId: string
+    ) => {
+      // Set pending permission state
+      state.pendingPermission = {
+        toolName,
+        toolArgs,
+        requestId,
+        timestamp: Date.now(),
+      };
+
+      // Add a display message indicating permission is needed
+      state.displayMessages.push({
+        role: "system",
+        content: `⚠️ Tool ${toolName} requires permission`,
+        messageType: "tool-permission-request" as any,
+        toolName,
+      });
+
+      // Don't wait here - the streamChatResponse will handle waiting
     },
   };
 
