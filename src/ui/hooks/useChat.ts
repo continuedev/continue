@@ -17,6 +17,7 @@ import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
 
 import { DisplayMessage } from "../types.js";
+import { posthogService } from "../../telemetry/posthogService.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;
@@ -257,18 +258,27 @@ export function useChat({
   const handleUserMessage = async (message: string) => {
     // Special handling for /org command in TUI
     if (message.trim() === "/org") {
+      posthogService.capture("useSlashCommand", {
+        name: "org",
+      });
       onShowOrgSelector();
       return;
     }
 
     // Special handling for /config command in TUI
     if (message.trim() === "/config") {
+      posthogService.capture("useSlashCommand", {
+        name: "config",
+      });
       onShowConfigSelector();
       return;
     }
 
     // Handle /exit command in remote mode
     if (isRemoteMode && remoteUrl && message.trim() === "/exit") {
+      posthogService.capture("useSlashCommand", {
+        name: "exit",
+      });
       try {
         // Send POST request to /exit endpoint
         const response = await fetch(`${remoteUrl}/exit`, {
@@ -379,6 +389,10 @@ export function useChat({
 
     // Track user prompt
     telemetryService.logUserPrompt(message.length, message);
+    posthogService.capture("chat", {
+      model: model?.name,
+      provider: model?.provider,
+    });
 
     // Add user message to history and display
     let messageContent = message;

@@ -17,6 +17,7 @@ import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { posthogService } from "../telemetry/posthogService.js";
 
 export interface ChatOptions {
   headless?: boolean;
@@ -149,6 +150,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   try {
     // Record session start
     telemetryService.recordSessionStart();
+    await posthogService.capture("sessionStart", {});
 
     // Start active time tracking
     telemetryService.startActiveTime();

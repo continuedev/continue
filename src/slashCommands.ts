@@ -7,6 +7,7 @@ import {
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
+import { posthogService } from "./telemetry/posthogService.js";
 
 export async function handleSlashCommands(
   input: string,
@@ -29,14 +30,29 @@ export async function handleSlashCommands(
           "Available commands:",
           ...allCommands.map((cmd) => `/${cmd.name} - ${cmd.description}`),
         ].join("\n");
+        posthogService.capture("useSlashCommand", {
+          name: "help",
+        });
         return { output: helpMessage };
       case "clear":
+        posthogService.capture("useSlashCommand", {
+          name: "clear",
+        });
         return { clear: true, output: "Chat history cleared" };
       case "exit":
+        posthogService.capture("useSlashCommand", {
+          name: "exit",
+        });
         return { exit: true, output: "Goodbye!" };
       case "config":
+        posthogService.capture("useSlashCommand", {
+          name: "config",
+        });
         return { openConfigSelector: true };
       case "login":
+        posthogService.capture("useSlashCommand", {
+          name: "login",
+        });
         try {
           const newAuthState = await services.auth.login();
 
@@ -66,6 +82,9 @@ export async function handleSlashCommands(
         }
 
       case "logout":
+        posthogService.capture("useSlashCommand", {
+          name: "logout",
+        });
         try {
           await services.auth.logout();
 
@@ -82,6 +101,9 @@ export async function handleSlashCommands(
         }
 
       case "whoami":
+        posthogService.capture("useSlashCommand", {
+          name: "whoami",
+        });
         if (isAuthenticated()) {
           const config = loadAuthConfig();
           if (config && isAuthenticatedConfig(config)) {
@@ -103,6 +125,9 @@ export async function handleSlashCommands(
         }
 
       case "org":
+        posthogService.capture("useSlashCommand", {
+          name: "org",
+        });
         // Organization switching command
         if (args.length === 0) {
           return {
@@ -156,7 +181,6 @@ export async function handleSlashCommands(
             };
           }
         }
-
       default:
         const assistantPrompt = assistant.prompts?.find(
           (prompt) => prompt?.name === command
