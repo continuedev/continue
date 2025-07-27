@@ -31,24 +31,35 @@ describe("E2E: Headless Mode with Tool Calls", () => {
     
     mockServer = await setupMockLLMTest(context, {
       customHandler: (req: http.IncomingMessage, res: http.ServerResponse) => {
-        if (req.method === "POST" && req.url === "/chat/completions") {
-          res.writeHead(200, {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-          });
+        // Collect request body first
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk.toString();
+        });
+        
+        req.on("end", () => {
+          if (req.method === "POST" && req.url === "/chat/completions") {
+            res.writeHead(200, {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              "Connection": "keep-alive",
+            });
 
-          // Send only tool call (no text content)
-          res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_123","type":"function","function":{"name":"search_code"}}]},"index":0}]}\n\n`);
-          res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"pattern\\":\\"createTestContext\\"}"}}]},"index":0}]}\n\n`);
-          
-          // End the stream
-          res.write(`data: [DONE]\n\n`);
-          res.end();
-        } else {
-          res.writeHead(404);
-          res.end("Not found");
-        }
+            // Send only tool call (no text content)
+            res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_123","type":"function","function":{"name":"search_code"}}]},"index":0}]}\n\n`);
+            res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"pattern\\":\\"createTestContext\\"}"}}]},"index":0}]}\n\n`);
+            
+            // Send usage data
+            res.write(`data: {"usage":{"prompt_tokens":10,"completion_tokens":20}}\n\n`);
+            
+            // End the stream
+            res.write(`data: [DONE]\n\n`);
+            res.end();
+          } else {
+            res.writeHead(404);
+            res.end("Not found");
+          }
+        });
       },
     });
 
@@ -69,27 +80,41 @@ describe("E2E: Headless Mode with Tool Calls", () => {
     
     mockServer = await setupMockLLMTest(context, {
       customHandler: (req: http.IncomingMessage, res: http.ServerResponse) => {
-        if (req.method === "POST" && req.url === "/chat/completions") {
-          res.writeHead(200, {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-          });
+        // Collect request body first
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk.toString();
+        });
+        
+        req.on("end", () => {
+          if (req.method === "POST" && req.url === "/chat/completions") {
+            res.writeHead(200, {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              "Connection": "keep-alive",
+            });
 
-          // Send initial text with tool calls
-          res.write(`data: {"choices":[{"delta":{"content":"I'll help you with that. Let me search for information."},"index":0}]}\n\n`);
-          
-          // Tool calls (which won't result in follow-up in headless mode)
-          res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_search","type":"function","function":{"name":"search_code"}}]},"index":0}]}\n\n`);
-          res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"pattern\\":\\"runCLI\\"}"}}]},"index":0}]}\n\n`);
-          
-          // End the stream
-          res.write(`data: [DONE]\n\n`);
-          res.end();
-        } else {
-          res.writeHead(404);
-          res.end("Not found");
-        }
+            // Send initial text
+            res.write(`data: {"choices":[{"delta":{"content":"I'll help you with that. Let me search for information."},"index":0}]}\n\n`);
+            
+            // Small delay to ensure content is processed
+            setTimeout(() => {
+              // Tool calls (which won't result in follow-up in headless mode)
+              res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_search","type":"function","function":{"name":"search_code"}}]},"index":0}]}\n\n`);
+              res.write(`data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\\"pattern\\":\\"runCLI\\"}"}}]},"index":0}]}\n\n`);
+              
+              // Send usage data
+              res.write(`data: {"usage":{"prompt_tokens":10,"completion_tokens":20}}\n\n`);
+              
+              // End the stream
+              res.write(`data: [DONE]\n\n`);
+              res.end();
+            }, 100);
+          } else {
+            res.writeHead(404);
+            res.end("Not found");
+          }
+        });
       },
     });
 

@@ -68,7 +68,7 @@ describe('ModelService', () => {
       });
     });
 
-    it('should return empty array when no chat models available', async () => {
+    it('should throw error when no chat models available during initialization', async () => {
       mockAssistant.models = [
         {
           provider: 'openai',
@@ -78,10 +78,8 @@ describe('ModelService', () => {
         } as ModelConfig,
       ];
       
-      await modelService.initialize(mockAssistant, mockAuthConfig);
-      
-      const models = modelService.getAvailableChatModels();
-      expect(models).toHaveLength(0);
+      await expect(modelService.initialize(mockAssistant, mockAuthConfig))
+        .rejects.toThrow('No models with the chat role found in the configured assistant');
     });
   });
 
