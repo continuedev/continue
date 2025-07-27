@@ -1,7 +1,7 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
 import { formatToolCall } from "../../tools/formatters.js";
-import { ToolPreview, DetailedToolPreview } from "./ToolPreview.js";
+import { DetailedToolPreview, ToolPreview } from "./ToolPreview.js";
 
 interface PermissionOption {
   id: string;
@@ -15,12 +15,22 @@ interface ToolPermissionSelectorProps {
   toolName: string;
   toolArgs: any;
   requestId: string;
-  onResponse: (requestId: string, approved: boolean, createPolicy?: boolean) => void;
+  onResponse: (
+    requestId: string,
+    approved: boolean,
+    createPolicy?: boolean
+  ) => void;
 }
 
 const PERMISSION_OPTIONS: PermissionOption[] = [
   { id: "approve", name: "Continue", color: "green", approved: true },
-  { id: "approve_policy", name: "Continue + add policy", color: "cyan", approved: true, createPolicy: true },
+  {
+    id: "approve_policy",
+    name: "Continue + don't ask again",
+    color: "cyan",
+    approved: true,
+    createPolicy: true,
+  },
   { id: "deny", name: "Cancel", color: "red", approved: false },
 ];
 
@@ -35,13 +45,23 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   useInput((input, key) => {
     if (key.return) {
       const selectedOption = PERMISSION_OPTIONS[selectedIndex];
-      onResponse(requestId, selectedOption.approved, selectedOption.createPolicy);
+      onResponse(
+        requestId,
+        selectedOption.approved,
+        selectedOption.createPolicy
+      );
       return;
     }
 
     // Tab to continue (approve)
-    if (key.tab) {
+    if (key.tab && !key.shift) {
       onResponse(requestId, true, false);
+      return;
+    }
+
+    // Shift+Tab to continue with policy creation
+    if (key.tab && key.shift) {
+      onResponse(requestId, true, true);
       return;
     }
 
@@ -59,13 +79,11 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       );
     }
 
-    // Also support y/n/p for quick responses
+    // Also support y/n for quick responses
     if (input === "y" || input === "Y") {
       onResponse(requestId, true, false);
     } else if (input === "n" || input === "N") {
       onResponse(requestId, false, false);
-    } else if (input === "p" || input === "P") {
-      onResponse(requestId, true, true);
     }
   });
 
@@ -96,9 +114,9 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
           const isSelected = index === selectedIndex;
           let shortcut = "";
           if (option.id === "approve") shortcut = "(tab)";
-          else if (option.id === "approve_policy") shortcut = "(p)";
+          else if (option.id === "approve_policy") shortcut = "(shift+tab)";
           else if (option.id === "deny") shortcut = "(esc)";
-          
+
           return (
             <Box key={option.id} marginTop={index === 0 ? 1 : 0}>
               <Text

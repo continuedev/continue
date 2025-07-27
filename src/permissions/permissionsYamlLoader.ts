@@ -2,11 +2,15 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as yaml from "yaml";
+import logger from "../util/logger.js";
 import { normalizeToolName } from "./toolNameMapping.js";
 import { ToolPermissionPolicy } from "./types.js";
-import logger from "../util/logger.js";
 
-export const PERMISSIONS_YAML_PATH = path.join(os.homedir(), ".continue", "permissions.yaml");
+export const PERMISSIONS_YAML_PATH = path.join(
+  os.homedir(),
+  ".continue",
+  "permissions.yaml"
+);
 
 export interface PermissionsYamlConfig {
   allow?: string[];
@@ -21,7 +25,9 @@ export interface PermissionsYamlConfig {
 export function loadPermissionsYaml(): PermissionsYamlConfig | null {
   try {
     if (!fs.existsSync(PERMISSIONS_YAML_PATH)) {
-      logger.debug("Permissions YAML file does not exist", { path: PERMISSIONS_YAML_PATH });
+      logger.debug("Permissions YAML file does not exist", {
+        path: PERMISSIONS_YAML_PATH,
+      });
       return null;
     }
 
@@ -31,25 +37,32 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
     // Validate the structure
     if (parsed && typeof parsed === "object") {
       const validKeys = ["allow", "ask", "exclude"];
-      const hasValidStructure = Object.keys(parsed).every(key => 
-        validKeys.includes(key) && 
-        (!parsed[key as keyof PermissionsYamlConfig] || Array.isArray(parsed[key as keyof PermissionsYamlConfig]))
+      const hasValidStructure = Object.keys(parsed).every(
+        (key) =>
+          validKeys.includes(key) &&
+          (!parsed[key as keyof PermissionsYamlConfig] ||
+            Array.isArray(parsed[key as keyof PermissionsYamlConfig]))
       );
 
       if (hasValidStructure) {
-        logger.debug("Loaded permissions from YAML", { 
+        logger.debug("Loaded permissions from YAML", {
           allow: parsed.allow?.length || 0,
           ask: parsed.ask?.length || 0,
-          exclude: parsed.exclude?.length || 0
+          exclude: parsed.exclude?.length || 0,
         });
         return parsed;
       }
     }
 
-    logger.warn("Invalid permissions YAML structure", { path: PERMISSIONS_YAML_PATH });
+    logger.warn("Invalid permissions YAML structure", {
+      path: PERMISSIONS_YAML_PATH,
+    });
     return null;
   } catch (error) {
-    logger.error("Failed to load permissions YAML", { error, path: PERMISSIONS_YAML_PATH });
+    logger.error("Failed to load permissions YAML", {
+      error,
+      path: PERMISSIONS_YAML_PATH,
+    });
     return null;
   }
 }
@@ -57,7 +70,9 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
 /**
  * Converts permissions YAML config to ToolPermissionPolicy array
  */
-export function yamlConfigToPolicies(config: PermissionsYamlConfig): ToolPermissionPolicy[] {
+export function yamlConfigToPolicies(
+  config: PermissionsYamlConfig
+): ToolPermissionPolicy[] {
   const policies: ToolPermissionPolicy[] = [];
 
   // Order matters: more restrictive policies first
@@ -90,7 +105,7 @@ export function yamlConfigToPolicies(config: PermissionsYamlConfig): ToolPermiss
  */
 export async function ensurePermissionsYamlExists(): Promise<void> {
   const dir = path.dirname(PERMISSIONS_YAML_PATH);
-  
+
   // Ensure directory exists
   if (!fs.existsSync(dir)) {
     await fs.promises.mkdir(dir, { recursive: true });
@@ -98,9 +113,7 @@ export async function ensurePermissionsYamlExists(): Promise<void> {
 
   // Create file if it doesn't exist
   if (!fs.existsSync(PERMISSIONS_YAML_PATH)) {
-    const defaultContent = `# Continue CLI Permissions Configuration
-# This file is managed by the Continue CLI and should not be edited manually.
-# Use the TUI to modify permissions interactively.
+    const defaultContent = `# cn tool permissions
 
 # Tools that are automatically allowed without prompting
 allow: []
@@ -111,8 +124,10 @@ ask: []
 # Tools that are completely excluded (model won't know they exist)
 exclude: []
 `;
-    
+
     await fs.promises.writeFile(PERMISSIONS_YAML_PATH, defaultContent, "utf-8");
-    logger.info("Created default permissions.yaml", { path: PERMISSIONS_YAML_PATH });
+    logger.info("Created default permissions.yaml", {
+      path: PERMISSIONS_YAML_PATH,
+    });
   }
 }
