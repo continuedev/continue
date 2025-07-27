@@ -2,7 +2,6 @@ import { getServiceSync } from "../services/index.js";
 import { SERVICE_NAMES } from "../services/types.js";
 import type { ToolPermissionServiceState } from "../services/types.js";
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
-import { getRuntimePermissionOverrides } from "./runtimeOverrides.js";
 import {
   PermissionCheckResult,
   ToolCallRequest,
@@ -65,24 +64,14 @@ export function checkToolPermission(
   let policies = permissions?.policies;
   
   if (!policies) {
-    // First check for runtime overrides (from command line)
-    const runtimeOverrides = getRuntimePermissionOverrides();
-    
-    if (runtimeOverrides) {
-      // Combine runtime overrides with defaults
-      // Runtime overrides take precedence
-      policies = [...runtimeOverrides, ...DEFAULT_TOOL_POLICIES];
-    } else {
-      // Try to get from service
-      try {
-        const serviceResult = getServiceSync<ToolPermissionServiceState>(
-          SERVICE_NAMES.TOOL_PERMISSIONS
-        );
-        policies = serviceResult.value?.permissions.policies || DEFAULT_TOOL_POLICIES;
-      } catch {
-        // Service not initialized yet, use defaults
-        policies = DEFAULT_TOOL_POLICIES;
-      }
+    try {
+      const serviceResult = getServiceSync<ToolPermissionServiceState>(
+        SERVICE_NAMES.TOOL_PERMISSIONS
+      );
+      policies = serviceResult.value?.permissions.policies || DEFAULT_TOOL_POLICIES;
+    } catch {
+      // Service not initialized yet, use defaults
+      policies = DEFAULT_TOOL_POLICIES;
     }
   }
 

@@ -478,11 +478,6 @@ export async function streamChatResponse(
             arguments: toolCall.arguments,
           });
 
-          logger.debug("Tool permission check result", {
-            toolName: toolCall.name,
-            permission: permissionCheck.permission,
-            matchedPolicy: permissionCheck.matchedPolicy,
-          });
 
           // Notify tool start immediately - before permission check
           // This ensures the UI shows the tool call even if it's rejected

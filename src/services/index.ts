@@ -28,12 +28,19 @@ const toolPermissionService = new ToolPermissionService();
 export async function initializeServices(options: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
-  // Register service factories with dependencies
-  serviceContainer.register(
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-    () => toolPermissionService.initialize(options.toolPermissionOverrides),
-    [] // No dependencies - initialize first
-  );
+  // Handle tool permissions specially for immediate availability
+  if (options.toolPermissionOverrides) {
+    // Initialize synchronously and register the value immediately
+    const permissionState = toolPermissionService.initializeSync(options.toolPermissionOverrides);
+    serviceContainer.registerValue(SERVICE_NAMES.TOOL_PERMISSIONS, permissionState);
+  } else {
+    // Register normal factory for lazy initialization
+    serviceContainer.register(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+      () => toolPermissionService.initialize(),
+      []
+    );
+  }
 
   serviceContainer.register(
     SERVICE_NAMES.AUTH,

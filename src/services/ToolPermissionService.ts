@@ -16,19 +16,16 @@ export class ToolPermissionService {
   };
 
   /**
-   * Initialize the tool permission service with runtime overrides
+   * Synchronously initialize with runtime overrides
+   * Used for immediate availability of command-line permission overrides
    */
-  async initialize(runtimeOverrides?: {
+  initializeSync(runtimeOverrides?: {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
-  }): Promise<ToolPermissionServiceState> {
-    logger.debug("Initializing ToolPermissionService", {
-      runtimeOverrides,
-      hasOverrides: !!runtimeOverrides,
-      askTools: runtimeOverrides?.ask,
-      allowTools: runtimeOverrides?.allow,
-      excludeTools: runtimeOverrides?.exclude
+  }): ToolPermissionServiceState {
+    logger.debug("Synchronously initializing ToolPermissionService", {
+      hasOverrides: !!runtimeOverrides
     });
     
     // Start with default policies
@@ -62,8 +59,6 @@ export class ToolPermissionService {
       
       // Prepend override policies (they take precedence)
       compiledPolicies.unshift(...overridePolicies);
-      
-      logger.debug(`Applied ${overridePolicies.length} runtime permission overrides`);
     }
     
     this.state = {
@@ -71,6 +66,18 @@ export class ToolPermissionService {
     };
     
     return this.state;
+  }
+
+  /**
+   * Initialize the tool permission service with runtime overrides (async version)
+   */
+  async initialize(runtimeOverrides?: {
+    allow?: string[];
+    ask?: string[];
+    exclude?: string[];
+  }): Promise<ToolPermissionServiceState> {
+    // Just use the synchronous version
+    return this.initializeSync(runtimeOverrides);
   }
 
   /**

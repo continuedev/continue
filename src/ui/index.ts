@@ -1,6 +1,5 @@
 import { render } from "ink";
 import React from "react";
-import { setRuntimePermissionOverrides } from "../permissions/runtimeOverrides.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
 import TUIChat from "./TUIChat.js";
@@ -18,12 +17,6 @@ export async function startTUIChat(
     exclude?: string[];
   }
 ) {
-  // Set runtime permission overrides immediately
-  // This ensures they're available before any services or tool calls
-  if (toolPermissionOverrides) {
-    setRuntimePermissionOverrides(toolPermissionOverrides);
-  }
-
   // Initialize services in the background - TUI will show loading states
   initializeServices({
     configPath,
