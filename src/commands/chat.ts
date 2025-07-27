@@ -150,7 +150,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   try {
     // Record session start
     telemetryService.recordSessionStart();
-    posthogService.capture("sessionStart", {});
+    await posthogService.capture("sessionStart", {});
 
     // Start active time tracking
     telemetryService.startActiveTime();
