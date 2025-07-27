@@ -17,8 +17,11 @@ export function matchesToolPattern(toolName: string, pattern: string): boolean {
   if (pattern === toolName) return true;
 
   // Handle wildcard patterns like "mcp__*"
-  if (pattern.includes("*")) {
-    const regexPattern = pattern.replace(/\*/g, ".*").replace(/\?/g, ".");
+  if (pattern.includes("*") || pattern.includes("?")) {
+    // Escape all regex metacharacters except * and ?
+    const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+    // Convert * and ? to their regex equivalents
+    const regexPattern = escaped.replace(/\*/g, ".*").replace(/\?/g, ".");
     const regex = new RegExp(`^${regexPattern}$`);
     return regex.test(toolName);
   }

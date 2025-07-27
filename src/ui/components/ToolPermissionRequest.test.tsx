@@ -9,8 +9,8 @@ function formatArgs(args: any): string {
   const firstKey = Object.keys(args)[0];
   const firstValue = args[firstKey];
 
-  if (typeof firstValue === "string" && firstValue.length > 50) {
-    return `${firstValue.substring(0, 50)}...`;
+  if (typeof firstValue === "string" && firstValue.length > 60) {
+    return `${firstValue.substring(0, 60)}...`;
   }
 
   return String(firstValue);
@@ -34,8 +34,8 @@ describe("formatArgs function", () => {
     it("should truncate long strings", () => {
       const longString = "a".repeat(100);
       const result = formatArgs({ content: longString });
-      expect(result).toBe("a".repeat(50) + "...");
-      expect(result.length).toBe(53); // 50 chars + "..."
+      expect(result).toBe("a".repeat(60) + "...");
+      expect(result.length).toBe(63); // 60 chars + "..."
     });
 
     it("should not truncate short strings", () => {
@@ -45,17 +45,17 @@ describe("formatArgs function", () => {
       expect(result).not.toContain("...");
     });
 
-    it("should handle exactly 50 character strings", () => {
-      const exactString = "a".repeat(50);
+    it("should handle exactly 60 character strings", () => {
+      const exactString = "a".repeat(60);
       const result = formatArgs({ content: exactString });
       expect(result).toBe(exactString);
       expect(result).not.toContain("...");
     });
 
-    it("should handle 51 character strings", () => {
-      const slightlyLongString = "a".repeat(51);
+    it("should handle 61 character strings", () => {
+      const slightlyLongString = "a".repeat(61);
       const result = formatArgs({ content: slightlyLongString });
-      expect(result).toBe("a".repeat(50) + "...");
+      expect(result).toBe("a".repeat(60) + "...");
     });
 
     it("should use first key when multiple arguments", () => {

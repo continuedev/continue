@@ -467,38 +467,42 @@ export async function streamChatResponse(
           } else if (permissionCheck.permission === "ask") {
             // Request permission from user
             if (callbacks?.onToolPermissionRequest) {
-              // Create a promise that resolves when permission is granted/denied
-              const permissionPromise = new Promise<boolean>((resolve) => {
-                const requestId = `tool-request-${toolCall.id}`;
-
-                // Set up listener for permission response
-                const handlePermissionResponse = (result: {
-                  requestId: string;
-                  approved: boolean;
-                }) => {
-                  if (result.requestId === requestId) {
-                    toolPermissionManager.off(
-                      "permissionResponse",
-                      handlePermissionResponse
-                    );
-                    resolve(result.approved);
-                  }
-                };
-
-                toolPermissionManager.on(
-                  "permissionResponse",
-                  handlePermissionResponse
-                );
-
-                // Notify UI about permission request
-                callbacks.onToolPermissionRequest!(
-                  toolCall.name,
-                  toolCall.arguments,
-                  requestId
-                );
-              });
-
-              approved = await permissionPromise;
+              // Use the proper toolPermissionManager API
+              const toolCallRequest = {
+                name: toolCall.name,
+                arguments: toolCall.arguments,
+              };
+              
+              // Set up listener for permissionRequested event
+              const handlePermissionRequested = (event: {
+                requestId: string;
+                toolCall: { name: string; arguments: any };
+              }) => {
+                if (event.toolCall.name === toolCall.name) {
+                  toolPermissionManager.off(
+                    "permissionRequested",
+                    handlePermissionRequested
+                  );
+                  // Notify UI about permission request
+                  callbacks.onToolPermissionRequest!(
+                    event.toolCall.name,
+                    event.toolCall.arguments,
+                    event.requestId
+                  );
+                }
+              };
+              
+              toolPermissionManager.on(
+                "permissionRequested",
+                handlePermissionRequested
+              );
+              
+              // Request permission using the proper API
+              const permissionResult = await toolPermissionManager.requestPermission(
+                toolCallRequest
+              );
+              
+              approved = permissionResult.approved;
             } else {
               // Fallback: deny if no UI callback available
               approved = false;

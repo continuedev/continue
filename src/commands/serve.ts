@@ -5,15 +5,12 @@ import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
 import { promisify } from "util";
 import {
-  ensureOrganization,
   getAssistantSlug,
-  getOrganizationId,
-  loadAuthConfig,
 } from "../auth/workos.js";
-import { runNormalFlow } from "../onboarding.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { saveSession } from "../session.js";
-import { initializeServices } from "../services/index.js";
+import { getService, initializeServices, SERVICE_NAMES } from "../services/index.js";
+import { AuthServiceState, ConfigServiceState, ModelServiceState } from "../services/types.js";
 import { streamChatResponse, type StreamCallbacks } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
@@ -36,6 +33,7 @@ interface PendingPermission {
   requestId: string;
   timestamp: number;
 }
+
 
 interface ServerState {
   chatHistory: ChatCompletionMessageParam[];
@@ -63,34 +61,37 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       ask: options.ask,
       exclude: options.exclude,
     },
+    configPath: options.config,
+    rules: options.rule,
+    headless: true, // Skip onboarding in serve mode
   });
 
-  // Initialize authentication
-  const authConfig = loadAuthConfig();
+  // Get initialized services from the service container
+  const [configState, modelState] = await Promise.all([
+    getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
+    getService<ModelServiceState>(SERVICE_NAMES.MODEL),
+  ]);
 
-  // Initialize with normal flow (skip onboarding like headless mode)
-  const { config, llmApi, model } = await runNormalFlow(
-    authConfig,
-    options.config,
-    options.rule
-  );
+  if (!configState.config || !modelState.llmApi || !modelState.model) {
+    throw new Error("Failed to initialize required services");
+  }
 
-  // Ensure organization is selected if authenticated
-  let finalAuthConfig = authConfig;
-  if (config && authConfig) {
-    finalAuthConfig = await ensureOrganization(authConfig, true); // headless mode
-    if (finalAuthConfig) {
-      const organizationId = getOrganizationId(finalAuthConfig);
-      if (organizationId) {
-        telemetryService.updateOrganization(organizationId);
-      }
-    }
+  const { config, llmApi, model } = {
+    config: configState.config,
+    llmApi: modelState.llmApi,
+    model: modelState.model,
+  };
+
+  // Organization selection is already handled in initializeServices
+  const authState = await getService<AuthServiceState>(SERVICE_NAMES.AUTH);
+  if (authState.organizationId) {
+    telemetryService.updateOrganization(authState.organizationId);
   }
 
   // Log configuration information
-  const organizationId = getOrganizationId(finalAuthConfig || authConfig) || 'personal';
+  const organizationId = authState.organizationId || 'personal';
   const assistantName = config.name;
-  const assistantSlug = getAssistantSlug(finalAuthConfig || authConfig);
+  const assistantSlug = getAssistantSlug(authState.authConfig);
   const modelProvider = model.provider;
   const modelName = model.model;
   

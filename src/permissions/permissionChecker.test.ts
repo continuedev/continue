@@ -47,6 +47,24 @@ describe("Permission Checker", () => {
       expect(matchesToolPattern("test.file", "test.file")).toBe(true);
       expect(matchesToolPattern("test_file", "test.file")).toBe(false);
       expect(matchesToolPattern("test[file]", "test[file]")).toBe(true);
+      expect(matchesToolPattern("testa", "test[abc]")).toBe(false);
+      expect(matchesToolPattern("test[abc]", "test[abc]")).toBe(true);
+      expect(matchesToolPattern("test(abc)", "test(abc)")).toBe(true);
+      expect(matchesToolPattern("test+plus", "test+plus")).toBe(true);
+      expect(matchesToolPattern("test^caret", "test^caret")).toBe(true);
+      expect(matchesToolPattern("test$dollar", "test$dollar")).toBe(true);
+      expect(matchesToolPattern("test{brace}", "test{brace}")).toBe(true);
+      expect(matchesToolPattern("test|pipe", "test|pipe")).toBe(true);
+      expect(matchesToolPattern("test\\backslash", "test\\backslash")).toBe(true);
+    });
+
+    it("should handle wildcard patterns with special regex characters", () => {
+      expect(matchesToolPattern("test[abc].txt", "test[abc].*")).toBe(true);
+      expect(matchesToolPattern("test[abc]_file", "test[abc].*")).toBe(false);
+      expect(matchesToolPattern("mcp__tool[1]", "mcp__*")).toBe(true);
+      expect(matchesToolPattern("file.test.txt", "*.test.*")).toBe(true);
+      expect(matchesToolPattern("(tool)_name", "(tool)*")).toBe(true);
+      expect(matchesToolPattern("tool+plus_extra", "tool+plus*")).toBe(true);
     });
   });
 
