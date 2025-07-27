@@ -61,7 +61,7 @@ describe("formatArgs function", () => {
     it("should use first key when multiple arguments", () => {
       const args = { path: "/test.txt", mode: "read", format: "json" };
       const result = formatArgs(args);
-      expect(result).toBe("/test.txt"); // Should use first key alphabetically
+      expect(result).toBe("/test.txt"); // Should use first key in insertion order
     });
 
     it("should handle non-string types", () => {
