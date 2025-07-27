@@ -1,5 +1,5 @@
-import { DEFAULT_TOOL_POLICIES } from "../permissions/defaultPolicies.js";
-import { normalizeToolName } from "../permissions/toolNameMapping.js";
+import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
+import { resolvePermissionPrecedence } from "../permissions/precedenceResolver.js";
 import { ToolPermissionPolicy, ToolPermissions } from "../permissions/types.js";
 import logger from "../util/logger.js";
 
@@ -12,7 +12,7 @@ export interface ToolPermissionServiceState {
  */
 export class ToolPermissionService {
   private state: ToolPermissionServiceState = {
-    permissions: { policies: [...DEFAULT_TOOL_POLICIES] }
+    permissions: { policies: [] }
   };
 
   /**
@@ -28,38 +28,12 @@ export class ToolPermissionService {
       hasOverrides: !!runtimeOverrides
     });
     
-    // Start with default policies
-    const compiledPolicies: ToolPermissionPolicy[] = [...DEFAULT_TOOL_POLICIES];
-    
-    // Apply runtime overrides if provided
-    if (runtimeOverrides) {
-      const overridePolicies: ToolPermissionPolicy[] = [];
-      
-      // Convert runtime overrides to policies
-      if (runtimeOverrides.allow) {
-        for (const tool of runtimeOverrides.allow) {
-          const normalizedName = normalizeToolName(tool);
-          overridePolicies.push({ tool: normalizedName, permission: "allow" });
-        }
-      }
-      
-      if (runtimeOverrides.ask) {
-        for (const tool of runtimeOverrides.ask) {
-          const normalizedName = normalizeToolName(tool);
-          overridePolicies.push({ tool: normalizedName, permission: "ask" });
-        }
-      }
-      
-      if (runtimeOverrides.exclude) {
-        for (const tool of runtimeOverrides.exclude) {
-          const normalizedName = normalizeToolName(tool);
-          overridePolicies.push({ tool: normalizedName, permission: "exclude" });
-        }
-      }
-      
-      // Prepend override policies (they take precedence)
-      compiledPolicies.unshift(...overridePolicies);
-    }
+    // Use the precedence resolver to get properly ordered policies
+    const compiledPolicies = resolvePermissionPrecedence({
+      commandLineFlags: runtimeOverrides,
+      personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
+      useDefaults: true
+    });
     
     this.state = {
       permissions: { policies: compiledPolicies }
@@ -76,7 +50,10 @@ export class ToolPermissionService {
     ask?: string[];
     exclude?: string[];
   }): Promise<ToolPermissionServiceState> {
-    // Just use the synchronous version
+    // Ensure permissions.yaml exists before loading
+    await ensurePermissionsYamlExists();
+    
+    // Use the synchronous version after ensuring the file exists
     return this.initializeSync(runtimeOverrides);
   }
 

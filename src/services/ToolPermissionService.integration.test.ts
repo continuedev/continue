@@ -22,11 +22,11 @@ describe("ToolPermissionService E2E", () => {
     // Verify the compiled policies
     const policies = state.permissions.policies;
     
-    // Runtime overrides should be first
-    expect(policies[0]).toEqual({ tool: "dangerous_tool", permission: "allow" });
-    expect(policies[1]).toEqual({ tool: "sensitive_tool", permission: "ask" });
-    expect(policies[2]).toEqual({ tool: "forbidden_tool", permission: "exclude" });
-    expect(policies[3]).toEqual({ tool: "write_*", permission: "exclude" });
+    // Runtime overrides should be first, in order: exclude, ask, allow
+    expect(policies[0]).toEqual({ tool: "forbidden_tool", permission: "exclude" });
+    expect(policies[1]).toEqual({ tool: "write_*", permission: "exclude" });
+    expect(policies[2]).toEqual({ tool: "sensitive_tool", permission: "ask" });
+    expect(policies[3]).toEqual({ tool: "dangerous_tool", permission: "allow" });
     
     // Defaults should follow
     expect(policies.slice(4)).toEqual(DEFAULT_TOOL_POLICIES);
