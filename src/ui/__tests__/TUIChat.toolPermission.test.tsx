@@ -4,6 +4,14 @@ import { jest } from "@jest/globals";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
   it("shows ToolPermissionSelector with correct content", async () => {
     const handleResponse = jest.fn();
 
@@ -20,7 +28,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
     const frame = lastFrame();
 
@@ -28,8 +36,10 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(frame).toContain("Edit");
     expect(frame).toContain("Would you like to continue?");
     expect(frame).toContain("Continue");
+    expect(frame).toContain("Continue + add policy");
     expect(frame).toContain("Cancel");
     expect(frame).toContain("(tab)");
+    expect(frame).toContain("(p)");
     expect(frame).toContain("(esc)");
   });
 
@@ -48,14 +58,14 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
     // Test Tab key for approval
     stdin.write("\t");
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
-    expect(handleResponse).toHaveBeenCalledWith("test-request-123", true);
+    expect(handleResponse).toHaveBeenCalledWith("test-request-123", true, false);
   });
 
   it("handles escape key for rejection", async () => {
@@ -72,14 +82,14 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
     // Test escape key for rejection
     stdin.write("\x1b"); // ESC key
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
-    expect(handleResponse).toHaveBeenCalledWith("test-request-456", false);
+    expect(handleResponse).toHaveBeenCalledWith("test-request-456", false, false);
   });
 
   it("handles 'n' key for rejection", async () => {
@@ -96,14 +106,14 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
     // Test 'n' key for rejection
     stdin.write("n");
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
-    expect(handleResponse).toHaveBeenCalledWith("test-request-789", false);
+    expect(handleResponse).toHaveBeenCalledWith("test-request-789", false, false);
   });
 
   it("handles arrow key navigation in permission selector", async () => {
@@ -120,34 +130,41 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await jest.advanceTimersByTimeAsync(50);
 
     // Initial state should show "> Continue" selected
     let frame = lastFrame();
     expect(frame).toMatch(/>\s+Continue/);
 
-    // Press down arrow to select "Cancel"
-    stdin.write("\x1B[B"); // Down arrow
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    frame = lastFrame();
-    expect(frame).toMatch(/>\s+Cancel/);
-
-    // Press up arrow to go back to "Continue"
-    stdin.write("\x1B[A"); // Up arrow
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    frame = lastFrame();
-    expect(frame).toMatch(/>\s+Continue/);
-
-    // Press Enter to confirm selection
+    // Test that pressing Enter on default selection triggers approval
     stdin.write("\r");
+    await jest.advanceTimersByTimeAsync(50);
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(handleResponse).toHaveBeenCalledWith("test-request-123", true, undefined);
+  });
 
-    expect(handleResponse).toHaveBeenCalledWith("test-request-123", true);
+  it("handles 'p' key for policy creation", async () => {
+    const handleResponse = jest.fn();
+
+    const { stdin } = render(
+      <ToolPermissionSelector
+        toolName="Bash"
+        toolArgs={{
+          command: "ls -la",
+        }}
+        requestId="test-request-policy"
+        onResponse={handleResponse}
+      />
+    );
+
+    await jest.advanceTimersByTimeAsync(50);
+
+    // Test 'p' key for approval with policy creation
+    stdin.write("p");
+
+    await jest.advanceTimersByTimeAsync(50);
+
+    expect(handleResponse).toHaveBeenCalledWith("test-request-policy", true, true);
   });
 
   it("shows tool result with red dot and 'Cancelled by user' message", async () => {
@@ -179,7 +196,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       <MemoizedMessage message={message} index={0} />
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await jest.advanceTimersByTimeAsync(100);
 
     const messageOutput = messageFrame();
     

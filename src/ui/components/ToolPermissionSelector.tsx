@@ -8,17 +8,19 @@ interface PermissionOption {
   name: string;
   color: string;
   approved: boolean;
+  createPolicy?: boolean;
 }
 
 interface ToolPermissionSelectorProps {
   toolName: string;
   toolArgs: any;
   requestId: string;
-  onResponse: (requestId: string, approved: boolean) => void;
+  onResponse: (requestId: string, approved: boolean, createPolicy?: boolean) => void;
 }
 
 const PERMISSION_OPTIONS: PermissionOption[] = [
   { id: "approve", name: "Continue", color: "green", approved: true },
+  { id: "approve_policy", name: "Continue + add policy", color: "cyan", approved: true, createPolicy: true },
   { id: "deny", name: "Cancel", color: "red", approved: false },
 ];
 
@@ -33,19 +35,19 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   useInput((input, key) => {
     if (key.return) {
       const selectedOption = PERMISSION_OPTIONS[selectedIndex];
-      onResponse(requestId, selectedOption.approved);
+      onResponse(requestId, selectedOption.approved, selectedOption.createPolicy);
       return;
     }
 
     // Tab to continue (approve)
     if (key.tab) {
-      onResponse(requestId, true);
+      onResponse(requestId, true, false);
       return;
     }
 
     // Escape to reject (deny)
     if (key.escape) {
-      onResponse(requestId, false);
+      onResponse(requestId, false, false);
       return;
     }
 
@@ -57,11 +59,13 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       );
     }
 
-    // Also support y/n for quick responses
+    // Also support y/n/p for quick responses
     if (input === "y" || input === "Y") {
-      onResponse(requestId, true);
+      onResponse(requestId, true, false);
     } else if (input === "n" || input === "N") {
-      onResponse(requestId, false);
+      onResponse(requestId, false, false);
+    } else if (input === "p" || input === "P") {
+      onResponse(requestId, true, true);
     }
   });
 
@@ -90,7 +94,11 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
         <Text color="dim">Would you like to continue?</Text>
         {PERMISSION_OPTIONS.map((option, index) => {
           const isSelected = index === selectedIndex;
-          const shortcut = option.approved ? "(tab)" : "(esc)";
+          let shortcut = "";
+          if (option.id === "approve") shortcut = "(tab)";
+          else if (option.id === "approve_policy") shortcut = "(p)";
+          else if (option.id === "deny") shortcut = "(esc)";
+          
           return (
             <Box key={option.id} marginTop={index === 0 ? 1 : 0}>
               <Text

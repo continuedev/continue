@@ -659,12 +659,33 @@ export function useChat({
     setMessages([]);
   };
 
-  const handleToolPermissionResponse = (
+  const handleToolPermissionResponse = async (
     requestId: string,
-    approved: boolean
+    approved: boolean,
+    createPolicy?: boolean
   ) => {
+    // Capture the current permission request before clearing it
+    const currentRequest = activePermissionRequest;
+    
     // Clear the active permission request
     setActivePermissionRequest(null);
+
+    // Handle policy creation if requested
+    if (approved && createPolicy && currentRequest) {
+      try {
+        const { generatePolicyRule, addPolicyToYaml } = await import("../../permissions/policyWriter.js");
+        
+        const policyRule = generatePolicyRule(
+          currentRequest.toolName,
+          currentRequest.toolArgs
+        );
+        
+        await addPolicyToYaml(policyRule);
+      } catch (error) {
+        logger.error("Failed to create policy", { error });
+        // Continue with the approval even if policy creation fails
+      }
+    }
 
     // Send response to permission manager
     // The streamChatResponse will handle showing the appropriate message

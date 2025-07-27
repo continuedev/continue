@@ -55,3 +55,23 @@ export function normalizeToolName(input: string): string {
   // If no mapping found, return as-is (might be an MCP tool or future tool)
   return input;
 }
+
+/**
+ * Gets the display name for a normalized tool name
+ * Returns the preferred display name (e.g., "read_file" -> "Read")
+ */
+export function getDisplayName(normalizedName: string): string {
+  // Create a reverse mapping from normalized names to display names
+  const reverseMapping: Record<string, string> = {
+    "read_file": "Read",
+    "write_file": "Write", 
+    "list_files": "List",
+    "search_code": "Search",
+    "run_terminal_command": "Bash",
+    "fetch": "Fetch",
+    "exit": "Exit",
+    "view_diff": "Diff",
+  };
+  
+  return reverseMapping[normalizedName] || normalizedName;
+}
