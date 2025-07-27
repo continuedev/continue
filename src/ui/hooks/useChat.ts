@@ -28,6 +28,7 @@ interface UseChatProps {
   additionalRules?: string[];
   onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
+  onShowModelSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
   // Remote mode props
@@ -44,6 +45,7 @@ export function useChat({
   additionalRules,
   onShowOrgSelector,
   onShowConfigSelector,
+  onShowModelSelector,
   onLoginPrompt,
   onReload,
   isRemoteMode = false,
@@ -336,6 +338,11 @@ export function useChat({
 
         if (commandResult.openConfigSelector) {
           onShowConfigSelector();
+          return;
+        }
+
+        if (commandResult.openModelSelector && onShowModelSelector) {
+          onShowModelSelector();
           return;
         }
 

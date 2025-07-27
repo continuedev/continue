@@ -16,9 +16,11 @@ import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
+import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import IntroMessage from "./IntroMessage.js";
 import LoadingAnimation from "./LoadingAnimation.js";
+import ModelSelector from "./ModelSelector.js";
 import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
 import UpdateNotification from "./UpdateNotification.js";
@@ -151,6 +153,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     additionalRules,
     onShowOrgSelector: () => showOrganizationSelector(),
     onShowConfigSelector: () => showConfigSelectorUI(),
+    onShowModelSelector: () => showModelSelectorUI(),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration
@@ -187,6 +190,17 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
+  const {
+    showModelSelector,
+    handleModelSelect,
+    handleModelCancel,
+    showModelSelectorUI,
+  } = useModelSelector({
+    onMessage: (message) => {
+      setMessages((prev) => [...prev, message]);
+    },
+  });
+
   // Handle free trial transition completion
   const handleFreeTrialTransitionComplete = () => {
     setIsShowingFreeTrialTransition(false);
@@ -208,6 +222,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const isInputDisabled =
     showOrgSelector ||
     showConfigSelector ||
+    showModelSelector ||
     !!loginPrompt ||
     isShowingFreeTrialTransition ||
     !!activePermissionRequest;
@@ -293,6 +308,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
           <ConfigSelector
             onSelect={handleConfigSelect}
             onCancel={handleConfigCancel}
+          />
+        )}
+
+        {/* Model selector - shows above input when active */}
+        {showModelSelector && (
+          <ModelSelector
+            onSelect={handleModelSelect}
+            onCancel={handleModelCancel}
           />
         )}
 

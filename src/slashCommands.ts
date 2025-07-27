@@ -18,6 +18,7 @@ export async function handleSlashCommands(
   newInput?: string;
   clear?: boolean;
   openConfigSelector?: boolean;
+  openModelSelector?: boolean;
 } | null> {
   // Only trigger slash commands if slash is the very first character
   if (input.startsWith("/") && input.trim().startsWith("/")) {
@@ -101,6 +102,10 @@ export async function handleSlashCommands(
             output: "Not logged in. Use /login to authenticate.",
           };
         }
+
+      case "model":
+        // Open model selector UI
+        return { openModelSelector: true };
 
       case "org":
         // Organization switching command
