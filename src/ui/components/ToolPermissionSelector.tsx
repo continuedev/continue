@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
-import { getToolDisplayName } from "../../tools.js";
+import { formatToolCall } from "../../tools/formatters.js";
 import { ToolPreview, DetailedToolPreview } from "./ToolPreview.js";
 
 interface PermissionOption {
@@ -65,21 +65,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
     }
   });
 
-  const formatArgs = (args: any) => {
-    if (!args || Object.keys(args).length === 0) return "";
-
-    const firstKey = Object.keys(args)[0];
-    const firstValue = args[firstKey];
-
-    if (typeof firstValue === "string" && firstValue.length > 60) {
-      return `${firstValue.substring(0, 60)}...`;
-    }
-
-    return String(firstValue);
-  };
-
-  const formattedArgs = formatArgs(toolArgs);
-  const displayName = getToolDisplayName(toolName);
+  const toolCallDisplay = formatToolCall(toolName, toolArgs);
 
   return (
     <Box
@@ -89,7 +75,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       borderColor="magenta"
     >
       <Text color="magenta" bold>
-        {displayName}({formattedArgs})
+        {toolCallDisplay}
       </Text>
 
       {/* Show preview of what the tool will do */}

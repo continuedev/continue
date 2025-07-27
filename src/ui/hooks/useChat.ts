@@ -2,7 +2,6 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import path from "path";
 import { useEffect, useState } from "react";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { loadSession, saveSession } from "../../session.js";
@@ -13,7 +12,7 @@ import {
 } from "../../streamChatResponse.js";
 import { constructSystemMessage } from "../../systemMessage.js";
 import telemetryService from "../../telemetry/telemetryService.js";
-import { getToolDisplayName } from "../../tools.js";
+import { formatToolCall } from "../../tools/formatters.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
 
@@ -491,23 +490,6 @@ export function useChat({
           }
         },
         onToolStart: (toolName: string, toolArgs?: any) => {
-          const formatToolCall = (name: string, args: any) => {
-            const displayName = getToolDisplayName(name);
-            if (!args) return displayName;
-
-            const firstValue = Object.values(args)[0];
-            const formatPath = (value: any) => {
-              if (typeof value === "string" && path.isAbsolute(value)) {
-                const workspaceRoot = process.cwd();
-                const relativePath = path.relative(workspaceRoot, value);
-                return relativePath || value;
-              }
-              return value;
-            };
-
-            return `${displayName}(${formatPath(firstValue) || ""})`;
-          };
-
           if (currentStreamingMessage && currentStreamingMessage.content) {
             const messageContent = currentStreamingMessage.content;
             setMessages((prev) => [

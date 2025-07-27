@@ -1,8 +1,8 @@
-import { Box, Text } from "ink";
-import * as fs from "fs";
-import path from "path";
-import React from "react";
 import { createTwoFilesPatch } from "diff";
+import * as fs from "fs";
+import { Box, Text } from "ink";
+import React from "react";
+import { formatToolCall, formatToolArgument } from "../../tools/formatters.js";
 import { getToolDisplayName } from "../../tools.js";
 import { ColoredDiff } from "../ColoredDiff.js";
 
@@ -14,58 +14,39 @@ interface ToolPreviewProps {
 /**
  * Generates a preview of what a tool will do based on its arguments
  */
-export const ToolPreview: React.FC<ToolPreviewProps> = ({ toolName, toolArgs }) => {
-  const formatPath = (filePath: string) => {
-    if (path.isAbsolute(filePath)) {
-      const workspaceRoot = process.cwd();
-      const relativePath = path.relative(workspaceRoot, filePath);
-      return relativePath || filePath;
-    }
-    return filePath;
-  };
-
+export const ToolPreview: React.FC<ToolPreviewProps> = ({
+  toolName,
+  toolArgs,
+}) => {
   const getPreview = () => {
+    // For tool calls that match the standard format, use formatToolCall
+    if (toolName === "read_file" || toolName === "write_file" || toolName === "edit_file") {
+      return formatToolCall(toolName, toolArgs);
+    }
+
     switch (toolName) {
-      case "read_file":
-        if (toolArgs.filepath) {
-          return `Will read: ${formatPath(toolArgs.filepath)}`;
-        }
-        return "Will read a file";
-
-      case "write_file":
-        if (toolArgs.filepath) {
-          const exists = fs.existsSync(toolArgs.filepath);
-          const action = exists ? "modify" : "create";
-          return `Will ${action}: ${formatPath(toolArgs.filepath)}`;
-        }
-        return "Will write to a file";
-
-      case "edit_file":
-        if (toolArgs.filepath) {
-          return `Will edit: ${formatPath(toolArgs.filepath)}`;
-        }
-        return "Will edit a file";
-
       case "list_files":
         if (toolArgs.directory) {
-          return `Will list files in: ${formatPath(toolArgs.directory)}`;
+          return `Will list files in: ${formatToolArgument(toolArgs.directory)}`;
         }
         return "Will list files in current directory";
 
       case "search_code":
         if (toolArgs.pattern) {
-          const truncatedPattern = toolArgs.pattern.length > 50 
-            ? toolArgs.pattern.substring(0, 50) + "..." 
-            : toolArgs.pattern;
+          const truncatedPattern =
+            toolArgs.pattern.length > 50
+              ? toolArgs.pattern.substring(0, 50) + "..."
+              : toolArgs.pattern;
           return `Will search for: "${truncatedPattern}"`;
         }
         return "Will search the codebase";
 
       case "run_terminal_command":
         if (toolArgs.command) {
-          const truncatedCmd = toolArgs.command.length > 60 
-            ? toolArgs.command.substring(0, 60) + "..." 
-            : toolArgs.command;
+          const truncatedCmd =
+            toolArgs.command.length > 60
+              ? toolArgs.command.substring(0, 60) + "..."
+              : toolArgs.command;
           return `Will run: ${truncatedCmd}`;
         }
         return "Will run a terminal command";
@@ -83,7 +64,9 @@ export const ToolPreview: React.FC<ToolPreviewProps> = ({ toolName, toolArgs }) 
         // For unknown tools, show what args will be passed
         const argCount = Object.keys(toolArgs || {}).length;
         if (argCount > 0) {
-          return `Will call ${getToolDisplayName(toolName)} with ${argCount} argument${argCount !== 1 ? 's' : ''}`;
+          return `Will call ${getToolDisplayName(
+            toolName
+          )} with ${argCount} argument${argCount !== 1 ? "s" : ""}`;
         }
         return `Will call ${getToolDisplayName(toolName)}`;
     }
@@ -100,18 +83,21 @@ export const ToolPreview: React.FC<ToolPreviewProps> = ({ toolName, toolArgs }) 
 /**
  * Shows a detailed preview for tools where we can predict the output
  */
-export const DetailedToolPreview: React.FC<ToolPreviewProps> = ({ toolName, toolArgs }) => {
+export const DetailedToolPreview: React.FC<ToolPreviewProps> = ({
+  toolName,
+  toolArgs,
+}) => {
   // For edit operations, we could show a diff preview if we have old_string/new_string
   if (toolName === "edit_file" && toolArgs.old_string && toolArgs.new_string) {
     return (
       <Box flexDirection="column" marginTop={1}>
-        <Text color="gray">Preview of changes:</Text>
         <Box flexDirection="column" paddingLeft={2}>
-          <Text color="red">- {toolArgs.old_string.split('\n')[0]}</Text>
-          <Text color="green">+ {toolArgs.new_string.split('\n')[0]}</Text>
-          {(toolArgs.old_string.split('\n').length > 1 || toolArgs.new_string.split('\n').length > 1) && 
-            <Text color="gray">  ...</Text>
-          }
+          <Text color="red">- {toolArgs.old_string.split("\n")[0]}</Text>
+          <Text color="green">+ {toolArgs.new_string.split("\n")[0]}</Text>
+          {(toolArgs.old_string.split("\n").length > 1 ||
+            toolArgs.new_string.split("\n").length > 1) && (
+            <Text color="gray"> ...</Text>
+          )}
         </Box>
       </Box>
     );
@@ -123,7 +109,7 @@ export const DetailedToolPreview: React.FC<ToolPreviewProps> = ({ toolName, tool
       if (fs.existsSync(toolArgs.filepath)) {
         const oldContent = fs.readFileSync(toolArgs.filepath, "utf-8");
         const newContent = toolArgs.content;
-        
+
         // Generate a diff preview
         const diff = createTwoFilesPatch(
           toolArgs.filepath,
@@ -134,7 +120,7 @@ export const DetailedToolPreview: React.FC<ToolPreviewProps> = ({ toolName, tool
           undefined,
           { context: 2 }
         );
-        
+
         return (
           <Box flexDirection="column" marginTop={1}>
             <Text color="gray">Preview of changes:</Text>
@@ -143,24 +129,28 @@ export const DetailedToolPreview: React.FC<ToolPreviewProps> = ({ toolName, tool
         );
       } else {
         // New file - show content preview
-        const lines = toolArgs.content.split('\n');
+        const lines = toolArgs.content.split("\n");
         const preview = lines.slice(0, 3);
-        
+
         return (
           <Box flexDirection="column" marginTop={1}>
             <Text color="gray">New file content:</Text>
             <Box flexDirection="column" paddingLeft={2}>
               {preview.map((line: string, i: number) => (
-                <Text key={i} color="green">{line || ' '}</Text>
+                <Text key={i} color="green">
+                  {line || " "}
+                </Text>
               ))}
-              {lines.length > 3 && <Text color="gray">... ({lines.length - 3} more lines)</Text>}
+              {lines.length > 3 && (
+                <Text color="gray">... ({lines.length - 3} more lines)</Text>
+              )}
             </Box>
           </Box>
         );
       }
     } catch (error) {
       // If we can't read the file, just show a simple preview
-      const lines = toolArgs.content.split('\n');
+      const lines = toolArgs.content.split("\n");
       return (
         <Box flexDirection="column" marginTop={1}>
           <Text color="gray">Content preview ({lines.length} lines)</Text>
