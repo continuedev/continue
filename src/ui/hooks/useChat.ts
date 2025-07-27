@@ -666,21 +666,25 @@ export function useChat({
   ) => {
     // Capture the current permission request before clearing it
     const currentRequest = activePermissionRequest;
-    
+
     // Clear the active permission request
     setActivePermissionRequest(null);
 
     // Handle policy creation if requested
     if (approved && createPolicy && currentRequest) {
       try {
-        const { generatePolicyRule, addPolicyToYaml } = await import("../../permissions/policyWriter.js");
-        
+        const { generatePolicyRule, addPolicyToYaml } = await import(
+          "../../permissions/policyWriter.js"
+        );
+
         const policyRule = generatePolicyRule(
           currentRequest.toolName,
           currentRequest.toolArgs
         );
-        
+
         await addPolicyToYaml(policyRule);
+
+        logger.debug(`Policy created: ${policyRule}`);
       } catch (error) {
         logger.error("Failed to create policy", { error });
         // Continue with the approval even if policy creation fails

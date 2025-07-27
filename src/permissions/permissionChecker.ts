@@ -11,12 +11,42 @@ import {
 /**
  * Checks if a tool name matches a pattern.
  * Supports wildcards (*) for pattern matching.
+ * Also handles special Bash command patterns like "Bash(ls*)"
  */
-export function matchesToolPattern(toolName: string, pattern: string): boolean {
+export function matchesToolPattern(
+  toolName: string, 
+  pattern: string, 
+  toolArguments?: Record<string, any>
+): boolean {
   if (pattern === "*") return true;
   if (pattern === toolName) return true;
 
-  // Handle wildcard patterns like "mcp__*"
+  // Handle special Bash command patterns like "Bash(ls*)"
+  const bashCommandMatch = pattern.match(/^Bash\((.+)\)$/);
+  if (bashCommandMatch) {
+    // Check if this is a bash/terminal tool (either normalized name or display name)
+    const isBashTool = toolName === "run_terminal_command" || toolName === "Bash";
+    if (isBashTool && toolArguments?.command) {
+      const commandPattern = bashCommandMatch[1];
+      const command = toolArguments.command;
+      
+      // Handle command patterns with wildcards
+      if (commandPattern.includes("*") || commandPattern.includes("?")) {
+        // Escape all regex metacharacters except * and ?
+        const escaped = commandPattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+        // Convert * and ? to their regex equivalents
+        const regexPattern = escaped.replace(/\*/g, ".*").replace(/\?/g, ".");
+        const regex = new RegExp(`^${regexPattern}$`);
+        return regex.test(command);
+      }
+      
+      // Exact command match
+      return command === commandPattern;
+    }
+    return false;
+  }
+
+  // Handle regular wildcard patterns like "mcp__*"
   if (pattern.includes("*") || pattern.includes("?")) {
     // Escape all regex metacharacters except * and ?
     const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
@@ -77,7 +107,7 @@ export function checkToolPermission(
 
   for (const policy of policies) {
     if (
-      matchesToolPattern(toolCall.name, policy.tool) &&
+      matchesToolPattern(toolCall.name, policy.tool, toolCall.arguments) &&
       matchesArguments(toolCall.arguments, policy.argumentMatches)
     ) {
       return {

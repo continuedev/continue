@@ -24,7 +24,7 @@ describe("ToolPermissionService unit tests", () => {
       expect(state.permissions.policies.length).toBeGreaterThan(0);
 
       // Verify the overrides are in the policies
-      const toolNames = state.permissions.policies.map(p => p.tool);
+      const toolNames = state.permissions.policies.map((p) => p.tool);
       expect(toolNames).toContain("TestTool3");
       expect(toolNames).toContain("TestTool2");
       expect(toolNames).toContain("TestTool1");

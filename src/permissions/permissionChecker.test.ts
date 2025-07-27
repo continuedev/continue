@@ -66,6 +66,41 @@ describe("Permission Checker", () => {
       expect(matchesToolPattern("(tool)_name", "(tool)*")).toBe(true);
       expect(matchesToolPattern("tool+plus_extra", "tool+plus*")).toBe(true);
     });
+
+    describe("Bash command patterns", () => {
+      it("should match Bash command patterns with run_terminal_command", () => {
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls*)", { command: "ls" })).toBe(true);
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls*)", { command: "ls -la" })).toBe(true);
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls*)", { command: "pwd" })).toBe(false);
+      });
+
+      it("should match Bash command patterns with Bash display name", () => {
+        expect(matchesToolPattern("Bash", "Bash(git*)", { command: "git status" })).toBe(true);
+        expect(matchesToolPattern("Bash", "Bash(git*)", { command: "git commit" })).toBe(true);
+        expect(matchesToolPattern("Bash", "Bash(git*)", { command: "npm install" })).toBe(false);
+      });
+
+      it("should match exact Bash commands", () => {
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls)", { command: "ls" })).toBe(true);
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls)", { command: "ls -la" })).toBe(false);
+      });
+
+      it("should not match Bash patterns for non-bash tools", () => {
+        expect(matchesToolPattern("read_file", "Bash(ls*)", { command: "ls" })).toBe(false);
+        expect(matchesToolPattern("write_file", "Bash(git*)", { command: "git status" })).toBe(false);
+      });
+
+      it("should not match Bash patterns without command argument", () => {
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls*)", {})).toBe(false);
+        expect(matchesToolPattern("run_terminal_command", "Bash(ls*)", { other: "value" })).toBe(false);
+      });
+
+      it("should handle complex Bash command patterns", () => {
+        expect(matchesToolPattern("run_terminal_command", "Bash(npm*)", { command: "npm install" })).toBe(true);
+        expect(matchesToolPattern("run_terminal_command", "Bash(npm*)", { command: "npm run build" })).toBe(true);
+        expect(matchesToolPattern("run_terminal_command", "Bash(git*commit*)", { command: "git commit -m 'test'" })).toBe(true);
+      });
+    });
   });
 
   describe("matchesArguments", () => {
@@ -264,6 +299,40 @@ describe("Permission Checker", () => {
       );
 
       expect(result.permission).toBe("ask");
+    });
+
+    it("should match Bash command patterns in checkToolPermission", () => {
+      const permissions: ToolPermissions = {
+        policies: [
+          { tool: "Bash(ls*)", permission: "allow" },
+          { tool: "Bash(git*)", permission: "ask" },
+          { tool: "run_terminal_command", permission: "ask" }, // Fallback for other commands
+        ],
+      };
+
+      // Should match "Bash(ls*)" pattern and allow
+      const lsResult = checkToolPermission(
+        { name: "run_terminal_command", arguments: { command: "ls -la" } },
+        permissions
+      );
+      expect(lsResult.permission).toBe("allow");
+      expect(lsResult.matchedPolicy?.tool).toBe("Bash(ls*)");
+
+      // Should match "Bash(git*)" pattern and ask
+      const gitResult = checkToolPermission(
+        { name: "run_terminal_command", arguments: { command: "git status" } },
+        permissions
+      );
+      expect(gitResult.permission).toBe("ask");
+      expect(gitResult.matchedPolicy?.tool).toBe("Bash(git*)");
+
+      // Should match general fallback for other commands
+      const npmResult = checkToolPermission(
+        { name: "run_terminal_command", arguments: { command: "npm install" } },
+        permissions
+      );
+      expect(npmResult.permission).toBe("ask");
+      expect(npmResult.matchedPolicy?.tool).toBe("run_terminal_command");
     });
   });
 
