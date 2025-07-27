@@ -6,6 +6,7 @@ import { loadAuthConfig } from "../auth/workos.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { initializeWithOnboarding } from "../onboarding.js";
+import { setRuntimePermissionOverrides } from "../permissions/runtimeOverrides.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
@@ -103,6 +104,15 @@ async function runHeadlessMode(
   prompt: string | undefined,
   options: ChatOptions
 ): Promise<void> {
+  // Set runtime permission overrides immediately
+  if (options.allow || options.ask || options.exclude) {
+    setRuntimePermissionOverrides({
+      allow: options.allow,
+      ask: options.ask,
+      exclude: options.exclude,
+    });
+  }
+
   // Initialize services for headless mode
   await initializeServices({
     configPath: options.config,

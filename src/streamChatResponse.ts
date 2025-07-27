@@ -478,6 +478,18 @@ export async function streamChatResponse(
             arguments: toolCall.arguments,
           });
 
+          logger.debug("Tool permission check result", {
+            toolName: toolCall.name,
+            permission: permissionCheck.permission,
+            matchedPolicy: permissionCheck.matchedPolicy,
+          });
+
+          // Notify tool start immediately - before permission check
+          // This ensures the UI shows the tool call even if it's rejected
+          if (callbacks?.onToolStart) {
+            callbacks.onToolStart(toolCall.name, toolCall.arguments);
+          }
+
           let approved = false;
 
           if (permissionCheck.permission === "allow") {
@@ -547,11 +559,6 @@ export async function streamChatResponse(
               callbacks.onToolResult(deniedMessage, toolCall.name);
             }
             continue;
-          }
-
-          // Now that permission is approved, notify tool start
-          if (callbacks?.onToolStart) {
-            callbacks.onToolStart(toolCall.name, toolCall.arguments);
           }
 
           logger.debug("Executing tool", {

@@ -17,4 +17,5 @@ export {
   toolPermissionManager,
   ToolPermissionManager,
 } from "./permissionManager.js";
+export { setRuntimePermissionOverrides } from "./runtimeOverrides.js";
 export type { PermissionRequestResult } from "./permissionManager.js";

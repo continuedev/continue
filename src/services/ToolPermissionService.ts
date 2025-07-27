@@ -23,7 +23,13 @@ export class ToolPermissionService {
     ask?: string[];
     exclude?: string[];
   }): Promise<ToolPermissionServiceState> {
-    logger.debug("Initializing ToolPermissionService");
+    logger.debug("Initializing ToolPermissionService", {
+      runtimeOverrides,
+      hasOverrides: !!runtimeOverrides,
+      askTools: runtimeOverrides?.ask,
+      allowTools: runtimeOverrides?.allow,
+      excludeTools: runtimeOverrides?.exclude
+    });
     
     // Start with default policies
     const compiledPolicies: ToolPermissionPolicy[] = [...DEFAULT_TOOL_POLICIES];
