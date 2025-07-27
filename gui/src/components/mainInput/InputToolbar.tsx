@@ -150,7 +150,7 @@ function InputToolbar(props: InputToolbarProps) {
                 {hasReasoningEnabled ? (
                   <LightBulbIconSolid
                     data-tooltip-id="model-reasoning-tooltip"
-                    className="h-3 w-3 brightness-200 hover:brightness-150"
+                    className="h-3 w-3 text-yellow-300 brightness-200 hover:brightness-150"
                   />
                 ) : (
                   <LightBulbIconOutline
