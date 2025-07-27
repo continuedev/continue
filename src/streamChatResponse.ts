@@ -164,6 +164,7 @@ async function processStreamingResponse(
   let aiResponse = "";
   let finalContent = "";
   const toolCallsMap = new Map<string, ToolCall>();
+  const indexToIdMap = new Map<number, string>(); // Track index to ID mapping
   let firstTokenTime: number | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
@@ -237,21 +238,40 @@ async function processStreamingResponse(
       if (choice.delta.tool_calls) {
         hasToolCalls = true;
         for (const toolCallDelta of choice.delta.tool_calls) {
-          // Get or create tool call
+          let toolCallId: string | undefined;
+          
+          // If we have an ID, use it and map the index
           if (toolCallDelta.id) {
-            if (!toolCallsMap.has(toolCallDelta.id)) {
-              toolCallsMap.set(toolCallDelta.id, {
-                id: toolCallDelta.id,
-                name: "",
-                arguments: null,
-                argumentsStr: "",
-                startNotified: false,
-              });
+            toolCallId = toolCallDelta.id;
+            if (toolCallDelta.index !== undefined && toolCallId) {
+              indexToIdMap.set(toolCallDelta.index, toolCallId);
             }
+          } else if (toolCallDelta.index !== undefined) {
+            // No ID, but we have an index - look up the ID from our map
+            toolCallId = indexToIdMap.get(toolCallDelta.index);
+          }
+          
+          if (!toolCallId) {
+            logger.warn("Tool call delta without ID or valid index mapping", { toolCallDelta });
+            continue;
+          }
+          
+          // Create tool call entry if it doesn't exist
+          if (!toolCallsMap.has(toolCallId)) {
+            toolCallsMap.set(toolCallId, {
+              id: toolCallId,
+              name: "",
+              arguments: null,
+              argumentsStr: "",
+              startNotified: false,
+            });
           }
 
-          const toolCall = toolCallsMap.get(toolCallDelta.id || "");
-          if (!toolCall) continue;
+          const toolCall = toolCallsMap.get(toolCallId);
+          if (!toolCall) {
+            logger.warn("Tool call not found in map", { toolCallId });
+            continue;
+          }
 
           // Update name
           if (toolCallDelta.function?.name) {
@@ -352,10 +372,8 @@ async function processStreamingResponse(
     return true;
   });
 
-  // Set finalContent based on whether this was a tool call or not
-  // For headless mode: if there's a tool call, we only want to show final text content
-  // If it's the first response (no tool calls), we save the final content
-  finalContent = hasToolCalls ? "" : aiResponse;
+  // Always preserve the content - it should be displayed regardless of tool calls
+  finalContent = aiResponse;
 
   return {
     content: aiResponse,
