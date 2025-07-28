@@ -30,8 +30,9 @@ export function getLlmApi(
   assistant: AssistantUnrolled,
   authConfig: AuthConfig
 ): [BaseLlmApi, ModelConfig] {
-  const model = assistant.models?.find((model) =>
-    model?.roles?.includes("chat")
+  const model = assistant.models?.find(
+    (model) =>
+      model?.roles?.includes("chat") || (model && model.roles === undefined)
   );
 
   if (!model) {
