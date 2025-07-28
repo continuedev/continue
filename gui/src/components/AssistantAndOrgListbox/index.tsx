@@ -144,13 +144,10 @@ export function AssistantAndOrgListbox() {
               </ListboxOption>
 
               <ListboxOption
-                value="reload-assistants"
+                value="reload-assistant"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={async (e: any) => {
-                  e.stopPropagation();
-                  await refreshProfiles();
-                }}
+                onClick={() => refreshProfiles()}
               >
                 <span
                   className="text-description flex flex-row items-center"

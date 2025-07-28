@@ -23,18 +23,9 @@ import { refreshSessionMetadata } from "../../redux/thunks/session";
 import { getFontSize, getPlatform } from "../../util";
 import { ROUTES } from "../../util/navigation";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import { Button } from "../ui";
 import { HistoryTableRow } from "./HistoryTableRow";
-
-const parseDate = (date: string): Date => {
-  let dateObj = new Date(date);
-  if (isNaN(dateObj.getTime())) {
-    dateObj = new Date(parseInt(date));
-  }
-  return dateObj;
-};
-
-const HEADER_CLASS =
-  "flex user-select-none pt-2 pb-3 opacity-75 text-center font-bold items-center justify-center sticky h-6";
+import { groupSessionsByDate, parseDate } from "./util";
 
 export function History() {
   const dispatch = useAppDispatch();
@@ -124,10 +115,9 @@ export function History() {
       );
   }, [allSessionMetadata, searchTerm, minisearch]);
 
-  const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
-  const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
-  const lastMonth = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
-  const earlier = new Date(0);
+  const sessionGroups = useMemo(() => {
+    return groupSessionsByDate(filteredAndSortedSessions);
+  }, [filteredAndSortedSessions]);
 
   const showClearSessionsDialog = () => {
     dispatch(
@@ -158,9 +148,9 @@ export function History() {
       style={{ fontSize: getFontSize() }}
       className="flex flex-1 flex-col overflow-auto px-1"
     >
-      <div className="relative my-2 flex justify-center space-x-2">
+      <div className="relative my-2 mt-4 flex justify-center space-x-2">
         <input
-          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-base outline-none focus:outline-none"
+          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-sm outline-none focus:outline-none"
           ref={searchInputRef}
           placeholder="Search past sessions"
           type="text"
@@ -179,7 +169,8 @@ export function History() {
           />
         )}
       </div>
-      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto pr-4">
+
+      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto">
         {filteredAndSortedSessions.length === 0 && (
           <div className="m-3 text-center">
             {isSessionMetadataLoading ? (
@@ -196,60 +187,42 @@ export function History() {
 
         <table className="flex flex-1 flex-col">
           <tbody className="">
-            {filteredAndSortedSessions.map((session, index) => {
-              const prevDate =
-                index > 0
-                  ? parseDate(filteredAndSortedSessions[index - 1].dateCreated)
-                  : earlier;
-              const date = parseDate(session.dateCreated);
-              return (
-                <Fragment key={index}>
-                  {index === 0 && date > yesterday && (
-                    <tr className={HEADER_CLASS}>
-                      <td colSpan={3}>Today</td>
-                    </tr>
-                  )}
-                  {date < yesterday &&
-                    date > lastWeek &&
-                    prevDate > yesterday && (
-                      <div className={HEADER_CLASS}>
-                        <td colSpan={3}>This Week</td>
-                      </div>
-                    )}
-                  {date < lastWeek &&
-                    date > lastMonth &&
-                    prevDate > lastWeek && (
-                      <div className={HEADER_CLASS}>
-                        <td colSpan={3}>This Month</td>
-                      </div>
-                    )}
-                  {date < lastMonth && prevDate > lastMonth && (
-                    <div className={HEADER_CLASS}>
-                      <td colSpan={3}>Older</td>
-                    </div>
-                  )}
-
+            {sessionGroups.map((group, groupIndex) => (
+              <Fragment key={group.label}>
+                <tr
+                  className={`user-select-none sticky mb-3 ml-2 flex h-6 justify-start text-left text-base font-bold opacity-75 ${
+                    groupIndex === 0 ? "mt-2" : "mt-8"
+                  }`}
+                >
+                  <td colSpan={3}>{group.label}</td>
+                </tr>
+                {group.sessions.map((session, sessionIndex) => (
                   <HistoryTableRow
+                    key={session.sessionId}
                     sessionMetadata={session}
-                    date={date}
-                    index={index}
+                    index={sessionIndex}
                   />
-                </Fragment>
-              );
-            })}
+                ))}
+              </Fragment>
+            ))}
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col items-end justify-center border-0 border-t border-solid border-gray-400 px-2 py-1.5 text-sm">
-        <i
-          className=""
-          data-testid="history-sessions-note"
-        >{`Data is saved in ${platform === "windows" ? "%USERPROFILE%/.continue" : "~/.continue/sessions"}`}</i>
+
+      <div className="border-border flex flex-col items-end justify-center border-0 border-t border-solid px-2 py-3 text-xs">
+        <Button variant="secondary" size="sm" onClick={showClearSessionsDialog}>
+          Clear chats
+        </Button>
         <span
-          className="cursor-pointer text-xs text-gray-400 hover:underline"
-          onClick={showClearSessionsDialog}
+          className="text-description text-2xs"
+          data-testid="history-sessions-note"
         >
-          Clear session history
+          Chat history is saved to{" "}
+          <span className="italic">
+            {platform === "windows"
+              ? "%USERPROFILE%/.continue"
+              : "~/.continue/sessions"}
+          </span>
         </span>
       </div>
     </div>

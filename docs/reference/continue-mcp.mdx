@@ -4,27 +4,11 @@ description: Set up an MCP server to search Continue documentation
 keywords: [mcp, documentation, search, mintlify, reference]
 ---
 
-# Continue Documentation MCP Server
+The Continue Documentation MCP Server allows you to search and retrieve information from the Continue documentation directly within your agent conversations.
 
-The Continue Documentation MCP Server allows you to search and retrieve information from the Continue documentation directly within your agent conversations. This is powered by Mintlify's MCP server generation.
+## Set up
 
-## Installation
-
-### Step 1: Install the MCP Server
-
-Run the following command to install the Continue documentation MCP server:
-
-```bash
-npx mint-mcp add continue-docs
-```
-
-This will:
-
-- Download and install the MCP server locally
-- Set up the search tool for Continue documentation
-- Create the necessary configuration files
-
-### Step 2: Configure Continue
+### Configure Continue
 
 1. Create a folder called `.continue/mcpServers` at the top level of your workspace
 2. Add a file called `continue-docs-mcp.yaml` to this folder
@@ -35,16 +19,10 @@ name: Continue Documentation MCP
 version: 0.0.1
 schema: v1
 mcpServers:
-  - name: Continue Docs Search
-    type: stdio
-    command: npx
-    args:
-      - mint-mcp
-      - add
-      - continue-docs
+  - uses: continuedev/continue-docs-mcp
 ```
 
-### Step 3: Enable Agent Mode
+### Enable Agent Mode
 
 MCP servers only work in agent mode. Make sure to switch to agent mode in Continue before testing.
 
@@ -55,97 +33,34 @@ Once configured, you can use the MCP server to search Continue documentation:
 ### Model Configuration Help
 
 ```
-Search for model setup instructions in the Continue docs
+How do I add Claude 4 Sonnet as a model from Bedrock in Continue?
 ```
 
 ### Context Providers
 
 ```
-Find documentation about context providers and how to configure them
+What context providers are available in Continue?
 ```
 
-### Autocomplete Setup
+### Customization
 
 ```
-How do I configure autocomplete in Continue?
+How do I add custom rules to my assistant in Continue?
 ```
-
-### Slash Commands
-
-```
-Search for information about custom slash commands
-```
-
-### Troubleshooting
-
-```
-Find troubleshooting information for Continue extension issues
-```
-
-## Test Plan
-
-Use this test plan to verify your MCP server is working correctly:
-
-### Prerequisites
-
-- Continue extension is installed and running
-- Agent mode is enabled
-- MCP server configuration file exists in `.continue/mcpServers/`
-
-### Test Cases
-
-#### 1. Basic Documentation Search
-
-- **Query**: "Search the Continue docs for information about model setup"
-- **Expected**: Returns structured information about configuring models
-- **Pass/Fail**: ☐
-
-#### 2. Context Provider Documentation
-
-- **Query**: "Find documentation about context providers in Continue"
-- **Expected**: Returns information about available context providers
-- **Pass/Fail**: ☐
-
-#### 3. Feature-Specific Search
-
-- **Query**: "How do I configure autocomplete in Continue?"
-- **Expected**: Returns autocomplete setup instructions
-- **Pass/Fail**: ☐
-
-#### 4. MCP Documentation Search
-
-- **Query**: "Search for MCP server setup instructions"
-- **Expected**: Returns MCP configuration information
-- **Pass/Fail**: ☐
 
 ## Troubleshooting
 
 ### MCP Server Not Loading
 
-1. **Check configuration**: Ensure your YAML configuration uses the npx command approach
-2. **Verify installation**: Run `npx mint-mcp add continue-docs` to confirm the server can be accessed
-3. **Check agent mode**: MCP servers only work in agent mode
-4. **Restart Continue**: Try restarting the Continue extension
+1. **Check configuration**: Ensure your YAML configuration uses the correct `uses` field with `continuedev/continue-docs-mcp`
+2. **Check agent mode**: MCP servers only work in agent mode
+3. **Restart Continue**: Try restarting the Continue extension
 
 ### No Search Results
 
 1. **Verify connection**: The MCP server needs internet access to search the documentation
 2. **Check query format**: Try rephrasing your search query
 3. **Test with known topics**: Search for well-documented features like "model configuration"
-
-### Permission Issues
-
-If you encounter permission errors, ensure npx has proper permissions:
-
-```bash
-npm config get prefix
-```
-
-## Advanced Configuration
-
-### Using Environment Variables
-
-You can configure the MCP server with environment variables:
 
 ## Related Documentation
 

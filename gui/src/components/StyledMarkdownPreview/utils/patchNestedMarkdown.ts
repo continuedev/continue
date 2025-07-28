@@ -7,7 +7,10 @@
 
     Note, this was benchmarked at sub-millisecond
 */
-import { headerIsMarkdown } from "./headerIsMarkdown";
+import {
+  headerIsMarkdown,
+  MarkdownBlockStateTracker,
+} from "../../../../../core/utils/markdownUtils";
 
 export const patchNestedMarkdown = (source: string): string => {
   // Early return if no markdown codeblock pattern is found (including GitHub variants)
@@ -16,21 +19,29 @@ export const patchNestedMarkdown = (source: string): string => {
 
   let nestCount = 0;
   const lines = source.split("\n");
-  const trimmedLines = lines.map((l) => l.trim());
+
+  // Use optimized state tracker for efficient bare backtick analysis
+  const stateTracker = new MarkdownBlockStateTracker(lines);
+  const trimmedLines = stateTracker.getTrimmedLines();
 
   for (let i = 0; i < trimmedLines.length; i++) {
     const line = trimmedLines[i];
 
     if (nestCount > 0) {
       // Inside a markdown block
-      if (line.match(/^`+$/)) {
-        // Ending a block with just backticks (```)
-        nestCount--;
-        if (nestCount === 0) {
-          lines[i] = "~~~"; // End of markdown block
+      if (stateTracker.isBareBacktickLine(i)) {
+        // Found bare backticks - use optimized lookup for remaining count
+        const remainingBareBackticks =
+          stateTracker.getRemainingBareBackticksAfter(i);
+
+        // If this is the last bare backticks, it closes the markdown block
+        if (remainingBareBackticks === 0) {
+          nestCount = 0;
+          lines[i] = "~~~"; // Convert final closing delimiter to tildes
         }
+        // Otherwise, keep as backticks (inner nested block delimiter)
       } else if (line.startsWith("```")) {
-        // Going into a nested codeblock
+        // Going into a nested codeblock (with language identifier)
         nestCount++;
       }
     } else {
