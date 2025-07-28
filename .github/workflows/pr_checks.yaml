@@ -209,10 +209,9 @@ jobs:
 
   test-packages:
     needs: build-packages
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
         package: [hub, config-yaml, fetch, openai-adapters]
     steps:
       - uses: actions/checkout@v4

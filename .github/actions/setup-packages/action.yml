@@ -18,3 +18,15 @@ runs:
     - name: Build packages
       shell: bash
       run: node ./scripts/build-packages.js
+
+    - name: Install package dependencies
+      shell: bash
+      run: |
+        for package_dir in packages/*/; do
+          if [ -f "$package_dir/package.json" ]; then
+            echo "Installing dependencies for $package_dir"
+            cd "$package_dir"
+            npm ci
+            cd - > /dev/null
+          fi
+        done
