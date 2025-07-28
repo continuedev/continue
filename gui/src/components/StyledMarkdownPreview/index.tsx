@@ -113,6 +113,10 @@ const StyledMarkdown = styled.div<{
     line-height: 1.5;
   }
 
+  * {
+    word-break: break-word;
+  }
+
   > *:last-child {
     margin-bottom: 0;
   }
