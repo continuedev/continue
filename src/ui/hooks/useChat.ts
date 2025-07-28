@@ -60,8 +60,21 @@ export function useChat({
         return [];
       }
 
-      // Initialize with empty array - will be populated asynchronously
-      return [];
+      // Synchronously initialize chat history to prevent race conditions
+      // This ensures system message is always loaded before handleUserMessage runs
+      let initialHistory: ChatCompletionMessageParam[] = [];
+
+      // Load previous session if resume flag is used
+      if (resume) {
+        const savedHistory = loadSession();
+        if (savedHistory) {
+          initialHistory = savedHistory;
+        }
+      }
+
+      // If no session loaded or not resuming, we'll need to add system message
+      // We can't make this async, so we'll handle it in the useEffect
+      return initialHistory;
     }
   );
 
@@ -87,6 +100,14 @@ export function useChat({
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
+    // If we're resuming and found a saved session, we're already initialized
+    // If we're in remote mode, we're initialized (will be populated by polling)
+    isRemoteMode || (resume && loadSession() !== null)
+  );
+  
+  // Capture initial rules to prevent re-initialization when rules change
+  const [initialRules] = useState(additionalRules);
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
@@ -203,26 +224,34 @@ export function useChat({
   }, [isRemoteMode, remoteUrl, responseStartTime]);
 
   useEffect(() => {
-    // Skip initialization in remote mode
-    if (isRemoteMode) return;
+    // Skip initialization in remote mode or if already initialized
+    if (isRemoteMode || isChatHistoryInitialized) return;
 
-    // Initialize chat history using the shared function
+    // Initialize chat history with system message only if we don't have a session
     const initializeHistory = async () => {
-      const history = await initializeChatHistory({
-        resume,
-        rule: additionalRules,
-      });
-      setChatHistory(history);
+      // Only add system message if we don't have any messages yet
+      if (chatHistory.length === 0) {
+        const history = await initializeChatHistory({
+          resume,
+          rule: initialRules,
+        });
+        setChatHistory(history);
+      }
+      setIsChatHistoryInitialized(true);
     };
 
     initializeHistory();
-  }, [isRemoteMode, resume, additionalRules]);
+    // Note: Using initialRules instead of additionalRules to prevent re-initialization
+    // when rules change during the conversation
+  }, [isRemoteMode, isChatHistoryInitialized, chatHistory.length, resume, initialRules]);
 
   useEffect(() => {
-    if (initialPrompt) {
+    // Only handle initial prompt after chat history is initialized
+    // This prevents race conditions where the prompt runs before system message is loaded
+    if (initialPrompt && isChatHistoryInitialized) {
       handleUserMessage(initialPrompt);
     }
-  }, [initialPrompt]);
+  }, [initialPrompt, isChatHistoryInitialized]);
 
   const handleUserMessage = async (message: string) => {
     // Special handling for /org command in TUI
