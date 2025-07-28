@@ -83,6 +83,22 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
+      - name: Run tests
+        run: |
+          cd core
+          npm test
+          npm run vitest
+        env:
+          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_FOUNDRY_CODESTRAL_API_KEY: ${{ secrets.AZURE_FOUNDRY_CODESTRAL_API_KEY }}
+          AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
+          AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
+
   gui-checks:
     runs-on: ubuntu-latest
     steps:
@@ -99,12 +115,19 @@ jobs:
         with:
           component: gui
           include-packages: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Type check and lint
         run: |
           cd gui
           npx tsc --noEmit
           npm run lint
+
+      - name: Run tests
+        run: |
+          cd gui
+          npm test
 
   binary-checks:
     runs-on: ubuntu-latest
@@ -132,34 +155,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
+      - uses: ./.github/actions/setup-packages
+      - uses: ./.github/actions/setup-component
         with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - uses: actions/cache@v4
+          component: core
+          include-root: true
+      - uses: ./.github/actions/setup-component
         with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: vscode-cache
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - name: Build packages and install dependencies
-        run: |
-          node ./scripts/build-packages.js
-          cd core
-          npm ci
-          cd ../extensions/vscode
-          npm ci
+          component: vscode
+          include-packages: false
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
@@ -175,40 +182,13 @@ jobs:
           cd extensions/vscode
           npm run vitest
 
-  core-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
-      - uses: ./.github/actions/setup-component
-        with:
-          component: core
-
-      - name: Run core tests
-        run: |
-          cd core
-          npm test
-          npm run vitest
-        env:
-          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_FOUNDRY_CODESTRAL_API_KEY: ${{ secrets.AZURE_FOUNDRY_CODESTRAL_API_KEY }}
-          AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
-          AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
 
   test-packages:
     needs: build-packages
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [hub, config-yaml, fetch, openai-adapters]
+        package: [hub, config-yaml, fetch]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -513,39 +493,6 @@ jobs:
           name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
           path: extensions/vscode/e2e.log
 
-  gui-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        with:
-          path: gui/node_modules
-          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
-
-      - name: Build packages and install dependencies
-        run: |
-          node ./scripts/build-packages.js
-          cd core
-          npm ci
-          cd ../gui
-          npm ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
-      - name: Run gui tests
-        run: |
-          cd gui
-          npm test
 
   jetbrains-tests:
     needs: [core-checks]
@@ -684,14 +631,12 @@ jobs:
       - gui-checks
       - binary-checks
       - vscode-checks
-      - core-tests
       - test-packages
       - vscode-get-test-file-matrix
       - vscode-package-extension-linux
       - vscode-package-extension-macos
       - vscode-download-e2e-dependencies
       - vscode-e2e-tests
-      - gui-tests
       - jetbrains-tests
       - config-yaml-checks
       - build-packages
