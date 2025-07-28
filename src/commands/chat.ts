@@ -25,7 +25,7 @@ export interface ChatOptions extends BaseCommandOptions {
   resume?: boolean;
 }
 
-async function initializeChatHistory(
+export async function initializeChatHistory(
   options: ChatOptions
 ): Promise<ChatCompletionMessageParam[]> {
   let chatHistory: ChatCompletionMessageParam[] = [];

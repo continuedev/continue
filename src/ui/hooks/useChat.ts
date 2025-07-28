@@ -10,7 +10,6 @@ import {
   StreamCallbacks,
   streamChatResponse,
 } from "../../streamChatResponse.js";
-import { constructSystemMessage } from "../../systemMessage.js";
 import telemetryService from "../../telemetry/telemetryService.js";
 import { formatToolCall } from "../../tools/formatters.js";
 import { formatError } from "../../util/formatError.js";
@@ -18,6 +17,7 @@ import logger from "../../util/logger.js";
 
 import { DisplayMessage } from "../types.js";
 import { posthogService } from "../../telemetry/posthogService.js";
+import { initializeChatHistory } from "../../commands/chat.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;
@@ -60,35 +60,8 @@ export function useChat({
         return [];
       }
 
-      let history: ChatCompletionMessageParam[] = [];
-
-      if (resume) {
-        const savedHistory = loadSession();
-        if (savedHistory) {
-          history = savedHistory;
-        }
-      }
-
-      if (history.length === 0) {
-        const rulesSystemMessage = "";
-        const systemMessage = constructSystemMessage(
-          rulesSystemMessage,
-          additionalRules
-        );
-        if (systemMessage instanceof Promise) {
-          // Handle the promise case - we'll need to initialize this asynchronously
-          systemMessage.then((resolvedMessage) => {
-            if (resolvedMessage) {
-              history.push({ role: "system", content: resolvedMessage });
-              setChatHistory([...history]);
-            }
-          });
-        } else if (systemMessage) {
-          history.push({ role: "system", content: systemMessage });
-        }
-      }
-
-      return history;
+      // Initialize with empty array - will be populated asynchronously
+      return [];
     }
   );
 
@@ -230,31 +203,20 @@ export function useChat({
   }, [isRemoteMode, remoteUrl, responseStartTime]);
 
   useEffect(() => {
-    // Skip system message initialization in remote mode
+    // Skip initialization in remote mode
     if (isRemoteMode) return;
 
-    // Initialize system message asynchronously
-    const initializeSystemMessage = async () => {
-      if (
-        chatHistory.length === 0 ||
-        !chatHistory.some((msg) => msg.role === "system")
-      ) {
-        const rulesSystemMessage = "";
-        const systemMessage = await constructSystemMessage(
-          rulesSystemMessage,
-          additionalRules
-        );
-        if (systemMessage) {
-          const newHistory = [
-            { role: "system" as const, content: systemMessage },
-          ];
-          setChatHistory(newHistory);
-        }
-      }
+    // Initialize chat history using the shared function
+    const initializeHistory = async () => {
+      const history = await initializeChatHistory({
+        resume,
+        rule: additionalRules,
+      });
+      setChatHistory(history);
     };
 
-    initializeSystemMessage();
-  }, [isRemoteMode]);
+    initializeHistory();
+  }, [isRemoteMode, resume, additionalRules]);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -661,14 +623,10 @@ export function useChat({
   };
 
   const resetChatHistory = async () => {
-    const rulesSystemMessage = "";
-    const systemMessage = await constructSystemMessage(
-      rulesSystemMessage,
-      additionalRules
-    );
-    const newHistory = systemMessage
-      ? [{ role: "system" as const, content: systemMessage }]
-      : [];
+    const newHistory = await initializeChatHistory({
+      resume: false, // Don't resume when resetting
+      rule: additionalRules,
+    });
     setChatHistory(newHistory);
     setMessages([]);
   };

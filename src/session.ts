@@ -1,7 +1,7 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import fs from "fs";
-import path from "path";
+import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import os from "os";
+import path from "path";
 import logger from "./util/logger.js";
 
 /**
@@ -13,19 +13,20 @@ function getSessionId(): string {
   if (process.env.CONTINUE_CLI_TEST_SESSION_ID) {
     return `continue-cli-${process.env.CONTINUE_CLI_TEST_SESSION_ID}`;
   }
-  
+
   // Use a combination of terminal session ID and process ID to ensure uniqueness
   // For tmux, use TMUX_PANE which is unique per pane
-  const terminalSession = process.env.TMUX_PANE || 
-                          process.env.TERM_SESSION_ID || 
-                          process.env.SSH_TTY || 
-                          process.env.TMUX || 
-                          process.env.STY || 
-                          process.pid.toString();
-  
+  const terminalSession =
+    process.env.TMUX_PANE ||
+    process.env.TERM_SESSION_ID ||
+    process.env.SSH_TTY ||
+    process.env.TMUX ||
+    process.env.STY ||
+    process.pid.toString();
+
   // Clean up the session ID to be filesystem-safe
-  const cleanSessionId = terminalSession.replace(/[^a-zA-Z0-9-_]/g, '-');
-  
+  const cleanSessionId = terminalSession.replace(/[^a-zA-Z0-9-_]/g, "-");
+
   return `continue-cli-${cleanSessionId}`;
 }
 
@@ -35,24 +36,24 @@ function getSessionId(): string {
 function getSessionDir(): string {
   // For tests, use the test directory if we're in test mode
   if (process.env.CONTINUE_CLI_TEST && process.env.HOME) {
-    const sessionDir = path.join(process.env.HOME, '.continue-cli', 'sessions');
-    
+    const sessionDir = path.join(process.env.HOME, ".continue-cli", "sessions");
+
     // Create directory if it doesn't exist
     if (!fs.existsSync(sessionDir)) {
       fs.mkdirSync(sessionDir, { recursive: true });
     }
-    
+
     return sessionDir;
   }
-  
+
   const homeDir = os.homedir();
-  const sessionDir = path.join(homeDir, '.continue-cli', 'sessions');
-  
+  const sessionDir = path.join(homeDir, ".continue-cli", "sessions");
+
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {
     fs.mkdirSync(sessionDir, { recursive: true });
   }
-  
+
   return sessionDir;
 }
 
@@ -73,12 +74,12 @@ export function saveSession(chatHistory: ChatCompletionMessageParam[]): void {
     const sessionFilePath = getSessionFilePath();
     const sessionData = {
       timestamp: new Date().toISOString(),
-      chatHistory
+      chatHistory,
     };
-    
+
     fs.writeFileSync(sessionFilePath, JSON.stringify(sessionData, null, 2));
   } catch (error) {
-    logger.error('Error saving session:', error);
+    logger.error("Error saving session:", error);
   }
 }
 
@@ -87,16 +88,17 @@ export function saveSession(chatHistory: ChatCompletionMessageParam[]): void {
  */
 export function loadSession(): ChatCompletionMessageParam[] | null {
   try {
-    const sessionFilePath = getSessionFilePath();
-    
+    const sessionFilePath =
+      "/Users/nate/.continue-cli/sessions/continue-cli-94507.json"; // getSessionFilePath();
+
     if (!fs.existsSync(sessionFilePath)) {
       return null;
     }
-    
-    const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf8'));
+
+    const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
     return sessionData.chatHistory || null;
   } catch (error) {
-    logger.error('Error loading session:', error);
+    logger.error("Error loading session:", error);
     return null;
   }
 }
@@ -111,7 +113,7 @@ export function clearSession(): void {
       fs.unlinkSync(sessionFilePath);
     }
   } catch (error) {
-    logger.error('Error clearing session:', error);
+    logger.error("Error clearing session:", error);
   }
 }
 
