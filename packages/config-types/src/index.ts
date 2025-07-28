@@ -205,7 +205,7 @@ export type DevData = z.infer<typeof devDataSchema>;
 
 export const siteIndexingConfigSchema = z.object({
   startUrl: z.string(),
-  rootUrl: z.string().optional(),
+  // rootUrl: z.string(),
   title: z.string(),
   maxDepth: z.number().optional(),
   faviconUrl: z.string().optional(),
