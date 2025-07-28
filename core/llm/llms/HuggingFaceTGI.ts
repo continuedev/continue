@@ -25,7 +25,7 @@ class HuggingFaceTGI extends BaseLLM {
         }
         const json = await response.json();
         this.model = json.model_id;
-        this.contextLength = Number.parseInt(json.max_input_length);
+        this._contextLength = Number.parseInt(json.max_input_length);
       })
       .catch((e) => {
         console.log(`Failed to list models for HuggingFace TGI: ${e.message}`);
