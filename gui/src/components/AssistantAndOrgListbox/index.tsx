@@ -1,5 +1,5 @@
 import { ArrowPathIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { isOnPremSession } from "core/control-plane/AuthTypes";
+import { AuthType, isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -98,49 +98,32 @@ export function AssistantAndOrgListbox() {
     };
   }, [currentOrg, selectedProfile]);
 
-  if (!selectedProfile) {
-    return (
-      <div
-        onClick={() => {
-          void ideMessenger.request("controlPlane/openUrl", {
-            path: "/new?type=assistant",
-            orgSlug: currentOrg?.slug,
-          });
-        }}
-        className="text-description flex cursor-pointer select-none items-center gap-1"
-        style={{ fontSize: smallFont }}
-      >
-        <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
-        <span
-          className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-        >
-          Create your first assistant
-        </span>
-      </div>
-    );
-  }
-
   return (
     <Listbox>
       <div className="relative" ref={listboxRef}>
         <SelectedAssistantButton selectedProfile={selectedProfile} />
         <Transition>
           <ListboxOptions className="-translate-x-1.5 pb-0">
-            {shouldRenderOrgInfo && (
-              <div className="border-border border-x-0 border-t-0 border-solid px-2 py-3">
-                <div className="flex flex-col gap-2 pb-1 pl-1">
+            <div className="border-border border-x-0 border-t-0 border-solid px-2 py-3">
+              <div className="flex flex-col gap-2 pb-1 pl-1">
+                {session && session?.AUTH_TYPE !== AuthType.OnPrem && (
                   <span className="text-description-muted flex items-center pb-1">
-                    {session.account.id}
+                    {session?.account.id}
                   </span>
-                  <label className="text-vsc-foreground font-semibold">
-                    Organization
-                  </label>
-                  <ScopeSelect />
-                </div>
+                )}
+                {shouldRenderOrgInfo && (
+                  <>
+                    <label className="text-vsc-foreground font-semibold">
+                      Organization
+                    </label>
+                    <ScopeSelect />
+                  </>
+                )}
               </div>
-            )}
+            </div>
+
             <AssistantOptions
-              selectedProfileId={selectedProfile.id}
+              selectedProfileId={selectedProfile?.id}
               onClose={close}
             />
 
@@ -176,7 +159,7 @@ export function AssistantAndOrgListbox() {
                       configLoading && "animate-spin-slow",
                     )}
                   />
-                  Reload config
+                  Reload assistants
                 </span>
               </ListboxOption>
 
