@@ -61,7 +61,7 @@ export function useChat({
       }
 
       // Initialize with empty array - will be populated asynchronously
-      return [];
+      return resume ? loadSession() ?? [] : [];
     }
   );
 
