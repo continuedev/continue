@@ -77,7 +77,7 @@ export function matchesArguments(
     // Handle glob patterns with wildcards (only for string patterns)
     if (typeof pattern === "string" && (pattern.includes("*") || pattern.includes("?"))) {
       // Convert argValue to string for pattern matching
-      const stringValue = String(argValue || "");
+      const stringValue = String(argValue ?? "");
       
       // Escape all regex metacharacters except * and ?
       const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
