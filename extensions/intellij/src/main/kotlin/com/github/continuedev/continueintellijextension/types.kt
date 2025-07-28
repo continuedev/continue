@@ -144,19 +144,12 @@ data class IdeSettings(
     val continueTestEnvironment: String
 )
 
-<<<<<<< HEAD
-=======
-data class ContinueRcJson(
-    val mergeBehavior: ConfigMergeType
-)
-
 data class TerminalOptions(
     val reuseTerminal: Boolean?,
     val terminalName: String?,
     val waitForCompletion: Boolean?
 )
 
->>>>>>> 3f6eba29474d2956e4e73193ffd49f3a4194a693
 interface IDE {
     suspend fun getIdeInfo(): IdeInfo
 
