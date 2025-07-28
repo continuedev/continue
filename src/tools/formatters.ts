@@ -35,7 +35,8 @@ export function formatToolArgument(value: any): string {
   if (typeof value === "string" && path.isAbsolute(value)) {
     const workspaceRoot = process.cwd();
     const relativePath = path.relative(workspaceRoot, value);
-    return relativePath || value;
+    // Normalize path separators to forward slashes for cross-platform consistency
+    return (relativePath || value).replace(/\\/g, "/");
   }
 
   // Return other values as strings
