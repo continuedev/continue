@@ -83,11 +83,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return model.toLowerCase().includes("gemini");
     },
     vertexai: (model) => {
+      const lowerCaseModel = model.toLowerCase();
       // All gemini models except flash 2.0 lite support function calling
-      return (
-        model.toLowerCase().includes("gemini") &&
-        !model.toLowerCase().includes("lite")
-      );
+      if (lowerCaseModel.includes("lite")) {
+        return false;
+      }
+      return ["claude", "gemini"].some((val) => lowerCaseModel.includes(val));
     },
     bedrock: (model) => {
       if (

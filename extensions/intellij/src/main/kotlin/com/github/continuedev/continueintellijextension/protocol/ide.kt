@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.protocol
 
-import com.github.continuedev.continueintellijextension.*
+import com.github.continuedev.continueintellijextension.Range
+import com.github.continuedev.continueintellijextension.TerminalOptions
 
 data class GetControlPlaneSessionInfoParams(val silent: Boolean, val useOnboarding: Boolean)
 
@@ -60,3 +61,5 @@ data class GetGitRootPathParams(val dir: String)
 data class ListDirParams(val dir: String)
 
 data class GetFileStatsParams(val files: List<String>)
+
+data class RunCommandParams(val command: String, val options: TerminalOptions?)

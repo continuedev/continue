@@ -438,7 +438,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
@@ -494,7 +494,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
@@ -507,7 +507,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
@@ -522,7 +522,10 @@ export class ConfigHandler {
     return config;
   }
 
-  async openConfigProfile(profileId?: string) {
+  async openConfigProfile(
+    profileId?: string,
+    element?: { sourceFile?: string },
+  ) {
     let openProfileId = profileId || this.currentProfile?.profileDescription.id;
     if (!openProfileId) {
       return;
@@ -530,8 +533,10 @@ export class ConfigHandler {
     const profile = this.currentOrg.profiles.find(
       (p) => p.profileDescription.id === openProfileId,
     );
+
     if (profile?.profileDescription.profileType === "local") {
-      await this.ide.openFile(profile.profileDescription.uri);
+      const configFile = element?.sourceFile ?? profile.profileDescription.uri;
+      await this.ide.openFile(configFile);
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);

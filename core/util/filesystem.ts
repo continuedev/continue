@@ -13,6 +13,7 @@ import {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
   ToastType,
@@ -46,6 +47,14 @@ class FileSystemIde implements IDE {
 
   getReferences(location: Location): Promise<RangeInFile[]> {
     return Promise.resolve([]);
+  }
+
+  gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
+  getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    return Promise.resolve(null);
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {

@@ -200,6 +200,7 @@ class Gemini extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
     isV1API: boolean,
+    includeToolIds: boolean,
   ): GeminiChatRequestBody {
     const toolCallIdToNameMap = new Map<string, string>();
     messages.forEach((msg) => {
@@ -231,7 +232,7 @@ class Gemini extends BaseLLM {
               parts: [
                 {
                   functionResponse: {
-                    id: msg.toolCallId,
+                    id: includeToolIds ? msg.toolCallId : undefined,
                     name: functionName || "unknown",
                     response: {
                       output: msg.content, // "output" key is opinionated - not all functions will output objects
@@ -406,7 +407,7 @@ class Gemini extends BaseLLM {
     const isV1API = !!this.apiBase?.includes("/v1/");
 
     // Convert chat messages to contents
-    const body = this.prepareBody(messages, options, isV1API);
+    const body = this.prepareBody(messages, options, isV1API, true);
 
     const response = await this.fetch(apiURL, {
       method: "POST",
