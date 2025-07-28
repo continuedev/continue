@@ -155,7 +155,8 @@ export const streamNormalInput = createAsyncThunk<
       completionOptions = {
         ...completionOptions,
         reasoning: true,
-        reasoningBudgetTokens: completionOptions.reasoningBudgetTokens ?? 2048,
+        reasoningBudgetTokens:
+          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
       };
     }
 
@@ -253,6 +254,7 @@ export const streamNormalInput = createAsyncThunk<
               rules: appliedRules.map((rule) => ({
                 id: getRuleId(rule),
                 rule: rule.rule,
+                slug: rule.slug,
               })),
             }),
           },
