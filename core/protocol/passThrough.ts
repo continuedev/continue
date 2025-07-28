@@ -68,10 +68,11 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "tools/call",
     "controlPlane/openUrl",
     "controlPlane/getModelsAddOnUpgradeUrl",
+    "controlPlane/getEnvironmentType",
+    "controlPlane/getFreeTrialStatus",
     "isItemTooBig",
     "process/markAsBackgrounded",
     "process/isBackgrounded",
-    "controlPlane/getFreeTrialStatus",
   ];
 
 // Message types to pass through from core to webview

@@ -43,7 +43,10 @@ import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../autocomplete/types";
 import { ConfigHandler } from "../config/ConfigHandler";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
+import {
+  ControlPlaneEnv,
+  ControlPlaneSessionInfo,
+} from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
 
 export enum OnboardingModes {
@@ -248,6 +251,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
+  "controlPlane/getEnvironmentType": [undefined, ControlPlaneEnv];
   "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
   "controlPlane/getModelsAddOnUpgradeUrl": [
     { vsCodeUriScheme?: string },

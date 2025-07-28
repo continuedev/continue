@@ -1,5 +1,5 @@
 import { OnboardingModes } from "core/protocol/core";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv } from ".";
@@ -28,8 +28,9 @@ import {
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
-const LayoutTopDiv = styled(CustomScrollbarDiv)`
+const LayoutTopDiv = styled(CustomScrollbarDiv)<{ showBorder: boolean }>`
   height: 100%;
+  border-top: ${(props) => (props.showBorder ? "1px solid yellow" : "none")};
   position: relative;
   overflow-x: hidden;
 `;
@@ -42,18 +43,30 @@ const GridDiv = styled.div`
 `;
 
 const Layout = () => {
+  const [showBorder, setShowBorder] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
   const ideMessenger = useContext(IdeMessengerContext);
-  const currentSessionId = useAppSelector((state) => state.session.id);
 
   const { mainEditor } = useMainEditor();
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+
+  useEffect(() => {
+    (async () => {
+      const response = await ideMessenger.request(
+        "controlPlane/getEnvironmentType",
+        undefined,
+      );
+      console.log("debug2 response was", response);
+      response.status === "success" &&
+        setShowBorder(response.content.AUTH_TYPE.includes("staging"));
+    })();
+  }, []);
 
   useWebviewListener(
     "newSession",
@@ -235,7 +248,7 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-        <LayoutTopDiv>
+        <LayoutTopDiv showBorder={showBorder}>
           <LumpProvider>
             <OSRContextMenu />
             <div
@@ -257,7 +270,7 @@ const Layout = () => {
                 message={dialogMessage}
               />
 
-              <GridDiv className="">
+              <GridDiv>
                 <PostHogPageView />
                 <Outlet />
                 <FatalErrorIndicator />
