@@ -94,14 +94,16 @@ export function checkToolPermission(
   let policies = permissions?.policies;
   
   if (!policies) {
-    try {
-      const serviceResult = getServiceSync<ToolPermissionServiceState>(
-        SERVICE_NAMES.TOOL_PERMISSIONS
-      );
-      policies = serviceResult.value?.permissions.policies || DEFAULT_TOOL_POLICIES;
-    } catch {
-      // Service not initialized yet, use defaults
+    const serviceResult = getServiceSync<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS
+    );
+    
+    // Only use defaults if service is not ready, not registered, or has no value
+    // This allows critical runtime errors to propagate properly
+    if (serviceResult.state !== 'ready' || !serviceResult.value) {
       policies = DEFAULT_TOOL_POLICIES;
+    } else {
+      policies = serviceResult.value.permissions.policies || DEFAULT_TOOL_POLICIES;
     }
   }
 

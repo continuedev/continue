@@ -55,7 +55,7 @@ export class ServiceContainer extends EventEmitter {
     });
 
     // Emit ready event
-    this.emit(`service:${serviceName}:ready`, value);
+    this.emit(`${serviceName}:ready`, value);
 
     logger.debug(`Registered service with immediate value: ${serviceName}`);
   }
