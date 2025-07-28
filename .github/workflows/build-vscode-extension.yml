@@ -87,6 +87,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-build-${{ hashFiles('**/package-lock.json') }}
+
       - name: Cache extension node_modules
         uses: actions/cache@v4
         with:
@@ -104,6 +110,13 @@ jobs:
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
+      - name: Cache packages node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/node_modules
+          key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
 
       # Build all packages using the authoritative build script
       - name: Build packages

@@ -29,11 +29,65 @@ jobs:
   build:
     needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/build-vscode-extension.yml
-    with:
-      # Uses default platforms (all supported platforms)
-      pre-release: false
-    secrets: inherit
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-13
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-13
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.npm_config_arch }}
+          pre-release: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          path: "extensions/vscode/*.vsix"
 
   check-version:
     runs-on: ubuntu-latest
