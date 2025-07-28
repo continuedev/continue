@@ -11,7 +11,6 @@ on:
       - main
 
 jobs:
-
   prettier-check:
     runs-on: ubuntu-latest
     steps:
@@ -63,7 +62,6 @@ jobs:
           # Tests are currently failing, commenting out for now
           # npm test
 
-
   core-checks:
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +82,6 @@ jobs:
           npm run lint
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
 
   gui-checks:
     runs-on: ubuntu-latest
@@ -130,7 +127,6 @@ jobs:
         run: |
           cd binary
           npx tsc --noEmit
-
 
   vscode-checks:
     runs-on: ubuntu-latest
@@ -299,19 +295,8 @@ jobs:
         run: |
           echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
 
-  vscode-package-extension:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-            npm_config_arch: x64
-          - os: macos-13
-            platform: darwin
-            arch: x64
-            npm_config_arch: x64
+  vscode-package-extension-linux:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -323,9 +308,9 @@ jobs:
 
       - uses: ./.github/actions/build-vscode-extension
         with:
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-          npm_config_arch: ${{ matrix.npm_config_arch }}
+          platform: linux
+          arch: x64
+          npm_config_arch: x64
           pre-release: false
           commit-sha: ${{ github.sha }}
         env:
@@ -334,13 +319,46 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vscode-extension-build-${{ runner.os }}
+          name: vscode-extension-build-Linux
           path: extensions/vscode/build
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          name: linux-x64-vsix
+          path: "extensions/vscode/*.vsix"
+
+  vscode-package-extension-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: darwin
+          arch: x64
+          npm_config_arch: x64
+          pre-release: false
+          commit-sha: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-build-macOS
+          path: extensions/vscode/build
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: darwin-x64-vsix
           path: "extensions/vscode/*.vsix"
 
   vscode-download-e2e-dependencies:
@@ -386,7 +404,7 @@ jobs:
       [
         vscode-download-e2e-dependencies,
         vscode-get-test-file-matrix,
-        vscode-package-extension,
+        vscode-package-extension-linux,
       ]
     runs-on: ubuntu-latest
     # Tests requiring secrets need approval from maintainers
@@ -669,7 +687,8 @@ jobs:
       - core-tests
       - test-packages
       - vscode-get-test-file-matrix
-      - vscode-package-extension
+      - vscode-package-extension-linux
+      - vscode-package-extension-macos
       - vscode-download-e2e-dependencies
       - vscode-e2e-tests
       - gui-tests
