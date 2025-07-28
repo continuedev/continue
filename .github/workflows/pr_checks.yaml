@@ -15,7 +15,10 @@ jobs:
   prettier-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
         id: root-cache
@@ -33,13 +36,19 @@ jobs:
   build-packages:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
 
   config-yaml-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
 
       - uses: actions/cache@v4
@@ -58,7 +67,10 @@ jobs:
   core-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
       - uses: ./.github/actions/setup-component
         with:
@@ -77,7 +89,10 @@ jobs:
   gui-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
       - uses: ./.github/actions/setup-component
         with:
@@ -97,7 +112,10 @@ jobs:
   binary-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
       - uses: ./.github/actions/setup-component
         with:
@@ -164,7 +182,10 @@ jobs:
   core-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
       - uses: ./.github/actions/setup-component
         with:
@@ -194,7 +215,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         package: [hub, config-yaml, fetch, openai-adapters]
     steps:
-      - uses: ./.github/actions/setup-node-base
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - uses: ./.github/actions/setup-packages
 
       - name: Test ${{ matrix.package }}
