@@ -156,16 +156,22 @@ export class ControlPlaneClient {
     // take effect. Otherwise the organization(s) won't show up.
     // This error manifests as a 404 (user not found)
     let retries = 0;
-    const maxRetries = 5;
+    const maxRetries = 10;
     const maxWaitTime = 20000; // 20 seconds in milliseconds
 
-    while (true) {
+    while (retries < maxRetries) {
       const resp = await this.request("ide/list-organizations", {
         method: "GET",
       });
 
       if (resp.status === 404) {
         retries++;
+        if (retries >= maxRetries) {
+          console.warn(
+            `Failed to list organizations after ${maxRetries} retries: user not found`,
+          );
+          return [];
+        }
         const waitTime = Math.min(
           Math.pow(2, retries) * 100,
           maxWaitTime / maxRetries,
@@ -181,6 +187,12 @@ export class ControlPlaneClient {
       const { organizations } = (await resp.json()) as any;
       return organizations;
     }
+
+    // This should never be reached due to the while condition, but adding for safety
+    console.warn(
+      `Failed to list organizations after ${maxRetries} retries: maximum attempts exceeded`,
+    );
+    return [];
   }
 
   public async listAssistantFullSlugs(
