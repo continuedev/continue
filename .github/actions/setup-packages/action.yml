@@ -23,10 +23,12 @@ runs:
       shell: bash
       run: |
         for package_dir in packages/*/; do
-          if [ -f "$package_dir/package.json" ]; then
+          if [ -f "$package_dir/package.json" ] && [ ! -d "$package_dir/node_modules" ]; then
             echo "Installing dependencies for $package_dir"
             cd "$package_dir"
             npm ci
             cd - > /dev/null
+          elif [ -d "$package_dir/node_modules" ]; then
+            echo "Using cached dependencies for $package_dir"
           fi
         done
