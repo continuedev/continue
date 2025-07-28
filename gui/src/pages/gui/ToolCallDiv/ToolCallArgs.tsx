@@ -4,13 +4,11 @@ import { ToolbarButtonWithTooltip } from "../../../components/StyledMarkdownPrev
 interface ArgsToggleIconProps {
   isShowing: boolean;
   setIsShowing: (val: boolean) => void;
-  toolCallId: string;
 }
 
 export const ArgsToggleIcon = ({
   isShowing,
   setIsShowing,
-  toolCallId,
 }: ArgsToggleIconProps) => {
   return (
     <ToolbarButtonWithTooltip

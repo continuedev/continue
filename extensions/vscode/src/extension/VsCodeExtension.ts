@@ -100,7 +100,6 @@ export class VsCodeExtension {
       resolveConfigHandler = resolve;
     });
     this.sidebar = new ContinueGUIWebviewViewProvider(
-      configHandlerPromise,
       this.windowId,
       this.extensionContext,
     );
@@ -147,8 +146,10 @@ export class VsCodeExtension {
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
 
-    void setupRemoteConfigSync(
-      this.configHandler.reloadConfig.bind(this.configHandler),
+    void setupRemoteConfigSync(() =>
+      this.configHandler.reloadConfig.bind(this.configHandler)(
+        "Remote config sync",
+      ),
     );
 
     void this.configHandler.loadConfig().then(({ config }) => {
@@ -284,7 +285,9 @@ export class VsCodeExtension {
       if (stats.size === 0) {
         return;
       }
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Global JSON config updated - fs file watch",
+      );
     });
 
     fs.watchFile(
@@ -294,7 +297,9 @@ export class VsCodeExtension {
         if (stats.size === 0) {
           return;
         }
-        await this.configHandler.reloadConfig();
+        await this.configHandler.reloadConfig(
+          "Global YAML config updated - fs file watch",
+        );
       },
     );
 
@@ -302,7 +307,7 @@ export class VsCodeExtension {
       if (stats.size === 0) {
         return;
       }
-      void this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig("config.ts updated - fs file watch");
     });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
@@ -363,7 +368,7 @@ export class VsCodeExtension {
         );
 
         if (e.provider.id === "github") {
-          this.configHandler.reloadConfig();
+          this.configHandler.reloadConfig("Github sign-in status changed");
         }
       }
     });

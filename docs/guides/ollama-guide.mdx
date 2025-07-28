@@ -3,7 +3,7 @@ title: "Using Ollama with Continue: A Developer's Guide"
 description: "This comprehensive guide will walk you through setting up Ollama with Continue for powerful local AI development. Ollama allows you to run large language models locally on your machine, providing privacy, control, and offline capabilities for AI-assisted coding."
 ---
 
-## Prerequisites[​](#prerequisites "Direct link to Prerequisites")
+## Prerequisites
 
 Before getting started, ensure your system meets these requirements:
 
@@ -12,29 +12,39 @@ Before getting started, ensure your system meets these requirements:
 - Storage: At least 10GB free space
 - Continue extension installed
 
-## Installation Steps[​](#installation-steps "Direct link to Installation Steps")
+## Installation Steps
 
-### Step 1: Install Ollama[​](#step-1-install-ollama "Direct link to Step 1: Install Ollama")
+### Step 1: Install Ollama
 
 Choose the installation method for your operating system:
 
 ```
-# macOSbrew install ollama# Linuxcurl -fsSL https://ollama.ai/install.sh | sh# Windows# Download from ollama.ai
+# macOS
+brew install ollama
+
+# Linux
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Windows
+# Download from ollama.ai
 ```
 
-### Step 2: Download Models[​](#step-2-download-models "Direct link to Step 2: Download Models")
+### Step 2: Download Models
 
 After installing Ollama, download the models you want to use. Here are some popular options:
 
 ```
-# Popular models for developmentollama pull llama2ollama pull codellamaollama pull mistral
+# Popular models for development
+ollama pull llama2
+ollama pull codellama
+ollama pull mistral
 ```
 
-## Configuration[​](#configuration "Direct link to Configuration")
+## Configuration
 
 Configure Continue to work with your local Ollama instance:
 
-### Continue Configuration[​](#continue-configuration "Direct link to Continue Configuration")
+### Continue Configuration
 
 ```json
 {
@@ -49,7 +59,7 @@ Configure Continue to work with your local Ollama instance:
 }
 ```
 
-### Advanced Settings[​](#advanced-settings "Direct link to Advanced Settings")
+### Advanced Settings
 
 For optimal performance, consider these advanced configuration options:
 
@@ -58,9 +68,9 @@ For optimal performance, consider these advanced configuration options:
 - Custom model parameters
 - Performance tuning
 
-## Best Practices[​](#best-practices "Direct link to Best Practices")
+## Best Practices
 
-### Model Selection[​](#model-selection "Direct link to Model Selection")
+### Model Selection
 
 Choose models based on your specific needs:
 
@@ -68,7 +78,7 @@ Choose models based on your specific needs:
 2. **Chat**: Llama2 or Mistral
 3. **Specialized Tasks**: Domain-specific models
 
-### Performance Optimization[​](#performance-optimization "Direct link to Performance Optimization")
+### Performance Optimization
 
 To get the best performance from Ollama:
 
@@ -77,25 +87,25 @@ To get the best performance from Ollama:
 - Use appropriate model sizes
 - Enable GPU acceleration when available
 
-## Troubleshooting[​](#troubleshooting "Direct link to Troubleshooting")
+## Troubleshooting
 
-### Common Issues[​](#common-issues "Direct link to Common Issues")
+### Common Issues
 
 Here are solutions to common problems you might encounter:
 
-#### Connection Problems[​](#connection-problems "Direct link to Connection Problems")
+#### Connection Problems
 
 - Check Ollama service status
 - Verify port availability
 - Review firewall settings
 
-#### Performance Issues[​](#performance-issues "Direct link to Performance Issues")
+#### Performance Issues
 
 - Insufficient RAM
 - Model too large for system
 - GPU compatibility
 
-### Solutions[​](#solutions "Direct link to Solutions")
+### Solutions
 
 Try these solutions in order:
 
@@ -104,15 +114,15 @@ Try these solutions in order:
 3. Update to latest version
 4. Check system requirements
 
-## Example Workflows[​](#example-workflows "Direct link to Example Workflows")
+## Example Workflows
 
-### Code Generation[​](#code-generation "Direct link to Code Generation")
+### Code Generation
 
 ```
 # Example: Generate a FastAPI endpointdef create_user_endpoint():    # Continue will help generate the implementation    pass
 ```
 
-### Code Review[​](#code-review "Direct link to Code Review")
+### Code Review
 
 Use Continue with Ollama to:
 
@@ -121,7 +131,7 @@ Use Continue with Ollama to:
 - Identify potential bugs
 - Generate documentation
 
-## Conclusion[​](#conclusion "Direct link to Conclusion")
+## Conclusion
 
 Ollama with Continue provides a powerful local development environment for AI-assisted coding. You now have complete control over your AI models, ensuring privacy and enabling offline development workflows.
 

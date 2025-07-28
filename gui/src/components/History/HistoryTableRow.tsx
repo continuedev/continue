@@ -17,11 +17,9 @@ import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 export function HistoryTableRow({
   sessionMetadata,
-  date,
   index,
 }: {
   sessionMetadata: SessionMetadata;
-  date: Date;
   index: number;
 }) {
   const dispatch = useAppDispatch();
@@ -67,7 +65,7 @@ export function HistoryTableRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       data-testid={`history-row-${index}`}
-      className="hover:bg-vsc-editor-background relative box-border flex cursor-pointer overflow-hidden rounded-lg p-3"
+      className="border-border relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg border border-solid p-3"
       onClick={async () => {
         await dispatch(exitEdit({}));
         if (sessionMetadata.sessionId !== currentSessionId) {
@@ -81,9 +79,9 @@ export function HistoryTableRow({
         navigate("/");
       }}
     >
-      <div className="flex-1 cursor-pointer space-y-1">
+      <td className="flex-1 cursor-pointer space-y-1">
         {editing ? (
-          <div className="text-md">
+          <div>
             <Input
               type="text"
               className="w-full"
@@ -95,13 +93,13 @@ export function HistoryTableRow({
             />
           </div>
         ) : (
-          <span className="line-clamp-1 break-all text-base font-semibold">
+          <span className="line-clamp-1 break-all text-sm font-semibold">
             {sessionMetadata.title}
           </span>
         )}
 
-        <div className="flex" style={{ color: "#9ca3af" }}>
-          <span className="line-clamp-1 break-all">
+        <div className="text-description-muted flex">
+          <span className="line-clamp-1 break-all text-xs">
             {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
           </span>
           {/* Uncomment to show the date */}
@@ -116,10 +114,10 @@ export function HistoryTableRow({
                 })}
               </span> */}
         </div>
-      </div>
+      </td>
 
       {hovered && !editing && (
-        <div className="bg-vsc-background absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-2 rounded-full py-1.5 pl-4 pr-4 shadow-md">
+        <td className="bg-badge absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
           <HeaderButtonWithToolTip
             text="Edit"
             onClick={async (e) => {
@@ -127,7 +125,7 @@ export function HistoryTableRow({
               setEditing(true);
             }}
           >
-            <PencilSquareIcon width="1.3em" height="1.3em" />
+            <PencilSquareIcon width="1em" height="1em" />
           </HeaderButtonWithToolTip>
           <HeaderButtonWithToolTip
             text="Delete"
@@ -136,9 +134,9 @@ export function HistoryTableRow({
               await dispatch(deleteSession(sessionMetadata.sessionId));
             }}
           >
-            <TrashIcon width="1.3em" height="1.3em" />
+            <TrashIcon width="1em" height="1em" />
           </HeaderButtonWithToolTip>
-        </div>
+        </td>
       )}
     </tr>
   );

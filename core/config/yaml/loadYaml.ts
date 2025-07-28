@@ -56,6 +56,8 @@ function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       rule: rule.rule,
       globs: rule.globs,
       name: rule.name,
+      ruleFile: rule.sourceFile,
+      alwaysApply: rule.alwaysApply,
     };
   }
 }
@@ -235,6 +237,8 @@ async function configYamlToContinueConfig(options: {
     startUrl: doc.startUrl,
     rootUrl: doc.rootUrl,
     faviconUrl: doc.faviconUrl,
+    useLocalCrawling: doc.useLocalCrawling,
+    sourceFile: doc.sourceFile,
   }));
 
   config.mcpServers?.forEach((mcpServer) => {
@@ -427,6 +431,7 @@ async function configYamlToContinueConfig(options: {
     (config.mcpServers ?? []).map((server) => ({
       id: server.name,
       name: server.name,
+      sourceFile: server.sourceFile,
       transport: {
         type: "stdio",
         args: [],

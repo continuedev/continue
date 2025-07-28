@@ -53,7 +53,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("sambanova"),
     z.literal("text-gen-webui"),
     z.literal("vllm"),
-    z.literal("x-ai"),
+    z.literal("xAI"),
     z.literal("scaleway"),
     z.literal("ncompass"),
     z.literal("relace"),
@@ -90,6 +90,17 @@ export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("llamastack"),
 });
 export type LlamastackConfig = z.infer<typeof LlamastackConfigSchema>;
+
+export const ContinueProxyConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("continue-proxy"),
+  env: z.object({
+    apiKeyLocation: z.string().optional(),
+    envSecretLocations: z.record(z.string(), z.string()).optional(),
+    orgScopeId: z.string().nullable(),
+    proxyUrl: z.string().optional(),
+  }),
+});
+export type ContinueProxyConfig = z.infer<typeof ContinueProxyConfigSchema>;
 
 export const MockConfigSchema = BasePlusConfig.extend({
   provider: z.literal("mock"),
@@ -154,6 +165,19 @@ export const InceptionConfigSchema = OpenAIConfigSchema.extend({
 });
 export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 
+export const VertexAIConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("vertexai"),
+  env: z
+    .object({
+      region: z.string().optional(),
+      projectId: z.string().optional(),
+      keyFile: z.string().optional(),
+      keyJson: z.string().optional(),
+    })
+    .optional(),
+});
+export type VertexAIConfig = z.infer<typeof VertexAIConfigSchema>;
+
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
@@ -168,6 +192,8 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  VertexAIConfigSchema,
   LlamastackConfigSchema,
+  ContinueProxyConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

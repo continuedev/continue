@@ -163,3 +163,15 @@ export function getExtensionVersion(): string {
 export function getvsCodeUriScheme(): string {
   return vscode.env.uriScheme;
 }
+
+export function isExtensionPrerelease(): boolean {
+  const extensionVersion = getExtensionVersion();
+  const versionParts = extensionVersion.split(".");
+  if (versionParts.length >= 2) {
+    const minorVersion = parseInt(versionParts[1], 10);
+    if (!isNaN(minorVersion)) {
+      return minorVersion % 2 !== 0;
+    }
+  }
+  return false;
+}
