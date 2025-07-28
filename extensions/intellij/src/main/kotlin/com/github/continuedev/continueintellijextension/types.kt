@@ -16,11 +16,6 @@ enum class FileType(val value: Int) {
     SYMBOLIC_LINK(64)
 }
 
-enum class ConfigMergeType {
-    MERGE,
-    OVERWRITE
-}
-
 data class Position(val line: Int, val character: Int)
 
 data class Range(val start: Position, val end: Position)
@@ -64,6 +59,68 @@ data class RangeInFileWithContents(
     val contents: String
 )
 
+/**
+ * Signature help represents the signature of something
+ * callable. There can be multiple signatures but only one
+ * active and only one active parameter.
+ */
+data class SignatureHelp(
+    /**
+     * One or more signatures.
+     */
+    val signatures: List<SignatureInformation>,
+
+    /**
+     * The active signature.
+     */
+    val activeSignature: Int,
+
+    /**
+     * The active parameter of the active signature.
+     */
+    val activeParameter: Int
+)
+
+/**
+ * Represents the signature of something callable. A signature
+ * can have a label, like a function-name, a doc-comment, and
+ * a set of parameters.
+ */
+data class SignatureInformation(
+    /**
+     * The label of this signature. Will be shown in
+     * the UI.
+     */
+    val label: String,
+
+    /**
+     * The parameters of this signature.
+     */
+    val parameters: List<ParameterInformation>,
+
+    /**
+     * The index of the active parameter.
+     *
+     * If provided, this is used in place of [SignatureHelp.activeParameter].
+     */
+    val activeParameter: Int? = null
+)
+
+/**
+ * Represents a parameter of a callable-signature. A parameter can
+ * have a label and a doc-comment.
+ */
+data class ParameterInformation(
+    /**
+     * The label of this signature.
+     *
+     * Either a string or inclusive start and exclusive end offsets within its containing
+     * [SignatureInformation.label] signature label. *Note*: A label of type string must be
+     * a substring of its containing signature information's [SignatureInformation.label] label.
+     */
+    val label: String // Note: Kotlin doesn't have union types, so this represents the string case
+)
+
 data class DocumentSymbol(
     val name: String,
     val kind: String,
@@ -94,10 +151,11 @@ data class IdeSettings(
     val continueTestEnvironment: String
 )
 
-data class ContinueRcJson(
-    val mergeBehavior: ConfigMergeType
+data class TerminalOptions(
+    val reuseTerminal: Boolean?,
+    val terminalName: String?,
+    val waitForCompletion: Boolean?
 )
-
 
 interface IDE {
     suspend fun getIdeInfo(): IdeInfo
@@ -127,8 +185,6 @@ interface IDE {
 
     suspend fun getWorkspaceDirs(): List<String>
 
-    suspend fun getWorkspaceConfigs(): List<ContinueRcJson>
-
     suspend fun fileExists(filepath: String): Boolean
 
     suspend fun writeFile(path: String, contents: String)
@@ -141,7 +197,7 @@ interface IDE {
 
     suspend fun openUrl(url: String)
 
-    suspend fun runCommand(command: String)
+    suspend fun runCommand(command: String, options: TerminalOptions?)
 
     suspend fun saveFile(filepath: String)
 
@@ -199,6 +255,8 @@ interface IDE {
 
     // LSP
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
+    suspend fun gotoTypeDefinition(location: Location): List<RangeInFile>
+    suspend fun getSignatureHelp(location: Location): SignatureHelp?
     suspend fun getReferences(location: Location): List<RangeInFile>
     suspend fun getDocumentSymbols(textDocumentIdentifier: String): List<DocumentSymbol>
 
@@ -230,6 +288,7 @@ data class ApplyState(
     val numDiffs: Int? = null,
     val filepath: String? = null,
     val fileContent: String? = null,
+    val originalFileContent: String? = null,
     val toolCallId: String? = null
 )
 

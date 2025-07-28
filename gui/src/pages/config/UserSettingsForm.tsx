@@ -71,6 +71,10 @@ export function UserSettingsForm() {
     handleUpdate({ optInNextEditFeature: value });
   };
 
+  const handleEnableStaticContextualizationToggle = (value: boolean) => {
+    handleUpdate({ enableStaticContextualization: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -88,10 +92,14 @@ export function UserSettingsForm() {
     config.experimental?.useCurrentFileAsContext ?? false;
   const enableExperimentalTools =
     config.experimental?.enableExperimentalTools ?? false;
+  const onlyUseSystemMessageTools =
+    config.experimental?.onlyUseSystemMessageTools ?? false;
   const optInNextEditFeature =
     config.experimental?.optInNextEditFeature ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
+  const enableStaticContextualization =
+    config.experimental?.enableStaticContextualization ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -420,6 +428,16 @@ export function UserSettingsForm() {
                 />
 
                 <ToggleSwitch
+                  isToggled={onlyUseSystemMessageTools}
+                  onToggle={() =>
+                    handleUpdate({
+                      onlyUseSystemMessageTools: !onlyUseSystemMessageTools,
+                    })
+                  }
+                  text="Only use system message tools"
+                />
+
+                <ToggleSwitch
                   isToggled={codebaseToolCallingOnly}
                   onToggle={() =>
                     handleUpdate({
@@ -433,6 +451,12 @@ export function UserSettingsForm() {
                   <ContinueFeaturesMenu
                     optInNextEditFeature={optInNextEditFeature}
                     handleOptInNextEditToggle={handleOptInNextEditToggle}
+                    enableStaticContextualization={
+                      enableStaticContextualization
+                    }
+                    handleEnableStaticContextualizationToggle={
+                      handleEnableStaticContextualizationToggle
+                    }
                   />
                 )}
               </div>

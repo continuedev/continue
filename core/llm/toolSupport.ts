@@ -1,4 +1,5 @@
 import { parseProxyModelName } from "@continuedev/config-yaml";
+import { ModelDescription } from "..";
 
 export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
   {
@@ -83,11 +84,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return model.toLowerCase().includes("gemini");
     },
     vertexai: (model) => {
+      const lowerCaseModel = model.toLowerCase();
       // All gemini models except flash 2.0 lite support function calling
-      return (
-        model.toLowerCase().includes("gemini") &&
-        !model.toLowerCase().includes("lite")
-      );
+      if (lowerCaseModel.includes("lite")) {
+        return false;
+      }
+      return ["claude", "gemini"].some((val) => lowerCaseModel.includes(val));
     },
     bedrock: (model) => {
       if (
@@ -287,3 +289,31 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
   };
+
+export function isRecommendedAgentModel(modelName: string): boolean {
+  // AND behavior
+  const recs: RegExp[][] = [
+    [/o[134]/],
+    [/deepseek/, /r1|reasoner/],
+    [/gemini/, /2\.5/, /pro/],
+    [/gpt/, /4/],
+    [/claude/, /sonnet/, /3\.5|3\.7|3-5|3-7|-4/],
+    [/claude/, /opus/, /-4/],
+  ];
+  for (const combo of recs) {
+    if (combo.every((regex) => modelName.toLowerCase().match(regex))) {
+      return true;
+    }
+  }
+  return false;
+}
+export function modelSupportsNativeTools(modelDescription: ModelDescription) {
+  if (modelDescription.capabilities?.tools !== undefined) {
+    return modelDescription.capabilities.tools;
+  }
+  const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
+  if (!providerSupport) {
+    return false;
+  }
+  return providerSupport(modelDescription.model) ?? false;
+}

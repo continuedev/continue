@@ -538,6 +538,7 @@ export class ContinueCompletionProvider
             editor,
             currCursorPos,
             editableRegionStartLine,
+            editableRegionEndLine,
             oldEditRangeSlice,
             newEditRangeSlice,
             diffLines,

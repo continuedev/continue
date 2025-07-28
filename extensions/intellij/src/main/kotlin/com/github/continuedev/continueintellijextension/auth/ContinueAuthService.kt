@@ -112,8 +112,10 @@ class ContinueAuthService {
         val jsonBody = gson.toJson(mapOf("refreshToken" to refreshToken))
         val url = getControlPlaneUrl() + "/auth/refresh"
         val response = HttpRequests.post(url, HttpRequests.JSON_CONTENT_TYPE)
-            .connect { connection -> connection.write(jsonBody.toByteArray()) }
-            .toString()
+            .connect {
+                connection -> connection.write(jsonBody.toByteArray())
+                connection.readString()
+            }
         return gson.fromJson(response, RefreshTokenResponse::class.java)
     }
 

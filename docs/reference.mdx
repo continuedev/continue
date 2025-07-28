@@ -357,8 +357,6 @@ List of documentation sites to index.
 
 - `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-
-- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
 - `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
@@ -507,7 +505,6 @@ context:
     params:
       startUrl: https://docs.example.com/introduction
       rootUrl: https://docs.example.com
-      maxDepth: 3
 mcpServers:
   - name: DevServer
     command: npm
