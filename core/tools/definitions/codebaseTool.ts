@@ -26,5 +26,5 @@ export const codebaseTool: Tool = {
       },
     },
   },
-  toolPolicy: "allowedWithPermission",
+  defaultToolPolicy: "allowedWithPermission",
 };

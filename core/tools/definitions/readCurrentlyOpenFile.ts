@@ -19,5 +19,5 @@ export const readCurrentlyOpenFileTool: Tool = {
       properties: {},
     },
   },
-  toolPolicy: "allowedWithPermission",
+  defaultToolPolicy: "allowedWithPermission",
 };

@@ -25,5 +25,5 @@ export const globSearchTool: Tool = {
       },
     },
   },
-  toolPolicy: "allowedWithoutPermission",
+  defaultToolPolicy: "allowedWithoutPermission",
 };

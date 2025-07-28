@@ -45,21 +45,7 @@ export const uiSlice = createSlice({
     ),
     shouldAddFileForEditing: false,
     ttsActive: false,
-    toolSettings: {
-      // [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
-      // [BuiltInToolNames.EditExistingFile]: "allowedWithPermission",
-      // [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
-      // [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
-      // [BuiltInToolNames.GrepSearch]: "allowedWithoutPermission",
-      // [BuiltInToolNames.FileGlobSearch]: "allowedWithoutPermission",
-      // [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
-      // [BuiltInToolNames.FetchUrlContent]: "allowedWithPermission",
-      // [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
-      // [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
-      // [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
-      // [BuiltInToolNames.RequestRule]: "disabled",
-      // [BuiltInToolNames.SearchAndReplaceInFile]: "allowedWithPermission",
-    },
+    toolSettings: {},
     toolGroupSettings: {
       [BUILT_IN_GROUP_NAME]: "include",
     },
@@ -91,13 +77,13 @@ export const uiSlice = createSlice({
     initTool: (state, action: PayloadAction<Tool>) => {
       if (!state.toolSettings[action.payload.function.name]) {
         state.toolSettings[action.payload.function.name] =
-          action.payload.toolPolicy ?? DEFAULT_TOOL_SETTING;
+          action.payload.defaultToolPolicy ?? DEFAULT_TOOL_SETTING;
       }
     },
     // Tools
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
-        action.payload.toolPolicy ?? DEFAULT_TOOL_SETTING;
+        action.payload.defaultToolPolicy ?? DEFAULT_TOOL_SETTING;
     },
     setToolPolicy: (
       state,

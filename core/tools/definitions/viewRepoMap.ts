@@ -19,5 +19,5 @@ export const viewRepoMapTool: Tool = {
       properties: {},
     },
   },
-  toolPolicy: "allowedWithPermission",
+  defaultToolPolicy: "allowedWithPermission",
 };

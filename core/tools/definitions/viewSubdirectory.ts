@@ -25,5 +25,5 @@ export const viewSubdirectoryTool: Tool = {
       },
     },
   },
-  toolPolicy: "allowedWithPermission",
+  defaultToolPolicy: "allowedWithPermission",
 };

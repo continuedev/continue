@@ -25,5 +25,5 @@ export const fetchUrlContentTool: Tool = {
       },
     },
   },
-  toolPolicy: "allowedWithPermission",
+  defaultToolPolicy: "allowedWithPermission",
 };

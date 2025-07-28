@@ -1091,7 +1091,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
-  toolPolicy?: ToolPolicy;
+  defaultToolPolicy?: ToolPolicy;
 }
 
 interface ToolChoice {

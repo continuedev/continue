@@ -49,5 +49,5 @@ export const requestRuleTool: GetTool = ({ rules }) => ({
       },
     },
   },
-  toolPolicy: "disabled",
+  defaultToolPolicy: "disabled",
 });
