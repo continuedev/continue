@@ -46,9 +46,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   if (toolName === "run_terminal_command") {
     const isStderr = content.startsWith("Stderr:");
     const actualOutput = isStderr ? content.slice(7).trim() : content;
-    const outputLines = actualOutput.split("\n").length;
-    
-    if (outputLines <= 16) {
+    const outputLines = actualOutput.split("\n");
+
+    if (outputLines.length <= 16) {
       // Show actual output for 16 lines or fewer
       return (
         <Box flexDirection="column">
@@ -62,11 +62,20 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         </Box>
       );
     } else {
-      // Show summary for more than 16 lines
+      // Show first 16 lines with ellipsis for more than 16 lines
+      const first16Lines = outputLines.slice(0, 16).join("\n");
       return (
-        <Box>
-          <Text color="gray">⎿ </Text>
-          <Text color="gray"> Command output ({outputLines} lines)</Text>
+        <Box flexDirection="column">
+          <Box>
+            <Text color="gray">⎿ </Text>
+            <Text color="gray"> Terminal output:</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text color={isStderr ? "red" : "white"}>{first16Lines}</Text>
+          </Box>
+          <Box paddingLeft={2}>
+            <Text color="gray">...</Text>
+          </Box>
         </Box>
       );
     }
@@ -101,7 +110,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return `${displayName} tool output (${lines} lines)`;
 
       case "write_file":
-        return content.includes("Successfully created file") ? "File created successfully" : "File written successfully";
+        return content.includes("Successfully created file")
+          ? "File created successfully"
+          : "File written successfully";
 
       case "list_files":
         return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;
