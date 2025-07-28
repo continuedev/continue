@@ -1,7 +1,7 @@
 import Parser from "web-tree-sitter";
 import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
 import { getAst } from "../autocomplete/util/ast";
-import { DocumentAstTracker } from "./DocumentHistoryTracker";
+import { DocumentHistoryTracker } from "./DocumentHistoryTracker";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
@@ -362,7 +362,7 @@ async function staticJump(ctx: {
     // Get the file's AST.
     // Getting this once helps us live-track the current node.
     const tree =
-      await DocumentAstTracker.getInstance().getMostRecentAst(filepath);
+      await DocumentHistoryTracker.getInstance().getMostRecentAst(filepath);
     // const tree = await getAst(filepath, fileContent);
     if (!tree) return null;
 

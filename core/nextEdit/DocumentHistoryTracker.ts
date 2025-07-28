@@ -1,59 +1,38 @@
-// TODO:
-// Create a DocumentAstTracker singleton class that keeps track of a map of document paths to their history of ASTs.
-// There should be a map from document path to history of ASTs (a LIFO stack of ASTs where the newest AST is at the front)
-// We want to expose these methods:
-// add document and its first AST
-// push to an existing document's AST history stack
-// get the most recent AST of an existing document's AST
-// The AST and nodes will be using web-tree-sitter types.
-// save map to file as a documentAstTracker.json inside the user's global continue path
-// delete document from map
-// clear map
-import * as fs from "fs";
-import * as path from "path";
 import Parser from "web-tree-sitter";
-import { getContinueGlobalPath } from "../util/paths";
 
 /**
- * Singleton class that keeps track of a map of document paths to their history of ASTs.
+ * Singleton class that keeps track of a map of document paths to their history.
+ * The point here is to prevent re-calculating the AST,
+ * and to preserve an older, original state of the document before any user edits.
  */
-export class DocumentAstTracker {
-  private static instance: DocumentAstTracker | null = null;
+export class DocumentHistoryTracker {
+  private static instance: DocumentHistoryTracker | null = null;
 
-  // Map from document path to history of ASTs (LIFO stack where newest AST is at the front).
+  // Map from document path to history (LIFO stack where newest representation is at the front).
   private documentAstMap: Map<string, Parser.Tree[]>;
   private documentContentHistoryMap: Map<string, string[]>;
-
-  // Path to save the AST tracker data.
-  private readonly savePath: string;
 
   private constructor() {
     this.documentAstMap = new Map<string, Parser.Tree[]>();
     this.documentContentHistoryMap = new Map<string, string[]>();
-    this.savePath = path.join(
-      getContinueGlobalPath(),
-      "documentAstTracker.jsonl",
-    );
-
-    // Try to load existing data.
-    // this.loadFromFile();
   }
 
   /**
-   * Get the singleton instance of DocumentAstTracker.
+   * Get the singleton instance of DocumentHistoryTracker.
    */
-  public static getInstance(): DocumentAstTracker {
-    if (!DocumentAstTracker.instance) {
-      DocumentAstTracker.instance = new DocumentAstTracker();
+  public static getInstance(): DocumentHistoryTracker {
+    if (!DocumentHistoryTracker.instance) {
+      DocumentHistoryTracker.instance = new DocumentHistoryTracker();
     }
 
-    return DocumentAstTracker.instance;
+    return DocumentHistoryTracker.instance;
   }
 
   /**
-   * Add a document and its first AST to the tracker.
+   * Add a document and its first state to the tracker.
    *
    * @param documentPath The path of the document.
+   * @param documentContent The first content of the document.
    * @param ast The first AST of the document.
    */
   public addDocument(
@@ -63,17 +42,17 @@ export class DocumentAstTracker {
   ): void {
     this.documentAstMap.set(documentPath, [ast]);
     this.documentContentHistoryMap.set(documentPath, [documentContent]);
-    // this.saveToFile();
   }
 
   /**
    * Push a new AST to an existing document's history stack.
    *
    * @param documentPath The path of the document.
+   * @param documentContent The new content to push to the document's history stack.
    * @param ast The new AST to push to the document's history stack.
    * @throws Error if the document doesn't exist in the tracker.
    */
-  public pushAst(
+  public push(
     documentPath: string,
     documentContent: string,
     ast: Parser.Tree,
@@ -86,12 +65,9 @@ export class DocumentAstTracker {
       this.addDocument(documentPath, documentContent, ast);
     }
 
-    console.log("same AST:", this.getMostRecentAst(documentPath) !== ast);
-
-    // Add the new AST to the front of the array (LIFO stack).
+    // Push to top (LIFO).
     astHistory!.unshift(ast);
     documentHistory!.unshift(documentContent);
-    // this.saveToFile();
   }
 
   /**
@@ -148,7 +124,6 @@ export class DocumentAstTracker {
   public deleteDocument(documentPath: string): void {
     this.documentAstMap.delete(documentPath);
     this.documentContentHistoryMap.delete(documentPath);
-    // this.saveToFile();
   }
 
   /**
@@ -157,51 +132,5 @@ export class DocumentAstTracker {
   public clearMap(): void {
     this.documentAstMap.clear();
     this.documentContentHistoryMap.clear();
-    // this.saveToFile();
-  }
-
-  /**
-   * Save the current state of the tracker to a file.
-   */
-  private saveToFile(): void {
-    try {
-      // We can't directly serialize Tree objects to JSON.
-      // So we'll just save the paths - this serves as a record of which documents we're tracking.
-      // The actual ASTs will need to be recreated when needed.
-      const documentPaths = Array.from(this.documentAstMap.keys());
-      const serializableData = { documentPaths };
-
-      fs.writeFileSync(
-        this.savePath,
-        JSON.stringify(serializableData, null, 2),
-      );
-    } catch (error) {
-      console.error("Error saving AST tracker data to file:", error);
-    }
-  }
-
-  /**
-   * Load the tracker state from a file.
-   */
-  private loadFromFile(): void {
-    try {
-      if (fs.existsSync(this.savePath)) {
-        const fileContent = fs.readFileSync(this.savePath, "utf-8");
-        const data = JSON.parse(fileContent);
-
-        // We only saved the paths, not the actual Trees.
-        // The Trees need to be reparsed when the documents are loaded again.
-        if (data && data.documentPaths) {
-          // Initialize empty arrays for each document.
-          data.documentPaths.forEach((path: string) => {
-            this.documentAstMap.set(path, []);
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error loading AST tracker data from file:", error);
-      // If loading fails, we'll start with an empty map.
-      this.documentAstMap = new Map<string, Parser.Tree[]>();
-    }
   }
 }

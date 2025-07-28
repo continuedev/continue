@@ -43,7 +43,7 @@ import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import { getAst } from "core/autocomplete/util/ast";
-import { DocumentAstTracker } from "core/nextEdit/DocumentHistoryTracker";
+import { DocumentHistoryTracker } from "core/nextEdit/DocumentHistoryTracker";
 import {
   EditableRegionStrategy,
   getNextEditableRegion,
@@ -384,7 +384,7 @@ export class VsCodeExtension {
       console.log("onDidOpenTextDocument");
       const ast = await getAst(event.fileName, event.getText());
       if (ast) {
-        DocumentAstTracker.getInstance().addDocument(
+        DocumentHistoryTracker.getInstance().addDocument(
           localPathOrUriToPath(event.fileName),
           event.getText(),
           ast,

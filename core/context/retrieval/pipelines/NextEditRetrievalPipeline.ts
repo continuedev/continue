@@ -242,10 +242,3 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
-
-// export async function getJumpDestinations(
-//   codeSnippet: string,
-//   cursorPosition: Position,
-//   filepath: string,
-// ): Promise<Chunk[]> {
-// }

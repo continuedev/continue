@@ -26,7 +26,7 @@ import {
 } from "./constants.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import { calculateFinalCursorPosition } from "./diff/diff.js";
-import { DocumentAstTracker } from "./DocumentHistoryTracker.js";
+import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import {
   EditableRegionStrategy,
   getNextEditableRegion,
@@ -224,7 +224,7 @@ export class NextEditProvider {
       ).toString();
       const ast = await getAst(this.previousRequest.filepath, fileContent);
       if (ast) {
-        DocumentAstTracker.getInstance().pushAst(
+        DocumentHistoryTracker.getInstance().push(
           localPathOrUriToPath(this.previousRequest.filepath),
           fileContent,
           ast,
@@ -311,7 +311,7 @@ export class NextEditProvider {
       } else {
         const historyDiff = createDiff({
           beforeContent:
-            DocumentAstTracker.getInstance().getMostRecentDocumentHistory(
+            DocumentHistoryTracker.getInstance().getMostRecentDocumentHistory(
               localPathOrUriToPath(helper.filepath),
             ) ?? "",
           afterContent: helper.fileContents,
