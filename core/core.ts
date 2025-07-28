@@ -400,7 +400,10 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      let url = `${env.APP_URL}${msg.data.path}`;
+      const urlPath = msg.data.path.startsWith("/")
+        ? msg.data.path.slice(1)
+        : msg.data.path;
+      let url = `${env.APP_URL}${urlPath}`;
       if (msg.data.orgSlug) {
         url += `?org=${msg.data.orgSlug}`;
       }
