@@ -229,11 +229,18 @@ export class ModelService {
   }
 
   /**
-   * Get model index by name
+   * Get model index by name and provider
    */
-  getModelIndexByName(modelName: string): number {
-    return this.availableModels.findIndex(model => 
-      (model as any).name === modelName
-    );
+  getModelIndexByName(modelName: string, provider?: string): number {
+    return this.availableModels.findIndex(model => {
+      const name = (model as any).name || (model as any).model;
+      const nameMatches = name === modelName;
+      
+      if (provider) {
+        return nameMatches && model.provider === provider;
+      }
+      
+      return nameMatches;
+    });
   }
 }
