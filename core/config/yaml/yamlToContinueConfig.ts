@@ -14,6 +14,7 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       globs: rule.globs,
       name: rule.name,
       ruleFile: rule.sourceFile,
+      alwaysApply: rule.alwaysApply,
     };
   }
 }

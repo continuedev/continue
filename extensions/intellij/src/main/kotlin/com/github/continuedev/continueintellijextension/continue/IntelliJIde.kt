@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.`continue`.file.FileUtils
 import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -38,9 +39,7 @@ import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.nio.charset.Charset
 
 class IntelliJIDE(
     private val project: Project,
@@ -49,7 +48,7 @@ class IntelliJIDE(
     ) : IDE {
 
     private val gitService = GitService(project, continuePluginService)
-
+    private val fileUtils = FileUtils()
     private val ripgrep: String = getRipgrepPath()
 
     init {
@@ -204,16 +203,11 @@ class IntelliJIDE(
         return configs as List<ContinueRcJson>
     }
 
-    override suspend fun fileExists(filepath: String): Boolean {
-        val file = UriUtils.uriToFile(filepath)
-        return file.exists()
-    }
+    override suspend fun fileExists(filepath: String): Boolean =
+        fileUtils.fileExists(filepath)
 
-    override suspend fun writeFile(path: String, contents: String) {
-        val file = UriUtils.uriToFile(path)
-        file.parentFile?.mkdirs()
-        file.writeText(contents)
-    }
+    override suspend fun writeFile(path: String, contents: String) =
+        fileUtils.writeFile(path, contents)
 
     override suspend fun showVirtualFile(title: String, contents: String) {
         val virtualFile = LightVirtualFile(title, contents)
@@ -321,38 +315,8 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun readFile(filepath: String): String {
-        return try {
-            val content = ApplicationManager.getApplication().runReadAction<String?> {
-                val virtualFile = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path)
-                if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
-                    return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
-                }
-                return@runReadAction null
-            }
-
-            if (content != null) {
-                content
-            } else {
-                val file = UriUtils.uriToFile(filepath)
-                if (!file.exists() || file.isDirectory) return ""
-                withContext(Dispatchers.IO) {
-                    FileInputStream(file).use { fis ->
-                        val sizeToRead = minOf(100000, file.length()).toInt()
-                        val buffer = ByteArray(sizeToRead)
-                        val bytesRead = fis.read(buffer, 0, sizeToRead)
-                        if (bytesRead <= 0) return@use ""
-                        String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
-                            // `\r` takes up unnecessary tokens
-                            .lineSequence().joinToString("\n")
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ""
-        }
-    }
+    override suspend fun readFile(filepath: String): String =
+        fileUtils.readFile(filepath)
 
     override suspend fun readRangeInFile(filepath: String, range: Range): String {
         val fullContents = readFile(filepath)
@@ -661,13 +625,8 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun listDir(dir: String): List<List<Any>> {
-        val files = UriUtils.uriToFile(dir).listFiles()?.map {
-            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
-        } ?: emptyList()
-
-        return files
-    }
+    override suspend fun listDir(dir: String): List<List<Any>> =
+        fileUtils.listDir(dir)
 
     override suspend fun getFileStats(files: List<String>): Map<String, FileStats> {
         return files.associateWith { file ->

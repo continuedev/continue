@@ -155,7 +155,8 @@ export const streamNormalInput = createAsyncThunk<
       completionOptions = {
         ...completionOptions,
         reasoning: true,
-        reasoningBudgetTokens: completionOptions.reasoningBudgetTokens ?? 2048,
+        reasoningBudgetTokens:
+          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
       };
     }
 
