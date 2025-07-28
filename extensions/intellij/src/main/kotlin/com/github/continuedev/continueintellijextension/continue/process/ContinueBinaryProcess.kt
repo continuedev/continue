@@ -1,5 +1,7 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
+import com.github.continuedev.continueintellijextension.proxy.ProxySettings
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
@@ -14,7 +16,9 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
+class ContinueBinaryProcess(
+    private val onUnexpectedExit: () -> Unit
+) : ContinueProcess {
 
     private val process = startBinaryProcess()
     override val input: InputStream = process.inputStream
@@ -28,11 +32,16 @@ class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
         runBlocking(Dispatchers.IO) {
             setPermissions()
         }
-        return ProcessBuilder(path).directory(File(path).parentFile)
-            .start()
-            .apply { onExit().thenRun(onExit).thenRun { reportErrorTelemetry() } }
-    }
 
+        val builder = ProcessBuilder(path)
+        val proxySettings = ProxySettings.getSettings()
+        if (proxySettings.enabled)
+            builder.environment() += "HTTP_PROXY" to proxySettings.proxy
+        return builder
+            .directory(File(path).parentFile)
+            .start()
+            .apply { onExit().thenRun(onUnexpectedExit).thenRun(::reportErrorTelemetry) }
+    }
 
     private fun reportErrorTelemetry() {
         var err = process.errorStream?.bufferedReader()?.readText()?.trim()
@@ -44,11 +53,8 @@ class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
                 err = err.substring(doneIndex + delimiter.length)
             }
         }
-
-        println("Core process exited with output: $err")
-
-        val telemetryService = service<TelemetryService>()
-        telemetryService.capture("jetbrains_core_exit", mapOf("error" to err))
+        service<ContinueErrorService>().reportMessage("Core process exited with output: $err")
+        service<TelemetryService>().capture("jetbrains_core_exit", mapOf("error" to err))
     }
 
     private companion object {
@@ -67,6 +73,7 @@ class ContinueBinaryProcess(private val onExit: () -> Unit) : ContinueProcess {
             elevatePermissions()
         }
 
+        // todo: consider setting permissions ahead-of-time during build/packaging, not at runtime
         private fun elevatePermissions() {
             val path = getContinueBinaryPath()
             val permissions = setOf(

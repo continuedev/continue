@@ -14,7 +14,7 @@ export function StreamingToolbar() {
         onClick={() => void dispatch(cancelStream())}
         className="text-2xs cursor-pointer px-1.5 py-0.5 hover:brightness-125"
       >
-        <span className="text-description">Pause</span>
+        <span className="text-description">Stop</span>
         {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
         <span className="text-description-muted ml-1 opacity-75">
           {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()}⌫

@@ -6,17 +6,38 @@ title: "Quick Start"
 
 Agent equips the Chat model with the tools needed to handle a wide range of coding tasks, allowing the model to make decisions and save you the work of manually finding context and performing actions.
 
+### When to use each mode
+
+- **Plan mode**: Use when you want to explore code, understand systems, or plan changes without making modifications. Perfect for:
+  - Understanding unfamiliar codebases
+  - Planning complex refactors
+  - Debugging and investigation
+  - Creating implementation strategies
+  
+- **Agent mode**: Use when you're ready to make changes. Ideal for:
+  - Implementing features
+  - Fixing bugs
+  - Running tests and commands
+  - Executing plans developed in Plan mode
+
 ### Use Agent
 
-You can switch to `Agent` in the mode selector below the chat input box.
+You can switch to `Agent` in the mode selector below the chat input box. The mode selector offers three options:
+- **Chat**: No tools available, pure conversation
+- **Plan**: Read-only tools for safe exploration and planning
+- **Agent**: All tools available for making changes
 
 ![How to select agent mode](/images/mode-select-agent.png)
 
 <Info>
-  If Agent is disabled with a `Not Supported` message, the selected model or
+  If Agent or Plan is disabled with a `Not Supported` message, the selected model or
   provider doesn't support tools, or Continue doesn't yet support tools with it.
   See [Model Blocks](/customization/models) for more information.
 </Info>
+
+<Tip>
+  Use the keyboard shortcut `Cmd/Ctrl + .` to quickly cycle between modes.
+</Tip>
 
 ### Chat with Agent
 

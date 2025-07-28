@@ -13,7 +13,7 @@ export type ChunkDocumentParam = {
   digest: string;
 };
 
-async function* chunkDocumentWithoutId(
+export async function* chunkDocumentWithoutId(
   fileUri: string,
   contents: string,
   maxChunkSize: number,

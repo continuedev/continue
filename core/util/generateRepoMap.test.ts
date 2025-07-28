@@ -55,7 +55,7 @@ describe.skip("generateRepoMap", () => {
       });
 
     // Set testLLM properties
-    testLLM.contextLength = 2048;
+    testLLM._contextLength = 2048;
     testLLM.countTokens = jest.fn().mockReturnValue(10);
 
     // Act
@@ -115,7 +115,7 @@ describe.skip("generateRepoMap", () => {
       });
 
     // Set testLLM properties
-    testLLM.contextLength = 2048;
+    testLLM._contextLength = 2048;
     testLLM.countTokens = jest.fn().mockReturnValue(10);
 
     // Act
@@ -184,7 +184,7 @@ describe.skip("generateRepoMap", () => {
       .mockImplementation(() => {});
 
     // Set testLLM properties
-    testLLM.contextLength = 2048;
+    testLLM._contextLength = 2048;
     testLLM.countTokens = jest.fn().mockReturnValue(10);
 
     // Act

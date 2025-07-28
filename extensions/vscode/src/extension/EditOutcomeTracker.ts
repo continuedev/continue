@@ -65,6 +65,7 @@ class EditOutcomeTracker {
         newCodeLines: pendingEdit.newCodeLines,
         lineChange: pendingEdit.lineChange,
         accepted,
+        filepath: pendingEdit.filepath,
       },
     });
 

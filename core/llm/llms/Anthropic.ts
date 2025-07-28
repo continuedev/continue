@@ -172,52 +172,10 @@ class Anthropic extends BaseLLM {
     }
   }
 
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
+  async *handleResponse(
+    response: any,
+    stream: boolean | undefined,
   ): AsyncGenerator<ChatMessage> {
-    if (!this.apiKey || this.apiKey === "") {
-      throw new Error(
-        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
-      );
-    }
-
-    const systemMessage = stripImages(
-      messages.filter((m) => m.role === "system")[0]?.content ?? "",
-    );
-    const shouldCacheSystemMessage = !!(
-      this.cacheBehavior?.cacheSystemMessage && systemMessage
-    );
-
-    const msgs = this.convertMessages(messages);
-    const response = await this.fetch(new URL("messages", this.apiBase), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
-      },
-      body: JSON.stringify({
-        ...this.convertArgs(options),
-        messages: msgs,
-        system: shouldCacheSystemMessage
-          ? [
-              {
-                type: "text",
-                text: systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
-          : systemMessage,
-      }),
-      signal,
-    });
-
     if (response.status === 499) {
       return; // Aborted by user
     }
@@ -237,7 +195,7 @@ class Anthropic extends BaseLLM {
       );
     }
 
-    if (options.stream === false) {
+    if (stream === false) {
       const data = await response.json();
       const cost = data.usage
         ? {
@@ -347,6 +305,55 @@ class Anthropic extends BaseLLM {
       content: "",
       usage,
     };
+  }
+
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    if (!this.apiKey || this.apiKey === "") {
+      throw new Error(
+        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+      );
+    }
+
+    const systemMessage = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    );
+
+    const msgs = this.convertMessages(messages);
+    const response = await this.fetch(new URL("messages", this.apiBase), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "anthropic-version": "2023-06-01",
+        "x-api-key": this.apiKey as string,
+        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
+          : {}),
+      },
+      body: JSON.stringify({
+        ...this.convertArgs(options),
+        messages: msgs,
+        system: shouldCacheSystemMessage
+          ? [
+              {
+                type: "text",
+                text: systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
+          : systemMessage,
+      }),
+      signal,
+    });
+
+    yield* this.handleResponse(response, options.stream);
   }
 }
 

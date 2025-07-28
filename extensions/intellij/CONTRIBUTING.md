@@ -101,6 +101,32 @@ allow for changes to your `config.json` and other files during development, with
 
 When using the `Run Continue` task, we automatically tail both prompt logs and IDE logs.
 
+#### Viewing more IDE logs
+
+You can selectively increase the log granularity (e.g., debug-level logs) as follows:
+
+- Navigate to `Help | Diagnostic Tools | Debug Log Settings...`
+- Add a line in the format: `com.intellij.diagnostic:debug`
+
+You can find more information about this feature in [official docs](https://youtrack.jetbrains.com/articles/SUPPORT-A-43/How-to-enable-debug-logging-in-IntelliJ-IDEA).
+
+### Developing `build.plugin.kts`
+
+If in doubt, check out the
+official [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template).
+These templates are the most up-to-date examples of how to correctly customize the plugin build scripts.
+
+Also, check out
+the [useful recipes](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-recipes.html)
+for common problems.
+
+### Adding new extensions in `plugin.xml`
+
+There's a tool called [JetBrains Platform Explorer](https://plugins.jetbrains.com/intellij-platform-explorer) that
+aggregates plugin metadata and allows you to filter by specific
+extension points. If you're having trouble implementing a feature that's not officially documented,
+you can learn from other open source plugins.
+
 ### Reloading changes
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting

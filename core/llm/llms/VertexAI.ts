@@ -254,24 +254,7 @@ class VertexAI extends BaseLLM {
       signal,
     });
 
-    if (response.status === 499) {
-      return; // Aborted by user
-    }
-
-    if (options.stream === false) {
-      const data = await response.json();
-      yield { role: "assistant", content: data.content[0].text };
-      return;
-    }
-
-    for await (const value of streamSse(response)) {
-      if (value.type === "message_start") {
-        console.log(value);
-      }
-      if (value.delta?.text) {
-        yield { role: "assistant", content: value.delta.text };
-      }
-    }
+    yield* this.anthropicInstance.handleResponse(response, options.stream);
   }
 
   // Gemini
@@ -285,17 +268,19 @@ class VertexAI extends BaseLLM {
       this.apiBase,
     );
 
-    const body = this.geminiInstance.prepareBody(messages, options, false);
+    // For some reason gemini through vertex does not support ids in functionResponses yet
+    const body = this.geminiInstance.prepareBody(
+      messages,
+      options,
+      false,
+      false,
+    );
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
       signal,
     });
-    for await (const message of this.geminiInstance.processGeminiResponse(
-      streamResponse(response),
-    )) {
-      yield message;
-    }
+    yield* this.geminiInstance.processGeminiResponse(streamResponse(response));
   }
 
   private async *streamChatBison(

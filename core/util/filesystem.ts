@@ -2,7 +2,6 @@ import * as fs from "node:fs";
 
 import { fileURLToPath } from "node:url";
 import {
-  ContinueRcJson,
   FileStatsMap,
   FileType,
   IDE,
@@ -13,6 +12,7 @@ import {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
   ToastType,
@@ -42,6 +42,14 @@ class FileSystemIde implements IDE {
 
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return Promise.resolve([]);
+  }
+
+  gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
+  getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    return Promise.resolve(null);
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
@@ -134,10 +142,6 @@ class FileSystemIde implements IDE {
 
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
-  }
-
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return Promise.resolve([]);
   }
 
   getDiff(includeUnstaged: boolean): Promise<string[]> {

@@ -452,7 +452,15 @@ export async function unrollBlocks(
               registry,
             );
 
-            return { blockType, resolvedBlock, error: null };
+            return {
+              blockType,
+              resolvedBlock,
+              source:
+                injectBlock.uriType === "file"
+                  ? injectBlock.filePath
+                  : undefined,
+              error: null,
+            };
           } catch (err) {
             let msg = "";
             if (injectBlock.uriType === "file") {
@@ -475,7 +483,11 @@ export async function unrollBlocks(
 
         const injectedResults = await Promise.all(injectedBlockPromises);
         const injectedErrors: ConfigValidationError[] = [];
-        const injectedBlocks: { blockType: string; resolvedBlock: any }[] = [];
+        const injectedBlocks: {
+          blockType: string;
+          resolvedBlock: any;
+          source?: string;
+        }[] = [];
 
         for (const result of injectedResults) {
           if (result.error) {
@@ -484,6 +496,7 @@ export async function unrollBlocks(
             injectedBlocks.push({
               blockType: result.blockType,
               resolvedBlock: result.resolvedBlock,
+              source: result.source,
             });
           }
         }
@@ -521,12 +534,21 @@ export async function unrollBlocks(
   }
 
   // Add injected blocks
-  for (const { blockType, resolvedBlock } of injectedResult.injectedBlocks) {
+  for (const {
+    blockType,
+    resolvedBlock,
+    source,
+  } of injectedResult.injectedBlocks) {
     const key = blockType as BlockType;
     if (!unrolledAssistant[key]) {
       unrolledAssistant[key] = [];
     }
-    unrolledAssistant[key]?.push(...((resolvedBlock[blockType] ?? []) as any));
+    const blocksWithSourceFiles = injectLocalSourceFile(
+      key,
+      resolvedBlock,
+      source,
+    );
+    unrolledAssistant[key]?.push(...blocksWithSourceFiles);
   }
 
   const configResult: ConfigResult<AssistantUnrolled> = {
@@ -539,6 +561,39 @@ export async function unrollBlocks(
     configResult.errors = errors;
   }
   return configResult;
+}
+
+function injectLocalSourceFile(
+  blockType: BlockType,
+  resolvedBlock: any,
+  source?: string,
+): (any & { source?: string })[] {
+  const blocks: any[] = resolvedBlock[blockType] ?? [];
+  if (source === undefined) {
+    // If no source is provided, return blocks as is
+    return blocks;
+  }
+  if (blockType === "rules") {
+    // For rules, we need to ensure they are wrapped in an object with a `source
+    return blocks.map((block) => {
+      if (typeof block === "string") {
+        const rule = {
+          sourceFile: source,
+          name: block,
+          rule: block,
+        } as Rule;
+        return rule;
+      } else if (typeof block === "object") {
+        block.sourceFile = source;
+      }
+      return block;
+    });
+  }
+  // For other block types, we can directly inject the source file
+  return blocks.map((block) => ({
+    ...block,
+    sourceFile: source,
+  }));
 }
 
 export async function resolveBlock(

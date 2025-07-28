@@ -2,20 +2,24 @@ import { inferResolvedUriFromRelativePath } from "../../util/ideUtils";
 
 import { ToolImpl } from ".";
 import { getCleanUriPath, getUriPathBasename } from "../../util/uri";
+import { getStringArg } from "../parseArgs";
 
 export const createNewFileImpl: ToolImpl = async (args, extras) => {
+  const filepath = getStringArg(args, "filepath");
+  const contents = getStringArg(args, "contents", true);
+
   const resolvedFileUri = await inferResolvedUriFromRelativePath(
-    args.filepath,
+    filepath,
     extras.ide,
   );
   if (resolvedFileUri) {
     const exists = await extras.ide.fileExists(resolvedFileUri);
     if (exists) {
       throw new Error(
-        `File ${args.filepath} already exists. Use the edit tool to edit this file`,
+        `File ${filepath} already exists. Use the edit tool to edit this file`,
       );
     }
-    await extras.ide.writeFile(resolvedFileUri, args.contents);
+    await extras.ide.writeFile(resolvedFileUri, contents);
     await extras.ide.openFile(resolvedFileUri);
     await extras.ide.saveFile(resolvedFileUri);
     if (extras.codeBaseIndexer) {

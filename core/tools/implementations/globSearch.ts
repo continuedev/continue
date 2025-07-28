@@ -1,10 +1,13 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
+import { getStringArg } from "../parseArgs";
 
 const MAX_AGENT_GLOB_RESULTS = 100;
+
 export const fileGlobSearchImpl: ToolImpl = async (args, extras) => {
+  const pattern = getStringArg(args, "pattern");
   const results = await extras.ide.getFileResults(
-    args.pattern,
+    pattern,
     MAX_AGENT_GLOB_RESULTS,
   );
   const contextItems: ContextItem[] = [

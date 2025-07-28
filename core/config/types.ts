@@ -682,8 +682,6 @@ declare global {
   
     getWorkspaceDirs(): Promise<string[]>;
   
-    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-  
     fileExists(filepath: string): Promise<boolean>;
   
     writeFile(path: string, contents: string): Promise<void>;
@@ -1057,6 +1055,7 @@ declare global {
     numDiffs?: number;
     filepath?: string;
     fileContent?: string;
+    originalFileContent?: string;
   }
   
   export interface RangeInFileWithContents {

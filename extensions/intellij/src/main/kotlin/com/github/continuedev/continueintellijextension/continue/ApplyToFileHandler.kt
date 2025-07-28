@@ -29,6 +29,9 @@ class ApplyToFileHandler(
     private val diffStreamService: DiffStreamService
 ) {
 
+    // Store the original file content before applying changes
+    private val originalFileContent: String? = editorUtils?.getDocumentText()
+
     suspend fun handleApplyToFile() {
         // Notify webview that we're starting to stream
         notifyStreamStarted()
@@ -111,6 +114,7 @@ class ApplyToFileHandler(
             numDiffs = numDiffs,
             filepath = params.filepath,
             fileContent = params.text,
+            originalFileContent = originalFileContent,
             toolCallId = params.toolCallId.toString()
         )
 

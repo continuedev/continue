@@ -3,7 +3,7 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/16/solid";
 import { ReactNode } from "react";
 import { vscBackground } from "..";
 

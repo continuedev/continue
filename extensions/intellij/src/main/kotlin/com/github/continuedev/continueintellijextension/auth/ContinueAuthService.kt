@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.auth
 
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -10,24 +11,22 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
+import com.intellij.util.io.HttpRequests
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.net.URL
+import kotlin.time.Duration.Companion.minutes
 
 @Service
 class ContinueAuthService {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val log = Logger.getInstance(ContinueAuthService::class.java)
 
     companion object {
-        fun getInstance(): ContinueAuthService = service<ContinueAuthService>()
         private const val CREDENTIALS_USER = "ContinueAuthUser"
         private const val ACCESS_TOKEN_KEY = "ContinueAccessToken"
         private const val REFRESH_TOKEN_KEY = "ContinueRefreshToken"
@@ -77,72 +76,48 @@ class ContinueAuthService {
     }
 
     private fun updateRefreshToken(token: String) {
-        // Launch a coroutine to call the suspend function
-        coroutineScope.launch {
-            try {
-                val response = refreshToken(token)
-                val accessToken = response["accessToken"] as? String
-                val refreshToken = response["refreshToken"] as? String
-                val user = response["user"] as? Map<*, *>
-                val firstName = user?.get("firstName") as? String
-                val lastName = user?.get("lastName") as? String
-                val label = "$firstName $lastName"
-                val id = user?.get("id") as? String
-                val email = user?.get("email") as? String
+        try {
+            val response = refreshToken(token)
+            val accountLabel = "${response.user.firstName} ${response.user.lastName}"
 
-                // Persist the session info
-                setRefreshToken(refreshToken!!)
-                val sessionInfo =
-                    ControlPlaneSessionInfo(accessToken!!, ControlPlaneSessionInfo.Account(email!!, label))
-                setControlPlaneSessionInfo(sessionInfo)
+            // Persist the session info
+            setRefreshToken(response.refreshToken)
+            val account = ControlPlaneSessionInfo.Account(response.user.email, accountLabel)
+            val sessionInfo = ControlPlaneSessionInfo(response.accessToken, account)
+            setControlPlaneSessionInfo(sessionInfo)
 
-                // Notify listeners
-                ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
-                    .handleUpdatedSessionInfo(sessionInfo)
-
-            } catch (e: Exception) {
-                // Handle any exceptions
-                println("Exception while refreshing token: ${e.message}")
-            }
+            // Notify listeners
+            ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
+                .handleUpdatedSessionInfo(sessionInfo)
+        } catch (e: Exception) {
+            service<ContinueErrorService>().report(e, "Exception while refreshing token ${e.message}")
         }
     }
 
     private fun setupRefreshTokenInterval() {
-        // Launch a coroutine to refresh the token every 30 minutes
         coroutineScope.launch {
             while (true) {
                 val refreshToken = getRefreshToken()
                 if (refreshToken != null) {
                     updateRefreshToken(refreshToken)
                 }
-
-                kotlinx.coroutines.delay(15 * 60 * 1000) // 15 minutes in milliseconds
+                log.info("Token refreshed, retrying in 15 minutes")
+                delay(15.minutes)
             }
         }
     }
 
-    private suspend fun refreshToken(refreshToken: String) = withContext(Dispatchers.IO) {
-        val client = OkHttpClient()
-        val url = URL(getControlPlaneUrl()).toURI().resolve("/auth/refresh").toURL()
-        val jsonBody = mapOf("refreshToken" to refreshToken)
-        val jsonString = Gson().toJson(jsonBody)
-        val requestBody = jsonString.toRequestBody("application/json".toMediaType())
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .header("Content-Type", "application/json")
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        val responseBody = response.body?.string()
+    private fun refreshToken(refreshToken: String): RefreshTokenResponse {
         val gson = Gson()
-        val responseMap = gson.fromJson(responseBody, Map::class.java)
-
-        responseMap
+        val jsonBody = gson.toJson(mapOf("refreshToken" to refreshToken))
+        val url = getControlPlaneUrl() + "/auth/refresh"
+        val response = HttpRequests.post(url, HttpRequests.JSON_CONTENT_TYPE)
+            .connect {
+                connection -> connection.write(jsonBody.toByteArray())
+                connection.readString()
+            }
+        return gson.fromJson(response, RefreshTokenResponse::class.java)
     }
-
 
     private fun openSignInPage(project: Project, useOnboarding: Boolean): String? {
         var authUrl: String? = null
@@ -256,6 +231,17 @@ class ContinueAuthService {
         setAccountLabel(info.account.label)
     }
 
+    private data class RefreshTokenResponse(
+        val accessToken: String,
+        val refreshToken: String,
+        val user: User,
+    ) {
+        data class User(
+            val firstName: String,
+            val lastName: String,
+            val email: String
+        )
+    }
 }
 
 // Data class to represent the ControlPlaneSessionInfo

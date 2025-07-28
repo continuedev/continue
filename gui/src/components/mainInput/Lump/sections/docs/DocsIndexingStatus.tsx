@@ -123,7 +123,11 @@ function DocsIndexingStatus({
               />
             )}
 
-            <EditBlockButton blockType="docs" block={docFromYaml} />
+            <EditBlockButton
+              blockType="docs"
+              block={docFromYaml}
+              sourceFile={docConfig.sourceFile}
+            />
 
             {["aborted", "complete", "failed"].includes(
               status?.status ?? "",

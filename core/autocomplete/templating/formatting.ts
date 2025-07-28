@@ -5,6 +5,7 @@ import {
   AutocompleteDiffSnippet,
   AutocompleteSnippet,
   AutocompleteSnippetType,
+  AutocompleteStaticSnippet,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 
@@ -51,6 +52,12 @@ const formatDiffSnippet = (
   return snippet;
 };
 
+const formatStaticSnippet = (
+  snippet: AutocompleteStaticSnippet,
+): AutocompleteStaticSnippet => {
+  return snippet;
+};
+
 const commentifySnippet = (
   helper: HelperVars,
   snippet: AutocompleteSnippet,
@@ -81,6 +88,8 @@ export const formatSnippets = (
             return formatDiffSnippet(snippet);
           case AutocompleteSnippetType.Clipboard:
             return formatClipboardSnippet(snippet, workspaceDirs);
+          case AutocompleteSnippetType.Static:
+            return formatStaticSnippet(snippet);
         }
       })
       .map((item) => {

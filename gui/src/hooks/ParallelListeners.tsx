@@ -38,6 +38,7 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
+import { logAgentModeEditOutcome } from "../util/editOutcomeLogger";
 import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -276,17 +277,40 @@ function ParallelListeners() {
               store.getState().session.history,
               state.toolCallId,
             );
-            if (toolCallState && toolCallState.status !== "canceled") {
-              dispatch(
-                acceptToolCall({
-                  toolCallId: state.toolCallId,
-                }),
-              );
-              void dispatch(
-                streamResponseAfterToolCall({
-                  toolCallId: state.toolCallId,
-                }),
-              );
+
+            if (toolCallState) {
+              const accepted = toolCallState.status !== "canceled";
+
+              logToolUsage(toolCallState, accepted, true, ideMessenger);
+
+              // Log edit outcome for Agent Mode
+              const applyState = store
+                .getState()
+                .session.codeBlockApplyStates.states.find(
+                  (s) => s.streamId === state.streamId,
+                );
+
+              if (applyState) {
+                void logAgentModeEditOutcome(
+                  toolCallState,
+                  applyState,
+                  accepted,
+                  ideMessenger,
+                );
+              }
+
+              if (accepted) {
+                dispatch(
+                  acceptToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+                void dispatch(
+                  streamResponseAfterToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+              }
             }
             // const output: ContextItem = {
             //   name: "Edit tool output",

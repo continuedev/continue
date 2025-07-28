@@ -2,7 +2,6 @@ import { FromIdeProtocol } from "..";
 import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
-  ContinueRcJson,
   FileStatsMap,
   FileType,
   IDE,
@@ -13,6 +12,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../..";
@@ -43,6 +43,14 @@ export class MessageIde implements IDE {
 
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return this.request("gotoDefinition", { location });
+  }
+
+  async gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    return this.request("gotoTypeDefinition", { location });
+  }
+
+  async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    return this.request("getSignatureHelp", { location });
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
@@ -112,10 +120,6 @@ export class MessageIde implements IDE {
 
   getUniqueId(): Promise<string> {
     return this.request("getUniqueId", undefined);
-  }
-
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return this.request("getWorkspaceConfigs", undefined);
   }
 
   async getDiff(includeUnstaged: boolean) {

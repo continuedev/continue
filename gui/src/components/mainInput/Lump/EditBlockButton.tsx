@@ -11,8 +11,9 @@ type SectionKey = Exclude<
 
 interface EditBlockButtonProps<T extends SectionKey> {
   blockType: T;
-  block?: NonNullable<ConfigYaml[T]>[number];
+  block?: NonNullable<Omit<ConfigYaml, "env">[T]>[number];
   className?: string;
+  sourceFile?: string;
 }
 
 function isUsesBlock(block: any): block is { uses: string } {
@@ -23,6 +24,7 @@ export default function EditBlockButton<T extends SectionKey>({
   block,
   blockType,
   className = "",
+  sourceFile,
 }: EditBlockButtonProps<T>) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { selectedProfile } = useAuth();
@@ -37,6 +39,7 @@ export default function EditBlockButton<T extends SectionKey>({
     if (selectedProfile?.profileType === "local") {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
+        element: { sourceFile },
       });
     } else if (block && isUsesBlock(block)) {
       openUrl(`${block.uses}/new-version`);

@@ -10,7 +10,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 class RestartContinueProcess : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val pluginService = getContinuePluginService(e.project) ?: return
-        pluginService.coreMessengerManager?.restart()
+        pluginService.coreMessengerManager?.coreMessenger?.restart()
     }
 }
 

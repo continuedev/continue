@@ -210,6 +210,7 @@ export const siteIndexingConfigSchema = z.object({
   maxDepth: z.number().optional(),
   faviconUrl: z.string().optional(),
   useLocalCrawling: z.boolean().optional(),
+  sourceFile: z.string().optional(),
 });
 
 export const controlPlaneConfigSchema = z.object({

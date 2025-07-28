@@ -68,6 +68,7 @@ export const configSlice = createSlice({
       } else {
         state.config = config;
       }
+      state.loading = false;
     },
     updateConfig: (
       state,

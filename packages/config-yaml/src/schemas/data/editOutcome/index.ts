@@ -12,4 +12,5 @@ export const editOutcomeEventAllSchema = baseDevDataAllSchema.extend({
   newCodeLines: z.number(),
   lineChange: z.number(),
   accepted: z.boolean(),
+  filepath: z.string(),
 });

@@ -161,8 +161,8 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         {parameters ? (
           <>
             <span className="text-xs font-bold">Arguments:</span>
-            {parameters.map((param) => (
-              <div className="block">
+            {parameters.map((param, idx) => (
+              <div key={idx} className="block">
                 <code className="">{param[0]}</code>
                 <span className="ml-1">{`(${param[1].type}):`}</span>
                 <span className="ml-1 italic">{param[1].description}</span>

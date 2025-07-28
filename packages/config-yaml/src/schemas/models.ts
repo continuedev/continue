@@ -163,6 +163,7 @@ export const modelSchema = z.union([
   z.object({
     ...baseModelFields,
     provider: z.string().refine((val) => val !== "continue-proxy"),
+    sourceFile: z.string().optional(),
   }),
 ]);
 
