@@ -4,7 +4,7 @@ import * as path from "path";
 import * as yaml from "yaml";
 import logger from "../util/logger.js";
 import { normalizeToolName } from "./toolNameMapping.js";
-import { ToolPermissionPolicy } from "./types.js";
+import { ToolPermissionPolicy, PermissionPolicy } from "./types.js";
 
 export const PERMISSIONS_YAML_PATH = path.join(
   os.homedir(),
@@ -68,6 +68,51 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
 }
 
 /**
+ * Parses a pattern string into a ToolPermissionPolicy
+ * Supports formats like:
+ * - "Write" -> { tool: "write_file", permission }
+ * - "Write(pattern)" -> { tool: "write_file", permission, argumentMatches: { file_path: "pattern" } }
+ * - "Bash(npm install)" -> { tool: "run_terminal_command", permission, argumentMatches: { command: "npm install" } }
+ */
+export function parseToolPattern(pattern: string, permission: PermissionPolicy): ToolPermissionPolicy {
+  const match = pattern.match(/^([^(]+)(?:\(([^)]*)\))?$/);
+  if (!match) {
+    throw new Error(`Invalid tool pattern: ${pattern}`);
+  }
+
+  const [, toolName, args] = match;
+  const normalizedName = normalizeToolName(toolName.trim());
+
+  const policy: ToolPermissionPolicy = {
+    tool: normalizedName,
+    permission,
+  };
+
+  if (args) {
+    const trimmedArgs = args.trim();
+    if (trimmedArgs) {
+      // Map tool names to their primary argument parameter
+      const toolArgMappings: Record<string, string> = {
+        "write_file": "file_path",
+        "read_file": "file_path", 
+        "list_files": "path",
+        "search_code": "query",
+        "run_terminal_command": "command",
+        "fetch": "url",
+        "view_diff": "file_path",
+      };
+
+      const argKey = toolArgMappings[normalizedName] || "pattern";
+      policy.argumentMatches = {
+        [argKey]: trimmedArgs
+      };
+    }
+  }
+
+  return policy;
+}
+
+/**
  * Converts permissions YAML config to ToolPermissionPolicy array
  */
 export function yamlConfigToPolicies(
@@ -77,23 +122,20 @@ export function yamlConfigToPolicies(
 
   // Order matters: more restrictive policies first
   if (config.exclude) {
-    for (const tool of config.exclude) {
-      const normalizedName = normalizeToolName(tool);
-      policies.push({ tool: normalizedName, permission: "exclude" });
+    for (const pattern of config.exclude) {
+      policies.push(parseToolPattern(pattern, "exclude"));
     }
   }
 
   if (config.ask) {
-    for (const tool of config.ask) {
-      const normalizedName = normalizeToolName(tool);
-      policies.push({ tool: normalizedName, permission: "ask" });
+    for (const pattern of config.ask) {
+      policies.push(parseToolPattern(pattern, "ask"));
     }
   }
 
   if (config.allow) {
-    for (const tool of config.allow) {
-      const normalizedName = normalizeToolName(tool);
-      policies.push({ tool: normalizedName, permission: "allow" });
+    for (const pattern of config.allow) {
+      policies.push(parseToolPattern(pattern, "allow"));
     }
   }
 
