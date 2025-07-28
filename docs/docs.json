@@ -1,0 +1,993 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Continue",
+  "colors": {
+    "primary": "#6b7280",
+    "light": "#ffffff",
+    "dark": "#000000"
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket-launch",
+            "pages": [
+              "index",
+              "getting-started/overview",
+              "getting-started/install"
+            ]
+          },
+          {
+            "group": "Features",
+            "icon": "star",
+            "pages": [
+              {
+                "group": "Chat",
+                "icon": "messages",
+                "pages": [
+                  "features/chat/quick-start",
+                  "features/chat/how-it-works",
+                  "features/chat/model-setup",
+                  "features/chat/how-to-customize",
+                  "features/chat/context-selection"
+                ]
+              },
+              {
+                "group": "Autocomplete",
+                "icon": "sparkles",
+                "pages": [
+                  "features/autocomplete/quick-start",
+                  "features/autocomplete/how-it-works",
+                  "features/autocomplete/model-setup",
+                  "features/autocomplete/how-to-customize",
+                  "features/autocomplete/context-selection"
+                ]
+              },
+              {
+                "group": "Edit",
+                "icon": "pen-to-square",
+                "pages": [
+                  "features/edit/quick-start",
+                  "features/edit/how-it-works",
+                  "features/edit/model-setup",
+                  "features/edit/how-to-customize",
+                  "features/edit/context-selection"
+                ]
+              },
+              {
+                "group": "Agent",
+                "icon": "robot",
+                "pages": [
+                  "features/agent/quick-start",
+                  "features/agent/how-it-works",
+                  "features/agent/plan-mode",
+                  "features/agent/model-setup",
+                  "features/agent/how-to-customize",
+                  "features/agent/context-selection"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Customization",
+            "icon": "sliders",
+            "pages": [
+              "customization/overview",
+              "customization/models",
+              "customization/prompts",
+              "customization/rules",
+              "customization/mcp-tools"
+            ]
+          },
+          {
+            "group": "Help",
+            "icon": "book-open",
+            "pages": ["troubleshooting"]
+          }
+        ]
+      },
+      {
+        "tab": "Customize",
+        "groups": [
+          {
+            "group": "Customize",
+            "pages": [
+              "customize/overview",
+              {
+                "group": "Model Providers",
+                "icon": "server",
+                "pages": [
+                  {
+                    "group": "Popular Providers",
+                    "pages": [
+                      "customize/model-providers/top-level/anthropic",
+                      "customize/model-providers/top-level/openai",
+                      "customize/model-providers/top-level/azure",
+                      "customize/model-providers/top-level/bedrock",
+                      "customize/model-providers/top-level/ollama",
+                      "customize/model-providers/top-level/gemini",
+                      "customize/model-providers/top-level/deepseek",
+                      "customize/model-providers/top-level/mistral",
+                      "customize/model-providers/top-level/xAI",
+                      "customize/model-providers/top-level/vertexai",
+                      "customize/model-providers/top-level/inception"
+                    ]
+                  },
+                  {
+                    "group": "More Providers",
+                    "pages": [
+                      "customize/model-providers/more/groq",
+                      "customize/model-providers/more/together",
+                      "customize/model-providers/more/lmstudio",
+                      "customize/model-providers/more/llamacpp",
+                      "customize/model-providers/more/openrouter",
+                      "customize/model-providers/more/huggingfaceinferenceapi",
+                      "customize/model-providers/more/cohere",
+                      "customize/model-providers/more/nvidia",
+                      "customize/model-providers/more/cloudflare",
+                      "customize/model-providers/more/deepinfra"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Model Roles",
+                "icon": "robot",
+                "pages": [
+                  "customize/model-roles/00-intro",
+                  "customize/model-roles/chat",
+                  "customize/model-roles/autocomplete",
+                  "customize/model-roles/edit",
+                  "customize/model-roles/apply",
+                  "customize/model-roles/embeddings",
+                  "customize/model-roles/reranking"
+                ]
+              },
+              {
+                "group": "Context Providers",
+                "icon": "code",
+                "pages": [
+                  "customize/context/codebase",
+                  "customize/context/documentation"
+                ]
+              },
+              {
+                "group": "Deep Dives",
+                "icon": "microscope",
+                "pages": [
+                  "customize/deep-dives/configuration",
+                  "customize/settings",
+                  "customize/deep-dives/slash-commands",
+                  "customize/deep-dives/rules",
+                  "customize/deep-dives/prompts",
+                  "customize/deep-dives/autocomplete",
+                  "customize/deep-dives/development-data",
+                  "customize/deep-dives/vscode-actions",
+                  "customize/deep-dives/mcp"
+                ]
+              },
+              {
+                "group": "Telemetry",
+                "icon": "chart-line",
+                "pages": ["customize/telemetry"]
+              },
+              "customize/custom-providers"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Hub",
+        "groups": [
+          {
+            "group": "Hub",
+            "pages": [
+              "hub/introduction",
+              {
+                "group": "Assistants",
+                "icon": "robot",
+                "pages": [
+                  "hub/assistants/intro",
+                  "hub/assistants/use-an-assistant",
+                  "hub/assistants/create-an-assistant",
+                  "hub/assistants/edit-an-assistant"
+                ]
+              },
+              {
+                "group": "Blocks",
+                "icon": "cube",
+                "pages": [
+                  "hub/blocks/intro",
+                  "hub/blocks/use-a-block",
+                  "hub/blocks/block-types",
+                  "hub/blocks/create-a-block",
+                  "hub/blocks/bundles"
+                ]
+              },
+              {
+                "group": "Governance",
+                "icon": "building",
+                "pages": [
+                  "hub/governance/creating-an-org",
+                  "hub/governance/org-permissions",
+                  "hub/governance/pricing"
+                ]
+              },
+              {
+                "group": "Secrets",
+                "icon": "key",
+                "pages": [
+                  "hub/secrets/secret-types",
+                  "hub/secrets/secret-resolution"
+                ]
+              },
+              "hub/sharing",
+              "hub/source-control"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/overview",
+              "guides/ollama-guide",
+              "guides/llama3.1",
+              "guides/set-up-codestral",
+              "guides/running-continue-without-internet",
+              "guides/custom-code-rag",
+              "guides/build-your-own-context-provider",
+              "guides/how-to-self-host-a-model"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Reference",
+            "icon": "code",
+            "pages": [
+              "reference",
+              "reference/json-reference",
+              "reference/yaml-migration",
+              "reference/continue-mcp"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "About Us",
+          "href": "https://continue.dev/about-us",
+          "icon": "book-open"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://discord.gg/NWtdYexhMs",
+          "icon": "discord"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://continue.dev/blog",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://continue.dev"
+  },
+  "background": {
+    "color": {
+      "dark": "#1a1a1a"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Explore",
+        "href": "https://hub.continue.dev/"
+      }
+    ],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/continuedev/continue"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://twitter.com/continuedev",
+      "github": "https://github.com/continuedev/continue",
+      "linkedin": "https://linkedin.com/company/continuedev",
+      "discord": "https://discord.gg/vapESyrFmJ"
+    }
+  },
+  "contextual": {
+    "options": ["copy", "view"]
+  },
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": false
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-M3JWW8N2XQ"
+    },
+    "posthog": {
+      "apiKey": "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/hub",
+      "destination": "/hub/introduction"
+    },
+    {
+      "source": "/hub/governance",
+      "destination": "/hub/governance/org-permissions"
+    },
+    {
+      "source": "/hub/secrets",
+      "destination": "/hub/secrets/secret-types"
+    },
+    {
+      "source": "/hub/assistants",
+      "destination": "/hub/assistants/intro"
+    },
+    {
+      "source": "/hub/blocks",
+      "destination": "/hub/blocks/intro"
+    },
+    {
+      "source": "/customize",
+      "destination": "/customization/overview"
+    },
+    {
+      "source": "/customization",
+      "destination": "/customization/overview"
+    },
+    {
+      "source": "/customize/tools",
+      "destination": "/customization/mcp-tools"
+    },
+    {
+      "source": "/install/vscode",
+      "destination": "/getting-started/install"
+    },
+    {
+      "source": "/install/jetbrains",
+      "destination": "/getting-started/install"
+    },
+    {
+      "source": "/advanced/deep-dives/settings",
+      "destination": "/customize/settings"
+    },
+    {
+      "source": "/customize/deep-dives/settings",
+      "destination": "/customize/settings"
+    },
+    {
+      "source": "/customize/model-types",
+      "destination": "/customize/model-roles/intro"
+    },
+    {
+      "source": "/setup/overview",
+      "destination": "/customize/model-roles/intro"
+    },
+    {
+      "source": "/advanced/model-roles/intro",
+      "destination": "/customize/model-roles/intro"
+    },
+    {
+      "source": "/customize/model-types/embeddings",
+      "destination": "/customize/model-roles/embeddings"
+    },
+    {
+      "source": "/advanced/model-roles/embeddings",
+      "destination": "/customize/model-roles/embeddings"
+    },
+    {
+      "source": "/customize/model-types/autocomplete",
+      "destination": "/customize/model-roles/autocomplete"
+    },
+    {
+      "source": "/advanced/model-roles/autocomplete",
+      "destination": "/customize/model-roles/autocomplete"
+    },
+    {
+      "source": "/customize/model-types/chat",
+      "destination": "/customize/model-roles/chat"
+    },
+    {
+      "source": "/advanced/model-roles/chat",
+      "destination": "/customize/model-roles/chat"
+    },
+    {
+      "source": "/customize/model-types/reranking",
+      "destination": "/customize/model-roles/reranking"
+    },
+    {
+      "source": "/advanced/model-roles/reranking",
+      "destination": "/customize/model-roles/reranking"
+    },
+    {
+      "source": "/model-setup/overview",
+      "destination": "/getting-started/overview"
+    },
+    {
+      "source": "/model-setup/select-model",
+      "destination": "/getting-started/overview"
+    },
+    {
+      "source": "/model-setup/configuration",
+      "destination": "/getting-started/overview"
+    },
+    {
+      "source": "/quickstart",
+      "destination": "/getting-started/overview"
+    },
+    {
+      "source": "/how-to-use-continue",
+      "destination": "/getting-started/overview"
+    },
+    {
+      "source": "/setup/select-provider",
+      "destination": "/customize/model-providers/anthropic"
+    },
+    {
+      "source": "/setup/model-providers",
+      "destination": "/customize/model-providers/anthropic"
+    },
+    {
+      "source": "/advanced/model-providers/anthropic",
+      "destination": "/customize/model-providers/anthropic"
+    },
+    {
+      "source": "/walkthroughs/codebase-embeddings",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/features/codebase-embeddings",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/advanced/deep-dives/codebase",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/advanced/context/codebase",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/walkthroughs/tab-autocomplete",
+      "destination": "/customize/deep-dives/autocomplete"
+    },
+    {
+      "source": "/features/tab-autocomplete",
+      "destination": "/customize/deep-dives/autocomplete"
+    },
+    {
+      "source": "/advanced/deep-dives/autocomplete",
+      "destination": "/customize/deep-dives/autocomplete"
+    },
+    {
+      "source": "/walkthroughs/prompt-files",
+      "destination": "/customize/deep-dives/prompts"
+    },
+    {
+      "source": "/features/prompt-files",
+      "destination": "/customize/deep-dives/prompts"
+    },
+    {
+      "source": "/advanced/deep-dives/prompts",
+      "destination": "/customize/deep-dives/prompts"
+    },
+    {
+      "source": "/actions/how-to-use-it",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/actions/how-to-customize",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/actions",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/actions/model-setup",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/actions/context-selection",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/actions/how-it-works",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/customize/slash-commands",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/customization/slash-commands",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/advanced/deep-dives/slash-commands",
+      "destination": "/customize/deep-dives/slash-commands"
+    },
+    {
+      "source": "/walkthroughs/quick-actions",
+      "destination": "/customize/deep-dives/vscode-actions"
+    },
+    {
+      "source": "/advanced/deep-dives/vscode-actions",
+      "destination": "/customize/deep-dives/vscode-actions"
+    },
+    {
+      "source": "/changelog",
+      "destination": "/reference"
+    },
+    {
+      "source": "/customization/code-config",
+      "destination": "/reference"
+    },
+    {
+      "source": "/reference/config",
+      "destination": "/reference"
+    },
+    {
+      "source": "/yaml-reference",
+      "destination": "/reference"
+    },
+    {
+      "source": "/customization/context-providers",
+      "destination": "/customize/custom-providers"
+    },
+    {
+      "source": "/advanced/context-integration/custom-providers",
+      "destination": "/customize/custom-providers"
+    },
+    {
+      "source": "/advanced/context/custom-providers",
+      "destination": "/customize/custom-providers"
+    },
+    {
+      "source": "/advanced/custom-providers",
+      "destination": "/customize/custom-providers"
+    },
+    {
+      "source": "/development-data",
+      "destination": "/customize/deep-dives/development-data"
+    },
+    {
+      "source": "/customize/development-data",
+      "destination": "/customize/deep-dives/development-data"
+    },
+    {
+      "source": "/advanced/deep-dives/development-data",
+      "destination": "/customize/deep-dives/development-data"
+    },
+    {
+      "source": "/features/talk-to-your-docs",
+      "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/advanced/context-integration/documentation",
+      "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/advanced/deep-dives/docs",
+      "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/advanced/context/documentation",
+      "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/reference/Model Providers/anthropicllm",
+      "destination": "/customize/model-providers/anthropic"
+    },
+    {
+      "source": "/reference/Model Providers/azure",
+      "destination": "/customize/model-providers/azure"
+    },
+    {
+      "source": "/advanced/model-providers/azure",
+      "destination": "/customize/model-providers/azure"
+    },
+    {
+      "source": "/reference/Model Providers/bedrock",
+      "destination": "/customize/model-providers/bedrock"
+    },
+    {
+      "source": "/advanced/model-providers/bedrock",
+      "destination": "/customize/model-providers/bedrock"
+    },
+    {
+      "source": "/reference/Model Providers/deepseek",
+      "destination": "/customize/model-providers/deepseek"
+    },
+    {
+      "source": "/advanced/model-providers/deepseek",
+      "destination": "/customize/model-providers/deepseek"
+    },
+    {
+      "source": "/reference/Model Providers/freetrial",
+      "destination": "/customize/model-providers/anthropic"
+    },
+    {
+      "source": "/reference/Model Providers/geminiapi",
+      "destination": "/customize/model-providers/gemini"
+    },
+    {
+      "source": "/advanced/model-providers/gemini",
+      "destination": "/customize/model-providers/gemini"
+    },
+    {
+      "source": "/reference/Model Providers/mistral",
+      "destination": "/customize/model-providers/mistral"
+    },
+    {
+      "source": "/advanced/model-providers/mistral",
+      "destination": "/customize/model-providers/mistral"
+    },
+    {
+      "source": "/reference/Model Providers/ollama",
+      "destination": "/customize/model-providers/ollama"
+    },
+    {
+      "source": "/advanced/model-providers/ollama",
+      "destination": "/customize/model-providers/ollama"
+    },
+    {
+      "source": "/reference/Model Providers/openai",
+      "destination": "/customize/model-providers/openai"
+    },
+    {
+      "source": "/advanced/model-providers/openai",
+      "destination": "/customize/model-providers/openai"
+    },
+    {
+      "source": "/intro",
+      "destination": "/"
+    },
+    {
+      "source": "/reference/Model Providers/cloudflare",
+      "destination": "/customize/model-providers/more/cloudflare"
+    },
+    {
+      "source": "/advanced/model-providers/more/cloudflare",
+      "destination": "/customize/model-providers/more/cloudflare"
+    },
+    {
+      "source": "/reference/Model Providers/cohere",
+      "destination": "/customize/model-providers/more/cohere"
+    },
+    {
+      "source": "/advanced/model-providers/more/cohere",
+      "destination": "/customize/model-providers/more/cohere"
+    },
+    {
+      "source": "/reference/Model Providers/deepinfra",
+      "destination": "/customize/model-providers/more/deepinfra"
+    },
+    {
+      "source": "/advanced/model-providers/more/deepinfra",
+      "destination": "/customize/model-providers/more/deepinfra"
+    },
+    {
+      "source": "/reference/Model Providers/flowise",
+      "destination": "/customize/model-providers/more/flowise"
+    },
+    {
+      "source": "/advanced/model-providers/more/flowise",
+      "destination": "/customize/model-providers/more/flowise"
+    },
+    {
+      "source": "/advanced/model-providers/more/llamastack",
+      "destination": "/customize/model-providers/llamastack"
+    },
+    {
+      "source": "/reference/Model Providers/huggingfaceinferenceapi",
+      "destination": "/customize/model-providers/more/huggingfaceinferenceapi"
+    },
+    {
+      "source": "/advanced/model-providers/more/huggingfaceinferenceapi",
+      "destination": "/customize/model-providers/more/huggingfaceinferenceapi"
+    },
+    {
+      "source": "/reference/Model Providers/ipex_llm",
+      "destination": "/customize/model-providers/more/ipex_llm"
+    },
+    {
+      "source": "/advanced/model-providers/more/ipex_llm",
+      "destination": "/customize/model-providers/more/ipex_llm"
+    },
+    {
+      "source": "/reference/Model Providers/kindo",
+      "destination": "/customize/model-providers/more/kindo"
+    },
+    {
+      "source": "/advanced/model-providers/more/kindo",
+      "destination": "/customize/model-providers/more/kindo"
+    },
+    {
+      "source": "/reference/Model Providers/llamacpp",
+      "destination": "/customize/model-providers/more/llamacpp"
+    },
+    {
+      "source": "/advanced/model-providers/more/llamacpp",
+      "destination": "/customize/model-providers/more/llamacpp"
+    },
+    {
+      "source": "/reference/Model Providers/llamafile",
+      "destination": "/customize/model-providers/more/llamafile"
+    },
+    {
+      "source": "/advanced/model-providers/more/llamafile",
+      "destination": "/customize/model-providers/more/llamafile"
+    },
+    {
+      "source": "/reference/Model Providers/lmstudio",
+      "destination": "/customize/model-providers/more/lmstudio"
+    },
+    {
+      "source": "/advanced/model-providers/more/lmstudio",
+      "destination": "/customize/model-providers/more/lmstudio"
+    },
+    {
+      "source": "/reference/Model Providers/msty",
+      "destination": "/customize/model-providers/more/msty"
+    },
+    {
+      "source": "/advanced/model-providers/more/msty",
+      "destination": "/customize/model-providers/more/msty"
+    },
+    {
+      "source": "/reference/Model Providers/openrouter",
+      "destination": "/customize/model-providers/more/openrouter"
+    },
+    {
+      "source": "/advanced/model-providers/more/openrouter",
+      "destination": "/customize/model-providers/more/openrouter"
+    },
+    {
+      "source": "/reference/Model Providers/replicatellm",
+      "destination": "/customize/model-providers/more/replicatellm"
+    },
+    {
+      "source": "/advanced/model-providers/more/replicatellm",
+      "destination": "/customize/model-providers/more/replicatellm"
+    },
+    {
+      "source": "/reference/Model Providers/sagemaker",
+      "destination": "/customize/model-providers/more/sagemaker"
+    },
+    {
+      "source": "/advanced/model-providers/more/sagemaker",
+      "destination": "/customize/model-providers/more/sagemaker"
+    },
+    {
+      "source": "/reference/Model Providers/textgenwebui",
+      "destination": "/customize/model-providers/more/textgenwebui"
+    },
+    {
+      "source": "/advanced/model-providers/more/textgenwebui",
+      "destination": "/customize/model-providers/more/textgenwebui"
+    },
+    {
+      "source": "/reference/Model Providers/together",
+      "destination": "/customize/model-providers/more/together"
+    },
+    {
+      "source": "/advanced/model-providers/more/together",
+      "destination": "/customize/model-providers/more/together"
+    },
+    {
+      "source": "/reference/Model Providers/novita",
+      "destination": "/customize/model-providers/more/novita"
+    },
+    {
+      "source": "/advanced/model-providers/more/novita",
+      "destination": "/customize/model-providers/more/novita"
+    },
+    {
+      "source": "/reference/Model Providers/vllm",
+      "destination": "/customize/model-providers/more/vllm"
+    },
+    {
+      "source": "/advanced/model-providers/more/vllm",
+      "destination": "/customize/model-providers/more/vllm"
+    },
+    {
+      "source": "/reference/Model Providers/watsonx",
+      "destination": "/customize/model-providers/more/watsonx"
+    },
+    {
+      "source": "/advanced/model-providers/more/watsonx",
+      "destination": "/customize/model-providers/more/watsonx"
+    },
+    {
+      "source": "/reference/Model Providers/nebius",
+      "destination": "/customize/model-providers/more/nebius"
+    },
+    {
+      "source": "/advanced/model-providers/more/nebius",
+      "destination": "/customize/model-providers/more/nebius"
+    },
+    {
+      "source": "/chat",
+      "destination": "/features/chat/quick-start"
+    },
+    {
+      "source": "/chat/how-to-use-it",
+      "destination": "/features/chat/quick-start"
+    },
+    {
+      "source": "/agent",
+      "destination": "/features/agent/quick-start"
+    },
+    {
+      "source": "/agent/how-to-use-it",
+      "destination": "/features/agent/quick-start"
+    },
+    {
+      "source": "/features/agent/how-to-use-it",
+      "destination": "/features/agent/quick-start"
+    },
+    {
+      "source": "/edit",
+      "destination": "/features/edit/quick-start"
+    },
+    {
+      "source": "/edit/how-to-use-it",
+      "destination": "/features/edit/quick-start"
+    },
+    {
+      "source": "/features/edit/how-to-use-it",
+      "destination": "/features/edit/quick-start"
+    },
+    {
+      "source": "/autocomplete",
+      "destination": "/features/autocomplete/quick-start"
+    },
+    {
+      "source": "/autocomplete/how-to-use-it",
+      "destination": "/features/autocomplete/quick-start"
+    },
+    {
+      "source": "/features/autocomplete/how-to-use-it",
+      "destination": "/features/autocomplete/quick-start"
+    },
+    {
+      "source": "/getting-started",
+      "destination": "/getting-started/install"
+    },
+    {
+      "source": "/customize/deep-dives/prompt-files",
+      "destination": "/customize/deep-dives/prompts"
+    },
+    {
+      "source": "/chat/how-it-works",
+      "destination": "/features/chat/how-it-works"
+    },
+    {
+      "source": "/autocomplete/how-it-works",
+      "destination": "/features/autocomplete/how-it-works"
+    },
+    {
+      "source": "/edit/how-it-works",
+      "destination": "/features/edit/how-it-works"
+    },
+    {
+      "source": "/agent/how-it-works",
+      "destination": "/features/agent/how-it-works"
+    },
+    {
+      "source": "/telemetry",
+      "destination": "/customize/telemetry"
+    },
+    {
+      "source": "/advanced/telemetry",
+      "destination": "/customize/telemetry"
+    },
+    {
+      "source": "/yaml-migration",
+      "destination": "/reference/yaml-migration"
+    },
+    {
+      "source": "/advanced/yaml-migration",
+      "destination": "/reference/yaml-migration"
+    },
+    {
+      "source": "/json-reference",
+      "destination": "/reference/json-reference"
+    },
+    {
+      "source": "/advanced/json-reference",
+      "destination": "/reference/json-reference"
+    },
+    {
+      "source": "/customize/json-reference",
+      "destination": "/reference/json-reference"
+    },
+    {
+      "source": "/customize/yaml-migration",
+      "destination": "/reference/yaml-migration"
+    },
+    {
+      "source": "/about",
+      "destination": "/about-us"
+    },
+    {
+      "source": "/autocomplete/model-setup",
+      "destination": "/features/autocomplete/model-setup"
+    },
+    {
+      "source": "/autocomplete/how-to-customize",
+      "destination": "/features/autocomplete/how-to-customize"
+    },
+    {
+      "source": "/autocomplete/context-selection",
+      "destination": "/features/autocomplete/context-selection"
+    },
+    {
+      "source": "/chat/model-setup",
+      "destination": "/features/chat/model-setup"
+    },
+    {
+      "source": "/chat/how-to-customize",
+      "destination": "/features/chat/how-to-customize"
+    },
+    {
+      "source": "/chat/context-selection",
+      "destination": "/features/chat/context-selection"
+    },
+    {
+      "source": "/features/chat/how-to-use-it",
+      "destination": "/features/chat/quick-start"
+    },
+    {
+      "source": "/edit/model-setup",
+      "destination": "/features/edit/model-setup"
+    },
+    {
+      "source": "/edit/how-to-customize",
+      "destination": "/features/edit/how-to-customize"
+    },
+    {
+      "source": "/edit/context-selection",
+      "destination": "/features/edit/context-selection"
+    },
+    {
+      "source": "/agent/model-setup",
+      "destination": "/features/agent/model-setup"
+    },
+    {
+      "source": "/agent/how-to-customize",
+      "destination": "/features/agent/how-to-customize"
+    },
+    {
+      "source": "/agent/context-selection",
+      "destination": "/features/agent/context-selection"
+    }
+  ]
+}

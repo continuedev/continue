@@ -1,29 +1,11 @@
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { Tool } from "core";
+import { MessageModes, Tool } from "core";
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../../../redux/slices/uiSlice";
 import { fontSize } from "../../../../../util";
+import Alert from "../../../../gui/Alert";
 import ToggleSwitch from "../../../../gui/Switch";
 import ToolPolicyItem from "./ToolPolicyItem";
-
-interface ModeBadgeProps {
-  text: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-  isSelected: boolean;
-}
-const ModeBadge = ({ text, onClick, isSelected, icon }: ModeBadgeProps) => {
-  return (
-    <div
-      className="flex flex-1 items-center justify-center gap-1.5 text-sm"
-      onClick={isSelected ? undefined : onClick}
-    >
-      {icon}
-      {text}
-    </div>
-  );
-};
 
 export const ToolPoliciesSection = () => {
   const mode = useAppSelector((state) => state.session.mode);
@@ -61,19 +43,28 @@ export const ToolPoliciesSection = () => {
 
   const allToolsOff = mode === "chat";
 
-  const message =
-    mode === "chat"
-      ? "All tools are disabled in Chat mode"
-      : mode === "plan"
-        ? "Plan mode: only read-only and MCP tools"
-        : "Agent mode: all tool policies apply";
+  const getMessage = (mode: MessageModes) => {
+    switch (mode) {
+      case "chat":
+        return "All tools disabled in Chat, switch to Plan or Agent mode to use tools";
+      case "plan":
+        return "Read-only/MCP tools available in Plan mode";
+      default:
+        return "";
+    }
+  };
+
+  const message = getMessage(mode);
 
   return (
     <>
-      <div className="mb-3 px-1">
-        <InformationCircleIcon className="text-description-muted mr-1.5 inline-block h-2.5 w-2.5 flex-shrink-0" />
-        <span className="text-description text-xs italic">{message}</span>
-      </div>
+      {(mode === "chat" || mode === "plan") && (
+        <div className="my-1 mb-3">
+          <Alert type="info" size="sm">
+            <span className="text-2xs italic">{message}</span>
+          </Alert>
+        </div>
+      )}
       {toolsByGroup.map(([groupName, tools]) => {
         const isGroupEnabled =
           !allToolsOff && toolGroupSettings[groupName] !== "exclude";

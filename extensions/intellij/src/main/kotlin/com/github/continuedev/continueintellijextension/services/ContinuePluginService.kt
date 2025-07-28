@@ -33,7 +33,7 @@ class ContinuePluginService : Disposable, DumbAware {
         coroutineScope.cancel()
         coreMessenger?.coroutineScope?.let {
             it.cancel()
-            coreMessenger?.killSubProcess()
+            coreMessenger?.close()
         }
     }
 

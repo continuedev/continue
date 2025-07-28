@@ -8,6 +8,7 @@ import {
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
+import { EventEmitter as NodeEventEmitter } from "node:events";
 import { v4 as uuidv4 } from "uuid";
 import {
   authentication,
@@ -101,6 +102,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     this.secretStorage = new SecretStorage(context);
 
     // Immediately refresh any existing sessions
+    this.attemptEmitter = new NodeEventEmitter();
+    WorkOsAuthProvider.hasAttemptedRefresh = new Promise((resolve) => {
+      this.attemptEmitter.on("attempted", resolve);
+    });
     void this.refreshSessions();
 
     // Set up a regular interval to refresh tokens
@@ -147,6 +152,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   public async getSessions(
     scopes?: string[],
   ): Promise<ContinueAuthenticationSession[]> {
+    // await this.hasAttemptedRefresh;
     const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
     if (!data) {
       return [];
@@ -182,6 +188,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return this.ideRedirectUri;
   }
 
+  public static hasAttemptedRefresh: Promise<void>;
+  private attemptEmitter: NodeEventEmitter;
   async refreshSessions() {
     // Prevent concurrent refresh operations
     if (this._isRefreshing) {
@@ -198,9 +206,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     }
   }
 
+  // It is important that every path in this function emits the attempted event
+  // As config loading in core will be locked until refresh is attempted
   private async _refreshSessions(): Promise<void> {
     const sessions = await this.getSessions();
     if (!sessions.length) {
+      this.attemptEmitter.emit("attempted");
       return;
     }
 
@@ -247,6 +258,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
+      this.attemptEmitter.emit("attempted");
       // Don't retry for auth errors
       if (
         error.message?.includes("401") ||
@@ -270,6 +282,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
             .catch(reject);
         }, delay);
       });
+    } finally {
+      this.attemptEmitter.emit("attempted");
     }
   }
 
@@ -553,7 +567,7 @@ export async function getControlPlaneSessionInfo(
     if (useOnboarding) {
       WorkOsAuthProvider.useOnboardingUri = true;
     }
-
+    await WorkOsAuthProvider.hasAttemptedRefresh;
     const session = await authentication.getSession(
       controlPlaneEnv.AUTH_TYPE,
       [],

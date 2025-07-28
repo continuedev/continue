@@ -48,7 +48,9 @@ export function renderMessage(message: ChatMessage, includeRole: boolean) {
           {includeRole ? renderMessageRole(message.role) : ""}
           {message.toolCalls
             ? message.toolCalls.map((toolCall) => (
-                <pre>Tool call: {JSON.stringify(toolCall, undefined, 2)}</pre>
+                <pre key={toolCall.id}>
+                  Tool call: {JSON.stringify(toolCall, undefined, 2)}
+                </pre>
               ))
             : ""}
           {renderMessageContent(message)}

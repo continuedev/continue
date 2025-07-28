@@ -11,6 +11,7 @@
       "../../../core/node_modules/sqlite3/**/*",
       "../../out/tree-sitter.wasm",
       "../../out/tree-sitter-wasms/*",
+      "../../tree-sitter/**/*",
       "../../out/llamaTokenizer.mjs",
       "../../out/llamaTokenizerWorkerPool.mjs",
       "../../out/tiktokenWorkerPool.mjs",

@@ -1,0 +1,80 @@
+---
+title: DeepSeek
+slug: ../deepseek
+---
+
+<Info>
+  You can get an API key from the [DeepSeek console](https://www.deepseek.com/).
+</Info>
+
+## Chat model
+
+We recommend configuring **DeepSeek Chat** as your chat model.
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: DeepSeek Chat
+       provider: deepseek
+       model: deepseek-chat
+       apiKey: <YOUR_DEEPSEEK_API_KEY>
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "DeepSeek Chat",
+         "provider": "deepseek",
+         "model": "deepseek-chat",
+         "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **DeepSeek Coder** as your autocomplete model.
+
+<Tabs>
+   <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: DeepSeek Coder
+        provider: deepseek
+        model: deepseek-coder
+        apiKey: <YOUR_DEEPSEEK_API_KEY>
+        roles:
+          - autocomplete
+    ```
+   </Tab>
+   <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "tabAutocompleteModel": {
+        "title": "DeepSeek Coder",
+        "provider": "deepseek",
+        "model": "deepseek-coder",
+        "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+      }
+    }
+    ```
+   </Tab>
+</Tabs>
+
+## Embeddings model
+
+DeepSeek currently does not offer any embeddings models.
+
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
+
+## Reranking model
+
+DeepSeek currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

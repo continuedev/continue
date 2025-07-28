@@ -75,6 +75,7 @@ describe("sessionSlice streamUpdate", () => {
     },
     newestToolbarPreviewForInput: {},
     isSessionMetadataLoading: false,
+    compactionLoading: {},
   });
 
   describe("Basic Chat Message", () => {
@@ -168,8 +169,10 @@ describe("sessionSlice streamUpdate", () => {
       // Check generating message
       expect(newState.history[1].message.role).toBe("assistant");
       expect(newState.history[1].message.content).toBe("");
-      expect(newState.history[1].toolCallState?.status).toBe("generating");
-      expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
+      expect(newState.history[1].toolCallStates?.[0]?.status).toBe(
+        "generating",
+      );
+      expect(newState.history[1].toolCallStates?.[0]?.toolCallId).toBe("1234");
 
       const toolResponseAction = {
         type: "session/streamUpdate",
@@ -237,8 +240,10 @@ describe("sessionSlice streamUpdate", () => {
       // Check generating message
       expect(newState.history[1].message.role).toBe("assistant");
       expect(newState.history[1].message.content).toBe("");
-      expect(newState.history[1].toolCallState?.status).toBe("generating");
-      expect(newState.history[1].toolCallState?.toolCallId).toBe("1234");
+      expect(newState.history[1].toolCallStates?.[0]?.status).toBe(
+        "generating",
+      );
+      expect(newState.history[1].toolCallStates?.[0]?.toolCallId).toBe("1234");
 
       const toolResponseAction = {
         type: "session/streamUpdate",
@@ -413,6 +418,37 @@ describe("sessionSlice streamUpdate", () => {
 
       expect(newState.history).toHaveLength(2);
       expect(newState.history[1].message.content).toBe("Hello world!");
+    });
+
+    it("should handle basic tool call streaming", () => {
+      const initialState = createInitialState();
+      const toolCallId = "call_123";
+
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            toolCalls: [
+              {
+                id: toolCallId,
+                type: "function" as const,
+                function: {
+                  name: "test_tool",
+                  arguments: '{"arg":"value"}',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].toolCallStates).toHaveLength(1);
     });
   });
 });

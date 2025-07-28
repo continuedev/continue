@@ -1,0 +1,45 @@
+Setting up the right model for autocomplete is crucial for a smooth coding experience. Here are our top recommendations:
+
+## Recommended Models
+
+### Hosted (Best Performance)
+
+For the highest quality autocomplete suggestions, we recommend **[Codestral](https://hub.continue.dev/mistral/codestral)** from Mistral.
+
+This model is specifically designed for code completion and offers excellent performance across multiple programming languages.
+
+**Codestral Quick Setup:**
+
+1. Get your API key from [Mistral AI](https://console.mistral.ai)
+2. Add [Codestral](https://hub.continue.dev/mistral/codestral) to your assistant on Continue Hub
+3. Add `MISTRAL_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the assistant selector in the Continue IDE extension
+
+### Hosted (Best Speed/Quality Tradeoff)
+
+For fast, quality autocomplete suggestions, we recommend **[Mercury Coder Small](https://hub.continue.dev/inceptionlabs/mercury-coder-small)** from Inception Labs.
+
+This model is specifically designed for code completion and is particularly fast because it is a diffusion model.
+
+**Mercury Coder Small Quick Setup:**
+
+1. Get your API key from [Inception Labs](https://platform.inceptionlabs.ai/)
+2. Add [Mercury Coder Small](https://hub.continue.dev/inceptionlabs/mercury-coder-small) to your assistant on Continue Hub
+3. Add `INCEPTION_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
+4. Click `Reload config` in the assistant selector in the Continue IDE extension
+
+### Local (Offline / Privacy First)
+
+For a fully local autocomplete experience, we recommend **[Qwen 2.5 Coder 1.5B](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)**.
+
+This model provides good suggestions while keeping your code completely private.
+
+**Quick Setup:**
+
+1. Install [Ollama](https://ollama.ai/)
+2. Add [Qwen 2.5 Coder 1.5B](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b) to your assistant on Continue Hub
+3. Click `Reload config` in the assistant selector in the Continue IDE extension
+
+## Need Help?
+
+If you're not seeing any completions or need more detailed configuration options, check out our comprehensive [autocomplete deep dive guide](/customize/deep-dives/autocomplete).

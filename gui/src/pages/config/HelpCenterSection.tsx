@@ -1,13 +1,14 @@
 import {
   ArrowTopRightOnSquareIcon,
   DocumentArrowUpIcon,
+  NumberedListIcon,
   PaintBrushIcon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppDispatch } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
 import { ROUTES } from "../../util/navigation";
@@ -17,6 +18,21 @@ export function HelpCenterSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  const currentSession = useAppSelector((state) => state.session);
+
+  const handleViewSessionData = async () => {
+    const sessionData = await ideMessenger.request("history/load", {
+      id: currentSession.id,
+    });
+
+    if (sessionData.status === "success") {
+      await ideMessenger.request("showVirtualFile", {
+        name: `${sessionData.content.title}.json`,
+        content: JSON.stringify(sessionData.content, null, 2),
+      });
+    }
+  };
 
   return (
     <div className="py-5">
@@ -67,6 +83,15 @@ export function HelpCenterSection() {
           Icon={TableCellsIcon}
           onClick={() => navigate("/stats")}
         />
+
+        {currentSession.history.length > 0 && !currentSession.isStreaming && (
+          <MoreHelpRow
+            title="View current session history"
+            description="Open the current chat session file for troubleshooting"
+            Icon={NumberedListIcon}
+            onClick={handleViewSessionData}
+          />
+        )}
 
         <MoreHelpRow
           title="Quickstart"
