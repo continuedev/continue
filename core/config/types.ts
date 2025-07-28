@@ -1057,6 +1057,7 @@ declare global {
     numDiffs?: number;
     filepath?: string;
     fileContent?: string;
+    originalFileContent?: string;
   }
   
   export interface RangeInFileWithContents {
