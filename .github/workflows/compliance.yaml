@@ -36,7 +36,7 @@ jobs:
         continue-on-error: true
 
       - name: Add commit message guidance comment
-        if: steps.commitlint.outcome == 'failure'
+        if: always() && steps.commitlint.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
@@ -88,6 +88,10 @@ jobs:
                 ].join('\n')
               });
             }
+
+      - name: Ensure job always succeeds
+        if: always()
+        run: echo "✅ Conventional commits check completed (warning only)"
 
   security-audit:
     name: Security Audit
