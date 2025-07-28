@@ -164,7 +164,7 @@ install_from_main() {
 
     # Install the extension
     echo "🚀 Installing VS Code extension..."
-    if code --install-extension "$target_path"; then
+    if code --install-extension "$target_path" --force; then
         echo "✅ Successfully installed Continue extension from main branch"
         echo "📄 VSIX file saved to: $target_path"
         echo ""
@@ -298,7 +298,7 @@ install_from_pr() {
 
 install_latest() {
     echo "🚀 Installing latest pre-release Continue extension..."
-    if code --install-extension --pre-release Continue.continue; then
+    if code --install-extension --pre-release Continue.continue --force; then
         echo "✅ Successfully installed latest pre-release Continue extension"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"
