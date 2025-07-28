@@ -37,7 +37,7 @@ models:
                 - id: test_id
                   type: function
                   function:
-                    name: builtin_view_diff
+                    name: view_diff
           - REPEAT_LAST_MSG
     roles:
       - chat

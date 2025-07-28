@@ -19,9 +19,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "claude-3-7",
         "claude-3.7",
         "claude-sonnet-4",
+        "claude-4-sonnet",
         "gpt-4",
         "o3",
         "gemini",
+        "claude-opus-4",
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
@@ -32,6 +34,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "claude-3-7",
           "claude-3.7",
           "claude-sonnet-4",
+          "claude-4-sonnet",
+          "claude-opus-4",
         ].some((part) => model.toLowerCase().startsWith(part))
       ) {
         return true;
@@ -79,22 +83,27 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return model.toLowerCase().includes("gemini");
     },
     vertexai: (model) => {
+      const lowerCaseModel = model.toLowerCase();
       // All gemini models except flash 2.0 lite support function calling
-      return (
-        model.toLowerCase().includes("gemini") &&
-        !model.toLowerCase().includes("lite")
-      );
+      if (lowerCaseModel.includes("lite")) {
+        return false;
+      }
+      return ["claude", "gemini"].some((val) => lowerCaseModel.includes(val));
     },
     bedrock: (model) => {
-      // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
       if (
-        model.toLowerCase().includes("sonnet") &&
         [
-          "claude-3-5",
-          "claude-3.5",
-          "claude-3-7",
-          "claude-3.7",
+          "claude-3-5-sonnet",
+          "claude-3.5-sonnet",
+          "claude-3-7-sonnet",
+          "claude-3.7-sonnet",
           "claude-sonnet-4",
+          "claude-4-sonnet",
+          "claude-opus-4",
+          "nova-lite",
+          "nova-pro",
+          "nova-micro",
+          "nova-premier",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
@@ -179,7 +188,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     deepseek: (model) => {
-      if (model !== "deepseek-reasoner") {
+      // https://api-docs.deepseek.com/quick_start/pricing
+      // https://api-docs.deepseek.com/guides/function_calling
+      if (model === "deepseek-reasoner" || model === "deepseek-chat") {
         return true;
       }
 

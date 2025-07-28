@@ -103,6 +103,16 @@ export function postprocessCompletion({
     }
   }
 
+  if (llm.model.includes("qwen3")) {
+    // Qwen3 always starts from special thinking markers, and we don't want them to output these contents
+    // Remove all content from "
+    completion = completion.replace(/<think>.*?<\/think>/s, "");
+    completion = completion.replace(/<\/think>/, "");
+
+    // Remove any number of newline characters at the beginning and end
+    completion = completion.replace(/^\n+|\n+$/g, "");
+  }
+
   if (llm.model.includes("mercury") || llm.model.includes("granite")) {
     // Granite tends to repeat the start of the line in the completion output
     let prefixEnd = prefix.split("\n").pop();
@@ -130,6 +140,14 @@ export function postprocessCompletion({
     (suffix.startsWith("\n") || suffix.trim().length === 0)
   ) {
     completion = "\n" + completion;
+  }
+
+  if (
+    (llm.model.includes("gemini") || llm.model.includes("gemma")) &&
+    completion.endsWith("<|file_separator|>")
+  ) {
+    // "<|file_separator|>" is 18 characters long
+    completion = completion.slice(0, -18);
   }
 
   // If prefix ends with space and so does completion, then remove the space from completion

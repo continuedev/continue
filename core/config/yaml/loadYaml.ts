@@ -26,7 +26,6 @@ import {
   RuleWithSource,
 } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
@@ -57,6 +56,8 @@ function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
       rule: rule.rule,
       globs: rule.globs,
       name: rule.name,
+      ruleFile: rule.sourceFile,
+      alwaysApply: rule.alwaysApply,
     };
   }
 }
@@ -70,6 +71,7 @@ function convertYamlMcpToContinueMcp(
       command: server.command,
       args: server.args ?? [],
       env: server.env,
+      cwd: server.cwd,
     } as any, // TODO: Fix the mcpServers types in config-yaml (discriminated union)
     timeout: server.connectionTimeout,
   };
@@ -235,6 +237,8 @@ async function configYamlToContinueConfig(options: {
     startUrl: doc.startUrl,
     rootUrl: doc.rootUrl,
     faviconUrl: doc.faviconUrl,
+    useLocalCrawling: doc.useLocalCrawling,
+    sourceFile: doc.sourceFile,
   }));
 
   config.mcpServers?.forEach((mcpServer) => {
@@ -385,13 +389,7 @@ async function configYamlToContinueConfig(options: {
   }
 
   // Context providers
-  const codebaseContextParams: IContextProvider[] =
-    (config.context || []).find((cp) => cp.provider === "codebase")?.params ||
-    {};
-  const DEFAULT_CONTEXT_PROVIDERS = [
-    new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
-  ];
+  const DEFAULT_CONTEXT_PROVIDERS = [new FileContextProvider({})];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
     ({ description: { title } }) => title,
@@ -433,6 +431,7 @@ async function configYamlToContinueConfig(options: {
     (config.mcpServers ?? []).map((server) => ({
       id: server.name,
       name: server.name,
+      sourceFile: server.sourceFile,
       transport: {
         type: "stdio",
         args: [],

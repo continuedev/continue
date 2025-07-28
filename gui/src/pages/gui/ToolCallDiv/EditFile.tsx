@@ -4,25 +4,26 @@ import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 type EditToolCallProps = {
   relativeFilePath: string;
   changes: string;
-  toolCallId?: string;
   historyIndex: number;
+  toolCallId?: string;
 };
 
 export function EditFile(props: EditToolCallProps) {
-  if (!props.relativeFilePath || !props.changes) {
+  if (!props.relativeFilePath) {
     return null;
   }
 
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath ?? "test.txt")} ${props.relativeFilePath}\n${props.changes}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilePath)} ${props.relativeFilePath}\n${props.changes}\n\`\`\``;
 
   return (
     <StyledMarkdownPreview
+      expandCodeblocks={false}
       isRenderingInStepContainer
       disableManualApply
       source={src}
       toolCallId={props.toolCallId}
-      expandCodeblocks={false}
       itemIndex={props.historyIndex}
+      collapsible={true}
     />
   );
 }

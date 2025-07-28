@@ -1,29 +1,32 @@
 import * as React from "react";
 import { cn } from "../../util/cn";
-import { FontSizeModifier, useFontSize } from "./font";
 
 type ButtonVariant = "ghost" | "primary" | "secondary" | "outline";
+type ButtonSize = "sm" | "lg";
 
 type ButtonProps = React.ComponentProps<"button"> & {
   variant?: ButtonVariant;
-  fontSizeModifier?: FontSizeModifier;
+  size?: ButtonSize;
 };
 
 const buttonVariants = {
   primary:
-    "px-3 py-1.5 border-none text-background bg-foreground hover:enabled:brightness-125",
+    "border-none text-foreground bg-primary hover:enabled:brightness-125",
   secondary:
-    "px-3 py-1.5 border border-input-border text-foreground bg-input hover:enabled:bg-background hover:enabled:opacity-90",
+    "border-none text-foreground bg-border hover:enabled:brightness-125",
   outline:
-    "px-3 py-1.5 border-[0.5px] border-foreground text-foreground bg-transparent hover:enabled:bg-foreground/10",
+    "border border-solid border-badge border-border text-foreground bg-transparent hover:enabled:bg-input",
   ghost:
-    "px-2 py-1.5 border-none text-foreground bg-gray-500/40 hover:enabled:brightness-125",
+    "border-none text-foreground bg-inherit hover:enabled:brightness-125 hover:enabled:bg-input",
+};
+
+const buttonSizes = {
+  sm: "px-1.5 py-0.5 text-2xs",
+  lg: "px-2 py-1 text-sm",
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", fontSizeModifier = 0, className, ...props }, ref) => {
-    const fontSize = useFontSize(fontSizeModifier);
-
+  ({ variant = "primary", size = "lg", className, ...props }, ref) => {
     return (
       <button
         ref={ref}
@@ -32,10 +35,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "hover:enabled:cursor-pointer",
           "disabled:text-description-muted disabled:pointer-events-none disabled:opacity-50",
           buttonVariants[variant],
+          buttonSizes[size],
           className,
         )}
         style={{
-          fontSize,
+          fontFamily: "system-ui, -apple-system, sans-serif",
           ...props.style,
         }}
         {...props}

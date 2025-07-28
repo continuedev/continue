@@ -28,7 +28,7 @@ export function EditToolbar() {
         Back to {mode.charAt(0).toUpperCase() + mode.slice(1)}
       </span>
       <span className="truncate">
-        Editing{" "}
+        Editing:{" "}
         <span className="italic">
           {getEditFilenameAndRangeText(codeToEdit)}
         </span>

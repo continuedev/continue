@@ -8,6 +8,7 @@ export interface IndexingProgressTitleTextProps {
 const STATUS_TO_TEXT: Record<IndexingProgressUpdate["status"], string> = {
   done: "Indexing complete",
   loading: "Initializing",
+  waiting: "Indexing other workspace",
   indexing: "Indexing in-progress",
   paused: "Indexing paused",
   failed: "Indexing failed",

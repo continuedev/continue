@@ -20,6 +20,7 @@ import {
   Tool,
 } from "../../";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
+import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
@@ -36,7 +37,7 @@ import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
-import { loadCodebaseRules } from "../markdown/loadCodebaseRules";
+import { CodebaseRulesCache } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
@@ -152,11 +153,21 @@ export default async function doLoadConfig(options: {
   newConfig.rules.unshift(...rules);
   newConfig.contextProviders.push(new RulesContextProvider({}));
 
+  // Add current file as context if setting is enabled
+  if (
+    newConfig.experimental?.useCurrentFileAsContext === true &&
+    !newConfig.contextProviders.find(
+      (c) =>
+        c.description.title === CurrentFileContextProvider.description.title,
+    )
+  ) {
+    newConfig.contextProviders.push(new CurrentFileContextProvider({}));
+  }
+
   // Add rules from colocated rules.md files in the codebase
-  const { rules: codebaseRules, errors: codebaseRulesErrors } =
-    await loadCodebaseRules(ide);
-  newConfig.rules.unshift(...codebaseRules);
-  errors.push(...codebaseRulesErrors);
+  const codebaseRulesCache = CodebaseRulesCache.getInstance();
+  newConfig.rules.unshift(...codebaseRulesCache.rules);
+  errors.push(...codebaseRulesCache.errors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
@@ -230,6 +241,8 @@ export default async function doLoadConfig(options: {
   newConfig.tools.push(
     ...getConfigDependentToolDefinitions({
       rules: newConfig.rules,
+      enableExperimentalTools:
+        newConfig.experimental?.enableExperimentalTools ?? false,
     }),
   );
 

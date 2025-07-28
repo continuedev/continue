@@ -4,7 +4,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectCurrentToolCallApplyState } from "../redux/selectors/selectCurrentToolCall";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
@@ -20,24 +19,28 @@ import {
 import {
   acceptToolCall,
   addContextItemsAtIndex,
-  selectCurrentToolCall,
   setHasReasoningEnabled,
+  setIsSessionMetadataLoading,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
 import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
 
+import { store } from "../redux/store";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import { findToolCallById, logToolUsage } from "../redux/util";
 import {
   setDocumentStylesFromLocalStorage,
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
+import { logAgentModeEditOutcome } from "../util/editOutcomeLogger";
 import { setLocalStorage } from "../util/localStorage";
+import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
 function ParallelListeners() {
@@ -45,15 +48,15 @@ function ParallelListeners() {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
-
   const hasDoneInitialConfigLoad = useRef(false);
-  const currentToolCallApplyState = useAppSelector(
-    selectCurrentToolCallApplyState,
+  const autoAcceptEditToolDiffs = useAppSelector(
+    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
   );
+  // Load symbols for chat on any session change
+  const sessionId = useAppSelector((state) => state.session.id);
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -99,24 +102,21 @@ function ParallelListeners() {
     [dispatch, hasDoneInitialConfigLoad],
   );
 
-  const initialLoadAuthAndConfig = useCallback(
-    async (initial: boolean) => {
+  // Load config from the IDE
+  useEffect(() => {
+    async function initialLoadConfig() {
+      dispatch(setIsSessionMetadataLoading(true));
       dispatch(setConfigLoading(true));
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
       );
       if (result.status === "success") {
-        await handleConfigUpdate(initial, result.content);
+        await handleConfigUpdate(true, result.content);
       }
       dispatch(setConfigLoading(false));
-    },
-    [ideMessenger, handleConfigUpdate],
-  );
-
-  // Load config from the IDE
-  useEffect(() => {
-    void initialLoadAuthAndConfig(true);
+    }
+    void initialLoadConfig();
     const interval = setInterval(() => {
       if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
@@ -127,12 +127,12 @@ function ParallelListeners() {
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
       } else {
-        void initialLoadAuthAndConfig(true);
+        void initialLoadConfig();
       }
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [hasDoneInitialConfigLoad, initialLoadAuthAndConfig, ideMessenger]);
+  }, [hasDoneInitialConfigLoad, ideMessenger]);
 
   useWebviewListener(
     "configUpdate",
@@ -145,8 +145,6 @@ function ParallelListeners() {
     [handleConfigUpdate],
   );
 
-  // Load symbols for chat on any session change
-  const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
     if (sessionId) {
       void dispatch(updateFileSymbolsFromHistory());
@@ -245,10 +243,6 @@ function ParallelListeners() {
     dispatch(updateIndexingStatus(data));
   });
 
-  const autoAcceptEditToolDiffs = useAppSelector(
-    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
-  );
-  const currentToolCall = useAppSelector(selectCurrentToolCall);
   useWebviewListener(
     "updateApplyState",
     async (state) => {
@@ -256,31 +250,67 @@ function ParallelListeners() {
         dispatch(updateEditStateApplyState(state));
 
         if (state.status === "closed") {
+          const toolCallState = findToolCallById(
+            store.getState().session.history,
+            state.toolCallId!,
+          );
+          if (toolCallState) {
+            logToolUsage(toolCallState, true, true, ideMessenger);
+          }
           void dispatch(exitEdit({}));
         }
       } else {
         // chat or agent
         dispatch(updateApplyState(state));
 
-        // Handle apply status updates that are associated with current tool call
-        if (
-          currentToolCallApplyState &&
-          currentToolCallApplyState.streamId === state.streamId
-        ) {
+        // Handle apply status updates - use toolCallId from event payload
+        if (state.toolCallId) {
           if (state.status === "done" && autoAcceptEditToolDiffs) {
-            console.log("AUTO ACCEPTED");
             ideMessenger.post("acceptDiff", {
               streamId: state.streamId,
               filepath: state.filepath,
             });
           }
           if (state.status === "closed") {
-            if (currentToolCall?.status !== "canceled") {
-              dispatch(
-                acceptToolCall({
-                  toolCallId: currentToolCallApplyState.toolCallId!,
-                }),
-              );
+            // Find the tool call to check if it was canceled
+            const toolCallState = findToolCallById(
+              store.getState().session.history,
+              state.toolCallId,
+            );
+
+            if (toolCallState) {
+              const accepted = toolCallState.status !== "canceled";
+
+              logToolUsage(toolCallState, accepted, true, ideMessenger);
+
+              // Log edit outcome for Agent Mode
+              const applyState = store
+                .getState()
+                .session.codeBlockApplyStates.states.find(
+                  (s) => s.streamId === state.streamId,
+                );
+
+              if (applyState) {
+                void logAgentModeEditOutcome(
+                  toolCallState,
+                  applyState,
+                  accepted,
+                  ideMessenger,
+                );
+              }
+
+              if (accepted) {
+                dispatch(
+                  acceptToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+                void dispatch(
+                  streamResponseAfterToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+              }
             }
             // const output: ContextItem = {
             //   name: "Edit tool output",
@@ -288,21 +318,11 @@ function ParallelListeners() {
             //   description: "",
             // };
             // dispatch(setToolCallOutput([]));
-            void dispatch(
-              streamResponseAfterToolCall({
-                toolCallId: currentToolCallApplyState.toolCallId!,
-              }),
-            );
           }
         }
       }
     },
-    [
-      currentToolCall,
-      currentToolCallApplyState,
-      autoAcceptEditToolDiffs,
-      ideMessenger,
-    ],
+    [autoAcceptEditToolDiffs, ideMessenger],
   );
 
   useEffect(() => {
@@ -310,6 +330,10 @@ function ParallelListeners() {
       dispatch(setLastNonEditSessionEmpty(history.length === 0));
     }
   }, [isInEdit, history]);
+
+  useEffect(() => {
+    migrateLocalStorage(dispatch);
+  }, []);
 
   return <></>;
 }

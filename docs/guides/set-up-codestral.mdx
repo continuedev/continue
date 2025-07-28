@@ -1,0 +1,57 @@
+---
+title: "How to Set Up Codestral"
+---
+
+**Here is a step-by-step guide on how to set up Codestral with Continue using the Mistral AI API:**
+
+1. Install the Continue VS Code or JetBrains extension following the instructions [here](/getting-started/install)
+
+2. Click on the gear icon in the bottom right corner of the Continue window to open `~/.continue/config.json` (MacOS) / `%userprofile%\.continue\config.json` (Windows)
+
+3. Log in and create an API key on Mistral AI's La Plateforme [here](https://console.mistral.ai/codestral). Make sure you get an API key from the "Codestral" page.
+
+4. To use Codestral as your model for both `autocomplete` and `chat`, insert your Mistral API key below and add it to your configuration file:
+
+- YAML
+- JSON
+
+config.yaml
+
+```
+models:
+  - name: Codestral
+    provider: mistral
+    model: codestral-latest
+    apiKey: <YOUR_CODESTRAL_API_KEY>
+    apiBase: https://codestral.mistral.ai/v1
+    roles:
+      - chat
+      - autocomplete
+```
+
+config.json
+
+```json
+{
+  "models": [
+    {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>",
+      "apiBase": "https://codestral.mistral.ai/v1"
+    }
+  ],
+  "tabAutocompleteModel": [
+    {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>",
+      "apiBase": "https://codestral.mistral.ai/v1"
+    }
+  ]
+}
+```
+
+5. If you run into any issues or have any questions, please join our Discord and post in the `#help` channel [here](https://discord.gg/EfJEfdFnDQ)

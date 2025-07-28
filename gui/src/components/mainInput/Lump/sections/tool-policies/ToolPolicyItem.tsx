@@ -3,6 +3,7 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Tool } from "core";
+import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../../../../redux/hooks";
@@ -16,7 +17,7 @@ import { useFontSize } from "../../../../ui/font";
 interface ToolDropdownItemProps {
   tool: Tool;
   duplicatesDetected: boolean;
-  excluded: boolean;
+  isGroupEnabled: boolean;
 }
 
 function ToolPolicyItem(props: ToolDropdownItemProps) {
@@ -25,6 +26,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
   const [isExpanded, setIsExpanded] = useState(false);
+  const mode = useAppSelector((state) => state.session.mode);
 
   useEffect(() => {
     if (!policy) {
@@ -44,6 +46,12 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
 
   const fontSize = useFontSize(-2);
 
+  const disabled =
+    !props.isGroupEnabled ||
+    (mode === "plan" &&
+      props.tool.group === BUILT_IN_GROUP_NAME &&
+      !props.tool.readonly);
+
   if (!policy) {
     return null;
   }
@@ -57,7 +65,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
     >
       <div className="flex flex-row items-center">
         <div
-          className={`hover:bg-list-active hover:text-list-active-foreground xs:gap-1.5 flex flex-1 cursor-pointer flex-row items-center gap-1 py-0.5 pl-1 pr-2`}
+          className={`hover:bg-badge hover:text-list-active-foreground xs:gap-1.5 flex flex-1 cursor-pointer flex-row items-center gap-1 rounded py-0.5 pl-1 pr-2`}
           onClick={() => setIsExpanded((val) => !val)}
         >
           <ChevronRightIcon
@@ -106,16 +114,21 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
             </span>
           </div>
         </div>
+
         <div
-          className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${props.excluded ? "cursor-not-allowed" : "hover:bg-list-active hover:text-list-active-foreground cursor-pointer"}`}
+          className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:text-list-active-foreground cursor-pointer hover:brightness-125"}`}
           data-testid={`tool-policy-item-${props.tool.function.name}`}
-          onClick={(e) => {
-            dispatch(toggleToolSetting(props.tool.function.name));
-            e.stopPropagation();
-            e.preventDefault();
-          }}
+          onClick={
+            disabled
+              ? undefined
+              : (e) => {
+                  dispatch(toggleToolSetting(props.tool.function.name));
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+          }
         >
-          {props.excluded || policy === "disabled" ? (
+          {disabled || policy === "disabled" ? (
             <>
               <span className="text-lightgray sm:hidden">Off</span>
               <span className="text-lightgray hidden sm:inline-block">
@@ -148,8 +161,8 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         {parameters ? (
           <>
             <span className="text-xs font-bold">Arguments:</span>
-            {parameters.map((param) => (
-              <div className="block">
+            {parameters.map((param, idx) => (
+              <div key={idx} className="block">
                 <code className="">{param[0]}</code>
                 <span className="ml-1">{`(${param[1].type}):`}</span>
                 <span className="ml-1 italic">{param[1].description}</span>

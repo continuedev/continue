@@ -1,0 +1,28 @@
+---
+title: Slash commands
+description: Shortcuts that can be activated by prefacing your input with '/'
+keywords: [slash command, custom commands, step]
+---
+
+![actions](/images/actions.gif)
+
+Slash commands are shortcuts that can be activated by typing '/' in a chat session (press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)), and selecting from the dropdown.
+![slash-commands](/images/slash-commands.png)
+
+Slash commands can be combined with additional instructions, including [context providers](../custom-providers.mdx) or highlighted code.
+
+## Prompts
+
+### Assistant prompt blocks
+
+The easiest way to add a slash command is by adding [`prompt` blocks](../../hub/blocks/block-types#prompts) to your assistant, which show up as slash commands in [Chat](../../features/chat/how-it-works.mdx).
+
+### Prompt files
+
+It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
+
+Learn more about prompt files [here](./prompts.md)
+
+### MCP Server prompts
+
+Any prompts provided by [Model Context Protocol](https://modelcontextprotocol.io/introduction) servers are also accessible in chat as Slash Commands. See the [MCP Server Deep Dive](./mcp.mdx) for more details.

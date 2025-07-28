@@ -25,6 +25,7 @@ import {
   vscQuickInputBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppSelector } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import FileIcon from "../../FileIcon";
@@ -159,6 +160,9 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
+  const isInAgentMode = useAppSelector(
+    (store) => store.session.mode === "agent",
+  );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -187,6 +191,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
         query,
         fullInput: "",
         selectedCode,
+        isInAgentMode,
       },
     );
 

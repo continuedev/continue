@@ -1,0 +1,175 @@
+---
+title: Azure AI Foundry
+slug: ../azure
+---
+
+Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
+
+<Info>
+
+For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azure-openai-service-configuration).
+
+</Info>
+
+## Chat model
+
+We recommend configuring **GPT-4o** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: azure
+      model: gpt-4o
+      apiBase: <YOUR_DEPLOYMENT_BASE>
+      apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
+      env:
+        deployment: <YOUR_DEPLOYMENT_NAME>
+        apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [{
+        "title": "GPT-4o",
+        "provider": "azure",
+        "model": "gpt-4o",
+        "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+        "deployment": "<YOUR_DEPLOYMENT_NAME>",
+        "apiKey": "<YOUR_AZURE_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+    }]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **Codestral** as your autocomplete model. 
+
+<Info>
+**Note:** Azure AI Foundry does not provide the FIM (Fill-in-Middle) endpoint required for autocomplete functionality. To use Codestral for autocomplete, deploy it through **Azure Machine Learning Studio** instead, which provides the necessary `/v1/fim/completions` endpoint.
+</Info>
+
+If you use Azure Machine Learning Studio to deploy Codestral:
+
+<Tabs>
+	<Tab title="YAML">
+	```yaml title="config.yaml"
+  models:
+    - name: Codestral
+      provider: mistral
+      model: codestral-latest
+      apiBase: https://<YOUR_MODEL_NAME>.<YOUR_REGION>.models.ai.azure.com/v1
+      apiKey: <YOUR_AZURE_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest", 
+      "apiBase": "https://<YOUR_MODEL_NAME>.<YOUR_REGION>.models.ai.azure.com/v1",
+      "apiKey": "<YOUR_AZURE_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings model
+
+We recommend configuring **text-embedding-3-large** as your embeddings model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Text Embedding-3 Large
+        provider: azure
+        model: text-embedding-3-large
+        apiBase: <YOUR_DEPLOYMENT_BASE>
+        apiKey: <YOUR_AZURE_API_KEY>
+        env:
+          deployment: <YOUR_DEPLOYMENT_NAME>
+          apiType: azure
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "azure",
+        "model": "text-embedding-3-large",
+        "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+        "deployment": "<YOUR_DEPLOYMENT_NAME>",
+        "apiKey": "<YOUR_AZURE_API_KEY>",
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Reranking model
+
+Azure OpenAI currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking models.
+
+## Privacy
+
+If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant.
+
+<Info>
+  **Getting access:** [Click
+  here](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
+  to apply for access to the Azure OpenAI service. Response times are typically
+  within a few days.
+</Info>
+
+## Azure OpenAI Service configuration
+
+Azure OpenAI Service requires a handful of additional parameters to be configured, such as a deployment name and API base URL.
+
+To find this information in _Azure AI Foundry_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
+
+For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
+
+<Tabs>
+	<Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: GPT-4o Azure
+        model: gpt-4o
+        provider: azure
+        apiBase: https://just-an-example.openai.azure.com
+        apiKey: <YOUR_AZURE_API_KEY>
+        env:
+          apiVersion: 2023-03-15-preview
+          deployment: gpt-4o-july
+          apiType: azure-openai
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "title": "GPT-4o Azure",
+      "model": "gpt-4o",
+      "provider": "azure",
+      "apiBase": "https://just-an-example.openai.azure.com",
+      "deployment": "gpt-4o-july",
+      "apiVersion": "2023-03-15-preview",
+      "apiKey": "<YOUR_AZURE_API_KEY>",
+      "apiType": "azure-openai"
+    }
+    ```
+  </Tab>
+</Tabs>

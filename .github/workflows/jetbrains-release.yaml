@@ -63,7 +63,6 @@ jobs:
 
       - name: Bump version in gradle.properties
         run: |
-          cd extensions/intellij
           awk '/pluginVersion=/{split($0,a,"="); split(a[2],b,"."); b[3]+=1; printf "%s=%s.%s.%s\n",a[1],b[1],b[2],b[3];next}1' gradle.properties > tmp && mv tmp gradle.properties
           rm -rf tmp
           NEW_VERSION=$(grep 'pluginVersion=' gradle.properties | cut -d'=' -f2)
@@ -167,20 +166,8 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Build and check config-yaml
-        run: |
-          cd ../../packages/config-yaml
-          npm i
-          npx tsc --noEmit
-          # Tests are currently failing, commenting out for now
-          # npm test 
-          npm run build
+      - name: Build packages (Unix)
+        run: cd ../.. && ./scripts/build-packages.sh
 
       # npm install core
       - name: Install core node_modules
@@ -236,10 +223,6 @@ jobs:
       #     apple-product-id: dev.continue.continue-binary
       #     options: --options runtime --entitlements entitlements.xml
 
-      # Build plugin
-      - name: Build plugin
-        run: ./gradlew buildPlugin
-
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
         if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
@@ -249,7 +232,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
           RELEASE_CHANNEL: eap
-        run: ./gradlew publishPlugin
+        run: ./gradlew publishPlugin --info --stacktrace
 
       - name: Publish Stable Plugin
         if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
@@ -259,7 +242,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
           RELEASE_CHANNEL: default
-        run: ./gradlew publishPlugin
+        run: ./gradlew publishPlugin --info --stacktrace
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact

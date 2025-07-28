@@ -1,4 +1,4 @@
-import { GoogleAuth } from "google-auth-library";
+import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 
 import { streamResponse, streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
@@ -14,30 +14,40 @@ class VertexAI extends BaseLLM {
   declare vertexProvider: "mistral" | "anthropic" | "gemini" | "unknown";
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
+  static AUTH_SCOPES = "https://www.googleapis.com/auth/cloud-platform";
 
   static defaultOptions: Partial<LLMOptions> | undefined = {
     maxEmbeddingBatchSize: 250,
     region: "us-central1",
   };
 
-  private clientPromise = new GoogleAuth({
-    scopes: "https://www.googleapis.com/auth/cloud-platform",
-  })
-    .getClient()
-    .catch((e) => {
-      console.warn(`Failed to load credentials for Vertex AI: ${e.message}`);
-    });
+  private clientPromise: Promise<AuthClient | void>;
 
-  private static getDefaultApiBaseFrom(options: LLMOptions) {
-    const { region, projectId } = options;
-    if (!region || !projectId) {
-      throw new Error(
-        "region and projectId must be defined if apiBase is not provided",
-      );
-    }
-    return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
-  }
+  /*
+      Vertex Supports 3 different URL formats 
+      1. Standard VertexAI: e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/google/models/{model}:streamGenerateContent
+      2. Tuned model:       e.g. https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints/{endpoint}:streamGenerateContent
+      3. Express mode:      e.g. https://aiplatform.googleapis.com/v1/publishers/google/models/{model}:streamGenerateContent?key={API_KEY} // see https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview
 
+      Authentication can be done using the following
+      2. Access token obtained using Google Auth client, passed to endpoint that includes full model path with project id and region
+      1. API Key (express mode), region and projectId will be ignored
+
+      In all cases we have defined apiBase to be up to everything including the location.
+      Standard api base: https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/
+      Express api base: https://aiplatform.googleapis.com/v1/
+      TODO endpoints is not currently supported (api base is same as standard but we don't have a way to add endpoint name yet
+
+      Note that VertexAI uses the term "service endpoint" and "model", like:
+      {service-endpoint}/v1/{model}:streamGenerateContent
+      So "model" includes the project, location, publisher, etc
+
+      Express mode has limited support 
+      and CRITICALLY is only available to NEW users who had NOT used cloud services before.
+      However it is pretty common as gemini becomes more popular.
+      Only Gemini models are supported for now
+      https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models
+  */
   constructor(_options: LLMOptions) {
     if (_options.region !== "us-central1") {
       // Any region outside of us-central1 has a max batch size of 5.
@@ -47,7 +57,7 @@ class VertexAI extends BaseLLM {
       );
     }
     super(_options);
-    this.apiBase ??= VertexAI.getDefaultApiBaseFrom(_options);
+
     this.vertexProvider =
       _options.model.includes("mistral") ||
       _options.model.includes("codestral") ||
@@ -58,24 +68,130 @@ class VertexAI extends BaseLLM {
           : _options.model.includes("gemini")
             ? "gemini"
             : "unknown";
+
+    // Set client authentication promise
+    const { apiKey, region, projectId, env } = _options;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
+
+    // Acceptable authentication methods:
+    // apiKey only
+    // region and projectId AND (keyFile OR keyJson OR nothing)
+
+    if (apiKey) {
+      // Consider warning here instead of throwing error
+      if (region || projectId || keyFile || keyJson) {
+        throw new Error(
+          "Vertex in express mode (api key only) cannot be configured with region, projectId, keyFile, or keyJson",
+        );
+        // console.warn(
+        //   "Region, projectId, and key path/file are ignored when apiKey is set. See VertexAI Express Mode docs https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview",
+        // );
+      }
+      if (this.vertexProvider !== "gemini") {
+        throw new Error(
+          "VertexAI: only gemini models are supported in express (apiKey) mode. See https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#models",
+        );
+      }
+    } else {
+      if (!region && !projectId) {
+        throw new Error(
+          "region and projectId are required for VertexAI (when not using express/apiKey mode)",
+        );
+      }
+      if (keyFile && keyJson) {
+        throw new Error(
+          "VertexAI credentials can be configured with either keyFile or keyJson but not both",
+        );
+      }
+    }
+
+    if (keyJson) {
+      // Loading keys from manually set JSON
+      if (typeof keyJson !== "string") {
+        throw new Error("VertexAI: keyJson must be a JSON string");
+      }
+      try {
+        const parsed = JSON.parse(keyJson);
+        if (!parsed?.private_key) {
+          throw new Error("VertexAI: keyJson must contain a valid private key");
+        }
+        parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+        const jsonClient = auth.fromJSON(parsed);
+        if (jsonClient instanceof JWT) {
+          jsonClient.scopes = [VertexAI.AUTH_SCOPES];
+        } else {
+          throw new Error("VertexAI: keyJson must be a valid JWT");
+        }
+        this.clientPromise = Promise.resolve(jsonClient);
+      } catch (e) {
+        throw new Error("VertexAI: Failed to parse keyJson");
+      }
+    } else if (keyFile) {
+      // Loading keys from manually set file path
+      if (typeof keyFile !== "string") {
+        throw new Error("VertexAI: keyFile must be a string");
+      }
+      this.clientPromise = new GoogleAuth({
+        scopes: VertexAI.AUTH_SCOPES,
+        keyFile,
+      })
+        .getClient()
+        .catch((e) => {
+          console.warn(
+            `Failed to load credentials for Vertex AI: ${e.message}`,
+          );
+        });
+    } else {
+      // Loading keys from local credentials or environment variable
+      this.clientPromise = new GoogleAuth({
+        scopes: VertexAI.AUTH_SCOPES,
+      })
+        .getClient()
+        .catch((e) => {
+          console.warn(
+            `Failed to load credentials for Vertex AI: ${e.message}`,
+          );
+        });
+    }
+
+    // Set api base
+    if (!this.apiBase) {
+      if (apiKey) {
+        // Express mode
+        this.apiBase = `https://aiplatform.googleapis.com/v1/`;
+      } else {
+        this.apiBase = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
+      }
+    }
+
+    // Uses instances of other LLMs since underlying functionality is the same
     this.anthropicInstance = new Anthropic(_options);
     this.geminiInstance = new Gemini(_options);
   }
 
-  async fetch(url: RequestInfo | URL, init?: RequestInit) {
-    const client = await this.clientPromise;
-    const result = await client?.getAccessToken();
-    if (!result?.token) {
-      throw new Error(
-        "Could not get an access token. Set up your Google Application Default Credentials.",
-      );
+  async fetch(url: URL, init?: RequestInit) {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (this.apiKey) {
+      url.searchParams.set("key", this.apiKey);
+    } else {
+      const client = await this.clientPromise;
+      const result = await client?.getAccessToken();
+      if (!result?.token) {
+        throw new Error(
+          "Could not get an access token. Set up your Google Application Default Credentials.",
+        );
+      }
+      headers.Authorization = `Bearer ${result.token}`;
     }
+
     return await super.fetch(url, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${result.token}`,
         ...init?.headers,
+        ...headers,
       },
     });
   }
@@ -85,6 +201,10 @@ class VertexAI extends BaseLLM {
     const convertedArgs = this.anthropicInstance.convertArgs(options);
 
     // Remove the `model` property and add `anthropic_version`
+    // For claude 4 models
+    // anthropic_version is a required parameter and must be set to "vertex-2024-10-22".
+
+    // const
     const { model, ...finalOptions } = convertedArgs;
     return {
       ...finalOptions,
@@ -103,6 +223,8 @@ class VertexAI extends BaseLLM {
     const shouldCacheSystemMessage = !!(
       this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
+
+    //  <code>/v1/publishers/anthropic/models/claude-3-5-sonnet-20240620:streamRawPredict
 
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
@@ -132,24 +254,7 @@ class VertexAI extends BaseLLM {
       signal,
     });
 
-    if (response.status === 499) {
-      return; // Aborted by user
-    }
-
-    if (options.stream === false) {
-      const data = await response.json();
-      yield { role: "assistant", content: data.content[0].text };
-      return;
-    }
-
-    for await (const value of streamSse(response)) {
-      if (value.type === "message_start") {
-        console.log(value);
-      }
-      if (value.delta?.text) {
-        yield { role: "assistant", content: value.delta.text };
-      }
-    }
+    yield* this.anthropicInstance.handleResponse(response, options.stream);
   }
 
   // Gemini
@@ -163,17 +268,19 @@ class VertexAI extends BaseLLM {
       this.apiBase,
     );
 
-    const body = this.geminiInstance.prepareBody(messages, options, false);
+    // For some reason gemini through vertex does not support ids in functionResponses yet
+    const body = this.geminiInstance.prepareBody(
+      messages,
+      options,
+      false,
+      false,
+    );
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
       signal,
     });
-    for await (const message of this.geminiInstance.processGeminiResponse(
-      streamResponse(response),
-    )) {
-      yield message;
-    }
+    yield* this.geminiInstance.processGeminiResponse(streamResponse(response));
   }
 
   private async *streamChatBison(
