@@ -42,7 +42,7 @@ function getDirectoryStructure(): string {
     const files = walker.start().result as string[];
 
     const filteredFiles = files
-      .slice(0, 100)
+      .slice(0, 500)
       .map((file: string) => `./${file}`);
 
     return filteredFiles.join("\n") || "No structure available";
@@ -74,7 +74,6 @@ const baseSystemMessage = `You are an agent in the Continue CLI. Given the user'
 Notes:
 1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.
 2. When relevant, share file names and code snippets relevant to the query
-3. Any file paths you return in your final response MUST be absolute. DO NOT use relative paths.
 Here is useful information about the environment you are running in:
 <env>
 Working directory: ${process.cwd()}
@@ -90,6 +89,7 @@ As you answer the user's questions, you can use the following context:
 ${getDirectoryStructure()}
 </context>
 <context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
+
 ${getGitStatus()}
 </context>`;
 

@@ -176,6 +176,119 @@ describe("Permission Checker", () => {
       };
       expect(matchesArguments(args, differentButEqualObjectPatterns)).toBe(false);
     });
+
+    describe("glob pattern matching", () => {
+      it("should match glob patterns with asterisk wildcards", () => {
+        const args = { command: "cd ../projects && ls", file_path: "/src/file.ts" };
+        
+        // Test command patterns
+        expect(matchesArguments(args, { command: "cd*" })).toBe(true);
+        expect(matchesArguments(args, { command: "*ls" })).toBe(true);
+        expect(matchesArguments(args, { command: "*&&*" })).toBe(true);
+        expect(matchesArguments(args, { command: "pwd*" })).toBe(false);
+        
+        // Test file path patterns
+        expect(matchesArguments(args, { file_path: "*.ts" })).toBe(true);
+        expect(matchesArguments(args, { file_path: "/src/*" })).toBe(true);
+        expect(matchesArguments(args, { file_path: "**/file.ts" })).toBe(true);
+        expect(matchesArguments(args, { file_path: "*.js" })).toBe(false);
+      });
+
+      it("should match glob patterns with question mark wildcards", () => {
+        const args = { command: "git add", file: "test1.js" };
+        
+        expect(matchesArguments(args, { command: "git a?d" })).toBe(true);
+        expect(matchesArguments(args, { command: "git a??d" })).toBe(false);
+        expect(matchesArguments(args, { file: "test?.js" })).toBe(true);
+        expect(matchesArguments(args, { file: "test??.js" })).toBe(false);
+      });
+
+      it("should match complex glob patterns", () => {
+        const args = { 
+          command: "npm run test:unit",
+          path: "/home/user/projects/myapp/src/utils/helper.ts"
+        };
+        
+        expect(matchesArguments(args, { command: "npm * test:*" })).toBe(true);
+        expect(matchesArguments(args, { command: "npm run *:unit" })).toBe(true);
+        expect(matchesArguments(args, { path: "**/src/**/*.ts" })).toBe(true);
+        expect(matchesArguments(args, { path: "/home/*/projects/*/src/**" })).toBe(true);
+        expect(matchesArguments(args, { command: "yarn *" })).toBe(false);
+      });
+
+      it("should escape special regex characters in glob patterns", () => {
+        const args = { 
+          command: "echo 'test.pattern'",
+          regex: "test[0-9]+",
+          special: "file(1).txt"
+        };
+        
+        // Literal dots, brackets, parentheses should match exactly
+        expect(matchesArguments(args, { command: "*'test.pattern'*" })).toBe(true);
+        expect(matchesArguments(args, { regex: "test[0-9]+" })).toBe(true);
+        expect(matchesArguments(args, { special: "file(1).txt" })).toBe(true);
+        expect(matchesArguments(args, { special: "file(*).txt" })).toBe(true);
+        
+        // These should not match due to regex escaping
+        expect(matchesArguments(args, { command: "*test_pattern*" })).toBe(false);
+        expect(matchesArguments(args, { regex: "test*" })).toBe(true); // * is wildcard, + is literal
+      });
+
+      it("should handle mixed exact and glob patterns", () => {
+        const args = { 
+          tool: "bash", 
+          command: "cd projects && npm install",
+          flag: "--verbose"
+        };
+        
+        // Mix of exact and glob matching
+        expect(matchesArguments(args, { 
+          tool: "bash",           // exact match
+          command: "cd*install",  // glob match
+          flag: "--verbose"       // exact match
+        })).toBe(true);
+        
+        expect(matchesArguments(args, { 
+          tool: "bash",           // exact match
+          command: "cd*test",     // glob no match
+          flag: "--verbose"       // exact match
+        })).toBe(false);
+      });
+
+      it("should convert non-string values to strings for pattern matching", () => {
+        const args = { 
+          port: 3000,
+          enabled: true,
+          count: null,
+          items: [1, 2, 3]
+        };
+        
+        expect(matchesArguments(args, { port: "30*" })).toBe(true);
+        expect(matchesArguments(args, { enabled: "tr*" })).toBe(true);
+        expect(matchesArguments(args, { count: "*" })).toBe(true); // null -> ""
+        expect(matchesArguments(args, { items: "*,*,*" })).toBe(true); // array toString
+        
+        expect(matchesArguments(args, { port: "40*" })).toBe(false);
+        expect(matchesArguments(args, { enabled: "fa*" })).toBe(false);
+      });
+
+      it("should handle empty and undefined argument values", () => {
+        const args = { 
+          empty: "",
+          undef: undefined,
+          zero: 0,
+          false_val: false
+        };
+        
+        expect(matchesArguments(args, { empty: "*" })).toBe(true);
+        expect(matchesArguments(args, { undef: "*" })).toBe(true); // undefined -> ""
+        expect(matchesArguments(args, { zero: "*" })).toBe(true);   // 0 -> "0" 
+        expect(matchesArguments(args, { false_val: "*" })).toBe(true); // false -> "false"
+        
+        expect(matchesArguments(args, { empty: "nonempty*" })).toBe(false);
+        expect(matchesArguments(args, { zero: "1*" })).toBe(false);
+      });
+    });
   });
 
   describe("checkToolPermission", () => {
@@ -333,6 +446,51 @@ describe("Permission Checker", () => {
       );
       expect(npmResult.permission).toBe("ask");
       expect(npmResult.matchedPolicy?.tool).toBe("run_terminal_command");
+    });
+
+    it("should match argument patterns with glob patterns", () => {
+      const permissions: ToolPermissions = {
+        policies: [
+          {
+            tool: "run_terminal_command",
+            permission: "exclude", 
+            argumentMatches: { command: "rm*" }
+          },
+          {
+            tool: "write_file",
+            permission: "ask",
+            argumentMatches: { file_path: "**/*.ts" }
+          },
+          {
+            tool: "write_file", 
+            permission: "allow"
+          }
+        ],
+      };
+
+      // Should exclude dangerous rm commands
+      const rmResult = checkToolPermission(
+        { name: "run_terminal_command", arguments: { command: "rm -rf /" } },
+        permissions
+      );
+      expect(rmResult.permission).toBe("exclude");
+      expect(rmResult.matchedPolicy?.argumentMatches?.command).toBe("rm*");
+
+      // Should ask for TypeScript files
+      const tsResult = checkToolPermission(
+        { name: "write_file", arguments: { file_path: "/src/components/Button.ts" } },
+        permissions
+      );
+      expect(tsResult.permission).toBe("ask");
+      expect(tsResult.matchedPolicy?.argumentMatches?.file_path).toBe("**/*.ts");
+
+      // Should allow other file writes
+      const jsResult = checkToolPermission(
+        { name: "write_file", arguments: { file_path: "/src/utils/helper.js" } },
+        permissions
+      );
+      expect(jsResult.permission).toBe("allow");
+      expect(jsResult.matchedPolicy?.argumentMatches).toBeUndefined();
     });
   });
 

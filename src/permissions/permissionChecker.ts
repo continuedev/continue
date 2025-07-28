@@ -61,6 +61,7 @@ export function matchesToolPattern(
 
 /**
  * Checks if tool call arguments match the specified patterns.
+ * Supports glob patterns with * and ? wildcards.
  */
 export function matchesArguments(
   args: Record<string, any>,
@@ -73,9 +74,25 @@ export function matchesArguments(
 
     if (pattern === "*") continue; // Wildcard matches anything
 
-    // Exact match
-    if (argValue !== pattern) {
-      return false;
+    // Handle glob patterns with wildcards (only for string patterns)
+    if (typeof pattern === "string" && (pattern.includes("*") || pattern.includes("?"))) {
+      // Convert argValue to string for pattern matching
+      const stringValue = String(argValue ?? "");
+      
+      // Escape all regex metacharacters except * and ?
+      const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+      // Convert * and ? to their regex equivalents
+      const regexPattern = escaped.replace(/\*/g, ".*").replace(/\?/g, ".");
+      const regex = new RegExp(`^${regexPattern}$`);
+      
+      if (!regex.test(stringValue)) {
+        return false;
+      }
+    } else {
+      // Exact match for non-glob patterns (preserve original behavior)
+      if (argValue !== pattern) {
+        return false;
+      }
     }
   }
 
