@@ -7,7 +7,7 @@ export default {
       "ts-jest",
       {
         useESM: true,
-        isolatedModules: true,
+        useIsolatedModules: true,
         tsconfig: {
           experimentalDecorators: true,
           emitDecoratorMetadata: true,
