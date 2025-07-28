@@ -22,6 +22,8 @@ show_help() {
     echo "                           Download and install VSIX from specified PR number"
     echo "                           Platform options: macos, linux (auto-detected by default)"
     echo "  install --latest         Install latest pre-release from VS Code marketplace"
+    echo "  setup-cron               Set up automatic updates every 10 minutes"
+    echo "  remove-cron              Remove automatic updates"
     echo "  clean                    Remove all downloaded VSIX files from oneper cache"
     echo ""
     echo "Options:"
@@ -33,6 +35,8 @@ show_help() {
     echo "  oneper install --pr 123              # Install VSIX from PR #123"
     echo "  oneper install --pr 123 --platform linux   # Install Linux VSIX from PR #123"
     echo "  oneper install --latest              # Install latest pre-release"
+    echo "  oneper setup-cron                    # Auto-update every 10 minutes"
+    echo "  oneper remove-cron                   # Stop auto-updates"
     echo "  oneper clean                         # Clear cached VSIX files"
     echo "  oneper -h                            # Show help"
     echo ""
@@ -319,6 +323,112 @@ install_latest() {
     fi
 }
 
+get_latest_main_run_id() {
+    gh run list \
+        --repo "$REPO" \
+        --workflow="main-build.yaml" \
+        --branch="main" \
+        --json databaseId,status,conclusion \
+        --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+        | head -1
+}
+
+check_and_install_if_new() {
+    local current_run_id=$(get_latest_main_run_id)
+    
+    if [ -z "$current_run_id" ]; then
+        echo "$(date): ❌ No successful main branch build found" >&2
+        return 1
+    fi
+    
+    local last_run_file="$ONEPER_DIR/last_installed_run"
+    local last_run_id=""
+    
+    if [ -f "$last_run_file" ]; then
+        last_run_id=$(cat "$last_run_file")
+    fi
+    
+    if [ "$current_run_id" != "$last_run_id" ]; then
+        echo "$(date): 🔄 New build detected (run $current_run_id), installing..."
+        
+        # Install from main silently
+        if install_from_main > /dev/null 2>&1; then
+            echo "$current_run_id" > "$last_run_file"
+            echo "$(date): ✅ Successfully installed new build from run $current_run_id"
+        else
+            echo "$(date): ❌ Failed to install new build" >&2
+            return 1
+        fi
+    else
+        echo "$(date): 🔍 No new builds (current: $current_run_id)"
+    fi
+}
+
+setup_cron() {
+    echo "🔧 Setting up automatic updates every 10 minutes..."
+    
+    # Get the absolute path to this script
+    local script_path=$(realpath "$0")
+    
+    # Create a wrapper script that calls the check function
+    local cron_script="$ONEPER_DIR/oneper-cron.sh"
+    
+    cat > "$cron_script" << EOF
+#!/bin/bash
+# Auto-generated oneper cron script
+export PATH="/usr/local/bin:/usr/bin:/bin:\$PATH"
+cd "\$(dirname "$script_path")"
+"$script_path" --cron-check
+EOF
+    
+    chmod +x "$cron_script"
+    
+    # Create log file
+    local log_file="$ONEPER_DIR/oneper-cron.log"
+    touch "$log_file"
+    
+    # Add to crontab
+    local cron_line="*/10 * * * * $cron_script >> $log_file 2>&1"
+    
+    # Check if cron job already exists
+    if crontab -l 2>/dev/null | grep -q "oneper-cron.sh"; then
+        echo "⚠️  Oneper cron job already exists. Removing old one..."
+        crontab -l 2>/dev/null | grep -v "oneper-cron.sh" | crontab -
+    fi
+    
+    # Add new cron job
+    (crontab -l 2>/dev/null; echo "$cron_line") | crontab -
+    
+    echo "✅ Automatic updates configured!"
+    echo "📊 Logs will be written to: $log_file"
+    echo "🔍 Check status with: tail -f $log_file"
+    echo ""
+    echo "💡 To remove automatic updates: oneper remove-cron"
+}
+
+remove_cron() {
+    echo "🗑️  Removing automatic updates..."
+    
+    # Remove from crontab
+    if crontab -l 2>/dev/null | grep -q "oneper-cron.sh"; then
+        crontab -l 2>/dev/null | grep -v "oneper-cron.sh" | crontab -
+        echo "✅ Removed cron job"
+    else
+        echo "ℹ️  No oneper cron job found"
+    fi
+    
+    # Clean up files
+    local cron_script="$ONEPER_DIR/oneper-cron.sh"
+    local log_file="$ONEPER_DIR/oneper-cron.log"
+    local last_run_file="$ONEPER_DIR/last_installed_run"
+    
+    [ -f "$cron_script" ] && rm "$cron_script" && echo "🗑️  Removed cron script"
+    [ -f "$log_file" ] && rm "$log_file" && echo "🗑️  Removed log file"
+    [ -f "$last_run_file" ] && rm "$last_run_file" && echo "🗑️  Removed state file"
+    
+    echo "✅ Automatic updates removed successfully"
+}
+
 clean_cache() {
     if [ ! -d "$ONEPER_DIR" ]; then
         echo "📁 Oneper cache directory doesn't exist: $ONEPER_DIR"
@@ -340,8 +450,14 @@ clean_cache() {
 }
 
 main() {
-    # Handle help flags first
+    # Handle special internal commands first
     case "$1" in
+        "--cron-check")
+            # Internal command used by cron job
+            ensure_oneper_dir
+            check_and_install_if_new
+            exit $?
+            ;;
         "-h"|"--help")
             show_help
             exit 0
@@ -392,6 +508,12 @@ main() {
                     exit 1
                     ;;
             esac
+            ;;
+        "setup-cron")
+            setup_cron
+            ;;
+        "remove-cron")
+            remove_cron
             ;;
         "clean")
             clean_cache
