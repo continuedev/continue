@@ -925,6 +925,7 @@ const getCommandsMap: (
             editor,
             currentPosition,
             editableRegionStartLine,
+            editableRegionEndLine,
             oldEditRangeSlice,
             newEditRangeSlice,
             diffLines,
