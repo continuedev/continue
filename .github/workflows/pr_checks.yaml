@@ -58,8 +58,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - name: Build packages (Unix)
-        run: ./scripts/build-packages.sh
+      - name: Build packages
+        run: node ./scripts/build-packages.js
 
   config-yaml-checks:
     needs: build-packages
@@ -78,7 +78,7 @@ jobs:
 
       - name: Build packages and check config-yaml
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd packages/config-yaml
           npx tsc --noEmit
           # Tests are currently failing, commenting out for now
@@ -137,7 +137,7 @@ jobs:
 
       - name: Build packages and install core dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
 
@@ -177,7 +177,7 @@ jobs:
 
       - name: Build packages and install dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           if [ "${{ steps.gui-cache.outputs.cache-hit }}" != "true" ]; then
             cd core
             npm ci
@@ -211,7 +211,7 @@ jobs:
 
       - name: Build packages and install dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
           cd ../gui
@@ -251,7 +251,7 @@ jobs:
 
       - name: Build packages and install dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           if [ "${{ steps.binary-cache.outputs.cache-hit }}" != "true" ]; then
             cd core
             npm ci
@@ -295,7 +295,7 @@ jobs:
 
       - name: Build packages and install dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           if [ "${{ steps.vscode-cache.outputs.cache-hit }}" != "true" ]; then
             cd core
             npm ci
@@ -333,7 +333,7 @@ jobs:
 
       - name: Build packages and install dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
           cd ../extensions/vscode
@@ -370,7 +370,7 @@ jobs:
 
       - name: Build packages and install core dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
 
@@ -401,7 +401,7 @@ jobs:
 
       - name: Build packages and run tests
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd packages/config-yaml
           npm test
 
@@ -421,7 +421,7 @@ jobs:
 
       - name: Build packages and run tests
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd packages/openai-adapters
           npm test
         env:
@@ -453,7 +453,7 @@ jobs:
       - name: Build packages and get test files
         id: vscode-get-test-file-matrix
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
           cd ../extensions/vscode
@@ -525,7 +525,7 @@ jobs:
 
       - name: Build packages and download e2e dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           if [ "${{ steps.storage-cache.outputs.cache-hit }}" != "true" ]; then
             cd core
             npm ci
@@ -590,7 +590,7 @@ jobs:
 
       - name: Build packages and install core dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
 
@@ -678,7 +678,7 @@ jobs:
 
       - name: Build packages and install dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
           cd ../gui
@@ -703,7 +703,7 @@ jobs:
 
       - name: Build packages and install core dependencies
         run: |
-          ./scripts/build-packages.sh
+          node ./scripts/build-packages.js
           cd core
           npm ci
 

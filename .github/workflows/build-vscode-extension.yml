@@ -106,13 +106,8 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
       # Build all packages using the authoritative build script
-      - name: Build packages (Windows)
+      - name: Build packages
         run: ./scripts/build-packages.ps1
-        if: matrix.os == 'windows-latest'
-
-      - name: Build packages (Linux/macOS)
-        run: ./scripts/build-packages.sh
-        if: matrix.os != 'windows-latest'
 
       - name: Install extension Dependencies
         run: |
