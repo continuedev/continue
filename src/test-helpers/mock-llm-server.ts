@@ -111,14 +111,18 @@ export async function createMockLLMServer(
           const words = responseText.split(" ");
           words.forEach((word, index) => {
             const content = index === 0 ? word : " " + word;
+            // Properly escape JSON content
+            const escapedContent = JSON.stringify(content).slice(1, -1);
             res.write(
-              `data: {"choices":[{"delta":{"content":"${content}"},"index":0}]}\n\n`
+              `data: {"choices":[{"delta":{"content":"${escapedContent}"},"index":0}]}\n\n`
             );
           });
         } else {
           // Send entire response in one chunk for non-streaming mode
+          // Properly escape JSON content
+          const escapedContent = JSON.stringify(responseText).slice(1, -1);
           res.write(
-            `data: {"choices":[{"delta":{"content":"${responseText}"},"index":0}]}\n\n`
+            `data: {"choices":[{"delta":{"content":"${escapedContent}"},"index":0}]}\n\n`
           );
         }
 

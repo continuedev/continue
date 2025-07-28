@@ -36,6 +36,7 @@ program
 program
   .argument("[prompt]", "Optional prompt to send to the assistant")
   .option("-p, --print", "Print response and exit (useful for pipes)")
+  .option("--format <format>", "Output format for headless mode (json). Only works with -p/--print flag.")
   .option("--config <path>", "Path to configuration file")
   .option("--resume", "Resume from last session")
   .option("--readonly", "Only allow readonly tools")
@@ -55,6 +56,18 @@ program
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
+
+    // Validate --format flag only works with -p/--print
+    if (options.format && !options.print) {
+      console.error("Error: --format flag can only be used with -p/--print flag");
+      process.exit(1);
+    }
+
+    // Validate format value
+    if (options.format && options.format !== 'json') {
+      console.error("Error: --format currently only supports 'json'");
+      process.exit(1);
+    }
 
     if (options.verbose) {
       logger.setLevel("debug");
