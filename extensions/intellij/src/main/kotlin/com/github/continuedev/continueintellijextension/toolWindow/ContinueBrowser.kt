@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
 import com.intellij.ui.jcef.JBCefClient.Properties
+import io.sentry.Sentry
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
@@ -21,6 +22,7 @@ import org.cef.handler.CefLoadHandlerAdapter
 class ContinueBrowser(val project: Project, url: String) {
 
     val browser: JBCefBrowser
+    private var isReady: Boolean = false
 
     init {
         val isOSREnabled = service<ContinueExtensionSettings>().continueState.enableOSR
@@ -83,6 +85,7 @@ class ContinueBrowser(val project: Project, url: String) {
                 if (!isLoading) {
                     // The page has finished loading
                     executeJavaScript(browser, myJSQueryOpenInBrowser)
+                    isReady = true
                 }
             }
         }, browser.cefBrowser)
@@ -111,6 +114,11 @@ class ContinueBrowser(val project: Project, url: String) {
         data: Any?,
         messageId: String = uuid()
     ) {
+        if (!isReady) {
+            println("Browser not ready yet, ignoring message: $messageType")
+            return
+        }
+
         val jsonData = Gson().toJson(
             mapOf(
                 "messageId" to messageId,
@@ -124,8 +132,9 @@ class ContinueBrowser(val project: Project, url: String) {
             this.browser.executeJavaScriptAsync(jsCode).onError {
                 println("Failed to execute jsCode error: ${it.message}")
             }
-        } catch (error: IllegalStateException) {
+        } catch (error: Exception) {
             println("Webview not initialized yet $error")
+            Sentry.captureMessage("Webview not initialized yet: $error")
         }
     }
 
