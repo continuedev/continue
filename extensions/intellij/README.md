@@ -4,7 +4,7 @@
 
 <div align="center">
 
-[**Continue**](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our open-source [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extension and [hub of models, rules, prompts, docs, and other building blocks](https://hub.continue.dev).
+[**Continue**](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our open-source [JetBrains extension](https://plugins.jetbrains.com/plugin/22707-continue-extension) and [hub of models, rules, prompts, docs, and other building blocks](https://hub.continue.dev).
 
 </div>
 
@@ -38,6 +38,6 @@ Agent equips the Chat model with the tools needed to handle a wide range of codi
 
 ## License
 
-[Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
+[Apache 2.0 © 2023-2025 Continue Dev, Inc.](./LICENSE)
 
 <!-- Plugin description end -->
