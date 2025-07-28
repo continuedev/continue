@@ -4,55 +4,77 @@ import {
 } from "@modelcontextprotocol/sdk/client/auth.js";
 import {
   OAuthClientInformationFull,
+  OAuthClientInformationSchema,
   OAuthTokens,
+  OAuthTokensSchema,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { IDE } from "../..";
 
 import http from "http";
 import url from "url";
+import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
+import { IMessenger } from "../../protocol/messenger";
+import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
+
+export type MCPOauthState = "login" | "authenticating" | "disconnect";
 
 const PORT = 3000;
 
 const server = http.createServer((req, res) => {
-  // TODO: instead of sending bad requests for each case, try catch handle the bad request at the end of the function
-  if (!req.url) {
-    res.writeHead(400, { "Content-Type": "text/plain" });
-    res.end("Bad Request");
-    return;
-  }
-  const parsedUrl = url.parse(req.url, true);
+  try {
+    if (!req.url) {
+      throw new Error("no url found");
+    }
+    const parsedUrl = url.parse(req.url, true);
+    if (parsedUrl.pathname !== "/") {
+      throw new Error("path is not index");
+    }
 
-  if (parsedUrl.pathname === "/") {
     const query = new URLSearchParams(
       parsedUrl.query as Record<string, string>,
     ).toString();
     if (!query) {
-      console.error("no query params found!");
+      throw new Error("no query params found");
     }
-    const redirectUrl = `vscode://continue.Continue${query ? "?" + query : ""}`;
+
+    const redirectUrl = `vscode://continue.Continue?${query}`;
 
     res.writeHead(302, {
       Location: redirectUrl,
     });
     res.end();
-  } else {
-    res.writeHead(404, { "Content-Type": "text/plain" });
-    res.end("Not Found");
+  } catch (error) {
+    res.writeHead(400, { "Content-Type": "text/plain" });
+    res.end(`Unexpected redirect error:  ${(error as Error).message}`);
   }
 });
 
+// TODO: start the server only when mcp oauth process starts and kill when done
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
+  console.log(
+    `Server running for MCP Oauth process at http://localhost:${PORT}/`,
+  );
 });
 
+type MCPOauthStorage = GlobalContextType["mcpOauthStorage"][string];
+type MCPOauthStorageKey = keyof MCPOauthStorage;
+
 class MCPConnectionOauthProvider implements OAuthClientProvider {
+  private globalContext: GlobalContext;
+
   constructor(
     public oauthServerUrl: string,
     private ide: IDE,
-  ) {}
+  ) {
+    this.globalContext = new GlobalContext();
+    console.log(
+      "debug1 mcp oauth storage",
+      this.globalContext.get("mcpOauthStorage"),
+    );
+  }
 
   get redirectUrl() {
-    return "http://localhost:3000"; // TODO: this has to be a hub url or should we spin up a server?
+    return `http://localhost:${PORT}`; // TODO: this has to be a hub url or should we spin up a server?
   }
 
   get clientMetadata() {
@@ -66,25 +88,76 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
     };
   }
 
-  saveClientInformation(clientInformation: OAuthClientInformationFull) {}
+  private _getOauthStorage<K extends MCPOauthStorageKey>(key: K) {
+    return this.globalContext.get("mcpOauthStorage")?.[this.oauthServerUrl]?.[
+      key
+    ];
+  }
+
+  private _updateOauthStorage<K extends MCPOauthStorageKey>(
+    key: K,
+    value: MCPOauthStorage[K],
+  ) {
+    const existingStorage = this.globalContext.get("mcpOauthStorage") ?? {};
+    const existingServerStorage = existingStorage[this.oauthServerUrl] ?? {};
+
+    this.globalContext.update("mcpOauthStorage", {
+      ...existingStorage,
+      [this.oauthServerUrl]: {
+        ...existingServerStorage,
+        [key]: value,
+      },
+    });
+  }
+
+  private _clearOauthStorage() {
+    const existingStorage = this.globalContext.get("mcpOauthStorage") ?? {};
+    delete existingStorage[this.oauthServerUrl];
+    this.globalContext.update("mcpOauthStorage", existingStorage);
+  }
+
+  saveClientInformation(clientInformation: OAuthClientInformationFull) {
+    this._updateOauthStorage("clientInformation", clientInformation);
+  }
 
   async clientInformation() {
-    return undefined;
+    const existingClientInformation =
+      this._getOauthStorage("clientInformation");
+    if (!existingClientInformation) {
+      return undefined;
+    }
+    return await OAuthClientInformationSchema.parseAsync(
+      existingClientInformation,
+    );
   }
 
   async tokens() {
-    return undefined;
+    const existingTokens = this._getOauthStorage("tokens");
+    if (!existingTokens) {
+      return undefined;
+    }
+    return await OAuthTokensSchema.parseAsync(existingTokens);
   }
 
-  saveTokens(tokens: OAuthTokens) {}
+  saveTokens(tokens: OAuthTokens) {
+    this._updateOauthStorage("tokens", tokens);
+  }
 
   codeVerifier(): string | Promise<string> {
-    return "";
+    const existingCodeVerifier = this._getOauthStorage("codeVerifier");
+    if (!existingCodeVerifier) {
+      return "";
+    }
+    return existingCodeVerifier;
   }
 
-  saveCodeVerifier(codeVerifier: string) {}
+  saveCodeVerifier(codeVerifier: string) {
+    this._updateOauthStorage("codeVerifier", codeVerifier);
+  }
 
-  clear() {}
+  clear() {
+    this._clearOauthStorage();
+  }
 
   async redirectToAuthorization(authorizationUrl: URL) {
     console.log("debug1 redirecting to url", authorizationUrl);
@@ -93,27 +166,46 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
   }
 }
 
+// TODO: first fetch can fail - need to refresh from gui
+export async function getOauthToken(mcpServerUrl: string, ide: IDE) {
+  const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
+  const tokens = await authProvider.tokens();
+  return tokens?.access_token;
+}
+
+// TODO: this needs to be called from an authenticate button in gui
 export async function performAuth(mcpServerUrl: string, ide: IDE) {
   const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
-  await auth(authProvider, { serverUrl: mcpServerUrl });
+  const result = await auth(authProvider, {
+    serverUrl: mcpServerUrl,
+  });
+  console.log("debug1 first result", result);
+}
 
-  // full uri is of the format "https://localhost:3000/?code=712020%253Abed80c83-1041-49e0-99b5-5d4f9f8aa538%3ACSlICEGG3rzCQhla%3AHA0oJYDjijnNE8nCoADpZsSp8jr7cCSZ"
-  // const input = await ide.showInput({
-  //   prompt: "Paste the auth code here",
-  // });
-  // const result = await auth(authProvider, {
-  //   serverUrl: mcpServerUrl,
-  //   authorizationCode: input,
-  // });
-  // if (result === "AUTHORIZED") {
-  //   void ide.showToast(
-  //     "info",
-  //     `Authenticated with ${new URL(mcpServerUrl).hostname} MCP server`,
-  //   );
-  // } else {
-  //   void ide.showToast(
-  //     "error",
-  //     `Failed to authenticate with ${new URL(mcpServerUrl).hostname} MCP server`,
-  //   );
-  // }
+export async function handleMCPOauthCode(
+  authorizationCode: string,
+  ide: IDE,
+  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+) {
+  // const { serverUrl, authState } = await messenger.request(
+  //   "getMCPOauthState", // remove this if not needed including the protocols - we can store the state in current file itself (also easier to kill the server)
+  //   undefined,
+  // );
+  const serverUrl = "https://mcp.asana.com/sse";
+  if (!authorizationCode) {
+    ide.showToast("error", `No MCP authorization code found for ${serverUrl}`);
+  }
+
+  console.log("debug1 authenticating ", {
+    serverUrl,
+    authorizationCode,
+  });
+  const authProvider = new MCPConnectionOauthProvider(serverUrl, ide);
+  console.log("debug1 starting auth");
+  const result = await auth(authProvider, {
+    serverUrl,
+    authorizationCode,
+  });
+
+  console.log("debug1 after auth result", result);
 }

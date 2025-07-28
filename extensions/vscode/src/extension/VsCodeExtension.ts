@@ -73,11 +73,6 @@ export class VsCodeExtension {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
 
-    // TODO: this should practically only start listening when user has started an mcp oauth flow. how to do this?
-    this.uriHandler.event((uri) => {
-      console.log("debug1 uri was", uri);
-    });
-
     void this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
 
@@ -444,6 +439,14 @@ export class VsCodeExtension {
         const settings = await this.ide.getIdeSettings();
         void this.core.invoke("config/ideSettingsUpdate", settings);
       }
+    });
+
+    // TODO: this should practically only start listening when user has started an mcp oauth flow. how to do this?
+    this.uriHandler.event((uri) => {
+      console.log("debug1 uri->", uri);
+      this.core.invoke("mcp/sendOauthCode", {
+        code: new URLSearchParams(uri.query).get("code") ?? "",
+      });
     });
   }
 

@@ -17,7 +17,7 @@ import {
   MCPTool,
 } from "../..";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
-import { performAuth } from "./MCPOauth";
+import { getOauthToken } from "./MCPOauth";
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
@@ -118,11 +118,19 @@ class MCPConnection {
     if (this.options.transport.type === "sse") {
       // currently support oauth for sse transports only
       console.log("debug1 extras", this.extras);
-      performAuth(this.options.transport.url, this.extras?.ide!).then(
-        (result) => {
-          console.log("debug1 result", result);
-        },
+      if (!this.options.transport.requestOptions) {
+        this.options.transport.requestOptions = {
+          headers: {},
+        };
+      }
+      const accessToken = await getOauthToken(
+        this.options.transport.url,
+        this.extras?.ide!,
       );
+      this.options.transport.requestOptions.headers = {
+        ...this.options.transport.requestOptions.headers,
+        Authorization: `Bearer ${accessToken}`,
+      };
     }
 
     this.connectionPromise = Promise.race([

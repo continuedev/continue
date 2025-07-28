@@ -61,6 +61,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { handleMCPOauthCode } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -433,6 +434,10 @@ export class Core {
         description: prompt.description,
       };
     });
+    on("mcp/sendOauthCode", async (msg) => {
+      await handleMCPOauthCode(msg.data.code, this.ide, this.messenger);
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
