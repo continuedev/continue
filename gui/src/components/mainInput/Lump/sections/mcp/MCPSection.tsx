@@ -1,22 +1,22 @@
 import { ConfigYaml, parseConfigYaml } from "@continuedev/config-yaml";
 import {
-  ArrowLeftCircleIcon,
   ArrowPathIcon,
   CircleStackIcon,
   CommandLineIcon,
-  GlobeAltIcon,
   InformationCircleIcon,
-  UserCircleIcon,
+  ShieldCheckIcon,
+  ShieldExclamationIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateConfig } from "../../../../../redux/slices/configSlice";
 import { fontSize } from "../../../../../util";
 import { ToolTip } from "../../../../gui/Tooltip";
+import { Button } from "../../../../ui";
 import EditBlockButton from "../../EditBlockButton";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
 
@@ -36,15 +36,14 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const promptsTooltipId = `${server.id}-prompts`;
   const resourcesTooltipId = `${server.id}-resources`;
   const errorsTooltipId = `${server.id}-errors`;
-
-  const [mcpAuthStatus, setMcpAuthStatus] = useState<
-    "unauthenticated" | "authenticated" | "authenticating"
-  >("unauthenticated");
+  const mcpAuthTooltipId = `${server.id}-auth`;
 
   const onAuthenticate = async () => {
-    setMcpAuthStatus("authenticating"); // TODO: move this updateConfig later with "authenticated" and "authenticating" status
     await ideMessenger.request("mcp/startAuthentication", server);
-    setMcpAuthStatus("authenticated");
+  };
+
+  const onRemoveAuth = async () => {
+    await ideMessenger.request("mcp/removeAuthentication", server);
   };
 
   const onRefresh = async () => {
@@ -154,20 +153,33 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        {has401Error(server.errors) && (
+        {server.isProtectedResource && (
           <>
             <div
               className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
-              onClick={onAuthenticate}
+              data-tooltip-id={mcpAuthTooltipId}
             >
-              {mcpAuthStatus === "authenticating" ? (
-                <GlobeAltIcon className="h-3 w-3" />
-              ) : mcpAuthStatus === "authenticated" ? (
-                <ArrowLeftCircleIcon className="h-3 w-3" />
-              ) : (
-                <UserCircleIcon className="h-3 w-3" />
+              {server.status === "error" ? (
+                <ShieldExclamationIcon className="h-3 w-3" />
+              ) : server.status === "connecting" ? null : (
+                <ShieldCheckIcon className="h-3 w-3" />
               )}
             </div>
+            <ToolTip place="left" delayHide={2000} id={mcpAuthTooltipId}>
+              <div className="pointer-events-auto">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={
+                    server.status === "connected"
+                      ? onRemoveAuth
+                      : onAuthenticate
+                  }
+                >
+                  {server.status === "error" ? "Authenticate" : "Logout"}
+                </Button>
+              </div>
+            </ToolTip>
           </>
         )}
         <EditBlockButton

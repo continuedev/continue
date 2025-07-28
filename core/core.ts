@@ -61,7 +61,11 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
-import { handleMCPOauthCode, performAuth } from "./context/mcp/MCPOauth";
+import {
+  handleMCPOauthCode,
+  performAuth,
+  removeMCPAuth,
+} from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -441,14 +445,14 @@ export class Core {
       }
     });
     on("mcp/sendOauthCode", async (msg) => {
-      const status = await handleMCPOauthCode(
-        msg.data.code,
-        this.ide,
-        this.messenger,
-      );
+      const status = await handleMCPOauthCode(msg.data.code, this.ide);
       if (status === "AUTHORIZED") {
         // await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
       }
+    });
+    on("mcp/removeAuthentication", async (msg) => {
+      removeMCPAuth(msg.data, this.ide);
+      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });
 
     // Context providers

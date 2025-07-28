@@ -29,6 +29,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "mcp/reloadServer",
     "mcp/getPrompt",
     "mcp/startAuthentication",
+    "mcp/removeAuthentication",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",

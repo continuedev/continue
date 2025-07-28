@@ -12,11 +12,9 @@ import { IDE, MCPServerStatus, SSEOptions } from "../..";
 
 import http from "http";
 import url from "url";
-import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
-import { IMessenger } from "../../protocol/messenger";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
 
-export type MCPOauthState = "login" | "authenticating" | "disconnect";
+let currentMCPAuthServerUrl = "";
 
 const PORT = 3000;
 
@@ -157,6 +155,10 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
 
   clear() {
     this._clearOauthStorage();
+    console.log(
+      "debug1 after clearing mcp oauth storage",
+      this.globalContext.get("mcpOauthStorage"),
+    );
   }
 
   async redirectToAuthorization(authorizationUrl: URL) {
@@ -181,15 +183,7 @@ export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
   });
 }
 
-export async function handleMCPOauthCode(
-  authorizationCode: string,
-  ide: IDE,
-  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-) {
-  // const { serverUrl, authState } = await messenger.request(
-  //   "getMCPOauthState", // remove this if not needed including the protocols - we can store the state in current file itself (also easier to kill the server)
-  //   undefined,
-  // );
+export async function handleMCPOauthCode(authorizationCode: string, ide: IDE) {
   const serverUrl = "https://mcp.asana.com/sse";
   if (!authorizationCode) {
     ide.showToast("error", `No MCP authorization code found for ${serverUrl}`);
@@ -204,4 +198,10 @@ export async function handleMCPOauthCode(
     serverUrl,
     authorizationCode,
   });
+}
+
+export function removeMCPAuth(mcpServer: MCPServerStatus, ide: IDE) {
+  const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
+  const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
+  authProvider.clear();
 }

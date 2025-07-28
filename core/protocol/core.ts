@@ -126,6 +126,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+
   "mcp/reloadServer": [
     {
       id: string;
@@ -150,6 +151,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/removeAuthentication": [MCPServerStatus, void];
+
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
