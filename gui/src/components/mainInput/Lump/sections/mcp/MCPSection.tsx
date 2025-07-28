@@ -132,7 +132,11 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
 
       {/* Refresh button */}
       <div className="flex items-center gap-2">
-        <EditBlockButton blockType={"mcpServers"} block={serverFromYaml} />
+        <EditBlockButton
+          blockType={"mcpServers"}
+          block={serverFromYaml}
+          sourceFile={server.sourceFile}
+        />
         <div
           className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
           onClick={onRefresh}

@@ -72,7 +72,7 @@ class Vllm extends OpenAI {
         const json = await response.json();
         const data = json.data[0];
         this.model = data.id;
-        this.contextLength = Number.parseInt(data.max_model_len);
+        this._contextLength = Number.parseInt(data.max_model_len);
       })
       .catch((e) => {
         console.log(`Failed to list models for vLLM: ${e.message}`);
