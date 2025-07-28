@@ -13,7 +13,7 @@ export const readFileTool: Tool = {
   function: {
     name: BuiltInToolNames.ReadFile,
     description:
-      "Use this tool if you need to view the contents of an existing file.",
+      "Use this tool if you need to view the contents of an existing file. It can be called in parallel to perform multiple file reads at once.",
     parameters: {
       type: "object",
       required: ["filepath"],
