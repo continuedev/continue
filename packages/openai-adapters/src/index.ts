@@ -28,7 +28,6 @@ function openAICompatible(
   return new OpenAIApi({
     ...config,
     apiBase: config.apiBase ?? apiBase,
-    apiKey: config.apiKey ?? "api-key",
   });
 }
 
