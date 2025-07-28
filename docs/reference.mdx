@@ -192,6 +192,8 @@ The `models` section defines the language models used in your configuration. Mod
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
 
   - `baseSystemMessage`: Can be used to override the default system prompt for **Chat** mode.
+  - `baseAgentSystemMessage`: Can be used to override the default system prompt specifically for **Agent** mode.
+  - `basePlanSystemMessage`: Can be used to override the default system prompt specifically for **Plan** mode.
 
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
 
@@ -246,6 +248,10 @@ models:
     defaultCompletionOptions:
       temperature: 0.7
       maxTokens: 1500
+    chatOptions:
+      baseSystemMessage: "You are a helpful coding assistant."
+      baseAgentSystemMessage: "You are a helpful coding assistant in agent mode. Focus on systematic problem solving."
+      basePlanSystemMessage: "You are a planning assistant. Break down complex tasks into clear, actionable steps."
   - name: Codestral
     provider: mistral
     model: codestral-latest
