@@ -86,7 +86,7 @@ describe("parseDataLine", () => {
   test("parseDataLine should throw error when data contains error field", () => {
     const line = 'data: {"error":"something went wrong"}';
     expect(() => parseDataLine(line)).toThrow(
-      "Error streaming response: something went wrong",
+      'Error streaming response: "something went wrong"',
     );
   });
 
