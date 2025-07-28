@@ -25,6 +25,7 @@ export interface AuthenticatedConfig {
   expiresAt: number;
   organizationId: string | null; // null means personal organization
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
+  modelName?: string; // Name of the selected model
 }
 
 // Represents configuration when using environment variable auth
@@ -32,6 +33,7 @@ export interface EnvironmentAuthConfig {
   accessToken: string;
   organizationId: null; // Environment auth always uses personal organization
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
+  modelName?: string; // Name of the selected model
 }
 
 // Union type representing the possible authentication states
@@ -77,6 +79,14 @@ export function getOrganizationId(config: AuthConfig): string | null {
 export function getConfigUri(config: AuthConfig): string | null {
   if (config === null) return null;
   return config.configUri || null;
+}
+
+/**
+ * Gets the model name from any auth config type
+ */
+export function getModelName(config: AuthConfig): string | null {
+  if (config === null) return null;
+  return config.modelName || null;
 }
 
 /**
@@ -149,6 +159,7 @@ export function loadAuthConfig(): AuthConfig {
           expiresAt: data.expiresAt,
           organizationId: data.organizationId || null,
           configUri: data.configUri,
+          modelName: data.modelName,
         };
       } else {
         console.warn("Invalid auth config found, ignoring.");
@@ -198,6 +209,25 @@ export function updateConfigUri(configUri: string | null): void {
     const updatedConfig: AuthenticatedConfig = {
       ...config,
       configUri: configUri || undefined,
+    };
+    saveAuthConfig(updatedConfig);
+  }
+}
+
+/**
+ * Updates the model name in the authentication configuration
+ */
+export function updateModelName(modelName: string | null): void {
+  // If using CONTINUE_API_KEY environment variable, don't save anything
+  if (process.env.CONTINUE_API_KEY) {
+    return;
+  }
+
+  const config = loadAuthConfig();
+  if (config && isAuthenticatedConfig(config)) {
+    const updatedConfig: AuthenticatedConfig = {
+      ...config,
+      modelName: modelName || undefined,
     };
     saveAuthConfig(updatedConfig);
   }
@@ -446,6 +476,10 @@ async function refreshToken(
       configUri: isAuthenticatedConfig(existingConfig)
         ? existingConfig.configUri
         : undefined,
+      // Preserve existing modelName if it exists
+      modelName: isAuthenticatedConfig(existingConfig)
+        ? existingConfig.modelName
+        : undefined,
     };
 
     // Save the config
@@ -543,6 +577,7 @@ export async function ensureOrganization(
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: null, // Default to personal organization
       configUri: authenticatedConfig.configUri,
+      modelName: authenticatedConfig.modelName,
     };
     saveAuthConfig(updatedConfig);
     return updatedConfig;
@@ -564,6 +599,7 @@ export async function ensureOrganization(
         expiresAt: authenticatedConfig.expiresAt,
         organizationId: null,
         configUri: authenticatedConfig.configUri,
+        modelName: authenticatedConfig.modelName,
       };
       saveAuthConfig(updatedConfig);
       return updatedConfig;
@@ -581,6 +617,7 @@ export async function ensureOrganization(
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: selectedOrgId,
       configUri: authenticatedConfig.configUri,
+      modelName: authenticatedConfig.modelName,
     };
 
     saveAuthConfig(updatedConfig);
@@ -599,6 +636,7 @@ export async function ensureOrganization(
       expiresAt: authenticatedConfig.expiresAt,
       organizationId: null,
       configUri: authenticatedConfig.configUri,
+      modelName: authenticatedConfig.modelName,
     };
     saveAuthConfig(updatedConfig);
     return updatedConfig;
