@@ -682,8 +682,6 @@ declare global {
   
     getWorkspaceDirs(): Promise<string[]>;
   
-    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-  
     fileExists(filepath: string): Promise<boolean>;
   
     writeFile(path: string, contents: string): Promise<void>;
@@ -1123,7 +1121,6 @@ declare global {
      * This is needed to crawl a large number of documentation sites that are dynamically rendered.
      */
     useChromiumForDocsCrawling?: boolean;
-    useTools?: boolean;
     modelContextProtocolServers?: MCPOptions[];
   }
   

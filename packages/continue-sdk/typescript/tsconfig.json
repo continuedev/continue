@@ -7,7 +7,6 @@
     "strict": true,
     "outDir": "dist",
     "declaration": true,
-    "types": ["node", "jest"],
     "skipLibCheck": true,
     "isolatedModules": true
   },

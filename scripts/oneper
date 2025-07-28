@@ -74,7 +74,6 @@ ensure_oneper_dir() {
     fi
 }
 
-
 install_from_pr() {
     local pr_number=$1
     local platform=${2:-$(detect_os)}  # Auto-detect OS if not specified
@@ -154,17 +153,17 @@ install_from_pr() {
         exit 1
     fi
 
-    # Extract full version from the original VSIX filename (e.g., continue-1.1.66-a1b2c3d.vsix -> 1.1.66-a1b2c3d)
+    # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
     local original_filename=$(basename "$vsix_file")
-    local full_version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
 
-    if [ -z "$full_version" ]; then
+    if [ -z "$version" ]; then
         echo "⚠️  Could not extract version from filename: $original_filename"
-        full_version="unknown-pr${pr_number}"
+        version="unknown"
     fi
 
-    # Use the full version (which includes commit SHA) for the target filename
-    local target_path="$ONEPER_DIR/continue-${full_version}.vsix"
+    # Create new VSIX name with version and PR number
+    local target_path="$ONEPER_DIR/continue-${version}-${pr_number}.vsix"
 
     # Check if file already exists and notify about overwrite
     if [ -f "$target_path" ]; then
@@ -182,7 +181,6 @@ install_from_pr() {
     if code --install-extension "$target_path"; then
         echo "✅ Successfully installed Continue extension from PR #$pr_number"
         echo "📄 VSIX file saved to: $target_path"
-        echo "🔖 Extension version: ${full_version} (includes commit SHA)"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"
         echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
