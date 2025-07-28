@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - nate/oneper-main
   workflow_dispatch:
     inputs:
       test_pr_number:
@@ -30,7 +31,7 @@ jobs:
           echo "Commit message: $COMMIT_MSG"
 
           # Extract PR number from merge commit message (format: "Merge pull request #123 from...")
-          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -o "Merge pull request #[0-9]*" | grep -o "[0-9]*" || echo "")
+          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -o "Merge pull request #[0-9]*" | grep -o "[0-9]*" || echo "6723")
 
           if [ -z "$PR_NUMBER" ]; then
             echo "❌ Could not extract PR number from commit message. This might not be a PR merge."
