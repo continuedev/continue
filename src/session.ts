@@ -1,8 +1,104 @@
+import { execSync } from "child_process";
 import fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import os from "os";
 import path from "path";
 import logger from "./util/logger.js";
+
+/**
+ * Get the terminal process ID by walking up the process tree
+ */
+function getTerminalProcessId(): string | null {
+  try {
+    // Skip on Windows - ps command doesn't exist
+    if (os.platform() === "win32") {
+      return null;
+    }
+
+    // Get parent process info by walking up the tree
+    let currentPid = process.ppid;
+
+    for (let i = 0; i < 10 && currentPid; i++) {
+      try {
+        const psOutput = execSync(`ps -o pid,ppid,comm -p ${currentPid}`, {
+          encoding: "utf8",
+          timeout: 1000,
+          stdio: ["ignore", "pipe", "ignore"], // Suppress stderr
+        }).trim();
+
+        const lines = psOutput.split("\n");
+        if (lines.length < 2) break;
+
+        const processInfo = lines[1].trim().split(/\s+/);
+        const [pid, ppid, comm] = processInfo;
+
+        // Check if this looks like a terminal process
+        if (
+          comm &&
+          (comm.includes("Terminal") ||
+            comm.includes("iTerm") ||
+            comm.includes("tmux") ||
+            comm.includes("screen") ||
+            comm.includes("bash") ||
+            comm.includes("zsh") ||
+            comm.includes("fish") ||
+            comm.includes("kitty") ||
+            comm.includes("alacritty") ||
+            comm.includes("wt") || // Windows Terminal
+            comm.includes("cmd") || // Windows Command Prompt
+            comm.includes("powershell"))
+        ) {
+          return pid;
+        }
+
+        const nextPid = parseInt(ppid);
+        if (isNaN(nextPid) || nextPid <= 1) break;
+        currentPid = nextPid;
+      } catch (innerError) {
+        // Continue to next iteration if this process lookup fails
+        break;
+      }
+    }
+  } catch (error) {
+    // Silently fail - this is a fallback mechanism
+  }
+
+  return null;
+}
+
+/**
+ * Get the TTY device path for unique terminal identification
+ */
+function getTtyPath(): string | null {
+  try {
+    // Skip on Windows - tty command doesn't exist
+    if (os.platform() === "win32") {
+      return null;
+    }
+
+    if (process.stdin.isTTY) {
+      // Get the TTY device path
+      const ttyPath = execSync("tty", {
+        encoding: "utf8",
+        timeout: 1000,
+        stdio: ["ignore", "pipe", "ignore"], // Suppress stderr
+      }).trim();
+
+      if (
+        ttyPath &&
+        ttyPath !== "not a tty" &&
+        !ttyPath.includes("not found")
+      ) {
+        // Convert /dev/ttys002 to ttys002 for cleaner ID
+        return ttyPath.replace("/dev/", "");
+      }
+    }
+  } catch (error) {
+    // Silently fail - this is a fallback mechanism
+  }
+
+  return null;
+}
 
 /**
  * Get a unique session identifier for the current terminal session
@@ -14,20 +110,34 @@ function getSessionId(): string {
     return `continue-cli-${process.env.CONTINUE_CLI_TEST_SESSION_ID}`;
   }
 
-  // Use a combination of terminal session ID and process ID to ensure uniqueness
-  // For tmux, use TMUX_PANE which is unique per pane
-  const terminalSession =
+  // Try environment variables first (most reliable)
+  const envSession =
     process.env.TMUX_PANE ||
     process.env.TERM_SESSION_ID ||
     process.env.SSH_TTY ||
     process.env.TMUX ||
-    process.env.STY ||
-    process.pid.toString();
+    process.env.STY;
 
-  // Clean up the session ID to be filesystem-safe
-  const cleanSessionId = terminalSession.replace(/[^a-zA-Z0-9-_]/g, "-");
+  if (envSession) {
+    const cleanSessionId = envSession.replace(/[^a-zA-Z0-9-_]/g, "-");
+    return `continue-cli-${cleanSessionId}`;
+  }
 
-  return `continue-cli-${cleanSessionId}`;
+  // Fallback 1: Try to get TTY device path (unique per terminal window)
+  const ttyPath = getTtyPath();
+  if (ttyPath) {
+    const cleanTtyId = ttyPath.replace(/[^a-zA-Z0-9-_]/g, "-");
+    return `continue-cli-tty-${cleanTtyId}`;
+  }
+
+  // Fallback 2: Try to get terminal process ID (unique per terminal process)
+  const terminalPid = getTerminalProcessId();
+  if (terminalPid) {
+    return `continue-cli-term-${terminalPid}`;
+  }
+
+  // Final fallback: Use process PID (least reliable but always available)
+  return `continue-cli-pid-${process.pid}`;
 }
 
 /**
@@ -88,8 +198,7 @@ export function saveSession(chatHistory: ChatCompletionMessageParam[]): void {
  */
 export function loadSession(): ChatCompletionMessageParam[] | null {
   try {
-    const sessionFilePath =
-      "/Users/nate/.continue-cli/sessions/continue-cli-94507.json"; // getSessionFilePath();
+    const sessionFilePath = getSessionFilePath();
 
     if (!fs.existsSync(sessionFilePath)) {
       return null;
