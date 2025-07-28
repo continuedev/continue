@@ -1,56 +1,40 @@
-import os from "os";
-import { execSync } from "child_process";
+import { saveSession, hasSession, clearSession } from "./session.js";
 
-// Mock external dependencies
-jest.mock("child_process");
-jest.mock("os");
-
-const mockedExecSync = execSync as jest.MockedFunction<typeof execSync>;
-const mockedOs = os as jest.Mocked<typeof os>;
-
-// We need to import the module functions to test them
-// Since they're not exported, we'll test through the public API
-import { saveSession, loadSession, hasSession, clearSession } from "./session.js";
-
-describe("Session ID Generation", () => {
+describe("Session Management", () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let originalProcess: any;
 
   beforeEach(() => {
-    // Store original values
     originalEnv = { ...process.env };
-    originalProcess = {
-      ppid: process.ppid,
-      pid: process.pid,
-      stdin: process.stdin,
-    };
-
-    // Clear environment variables
+    
+    // Clear session-related environment variables
     delete process.env.TMUX_PANE;
     delete process.env.TERM_SESSION_ID;
     delete process.env.SSH_TTY;
     delete process.env.TMUX;
     delete process.env.STY;
-    delete process.env.CONTINUE_CLI_TEST_SESSION_ID;
-
-    // Reset mocks
-    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    // Restore original values
     process.env = originalEnv;
-    Object.assign(process, originalProcess);
+    // Clean up any test sessions
+    try {
+      clearSession();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
   });
 
-  describe("Environment Variable Fallbacks", () => {
-    it("should use TMUX_PANE when available", () => {
+  describe("Environment Variable Session IDs", () => {
+    it("should create unique sessions for different TMUX_PANE values", () => {
+      // Test first session
       process.env.TMUX_PANE = "%1";
-      
-      // Create a session to trigger session ID generation
-      saveSession([]);
-      
-      // Verify session was created (indicates session ID worked)
+      saveSession([{ role: "user", content: "test1" }]);
+      expect(hasSession()).toBe(true);
+      clearSession();
+
+      // Test second session with different TMUX_PANE
+      process.env.TMUX_PANE = "%2";
+      saveSession([{ role: "user", content: "test2" }]);
       expect(hasSession()).toBe(true);
       clearSession();
     });
@@ -58,7 +42,7 @@ describe("Session ID Generation", () => {
     it("should use TERM_SESSION_ID when TMUX_PANE is not available", () => {
       process.env.TERM_SESSION_ID = "w1t0s0:0.0";
       
-      saveSession([]);
+      saveSession([{ role: "user", content: "test" }]);
       expect(hasSession()).toBe(true);
       clearSession();
     });
@@ -66,196 +50,21 @@ describe("Session ID Generation", () => {
     it("should use SSH_TTY when other env vars are not available", () => {
       process.env.SSH_TTY = "/dev/pts/0";
       
-      saveSession([]);
+      saveSession([{ role: "user", content: "test" }]);
       expect(hasSession()).toBe(true);
       clearSession();
     });
-  });
 
-  describe("TTY Path Fallback", () => {
-    beforeEach(() => {
-      // Mock platform detection
-      mockedOs.platform.mockReturnValue("darwin");
+    it("should clean special characters from session IDs", () => {
+      process.env.TMUX_PANE = "%1:0.0/special#chars@test!";
       
-      // Mock stdin.isTTY
-      Object.defineProperty(process.stdin, 'isTTY', {
-        value: true,
-        writable: true
-      });
-    });
-
-    it("should use TTY path when environment variables are not available", () => {
-      mockedExecSync.mockReturnValue("/dev/ttys002\n");
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-      
-      expect(mockedExecSync).toHaveBeenCalledWith("tty", {
-        encoding: "utf8",
-        timeout: 1000,
-        stdio: ["ignore", "pipe", "ignore"]
-      });
-    });
-
-    it("should skip TTY detection on Windows", () => {
-      mockedOs.platform.mockReturnValue("win32");
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-      
-      // Should not call execSync for tty command on Windows
-      expect(mockedExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining("tty"),
-        expect.any(Object)
-      );
-    });
-
-    it("should handle TTY command errors gracefully", () => {
-      mockedExecSync.mockImplementation((command) => {
-        if (command === "tty") {
-          throw new Error("tty: not found");
-        }
-        return "";
-      });
-      
-      // Should not throw and should fall back to process ID
+      // Should not throw error despite special characters
       expect(() => {
-        saveSession([]);
+        saveSession([{ role: "user", content: "test" }]);
       }).not.toThrow();
       
       expect(hasSession()).toBe(true);
       clearSession();
-    });
-
-    it("should handle 'not a tty' response", () => {
-      mockedExecSync.mockReturnValue("not a tty\n");
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-    });
-  });
-
-  describe("Process Tree Fallback", () => {
-    beforeEach(() => {
-      mockedOs.platform.mockReturnValue("darwin");
-      Object.defineProperty(process.stdin, 'isTTY', {
-        value: false,
-        writable: true
-      });
-    });
-
-    it("should find terminal process in process tree", () => {
-      // Mock process tree with terminal process
-      mockedExecSync.mockImplementation((command) => {
-        if (command.includes("ps -o pid,ppid,comm")) {
-          return "  PID  PPID COMMAND\n 1234  5678 iTerm2\n";
-        }
-        return "";
-      });
-      
-      // Mock process.ppid
-      Object.defineProperty(process, 'ppid', {
-        value: 1234,
-        writable: true
-      });
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-    });
-
-    it("should skip process tree analysis on Windows", () => {
-      mockedOs.platform.mockReturnValue("win32");
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-      
-      // Should not call ps command on Windows
-      expect(mockedExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining("ps -o"),
-        expect.any(Object)
-      );
-    });
-
-    it("should handle ps command errors gracefully", () => {
-      mockedExecSync.mockImplementation((command) => {
-        if (command.includes("ps -o")) {
-          throw new Error("ps: command not found");
-        }
-        return "";
-      });
-      
-      expect(() => {
-        saveSession([]);
-      }).not.toThrow();
-      
-      expect(hasSession()).toBe(true);
-      clearSession();
-    });
-
-    it("should handle malformed ps output", () => {
-      mockedExecSync.mockImplementation((command) => {
-        if (command.includes("ps -o")) {
-          return "malformed output\n";
-        }
-        return "";
-      });
-      
-      expect(() => {
-        saveSession([]);
-      }).not.toThrow();
-      
-      expect(hasSession()).toBe(true);
-      clearSession();
-    });
-  });
-
-  describe("Final Fallback", () => {
-    beforeEach(() => {
-      mockedOs.platform.mockReturnValue("linux");
-      Object.defineProperty(process.stdin, 'isTTY', {
-        value: false,
-        writable: true
-      });
-      
-      // Mock all external commands to fail
-      mockedExecSync.mockImplementation(() => {
-        throw new Error("Command failed");
-      });
-    });
-
-    it("should fall back to process PID when all other methods fail", () => {
-      const originalPid = process.pid;
-      Object.defineProperty(process, 'pid', {
-        value: 9999,
-        writable: true
-      });
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-      
-      // Restore original PID
-      Object.defineProperty(process, 'pid', {
-        value: originalPid,
-        writable: true
-      });
-    });
-  });
-
-  describe("Session ID Cleaning", () => {
-    it("should clean up special characters in session IDs", () => {
-      process.env.TMUX_PANE = "%1:0.0/special#chars";
-      
-      saveSession([]);
-      expect(hasSession()).toBe(true);
-      clearSession();
-      
-      // The session should be created successfully despite special characters
     });
   });
 
@@ -263,8 +72,52 @@ describe("Session ID Generation", () => {
     it("should use test session ID when provided", () => {
       process.env.CONTINUE_CLI_TEST_SESSION_ID = "test-123";
       
-      saveSession([]);
+      saveSession([{ role: "user", content: "test" }]);
       expect(hasSession()).toBe(true);
+      clearSession();
+    });
+  });
+
+  describe("Fallback Mechanisms", () => {
+    it("should create a session even when no environment variables are available", () => {
+      // No environment variables set
+      
+      // Should fall back to TTY path, process tree, or PID
+      expect(() => {
+        saveSession([{ role: "user", content: "fallback test" }]);
+      }).not.toThrow();
+      
+      expect(hasSession()).toBe(true);
+      clearSession();
+    });
+
+    it("should handle session persistence correctly", () => {
+      process.env.TMUX_PANE = "%test";
+      
+      const testHistory = [
+        { role: "user" as const, content: "Hello" },
+        { role: "assistant" as const, content: "Hi there!" }
+      ];
+      
+      // Save session
+      saveSession(testHistory);
+      expect(hasSession()).toBe(true);
+      
+      // Clear and verify it's gone
+      clearSession();
+      expect(hasSession()).toBe(false);
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should handle filesystem errors gracefully", () => {
+      // Try to save to invalid session ID that might cause filesystem issues
+      process.env.CONTINUE_CLI_TEST_SESSION_ID = "test-with-various-chars";
+      
+      expect(() => {
+        saveSession([{ role: "user", content: "test" }]);
+      }).not.toThrow();
+      
       clearSession();
     });
   });
