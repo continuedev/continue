@@ -68,7 +68,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "tools/call",
     "controlPlane/openUrl",
     "controlPlane/getModelsAddOnUpgradeUrl",
-    "controlPlane/getEnvironmentType",
+    "controlPlane/getEnvironment",
     "controlPlane/getFreeTrialStatus",
     "isItemTooBig",
     "process/markAsBackgrounded",

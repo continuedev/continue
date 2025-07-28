@@ -407,7 +407,7 @@ export class Core {
       await this.messenger.request("openUrl", url);
     });
 
-    on("controlPlane/getEnvironmentType", async (msg) => {
+    on("controlPlane/getEnvironment", async (msg) => {
       return await getControlPlaneEnv(this.ide.getIdeSettings());
     });
 

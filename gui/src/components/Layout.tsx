@@ -59,7 +59,7 @@ const Layout = () => {
   useEffect(() => {
     (async () => {
       const response = await ideMessenger.request(
-        "controlPlane/getEnvironmentType",
+        "controlPlane/getEnvironment",
         undefined,
       );
       console.log("debug2 response was", response);

@@ -251,7 +251,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
-  "controlPlane/getEnvironmentType": [undefined, ControlPlaneEnv];
+  "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
   "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
   "controlPlane/getModelsAddOnUpgradeUrl": [
     { vsCodeUriScheme?: string },
