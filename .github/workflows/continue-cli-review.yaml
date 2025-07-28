@@ -31,7 +31,7 @@ jobs:
           # cache: "npm"
 
       - name: Install cn
-        run: npm i -g @continuedev/cn
+        run: npm i -g @continuedev/cli
 
       - name: Build prompt
         run: |
@@ -44,7 +44,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Run cn check
-        run: cat prompt.txt | cn run
+        run: cat prompt.txt | cn -p
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
