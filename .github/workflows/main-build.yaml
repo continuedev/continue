@@ -1,229 +1,105 @@
 name: Main Branch Build
 
-# Build and upload VS Code extension artifacts when code is merged to main
+# Download and republish VS Code extension artifacts when code is merged to main
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      test_pr_number:
+        description: "PR number to test with"
+        required: true
 
 jobs:
-  install-root:
+  republish-pr-artifacts:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        id: root-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install root dependencies
-        if: steps.root-cache.outputs.cache-hit != 'true'
-        run: npm ci
-
-  install-config-yaml:
-    needs: install-root
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - name: Install config-yaml dependencies
-        if: steps.config-yaml-cache.outputs.cache-hit != 'true'
-        run: |
-          cd packages/config-yaml
-          npm ci
-
-  install-openai-adapters:
-    needs: install-root
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Install openai-adapters dependencies
-        if: steps.openai-adapters-cache.outputs.cache-hit != 'true'
-        run: |
-          cd packages/openai-adapters
-          npm ci
-
-  install-core:
-    needs: install-root
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        platform: [Linux, macOS]
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          fetch-depth: 2 # Get the last 2 commits to find the merge commit
 
-      - uses: actions/cache@v4
-        id: root-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: core-cache
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
-
-      - name: Install core dependencies
-        if: steps.core-cache.outputs.cache-hit != 'true'
+      - name: Get merged PR number
+        id: get-pr
         run: |
-          cd core
-          npm ci
+          # Get the commit message of the merge commit
+          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
+          echo "Commit message: $COMMIT_MSG"
 
-  install-vscode:
-    needs: [install-root, install-core, install-config-yaml, install-openai-adapters]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
+          # Extract PR number from merge commit message (format: "Merge pull request #123 from...")
+          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -o "Merge pull request #[0-9]*" | grep -o "[0-9]*" || echo "")
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "❌ Could not extract PR number from commit message. This might not be a PR merge."
+            echo "Commit message was: $COMMIT_MSG"
+            exit 1
+          fi
 
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+          echo "Found PR number: $PR_NUMBER"
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: vscode-cache
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
-        run: |
-          cd packages/config-yaml
-          npm run build
-
-      - name: Build openai-adapters
-        run: |
-          cd packages/openai-adapters
-          npm run build
-
-      - name: Install vscode dependencies
-        if: steps.vscode-cache.outputs.cache-hit != 'true'
-        run: |
-          cd extensions/vscode
-          npm ci
+      - name: Find PR workflow run
+        id: find-run
         env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
-  vscode-package-extension:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    needs: [install-vscode, install-core, install-config-yaml, install-openai-adapters]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        id: vscode-node-modules-cache
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: core-node-modules-cache
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: config-yaml-cache
-        with:
-          path: packages/config-yaml/node_modules
-          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: openai-adapters-cache
-        with:
-          path: packages/openai-adapters/node_modules
-          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
-
-      - name: Build config-yaml
+          PR_NUMBER: ${{ steps.get-pr.outputs.pr_number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd packages/config-yaml
-          npm run build
+          echo "🔍 Getting branch name for PR #$PR_NUMBER..."
 
-      - name: Build openai-adapters
+          # Get the branch name for the PR
+          BRANCH_NAME=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json headRefName --jq '.headRefName')
+
+          if [ -z "$BRANCH_NAME" ]; then
+            echo "❌ Could not find PR #$PR_NUMBER"
+            exit 1
+          fi
+
+          echo "Branch name: $BRANCH_NAME"
+
+          # Get the latest successful workflow run for the branch
+          RUN_ID=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow="pr_checks.yaml" \
+            --branch="$BRANCH_NAME" \
+            --json databaseId,status,conclusion \
+            --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+            | head -1)
+
+          if [ -z "$RUN_ID" ]; then
+            echo "❌ No successful workflow run found for PR #$PR_NUMBER (branch: $BRANCH_NAME)"
+            exit 1
+          fi
+
+          echo "Found successful workflow run: $RUN_ID"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+
+      - name: Download PR artifact
+        env:
+          RUN_ID: ${{ steps.find-run.outputs.run_id }}
+          PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd packages/openai-adapters
-          npm run build
+          echo "📥 Downloading vscode-extension-build-$PLATFORM artifact from run $RUN_ID..."
 
-      - name: Package extension
-        run: |
-          cd extensions/vscode
-          npm run package
+          # Create temporary directory for download
+          mkdir -p ./temp-download
 
-      - name: Upload build artifact
+          # Download the artifact from the PR workflow run
+          if ! gh run download "$RUN_ID" \
+            --repo "${{ github.repository }}" \
+            --name "vscode-extension-build-$PLATFORM" \
+            --dir "./temp-download"; then
+            echo "❌ Failed to download artifact vscode-extension-build-$PLATFORM from run $RUN_ID"
+            exit 1
+          fi
+
+          echo "✅ Successfully downloaded artifact"
+
+      - name: Republish as main branch artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vscode-extension-build-${{ runner.os }}
-          path: extensions/vscode/build
+          name: vscode-extension-build-${{ matrix.platform }}
+          path: ./temp-download/*
