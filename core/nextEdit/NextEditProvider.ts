@@ -71,7 +71,6 @@ export class NextEditProvider {
   private previousRequest: AutocompleteInput | null = null;
   private previousCompletions: NextEditOutcome[] = [];
   private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
-  // TODO: keep track of the last completion request (at least the file path it came from)
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -305,6 +304,7 @@ export class NextEditProvider {
 
       // TODO: Toggle between the default endpoint and the finetuned endpoint.
       const prompts: Prompt[] = [];
+
       if (this.endpointType === "default") {
         prompts.push(renderDefaultSystemPrompt());
         prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
@@ -319,11 +319,12 @@ export class NextEditProvider {
           diffType: DiffFormatType.Unified,
           contextLines: 3,
         });
+
         const promptMetadata = await renderPrompt(
           helper,
           historyDiff ?? this.diffContext,
-          EditableRegionStrategy.Naive,
         );
+
         this.promptMetadata = promptMetadata;
 
         prompts.push({
@@ -336,6 +337,7 @@ export class NextEditProvider {
             "If the user has made a change, make sure you respect that and try to apply it to other parts of the code that used to use the old content.",
           ].join("\n"),
         });
+
         prompts.push(promptMetadata.prompt);
       }
 
@@ -343,10 +345,12 @@ export class NextEditProvider {
         helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
         0,
       );
+
       const editableRegionEndLine = Math.min(
         helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
         helper.fileLines.length - 1,
       );
+
       const oldEditRangeSlice = helper.fileContents
         .split("\n")
         .slice(editableRegionStartLine, editableRegionEndLine + 1)
@@ -361,6 +365,7 @@ export class NextEditProvider {
 
       if (this.endpointType === "default") {
         const msg: ChatMessage = await llm.chat(prompts, token);
+
         if (typeof msg.content === "string") {
           const nextCompletion = JSON.parse(msg.content).newCode;
           const outcomeNext: NextEditOutcome = {
@@ -368,7 +373,6 @@ export class NextEditProvider {
             modelProvider: llm.underlyingProviderName,
             modelName: llm.model + ":zetaDataset",
             completionOptions: null,
-            // filepath: helper.filepath,
             completionId: helper.input.completionId,
             gitRepo: await this.ide.getRepoName(helper.filepath),
             uniqueId: await this.ide.getUniqueId(),
@@ -413,14 +417,17 @@ export class NextEditProvider {
             : "";
 
           const currCursorPos = helper.pos;
+
           const editableRegionStartLine = Math.max(
             currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
             0,
           );
+
           const editableRegionEndLine = Math.min(
             currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
             helper.fileLines.length - 1,
           );
+
           const oldEditRangeSlice = helper.fileContents
             .split("\n")
             .slice(editableRegionStartLine, editableRegionEndLine + 1)
@@ -438,7 +445,6 @@ export class NextEditProvider {
             modelProvider: llm.underlyingProviderName,
             modelName: llm.model + ":zetaDataset",
             completionOptions: null,
-            // filepath: helper.filepath,
             completionId: helper.input.completionId,
             gitRepo: await this.ide.getRepoName(helper.filepath),
             uniqueId: await this.ide.getUniqueId(),
