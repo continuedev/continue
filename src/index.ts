@@ -42,7 +42,6 @@ addCommonOptions(program)
     "--format <format>",
     "Output format for headless mode (json). Only works with -p/--print flag."
   )
-  .option("--config <path>", "Path to configuration file")
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
@@ -121,7 +120,7 @@ program
   });
 
 // Serve subcommand
-const serveCommand = program
+program
   .command("serve [prompt]")
   .description("Start an HTTP server with /state and /message endpoints")
   .option(

@@ -96,3 +96,20 @@ export function withOriginalConsole<T>(fn: () => T): T {
 export function isInHeadlessMode(): boolean {
   return isHeadlessMode;
 }
+
+/**
+ * Reset console overrides to original state
+ * Useful for testing to ensure clean state
+ */
+export function resetConsoleOverrides(): void {
+  if (originalConsole) {
+    console.log = originalConsole.log;
+    console.info = originalConsole.info;
+    console.warn = originalConsole.warn;
+    console.error = originalConsole.error;
+    console.debug = originalConsole.debug;
+    
+    originalConsole = null;
+  }
+  isHeadlessMode = false;
+}
