@@ -12,12 +12,12 @@ import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
+import { posthogService } from "../telemetry/posthogService.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
-import { posthogService } from "../telemetry/posthogService.js";
 
 /**
  * Processes and validates JSON output for headless mode
@@ -26,7 +26,7 @@ import { posthogService } from "../telemetry/posthogService.js";
  */
 function processJsonOutput(response: string): string {
   const trimmedResponse = response.trim();
-  
+
   try {
     // Try to parse the response as JSON to validate it
     JSON.parse(trimmedResponse);
@@ -37,7 +37,7 @@ function processJsonOutput(response: string): string {
     return JSON.stringify({
       response: trimmedResponse,
       status: "success",
-      note: "Response was not valid JSON, so it was wrapped in a JSON object"
+      note: "Response was not valid JSON, so it was wrapped in a JSON object",
     });
   }
 }
@@ -47,7 +47,7 @@ export interface ChatOptions {
   config?: string;
   resume?: boolean;
   rule?: string[]; // Array of rule specifications
-  format?: 'json'; // Output format for headless mode
+  format?: "json"; // Output format for headless mode
 }
 
 async function initializeChatHistory(
@@ -88,7 +88,7 @@ async function processMessage(
   model: any,
   llmApi: any,
   isHeadless: boolean,
-  format?: 'json'
+  format?: "json"
 ): Promise<void> {
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
@@ -113,10 +113,9 @@ async function processMessage(
     // In headless mode, only print the final response using safe stdout
     if (isHeadless && finalResponse.trim()) {
       // Process output based on format
-      const outputResponse = format === 'json' 
-        ? processJsonOutput(finalResponse)
-        : finalResponse;
-      
+      const outputResponse =
+        format === "json" ? processJsonOutput(finalResponse) : finalResponse;
+
       safeStdout(outputResponse + "\n");
     }
 
@@ -167,7 +166,14 @@ async function runHeadlessMode(
 
     isFirstMessage = false;
 
-    await processMessage(userInput, chatHistory, model, llmApi, true, options.format);
+    await processMessage(
+      userInput,
+      chatHistory,
+      model,
+      llmApi,
+      true,
+      options.format
+    );
   }
 }
 

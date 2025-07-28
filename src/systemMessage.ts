@@ -145,7 +145,7 @@ export async function constructSystemMessage(
   if (format === "json") {
     systemMessage += `
 
-IMPORTANT: You are operating in JSON output mode. Your final response MUST be valid JSON that can be parsed by JSON.parse(). The JSON should contain your response content and any relevant information. Structure your response as a JSON object with appropriate fields. Do not include any text before or after the JSON - the entire response must be parseable JSON.
+IMPORTANT: You are operating in JSON output mode. Your final response MUST be valid JSON that can be parsed by JSON.parse(). The JSON should contain properties relevant to answer the user's question. You don't need to include any general "response" or "answer" field. Do not include any text before or after the JSON - the entire response must be parseable JSON.
 
 Example response format:
 {
