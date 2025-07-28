@@ -10,12 +10,14 @@ REPO="continuedev/continue"
 ONEPER_DIR="$HOME/.continue/.utils/oneper"
 
 show_help() {
-    echo "oneper - Install Continue VS Code extension from PR builds or latest pre-release"
+    echo "oneper - Install Continue VS Code extension from builds or latest pre-release"
     echo ""
     echo "Usage: oneper <command> [options]"
     echo "       oneper -h | --help"
+    echo "       oneper install                   # Install latest build from main branch (default)"
     echo ""
     echo "Commands:"
+    echo "  install                  Download and install VSIX from latest main branch build (default)"
     echo "  install --pr <number> [--platform <platform>]"
     echo "                           Download and install VSIX from specified PR number"
     echo "                           Platform options: macos, linux (auto-detected by default)"
@@ -24,9 +26,10 @@ show_help() {
     echo ""
     echo "Options:"
     echo "  -h, --help              Show this help message"
-    echo "  --platform <platform>   Specify platform for PR builds (macos, linux)"
+    echo "  --platform <platform>   Specify platform for builds (macos, linux)"
     echo ""
     echo "Examples:"
+    echo "  oneper install                       # Install latest build from main branch"
     echo "  oneper install --pr 123              # Install VSIX from PR #123"
     echo "  oneper install --pr 123 --platform linux   # Install Linux VSIX from PR #123"
     echo "  oneper install --latest              # Install latest pre-release"
@@ -71,6 +74,107 @@ ensure_oneper_dir() {
     if [ ! -d "$ONEPER_DIR" ]; then
         echo "📁 Creating oneper directory: $ONEPER_DIR"
         mkdir -p "$ONEPER_DIR"
+    fi
+}
+
+install_from_main() {
+    local platform=${1:-$(detect_os)}  # Auto-detect OS if not specified
+
+    # Map platform names to GitHub runner OS names
+    local artifact_suffix
+    case "$platform" in
+        "macos")
+            artifact_suffix="macOS"
+            ;;
+        "linux")
+            artifact_suffix="Linux"
+            ;;
+        *)
+            echo "❌ Unknown platform: $platform"
+            echo "   Supported platforms: macos, linux"
+            exit 1
+            ;;
+    esac
+
+    echo "🔍 Finding latest main branch build..."
+
+    # Get the latest successful workflow run for main branch
+    local run_id=$(gh run list \
+        --repo "$REPO" \
+        --workflow="main-build.yaml" \
+        --branch="main" \
+        --json databaseId,status,conclusion \
+        --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+        | head -1)
+
+    if [ -z "$run_id" ]; then
+        echo "❌ No successful main branch build found"
+        echo "   Make sure there are recent commits to main with successful builds"
+        exit 1
+    fi
+
+    echo "✅ Found workflow run: $run_id"
+    echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
+
+    # Create temporary directory for download
+    local temp_dir=$(mktemp -d)
+
+    # Download the artifact
+    if ! gh run download "$run_id" \
+        --repo "$REPO" \
+        --name "vscode-extension-build-$artifact_suffix" \
+        --dir "$temp_dir"; then
+        echo "❌ Failed to download artifact vscode-extension-build-$artifact_suffix"
+        echo "   Make sure the workflow run completed successfully for $platform"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Find the VSIX file in the downloaded artifact
+    local vsix_file=$(find "$temp_dir" -name "*.vsix" | head -1)
+
+    if [ -z "$vsix_file" ]; then
+        echo "❌ No VSIX file found in artifact"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
+    local original_filename=$(basename "$vsix_file")
+    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+
+    if [ -z "$version" ]; then
+        echo "⚠️  Could not extract version from filename: $original_filename"
+        version="unknown"
+    fi
+
+    # Create new VSIX name with version and "main" suffix
+    local target_path="$ONEPER_DIR/continue-${version}-main.vsix"
+
+    # Check if file already exists and notify about overwrite
+    if [ -f "$target_path" ]; then
+        echo "⚠️  Overwriting existing VSIX: $target_path"
+    fi
+
+    echo "📦 Moving VSIX to: $target_path"
+    mv "$vsix_file" "$target_path"
+
+    # Clean up temp directory
+    rm -rf "$temp_dir"
+
+    # Install the extension
+    echo "🚀 Installing VS Code extension..."
+    if code --install-extension "$target_path"; then
+        echo "✅ Successfully installed Continue extension from main branch"
+        echo "📄 VSIX file saved to: $target_path"
+        echo ""
+        echo "💡 To use the new extension version, reload your VS Code window:"
+        echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
+        echo "   • Type 'Developer: Reload Window' and press Enter"
+        echo "   • Or restart VS Code entirely"
+    else
+        echo "❌ Failed to install extension"
+        exit 1
     fi
 }
 
@@ -228,11 +332,6 @@ clean_cache() {
 }
 
 main() {
-    if [ $# -eq 0 ]; then
-        show_help
-        exit 1
-    fi
-
     # Handle help flags first
     case "$1" in
         "-h"|"--help")
@@ -240,6 +339,14 @@ main() {
             exit 0
             ;;
     esac
+
+    # If no arguments, default to installing from main
+    if [ $# -eq 0 ]; then
+        check_dependencies
+        ensure_oneper_dir
+        install_from_main
+        exit 0
+    fi
 
     check_dependencies
     ensure_oneper_dir
@@ -261,6 +368,15 @@ main() {
                     ;;
                 "--latest")
                     install_latest
+                    ;;
+                "--platform")
+                    # Handle: oneper install --platform <platform> (install from main with specific platform)
+                    local platform="$3"
+                    install_from_main "$platform"
+                    ;;
+                "")
+                    # Handle: oneper install (install from main with auto-detected platform)
+                    install_from_main
                     ;;
                 *)
                     echo "❌ Unknown install option: $2"

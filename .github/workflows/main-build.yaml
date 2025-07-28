@@ -1,0 +1,229 @@
+name: Main Branch Build
+
+# Build and upload VS Code extension artifacts when code is merged to main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  install-root:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: root-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install root dependencies
+        if: steps.root-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+  install-config-yaml:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Install config-yaml dependencies
+        if: steps.config-yaml-cache.outputs.cache-hit != 'true'
+        run: |
+          cd packages/config-yaml
+          npm ci
+
+  install-openai-adapters:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: openai-adapters-cache
+        with:
+          path: packages/openai-adapters/node_modules
+          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
+
+      - name: Install openai-adapters dependencies
+        if: steps.openai-adapters-cache.outputs.cache-hit != 'true'
+        run: |
+          cd packages/openai-adapters
+          npm ci
+
+  install-core:
+    needs: install-root
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: root-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: core-cache
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Install core dependencies
+        if: steps.core-cache.outputs.cache-hit != 'true'
+        run: |
+          cd core
+          npm ci
+
+  install-vscode:
+    needs: [install-root, install-core, install-config-yaml, install-openai-adapters]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: vscode-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: openai-adapters-cache
+        with:
+          path: packages/openai-adapters/node_modules
+          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
+      - name: Build openai-adapters
+        run: |
+          cd packages/openai-adapters
+          npm run build
+
+      - name: Install vscode dependencies
+        if: steps.vscode-cache.outputs.cache-hit != 'true'
+        run: |
+          cd extensions/vscode
+          npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+  vscode-package-extension:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    needs: [install-vscode, install-core, install-config-yaml, install-openai-adapters]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: vscode-node-modules-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: core-node-modules-cache
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: openai-adapters-cache
+        with:
+          path: packages/openai-adapters/node_modules
+          key: ${{ runner.os }}-openai-adapters-node-modules-${{ hashFiles('packages/openai-adapters/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
+      - name: Build openai-adapters
+        run: |
+          cd packages/openai-adapters
+          npm run build
+
+      - name: Package extension
+        run: |
+          cd extensions/vscode
+          npm run package
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-build-${{ runner.os }}
+          path: extensions/vscode/build
