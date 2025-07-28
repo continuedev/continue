@@ -15,9 +15,9 @@ import { formatToolCall } from "../../tools/formatters.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
 
-import { DisplayMessage } from "../types.js";
-import { posthogService } from "../../telemetry/posthogService.js";
 import { initializeChatHistory } from "../../commands/chat.js";
+import { posthogService } from "../../telemetry/posthogService.js";
+import { DisplayMessage } from "../types.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;
@@ -74,7 +74,7 @@ export function useChat({
 
       // If no session loaded or not resuming, we'll need to add system message
       // We can't make this async, so we'll handle it in the useEffect
-      return initialHistory;
+      return resume ? loadSession() ?? [] : [];
     }
   );
 
@@ -105,7 +105,7 @@ export function useChat({
     // If we're in remote mode, we're initialized (will be populated by polling)
     isRemoteMode || (resume && loadSession() !== null)
   );
-  
+
   // Capture initial rules to prevent re-initialization when rules change
   const [initialRules] = useState(additionalRules);
   const [attachedFiles, setAttachedFiles] = useState<
@@ -243,7 +243,13 @@ export function useChat({
     initializeHistory();
     // Note: Using initialRules instead of additionalRules to prevent re-initialization
     // when rules change during the conversation
-  }, [isRemoteMode, isChatHistoryInitialized, chatHistory.length, resume, initialRules]);
+  }, [
+    isRemoteMode,
+    isChatHistoryInitialized,
+    chatHistory.length,
+    resume,
+    initialRules,
+  ]);
 
   useEffect(() => {
     // Only handle initial prompt after chat history is initialized
