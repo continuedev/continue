@@ -13,8 +13,8 @@ describe('ModelCapabilityWarning', () => {
     if (frame) {
       expect(frame).toContain('Model Capability Warning');
       expect(frame).toContain('gpt-3-davinci');
-      expect(frame).toContain('may have limited capabilities');
-      expect(frame).toContain('Consider using a more capable model');
+      expect(frame).toContain('is not recommended for use with cn due to limited reasoning and tool');
+      expect(frame).toContain('calling capabilities');
     }
   });
 

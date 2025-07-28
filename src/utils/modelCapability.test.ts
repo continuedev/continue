@@ -13,9 +13,15 @@ describe('isModelCapable', () => {
       expect(isModelCapable('openai', 'gpt-3.5-turbo-16k')).toBe(true);
     });
 
-    test('should consider older GPT-3 models as less capable', () => {
-      expect(isModelCapable('openai', 'gpt-3-davinci')).toBe(false);
-      expect(isModelCapable('openai', 'gpt-3-curie')).toBe(false);
+    test('should consider O-series models as capable', () => {
+      expect(isModelCapable('openai', 'o1-preview')).toBe(true);
+      expect(isModelCapable('openai', 'o1-mini')).toBe(true);
+      expect(isModelCapable('openai', 'o3')).toBe(true);
+    });
+
+    test('should consider older GPT-3 models as capable', () => {
+      expect(isModelCapable('openai', 'gpt-3-davinci')).toBe(true);
+      expect(isModelCapable('openai', 'gpt-3-curie')).toBe(true);
     });
   });
 
@@ -30,8 +36,8 @@ describe('isModelCapable', () => {
       expect(isModelCapable('anthropic', 'claude-2.1')).toBe(true);
     });
 
-    test('should consider Claude-1 as less capable', () => {
-      expect(isModelCapable('anthropic', 'claude-1')).toBe(false);
+    test('should consider Claude-1 as capable', () => {
+      expect(isModelCapable('anthropic', 'claude-1')).toBe(true);
     });
   });
 
@@ -41,15 +47,15 @@ describe('isModelCapable', () => {
       expect(isModelCapable('gemini', 'gemini-ultra')).toBe(true);
     });
 
-    test('should consider PaLM-2 models as capable', () => {
-      expect(isModelCapable('google', 'palm-2-chat')).toBe(true);
+    test('should consider PaLM-2 models as not capable', () => {
+      expect(isModelCapable('google', 'palm-2-chat')).toBe(false);
     });
   });
 
   describe('Local/Ollama models', () => {
-    test('should consider larger models as capable', () => {
-      expect(isModelCapable('ollama', 'llama2-70b')).toBe(true);
-      expect(isModelCapable('local', 'codellama-34b')).toBe(true);
+    test('should consider larger models as not capable', () => {
+      expect(isModelCapable('ollama', 'llama2-70b')).toBe(false);
+      expect(isModelCapable('local', 'codellama-34b')).toBe(false);
     });
 
     test('should consider smaller models as less capable', () => {
@@ -59,9 +65,9 @@ describe('isModelCapable', () => {
   });
 
   describe('Meta/Llama models', () => {
-    test('should consider large Llama models as capable', () => {
-      expect(isModelCapable('llama', 'llama-2-70b')).toBe(true);
-      expect(isModelCapable('meta', 'llama-65b')).toBe(true);
+    test('should consider large Llama models as not capable', () => {
+      expect(isModelCapable('llama', 'llama-2-70b')).toBe(false);
+      expect(isModelCapable('meta', 'llama-65b')).toBe(false);
     });
 
     test('should consider small Llama models as less capable', () => {
@@ -71,15 +77,15 @@ describe('isModelCapable', () => {
   });
 
   describe('Continue Proxy models', () => {
-    test('should consider continue-proxy models as capable', () => {
-      expect(isModelCapable('continue-proxy', 'any-model')).toBe(true);
+    test('should consider continue-proxy models as not capable', () => {
+      expect(isModelCapable('continue-proxy', 'any-model')).toBe(false);
     });
   });
 
   describe('Hugging Face models', () => {
-    test('should consider code-specific models as capable', () => {
-      expect(isModelCapable('huggingface', 'codellama-instruct')).toBe(true);
-      expect(isModelCapable('huggingface', 'starcoder-base')).toBe(true);
+    test('should consider code-specific models as not capable', () => {
+      expect(isModelCapable('huggingface', 'codellama-instruct')).toBe(false);
+      expect(isModelCapable('huggingface', 'starcoder-base')).toBe(false);
     });
 
     test('should consider general chat models as less capable', () => {
@@ -88,8 +94,20 @@ describe('isModelCapable', () => {
   });
 
   describe('Unknown providers', () => {
-    test('should default to capable for unknown providers', () => {
-      expect(isModelCapable('unknown-provider', 'some-model')).toBe(true);
+    test('should default to not capable for unknown providers', () => {
+      expect(isModelCapable('unknown-provider', 'some-model')).toBe(false);
+    });
+  });
+
+  describe('Other capable models', () => {
+    test('should consider Qwen models as capable', () => {
+      expect(isModelCapable('alibaba', 'qwen-turbo')).toBe(true);
+      expect(isModelCapable('dashscope', 'qwen-max')).toBe(true);
+    });
+
+    test('should consider Kimi models as capable', () => {
+      expect(isModelCapable('moonshot', 'kimi-8k')).toBe(true);
+      expect(isModelCapable('moonshot', 'kimi-32k')).toBe(true);
     });
   });
 
