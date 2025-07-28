@@ -116,15 +116,15 @@ If in doubt, check out the
 official [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template).
 These templates are the most up-to-date examples of how to correctly customize the plugin build scripts.
 
-Also, check out 
-the [useful recipes](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-recipes.html) 
+Also, check out
+the [useful recipes](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-recipes.html)
 for common problems.
 
 ### Adding new extensions in `plugin.xml`
 
-There's a tool called [JetBrains Platform Explorer](https://plugins.jetbrains.com/intellij-platform-explorer) that 
-aggregates plugin metadata and allows you to filter by specific 
-extension points. If you're having trouble implementing a feature that's not officially documented, 
+There's a tool called [JetBrains Platform Explorer](https://plugins.jetbrains.com/intellij-platform-explorer) that
+aggregates plugin metadata and allows you to filter by specific
+extension points. If you're having trouble implementing a feature that's not officially documented,
 you can learn from other open source plugins.
 
 ### Reloading changes
