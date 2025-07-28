@@ -63,7 +63,7 @@ function getGitStatus(): string {
       encoding: "utf-8",
       cwd: process.cwd(),
     });
-    return result.trim() || "Working tree clea  n";
+    return result.trim() || "Working tree clean";
   } catch {
     return "Git status not available";
   }
