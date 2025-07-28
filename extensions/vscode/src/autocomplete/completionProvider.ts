@@ -5,8 +5,6 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
-// import { IS_NEXT_EDIT_ACTIVE } from "core/nextEdit/constants";
-// import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -71,8 +69,6 @@ export class ContinueCompletionProvider
   private jumpManager: JumpManager;
   public recentlyVisitedRanges: RecentlyVisitedRangesService;
   public recentlyEditedTracker: RecentlyEditedTracker;
-
-  private oldFileContent: string = "";
 
   private isNextEditActive: boolean = false;
 
@@ -140,14 +136,6 @@ export class ContinueCompletionProvider
     token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
-    console.log("================================================");
-    console.log(
-      "editor.inlineSuggest.enabled:",
-      vscode.workspace
-        .getConfiguration()
-        .get<boolean>("editor.inlineSuggest.enabled"),
-    );
-    // console.log("trigger!!", token.isCancellationRequested);
     const enableTabAutocomplete =
       getStatusBarStatus() === StatusBarStatus.Enabled;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
@@ -247,15 +235,9 @@ export class ContinueCompletionProvider
       const recentlyVisitedRanges = this.recentlyVisitedRanges.getSnippets();
       let recentlyEditedRanges =
         await this.recentlyEditedTracker.getRecentlyEditedRanges();
-      // console.log("one:", JSON.stringify(recentlyEditedRanges, null, 2));
-      console.log(
-        this.nextEditProvider.chainExists()
-          ? "chain is alive"
-          : "chain is not alive",
-      );
 
       if (this.nextEditProvider.chainExists()) {
-        // If the user has accepted the previous completion, the chain of edits is alive.
+        // The chain of edits is alive because the user has accepted the previous completion.
         // Get the next editable region and set the pos to be within that range.
         outcome =
           await this.nextEditProvider.provideInlineCompletionItemsWithChain(
@@ -288,6 +270,7 @@ export class ContinueCompletionProvider
         };
 
         setupStatusBar(undefined, true);
+
         // Check if editChainId exists or needs to be refreshed.
         if (this.isNextEditActive) {
           outcome = await this.nextEditProvider.provideInlineCompletionItems(
@@ -295,17 +278,16 @@ export class ContinueCompletionProvider
             signal,
             false,
           );
-          console.log("outcome.completion:");
-          console.log(outcome?.completion);
+
           if (!outcome || !outcome.completion) {
-            // TODO: At this point we assume that the user typed something "whole".
-            // AKA, the user's edit was good enough to start an edit chain.
-            // We actually started the chain before getting the outcome. This makes logical sense.
-            // Then all we need to do is to calculate next editable region.
+            // Hitting this condition means that the model could not predict a next edit action.
+            // That happens when the user's recent edit is good enough, or if the model is totally lost.
+            // At this point we assume that the user typed something good enough to maintain a chain of edits.
+            // All we need to do here is to calculate next editable region.
             // We also need to use the user's edits to create a user edits section in renderPrompt.
             recentlyEditedRanges =
               await this.recentlyEditedTracker.getRecentlyEditedRanges();
-            // console.log("two:", JSON.stringify(recentlyEditedRanges, null, 2));
+
             outcome =
               await this.nextEditProvider.provideInlineCompletionItemsWithChain(
                 {
@@ -321,6 +303,7 @@ export class ContinueCompletionProvider
               );
           }
         } else {
+          // Handle autocomplete request.
           outcome = await this.completionProvider.provideInlineCompletionItems(
             input,
             signal,
@@ -329,21 +312,8 @@ export class ContinueCompletionProvider
         }
       }
 
-      this.oldFileContent = document.getText();
-
-      // TODO: fix type of outcome to be a union between NextEditOutcome and AutocompleteOutcome.
-      // const outcome: AutocompleteOutcome | NextEditOutcome | undefined = this
-      //   .isNextEditActive
-      //   ? await this.nextEditProvider.provideInlineCompletionItems(
-      //       input,
-      //       signal,
-      //     )
-      //   : await this.completionProvider.provideInlineCompletionItems(
-      //       input,
-      //       signal,
-      //       wasManuallyTriggered,
-      //     );
-
+      // If the model cannot predict a completion or a next edit,
+      // then it's safe to assume that there are no more changes to be made.
       if (!outcome || !outcome.completion) {
         return null;
       }
@@ -374,8 +344,8 @@ export class ContinueCompletionProvider
         return null;
       }
 
-      // Marking the outcome as displayed saves
-      // the current outcome as a value of the key completionId.
+      // Marking the outcome as displayed saves the current outcome
+      // as a value of the key completionId.
       if (this.isNextEditActive) {
         this.nextEditProvider.markDisplayed(
           completionId,
@@ -394,7 +364,6 @@ export class ContinueCompletionProvider
       let range = new vscode.Range(startPos, startPos);
       let completionText = outcome.completion;
 
-      // NOTE: This seems like an autocomplete logic.
       const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
 
       if (isSingleLineCompletion) {
@@ -445,14 +414,14 @@ export class ContinueCompletionProvider
       const currCursorPos = editor.selection.active;
 
       if (this.isNextEditActive) {
-        console.log(this.nextEditProvider.getChain().length);
-
         if (!this.nextEditProvider.isStartOfChain()) {
           const jumpPosition = new vscode.Position(
             (outcome as NextEditOutcome).editableRegionStartLine,
             0,
           );
 
+          // Suggest a jump if there is a valid next location.
+          // This will set isJumpInProgress if a jump is suggested.
           await this.jumpManager.suggestJump(
             currCursorPos,
             jumpPosition,
@@ -461,7 +430,7 @@ export class ContinueCompletionProvider
 
           // If a jump was just suggested, don't show ghost text yet.
           if (this.jumpManager.isJumpInProgress()) {
-            // Store this completion for later use when jump is complete.
+            // Store this completion to be rendered after jump is complete.
             this.jumpManager.setCompletionAfterJump({
               completionId: completionId,
               outcome: outcome as NextEditOutcome,
@@ -516,8 +485,6 @@ export class ContinueCompletionProvider
           newEditRangeSlice,
           relativeCursorPos,
         );
-        console.log("isFim:", isFim);
-        console.log("fimText:", fimText);
 
         if (isFim) {
           if (!fimText) {
@@ -526,9 +493,12 @@ export class ContinueCompletionProvider
             return undefined;
           }
 
-          // const completionId = input.completionId;
-
           // Track this ghost text for acceptance detection.
+          // Ghost text acceptance can *technically* be acted upon in
+          // the command handler for "continue.logNextEditOutcomeAccept",
+          // but there is a substantial delay between accepting and logging,
+          // which introduces a lot of race conditions with different event handlers.
+          // Plus, separating these concerns seems to make sense logically as well.
           GhostTextAcceptanceTracker.getInstance().setExpectedGhostTextAcceptance(
             document,
             fimText,
@@ -544,10 +514,9 @@ export class ContinueCompletionProvider
             {
               title: "Log Next Edit Outcome",
               command: "continue.logNextEditOutcomeAccept",
-              arguments: [completionId, this.nextEditLoggingService], // TODO: this may have to be this.completionProvider.
+              arguments: [completionId, this.nextEditLoggingService],
             },
           );
-          console.log(nextEditCompletionItem);
           return [nextEditCompletionItem];
         }
 

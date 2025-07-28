@@ -9,11 +9,7 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
   USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
-import { createDiff, DiffFormatType } from "../context/diffFormatting";
-import {
-  EditableRegionStrategy,
-  getNextEditableRegion,
-} from "../NextEditEditableRegionCalculator";
+import { EditableRegionStrategy } from "../NextEditEditableRegionCalculator";
 import {
   NextEditOutcome,
   NextEditTemplate,
@@ -94,67 +90,67 @@ export async function renderPrompt(
   // TODO: apply prevOutcome to existing content. we will need the line range.
   // Also display the diff between existing content and applied content.
   // NOTE: This only runs in fetchFunction.
-  if (prevOutcome) {
-    // console.log("renderPrompt prevOutcome:", prevOutcome.completion);
-    // console.log(
-    //   "beforeInsert:",
-    //   helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
-    // );
-    // console.log("toInsert: ", prevOutcome?.completion.split("\n"));
-    // console.log(
-    //   "afterInsert:",
-    //   helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
-    // );
-    let appliedContent = [
-      ...helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
-      ...(prevOutcome?.completion.split("\n") ?? []),
-      ...helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
-    ];
-    // console.log("helper.fileContents:", helper.fileContents);
-    // NOTE: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
-    // The individual parts don't contain this.
-    // console.log("appliedContent:", appliedContent);
-    appliedContent = appliedContent.filter(
-      (line) => !line.includes(USER_CURSOR_IS_HERE_TOKEN),
-    );
-    // Given a previous response, we need to calculate where the cursor would be.
-    // I think it's a good idea to calculate this in the response.
+  // if (prevOutcome) {
+  //   // console.log("renderPrompt prevOutcome:", prevOutcome.completion);
+  //   // console.log(
+  //   //   "beforeInsert:",
+  //   //   helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+  //   // );
+  //   // console.log("toInsert: ", prevOutcome?.completion.split("\n"));
+  //   // console.log(
+  //   //   "afterInsert:",
+  //   //   helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+  //   // );
+  //   let appliedContent = [
+  //     ...helper.fileLines.slice(0, prevOutcome?.editableRegionStartLine),
+  //     ...(prevOutcome?.completion.split("\n") ?? []),
+  //     ...helper.fileLines.slice(prevOutcome?.editableRegionEndLine),
+  //   ];
+  //   // console.log("helper.fileContents:", helper.fileContents);
+  //   // NOTE: I'm not sure, but <|user_cursor_is_here|> is somehow being added to appliedContent.
+  //   // The individual parts don't contain this.
+  //   // console.log("appliedContent:", appliedContent);
+  //   appliedContent = appliedContent.filter(
+  //     (line) => !line.includes(USER_CURSOR_IS_HERE_TOKEN),
+  //   );
+  //   // Given a previous response, we need to calculate where the cursor would be.
+  //   // I think it's a good idea to calculate this in the response.
 
-    // TODO: handle cases where there are more than one next editable region.
-    // NOTE: we might set it so that we receive the next editable region as an argument.
-    const editableRegion = await getNextEditableRegion(editableRegionStrategy, {
-      fileLines: appliedContent,
-      filepath: helper.filepath,
-    });
+  //   // TODO: handle cases where there are more than one next editable region.
+  //   // NOTE: we might set it so that we receive the next editable region as an argument.
+  //   const editableRegion = await getNextEditableRegion(editableRegionStrategy, {
+  //     fileLines: appliedContent,
+  //     filepath: helper.filepath,
+  //   });
 
-    // console.log("appliedContent:", appliedContent);
-    // console.log("startLine:", editableRegion?.range.start.line);
-    editedCodeWithTokens = insertTokens(
-      appliedContent,
-      prevOutcome.finalCursorPosition,
-      editableRegion && editableRegion[0]?.range.start.line !== undefined
-        ? editableRegion[0].range.start.line
-        : undefined,
-      editableRegion && editableRegion[0]?.range.end.line !== undefined
-        ? editableRegion[0].range.end.line
-        : undefined,
-    );
-    // console.log("new editedCodeWithTokens:", editedCodeWithTokens);
-    userEdits = createDiff({
-      beforeContent: helper.fileContents,
-      afterContent: appliedContent.join("\n"),
-      filePath: helper.filepath,
-      diffType: DiffFormatType.Unified,
-      contextLines: 3,
-    });
-    userEdits = userEdits.replace(USER_CURSOR_IS_HERE_TOKEN, "");
-    // console.log("new userDiff:", userEdits);
-  } else {
-    editedCodeWithTokens = insertTokens(
-      helper.fileContents.split("\n"),
-      helper.pos,
-    );
-  }
+  //   // console.log("appliedContent:", appliedContent);
+  //   // console.log("startLine:", editableRegion?.range.start.line);
+  //   editedCodeWithTokens = insertTokens(
+  //     appliedContent,
+  //     prevOutcome.finalCursorPosition,
+  //     editableRegion && editableRegion[0]?.range.start.line !== undefined
+  //       ? editableRegion[0].range.start.line
+  //       : undefined,
+  //     editableRegion && editableRegion[0]?.range.end.line !== undefined
+  //       ? editableRegion[0].range.end.line
+  //       : undefined,
+  //   );
+  //   // console.log("new editedCodeWithTokens:", editedCodeWithTokens);
+  //   userEdits = createDiff({
+  //     beforeContent: helper.fileContents,
+  //     afterContent: appliedContent.join("\n"),
+  //     filePath: helper.filepath,
+  //     diffType: DiffFormatType.Unified,
+  //     contextLines: 3,
+  //   });
+  //   userEdits = userEdits.replace(USER_CURSOR_IS_HERE_TOKEN, "");
+  //   // console.log("new userDiff:", userEdits);
+  // } else {
+  editedCodeWithTokens = insertTokens(
+    helper.fileContents.split("\n"),
+    helper.pos,
+  );
+  // }
 
   const tv: TemplateVars = {
     userEdits,

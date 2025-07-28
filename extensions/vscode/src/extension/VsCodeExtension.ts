@@ -419,20 +419,15 @@ export class VsCodeExtension {
       }
     });
 
-    // TODO: check if next edit provider's chain id is cleared properly.
     // Listen for editor changes to clean up decorations when editor closes.
     vscode.window.onDidChangeVisibleTextEditors(async () => {
       // If our active editor is no longer visible, clear decorations.
-      // console.log(
-      //   "deleteChain from VsCodeExtension.ts: onDidChangeVisibleTextEditors",
-      // );
       await NextEditProvider.getInstance().deleteChain();
     });
 
     // Listen for selection changes to hide tooltip when cursor moves.
     vscode.window.onDidChangeTextEditorSelection(async (e) => {
-      // console.log("move detected");
-      // Don't delete the chain if:
+      // Don't delete the chain of edits if:
 
       // 1. A next edit window was just accepted.
       if (
@@ -461,21 +456,22 @@ export class VsCodeExtension {
       }
 
       // 4. The selection change is part of a typing session
-      // Check if this selection change is close enough to a document change to be considered typing
+      // Check if this selection change is close enough to a document change to be considered typing.
       const timeSinceLastDocChange = Date.now() - this.lastDocumentChangeTime;
-      if (this.isTypingSession && timeSinceLastDocChange < 500) {
-        // This selection change is likely due to typing, don't delete the chain
+      const ARBITRARY_TYPING_DELAY = 500;
+      if (
+        this.isTypingSession &&
+        timeSinceLastDocChange < ARBITRARY_TYPING_DELAY
+      ) {
+        // This selection change is likely due to typing, don't delete the chain.
         return;
       }
 
       // Otherwise, delete the chain (for rejection or unrelated movement).
-      console.log(
-        "deleteChain from VsCodeExtension.ts: onDidChangeTextEditorSelection",
-      );
       await NextEditProvider.getInstance().deleteChain();
+
       NextEditProvider.getInstance().loadNextEditableRegionsInTheCurrentChain(
         (await getNextEditableRegion(EditableRegionStrategy.Static, {
-          fileContent: e.textEditor.document.getText(),
           cursorPosition: e.selections[0].anchor,
           filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
           ide: this.ide,

@@ -343,17 +343,15 @@ async function staticRerankJump(ctx: {
 // Static jump relies purely on static analysis
 // to determine where to edit next.
 async function staticJump(ctx: {
-  fileContent: string;
   cursorPosition: { line: number; character: number };
   filepath: string;
   ide: IDE;
 }): Promise<RangeInFile[] | null> {
   try {
-    const { fileContent, cursorPosition, filepath, ide } = ctx;
-    if (!fileContent || !cursorPosition || !filepath || !ide) {
+    const { cursorPosition, filepath, ide } = ctx;
+    if (!cursorPosition || !filepath || !ide) {
       console.warn(
         "Missing required context for static jump:",
-        !fileContent,
         !cursorPosition,
         !filepath,
         !ide,
