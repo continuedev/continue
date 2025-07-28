@@ -44,9 +44,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Run cn check
-        run: cat prompt.txt | cn -p
+        run: cat prompt.txt | cn --config continuedev/default-agent -p
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
       - name: Upload review artifact
         uses: actions/upload-artifact@v4
