@@ -342,9 +342,10 @@ class IntelliJIDE(
                         val buffer = ByteArray(sizeToRead)
                         val bytesRead = fis.read(buffer, 0, sizeToRead)
                         if (bytesRead <= 0) return@use ""
-                        String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
-                            // `\r` takes up unnecessary tokens
-                            .lineSequence().joinToString("\n")
+                        val content = String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
+                        // Remove `\r` characters but preserve trailing newlines to prevent line count discrepancies
+                        val contentWithoutCR = content.replace("\r\n", "\n").replace("\r", "\n")
+                        contentWithoutCR
                     }
                 }
             }

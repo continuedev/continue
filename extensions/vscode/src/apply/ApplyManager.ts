@@ -29,13 +29,6 @@ export class ApplyManager {
     toolCallId,
     isSearchAndReplace,
   }: ApplyToFilePayload) {
-    await this.webviewProtocol.request("updateApplyState", {
-      streamId,
-      status: "streaming",
-      fileContent: text,
-      toolCallId,
-    });
-
     if (filepath) {
       await this.ensureFileOpen(filepath);
     }
@@ -45,6 +38,17 @@ export class ApplyManager {
       void vscode.window.showErrorMessage("No active editor to apply edits to");
       return;
     }
+
+    // Capture the original file content before applying changes
+    const originalFileContent = activeTextEditor.document.getText();
+
+    await this.webviewProtocol.request("updateApplyState", {
+      streamId,
+      status: "streaming",
+      fileContent: text,
+      originalFileContent,
+      toolCallId,
+    });
 
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
