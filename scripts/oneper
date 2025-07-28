@@ -113,7 +113,15 @@ install_from_main() {
         exit 1
     fi
 
-    echo "✅ Found workflow run: $run_id"
+    echo "✅ Found workflow run: https://github.com/$REPO/actions/runs/$run_id"
+    
+    # Try to get the original PR number from the workflow run
+    local original_pr=$(gh run view "$run_id" --repo "$REPO" --json displayTitle --jq '.displayTitle' | grep -o "pull request #[0-9]*" | grep -o "[0-9]*" || echo "")
+    
+    if [ -n "$original_pr" ]; then
+        echo "📦 This contains artifacts originally from PR #$original_pr"
+    fi
+    
     echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
 
     # Create temporary directory for download
