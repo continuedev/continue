@@ -18,6 +18,7 @@ import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
 import { BaseCommandOptions } from "./BaseCommandOptions.js";
+import { posthogService } from "../telemetry/posthogService.js";
 
 export interface ChatOptions extends BaseCommandOptions {
   headless?: boolean;
@@ -153,6 +154,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   try {
     // Record session start
     telemetryService.recordSessionStart();
+    await posthogService.capture("sessionStart", {});
 
     // Start active time tracking
     telemetryService.startActiveTime();
