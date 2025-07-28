@@ -6,13 +6,15 @@ import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
+import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.protocol.*
-import com.github.continuedev.continueintellijextension.services.*
-import com.github.continuedev.continueintellijextension.utils.*
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
+import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -20,7 +22,10 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowManager
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
@@ -46,7 +51,7 @@ class IdeProtocolClient(
     init {
         // Setup config.json / config.ts save listeners
         VirtualFileManager.getInstance().addAsyncFileListener(
-            AsyncFileSaveListener(continuePluginService), ContinuePluginDisposable.getInstance(project)
+            AsyncFileSaveListener(continuePluginService), project.service<ContinuePluginDisposable>()
         )
     }
 
@@ -67,8 +72,7 @@ class IdeProtocolClient(
                     }
 
                     "jetbrains/isOSREnabled" -> {
-                        val isOSREnabled =
-                            ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+                        val isOSREnabled = service<ContinueExtensionSettings>().continueState.enableOSR
                         respond(isOSREnabled)
                     }
 
@@ -202,6 +206,11 @@ class IdeProtocolClient(
                         respond(contents)
                     }
 
+                    "isWorkspaceRemote" -> {
+                        val isRemote = ide.isWorkspaceRemote()
+                        respond(isRemote)
+                    }
+
                     "saveFile" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
@@ -318,7 +327,11 @@ class IdeProtocolClient(
                     }
 
                     "runCommand" -> {
-                        // Running commands not yet supported in JetBrains
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            RunCommandParams::class.java
+                        )
+                        ide.runCommand(params.command, params.options)
                         respond(null)
                     }
 
@@ -463,8 +476,10 @@ class IdeProtocolClient(
                         println("Unknown message type: $messageType")
                     }
                 }
-            } catch (error: Exception) {
-                ide.showToast(ToastType.ERROR, " Error handling message of type $messageType: $error")
+            } catch (exception: Exception) {
+                val exceptionMessage = "Error handling message of type $messageType: $exception"
+                service<ContinueErrorService>().report(exception, exceptionMessage)
+                ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }
     }
@@ -473,7 +488,7 @@ class IdeProtocolClient(
         val editor = EditorUtils.getEditor(project)
         val rif = editor?.getHighlightedRIF() ?: return
 
-       val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
+        val serializedRif = com.github.continuedev.continueintellijextension.RangeInFileWithContents(
             filepath = rif.filepath,
             range = rif.range,
             contents = rif.contents

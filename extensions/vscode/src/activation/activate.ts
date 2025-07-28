@@ -24,8 +24,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
-    context.globalState.update("hasBeenInstalled", true);
-    Telemetry.capture(
+    void context.globalState.update("hasBeenInstalled", true);
+    void Telemetry.capture(
       "install",
       {
         extensionVersion: getExtensionVersion(),
@@ -38,21 +38,15 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   const yamlMatcher = ".continue/**/*.yaml";
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
 
-  const existingSchemas = yamlConfig.get("schemas") || {};
-  const newSchemas = Object.entries(existingSchemas).filter(
-    ([_, value]) => Array.isArray(value) && value.includes(yamlMatcher), // remove old ones
-  );
-
   const newPath = path.join(
     context.extension.extensionUri.fsPath,
     "config-yaml-schema.json",
   );
-  newSchemas.push([newPath, [yamlMatcher]]);
 
   try {
     await yamlConfig.update(
       "schemas",
-      Object.fromEntries(newSchemas),
+      { [newPath]: [yamlMatcher] },
       vscode.ConfigurationTarget.Global,
     );
   } catch (error) {

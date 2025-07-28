@@ -9,6 +9,7 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 - [Environment Setup](#environment-setup)
   - [IDE Installation](#ide-installation)
   - [IDE configuration](#ide-configuration)
+    - [Recommended plugins](#recommended-plugins)
   - [Node.js Requirements](#nodejs-requirements)
   - [Install all dependencies](#install-all-dependencies)
   - [Misc](#misc)
@@ -27,6 +28,7 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
     - [Setup](#setup)
     - [Running the tests](#running-the-tests)
     - [Identifying selectors](#identifying-selectors)
+    - [Rebuilding the extension](#rebuilding-the-extension)
 
 ## Architecture Overview
 
@@ -49,6 +51,13 @@ notes below).
 ### IDE configuration
 
 - Enable code formatting on save: `Settings | Tools | Actions on Save | Reformat code`
+
+#### Recommended plugins
+
+- [Thread Access Info](https://plugins.jetbrains.com/plugin/16815-thread-access-info) - adds an extra debug panel
+  showing possible thread access violation (according to Intellij Platform SDK guidelines)
+- [File Expander](https://plugins.jetbrains.com/plugin/11940-file-expander) - allows you to easily preview archives as
+  directories (like `build/distributions/continue-*.zip`)
 
 ### Node.js Requirements
 
@@ -91,6 +100,32 @@ allow for changes to your `config.json` and other files during development, with
 ### Viewing logs
 
 When using the `Run Continue` task, we automatically tail both prompt logs and IDE logs.
+
+#### Viewing more IDE logs
+
+You can selectively increase the log granularity (e.g., debug-level logs) as follows:
+
+- Navigate to `Help | Diagnostic Tools | Debug Log Settings...`
+- Add a line in the format: `com.intellij.diagnostic:debug`
+
+You can find more information about this feature in [official docs](https://youtrack.jetbrains.com/articles/SUPPORT-A-43/How-to-enable-debug-logging-in-IntelliJ-IDEA).
+
+### Developing `build.plugin.kts`
+
+If in doubt, check out the
+official [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template).
+These templates are the most up-to-date examples of how to correctly customize the plugin build scripts.
+
+Also, check out
+the [useful recipes](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-recipes.html)
+for common problems.
+
+### Adding new extensions in `plugin.xml`
+
+There's a tool called [JetBrains Platform Explorer](https://plugins.jetbrains.com/intellij-platform-explorer) that
+aggregates plugin metadata and allows you to filter by specific
+extension points. If you're having trouble implementing a feature that's not officially documented,
+you can learn from other open source plugins.
 
 ### Reloading changes
 
@@ -184,7 +219,7 @@ Run a single test
 While the `runIdeForUiTests` task is running, you can visit the following URL
 to view the UI hierarchy of the running IDE:
 
-http://127.0.0.1:8082/
+<http://127.0.0.1:8082/>
 
 #### Rebuilding the extension
 

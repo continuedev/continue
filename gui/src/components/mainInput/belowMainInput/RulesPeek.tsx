@@ -1,5 +1,6 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { RuleSource, RuleWithSource } from "core";
+import { RuleWithSource } from "core";
+import { getLastNPathParts } from "core/util/uri";
 import { ComponentType, useMemo, useState } from "react";
 import ToggleDiv from "../../ToggleDiv";
 
@@ -13,24 +14,32 @@ interface RulesPeekItemProps {
 }
 
 // Convert technical source to user-friendly text
-const getSourceLabel = (source: RuleSource): string => {
-  switch (source) {
+const getSourceLabel = (rule: RuleWithSource): string => {
+  switch (rule.source) {
     case "default-chat":
       return "Default Chat";
     case "default-agent":
       return "Default Agent";
-    case "model-chat-options":
+    case "model-options-chat":
       return "Model Chat Options";
-    case "model-agent-options":
+    case "model-options-plan":
+      return "Model Plan Options";
+    case "model-options-agent":
       return "Model Agent Options";
     case "rules-block":
       return "Rules Block";
+    case "colocated-markdown":
+      if (rule.ruleFile) {
+        return getLastNPathParts(rule.ruleFile, 2);
+      } else {
+        return "rules.md";
+      }
     case "json-systemMessage":
       return "System Message";
     case ".continuerules":
       return "Project Rules";
     default:
-      return source;
+      return rule.source;
   }
 };
 
@@ -62,9 +71,9 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
-          <GlobeAltIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+          <GlobeAltIcon className="text-description-muted mr-2 h-4 w-4 flex-shrink-0" />
         ) : (
-          <DocumentTextIcon className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+          <DocumentTextIcon className="text-description-muted mr-2 h-4 w-4 flex-shrink-0" />
         )}
 
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
@@ -87,13 +96,13 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
       >
         {displayedRule}
         {isRuleLong && (
-          <span className="ml-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="text-description-muted ml-1 opacity-0 transition-opacity group-hover:opacity-100">
             {expanded ? "(collapse)" : "(expand)"}
           </span>
         )}
       </div>
       <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
-        Source: {getSourceLabel(rule.source)}
+        Source: {getSourceLabel(rule)}
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ import {
   SearchMatch,
   searchWithinContainer,
 } from "./findWidgetSearch";
-import useDebounceValue from "./useDebounce";
+import { useDebounceValue } from "./useDebounce";
 import { useElementSize } from "./useElementSize";
 
 interface HighlightOverlayProps {

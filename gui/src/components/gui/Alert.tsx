@@ -3,15 +3,17 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/16/solid";
 import { ReactNode } from "react";
 import { vscBackground } from "..";
 
 type AlertTypes = "info" | "success" | "warning" | "error";
+type AlertSize = "sm" | "lg";
 
 export interface AlertProps {
   children?: ReactNode;
   type?: AlertTypes;
+  size?: AlertSize;
 }
 
 type AlertConfig = {
@@ -35,18 +37,35 @@ const ALERT_CONFIGS: AlertConfig = {
   },
 };
 
-function Alert({ children, type = "info" }: AlertProps) {
+const alertSizes = {
+  sm: "px-2 py-1.5 rounded border-l-2",
+  lg: "px-4 py-3 rounded-lg border-l-4",
+};
+
+const iconSizes = {
+  sm: "h-3 w-3",
+  lg: "h-5 w-5",
+};
+
+const spacingSizes = {
+  sm: "ml-1.5",
+  lg: "ml-3",
+};
+
+function Alert({ children, type = "info", size = "lg" }: AlertProps) {
   const { Icon } = ALERT_CONFIGS[type];
 
   return (
-    <div className="bg-editor-foreground rounded-lg border-l-4 p-4 opacity-70 shadow-none">
-      <div className="flex items-start">
+    <div
+      className={`bg-editor-foreground opacity-70 shadow-none ${alertSizes[size]}`}
+    >
+      <div className="flex items-center">
         <Icon
-          className="h-6 min-h-5 w-6 min-w-5"
+          className={`flex-shrink-0 ${iconSizes[size]}`}
           style={{ color: vscBackground }}
         />
 
-        <div className="ml-3" style={{ color: vscBackground }}>
+        <div className={spacingSizes[size]} style={{ color: vscBackground }}>
           {children}
         </div>
       </div>

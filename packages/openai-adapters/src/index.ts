@@ -2,15 +2,19 @@ import dotenv from "dotenv";
 import { z } from "zod";
 import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureApi } from "./apis/Azure.js";
+import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
+import { ContinueProxyApi } from "./apis/ContinueProxy.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
 import { JinaApi } from "./apis/Jina.js";
+import { LlamastackApi } from "./apis/LlamaStack.js";
 import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { RelaceApi } from "./apis/Relace.js";
+import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
@@ -33,6 +37,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new OpenAIApi(config);
     case "azure":
       return new AzureApi(config);
+    case "bedrock":
+      return new BedrockApi(config);
     case "cohere":
       return new CohereApi(config);
     case "anthropic":
@@ -51,7 +57,13 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new InceptionApi(config);
     case "watsonx":
       return new WatsonXApi(config);
-    case "x-ai":
+    case "vertexai":
+      return new VertexAIApi(config);
+    case "llamastack":
+      return new LlamastackApi(config);
+    case "continue-proxy":
+      return new ContinueProxyApi(config);
+    case "xAI":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "voyage":
       return openAICompatible("https://api.voyageai.com/v1/", config);

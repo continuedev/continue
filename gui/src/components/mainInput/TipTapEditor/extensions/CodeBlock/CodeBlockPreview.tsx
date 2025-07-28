@@ -42,7 +42,7 @@ export const CodeBlockPreview = ({
       });
     } else if (item.id.providerTitle === "code") {
       const rif = ctxItemToRifWithContents(item, true);
-      ideMessenger.ide.showLines(
+      void ideMessenger.ide.showLines(
         rif.filepath,
         rif.range.start.line,
         rif.range.end.line,

@@ -7,7 +7,6 @@ import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.*
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.InlayProperties
@@ -64,8 +63,7 @@ class AutocompleteService(private val project: Project) {
     var lastChangeWasPartialAccept = false
 
     fun triggerCompletion(editor: Editor) {
-        val settings =
-            ServiceManager.getService(ContinueExtensionSettings::class.java)
+        val settings = service<ContinueExtensionSettings>()
         if (!settings.continueState.enableTabAutocomplete) {
             return
         }
@@ -183,22 +181,21 @@ class AutocompleteService(private val project: Project) {
         }
         if (isInjectedFile(editor)) return
         // Skip rendering completions if the code completion dropdown is already visible and the IDE completion side-by-side setting is disabled
-        if (shouldSkipRender(ServiceManager.getService(ContinueExtensionSettings::class.java))) {
+        if (shouldSkipRender()) {
             return
         }
 
-        ApplicationManager.getApplication().invokeLater {
-            WriteAction.run<Throwable> {
-                // Clear existing completions
-                hideCompletions(editor)
+        invokeLater {
+            // Clear existing completions
+            hideCompletions(editor)
 
-                val properties = InlayProperties()
-                properties.relatesToPrecedingText(true)
-                properties.disableSoftWrapping(true)
+            val properties = InlayProperties()
+            properties.relatesToPrecedingText(true)
+            properties.disableSoftWrapping(true)
 
-                val lines = completion.lines()
-                pendingCompletion = pendingCompletion?.copy(text = lines.joinToString("\n"))
-                editor.addInlayElement(lines, offset, properties)
+            val lines = completion.lines()
+            pendingCompletion = pendingCompletion?.copy(text = lines.joinToString("\n"))
+            editor.addInlayElement(lines, offset, properties)
 
 //                val attributes = TextAttributes().apply {
 //                    backgroundColor = JBColor.GREEN
@@ -206,7 +203,6 @@ class AutocompleteService(private val project: Project) {
 //                val key = TextAttributesKey.createTextAttributesKey("CONTINUE_AUTOCOMPLETE")
 //                key.let { editor.colorsScheme.setAttributes(it, attributes) }
 //                editor.markupModel.addLineHighlighter(key, editor.caretModel.logicalPosition.line, HighlighterLayer.LAST)
-            }
         }
     }
 
@@ -230,9 +226,10 @@ class AutocompleteService(private val project: Project) {
         }
     }
 
-    private fun shouldSkipRender(settings: ContinueExtensionSettings) =
-        !settings.continueState.showIDECompletionSideBySide && !autocompleteLookupListener.isLookupEmpty()
-
+    private fun shouldSkipRender(): Boolean {
+        val settings = service<ContinueExtensionSettings>()
+        return !settings.continueState.showIDECompletionSideBySide && !autocompleteLookupListener.isLookupEmpty()
+    }
 
     private fun splitKeepingDelimiters(input: String, delimiterPattern: String = "\\s+"): List<String> {
         val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())

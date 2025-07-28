@@ -1,0 +1,107 @@
+---
+title: Anthropic
+slug: ../anthropic
+---
+
+<Info>
+  You can get an API key from the [Anthropic
+  console](https://console.anthropic.com/account/keys).
+</Info>
+
+## Chat model
+
+We recommend configuring **Claude 4 Sonnet** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 4 Sonnet
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 4 Sonnet",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete model
+
+Anthropic currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+Anthropic currently does not offer any embeddings models.
+
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
+
+## Reranking model
+
+Anthropic currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
+
+## Prompt caching
+
+Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
+
+Prompt caching is generally available for:
+
+- Claude 4 Sonnet
+- Claude 3.7 Sonnet
+- Claude 3.5 Sonnet
+- Claude 3.5 Haiku
+
+To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Anthropic
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - chat
+      defaultCompletionOptions:
+        promptCaching: true
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true
+        },
+        "title": "Anthropic",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-latest",
+        "defaultCompletionOptions": {
+          "promptCaching": true
+        },
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

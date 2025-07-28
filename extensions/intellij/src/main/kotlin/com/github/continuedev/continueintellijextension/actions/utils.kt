@@ -1,7 +1,7 @@
 package com.github.continuedev.continueintellijextension.actions
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
 
@@ -28,12 +28,5 @@ fun focusContinueInput(project: Project?) {
     continuePluginService.ideProtocolClient?.sendHighlightedCode()
 }
 
-fun getPluginService(project: Project?): ContinuePluginService? {
-    if (project == null) {
-        return null
-    }
-    return ServiceManager.getService(
-        project,
-        ContinuePluginService::class.java
-    )
-}
+fun getPluginService(project: Project?): ContinuePluginService? =
+    project?.service<ContinuePluginService>()

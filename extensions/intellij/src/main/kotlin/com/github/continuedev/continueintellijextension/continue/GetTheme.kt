@@ -166,6 +166,9 @@ class GetTheme {
             val findMatchSelectedBackground = namedColor("SearchMatch.selectedBackground") ?:
             editorScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)?.backgroundColor
             
+            // Use editor background with slight tint for code blocks
+            val textCodeBlockBackground = slightChange(editorBackground, 3) ?: editorBackground
+
             // These should match the keys in GUI's theme.ts
             val theme = mapOf(
                 "background" to background,
@@ -197,6 +200,7 @@ class GetTheme {
                 "warning" to warningColor,
                 "error" to errorColor,
                 "link" to link,
+                "textCodeBlockBackground" to textCodeBlockBackground,
                 "accent" to accentColor,
                 "find-match" to findMatchBackground,
                 "find-match-selected" to findMatchSelectedBackground,

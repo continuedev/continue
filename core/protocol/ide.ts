@@ -1,6 +1,5 @@
 import type {
   ContinueRcJson,
-  DiffLine,
   FileStatsMap,
   FileType,
   IDE,
@@ -11,6 +10,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../";
@@ -35,15 +35,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
-  diffLine: [
-    {
-      diffLine: DiffLine;
-      filepath: string;
-      startLine: number;
-      endLine: number;
-    },
-    void,
-  ];
   getProblems: [{ filepath: string }, Problem[]];
   getOpenFiles: [undefined, string[]];
   getCurrentFile: [
@@ -92,6 +83,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
+  gotoTypeDefinition: [{ location: Location }, RangeInFile[]];
+  getSignatureHelp: [{ location: Location }, SignatureHelp | null];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

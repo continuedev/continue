@@ -324,30 +324,43 @@ export const getApplicableRules = (
   return applicableRules;
 };
 
+export function getRuleId(rule: RuleWithSource): string {
+  return rule.slug ?? rule.ruleFile ?? rule.name ?? rule.source;
+}
+
 export const getSystemMessageWithRules = ({
   baseSystemMessage,
   userMessage,
-  rules,
+  availableRules,
   contextItems,
   rulePolicies = {},
 }: {
   baseSystemMessage?: string;
   userMessage: UserChatMessage | ToolResultChatMessage | undefined;
-  rules: RuleWithSource[];
+  availableRules: RuleWithSource[];
   contextItems: ContextItemWithId[];
   rulePolicies?: RulePolicies;
-}) => {
-  const applicableRules = getApplicableRules(
+}): {
+  systemMessage: string;
+  appliedRules: RuleWithSource[];
+} => {
+  const appliedRules = getApplicableRules(
     userMessage,
-    rules,
+    availableRules,
     contextItems,
     rulePolicies,
   );
   let systemMessage = baseSystemMessage ?? "";
 
-  for (const rule of applicableRules) {
-    systemMessage += `\n\n${rule.rule}`;
+  for (const rule of appliedRules) {
+    if (systemMessage) {
+      systemMessage += "\n\n";
+    }
+    systemMessage += rule.rule;
   }
 
-  return systemMessage;
+  return {
+    systemMessage,
+    appliedRules,
+  };
 };

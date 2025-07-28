@@ -79,14 +79,19 @@ export async function retrieveContextItemsFromEmbeddings(
 
   if (results.length === 0) {
     if (extras.config.disableIndexing) {
-      void extras.ide.showToast("warning", "No results found.");
-      return [];
-    } else {
       void extras.ide.showToast(
         "warning",
-        "No results found. If you think this is an error, re-index your codebase.",
+        "No results found (Indexing disabled).",
       );
-      // TODO - add "re-index" option to warning message which clears and reindexes codebase
+      return [];
+    }
+    if (extras.isInAgentMode) {
+      return [
+        {
+          ...INSTRUCTIONS_BASE_ITEM,
+          content: "No results were found. Try using other tools.",
+        },
+      ];
     }
     return [];
   }
@@ -108,7 +113,11 @@ export async function retrieveContextItemsFromEmbeddings(
         }
 
         return {
-          name: `${baseName} (${r.startLine + 1}-${r.endLine + 1})`,
+          // Don't show line numbers for tool calls where startLine = -1
+          name:
+            r.startLine === -1
+              ? baseName
+              : `${baseName} (${r.startLine + 1}-${r.endLine + 1})`,
           description: last2Parts,
           content: `\`\`\`${relativePathOrBasename}\n${r.content}\n\`\`\``,
           uri: {
