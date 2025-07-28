@@ -9,6 +9,11 @@ import type {
 } from "openai/resources.mjs";
 import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
+import {
+  checkToolPermission,
+  filterExcludedTools,
+} from "./permissions/index.js";
+import { toolPermissionManager } from "./permissions/permissionManager.js";
 import telemetryService from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import { executeToolCall } from "./tools.js";
@@ -29,7 +34,24 @@ export function getAllTools() {
     return [];
   }
 
-  const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
+  // Get all available tool names
+  const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
+  const mcpToolNames =
+    MCPService.getInstance()
+      ?.getTools()
+      .map((tool) => tool.name) ?? [];
+  const allToolNames = [...builtinToolNames, ...mcpToolNames];
+
+  // Filter out excluded tools based on permissions
+  const allowedToolNames = filterExcludedTools(allToolNames);
+  const allowedToolNamesSet = new Set(allowedToolNames);
+
+  // Filter builtin tools
+  const allowedBuiltinTools = BUILTIN_TOOLS.filter((tool) =>
+    allowedToolNamesSet.has(tool.name)
+  );
+
+  const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
     type: "function" as const,
     function: {
       name: tool.name,
@@ -49,10 +71,14 @@ export function getAllTools() {
     },
   }));
 
-  // Add MCP tools if not in no-tools mode
+  // Add filtered MCP tools if not in no-tools mode
   const mcpTools = MCPService.getInstance()?.getTools() ?? [];
+  const allowedMcpTools = mcpTools.filter((tool) =>
+    allowedToolNamesSet.has(tool.name)
+  );
+
   allTools.push(
-    ...mcpTools.map((tool) => ({
+    ...allowedMcpTools.map((tool) => ({
       type: "function" as const,
       function: {
         name: tool.name,
@@ -71,6 +97,11 @@ export interface StreamCallbacks {
   onToolStart?: (toolName: string, toolArgs?: any) => void;
   onToolResult?: (result: string, toolName: string) => void;
   onToolError?: (error: string, toolName?: string) => void;
+  onToolPermissionRequest?: (
+    toolName: string,
+    toolArgs: any,
+    requestId: string
+  ) => void;
 }
 
 interface ToolCall {
@@ -133,6 +164,7 @@ async function processStreamingResponse(
   let aiResponse = "";
   let finalContent = "";
   const toolCallsMap = new Map<string, ToolCall>();
+  const indexToIdMap = new Map<number, string>(); // Track index to ID mapping
   let firstTokenTime: number | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
@@ -206,21 +238,40 @@ async function processStreamingResponse(
       if (choice.delta.tool_calls) {
         hasToolCalls = true;
         for (const toolCallDelta of choice.delta.tool_calls) {
-          // Get or create tool call
+          let toolCallId: string | undefined;
+          
+          // If we have an ID, use it and map the index
           if (toolCallDelta.id) {
-            if (!toolCallsMap.has(toolCallDelta.id)) {
-              toolCallsMap.set(toolCallDelta.id, {
-                id: toolCallDelta.id,
-                name: "",
-                arguments: null,
-                argumentsStr: "",
-                startNotified: false,
-              });
+            toolCallId = toolCallDelta.id;
+            if (toolCallDelta.index !== undefined && toolCallId) {
+              indexToIdMap.set(toolCallDelta.index, toolCallId);
             }
+          } else if (toolCallDelta.index !== undefined) {
+            // No ID, but we have an index - look up the ID from our map
+            toolCallId = indexToIdMap.get(toolCallDelta.index);
+          }
+          
+          if (!toolCallId) {
+            logger.warn("Tool call delta without ID or valid index mapping", { toolCallDelta });
+            continue;
+          }
+          
+          // Create tool call entry if it doesn't exist
+          if (!toolCallsMap.has(toolCallId)) {
+            toolCallsMap.set(toolCallId, {
+              id: toolCallId,
+              name: "",
+              arguments: null,
+              argumentsStr: "",
+              startNotified: false,
+            });
           }
 
-          const toolCall = toolCallsMap.get(toolCallDelta.id || "");
-          if (!toolCall) continue;
+          const toolCall = toolCallsMap.get(toolCallId);
+          if (!toolCall) {
+            logger.warn("Tool call not found in map", { toolCallId });
+            continue;
+          }
 
           // Update name
           if (toolCallDelta.function?.name) {
@@ -235,13 +286,8 @@ async function processStreamingResponse(
             try {
               toolCall.arguments = JSON.parse(toolCall.argumentsStr);
 
-              // Notify on first successful parse
-              if (!toolCall.startNotified && toolCall.name) {
-                toolCall.startNotified = true;
-                if (callbacks?.onToolStart) {
-                  callbacks.onToolStart(toolCall.name, toolCall.arguments);
-                }
-              }
+              // Don't notify onToolStart here anymore - wait until after permission check
+              toolCall.startNotified = true;
             } catch (e) {
               // JSON not complete yet, continue
             }
@@ -326,10 +372,8 @@ async function processStreamingResponse(
     return true;
   });
 
-  // Set finalContent based on whether this was a tool call or not
-  // For headless mode: if there's a tool call, we only want to show final text content
-  // If it's the first response (no tool calls), we save the final content
-  finalContent = hasToolCalls ? "" : aiResponse;
+  // Always preserve the content - it should be displayed regardless of tool calls
+  finalContent = aiResponse;
 
   return {
     content: aiResponse,
@@ -423,6 +467,95 @@ export async function streamChatResponse(
       // Execute tool calls
       for (const toolCall of toolCalls) {
         try {
+          logger.debug("Checking tool permissions", {
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+
+          // Check tool permissions
+          const permissionCheck = checkToolPermission({
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+
+
+          // Notify tool start immediately - before permission check
+          // This ensures the UI shows the tool call even if it's rejected
+          if (callbacks?.onToolStart) {
+            callbacks.onToolStart(toolCall.name, toolCall.arguments);
+          }
+
+          let approved = false;
+
+          if (permissionCheck.permission === "allow") {
+            approved = true;
+          } else if (permissionCheck.permission === "ask") {
+            // Request permission from user
+            if (callbacks?.onToolPermissionRequest) {
+              // Use the proper toolPermissionManager API
+              const toolCallRequest = {
+                name: toolCall.name,
+                arguments: toolCall.arguments,
+              };
+              
+              // Set up listener for permissionRequested event
+              const handlePermissionRequested = (event: {
+                requestId: string;
+                toolCall: { name: string; arguments: any };
+              }) => {
+                if (event.toolCall.name === toolCall.name) {
+                  toolPermissionManager.off(
+                    "permissionRequested",
+                    handlePermissionRequested
+                  );
+                  // Notify UI about permission request
+                  callbacks.onToolPermissionRequest!(
+                    event.toolCall.name,
+                    event.toolCall.arguments,
+                    event.requestId
+                  );
+                }
+              };
+              
+              toolPermissionManager.on(
+                "permissionRequested",
+                handlePermissionRequested
+              );
+              
+              // Request permission using the proper API
+              const permissionResult = await toolPermissionManager.requestPermission(
+                toolCallRequest
+              );
+              
+              approved = permissionResult.approved;
+            } else {
+              // Fallback: deny if no UI callback available
+              approved = false;
+            }
+          } else if (permissionCheck.permission === "exclude") {
+            // This shouldn't happen as excluded tools are filtered out earlier
+            approved = false;
+          }
+
+          if (!approved) {
+            const deniedMessage = `Permission denied by user`;
+            logger.info("Tool call denied", {
+              name: toolCall.name,
+              arguments: toolCall.arguments,
+            });
+
+            chatHistory.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              content: deniedMessage,
+            });
+
+            if (callbacks?.onToolResult) {
+              callbacks.onToolResult(deniedMessage, toolCall.name);
+            }
+            continue;
+          }
+
           logger.debug("Executing tool", {
             name: toolCall.name,
             arguments: toolCall.arguments,

@@ -74,6 +74,11 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   // Handle all other cases with text summary
   const getSummary = () => {
+    // Check if this is a user cancellation first
+    if (content === "Permission denied by user") {
+      return "Cancelled by user";
+    }
+
     // Convert absolute paths to relative paths from workspace root
     const formatPath = (filePath: string) => {
       if (path.isAbsolute(filePath)) {

@@ -10,13 +10,19 @@ export async function startTUIChat(
   initialPrompt?: string,
   resume?: boolean,
   configPath?: string,
-  additionalRules?: string[]
+  additionalRules?: string[],
+  toolPermissionOverrides?: {
+    allow?: string[];
+    ask?: string[];
+    exclude?: string[];
+  }
 ) {
   // Initialize services in the background - TUI will show loading states
   initializeServices({
     configPath,
     rules: additionalRules,
     headless: false,
+    toolPermissionOverrides,
   }).catch((error) => {
     console.error("Failed to initialize services:", error);
   });

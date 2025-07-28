@@ -1,0 +1,23 @@
+# Example permissions.yaml file
+# This shows how you can configure tool permissions
+
+# Tools that are automatically allowed without prompting
+allow:
+  - Read       # or read_file, read, READ - all normalized
+  - List       # or list_files
+  - Search     # or search_code
+
+# Tools that require user confirmation before execution
+ask:
+  - Write      # or write_file
+  - Terminal   # or run_terminal_command, Bash, bash
+
+# Tools that are completely excluded (model won't know they exist)
+exclude:
+  - Exit       # or exit
+
+# You can also use wildcards
+# allow:
+#   - mcp__*   # Allow all MCP tools
+# exclude:
+#   - *        # Exclude everything else

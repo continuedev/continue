@@ -4,7 +4,13 @@ import { DisplayMessage } from "../types.js";
 
 export function useMessageRenderer() {
   const renderMessage = useCallback((message: DisplayMessage, index: number) => {
-    return <MemoizedMessage key={index} message={message} index={index} />;
+    return (
+      <MemoizedMessage 
+        key={index} 
+        message={message} 
+        index={index}
+      />
+    );
   }, []);
 
   return { renderMessage };

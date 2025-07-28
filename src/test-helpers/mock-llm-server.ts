@@ -159,6 +159,9 @@ export async function createMockLLMServer(
         return;
       }
 
+      // Use unref() to prevent keeping the process alive unnecessarily
+      server.unref();
+
       resolve({
         server,
         port: address.port,
@@ -248,12 +251,16 @@ export async function cleanupMockLLMServer(
       }
     };
 
-    // Force close all connections if method exists
+    // Destroy all active connections immediately
     if (typeof mockServer.server.closeAllConnections === "function") {
       mockServer.server.closeAllConnections();
     }
 
-    // Try to close the server gracefully
+    // Set a shorter keep-alive timeout before closing
+    mockServer.server.keepAliveTimeout = 0;
+    mockServer.server.headersTimeout = 0;
+
+    // Try to close the server gracefully first
     if (mockServer.server.listening) {
       mockServer.server.close((err: any) => {
         if (err && err.code !== "ERR_SERVER_NOT_RUNNING") {
@@ -261,11 +268,21 @@ export async function cleanupMockLLMServer(
         }
         resolveOnce();
       });
+      
+      // Force close after a short timeout
+      setTimeout(() => {
+        if (mockServer.server.listening) {
+          mockServer.server.closeAllConnections?.();
+          // Use unref to prevent keeping the process alive
+          mockServer.server.unref();
+        }
+        resolveOnce();
+      }, 100);
     } else {
       resolveOnce();
     }
 
     // Fallback timeout to ensure cleanup doesn't hang
-    setTimeout(resolveOnce, 500);
+    setTimeout(resolveOnce, 200);
   });
 }

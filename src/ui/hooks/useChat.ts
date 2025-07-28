@@ -2,8 +2,8 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import path from "path";
 import { useEffect, useState } from "react";
+import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../../streamChatResponse.js";
 import { constructSystemMessage } from "../../systemMessage.js";
 import telemetryService from "../../telemetry/telemetryService.js";
-import { getToolDisplayName } from "../../tools.js";
+import { formatToolCall } from "../../tools/formatters.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
 
@@ -28,6 +28,7 @@ interface UseChatProps {
   additionalRules?: string[];
   onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
+  onShowModelSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
   // Remote mode props
@@ -44,6 +45,7 @@ export function useChat({
   additionalRules,
   onShowOrgSelector,
   onShowConfigSelector,
+  onShowModelSelector,
   onLoginPrompt,
   onReload,
   isRemoteMode = false,
@@ -115,6 +117,11 @@ export function useChat({
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
+  const [activePermissionRequest, setActivePermissionRequest] = useState<{
+    toolName: string;
+    toolArgs: any;
+    requestId: string;
+  } | null>(null);
 
   // Remote mode polling
   useEffect(() => {
@@ -343,6 +350,11 @@ export function useChat({
           return;
         }
 
+        if (commandResult.openModelSelector && onShowModelSelector) {
+          onShowModelSelector();
+          return;
+        }
+
         if (commandResult.clear) {
           const systemMessage = chatHistory.find(
             (msg) => msg.role === "system"
@@ -492,23 +504,6 @@ export function useChat({
           }
         },
         onToolStart: (toolName: string, toolArgs?: any) => {
-          const formatToolCall = (name: string, args: any) => {
-            const displayName = getToolDisplayName(name);
-            if (!args) return displayName;
-
-            const firstValue = Object.values(args)[0];
-            const formatPath = (value: any) => {
-              if (typeof value === "string" && path.isAbsolute(value)) {
-                const workspaceRoot = process.cwd();
-                const relativePath = path.relative(workspaceRoot, value);
-                return relativePath || value;
-              }
-              return value;
-            };
-
-            return `${displayName}(${formatPath(firstValue) || ""})`;
-          };
-
           if (currentStreamingMessage && currentStreamingMessage.content) {
             const messageContent = currentStreamingMessage.content;
             setMessages((prev) => [
@@ -561,6 +556,18 @@ export function useChat({
               toolName,
             },
           ]);
+        },
+        onToolPermissionRequest: (
+          toolName: string,
+          toolArgs: any,
+          requestId: string
+        ) => {
+          // Set the active permission request to show the selector
+          setActivePermissionRequest({
+            toolName,
+            toolArgs,
+            requestId,
+          });
         },
       };
 
@@ -666,6 +673,48 @@ export function useChat({
     setMessages([]);
   };
 
+  const handleToolPermissionResponse = async (
+    requestId: string,
+    approved: boolean,
+    createPolicy?: boolean
+  ) => {
+    // Capture the current permission request before clearing it
+    const currentRequest = activePermissionRequest;
+
+    // Clear the active permission request
+    setActivePermissionRequest(null);
+
+    // Handle policy creation if requested
+    if (approved && createPolicy && currentRequest) {
+      try {
+        const { generatePolicyRule, addPolicyToYaml } = await import(
+          "../../permissions/policyWriter.js"
+        );
+
+        const policyRule = generatePolicyRule(
+          currentRequest.toolName,
+          currentRequest.toolArgs
+        );
+
+        await addPolicyToYaml(policyRule);
+
+        logger.debug(`Policy created: ${policyRule}`);
+      } catch (error) {
+        logger.error("Failed to create policy", { error });
+        // Continue with the approval even if policy creation fails
+      }
+    }
+
+    // Send response to permission manager
+    // The streamChatResponse will handle showing the appropriate message
+    // through its normal onToolStart/onToolError flow
+    if (approved) {
+      toolPermissionManager.approveRequest(requestId);
+    } else {
+      toolPermissionManager.rejectRequest(requestId);
+    }
+  };
+
   return {
     messages,
     setMessages,
@@ -675,9 +724,11 @@ export function useChat({
     responseStartTime,
     inputMode,
     attachedFiles,
+    activePermissionRequest,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleToolPermissionResponse,
   };
 }
