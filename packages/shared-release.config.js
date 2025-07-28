@@ -21,13 +21,7 @@ export default function createReleaseConfig(packageName) {
       "@semantic-release/release-notes-generator",
       "@semantic-release/changelog",
       "@semantic-release/npm",
-      [
-        "@semantic-release/git",
-        {
-          assets: ["CHANGELOG.md", "package.json"],
-          message: `chore(release): @continuedev/${packageName}@\${nextRelease.version} [skip ci]`,
-        },
-      ],
+      // Removed @semantic-release/git plugin to avoid pushing to main
       "@semantic-release/github",
     ],
   };

@@ -1,8 +1,9 @@
 import {
   AtSymbolIcon,
-  LightBulbIcon,
+  LightBulbIcon as LightBulbIconOutline,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
+import { LightBulbIcon as LightBulbIconSolid } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useContext, useRef } from "react";
@@ -13,12 +14,12 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
 import { exitEdit } from "../../redux/thunks/edit";
 import { getAltKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { cn } from "../../util/cn";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
 import { Button } from "../ui";
 import { useFontSize } from "../ui/font";
+import ContextStatus from "./ContextStatus";
 import HoverItem from "./InputToolbar/HoverItem";
 
 export interface ToolbarOptions {
@@ -140,19 +141,23 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
-            {defaultModel?.provider === "anthropic" && (
+            {defaultModel?.underlyingProviderName === "anthropic" && (
               <HoverItem
                 onClick={() =>
                   dispatch(setHasReasoningEnabled(!hasReasoningEnabled))
                 }
               >
-                <LightBulbIcon
-                  data-tooltip-id="model-reasoning-tooltip"
-                  className={cn(
-                    "h-3 w-3 hover:brightness-150",
-                    hasReasoningEnabled && "brightness-200",
-                  )}
-                />
+                {hasReasoningEnabled ? (
+                  <LightBulbIconSolid
+                    data-tooltip-id="model-reasoning-tooltip"
+                    className="h-3 w-3 brightness-200 hover:brightness-150"
+                  />
+                ) : (
+                  <LightBulbIconOutline
+                    data-tooltip-id="model-reasoning-tooltip"
+                    className="h-3 w-3 hover:brightness-150"
+                  />
+                )}
 
                 <ToolTip id="model-reasoning-tooltip" place="top">
                   {hasReasoningEnabled
@@ -170,6 +175,7 @@ function InputToolbar(props: InputToolbarProps) {
             fontSize: tinyFont,
           }}
         >
+          {!isInEdit && <ContextStatus />}
           {!props.toolbarOptions?.hideUseCodebase && !isInEdit && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
@@ -209,7 +215,6 @@ function InputToolbar(props: InputToolbarProps) {
               </span>
             </HoverItem>
           )}
-
           <Button
             data-tooltip-id="enter-tooltip"
             variant={props.isMainInput ? "primary" : "secondary"}

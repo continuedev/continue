@@ -19,5 +19,19 @@
     "max-depth": ["error", { "max": 6 }],
     "max-nested-callbacks": ["error", { "max": 4 }],
     "max-params": ["error", { "max": 8 }]
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.vitest.ts"
+      ],
+      "rules": {
+        "max-lines-per-function": "off"
+      }
+    }
+  ]
 }

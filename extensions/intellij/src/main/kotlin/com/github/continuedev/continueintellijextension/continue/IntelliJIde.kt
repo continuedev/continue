@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.`continue`.file.FileUtils
 import com.github.continuedev.continueintellijextension.error.ContinueErrorService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -26,19 +27,19 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
+import org.jetbrains.plugins.terminal.ShellTerminalWidget
+import org.jetbrains.plugins.terminal.TerminalView
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.nio.charset.Charset
 
 class IntelliJIDE(
     private val project: Project,
@@ -47,13 +48,13 @@ class IntelliJIDE(
     ) : IDE {
 
     private val gitService = GitService(project, continuePluginService)
-
+    private val fileUtils = FileUtils()
     private val ripgrep: String = getRipgrepPath()
 
     init {
         try {
             val os = getOS()
-            
+
             if (os == OS.LINUX || os == OS.MAC) {
                 val file = File(ripgrep)
                 if (!file.canExecute()) {
@@ -86,7 +87,8 @@ class IntelliJIDE(
             name = ideName,
             version = ideVersion,
             remoteName = remoteName,
-            extensionVersion = extensionVersion
+            extensionVersion = extensionVersion,
+            isPrerelease = false // TODO: Implement prerelease detection for JetBrains
         )
     }
 
@@ -133,7 +135,33 @@ class IntelliJIDE(
     }
 
     override suspend fun getTerminalContents(): String {
-        return ""
+        return withContext(Dispatchers.EDT) {
+            try {
+                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+
+                val terminalView = TerminalView.getInstance(project)
+                // Find the first terminal widget selected, whatever its state, running command or not.
+                val widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                    toolWindow?.getContentManager()?.getContent(it)?.isSelected ?: false
+                }
+
+                if (widget != null) {
+                    val textBuffer = widget.terminalTextBuffer
+                    val stringBuilder = StringBuilder()
+                    // Iterate through all lines in the buffer (history + screen)
+                    for (i in 0 until textBuffer.historyLinesCount + textBuffer.screenLinesCount) {
+                        stringBuilder.append(textBuffer.getLine(i).text).append('\n')
+                    }
+                    stringBuilder.toString()
+                } else {
+                    "" // Return empty if no terminal is available
+                }
+            } catch (e: Exception) {
+                println("Error getting terminal contents: ${e.message}")
+                e.printStackTrace()
+                "" // Return empty on error
+            }
+        }
     }
 
     override suspend fun getDebugLocals(threadIndex: Int): String {
@@ -152,16 +180,11 @@ class IntelliJIDE(
         return workspaceDirectories().toList()
     }
 
-    override suspend fun fileExists(filepath: String): Boolean {
-        val file = UriUtils.uriToFile(filepath)
-        return file.exists()
-    }
+    override suspend fun fileExists(filepath: String): Boolean =
+        fileUtils.fileExists(filepath)
 
-    override suspend fun writeFile(path: String, contents: String) {
-        val file = UriUtils.uriToFile(path)
-        file.parentFile?.mkdirs()
-        file.writeText(contents)
-    }
+    override suspend fun writeFile(path: String, contents: String) =
+        fileUtils.writeFile(path, contents)
 
     override suspend fun showVirtualFile(title: String, contents: String) {
         val virtualFile = LightVirtualFile(title, contents)
@@ -195,8 +218,65 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun runCommand(command: String) {
-        throw NotImplementedError("runCommand not implemented in IntelliJ")
+    override suspend fun runCommand(command: String, options: TerminalOptions?) {
+        val terminalOptions =
+            options ?: TerminalOptions(reuseTerminal = true, terminalName = null, waitForCompletion = false)
+
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Terminal")
+                toolWindow?.activate({
+                    try {
+                        val terminalView = TerminalView.getInstance(project)
+                        var widget: ShellTerminalWidget? = null
+
+                        // 1. Handle reuseTerminal option
+                        if (terminalOptions.reuseTerminal == true && terminalView.getWidgets().isNotEmpty()) {
+                            // 2. Find by terminalName if provided
+                            if (terminalOptions.terminalName != null) {
+                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                    .firstOrNull {
+                                        toolWindow.contentManager.getContent(it).tabName == terminalOptions.terminalName
+                                                && !it.hasRunningCommands()
+                                    }
+                            } else {
+                                // 3. Find active terminal, or fall back to the first one
+                                widget = terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>()
+                                    .firstOrNull { toolWindow.contentManager.getContent(it).isSelected }
+                                    ?: terminalView.getWidgets().filterIsInstance<ShellTerminalWidget>().firstOrNull {
+                                        !it.hasRunningCommands()
+                                    }
+                            }
+                        }
+
+                        // 4. Create a new terminal if needed
+                        if (widget == null) {
+                            widget = terminalView.createLocalShellWidget(
+                                project.basePath,
+                                terminalOptions.terminalName,
+                                true
+                            )
+                        } else {
+                            // Ensure the found widget is visible
+                            val content = toolWindow.contentManager.getContent(widget)
+                            if (content != null) {
+                                toolWindow.contentManager.setSelectedContent(content, true)
+                            }
+                        }
+
+                        // 5. Show and send text
+                        widget.ttyConnector?.write(command)
+
+                    } catch (e: Exception) {
+                        println("Error during terminal widget handling: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }, true)
+            } catch (e: Exception) {
+                println("Error activating terminal tool window: ${e.message}")
+                e.printStackTrace()
+            }
+        }
     }
 
     override suspend fun saveFile(filepath: String) {
@@ -212,38 +292,8 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun readFile(filepath: String): String {
-        return try {
-            val content = ApplicationManager.getApplication().runReadAction<String?> {
-                val virtualFile = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(filepath).path)
-                if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
-                    return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
-                }
-                return@runReadAction null
-            }
-
-            if (content != null) {
-                content
-            } else {
-                val file = UriUtils.uriToFile(filepath)
-                if (!file.exists() || file.isDirectory) return ""
-                withContext(Dispatchers.IO) {
-                    FileInputStream(file).use { fis ->
-                        val sizeToRead = minOf(100000, file.length()).toInt()
-                        val buffer = ByteArray(sizeToRead)
-                        val bytesRead = fis.read(buffer, 0, sizeToRead)
-                        if (bytesRead <= 0) return@use ""
-                        String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
-                            // `\r` takes up unnecessary tokens
-                            .lineSequence().joinToString("\n")
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ""
-        }
-    }
+    override suspend fun readFile(filepath: String): String =
+        fileUtils.readFile(filepath)
 
     override suspend fun readRangeInFile(filepath: String, range: Range): String {
         val fullContents = readFile(filepath)
@@ -318,7 +368,7 @@ class IntelliJIDE(
                 }
 
                 val command = GeneralCommandLine(commandArgs)
-    
+
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
                 return results.split("\n")
@@ -332,11 +382,12 @@ class IntelliJIDE(
             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
         }
     }
+
     override suspend fun getSearchResults(query: String, maxResults: Int?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                 val commandArgs = mutableListOf(
+                val commandArgs = mutableListOf(
                     ripgrep,
                     "-i",
                     "--ignore-file",
@@ -347,20 +398,20 @@ class IntelliJIDE(
                     "2",
                     "--heading"
                 )
-                
+
                 // Conditionally add maxResults flag
                 if (maxResults != null) {
                     commandArgs.add("-m")
                     commandArgs.add(maxResults.toString())
                 }
-                
+
                 // Add the search query and path
                 commandArgs.add("-e")
                 commandArgs.add(query)
                 commandArgs.add(".")
 
                 val command = GeneralCommandLine(commandArgs)
-    
+
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {
@@ -551,13 +602,8 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun listDir(dir: String): List<List<Any>> {
-        val files = UriUtils.uriToFile(dir).listFiles()?.map {
-            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
-        } ?: emptyList()
-
-        return files
-    }
+    override suspend fun listDir(dir: String): List<List<Any>> =
+        fileUtils.listDir(dir)
 
     override suspend fun getFileStats(files: List<String>): Map<String, FileStats> {
         return files.associateWith { file ->
@@ -567,6 +613,14 @@ class IntelliJIDE(
 
     override suspend fun gotoDefinition(location: Location): List<RangeInFile> {
         throw NotImplementedError("gotoDefinition not implemented yet")
+    }
+
+    override suspend fun gotoTypeDefinition(location: Location): List<RangeInFile> {
+        throw NotImplementedError("gotoTypeDefinition not implemented yet")
+    }
+
+    override suspend fun getSignatureHelp(location: Location): SignatureHelp? {
+        throw NotImplementedError("getSignatureHelp not implemented yet")
     }
 
     override fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit) {
@@ -600,4 +654,3 @@ class IntelliJIDE(
     }
 
 }
-

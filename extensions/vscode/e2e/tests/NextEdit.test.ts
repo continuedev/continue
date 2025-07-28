@@ -7,55 +7,59 @@ import { NextEditActions } from "../actions/NextEdit.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
 import { TestUtils } from "../TestUtils";
 
-describe("Next Edit", () => {  
+describe("Next Edit", () => {
   let editor: TextEditor;
 
   before(async function () {
     // this.timeout(DEFAULT_TIMEOUT.XL);
 
     const globalContextPath = TestUtils.getGlobalContextFilePath();
-    
+
     // Update config.json to add optInNextEditFeature.
     // globalContext.json does not exist in CI before this test runs.
     if (await TestUtils.fileExists(globalContextPath)) {
       const globalContext = await fs.readFile(globalContextPath, "utf8");
       const sharedConfig = JSON.parse(globalContext).sharedConfig;
-      
+
       const sharedConfigWithNextEditEnabled = {
         ...sharedConfig,
-        "optInNextEditFeature": true
+        optInNextEditFeature: true,
       };
-  
+
       const globalContextWithNextEditEnabled = {
         ...JSON.parse(globalContext),
-        "sharedConfig": sharedConfigWithNextEditEnabled
+        sharedConfig: sharedConfigWithNextEditEnabled,
       };
-      
-      await fs.writeFile(globalContextPath, JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
+
+      await fs.writeFile(
+        globalContextPath,
+        JSON.stringify(globalContextWithNextEditEnabled, null, 2),
+        "utf8",
+      );
     } else {
       await fs.writeFile(
-         globalContextPath,
-         JSON.stringify(
-           {
-             sharedConfig: {
-               optInNextEditFeature: true
-             },
-             selectedModelsByProfileId: {
-               local: {
-                 chat: "TEST LLM",
-                 edit: "TEST LLM",
-                 apply: "TEST LLM",
-                 embed: "Transformers.js (Built-In)",
-                 autocomplete: "TEST LLM",
-                 rerank: null,
-                 summarize: null
-               }
-             }
-           },
-           null,
-           2,
-         ),
-       );
+        globalContextPath,
+        JSON.stringify(
+          {
+            sharedConfig: {
+              optInNextEditFeature: true,
+            },
+            selectedModelsByProfileId: {
+              local: {
+                chat: "TEST LLM",
+                edit: "TEST LLM",
+                apply: "TEST LLM",
+                embed: "Transformers.js (Built-In)",
+                autocomplete: "TEST LLM",
+                rerank: null,
+                summarize: null,
+              },
+            },
+          },
+          null,
+          2,
+        ),
+      );
     }
 
     await NextEditActions.reload();
@@ -77,20 +81,27 @@ describe("Next Edit", () => {
 
   after(async function () {
     // this.timeout(DEFAULT_TIMEOUT.XL);
-    
+
     // Update config.json to delete optInNextEditFeature.
-    const globalContext = await fs.readFile(TestUtils.getGlobalContextFilePath(), "utf8");
+    const globalContext = await fs.readFile(
+      TestUtils.getGlobalContextFilePath(),
+      "utf8",
+    );
     const sharedConfig = JSON.parse(globalContext).sharedConfig;
-  
+
     const sharedConfigWithoutNextEdit = { ...sharedConfig };
     delete sharedConfigWithoutNextEdit.optInNextEditFeature;
 
     const globalContextWithNextEditEnabled = {
       ...JSON.parse(globalContext),
-      "sharedConfig": sharedConfigWithoutNextEdit
+      sharedConfig: sharedConfigWithoutNextEdit,
     };
 
-    await fs.writeFile(TestUtils.getGlobalContextFilePath(), JSON.stringify(globalContextWithNextEditEnabled, null, 2), "utf8");
+    await fs.writeFile(
+      TestUtils.getGlobalContextFilePath(),
+      JSON.stringify(globalContextWithNextEditEnabled, null, 2),
+      "utf8",
+    );
     await NextEditActions.reload();
   }).timeout(DEFAULT_TIMEOUT.XL);
 
@@ -116,5 +127,4 @@ describe("Next Edit", () => {
     const rejected = await NextEditActions.rejectNextEditSuggestion(editor);
     expect(rejected).to.be.true;
   }).timeout(DEFAULT_TIMEOUT.XXL);
-
 });

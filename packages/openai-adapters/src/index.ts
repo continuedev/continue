@@ -14,6 +14,7 @@ import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { RelaceApi } from "./apis/Relace.js";
+import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
@@ -56,11 +57,13 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new InceptionApi(config);
     case "watsonx":
       return new WatsonXApi(config);
+    case "vertexai":
+      return new VertexAIApi(config);
     case "llamastack":
       return new LlamastackApi(config);
     case "continue-proxy":
       return new ContinueProxyApi(config);
-    case "x-ai":
+    case "xAI":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "voyage":
       return openAICompatible("https://api.voyageai.com/v1/", config);

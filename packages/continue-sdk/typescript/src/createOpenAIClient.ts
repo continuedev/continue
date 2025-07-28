@@ -71,7 +71,10 @@ export function createOpenAIClient({
             );
           }
 
-          if (!("apiKeyLocation" in modelConfig) && !("envSecretLocations" in modelConfig)) {
+          if (
+            !("apiKeyLocation" in modelConfig) &&
+            !("envSecretLocations" in modelConfig)
+          ) {
             throw new Error(
               `Model ${modelName} does not have an apiKeyLocation or envSecretLocations defined`,
             );
