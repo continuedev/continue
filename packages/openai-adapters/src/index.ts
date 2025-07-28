@@ -28,6 +28,7 @@ function openAICompatible(
   return new OpenAIApi({
     ...config,
     apiBase: config.apiBase ?? apiBase,
+    apiKey: config.apiKey ?? "api-key",
   });
 }
 
@@ -113,6 +114,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:8000/", config);
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
+    case "ollama":
+      return openAICompatible("http://localhost:11434/v1/", config);
     case "mock":
       return new MockApi();
     default:
