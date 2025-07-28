@@ -26,6 +26,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MCPServerStatus,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -142,6 +143,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       description: string | undefined;
     },
   ];
+  "mcp/startAuthentication": [MCPServerStatus, void];
   "mcp/sendOauthCode": [
     {
       code: string;

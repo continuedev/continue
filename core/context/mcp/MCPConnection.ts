@@ -117,7 +117,6 @@ class MCPConnection {
 
     if (this.options.transport.type === "sse") {
       // currently support oauth for sse transports only
-      console.log("debug1 extras", this.extras);
       if (!this.options.transport.requestOptions) {
         this.options.transport.requestOptions = {
           headers: {},

@@ -8,7 +8,7 @@ import {
   OAuthTokens,
   OAuthTokensSchema,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
-import { IDE } from "../..";
+import { IDE, MCPServerStatus, SSEOptions } from "../..";
 
 import http from "http";
 import url from "url";
@@ -173,13 +173,12 @@ export async function getOauthToken(mcpServerUrl: string, ide: IDE) {
   return tokens?.access_token;
 }
 
-// TODO: this needs to be called from an authenticate button in gui
-export async function performAuth(mcpServerUrl: string, ide: IDE) {
+export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
+  const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
   const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
-  const result = await auth(authProvider, {
+  return await auth(authProvider, {
     serverUrl: mcpServerUrl,
   });
-  console.log("debug1 first result", result);
 }
 
 export async function handleMCPOauthCode(
@@ -201,11 +200,8 @@ export async function handleMCPOauthCode(
     authorizationCode,
   });
   const authProvider = new MCPConnectionOauthProvider(serverUrl, ide);
-  console.log("debug1 starting auth");
-  const result = await auth(authProvider, {
+  return await auth(authProvider, {
     serverUrl,
     authorizationCode,
   });
-
-  console.log("debug1 after auth result", result);
 }

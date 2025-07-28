@@ -1,13 +1,16 @@
 import { ConfigYaml, parseConfigYaml } from "@continuedev/config-yaml";
 import {
+  ArrowLeftCircleIcon,
   ArrowPathIcon,
   CircleStackIcon,
   CommandLineIcon,
+  GlobeAltIcon,
   InformationCircleIcon,
+  UserCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
@@ -16,6 +19,10 @@ import { fontSize } from "../../../../../util";
 import { ToolTip } from "../../../../gui/Tooltip";
 import EditBlockButton from "../../EditBlockButton";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
+
+function has401Error(errors: string[]) {
+  return !!errors.find((error) => error.includes("401"));
+}
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
@@ -30,7 +37,17 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const resourcesTooltipId = `${server.id}-resources`;
   const errorsTooltipId = `${server.id}-errors`;
 
-  async function onRefresh() {
+  const [mcpAuthStatus, setMcpAuthStatus] = useState<
+    "unauthenticated" | "authenticated" | "authenticating"
+  >("unauthenticated");
+
+  const onAuthenticate = async () => {
+    setMcpAuthStatus("authenticating"); // TODO: move this updateConfig later with "authenticated" and "authenticating" status
+    await ideMessenger.request("mcp/startAuthentication", server);
+    setMcpAuthStatus("authenticated");
+  };
+
+  const onRefresh = async () => {
     // optimistic config update
     dispatch(
       updateConfig({
@@ -48,7 +65,13 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     ideMessenger.post("mcp/reloadServer", {
       id: server.id,
     });
-  }
+  };
+
+  // useEffect(() => {
+  //   if (hasConnectionResetError(server.errors)) {
+  //     onRefresh();
+  //   }
+  // }, [server.errors]);
 
   return (
     <div
@@ -130,8 +153,23 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
       </div>
 
-      {/* Refresh button */}
       <div className="flex items-center gap-2">
+        {has401Error(server.errors) && (
+          <>
+            <div
+              className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
+              onClick={onAuthenticate}
+            >
+              {mcpAuthStatus === "authenticating" ? (
+                <GlobeAltIcon className="h-3 w-3" />
+              ) : mcpAuthStatus === "authenticated" ? (
+                <ArrowLeftCircleIcon className="h-3 w-3" />
+              ) : (
+                <UserCircleIcon className="h-3 w-3" />
+              )}
+            </div>
+          </>
+        )}
         <EditBlockButton
           blockType={"mcpServers"}
           block={serverFromYaml}
