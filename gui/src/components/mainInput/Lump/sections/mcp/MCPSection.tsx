@@ -9,7 +9,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
@@ -30,8 +30,6 @@ interface MCPServerStatusProps {
 }
 function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  // TODO: refactor this to mcp state - also easier to remove the in memory storage
-  const [isMcpAuthenticating, setIsMcpAuthenticating] = useState(false);
   const config = useAppSelector((store) => store.config.config);
   const dispatch = useAppDispatch();
   const toolsTooltipId = `${server.id}-tools`;
@@ -40,17 +38,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const errorsTooltipId = `${server.id}-errors`;
   const mcpAuthTooltipId = `${server.id}-auth`;
 
-  const onAuthenticate = async () => {
-    setIsMcpAuthenticating(true);
-    await ideMessenger.request("mcp/startAuthentication", server);
-    setIsMcpAuthenticating(false);
-  };
-
-  const onRemoveAuth = async () => {
-    await ideMessenger.request("mcp/removeAuthentication", server);
-  };
-
-  const onRefresh = async () => {
+  const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
     // optimistic config update
     dispatch(
       updateConfig({
@@ -59,12 +47,25 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
           s.id === server.id
             ? {
                 ...s,
-                status: "connecting",
+                status,
               }
             : s,
         ),
       }),
     );
+  };
+
+  const onAuthenticate = async () => {
+    updateMCPServerStatus("authenticating");
+    await ideMessenger.request("mcp/startAuthentication", server);
+  };
+
+  const onRemoveAuth = async () => {
+    await ideMessenger.request("mcp/removeAuthentication", server);
+  };
+
+  const onRefresh = async () => {
+    updateMCPServerStatus("connecting");
     ideMessenger.post("mcp/reloadServer", {
       id: server.id,
     });
@@ -151,7 +152,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        {server.isProtectedResource && !isMcpAuthenticating && (
+        {server.isProtectedResource && server.status !== "authenticating" && (
           <>
             <div
               className="text-lightgray flex cursor-pointer items-center hover:opacity-80"

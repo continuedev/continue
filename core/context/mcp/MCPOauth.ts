@@ -14,9 +14,6 @@ import http from "http";
 import url from "url";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
 
-/**in memory storage variable for the server that is currently being authenticated */
-let authenticatingMCPServer: MCPServerStatus | null = null;
-
 const PORT = 3000;
 
 const server = http.createServer((req, res) => {
@@ -180,41 +177,34 @@ export async function getOauthToken(mcpServerUrl: string, ide: IDE) {
 export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
   const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
   const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
-  const authStatus = await auth(authProvider, {
+  return await auth(authProvider, {
     serverUrl: mcpServerUrl,
   });
-  if (authStatus === "REDIRECT") {
-    authenticatingMCPServer = mcpServer;
-  }
-  return authStatus;
 }
 
 /**
  * handle the authentication code received from the oauth redirect
  */
-export async function handleMCPOauthCode(authorizationCode: string, ide: IDE) {
-  const serverUrl = (authenticatingMCPServer?.transport as SSEOptions).url;
+export async function handleMCPOauthCode(
+  authorizationCode: string,
+  ide: IDE,
+  authenticatingServer: MCPServerStatus | undefined,
+) {
+  const serverUrl = (authenticatingServer?.transport as SSEOptions).url;
   if (!serverUrl) {
     ide.showToast("error", "No MCP server url found for authentication");
+    return;
   }
   if (!authorizationCode) {
     ide.showToast("error", `No MCP authorization code found for ${serverUrl}`);
+    return;
   }
 
-  console.log("debug1 authenticating ", {
-    serverUrl,
-    authorizationCode,
-  });
   const authProvider = new MCPConnectionOauthProvider(serverUrl, ide);
-  const authStatus = await auth(authProvider, {
+  return await auth(authProvider, {
     serverUrl,
     authorizationCode,
   });
-
-  const prevAuthenticatingMCPServer = authenticatingMCPServer!;
-  authenticatingMCPServer = null;
-
-  return { authStatus, authenticatingMCPServer: prevAuthenticatingMCPServer };
 }
 
 export function removeMCPAuth(mcpServer: MCPServerStatus, ide: IDE) {

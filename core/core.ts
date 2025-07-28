@@ -439,19 +439,24 @@ export class Core {
       };
     });
     on("mcp/startAuthentication", async (msg) => {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       const status = await performAuth(msg.data, this.ide);
       if (status === "AUTHORIZED") {
         await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
       }
     });
     on("mcp/sendOauthCode", async (msg) => {
-      const { authStatus, authenticatingMCPServer } = await handleMCPOauthCode(
+      const authenticatingServer = MCPManagerSingleton.getInstance()
+        .getStatuses()
+        .find((s) => s.status === "authenticating");
+      const authStatus = await handleMCPOauthCode(
         msg.data.code,
         this.ide,
+        authenticatingServer,
       );
-      if (authStatus === "AUTHORIZED") {
+      if (authStatus === "AUTHORIZED" && authenticatingServer) {
         await MCPManagerSingleton.getInstance().refreshConnection(
-          authenticatingMCPServer.id,
+          authenticatingServer.id,
         );
       }
     });
