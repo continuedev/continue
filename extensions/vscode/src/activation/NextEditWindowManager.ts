@@ -311,7 +311,7 @@ export class NextEditWindowManager {
 
     const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
-    this.renderDeletes(editor, diffChars);
+    this.renderDeletions(editor, diffChars);
 
     // Reserve tab and esc to either accept or reject the displayed next edit contents.
     await NextEditWindowManager.reserveTabAndEsc();
@@ -787,7 +787,7 @@ export class NextEditWindowManager {
       );
   }
 
-  private renderDeletes(editor: vscode.TextEditor, oldDiffChars: DiffChar[]) {
+  private renderDeletions(editor: vscode.TextEditor, oldDiffChars: DiffChar[]) {
     const charsToDelete: vscode.DecorationOptions[] = [];
 
     // const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
