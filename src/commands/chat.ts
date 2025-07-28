@@ -18,6 +18,7 @@ import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { BaseCommandOptions } from "./BaseCommandOptions.js";
 
 /**
  * Processes and validates JSON output for headless mode
@@ -42,15 +43,14 @@ function processJsonOutput(response: string): string {
   }
 }
 
-export interface ChatOptions {
+export interface ChatOptions extends BaseCommandOptions {
   headless?: boolean;
-  config?: string;
   resume?: boolean;
   rule?: string[]; // Array of rule specifications
   format?: "json"; // Output format for headless mode
 }
 
-async function initializeChatHistory(
+export async function initializeChatHistory(
   options: ChatOptions
 ): Promise<ChatCompletionMessageParam[]> {
   let chatHistory: ChatCompletionMessageParam[] = [];
@@ -140,6 +140,11 @@ async function runHeadlessMode(
     configPath: options.config,
     rules: options.rule,
     headless: true,
+    toolPermissionOverrides: {
+      allow: options.allow,
+      ask: options.ask,
+      exclude: options.exclude,
+    },
   });
 
   // Get required services from the service container
@@ -213,7 +218,11 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       console.log(CONTINUE_ASCII_ART);
 
       // Start TUI immediately - it will handle service loading
-      await startTUIChat(prompt, options.resume, options.config, options.rule);
+      await startTUIChat(prompt, options.resume, options.config, options.rule, {
+        allow: options.allow,
+        ask: options.ask,
+        exclude: options.exclude,
+      });
       return;
     }
 

@@ -1,0 +1,76 @@
+import { Command } from "commander";
+
+// Function to add common options to any command
+export function addCommonOptions(command: Command): Command {
+  return command
+    .option("--config <path>", "Path to configuration file")
+    .option("--readonly", "Only allow readonly tools")
+    .option("--no-tools", "Disable all tools")
+    .option("-v, --verbose", "Enable verbose logging")
+    .option(
+      "--rule <rule>",
+      "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[]
+    )
+    .option(
+      "--allow <tool>",
+      "Allow specified tool (overrides default policies). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[]
+    )
+    .option(
+      "--ask <tool>",
+      "Ask for permission before using specified tool (overrides default policies). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[]
+    )
+    .option(
+      "--exclude <tool>",
+      "Exclude specified tool from use (overrides default policies). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[]
+    );
+}
+
+// Function to merge parent options into subcommand options
+export function mergeParentOptions(parentCommand: Command, options: any): any {
+  const parentOpts = parentCommand.opts();
+  const mergedOptions = { ...options };
+
+  // List of options to inherit from parent if not present in subcommand
+  const inheritableOptions = [
+    'config',
+    'readonly',
+    'tools',
+    'verbose',
+    'rule',
+    'allow',
+    'ask',
+    'exclude'
+  ];
+
+  for (const optName of inheritableOptions) {
+    if (parentOpts[optName] !== undefined && mergedOptions[optName] === undefined) {
+      mergedOptions[optName] = parentOpts[optName];
+    }
+  }
+
+  return mergedOptions;
+}

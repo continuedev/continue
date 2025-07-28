@@ -39,6 +39,28 @@ export class ServiceContainer extends EventEmitter {
   }
 
   /**
+   * Register a service with an immediate value (no factory needed)
+   * Used when the service is already initialized
+   */
+  registerValue<T>(
+    serviceName: string,
+    value: T
+  ): void {
+    // Set the service as ready with the provided value
+    this.services.set(serviceName, {
+      value,
+      state: 'ready',
+      error: null,
+      lastUpdated: new Date()
+    });
+
+    // Emit ready event
+    this.emit(`${serviceName}:ready`, value);
+
+    logger.debug(`Registered service with immediate value: ${serviceName}`);
+  }
+
+  /**
    * Get current service result (synchronous)
    */
   getSync<T>(serviceName: string): ServiceResult<T> {

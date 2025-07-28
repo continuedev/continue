@@ -5,6 +5,7 @@ import { ConfigService } from "./ConfigService.js";
 import { MCPServiceWrapper } from "./MCPServiceWrapper.js";
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { ToolPermissionService } from "./ToolPermissionService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -19,6 +20,7 @@ const configService = new ConfigService();
 const modelService = new ModelService();
 const apiClientService = new ApiClientService();
 const mcpServiceWrapper = new MCPServiceWrapper();
+const toolPermissionService = new ToolPermissionService();
 
 /**
  * Initialize all services and register them with the service container
@@ -26,7 +28,20 @@ const mcpServiceWrapper = new MCPServiceWrapper();
 export async function initializeServices(options: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
-  // Register service factories with dependencies
+  // Handle tool permissions specially for immediate availability
+  if (options.toolPermissionOverrides) {
+    // Initialize synchronously and register the value immediately
+    const permissionState = toolPermissionService.initializeSync(options.toolPermissionOverrides);
+    serviceContainer.registerValue(SERVICE_NAMES.TOOL_PERMISSIONS, permissionState);
+  } else {
+    // Register normal factory for lazy initialization
+    serviceContainer.register(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+      () => toolPermissionService.initialize(),
+      []
+    );
+  }
+
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
     () => authService.initialize(),
@@ -160,6 +175,7 @@ export function reloadService(serviceName: string) {
  */
 export function areServicesReady(): boolean {
   return [
+    SERVICE_NAMES.TOOL_PERMISSIONS,
     SERVICE_NAMES.AUTH,
     SERVICE_NAMES.API_CLIENT,
     SERVICE_NAMES.CONFIG,
@@ -184,6 +200,7 @@ export const services = {
   model: modelService,
   apiClient: apiClientService,
   mcp: mcpServiceWrapper,
+  toolPermissions: toolPermissionService,
 } as const;
 
 // Export the service container for advanced usage

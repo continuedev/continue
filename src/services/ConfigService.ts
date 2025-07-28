@@ -4,11 +4,7 @@ import { processRule } from "../args.js";
 import {
   AuthConfig,
   loadAuthConfig,
-  pathToUri,
-  slugToUri,
-  updateConfigUri,
 } from "../auth/workos.js";
-import { loadConfig } from "../config.js";
 import logger from "../util/logger.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
@@ -39,12 +35,11 @@ export class ConfigService {
     rules?: string[]
   ): Promise<ConfigServiceState> {
     try {
-      let config = await loadConfig(
-        authConfig,
-        configPath,
-        organizationId,
-        apiClient
-      );
+      // Use the new streamlined config loader
+      const { loadConfiguration } = await import("../configLoader.js");
+      const result = await loadConfiguration(authConfig, configPath, apiClient);
+      
+      let config = result.config;
 
       // Inject rules if provided
       if (rules && rules.length > 0) {
@@ -56,15 +51,7 @@ export class ConfigService {
         configPath,
       };
 
-      // Save config URI to auth config
-      if (configPath) {
-        const configUri = this.isFilePath(configPath)
-          ? pathToUri(configPath)
-          : slugToUri(configPath);
-        updateConfigUri(configUri);
-      } else {
-        updateConfigUri(null);
-      }
+      // Config URI persistence is now handled by the streamlined loader
 
       logger.debug("ConfigService initialized successfully");
       return this.currentState;
@@ -97,12 +84,11 @@ export class ConfigService {
     });
 
     try {
-      let config = await loadConfig(
-        authConfig,
-        newConfigPath,
-        organizationId,
-        apiClient
-      );
+      // Use the new streamlined config loader
+      const { loadConfiguration } = await import("../configLoader.js");
+      const result = await loadConfiguration(authConfig, newConfigPath, apiClient);
+      
+      let config = result.config;
 
       // Inject rules if provided
       if (rules && rules.length > 0) {
@@ -114,11 +100,7 @@ export class ConfigService {
         configPath: newConfigPath,
       };
 
-      // Save config URI to auth config
-      const configUri = this.isFilePath(newConfigPath)
-        ? pathToUri(newConfigPath)
-        : slugToUri(newConfigPath);
-      updateConfigUri(configUri);
+      // Config URI persistence is now handled by the streamlined loader
 
       logger.debug("Configuration switched successfully", {
         newConfigPath,
@@ -223,30 +205,21 @@ export class ConfigService {
         throw new Error("API client not available");
       }
 
-      // Load the new configuration
-      let config = await loadConfig(
-        authConfig,
-        newConfigPath,
-        authState.organizationId || null,
+      // Load the new configuration using streamlined loader
+      const { loadConfiguration } = await import("../configLoader.js");
+      const result = await loadConfiguration(
+        authConfig, 
+        newConfigPath, 
         apiClientState.apiClient
       );
 
       // Update internal state
       this.currentState = {
-        config,
+        config: result.config,
         configPath: newConfigPath,
       };
 
-      // Save config URI to auth config
-      if (newConfigPath) {
-        const configUri = this.isFilePath(newConfigPath)
-          ? pathToUri(newConfigPath)
-          : slugToUri(newConfigPath);
-        updateConfigUri(configUri);
-      } else {
-        // Clear config URI when switching to undefined
-        updateConfigUri(null);
-      }
+      // Config URI persistence is now handled by the streamlined loader
 
       // Update the CONFIG service in the container
       serviceContainer.set(SERVICE_NAMES.CONFIG, this.currentState);
@@ -257,7 +230,7 @@ export class ConfigService {
 
       logger.debug("Configuration path updated successfully", {
         newConfigPath,
-        configName: config.name,
+        configName: result.config.name,
       });
     } catch (error: any) {
       logger.error("Failed to update configuration path:", error);
@@ -265,14 +238,4 @@ export class ConfigService {
     }
   }
 
-  /**
-   * Check if a config path is a file path vs assistant slug
-   */
-  private isFilePath(configPath: string): boolean {
-    return (
-      configPath.startsWith(".") ||
-      configPath.startsWith("/") ||
-      configPath.startsWith("~")
-    );
-  }
 }

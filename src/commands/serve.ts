@@ -5,13 +5,12 @@ import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
 import { promisify } from "util";
 import {
-  ensureOrganization,
   getAssistantSlug,
-  getOrganizationId,
-  loadAuthConfig,
 } from "../auth/workos.js";
-import { runNormalFlow } from "../onboarding.js";
+import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { saveSession } from "../session.js";
+import { getService, initializeServices, SERVICE_NAMES } from "../services/index.js";
+import { AuthServiceState, ConfigServiceState, ModelServiceState } from "../services/types.js";
 import { streamChatResponse, type StreamCallbacks } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
@@ -19,18 +18,22 @@ import { getToolDisplayName } from "../tools.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 const execAsync = promisify(exec);
 
-interface ServeOptions {
-  config?: string;
-  readonly?: boolean;
-  noTools?: boolean;
-  verbose?: boolean;
-  rule?: string[];
+interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
 }
+
+interface PendingPermission {
+  toolName: string;
+  toolArgs: any;
+  requestId: string;
+  timestamp: number;
+}
+
 
 interface ServerState {
   chatHistory: ChatCompletionMessageParam[];
@@ -43,6 +46,7 @@ interface ServerState {
   currentAbortController: AbortController | null;
   shouldInterrupt: boolean;
   serverRunning: boolean;
+  pendingPermission: PendingPermission | null;
 }
 
 export async function serve(prompt?: string, options: ServeOptions = {}) {
@@ -50,32 +54,44 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
 
-  // Initialize authentication
-  const authConfig = loadAuthConfig();
+  // Initialize services with tool permission overrides
+  await initializeServices({
+    toolPermissionOverrides: {
+      allow: options.allow,
+      ask: options.ask,
+      exclude: options.exclude,
+    },
+    configPath: options.config,
+    rules: options.rule,
+    headless: true, // Skip onboarding in serve mode
+  });
 
-  // Initialize with normal flow (skip onboarding like headless mode)
-  const { config, llmApi, model } = await runNormalFlow(
-    authConfig,
-    options.config,
-    options.rule
-  );
+  // Get initialized services from the service container
+  const [configState, modelState] = await Promise.all([
+    getService<ConfigServiceState>(SERVICE_NAMES.CONFIG),
+    getService<ModelServiceState>(SERVICE_NAMES.MODEL),
+  ]);
 
-  // Ensure organization is selected if authenticated
-  let finalAuthConfig = authConfig;
-  if (config && authConfig) {
-    finalAuthConfig = await ensureOrganization(authConfig, true); // headless mode
-    if (finalAuthConfig) {
-      const organizationId = getOrganizationId(finalAuthConfig);
-      if (organizationId) {
-        telemetryService.updateOrganization(organizationId);
-      }
-    }
+  if (!configState.config || !modelState.llmApi || !modelState.model) {
+    throw new Error("Failed to initialize required services");
+  }
+
+  const { config, llmApi, model } = {
+    config: configState.config,
+    llmApi: modelState.llmApi,
+    model: modelState.model,
+  };
+
+  // Organization selection is already handled in initializeServices
+  const authState = await getService<AuthServiceState>(SERVICE_NAMES.AUTH);
+  if (authState.organizationId) {
+    telemetryService.updateOrganization(authState.organizationId);
   }
 
   // Log configuration information
-  const organizationId = getOrganizationId(finalAuthConfig || authConfig) || 'personal';
+  const organizationId = authState.organizationId || 'personal';
   const assistantName = config.name;
-  const assistantSlug = getAssistantSlug(finalAuthConfig || authConfig);
+  const assistantSlug = getAssistantSlug(authState.authConfig);
   const modelProvider = model.provider;
   const modelName = model.model;
   
@@ -83,6 +99,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   console.log(chalk.dim(`  Organization: ${organizationId}`));
   console.log(chalk.dim(`  Assistant: ${assistantName}${assistantSlug ? ` (${assistantSlug})` : ''}`));
   console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
+  if (options.config) {
+    console.log(chalk.dim(`  Config file: ${options.config}`));
+  }
 
   // Initialize chat history
   let chatHistory: ChatCompletionMessageParam[] = [];
@@ -103,6 +122,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     currentAbortController: null,
     shouldInterrupt: false,
     serverRunning: true,
+    pendingPermission: null,
   };
 
   // Record session start
@@ -119,6 +139,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       chatHistory: state.displayMessages, // Send display messages with proper formatting
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
+      pendingPermission: state.pendingPermission,
     });
   });
 
@@ -149,6 +170,42 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     if (!state.isProcessing) {
       processMessages(state, llmApi);
     }
+  });
+
+  // POST /permission - Approve or reject pending tool permission
+  app.post("/permission", async (req: Request, res: Response) => {
+    state.lastActivity = Date.now();
+
+    const { requestId, approved } = req.body;
+    
+    if (!state.pendingPermission) {
+      return res.status(400).json({ error: "No pending permission request" });
+    }
+    
+    if (state.pendingPermission.requestId !== requestId) {
+      return res.status(400).json({ error: "Invalid request ID" });
+    }
+    
+    // Remove the permission request message
+    const lastMsg = state.displayMessages[state.displayMessages.length - 1];
+    if (lastMsg && lastMsg.messageType === "tool-permission-request") {
+      state.displayMessages.pop();
+    }
+    
+    // Send the permission response to the toolPermissionManager
+    if (approved) {
+      toolPermissionManager.approveRequest(requestId);
+    } else {
+      toolPermissionManager.rejectRequest(requestId);
+    }
+    
+    // Clear pending permission state
+    state.pendingPermission = null;
+    
+    res.json({
+      success: true,
+      approved,
+    });
   });
 
   // GET /diff - Return git diff against main branch
@@ -231,14 +288,17 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const server = app.listen(port, () => {
     console.log(chalk.green(`Server started on http://localhost:${port}`));
     console.log(chalk.dim("Endpoints:"));
-    console.log(chalk.dim("  GET  /state   - Get current agent state"));
+    console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
-      chalk.dim("  POST /message - Send a message (body: { message: string })")
+      chalk.dim("  POST /message    - Send a message (body: { message: string })")
     );
     console.log(
-      chalk.dim("  GET  /diff    - Get git diff against main branch")
+      chalk.dim("  POST /permission - Approve/reject tool (body: { requestId, approved })")
     );
-    console.log(chalk.dim("  POST /exit    - Gracefully shut down the server"));
+    console.log(
+      chalk.dim("  GET  /diff       - Get git diff against main branch")
+    );
+    console.log(chalk.dim("  POST /exit       - Gracefully shut down the server"));
     console.log(
       chalk.dim(
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
@@ -470,6 +530,29 @@ async function streamChatResponseWithInterruption(
         messageType: "tool-error",
         toolName,
       });
+    },
+    onToolPermissionRequest: (
+      toolName: string,
+      toolArgs: any,
+      requestId: string
+    ) => {
+      // Set pending permission state
+      state.pendingPermission = {
+        toolName,
+        toolArgs,
+        requestId,
+        timestamp: Date.now(),
+      };
+
+      // Add a display message indicating permission is needed
+      state.displayMessages.push({
+        role: "system",
+        content: `⚠️ Tool ${toolName} requires permission`,
+        messageType: "tool-permission-request" as any,
+        toolName,
+      });
+
+      // Don't wait here - the streamChatResponse will handle waiting
     },
   };
 

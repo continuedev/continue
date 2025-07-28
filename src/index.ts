@@ -7,6 +7,7 @@ import { logout } from "./commands/logout.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
+import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import logger from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
@@ -33,25 +34,16 @@ program
   .version(getVersion());
 
 // Root command - chat functionality (default)
-program
+// Add common options to the root command
+addCommonOptions(program)
   .argument("[prompt]", "Optional prompt to send to the assistant")
   .option("-p, --print", "Print response and exit (useful for pipes)")
-  .option("--format <format>", "Output format for headless mode (json). Only works with -p/--print flag.")
+  .option(
+    "--format <format>",
+    "Output format for headless mode (json). Only works with -p/--print flag."
+  )
   .option("--config <path>", "Path to configuration file")
   .option("--resume", "Resume from last session")
-  .option("--readonly", "Only allow readonly tools")
-  .option("--no-tools", "Disable all tools")
-  .option("-v, --verbose", "Enable verbose logging")
-  .option(
-    "--rule <rule>",
-    "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
-    (value: string, previous: string[] | undefined) => {
-      const array = Array.isArray(previous) ? previous : [];
-      array.push(value);
-      return array;
-    },
-    [] as string[]
-  )
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
@@ -59,12 +51,14 @@ program
 
     // Validate --format flag only works with -p/--print
     if (options.format && !options.print) {
-      console.error("Error: --format flag can only be used with -p/--print flag");
+      console.error(
+        "Error: --format flag can only be used with -p/--print flag"
+      );
       process.exit(1);
     }
 
     // Validate format value
-    if (options.format && options.format !== 'json') {
+    if (options.format && options.format !== "json") {
       console.error("Error: --format currently only supports 'json'");
       process.exit(1);
     }
@@ -127,23 +121,9 @@ program
   });
 
 // Serve subcommand
-program
+const serveCommand = program
   .command("serve [prompt]")
   .description("Start an HTTP server with /state and /message endpoints")
-  .option("--config <path>", "Path to configuration file")
-  .option("--readonly", "Only allow readonly tools")
-  .option("--no-tools", "Disable all tools")
-  .option("-v, --verbose", "Enable verbose logging")
-  .option(
-    "--rule <rule>",
-    "Add a rule (can be a file path, hub slug, or string content). Can be specified multiple times.",
-    (value: string, previous: string[] | undefined) => {
-      const array = Array.isArray(previous) ? previous : [];
-      array.push(value);
-      return array;
-    },
-    [] as string[]
-  )
   .option(
     "--timeout <seconds>",
     "Inactivity timeout in seconds (default: 300)",
@@ -151,11 +131,15 @@ program
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
   .action(async (prompt, options) => {
-    if (options.verbose) {
+    // Merge parent options with subcommand options
+    const mergedOptions = mergeParentOptions(program, options);
+
+    if (mergedOptions.verbose) {
       logger.setLevel("debug");
       logger.debug("Verbose logging enabled");
     }
-    await serve(prompt, options);
+
+    await serve(prompt, mergedOptions);
   });
 
 // Remote test subcommand (for development)

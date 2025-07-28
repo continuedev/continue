@@ -4,6 +4,8 @@ import React from "react";
 import { parseArgs } from "../args.js";
 import { getAllSlashCommands } from "../commands/commands.js";
 import { MCPService } from "../mcp.js";
+import { isModelCapable } from "../utils/modelCapability.js";
+import ModelCapabilityWarning from "./ModelCapabilityWarning.js";
 
 interface IntroMessageProps {
   config: AssistantUnrolled;
@@ -32,6 +34,9 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
   const allRules = [...commandLineRules, ...configRules];
 
+  // Check if model is capable
+  const modelCapable = isModelCapable(model.provider, model.name);
+
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
       {/* Agent name */}
@@ -43,6 +48,14 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       <Text color="blue">
         Model: <Text color="white">{model.name.split("/").pop()}</Text>
       </Text>
+
+      {/* Model capability warning */}
+      {!modelCapable && (
+        <>
+          <Text> </Text>
+          <ModelCapabilityWarning modelName={model.name.split("/").pop() || model.name} />
+        </>
+      )}
 
       <Text> </Text>
 

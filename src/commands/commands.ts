@@ -48,6 +48,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "model",
+    description: "Switch between available chat models",
+    category: "system",
+  },
+  {
     name: "config",
     description: "Switch configuration",
     category: "system",

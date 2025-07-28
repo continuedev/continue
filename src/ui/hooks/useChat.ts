@@ -2,22 +2,22 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import path from "path";
 import { useEffect, useState } from "react";
+import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import {
   StreamCallbacks,
   streamChatResponse,
 } from "../../streamChatResponse.js";
-import { constructSystemMessage } from "../../systemMessage.js";
 import telemetryService from "../../telemetry/telemetryService.js";
-import { getToolDisplayName } from "../../tools.js";
+import { formatToolCall } from "../../tools/formatters.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
 
-import { DisplayMessage } from "../types.js";
+import { initializeChatHistory } from "../../commands/chat.js";
 import { posthogService } from "../../telemetry/posthogService.js";
+import { DisplayMessage } from "../types.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;
@@ -28,6 +28,7 @@ interface UseChatProps {
   additionalRules?: string[];
   onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
+  onShowModelSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
   // Remote mode props
@@ -44,6 +45,7 @@ export function useChat({
   additionalRules,
   onShowOrgSelector,
   onShowConfigSelector,
+  onShowModelSelector,
   onLoginPrompt,
   onReload,
   isRemoteMode = false,
@@ -58,35 +60,21 @@ export function useChat({
         return [];
       }
 
-      let history: ChatCompletionMessageParam[] = [];
+      // Synchronously initialize chat history to prevent race conditions
+      // This ensures system message is always loaded before handleUserMessage runs
+      let initialHistory: ChatCompletionMessageParam[] = [];
 
+      // Load previous session if resume flag is used
       if (resume) {
         const savedHistory = loadSession();
         if (savedHistory) {
-          history = savedHistory;
+          initialHistory = savedHistory;
         }
       }
 
-      if (history.length === 0) {
-        const rulesSystemMessage = "";
-        const systemMessage = constructSystemMessage(
-          rulesSystemMessage,
-          additionalRules
-        );
-        if (systemMessage instanceof Promise) {
-          // Handle the promise case - we'll need to initialize this asynchronously
-          systemMessage.then((resolvedMessage) => {
-            if (resolvedMessage) {
-              history.push({ role: "system", content: resolvedMessage });
-              setChatHistory([...history]);
-            }
-          });
-        } else if (systemMessage) {
-          history.push({ role: "system", content: systemMessage });
-        }
-      }
-
-      return history;
+      // If no session loaded or not resuming, we'll need to add system message
+      // We can't make this async, so we'll handle it in the useEffect
+      return resume ? loadSession() ?? [] : [];
     }
   );
 
@@ -112,9 +100,22 @@ export function useChat({
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
+    // If we're resuming and found a saved session, we're already initialized
+    // If we're in remote mode, we're initialized (will be populated by polling)
+    isRemoteMode || (resume && loadSession() !== null)
+  );
+
+  // Capture initial rules to prevent re-initialization when rules change
+  const [initialRules] = useState(additionalRules);
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ path: string; content: string }>
   >([]);
+  const [activePermissionRequest, setActivePermissionRequest] = useState<{
+    toolName: string;
+    toolArgs: any;
+    requestId: string;
+  } | null>(null);
 
   // Remote mode polling
   useEffect(() => {
@@ -223,37 +224,40 @@ export function useChat({
   }, [isRemoteMode, remoteUrl, responseStartTime]);
 
   useEffect(() => {
-    // Skip system message initialization in remote mode
-    if (isRemoteMode) return;
+    // Skip initialization in remote mode or if already initialized
+    if (isRemoteMode || isChatHistoryInitialized) return;
 
-    // Initialize system message asynchronously
-    const initializeSystemMessage = async () => {
-      if (
-        chatHistory.length === 0 ||
-        !chatHistory.some((msg) => msg.role === "system")
-      ) {
-        const rulesSystemMessage = "";
-        const systemMessage = await constructSystemMessage(
-          rulesSystemMessage,
-          additionalRules
-        );
-        if (systemMessage) {
-          const newHistory = [
-            { role: "system" as const, content: systemMessage },
-          ];
-          setChatHistory(newHistory);
-        }
+    // Initialize chat history with system message only if we don't have a session
+    const initializeHistory = async () => {
+      // Only add system message if we don't have any messages yet
+      if (chatHistory.length === 0) {
+        const history = await initializeChatHistory({
+          resume,
+          rule: initialRules,
+        });
+        setChatHistory(history);
       }
+      setIsChatHistoryInitialized(true);
     };
 
-    initializeSystemMessage();
-  }, [isRemoteMode]);
+    initializeHistory();
+    // Note: Using initialRules instead of additionalRules to prevent re-initialization
+    // when rules change during the conversation
+  }, [
+    isRemoteMode,
+    isChatHistoryInitialized,
+    chatHistory.length,
+    resume,
+    initialRules,
+  ]);
 
   useEffect(() => {
-    if (initialPrompt) {
+    // Only handle initial prompt after chat history is initialized
+    // This prevents race conditions where the prompt runs before system message is loaded
+    if (initialPrompt && isChatHistoryInitialized) {
       handleUserMessage(initialPrompt);
     }
-  }, [initialPrompt]);
+  }, [initialPrompt, isChatHistoryInitialized]);
 
   const handleUserMessage = async (message: string) => {
     // Special handling for /org command in TUI
@@ -340,6 +344,11 @@ export function useChat({
 
         if (commandResult.openConfigSelector) {
           onShowConfigSelector();
+          return;
+        }
+
+        if (commandResult.openModelSelector && onShowModelSelector) {
+          onShowModelSelector();
           return;
         }
 
@@ -492,23 +501,6 @@ export function useChat({
           }
         },
         onToolStart: (toolName: string, toolArgs?: any) => {
-          const formatToolCall = (name: string, args: any) => {
-            const displayName = getToolDisplayName(name);
-            if (!args) return displayName;
-
-            const firstValue = Object.values(args)[0];
-            const formatPath = (value: any) => {
-              if (typeof value === "string" && path.isAbsolute(value)) {
-                const workspaceRoot = process.cwd();
-                const relativePath = path.relative(workspaceRoot, value);
-                return relativePath || value;
-              }
-              return value;
-            };
-
-            return `${displayName}(${formatPath(firstValue) || ""})`;
-          };
-
           if (currentStreamingMessage && currentStreamingMessage.content) {
             const messageContent = currentStreamingMessage.content;
             setMessages((prev) => [
@@ -561,6 +553,18 @@ export function useChat({
               toolName,
             },
           ]);
+        },
+        onToolPermissionRequest: (
+          toolName: string,
+          toolArgs: any,
+          requestId: string
+        ) => {
+          // Set the active permission request to show the selector
+          setActivePermissionRequest({
+            toolName,
+            toolArgs,
+            requestId,
+          });
         },
       };
 
@@ -654,16 +658,54 @@ export function useChat({
   };
 
   const resetChatHistory = async () => {
-    const rulesSystemMessage = "";
-    const systemMessage = await constructSystemMessage(
-      rulesSystemMessage,
-      additionalRules
-    );
-    const newHistory = systemMessage
-      ? [{ role: "system" as const, content: systemMessage }]
-      : [];
+    const newHistory = await initializeChatHistory({
+      resume: false, // Don't resume when resetting
+      rule: additionalRules,
+    });
     setChatHistory(newHistory);
     setMessages([]);
+  };
+
+  const handleToolPermissionResponse = async (
+    requestId: string,
+    approved: boolean,
+    createPolicy?: boolean
+  ) => {
+    // Capture the current permission request before clearing it
+    const currentRequest = activePermissionRequest;
+
+    // Clear the active permission request
+    setActivePermissionRequest(null);
+
+    // Handle policy creation if requested
+    if (approved && createPolicy && currentRequest) {
+      try {
+        const { generatePolicyRule, addPolicyToYaml } = await import(
+          "../../permissions/policyWriter.js"
+        );
+
+        const policyRule = generatePolicyRule(
+          currentRequest.toolName,
+          currentRequest.toolArgs
+        );
+
+        await addPolicyToYaml(policyRule);
+
+        logger.debug(`Policy created: ${policyRule}`);
+      } catch (error) {
+        logger.error("Failed to create policy", { error });
+        // Continue with the approval even if policy creation fails
+      }
+    }
+
+    // Send response to permission manager
+    // The streamChatResponse will handle showing the appropriate message
+    // through its normal onToolStart/onToolError flow
+    if (approved) {
+      toolPermissionManager.approveRequest(requestId);
+    } else {
+      toolPermissionManager.rejectRequest(requestId);
+    }
   };
 
   return {
@@ -675,9 +717,11 @@ export function useChat({
     responseStartTime,
     inputMode,
     attachedFiles,
+    activePermissionRequest,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
     resetChatHistory,
+    handleToolPermissionResponse,
   };
 }

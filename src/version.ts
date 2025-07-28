@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import logger from "./util/logger.js";
 
 export function getVersion(): string {
   try {
@@ -15,7 +16,9 @@ export function getVersion(): string {
   }
 }
 
-export async function getLatestVersion(signal?: AbortSignal): Promise<string | null> {
+export async function getLatestVersion(
+  signal?: AbortSignal
+): Promise<string | null> {
   try {
     const response = await fetch(
       "https://registry.npmjs.org/@continuedev/cli/latest",
@@ -27,11 +30,11 @@ export async function getLatestVersion(signal?: AbortSignal): Promise<string | n
     const data = await response.json();
     return data.version;
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (error instanceof Error && error.name === "AbortError") {
       // Request was aborted, don't log
       return null;
     }
-    console.warn("Warning: Could not fetch latest version from npm registry");
+    logger.debug("Warning: Could not fetch latest version from npm registry");
     return null;
   }
 }
@@ -46,7 +49,10 @@ export function compareVersions(
 
   // Simple semantic version comparison
   const parseVersion = (version: string) => {
-    const parts = version.replace(/^v/, "").split(".").map(part => parseInt(part, 10));
+    const parts = version
+      .replace(/^v/, "")
+      .split(".")
+      .map((part) => parseInt(part, 10));
     return { major: parts[0] || 0, minor: parts[1] || 0, patch: parts[2] || 0 };
   };
 

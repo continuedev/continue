@@ -3,6 +3,7 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { AuthConfig } from "../auth/workos.js";
 import { MCPService } from "../mcp.js";
+import { ToolPermissions } from "../permissions/types.js";
 
 /**
  * Service lifecycle states
@@ -56,6 +57,10 @@ export interface ApiClientServiceState {
   apiClient: DefaultApiInterface | null;
 }
 
+export interface ToolPermissionServiceState {
+  permissions: ToolPermissions;
+}
+
 /**
  * Service names as constants to prevent typos
  */
@@ -64,7 +69,8 @@ export const SERVICE_NAMES = {
   CONFIG: 'config', 
   MODEL: 'model',
   MCP: 'mcp',
-  API_CLIENT: 'apiClient'
+  API_CLIENT: 'apiClient',
+  TOOL_PERMISSIONS: 'toolPermissions'
 } as const;
 
 /**
@@ -74,4 +80,9 @@ export interface ServiceInitOptions {
   configPath?: string;
   rules?: string[];
   headless?: boolean;
+  toolPermissionOverrides?: {
+    allow?: string[];
+    ask?: string[];
+    exclude?: string[];
+  };
 }
