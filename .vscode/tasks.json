@@ -227,8 +227,7 @@
     {
       "label": "build-packages",
       "type": "shell",
-      "windows": { "command": "./scripts/build-packages.ps1" },
-      "command": "./scripts/build-packages.sh",
+      "command": "node ./scripts/build-packages.js",
       "problemMatcher": [],
       "presentation": {
         "reveal": "silent",
