@@ -14,7 +14,8 @@ import http from "http";
 import url from "url";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
 
-let currentMCPAuthServerUrl = "";
+/**in memory storage variable for the server that is currently being authenticated */
+let authenticatingMCPServer: MCPServerStatus | null = null;
 
 const PORT = 3000;
 
@@ -162,29 +163,40 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
   }
 
   async redirectToAuthorization(authorizationUrl: URL) {
-    console.log("debug1 redirecting to url", authorizationUrl);
-    // TODO here the url needs to be sent to the extension
     this.ide.openUrl(authorizationUrl.toString());
   }
 }
 
-// TODO: first fetch can fail - need to refresh from gui
 export async function getOauthToken(mcpServerUrl: string, ide: IDE) {
   const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
   const tokens = await authProvider.tokens();
   return tokens?.access_token;
 }
 
+/**
+ * checks if the authentication is already done for the current server
+ * if not, starts the authentication process by opening a webpage url
+ */
 export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
   const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
   const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
-  return await auth(authProvider, {
+  const authStatus = await auth(authProvider, {
     serverUrl: mcpServerUrl,
   });
+  if (authStatus === "REDIRECT") {
+    authenticatingMCPServer = mcpServer;
+  }
+  return authStatus;
 }
 
+/**
+ * handle the authentication code received from the oauth redirect
+ */
 export async function handleMCPOauthCode(authorizationCode: string, ide: IDE) {
-  const serverUrl = "https://mcp.asana.com/sse";
+  const serverUrl = (authenticatingMCPServer?.transport as SSEOptions).url;
+  if (!serverUrl) {
+    ide.showToast("error", "No MCP server url found for authentication");
+  }
   if (!authorizationCode) {
     ide.showToast("error", `No MCP authorization code found for ${serverUrl}`);
   }
@@ -194,10 +206,15 @@ export async function handleMCPOauthCode(authorizationCode: string, ide: IDE) {
     authorizationCode,
   });
   const authProvider = new MCPConnectionOauthProvider(serverUrl, ide);
-  return await auth(authProvider, {
+  const authStatus = await auth(authProvider, {
     serverUrl,
     authorizationCode,
   });
+
+  const prevAuthenticatingMCPServer = authenticatingMCPServer!;
+  authenticatingMCPServer = null;
+
+  return { authStatus, authenticatingMCPServer: prevAuthenticatingMCPServer };
 }
 
 export function removeMCPAuth(mcpServer: MCPServerStatus, ide: IDE) {

@@ -445,9 +445,14 @@ export class Core {
       }
     });
     on("mcp/sendOauthCode", async (msg) => {
-      const status = await handleMCPOauthCode(msg.data.code, this.ide);
-      if (status === "AUTHORIZED") {
-        // await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      const { authStatus, authenticatingMCPServer } = await handleMCPOauthCode(
+        msg.data.code,
+        this.ide,
+      );
+      if (authStatus === "AUTHORIZED") {
+        await MCPManagerSingleton.getInstance().refreshConnection(
+          authenticatingMCPServer.id,
+        );
       }
     });
     on("mcp/removeAuthentication", async (msg) => {
