@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { services, serviceContainer, SERVICE_NAMES } from "../../services/index.js";
 import { ModelServiceState } from "../../services/types.js";
+import { updateModelName } from "../../auth/workos.js";
 
 interface ModelOption {
   id: string;
@@ -34,6 +35,11 @@ export function useModelSelector({
       // Update the service container to trigger re-renders
       const currentState = services.model.getState();
       serviceContainer.set<ModelServiceState>(SERVICE_NAMES.MODEL, currentState);
+      
+      // Persist the model choice using the actual model name
+      if (modelInfo?.name) {
+        updateModelName(modelInfo.name);
+      }
       
       onMessage({
         role: "system",

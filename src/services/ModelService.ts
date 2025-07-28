@@ -1,7 +1,7 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi, constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
 import { getLlmApi } from '../config.js';
-import { AuthConfig, getAccessToken, getOrganizationId } from '../auth/workos.js';
+import { AuthConfig, getAccessToken, getOrganizationId, getModelName } from '../auth/workos.js';
 import logger from '../util/logger.js';
 import { ModelServiceState } from './types.js';
 
@@ -34,16 +34,34 @@ export class ModelService {
         model && model.roles?.includes("chat")
       ) || []) as ModelConfig[];
       
-      const [llmApi, model] = getLlmApi(assistant, authConfig);
-
-      this.currentState = {
-        llmApi,
-        model
-      };
+      // Check if we have a persisted model name and use it if valid
+      const persistedModelName = getModelName(authConfig);
+      if (persistedModelName) {
+        const modelIndex = this.getModelIndexByName(persistedModelName);
+        if (modelIndex !== -1) {
+          // Use the persisted model
+          const state = await this.switchModel(modelIndex);
+          this.currentState = state;
+        } else {
+          // Model name not found, use default model selection
+          const [llmApi, model] = getLlmApi(assistant, authConfig);
+          this.currentState = {
+            llmApi,
+            model
+          };
+        }
+      } else {
+        // Use default model selection
+        const [llmApi, model] = getLlmApi(assistant, authConfig);
+        this.currentState = {
+          llmApi,
+          model
+        };
+      }
 
       logger.debug('ModelService initialized successfully', {
-        modelProvider: model.provider,
-        modelName: (model as any).name || 'unnamed',
+        modelProvider: this.currentState.model?.provider,
+        modelName: (this.currentState.model as any)?.name || 'unnamed',
         availableModels: this.availableModels.length
       });
 
@@ -207,6 +225,15 @@ export class ModelService {
     return this.availableModels.findIndex(model => 
       model.provider === this.currentState.model?.provider &&
       (model as any).name === (this.currentState.model as any).name
+    );
+  }
+
+  /**
+   * Get model index by name
+   */
+  getModelIndexByName(modelName: string): number {
+    return this.availableModels.findIndex(model => 
+      (model as any).name === modelName
     );
   }
 }
