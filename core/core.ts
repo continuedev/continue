@@ -440,6 +440,7 @@ export class Core {
     });
     on("mcp/startAuthentication", async (msg) => {
       await new Promise((resolve) => setTimeout(resolve, 5000));
+      MCPManagerSingleton.getInstance().setStatus(msg.data, "authenticating");
       const status = await performAuth(msg.data, this.ide);
       if (status === "AUTHORIZED") {
         await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);

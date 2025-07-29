@@ -166,6 +166,10 @@ export class MCPManagerSingleton {
     }));
   }
 
+  setStatus(server: MCPServerStatus, status: MCPServerStatus["status"]) {
+    this.connections.get(server.id)!.status = status;
+  }
+
   async getPrompt(
     serverName: string,
     promptName: string,
