@@ -415,7 +415,7 @@ describe("runTerminalCommandImpl", () => {
       delete process.env.USERPROFILE;
       process.cwd = jest.fn().mockImplementation(() => {
         throw new Error("Current directory unavailable");
-      });
+      }) as jest.MockedFunction<() => string>;
 
       // Create IDE mock with empty workspace
       const mockIde = {
