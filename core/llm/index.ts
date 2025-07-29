@@ -531,7 +531,7 @@ export abstract class BaseLLM implements ILLM {
     let contentToShow = "";
     if (msg.role === "tool") {
       contentToShow = msg.content;
-    } else if (msg.role === "assistant" && msg.toolCalls) {
+    } else if (msg.role === "assistant" && msg.toolCalls?.length) {
       contentToShow = msg.toolCalls
         ?.map(
           (toolCall) =>
@@ -539,10 +539,7 @@ export abstract class BaseLLM implements ILLM {
         )
         .join("\n");
     } else if ("content" in msg) {
-      if (Array.isArray(msg.content)) {
-        msg.content = renderChatMessage(msg);
-      }
-      contentToShow = msg.content;
+      contentToShow = renderChatMessage(msg);
     }
 
     return `<${msg.role}>\n${contentToShow}\n\n`;

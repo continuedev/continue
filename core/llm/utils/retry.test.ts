@@ -450,8 +450,9 @@ describe("Retry Functionality", () => {
 
       expect(result).toBe("success");
       // Should be capped at maxDelay (200ms) not header value (10000ms)
-      expect(delays[0]).toBeGreaterThan(190);
-      expect(delays[0]).toBeLessThan(210);
+      // Jitter is applied before maxDelay cap, so delay should never exceed maxDelay
+      expect(delays[0]).toBeGreaterThanOrEqual(190);
+      expect(delays[0]).toBeLessThanOrEqual(200);
     });
 
     it("should handle case-insensitive header names", async () => {

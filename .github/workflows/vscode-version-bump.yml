@@ -1,8 +1,9 @@
 name: Create VS Code main release draft
 on:
-  schedule:
-    # Runs at 7 AM PST (15:00 UTC) every Friday
-    - cron: "0 15 * * 5"
+  # Not using this now because making drafts was just noisy. Will be useful when we are ready for automated releases.
+  # schedule:
+  #   # Runs at 7 AM PST (15:00 UTC) every Friday
+  #   - cron: "0 15 * * 5"
   workflow_dispatch:
     # Allows manual triggering
 

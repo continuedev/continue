@@ -87,7 +87,7 @@ jobs:
     needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
     name: Build Plugin
-    runs-on: macos-latest
+    runs-on: macos-13
     permissions:
       contents: write
       pull-requests: write
@@ -167,7 +167,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
       - name: Build packages (Unix)
-        run: cd ../.. && ./scripts/build-packages.sh
+        run: cd ../.. && node ./scripts/build-packages.js
 
       # npm install core
       - name: Install core node_modules
@@ -325,7 +325,7 @@ jobs:
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-latest
+          - os: macos-13
             platform: darwin
             arch: arm64
             npm_config_arch: arm64

@@ -42,6 +42,7 @@ import { VsCodeIde } from "../VsCodeIde";
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { isModelCapableOfNextEdit } from "core/nextEdit/utils";
 import setupNextEditWindowManager, {
   NextEditWindowManager,
 } from "../activation/NextEditWindowManager";
@@ -165,10 +166,13 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
-        if (newConfig?.experimental?.optInNextEditFeature) {
+        const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
+        if (
+          autocompleteModel &&
+          isModelCapableOfNextEdit(autocompleteModel.model)
+        ) {
           // Set up next edit window manager only for Continue team members
           await setupNextEditWindowManager(context);
-
           this.activateNextEdit();
           await NextEditWindowManager.freeTabAndEsc();
         } else {

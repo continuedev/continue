@@ -149,10 +149,10 @@ function calculateDelay(
         delayMs = Number(retryAfter) * 1000;
       }
 
-      // Respect maxDelay and add small jitter to spread requests
-      const cappedDelay = Math.min(delayMs, maxDelay);
+      // Apply small jitter to spread requests, then respect maxDelay as hard limit
       const jitterMultiplier = 1 + (Math.random() * 0.1 - 0.05); // Small jitter ±5%
-      return Math.max(0, Math.floor(cappedDelay * jitterMultiplier));
+      const jitteredDelay = delayMs * jitterMultiplier;
+      return Math.max(0, Math.floor(Math.min(jitteredDelay, maxDelay)));
     }
   }
 

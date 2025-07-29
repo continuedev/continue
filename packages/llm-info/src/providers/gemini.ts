@@ -43,7 +43,7 @@ export const Gemini: ModelProvider = {
       contextLength: 1048576,
       maxCompletionTokens: 8192,
       mediaTypes: AllMediaTypes,
-      regex: /gemini-2\.0-flash/i,
+      regex: /^gemini-2\.0-flash$/i,
       recommendedFor: ["chat"],
     },
     {
@@ -54,7 +54,7 @@ export const Gemini: ModelProvider = {
       contextLength: 1048576,
       maxCompletionTokens: 8192,
       mediaTypes: AllMediaTypes,
-      regex: /gemini-2\.0-flash-lite/i,
+      regex: /^gemini-2\.0-flash-lite$/i,
       recommendedFor: ["chat"],
     },
     {
@@ -86,7 +86,7 @@ export const Gemini: ModelProvider = {
       contextLength: 1048576,
       maxCompletionTokens: 8192,
       mediaTypes: AllMediaTypes,
-      regex: /gemini-2\.0-flash-exp/i,
+      regex: /^gemini-2\.0-flash-exp$/i,
       recommendedFor: ["chat"],
     },
     {

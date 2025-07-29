@@ -1,12 +1,18 @@
 import {
   CheckIcon,
   ChevronDownIcon,
+  ExclamationTriangleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
+import {
+  isRecommendedAgentModel,
+  modelSupportsNativeTools,
+} from "core/llm/toolSupport";
+import { capitalize } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUseSystemMessageTools } from "../../redux/selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
@@ -19,9 +25,22 @@ export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const agentModeSupported = useMemo(() => {
-    return selectedModel && modelSupportsTools(selectedModel);
+  const useSystemTools = useAppSelector(selectUseSystemMessageTools);
+
+  const isAgentSupported = useMemo(() => {
+    if (!selectedModel) {
+      return undefined;
+    }
+    return !!useSystemTools || modelSupportsNativeTools(selectedModel);
+  }, [selectedModel, useSystemTools]);
+
+  const isGoodAtAgentMode = useMemo(() => {
+    if (!selectedModel) {
+      return undefined;
+    }
+    return isRecommendedAgentModel(selectedModel.model);
   }, [selectedModel]);
+
   const { mainEditor } = useMainEditor();
   const metaKeyLabel = useMemo(() => {
     return getMetaKeyLabel();
@@ -32,10 +51,10 @@ export function ModeSelect() {
     if (!selectedModel) {
       return;
     }
-    if (mode !== "chat" && !agentModeSupported) {
+    if (mode !== "chat" && !isAgentSupported) {
       dispatch(setMode("chat"));
     }
-  }, [mode, agentModeSupported, dispatch, selectedModel]);
+  }, [mode, isAgentSupported, selectedModel]);
 
   const cycleMode = useCallback(() => {
     if (mode === "chat") {
@@ -75,6 +94,25 @@ export function ModeSelect() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [cycleMode]);
+
+  const notSupported = <span>(Not supported)</span>;
+  const notGreatAtAgent = (
+    <>
+      <ExclamationTriangleIcon
+        data-tooltip-id="bad-at-agent-mode-tooltip"
+        className="text-warning h-2.5 w-2.5"
+      />
+      <ToolTip
+        id="bad-at-agent-mode-tooltip"
+        style={{
+          zIndex: 200001, // in front of listbox
+        }}
+        className="flex items-center gap-1"
+      >
+        {`${capitalize(mode)} might not work well with this model.`}
+      </ToolTip>
+    </>
+  );
 
   return (
     <Listbox value={mode} onChange={selectMode}>
@@ -117,11 +155,7 @@ export function ModeSelect() {
             </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </ListboxOption>
-          <ListboxOption
-            value="plan"
-            disabled={!agentModeSupported}
-            className={"gap-1"}
-          >
+          <ListboxOption value="plan" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="plan" />
               <span className="">Plan</span>
@@ -138,19 +172,19 @@ export function ModeSelect() {
                 Read-only/MCP tools available
               </ToolTip>
             </div>
-            {agentModeSupported ? (
-              <CheckIcon
-                className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
-              />
+            {isAgentSupported ? (
+              <>
+                {!isGoodAtAgentMode && notGreatAtAgent}
+                <CheckIcon
+                  className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
+                />
+              </>
             ) : (
-              <span>(Not supported)</span>
+              notSupported
             )}
           </ListboxOption>
-          <ListboxOption
-            value="agent"
-            disabled={!agentModeSupported}
-            className={"gap-1"}
-          >
+
+          <ListboxOption value="agent" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
               <span className="">Agent</span>
@@ -167,12 +201,15 @@ export function ModeSelect() {
                 All tools available
               </ToolTip>
             </div>
-            {agentModeSupported ? (
-              <CheckIcon
-                className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
-              />
+            {isAgentSupported ? (
+              <>
+                {!isGoodAtAgentMode && notGreatAtAgent}
+                <CheckIcon
+                  className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
+                />
+              </>
             ) : (
-              <span>(Not supported)</span>
+              notSupported
             )}
           </ListboxOption>
 

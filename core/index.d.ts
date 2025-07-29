@@ -1084,6 +1084,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
+  systemMessageDescription?: string;
 }
 
 interface ToolChoice {
@@ -1514,6 +1515,7 @@ export interface ExperimentalConfig {
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
   enableExperimentalTools?: boolean;
+  onlyUseSystemMessageTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1538,11 +1540,6 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
-
-  /**
-   * If enabled, will enable next edit in place of autocomplete
-   */
-  optInNextEditFeature?: boolean;
 
   /**
    * If enabled, @codebase will only use tool calling

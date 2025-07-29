@@ -410,6 +410,10 @@ export class Core {
       await this.messenger.request("openUrl", url);
     });
 
+    on("controlPlane/getEnvironment", async (msg) => {
+      return await getControlPlaneEnv(this.ide.getIdeSettings());
+    });
+
     on("controlPlane/getFreeTrialStatus", async (msg) => {
       return this.configHandler.controlPlaneClient.getFreeTrialStatus();
     });

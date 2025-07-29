@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;
@@ -10,46 +11,16 @@ export interface SearchAndReplaceInFileArgs {
 export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
   "Note this tool CANNOT be called in parallel.";
 
-/**
- * This tool is in an experimental state.
- * Our starting point is heavily inspired by Cline's `replace_in_file` tool: https://github.com/cline/cline/blob/2709ccefcddc616e89a70962f017bcbbca1f17bf/src/core/prompts/system.ts#L87-L121
- */
-export const searchAndReplaceInFileTool: Tool = {
-  type: "function",
-  displayTitle: "Edit File",
-  wouldLikeTo: "edit {{{ filepath }}}",
-  isCurrently: "editing {{{ filepath }}}",
-  hasAlready: "edited {{{ filepath }}}",
-  group: BUILT_IN_GROUP_NAME,
-  readonly: false,
-  isInstant: false,
-  function: {
-    name: BuiltInToolNames.SearchAndReplaceInFile,
-    description: `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
-    parameters: {
-      type: "object",
-      required: ["filepath", "diffs"],
-      properties: {
-        filepath: {
-          type: "string",
-          description:
-            "The path of the file to modify, relative to the root of the workspace.",
-        },
-        diffs: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: `An array of strings, each containing one or more SEARCH/REPLACE blocks following this exact format:
-\`\`\`
-------- SEARCH
+const SEARCH_AND_REPLACE_TOOL_DESCRIPTION = `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`;
+const SEARCH_AND_REPLACE_FILEPATH_DESCRIPTION =
+  "The path of the file to modify, relative to the root of the workspace.";
+const SEARCH_AND_REPLACE_EXAMPLE_BLOCK = `------- SEARCH
 [exact content to find]
 =======
 [new content to replace with]
-+++++++ REPLACE
-\`\`\`
++++++++ REPLACE`;
 
-Critical rules:
+const SEARCH_AND_REPLACE_RULES = `Critical rules:
 1. SEARCH content must match the associated file section to find EXACTLY:
     * Match character-for-character including whitespace, indentation, line endings
     * Include all comments, docstrings, etc.
@@ -69,26 +40,84 @@ Critical rules:
     * DO NOT make back-to-back tool calls. Instead interleave with brief explanation of what each will do. For example, instead of [explanation, tool call, tool call] you should do [explanation, tool call, explanation, tool call]
 6. Special operations:
     * To move code: Use two SEARCH/REPLACE blocks (one to delete from original + one to insert at new location)
-    * To delete code: Use empty REPLACE section
+    * To delete code: Use empty REPLACE section`;
+
+const SEARCH_AND_REPLACE_DIFFS_DESCRIPTION = `An array of strings, each containing one or more SEARCH/REPLACE blocks following this exact format:
+\`\`\`
+${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}
+\`\`\`
+
+${SEARCH_AND_REPLACE_RULES}
     
 Usage:
 \`\`\`
-------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE
+${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}
 
-------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE
-  \`\`\`
+${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}
+\`\`\`
 
-Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and all will be applied sequentially in the order they appear.`,
+Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and all will be applied sequentially in the order they appear.`;
+
+/**
+ * This tool is in an experimental state.
+ * Our starting point is heavily inspired by Cline's `replace_in_file` tool: https://github.com/cline/cline/blob/2709ccefcddc616e89a70962f017bcbbca1f17bf/src/core/prompts/system.ts#L87-L121
+ */
+export const searchAndReplaceInFileTool: Tool = {
+  type: "function",
+  displayTitle: "Edit File",
+  wouldLikeTo: "edit {{{ filepath }}}",
+  isCurrently: "editing {{{ filepath }}}",
+  hasAlready: "edited {{{ filepath }}}",
+  group: BUILT_IN_GROUP_NAME,
+  readonly: false,
+  isInstant: false,
+  function: {
+    name: BuiltInToolNames.SearchAndReplaceInFile,
+    description: SEARCH_AND_REPLACE_TOOL_DESCRIPTION,
+    parameters: {
+      type: "object",
+      required: ["filepath", "diffs"],
+      properties: {
+        filepath: {
+          type: "string",
+          description: SEARCH_AND_REPLACE_FILEPATH_DESCRIPTION,
+        },
+        diffs: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: SEARCH_AND_REPLACE_DIFFS_DESCRIPTION,
         },
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.SearchAndReplaceInFile,
+    `To make targeted edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a "diffs" argument containing an array of SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
+Each block should follow this format:
+${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}
+
+${SEARCH_AND_REPLACE_RULES}
+
+  For example, you could respond with:`,
+    [
+      ["filepath", "path/to/file.ts"],
+      [
+        "diffs",
+        `[
+"------- SEARCH
+[exact content to find]
+=======
+[new content to replace with]
++++++++ REPLACE",
+"------- SEARCH
+[exact content to find]
+=======
+[new content to replace with]
++++++++ REPLACE"
+]`,
+      ],
+    ],
+  ),
 };

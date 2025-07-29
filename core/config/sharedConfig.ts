@@ -19,8 +19,8 @@ export const sharedConfigSchema = z
     readResponseTTS: z.boolean(),
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
-    optInNextEditFeature: z.boolean(),
     enableExperimentalTools: z.boolean(),
+    onlyUseSystemMessageTools: z.boolean(),
     codebaseToolCallingOnly: z.boolean(),
     enableStaticContextualization: z.boolean(),
 
@@ -181,10 +181,12 @@ export function modifyAnyConfigWithSharedConfig<
     configCopy.experimental.useCurrentFileAsContext =
       sharedConfig.useCurrentFileAsContext;
   }
-  if (sharedConfig.optInNextEditFeature !== undefined) {
-    configCopy.experimental.optInNextEditFeature =
-      sharedConfig.optInNextEditFeature;
+
+  if (sharedConfig.onlyUseSystemMessageTools !== undefined) {
+    configCopy.experimental.onlyUseSystemMessageTools =
+      sharedConfig.onlyUseSystemMessageTools;
   }
+
   if (sharedConfig.codebaseToolCallingOnly !== undefined) {
     configCopy.experimental.codebaseToolCallingOnly =
       sharedConfig.codebaseToolCallingOnly;
