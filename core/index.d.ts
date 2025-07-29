@@ -1262,10 +1262,10 @@ export interface MCPOptions {
 }
 
 export type MCPConnectionStatus =
-  | "authenticating"
   | "connecting"
   | "connected"
   | "error"
+  | "authenticating"
   | "not-connected";
 
 export type MCPPromptArgs = {

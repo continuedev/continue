@@ -3,6 +3,7 @@ import {
   ArrowPathIcon,
   CircleStackIcon,
   CommandLineIcon,
+  GlobeAltIcon,
   InformationCircleIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
@@ -19,10 +20,6 @@ import { ToolTip } from "../../../../gui/Tooltip";
 import { Button } from "../../../../ui";
 import EditBlockButton from "../../EditBlockButton";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
-
-function has401Error(errors: string[]) {
-  return !!errors.find((error) => error.includes("401"));
-}
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
@@ -61,6 +58,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   };
 
   const onRemoveAuth = async () => {
+    updateMCPServerStatus("authenticating");
     await ideMessenger.request("mcp/removeAuthentication", server);
   };
 
@@ -76,7 +74,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
       style={{
         fontSize: fontSize(-2),
       }}
-      className="flex flex-row items-center justify-between gap-3"
+      className={`flex flex-row items-center justify-between gap-3 ${server.status === "authenticating" ? "my-0.5" : ""}`}
     >
       <div className="flex flex-row items-center gap-3">
         {/* Name and Status */}
@@ -152,7 +150,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        {server.isProtectedResource && server.status !== "authenticating" && (
+        {server.isProtectedResource && (
           <>
             <div
               className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
@@ -160,11 +158,18 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
             >
               {server.status === "error" ? (
                 <ShieldExclamationIcon className="h-3 w-3" />
-              ) : server.status === "connecting" ? null : (
+              ) : server.status === "authenticating" ? (
+                <GlobeAltIcon className="animate-spin-slow h-3 w-3" />
+              ) : (
                 <ShieldCheckIcon className="h-3 w-3" />
               )}
             </div>
-            <ToolTip place="left" delayHide={2000} id={mcpAuthTooltipId}>
+            <ToolTip
+              place="left"
+              delayHide={2000}
+              hidden={server.status === "authenticating"}
+              id={mcpAuthTooltipId}
+            >
               <div className="pointer-events-auto">
                 <Button
                   size="sm"
@@ -226,6 +231,8 @@ function MCPSection() {
       blockFromYaml: parsed?.mcpServers?.[index],
     }));
   }, [servers, selectedProfile]);
+
+  console.log("debug1 servers->", servers);
 
   return (
     <div className="flex flex-col gap-1">
