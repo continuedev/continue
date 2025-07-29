@@ -6,7 +6,7 @@ export function isModelCapable(provider: string, name: string, model?: string): 
   const normalizedName = name.toLowerCase();
   const normalizedModel = model ? model.toLowerCase() : '';
 
-  const patterns = [/gemini/, /claude/, /gpt/, /o\d/g, /kimi/, /qwen/];
+  const patterns = [/gemini/, /claude/, /gpt/, /o\d/, /kimi/, /qwen/];
 
   // If either name OR model matches any of the patterns, consider it capable
   if (patterns.some((pattern) => pattern.test(normalizedName))) {
