@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
       throw new Error("no query params found");
     }
 
-    handleMCPOauthCode(parsedUrl.query["code"] as string);
+    void handleMCPOauthCode(parsedUrl.query["code"] as string);
 
     const html = `
 <!DOCTYPE html>
@@ -164,7 +164,7 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
         `Server started for MCP Oauth process at http://localhost:${PORT}/`,
       );
     });
-    this.ide.openUrl(authorizationUrl.toString());
+    void this.ide.openUrl(authorizationUrl.toString());
   }
 }
 
@@ -201,11 +201,14 @@ export async function handleMCPOauthCode(authorizationCode: string) {
   const serverUrl = (authenticatingServer.transport as SSEOptions).url;
 
   if (!serverUrl) {
-    ide.showToast("error", "No MCP server url found for authentication");
+    void ide.showToast("error", "No MCP server url found for authentication");
     return;
   }
   if (!authorizationCode) {
-    ide.showToast("error", `No MCP authorization code found for ${serverUrl}`);
+    void ide.showToast(
+      "error",
+      `No MCP authorization code found for ${serverUrl}`,
+    );
     return;
   }
   server.close(() => console.debug("Server for MCP Oauth process was closed"));
