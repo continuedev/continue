@@ -61,11 +61,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
-import {
-  handleMCPOauthCode,
-  performAuth,
-  removeMCPAuth,
-} from "./context/mcp/MCPOauth";
+import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -446,21 +442,22 @@ export class Core {
         await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
       }
     });
-    on("mcp/sendOauthCode", async (msg) => {
-      const authenticatingServer = MCPManagerSingleton.getInstance()
-        .getStatuses()
-        .find((s) => s.status === "authenticating");
-      const authStatus = await handleMCPOauthCode(
-        msg.data.code,
-        this.ide,
-        authenticatingServer,
-      );
-      if (authStatus === "AUTHORIZED" && authenticatingServer) {
-        await MCPManagerSingleton.getInstance().refreshConnection(
-          authenticatingServer.id,
-        );
-      }
-    });
+    // TODO: remove this protocol altogher along with vscode counterpart
+    // on("mcp/sendOauthCode", async (msg) => {
+    //   const authenticatingServer = MCPManagerSingleton.getInstance()
+    //     .getStatuses()
+    //     .find((s) => s.status === "authenticating");
+    //   const authStatus = await handleMCPOauthCode(
+    //     msg.data.code,
+    //     this.ide,
+    //     authenticatingServer,
+    //   );
+    //   if (authStatus === "AUTHORIZED" && authenticatingServer) {
+    //     await MCPManagerSingleton.getInstance().refreshConnection(
+    //       authenticatingServer.id,
+    //     );
+    //   }
+    // });
     on("mcp/removeAuthentication", async (msg) => {
       removeMCPAuth(msg.data, this.ide);
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);

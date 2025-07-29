@@ -14,6 +14,11 @@ import http from "http";
 import url from "url";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
 
+let authenticatingMCPContext = null as {
+  authenticatingServer: MCPServerStatus;
+  ide: IDE;
+} | null;
+
 const PORT = 3000;
 
 const server = http.createServer((req, res) => {
@@ -21,24 +26,25 @@ const server = http.createServer((req, res) => {
     if (!req.url) {
       throw new Error("no url found");
     }
-    const parsedUrl = url.parse(req.url, true);
-    if (parsedUrl.pathname !== "/") {
-      throw new Error("path is not index");
-    }
 
-    const query = new URLSearchParams(
-      parsedUrl.query as Record<string, string>,
-    ).toString();
-    if (!query) {
+    const parsedUrl = url.parse(req.url, true);
+    if (!parsedUrl.query["code"]) {
       throw new Error("no query params found");
     }
 
-    const redirectUrl = `vscode://continue.Continue?${query}`;
+    handleMCPOauthCode(parsedUrl.query["code"] as string);
 
-    res.writeHead(302, {
-      Location: redirectUrl,
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><title>Authentication Complete</title></head>
+<body>Authentication Complete. You can close this page now.</body>
+</html>`;
+
+    res.writeHead(200, {
+      "Content-Type": "text/html",
     });
-    res.end();
+    res.end(html);
   } catch (error) {
     res.writeHead(400, { "Content-Type": "text/plain" });
     res.end(`Unexpected redirect error:  ${(error as Error).message}`);
@@ -177,6 +183,10 @@ export async function getOauthToken(mcpServerUrl: string, ide: IDE) {
 export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
   const mcpServerUrl = (mcpServer.transport as SSEOptions).url;
   const authProvider = new MCPConnectionOauthProvider(mcpServerUrl, ide);
+  authenticatingMCPContext = {
+    authenticatingServer: mcpServer,
+    ide,
+  };
   return await auth(authProvider, {
     serverUrl: mcpServerUrl,
   });
@@ -185,12 +195,13 @@ export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
 /**
  * handle the authentication code received from the oauth redirect
  */
-export async function handleMCPOauthCode(
-  authorizationCode: string,
-  ide: IDE,
-  authenticatingServer: MCPServerStatus | undefined,
-) {
-  const serverUrl = (authenticatingServer?.transport as SSEOptions).url;
+export async function handleMCPOauthCode(authorizationCode: string) {
+  if (!authenticatingMCPContext) {
+    return;
+  }
+  const { ide, authenticatingServer } = authenticatingMCPContext;
+  const serverUrl = (authenticatingServer.transport as SSEOptions).url;
+
   if (!serverUrl) {
     ide.showToast("error", "No MCP server url found for authentication");
     return;
@@ -201,10 +212,17 @@ export async function handleMCPOauthCode(
   }
 
   const authProvider = new MCPConnectionOauthProvider(serverUrl, ide);
-  return await auth(authProvider, {
+  const authStatus = await auth(authProvider, {
     serverUrl,
     authorizationCode,
   });
+  if (authStatus === "AUTHORIZED") {
+    const { MCPManagerSingleton } = await import("./MCPManagerSingleton"); // put dynamic import to avoid cyclic imports
+    await MCPManagerSingleton.getInstance().refreshConnection(
+      authenticatingServer.id,
+    );
+  }
+  authenticatingMCPContext = null;
 }
 
 export function removeMCPAuth(mcpServer: MCPServerStatus, ide: IDE) {
