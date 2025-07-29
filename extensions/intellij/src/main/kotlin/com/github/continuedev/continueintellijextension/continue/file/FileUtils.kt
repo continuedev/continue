@@ -75,7 +75,8 @@ class FileUtils(
         }.toMap()
 
     private fun findFile(fileUri: String): VirtualFile? {
-        val normalizedAuthority = normalizeWindowsAuthority(fileUri)
+        val noParams = fileUri.substringBefore("?")
+        val normalizedAuthority = normalizeWindowsAuthority(noParams)
         return VirtualFileManager.getInstance()
             .refreshAndFindFileByUrl(normalizedAuthority)
     }
