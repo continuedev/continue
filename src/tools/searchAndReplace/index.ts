@@ -132,22 +132,13 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
         newContent.substring(match.endIndex);
     }
 
-    // Get lines for telemetry
-    const { added, removed } = calculateLinesOfCodeDiff(oldContent, newContent);
-    const language = getLanguageFromFilePath(filepath);
-
-    if (added > 0) {
-      telemetryService.recordLinesOfCodeModified("added", added, language);
-    }
-    if (removed > 0) {
-      telemetryService.recordLinesOfCodeModified("removed", removed, language);
-    }
-
     const diff = generateDiff(oldContent, newContent, filepath);
+
     return {
       args: {
         filepath,
         newContent,
+        oldContent, // Just for telemetry later
       },
       preview: [
         {
@@ -164,6 +155,24 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
   run: async (args) => {
     try {
       fs.writeFileSync(args.filepath, args.newContent, "utf-8");
+
+      // Get lines for telemetry
+      const { added, removed } = calculateLinesOfCodeDiff(
+        args.oldContent,
+        args.newContent
+      );
+      const language = getLanguageFromFilePath(args.filepath);
+
+      if (added > 0) {
+        telemetryService.recordLinesOfCodeModified("added", added, language);
+      }
+      if (removed > 0) {
+        telemetryService.recordLinesOfCodeModified(
+          "removed",
+          removed,
+          language
+        );
+      }
 
       // Record file operation
       return `Successfully edited ${args.filepath}`;

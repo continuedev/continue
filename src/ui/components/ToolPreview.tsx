@@ -1,6 +1,5 @@
 import { Box, Text } from "ink";
 import React from "react";
-import { formatToolCall } from "../../tools/formatters.js";
 import { getToolDisplayName } from "../../tools.js";
 import { ColoredDiff } from "../ColoredDiff.js";
 import { ToolCallPreview } from "../../tools/types.js";
