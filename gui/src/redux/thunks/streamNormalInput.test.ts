@@ -34,6 +34,10 @@ vi.mock("../util/getBaseSystemMessage", () => ({
   getBaseSystemMessage: vi.fn(),
 }));
 
+vi.mock("core/config/shouldAutoEnableSystemMessageTools", () => ({
+  shouldAutoEnableSystemMessageTools: vi.fn(() => undefined), // Let manual setting take priority
+}));
+
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
