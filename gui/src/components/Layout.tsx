@@ -248,8 +248,8 @@ const Layout = () => {
       <AuthProvider>
         <LayoutTopDiv>
           {showStagingIndicator && (
-            <div
-              title="running on staging"
+            <span
+              title="Staging environment"
               className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
               style={{
                 backgroundColor: "var(--vscode-list-warningForeground)",
