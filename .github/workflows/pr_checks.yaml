@@ -163,20 +163,25 @@ jobs:
           cd extensions/vscode
           npm run vitest
 
+  get-packages-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.get-packages.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get package list
+        id: get-packages
+        run: |
+          packages=$(ls -1 packages/ | jq -R . | jq -s .)
+          echo "packages=$packages" >> $GITHUB_OUTPUT
+          echo "Found packages: $packages"
+
   packages-checks:
+    needs: get-packages-matrix
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package:
-          [
-            hub,
-            config-yaml,
-            fetch,
-            config-types,
-            continue-sdk,
-            llm-info,
-            openai-adapters,
-          ]
+        package: ${{ fromJson(needs.get-packages-matrix.outputs.packages) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -494,6 +499,7 @@ jobs:
       - gui-checks
       - binary-checks
       - vscode-checks
+      - get-packages-matrix
       - packages-checks
       - vscode-get-test-file-matrix
       - vscode-package-extension-linux
