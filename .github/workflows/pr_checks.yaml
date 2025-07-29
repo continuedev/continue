@@ -307,6 +307,7 @@ jobs:
   vscode-package-extension-macos:
     runs-on: macos-13
     timeout-minutes: 15
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -512,3 +513,5 @@ jobs:
         uses: re-actors/alls-green@release/v1
         with:
           jobs: ${{ toJSON(needs) }}
+          ## Currently we only use `vscode-package-extension-macos` for publishing build artifacts for `oneper` script
+          allowed-failures: vscode-package-extension-macos
