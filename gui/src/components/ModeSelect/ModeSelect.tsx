@@ -12,6 +12,7 @@ import {
 import { capitalize } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUseSystemMessageTools } from "../../redux/selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
@@ -24,9 +25,8 @@ export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const useSystemTools = useAppSelector(
-    (state) => state.config.config.experimental?.onlyUseSystemMessageTools,
-  );
+  const useSystemTools = useAppSelector(selectUseSystemMessageTools);
+
   const isAgentSupported = useMemo(() => {
     if (!selectedModel) {
       return undefined;
