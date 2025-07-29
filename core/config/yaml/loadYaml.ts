@@ -386,42 +386,37 @@ async function configYamlToContinueConfig(options: {
   const globalContext = new GlobalContext();
 
   continueConfig.contextProviders =
-    (
-      config.context
-        ?.map((context) => {
-          const cls = contextProviderClassFromName(context.provider) as any;
-          if (!cls) {
-            if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
-              localErrors.push({
-                fatal: false,
-                message: `Unknown context provider ${context.provider}`,
-              });
-            }
-            return undefined;
-          }
-          const instance: IContextProvider = new cls({
-            name: context.name,
-            ...context.params,
+    (config.context?.map((context) => {
+      const cls = contextProviderClassFromName(context.provider) as any;
+      if (!cls) {
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
+          localErrors.push({
+            fatal: false,
+            message: `Unknown context provider ${context.provider}`,
           });
-          return instance;
-        })
-        .filter((p) => !!p) as IContextProvider[]
-    ).filter((p) => {
-      if (p.deprecationMessage) {
-        const providerTitle = p.description.title;
+        }
+        return undefined;
+      }
+      const instance: IContextProvider = new cls({
+        name: context.name,
+        ...context.params,
+      });
+
+      if (instance.deprecationMessage) {
+        const providerTitle = instance.description.title;
         const shownWarnings =
           globalContext.get("shownDeprecatedProviderWarnings") ?? {};
         if (!shownWarnings[providerTitle]) {
-          void ide.showToast("warning", p.deprecationMessage);
+          void ide.showToast("warning", instance.deprecationMessage);
           globalContext.update("shownDeprecatedProviderWarnings", {
             ...shownWarnings,
             [providerTitle]: true,
           });
         }
-        return true;
       }
-      return false;
-    }) ?? [];
+
+      return instance;
+    }) as IContextProvider[]) ?? [];
 
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
