@@ -1844,4 +1844,328 @@ describe("streamNormalInput", () => {
       },
     });
   });
+
+  it("should handle tool call requiring manual approval", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Create store with tool settings that require manual approval (ask first)
+    const mockStoreWithManualApproval = createMockStore({
+      session: {
+        history: [
+          {
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please search the codebase",
+            },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: new AbortController(),
+        contextPercentage: 0,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,  
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        } as any,
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+      } as any,
+      ui: {
+        toolSettings: {
+          search_codebase: "askFirst", // Requires manual approval
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      } as any,
+    });
+
+    const mockIdeMessengerManual = mockStoreWithManualApproval.mockIdeMessenger;
+
+    // Setup successful compilation
+    mockIdeMessengerManual.request.mockResolvedValue({
+      status: "success",
+      content: {
+        compiledChatMessages: [
+          { role: "user", content: "Please search the codebase" },
+        ],
+        didPrune: false,
+        contextPercentage: 0.9,
+      },
+    });
+
+    // Setup streaming generator with tool call requiring approval
+    async function* mockStreamGeneratorWithApprovalTool() {
+      yield [
+        { role: "assistant", content: "I'll search the codebase for you." },
+      ];
+      yield [
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-approval-1",
+              type: "function",
+              function: {
+                name: "search_codebase",
+                arguments: JSON.stringify({ query: "test function" }),
+              },
+            },
+          ],
+        },
+      ];
+      return {
+        prompt: "Please search the codebase",
+        completion: "I'll search the codebase for you.",
+        modelProvider: "anthropic",
+      };
+    }
+
+    mockIdeMessengerManual.llmStreamChat.mockReturnValue(
+      mockStreamGeneratorWithApprovalTool(),
+    );
+
+    // Execute thunk
+    const result = await mockStoreWithManualApproval.dispatch(
+      streamNormalInput({}) as any,
+    );
+
+    // Verify thunk completed successfully (tool waits for approval)
+    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Verify action sequence includes tool generation but NO execution
+    const dispatchedActions = (mockStoreWithManualApproval as any).getActions();
+
+    // Should contain the standard streaming setup actions
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setAppliedRulesAtIndex",
+        payload: { index: 0, appliedRules: [] },
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/setActive" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setContextPercentage",
+        payload: 0.9,
+      }),
+    );
+
+    // Should contain streaming updates including the tool call
+    const streamUpdates = dispatchedActions.filter(
+      (action: any) => action.type === "session/streamUpdate",
+    );
+    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
+
+    // Tool call should be marked as generated but NOT executed (waiting for approval)
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolGenerated",
+        payload: expect.objectContaining({ toolCallId: "tool-approval-1" }),
+      }),
+    );
+
+    // Should NOT contain any tool execution actions
+    expect(dispatchedActions).not.toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolCallCalling",
+      }),
+    );
+    expect(dispatchedActions).not.toContainEqual(
+      expect.objectContaining({
+        type: "session/updateToolCallOutput",
+      }),
+    );
+    expect(dispatchedActions).not.toContainEqual(
+      expect.objectContaining({
+        type: "session/acceptToolCall",
+      }),
+    );
+
+    // Should complete successfully
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamNormalInput/fulfilled",
+      }),
+    );
+
+    // Verify IDE messenger calls - compilation should happen, streaming should happen
+    expect(mockIdeMessengerManual.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [{ role: "user", content: "Hello" }], // constructMessages mock
+        options: {},
+      },
+    );
+
+    expect(mockIdeMessengerManual.llmStreamChat).toHaveBeenCalled();
+
+    // Should NOT call tools/call since tool requires approval
+    expect(mockIdeMessengerManual.request).not.toHaveBeenCalledWith(
+      "tools/call",
+      expect.anything(),
+    );
+
+    // Verify final state contains the tool call in "generated" state (waiting for approval)
+    const finalState = mockStoreWithManualApproval.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please search the codebase",
+            },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "I'll search the codebase for you.",
+              id: expect.any(String),
+              role: "assistant",
+              toolCalls: [
+                {
+                  id: "tool-approval-1",
+                  type: "function",
+                  function: {
+                    name: "search_codebase",
+                    arguments: JSON.stringify({ query: "test function" }),
+                  },
+                },
+              ],
+            },
+            promptLogs: [
+              {
+                completion: "I'll search the codebase for you.",
+                modelProvider: "anthropic",
+                prompt: "Please search the codebase",
+              },
+            ],
+            toolCallStates: [
+              {
+                toolCallId: "tool-approval-1",
+                toolCall: {
+                  id: "tool-approval-1",
+                  type: "function",
+                  function: {
+                    name: "search_codebase",
+                    arguments: JSON.stringify({ query: "test function" }),
+                  },
+                },
+                parsedArgs: { query: "test function" },
+                status: "generated", // Waiting for user approval
+              },
+            ],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0.9,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {
+          search_codebase: "askFirst",
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
+
 });
