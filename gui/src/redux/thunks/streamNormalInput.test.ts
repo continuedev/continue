@@ -2168,4 +2168,279 @@ describe("streamNormalInput", () => {
     });
   });
 
+  it("should handle complete user approval and tool execution flow", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Create store with tool settings that require manual approval
+    const mockStoreWithApproval = createMockStore({
+      session: {
+        history: [
+          {
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please search the codebase for test functions",
+            },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: new AbortController(),
+        contextPercentage: 0,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        } as any,
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+      } as any,
+      ui: {
+        toolSettings: {
+          search_codebase: "askFirst", // Requires manual approval
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      } as any,
+    });
+
+    const mockIdeMessengerApproval = mockStoreWithApproval.mockIdeMessenger;
+
+    // Setup successful compilation
+    mockIdeMessengerApproval.request.mockImplementation((endpoint: string, data: any) => {
+      if (endpoint === "llm/compileChat") {
+        return Promise.resolve({
+          status: "success",
+          content: {
+            compiledChatMessages: [
+              { role: "user", content: "Please search the codebase for test functions" },
+            ],
+            didPrune: false,
+            contextPercentage: 0.85,
+          },
+        });
+      } else if (endpoint === "tools/call") {
+        // Mock server-side tool call response for search_codebase
+        return Promise.resolve({
+          status: "success",
+          content: {
+            contextItems: [
+              {
+                name: "Search Results",
+                description: "Found test functions",
+                content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+                icon: "search",
+                hidden: false,
+              },
+            ],
+            errorMessage: undefined,
+          },
+        });
+      } else if (endpoint === "history/save") {
+        return Promise.resolve({ status: "success" });
+      }
+      return Promise.resolve({ status: "success", content: {} });
+    });
+
+    // Setup streaming generator with tool call
+    async function* mockStreamGeneratorWithApprovalFlow() {
+      yield [
+        { role: "assistant", content: "I'll search for test functions in the codebase." },
+      ];
+      yield [
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-approval-flow-1",
+              type: "function",
+              function: {
+                name: "search_codebase",
+                arguments: JSON.stringify({ query: "test function" }),
+              },
+            },
+          ],
+        },
+      ];
+      return {
+        prompt: "Please search the codebase for test functions",
+        completion: "I'll search for test functions in the codebase.",
+        modelProvider: "anthropic",
+      };
+    }
+
+    // Mock subsequent streaming calls (after tool execution)
+    let streamCallCount = 0;
+    mockIdeMessengerApproval.llmStreamChat.mockImplementation(() => {
+      streamCallCount++;
+      if (streamCallCount === 1) {
+        // First call - initial streaming with tool call
+        return mockStreamGeneratorWithApprovalFlow();
+      } else {
+        // Subsequent calls from streamResponseAfterToolCall
+        async function* followupGenerator() {
+          yield [
+            { 
+              role: "assistant", 
+              content: "I found several test functions in your codebase. Here are the main ones I discovered..." 
+            },
+          ];
+          return {
+            prompt: "continuing after tool execution",
+            completion: "I found several test functions in your codebase. Here are the main ones I discovered...",
+            modelProvider: "anthropic",
+          };
+        }
+        return followupGenerator();
+      }
+    });
+
+    // Execute initial thunk - this should generate the tool call but not execute it
+    const initialResult = await mockStoreWithApproval.dispatch(
+      streamNormalInput({}) as any,
+    );
+
+    // Verify initial streaming completed successfully 
+    expect(initialResult.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Get initial actions to verify tool was generated
+    const initialActions = (mockStoreWithApproval as any).getActions();
+    expect(initialActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolGenerated",
+        payload: expect.objectContaining({ toolCallId: "tool-approval-flow-1" }),
+      }),
+    );
+
+    // Clear the actions array to track only the approval flow
+    (mockStoreWithApproval as any).clearActions();
+
+    // Import the callToolById thunk to simulate user approval
+    const { callToolById } = await import("./callToolById");
+
+    // Simulate user clicking "Accept" on the tool call
+    const approvalResult = await mockStoreWithApproval.dispatch(
+      callToolById({ toolCallId: "tool-approval-flow-1" }) as any,
+    );
+
+    // Verify tool execution completed successfully
+    expect(approvalResult.type).toBe("chat/callTool/fulfilled");
+
+    // Verify the approval flow actions
+    const approvalActions = (mockStoreWithApproval as any).getActions();
+
+    // Should contain tool execution actions
+    expect(approvalActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolCallCalling",
+        payload: { toolCallId: "tool-approval-flow-1" },
+      }),
+    );
+
+    expect(approvalActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/updateToolCallOutput",
+        payload: {
+          toolCallId: "tool-approval-flow-1",
+          contextItems: [
+            {
+              name: "Search Results",
+              description: "Found test functions",
+              content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+              icon: "search",
+              hidden: false,
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(approvalActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/acceptToolCall",
+        payload: { toolCallId: "tool-approval-flow-1" },
+      }),
+    );
+
+    // Should trigger follow-up streaming (streamAfterToolCall)
+    expect(approvalActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamAfterToolCall/fulfilled",
+      }),
+    );
+
+    // Verify IDE messenger calls for tool execution
+    expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith("tools/call", {
+      toolCall: {
+        id: "tool-approval-flow-1",
+        type: "function",
+        function: {
+          name: "search_codebase",
+          arguments: JSON.stringify({ query: "test function" }),
+        },
+      },
+    });
+
+    // Verify second streaming call was made for continuation
+    expect(streamCallCount).toBe(2);
+
+    // Verify final state shows completed tool call and follow-up response
+    const finalState = mockStoreWithApproval.getState();
+    
+    // Should have 4 messages: user → assistant → tool → assistant
+    expect(finalState.session.history).toHaveLength(4);
+    
+    // Verify tool call is in "done" state
+    const assistantWithTool = finalState.session.history[1];
+    expect(assistantWithTool.toolCallStates?.[0]?.status).toBe("done");
+    
+    // Verify tool message exists
+    const toolMessage = finalState.session.history[2];
+    expect(toolMessage.message.role).toBe("tool");
+    expect(toolMessage.message.toolCallId).toBe("tool-approval-flow-1");
+    expect(toolMessage.message.content).toContain("function testUserLogin");
+    
+    // Verify follow-up assistant response
+    const followupResponse = finalState.session.history[3];
+    expect(followupResponse.message.role).toBe("assistant");
+    expect(followupResponse.message.content).toContain("I found several test functions");
+    
+    // Should be inactive after complete flow
+    expect(finalState.session.isStreaming).toBe(false);
+  });
+
 });
