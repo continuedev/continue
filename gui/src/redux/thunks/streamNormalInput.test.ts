@@ -11,7 +11,7 @@ vi.mock("core/llm/toolSupport", () => ({
 vi.mock(
   "core/tools/systemMessageTools/buildToolsSystemMessage",
   async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = (await importOriginal()) as any;
     return {
       ...actual,
       addSystemMessageToolsToSystemMessage: vi.fn(),
@@ -90,10 +90,19 @@ describe("streamNormalInput", () => {
         isInEdit: false,
         title: "",
         lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
       },
       config: {
         config: {
-          models: [mockClaudeModel],
           tools: [],
           rules: [],
           tabAutocompleteModel: undefined,
@@ -109,17 +118,17 @@ describe("streamNormalInput", () => {
           experimental: {
             onlyUseSystemMessageTools: false,
           },
-        },
+        } as any,
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
         },
-      },
+      } as any,
       ui: {
         toolSettings: {},
         ruleSettings: {},
         showDialog: false,
-        dialogMessage: null,
-      },
+        dialogMessage: undefined,
+      } as any,
     });
 
     // Use the store's ideMessenger instance
@@ -152,10 +161,10 @@ describe("streamNormalInput", () => {
       mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamGenerator());
 
       // Execute thunk
-      const result = await mockStore.dispatch(streamNormalInput({}));
+      const result = await mockStore.dispatch(streamNormalInput({}) as any);
 
       // Verify dispatch calls in order
-      const dispatchedActions = mockStore.getActions();
+      const dispatchedActions = (mockStore as any).getActions();
 
       expect(dispatchedActions).toContainEqual(
         expect.objectContaining({ type: "session/setAppliedRulesAtIndex" }),
