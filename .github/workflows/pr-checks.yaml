@@ -1,4 +1,4 @@
-name: PR checks
+name: PR Checks
 
 # PR Checks run on all PRs to the main branch and must pass before merging.
 on:
@@ -200,7 +200,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Setup E2E tests and build extension
         id: setup
         uses: ./.github/actions/setup-vscode-e2e

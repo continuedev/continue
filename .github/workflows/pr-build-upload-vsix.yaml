@@ -1,4 +1,4 @@
-name: PR Build Upload VSIX
+name: PR Build And Upload VSIX
 
 # Builds and uploads VSIX artifacts for the `oneper` script across Linux, Windows, and macOS ARM platforms
 on:

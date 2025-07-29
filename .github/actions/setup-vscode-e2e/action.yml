@@ -57,11 +57,10 @@ runs:
         key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
     # Generate test matrix
-    - name: Build packages and get test files
+    - name: Compile tests and get test files
       id: get-test-files
       shell: bash
       run: |
-        node ./scripts/build-packages.js
         if [ "${{ steps.vscode-cache.outputs.cache-hit }}" != "true" ]; then
           cd core
           npm ci
