@@ -160,42 +160,77 @@ describe("streamNormalInput", () => {
     // Execute thunk
     const result = await mockStore.dispatch(streamNormalInput({}) as any);
 
-    // Verify dispatch calls in order
+    // Verify exact sequence of dispatched actions with payloads
     const dispatchedActions = (mockStore as any).getActions();
-
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/setAppliedRulesAtIndex" }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/setActive" }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+    
+    expect(dispatchedActions).toEqual([
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "pending",
+        }),
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          index: 0,
+          appliedRules: [],
+        },
+      },
+      {
+        type: "session/setActive",
+      },
+      {
         type: "session/setInlineErrorMessage",
-        payload: undefined,
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+      },
+      {
         type: "session/setIsPruned",
         payload: false,
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+      },
+      {
         type: "session/setContextPercentage",
         payload: 0.8,
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/streamUpdate" }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/addPromptCompletionPair" }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/setInactive" }),
-    );
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "First chunk",
+          },
+        ],
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant", 
+            content: "Second chunk",
+          },
+        ],
+      },
+      {
+        type: "session/addPromptCompletionPair",
+        payload: [
+          {
+            prompt: "Hello",
+            completion: "Hi there!",
+            modelProvider: "anthropic",
+          },
+        ],
+      },
+      {
+        type: "session/setInactive",
+      },
+      {
+        type: "chat/streamNormalInput/fulfilled",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "fulfilled",
+        }),
+      },
+    ]);
 
     // Verify IDE messenger calls
     expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
@@ -214,5 +249,11 @@ describe("streamNormalInput", () => {
     );
 
     expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Verify final state after thunk completion
+    const finalState = mockStore.getState();
+    expect(finalState.session.isStreaming).toBe(false); // Should be inactive
+    expect(finalState.session.contextPercentage).toBe(0.8); // Should be updated
+    expect(finalState.session.isPruned).toBe(false); // Should match compilation result
   });
 });
