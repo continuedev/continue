@@ -152,7 +152,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       preview: [
         {
           type: "text",
-          content: "",
+          content: "Will make the following changes:",
         },
         {
           type: "diff",
