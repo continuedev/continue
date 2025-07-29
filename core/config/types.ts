@@ -743,6 +743,8 @@ declare global {
   
     // LSP
     gotoDefinition(location: Location): Promise<RangeInFile[]>;
+    gotoTypeDefinition(location: Location): Promise<RangeInFile[]>;
+    getSignatureHelp(location: Location): Promise<SignatureHelp | null>;
     getReferences(location: Location): Promise<RangeInFile[]>;
     getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
   
