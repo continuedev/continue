@@ -1,5 +1,4 @@
-import { ModelDescription, Tool } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
+import { ModelDescription } from "core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockStore } from "../../util/test/mockStore";
 import { streamNormalInput } from "./streamNormalInput";
@@ -20,14 +19,6 @@ vi.mock(
   },
 );
 
-vi.mock("core/tools/systemMessageTools/interceptSystemToolCalls", () => ({
-  interceptSystemToolCalls: vi.fn(),
-}));
-
-vi.mock("./callToolById", () => ({
-  callToolById: vi.fn(),
-}));
-
 vi.mock("../util/constructMessages", () => ({
   constructMessages: vi.fn(),
 }));
@@ -37,7 +28,7 @@ vi.mock("../util/getBaseSystemMessage", () => ({
 }));
 
 vi.mock("core/config/shouldAutoEnableSystemMessageTools", () => ({
-  shouldAutoEnableSystemMessageTools: vi.fn(() => undefined), // Let manual setting take priority
+  shouldAutoEnableSystemMessageTools: vi.fn(() => undefined),
 }));
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
@@ -49,7 +40,6 @@ const mockModelSupportsNativeTools = vi.mocked(modelSupportsNativeTools);
 const mockAddSystemMessageToolsToSystemMessage = vi.mocked(
   addSystemMessageToolsToSystemMessage,
 );
-
 const mockConstructMessages = vi.mocked(constructMessages);
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
@@ -65,13 +55,6 @@ describe("streamNormalInput", () => {
     completionOptions: { reasoningBudgetTokens: 2048 },
   };
 
-  const mockTool: Tool = {
-    function: {
-      name: BuiltInToolNames.EditExistingFile,
-      description: "Edit a file",
-      parameters: { type: "object", properties: {} },
-    },
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -111,7 +94,7 @@ describe("streamNormalInput", () => {
       config: {
         config: {
           models: [mockClaudeModel],
-          tools: [mockTool],
+          tools: [],
           rules: [],
           tabAutocompleteModel: undefined,
           selectedModelByRole: {
@@ -124,7 +107,7 @@ describe("streamNormalInput", () => {
             embed: null,
           },
           experimental: {
-            onlyUseSystemMessageTools: false, // Ensure native tools are used
+            onlyUseSystemMessageTools: false,
           },
         },
         lastSelectedModelByRole: {
