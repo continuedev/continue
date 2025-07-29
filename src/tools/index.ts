@@ -7,15 +7,22 @@ import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
+import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
-import { type Tool, type ToolParameters } from "./types.js";
+import {
+  type Tool,
+  type ToolParameters,
+  type ToolCall,
+  PreprocessedToolCall,
+} from "./types.js";
 import { writeFileTool } from "./writeFile.js";
 
-export type { Tool, ToolParameters };
+export type { Tool, ToolParameters, ToolCall };
 
 const ALL_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
+  searchAndReplaceInFileTool,
   listFilesTool,
   searchCodeTool,
   runTerminalCommandTool,
@@ -110,12 +117,7 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
   return parameters;
 }
 
-export async function executeToolCall(toolCall: {
-  name: string;
-  arguments: Record<string, any>;
-}): Promise<string> {
-  const startTime = Date.now();
-
+export async function getAvailableTools() {
   const args = parseArgs();
 
   let mcpTools: Tool[] = [];
@@ -148,32 +150,27 @@ export async function executeToolCall(toolCall: {
   }
 
   const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
+  return allTools;
+}
 
-  const tool = allTools.find((t) => t.name === toolCall.name);
-
-  if (!tool) {
-    const duration = Date.now() - startTime;
-    telemetryService.logToolResult(
-      toolCall.name,
-      false,
-      duration,
-      `Tool "${toolCall.name}" not found`
-    );
-    return `Error: Tool "${toolCall.name}" not found`;
-  }
-
+export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
   for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
     if (
       paramDef.required &&
       (toolCall.arguments[paramName] === undefined ||
         toolCall.arguments[paramName] === null)
     ) {
-      const duration = Date.now() - startTime;
-      const error = `Required parameter "${paramName}" missing for tool "${toolCall.name}"`;
-      telemetryService.logToolResult(toolCall.name, false, duration, error);
-      return `Error: ${error}`;
+      throw new Error(
+        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`
+      );
     }
   }
+}
+
+export async function executeToolCall(
+  toolCall: PreprocessedToolCall
+): Promise<string> {
+  const startTime = Date.now();
 
   try {
     logger.debug("Executing tool", {
@@ -181,7 +178,11 @@ export async function executeToolCall(toolCall: {
       arguments: toolCall.arguments,
     });
 
-    const result = await tool.run(toolCall.arguments);
+    // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
+    // Preprocessed arg names may be different
+    const result = await toolCall.tool.run(
+      toolCall.preprocessResult?.args ?? toolCall.arguments
+    );
     const duration = Date.now() - startTime;
 
     telemetryService.logToolResult(

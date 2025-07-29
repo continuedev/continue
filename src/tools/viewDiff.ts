@@ -18,6 +18,17 @@ export const viewDiffTool: Tool = {
     },
   },
   readonly: true,
+  preprocess: async (args) => {
+    return {
+      args,
+      preview: [
+        {
+          type: "text",
+          content: "Will show git diff",
+        },
+      ],
+    };
+  },
   run: async (args: { path?: string }): Promise<string> => {
     try {
       const repoPath = args.path || process.cwd();
@@ -47,7 +58,9 @@ export const viewDiffTool: Tool = {
 
       return `Git diff for repository at ${repoPath}:\n\n${stdout}`;
     } catch (error) {
-      return `Error running git diff: ${error instanceof Error ? error.message : String(error)}`;
+      return `Error running git diff: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
     }
   },
 };

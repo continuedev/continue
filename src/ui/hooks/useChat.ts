@@ -18,6 +18,7 @@ import logger from "../../util/logger.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { DisplayMessage } from "../types.js";
+import { ToolCallPreview } from "../../tools/types.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;
@@ -115,6 +116,7 @@ export function useChat({
     toolName: string;
     toolArgs: any;
     requestId: string;
+    toolCallPreview?: ToolCallPreview[];
   } | null>(null);
 
   // Remote mode polling
@@ -557,13 +559,15 @@ export function useChat({
         onToolPermissionRequest: (
           toolName: string,
           toolArgs: any,
-          requestId: string
+          requestId: string,
+          toolCallPreview?: ToolCallPreview[]
         ) => {
           // Set the active permission request to show the selector
           setActivePermissionRequest({
             toolName,
             toolArgs,
             requestId,
+            toolCallPreview,
           });
         },
       };

@@ -3,12 +3,12 @@ import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
 import { Tool } from "../types.js";
 import { generateDiff } from "../writeFile.js";
 import * as fs from "fs";
-import * as path from "path";
 import telemetryService from "../../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../../telemetry/utils.js";
+import { parseSearchAndReplaceArgs } from "./parseArgs.js";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;
@@ -89,87 +89,87 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       required: true,
     },
   },
+  preprocess: async (args) => {
+    // Get and validate args
+    const { filepath, diffs } = parseSearchAndReplaceArgs(args);
+
+    // Get current file contents
+    if (!fs.existsSync(filepath)) {
+      throw new Error(`file ${filepath} does not exist`);
+    }
+    const oldContent = fs.readFileSync(filepath, "utf-8");
+    let newContent = oldContent;
+
+    // Parse blocks
+    const blocks = diffs.map(parseAllSearchReplaceBlocks).flat();
+    if (blocks.length === 0) {
+      throw new Error("No complete search/replace blocks found in any diffs");
+    }
+
+    // Apply all replacements sequentially to build the final content
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const { searchContent, replaceContent } = block;
+
+      if (typeof searchContent === "undefined") {
+        throw new Error(`No search content defined for block ${i + 1}`);
+      }
+      if (typeof replaceContent === "undefined") {
+        throw new Error(`No replace content defined for block ${i + 1}`);
+      }
+
+      const match = findSearchMatch(newContent, searchContent);
+
+      if (!match) {
+        throw new Error(
+          `Search content not found in block ${i + 1}:\n${searchContent}`
+        );
+      }
+
+      newContent =
+        newContent.substring(0, match.startIndex) +
+        replaceContent +
+        newContent.substring(match.endIndex);
+    }
+
+    // Get lines for telemetry
+    const { added, removed } = calculateLinesOfCodeDiff(oldContent, newContent);
+    const language = getLanguageFromFilePath(filepath);
+
+    if (added > 0) {
+      telemetryService.recordLinesOfCodeModified("added", added, language);
+    }
+    if (removed > 0) {
+      telemetryService.recordLinesOfCodeModified("removed", removed, language);
+    }
+
+    const diff = generateDiff(oldContent, newContent, filepath);
+    return {
+      args: {
+        filepath,
+        newContent,
+      },
+      preview: [
+        {
+          type: "text",
+          content: "",
+        },
+        {
+          type: "diff",
+          content: diff,
+        },
+      ],
+    };
+  },
   run: async (args) => {
     try {
-      // Get and validate args
-      const { filepath, diffs } = args;
-
-      if (!filepath || !diffs) {
-        throw new Error("filepath and diffs args are required");
-      }
-
-      if (typeof filepath !== "string") {
-        throw new Error("filepath must be a string");
-      }
-
-      if (
-        !Array.isArray(diffs) ||
-        diffs.some((diff) => typeof diff !== "string")
-      ) {
-        throw new Error(
-          "diffs must be an array of string search/replace blocks"
-        );
-      }
-
-      // Get current file contents
-      const fixedPath = filepath.replace(/\/|\\/g, path.sep);
-
-      if (!fs.existsSync(fixedPath)) {
-        throw new Error(`file ${filepath} does not exist`);
-      }
-      const oldContent = fs.readFileSync(fixedPath, "utf-8");
-      let newContent = oldContent;
-
-      // Parse blocks
-      const blocks = diffs.map(parseAllSearchReplaceBlocks).flat();
-      if (blocks.length === 0) {
-        throw new Error("No complete search/replace blocks found in any diffs");
-      }
-
-      // Apply all replacements sequentially to build the final content
-      for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
-        const { searchContent, replaceContent } = block;
-
-        const match = findSearchMatch(newContent, searchContent || "");
-
-        if (!match) {
-          throw new Error(
-            `Search content not found in block ${i + 1}:\n${searchContent}`
-          );
-        }
-
-        newContent =
-          newContent.substring(0, match.startIndex) +
-          (replaceContent || "") +
-          newContent.substring(match.endIndex);
-      }
-
-      // Get lines for telemetry
-      const { added, removed } = calculateLinesOfCodeDiff(
-        oldContent,
-        args.content
-      );
-      const language = getLanguageFromFilePath(args.filepath);
-
-      if (added > 0) {
-        telemetryService.recordLinesOfCodeModified("added", added, language);
-      }
-      if (removed > 0) {
-        telemetryService.recordLinesOfCodeModified(
-          "removed",
-          removed,
-          language
-        );
-      }
-
-      const diff = generateDiff(oldContent, args.content, args.filepath);
+      fs.writeFileSync(args.filepath, args.newContent, "utf-8");
 
       // Record file operation
-      return `Successfully wrote to file: ${args.filepath}\n\nDiff:\n${diff}`;
+      return `Successfully edited ${args.filepath}`;
     } catch (error) {
       throw new Error(
-        `Failed to apply search and replace: ${
+        `Failed to edit ${args.filepath}:\n ${
           error instanceof Error ? error.message : String(error)
         }`
       );

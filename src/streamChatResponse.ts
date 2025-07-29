@@ -12,17 +12,25 @@ import { MCPService } from "./mcp.js";
 import {
   checkToolPermission,
   filterExcludedTools,
+  ToolCallRequest,
 } from "./permissions/index.js";
 import { toolPermissionManager } from "./permissions/permissionManager.js";
 import telemetryService from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import { executeToolCall } from "./tools.js";
-import { BUILTIN_TOOLS } from "./tools/index.js";
+import {
+  BUILTIN_TOOLS,
+  getAvailableTools,
+  Tool,
+  ToolCall,
+  validateToolCallArgsPresent,
+} from "./tools/index.js";
 import {
   chatCompletionStreamWithBackoff,
   withExponentialBackoff,
 } from "./util/exponentialBackoff.js";
 import logger from "./util/logger.js";
+import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
 
 dotenv.config();
 
@@ -100,18 +108,10 @@ export interface StreamCallbacks {
   onToolPermissionRequest?: (
     toolName: string,
     toolArgs: any,
-    requestId: string
+    requestId: string,
+    preview?: ToolCallPreview[]
   ) => void;
 }
-
-interface ToolCall {
-  id: string;
-  name: string;
-  arguments: any;
-  argumentsStr: string;
-  startNotified: boolean;
-}
-
 function getDefaultCompletionOptions(
   opts?: CompletionOptions
 ): Partial<ChatCompletionCreateParamsStreaming> {
@@ -239,7 +239,7 @@ async function processStreamingResponse(
         hasToolCalls = true;
         for (const toolCallDelta of choice.delta.tool_calls) {
           let toolCallId: string | undefined;
-          
+
           // If we have an ID, use it and map the index
           if (toolCallDelta.id) {
             toolCallId = toolCallDelta.id;
@@ -250,12 +250,14 @@ async function processStreamingResponse(
             // No ID, but we have an index - look up the ID from our map
             toolCallId = indexToIdMap.get(toolCallDelta.index);
           }
-          
+
           if (!toolCallId) {
-            logger.warn("Tool call delta without ID or valid index mapping", { toolCallDelta });
+            logger.warn("Tool call delta without ID or valid index mapping", {
+              toolCallDelta,
+            });
             continue;
           }
-          
+
           // Create tool call entry if it doesn't exist
           if (!toolCallsMap.has(toolCallId)) {
             toolCallsMap.set(toolCallId, {
@@ -359,7 +361,7 @@ async function processStreamingResponse(
   const toolCalls = Array.from(toolCallsMap.values());
 
   // Validate tool calls have complete arguments
-  const validToolCalls = toolCalls.filter((tc) => {
+  const preprocessedToolCalls = toolCalls.filter((tc) => {
     if (!tc.arguments || !tc.name) {
       logger.error("Incomplete tool call", {
         id: tc.id,
@@ -378,8 +380,8 @@ async function processStreamingResponse(
   return {
     content: aiResponse,
     finalContent: finalContent,
-    toolCalls: validToolCalls,
-    shouldContinue: validToolCalls.length > 0,
+    toolCalls: preprocessedToolCalls,
+    shouldContinue: preprocessedToolCalls.length > 0,
   };
 }
 
@@ -464,8 +466,70 @@ export async function streamChatResponse(
         tool_calls: toolCallsForHistory,
       });
 
-      // Execute tool calls
+      const availableTools: Tool[] =
+        toolCalls.length > 0 ? await getAvailableTools() : [];
+
+      // Run pre-permission args processing for tool calls
+      // If pre-processing fails we can just insert failure
+      // If it succeeds, we ask for permissions
+      const preProcessedToolCalls: PreprocessedToolCall[] = [];
       for (const toolCall of toolCalls) {
+        const startTime = Date.now();
+        try {
+          const tool = availableTools.find((t) => t.name === toolCall.name);
+          if (!tool) {
+            throw new Error(`Tool ${toolCall.name} not found`);
+          }
+          validateToolCallArgsPresent(toolCall, tool);
+          const preprocessedCall: PreprocessedToolCall = {
+            ...toolCall,
+            tool,
+          };
+          if (tool.preprocess) {
+            logger.debug("Preprocessing tool call args", {
+              name: toolCall.name,
+              arguments: toolCall.arguments,
+            });
+            const preprocessed = await tool.preprocess(toolCall.arguments);
+            preprocessedCall.preprocessResult = preprocessed;
+          }
+          preProcessedToolCalls.push(preprocessedCall);
+        } catch (error) {
+          if (callbacks?.onToolStart) {
+            callbacks.onToolStart(toolCall.name, toolCall.arguments);
+          }
+
+          const errorMessage = `Error processing tool call: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
+
+          logger.error("Invalid tool call", {
+            name: toolCall.name,
+            error: errorMessage,
+          });
+
+          const duration = Date.now() - startTime;
+          telemetryService.logToolResult(
+            toolCall.name,
+            false,
+            duration,
+            errorMessage
+          );
+
+          chatHistory.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: errorMessage,
+          });
+
+          if (callbacks?.onToolError) {
+            callbacks.onToolError(errorMessage, toolCall.name);
+          }
+        }
+      }
+
+      // Execute tool calls
+      for (const toolCall of preProcessedToolCalls) {
         try {
           logger.debug("Checking tool permissions", {
             name: toolCall.name,
@@ -473,11 +537,7 @@ export async function streamChatResponse(
           });
 
           // Check tool permissions
-          const permissionCheck = checkToolPermission({
-            name: toolCall.name,
-            arguments: toolCall.arguments,
-          });
-
+          const permissionCheck = checkToolPermission(toolCall);
 
           // Notify tool start immediately - before permission check
           // This ensures the UI shows the tool call even if it's rejected
@@ -493,15 +553,17 @@ export async function streamChatResponse(
             // Request permission from user
             if (callbacks?.onToolPermissionRequest) {
               // Use the proper toolPermissionManager API
-              const toolCallRequest = {
+              const toolCallRequest: ToolCallRequest = {
                 name: toolCall.name,
-                arguments: toolCall.arguments,
+                arguments:
+                  toolCall.preprocessResult?.args ?? toolCall.arguments,
+                preview: toolCall.preprocessResult?.preview,
               };
-              
+
               // Set up listener for permissionRequested event
               const handlePermissionRequested = (event: {
                 requestId: string;
-                toolCall: { name: string; arguments: any };
+                toolCall: ToolCallRequest;
               }) => {
                 if (event.toolCall.name === toolCall.name) {
                   toolPermissionManager.off(
@@ -512,21 +574,21 @@ export async function streamChatResponse(
                   callbacks.onToolPermissionRequest!(
                     event.toolCall.name,
                     event.toolCall.arguments,
-                    event.requestId
+                    event.requestId,
+                    event.toolCall.preview
                   );
                 }
               };
-              
+
               toolPermissionManager.on(
                 "permissionRequested",
                 handlePermissionRequested
               );
-              
+
               // Request permission using the proper API
-              const permissionResult = await toolPermissionManager.requestPermission(
-                toolCallRequest
-              );
-              
+              const permissionResult =
+                await toolPermissionManager.requestPermission(toolCallRequest);
+
               approved = permissionResult.approved;
             } else {
               // Fallback: deny if no UI callback available
@@ -561,10 +623,7 @@ export async function streamChatResponse(
             arguments: toolCall.arguments,
           });
 
-          const toolResult = await executeToolCall({
-            name: toolCall.name,
-            arguments: toolCall.arguments,
-          });
+          const toolResult = await executeToolCall(toolCall);
 
           chatHistory.push({
             role: "tool",

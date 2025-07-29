@@ -18,6 +18,21 @@ export const runTerminalCommandTool: Tool = {
     },
   },
   readonly: false,
+  preprocess: async (args) => {
+    const truncatedCmd =
+      args.command.length > 60
+        ? args.command.substring(0, 60) + "..."
+        : args.command;
+    return {
+      args,
+      preview: [
+        {
+          type: "text",
+          content: `Will run: ${truncatedCmd}`,
+        },
+      ],
+    };
+  },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
       exec(command, (error, stdout, stderr) => {
