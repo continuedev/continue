@@ -14,17 +14,20 @@ vi.mock("core/config/shouldAutoEnableSystemMessageTools", () => ({
 }));
 
 // Mock the selectSelectedChatModel selector
+const mockSelectSelectedChatModel = vi.fn();
 vi.mock("../slices/configSlice", () => ({
-  selectSelectedChatModel: vi.fn((state: RootState) => state.selectedModel),
+  selectSelectedChatModel: mockSelectSelectedChatModel,
 }));
 
 describe("selectUseSystemMessageTools", () => {
   const createMockState = (
     manualSetting?: boolean,
     selectedModel?: ModelDescription,
-  ): RootState =>
-    ({
-      selectedModel,
+  ): RootState => {
+    // Set up the mock to return the selected model for this test
+    mockSelectSelectedChatModel.mockReturnValue(selectedModel);
+
+    return {
       config: {
         config: {
           experimental: {
@@ -32,7 +35,8 @@ describe("selectUseSystemMessageTools", () => {
           },
         },
       },
-    }) as any;
+    } as any;
+  };
 
   const createModel = (provider: string, model: string): ModelDescription => ({
     title: "Test Model",
