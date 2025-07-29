@@ -172,7 +172,7 @@ jobs:
       - name: Get package list
         id: get-packages
         run: |
-          packages=$(find packages/ -maxdepth 1 -type d -not -path packages/ -exec basename {} \; | jq -R . | jq -s .)
+          packages=$(find packages/ -maxdepth 1 -type d -not -path packages/ -exec basename {} \; | sort | jq -R -s -c 'split("\n")[:-1]')
           echo "packages=$packages" >> $GITHUB_OUTPUT
           echo "Found packages: $packages"
 
