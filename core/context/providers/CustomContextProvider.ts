@@ -31,8 +31,8 @@ class CustomContextProviderClass implements IContextProvider {
     return this.custom.loadSubmenuItems?.(args) ?? [];
   }
 
-  isDeprecated() {
-    return false;
+  get deprecationMessage() {
+    return null;
   }
 }
 
