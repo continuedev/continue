@@ -162,7 +162,7 @@ describe("streamNormalInput", () => {
 
     // Verify exact sequence of dispatched actions with payloads
     const dispatchedActions = (mockStore as any).getActions();
-    
+
     expect(dispatchedActions).toEqual([
       {
         type: "chat/streamNormalInput/pending",
@@ -205,7 +205,7 @@ describe("streamNormalInput", () => {
         type: "session/streamUpdate",
         payload: [
           {
-            role: "assistant", 
+            role: "assistant",
             content: "Second chunk",
           },
         ],
@@ -283,7 +283,7 @@ describe("streamNormalInput", () => {
             promptLogs: [
               {
                 completion: "Hi there!",
-                modelProvider: "anthropic", 
+                modelProvider: "anthropic",
                 prompt: "Hello",
               },
             ],
@@ -364,7 +364,11 @@ describe("streamNormalInput", () => {
       session: {
         history: [
           {
-            message: { id: "1", role: "user", content: "Please search the codebase" },
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please search the codebase",
+            },
             contextItems: [],
           },
         ],
@@ -424,44 +428,50 @@ describe("streamNormalInput", () => {
     const mockIdeMessengerWithTool = mockStoreWithToolSettings.mockIdeMessenger;
 
     // Setup successful compilation and tool responses
-    mockIdeMessengerWithTool.request.mockImplementation((endpoint: string, data: any) => {
-      if (endpoint === "llm/compileChat") {
-        return Promise.resolve({
-          status: "success",
-          content: {
-            compiledChatMessages: [{ role: "user", content: "Please search the codebase" }],
-            didPrune: false,
-            contextPercentage: 0.9,
-          },
-        });
-      } else if (endpoint === "tools/call") {
-        // Mock server-side tool call response
-        return Promise.resolve({
-          status: "success",
-          content: {
-            contextItems: [
-              {
-                name: "Search Results",
-                description: "Found 3 matches",
-                content: "Result 1\nResult 2\nResult 3",
-                icon: "search",
-                hidden: false,
-              },
-            ],
-            errorMessage: undefined,
-          },
-        });
-      } else if (endpoint === "history/save") {
-        // Mock session save
-        return Promise.resolve({ status: "success" });
-      }
-      // Let other endpoints pass through or return success
-      return Promise.resolve({ status: "success", content: {} });
-    });
+    mockIdeMessengerWithTool.request.mockImplementation(
+      (endpoint: string, data: any) => {
+        if (endpoint === "llm/compileChat") {
+          return Promise.resolve({
+            status: "success",
+            content: {
+              compiledChatMessages: [
+                { role: "user", content: "Please search the codebase" },
+              ],
+              didPrune: false,
+              contextPercentage: 0.9,
+            },
+          });
+        } else if (endpoint === "tools/call") {
+          // Mock server-side tool call response
+          return Promise.resolve({
+            status: "success",
+            content: {
+              contextItems: [
+                {
+                  name: "Search Results",
+                  description: "Found 3 matches",
+                  content: "Result 1\nResult 2\nResult 3",
+                  icon: "search",
+                  hidden: false,
+                },
+              ],
+              errorMessage: undefined,
+            },
+          });
+        } else if (endpoint === "history/save") {
+          // Mock session save
+          return Promise.resolve({ status: "success" });
+        }
+        // Let other endpoints pass through or return success
+        return Promise.resolve({ status: "success", content: {} });
+      },
+    );
 
     // Setup streaming generator with tool call
     async function* mockStreamGeneratorWithTool() {
-      yield [{ role: "assistant", content: "I'll search the codebase for you." }];
+      yield [
+        { role: "assistant", content: "I'll search the codebase for you." },
+      ];
       yield [
         {
           role: "assistant",
@@ -507,7 +517,9 @@ describe("streamNormalInput", () => {
     });
 
     // Execute thunk
-    const result = await mockStoreWithToolSettings.dispatch(streamNormalInput({}) as any);
+    const result = await mockStoreWithToolSettings.dispatch(
+      streamNormalInput({}) as any,
+    );
 
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
     const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
@@ -599,26 +611,33 @@ describe("streamNormalInput", () => {
     );
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [{ role: "user", content: "Hello" }], // constructMessages mock returns this
-      options: {},
-    });
+    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [{ role: "user", content: "Hello" }], // constructMessages mock returns this
+        options: {},
+      },
+    );
 
-    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith("tools/call", {
-      toolCall: {
-        id: "tool-call-1",
-        type: "function",
-        function: {
-          name: "search_codebase",
-          arguments: JSON.stringify({ query: "test function" }),
+    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
+      "tools/call",
+      {
+        toolCall: {
+          id: "tool-call-1",
+          type: "function",
+          function: {
+            name: "search_codebase",
+            arguments: JSON.stringify({ query: "test function" }),
+          },
         },
       },
-    });
+    );
 
     // Verify that multiple compilation calls were made (due to tool call continuation)
-    const compileCallsCount = mockIdeMessengerWithTool.request.mock.calls.filter(
-      (call: any) => call[0] === "llm/compileChat",
-    ).length;
+    const compileCallsCount =
+      mockIdeMessengerWithTool.request.mock.calls.filter(
+        (call: any) => call[0] === "llm/compileChat",
+      ).length;
     expect(compileCallsCount).toBeGreaterThanOrEqual(1);
 
     expect(result.type).toBe("chat/streamNormalInput/fulfilled");
@@ -631,7 +650,11 @@ describe("streamNormalInput", () => {
           {
             appliedRules: [],
             contextItems: [],
-            message: { id: "1", role: "user", content: "Please search the codebase" },
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please search the codebase",
+            },
           },
           {
             contextItems: [],
@@ -840,7 +863,9 @@ describe("streamNormalInput", () => {
     });
 
     // Execute thunk and expect it to be rejected
-    const result = await mockStoreNoModel.dispatch(streamNormalInput({}) as any);
+    const result = await mockStoreNoModel.dispatch(
+      streamNormalInput({}) as any,
+    );
 
     // Verify the thunk was rejected with correct error
     expect(result.type).toBe("chat/streamNormalInput/rejected");
@@ -870,7 +895,9 @@ describe("streamNormalInput", () => {
 
     // Verify no IDE messenger calls were made
     expect(mockStoreNoModel.mockIdeMessenger.request).not.toHaveBeenCalled();
-    expect(mockStoreNoModel.mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
+    expect(
+      mockStoreNoModel.mockIdeMessenger.llmStreamChat,
+    ).not.toHaveBeenCalled();
 
     // Verify state remains unchanged from initial mock store values
     const finalState = mockStoreNoModel.getState();
@@ -883,11 +910,11 @@ describe("streamNormalInput", () => {
           },
         ],
         hasReasoningEnabled: false,
-        isStreaming: true,  // Unchanged from initial
+        isStreaming: true, // Unchanged from initial
         id: "session-123",
         mode: "chat",
         streamAborter: expect.any(AbortController),
-        contextPercentage: 0,  // Unchanged from initial
+        contextPercentage: 0, // Unchanged from initial
         isPruned: false,
         isInEdit: false,
         title: "",
@@ -901,7 +928,7 @@ describe("streamNormalInput", () => {
         },
         newestToolbarPreviewForInput: {},
         compactionLoading: {},
-        inlineErrorMessage: undefined,  // Unchanged from initial
+        inlineErrorMessage: undefined, // Unchanged from initial
       },
       config: {
         config: {
@@ -909,7 +936,7 @@ describe("streamNormalInput", () => {
           rules: [],
           tabAutocompleteModel: undefined,
           selectedModelByRole: {
-            chat: null,  // No model selected
+            chat: null, // No model selected
             apply: null,
             edit: null,
             summarize: null,
@@ -1027,7 +1054,7 @@ describe("streamNormalInput", () => {
         mode: "chat",
         streamAborter: expect.any(AbortController),
         contextPercentage: 0, // Unchanged - no successful compilation
-        isPruned: false, // Unchanged - no successful compilation  
+        isPruned: false, // Unchanged - no successful compilation
         isInEdit: false,
         title: "",
         lastSessionId: undefined,
