@@ -62,10 +62,6 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
     private ide: IDE,
   ) {
     this.globalContext = new GlobalContext();
-    console.log(
-      "debug1 mcp oauth storage",
-      this.globalContext.get("mcpOauthStorage"),
-    );
   }
 
   get redirectUrl() {
@@ -152,18 +148,16 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
 
   clear() {
     this._clearOauthStorage();
-    console.log(
-      "debug1 after clearing mcp oauth storage",
-      this.globalContext.get("mcpOauthStorage"),
-    );
   }
 
   async redirectToAuthorization(authorizationUrl: URL) {
-    server.listen(PORT, () => {
-      console.debug(
-        `Server started for MCP Oauth process at http://localhost:${PORT}/`,
-      );
-    });
+    if (!server.listening) {
+      server.listen(PORT, () => {
+        console.debug(
+          `Server started for MCP Oauth process at http://localhost:${PORT}/`,
+        );
+      });
+    }
     void this.ide.openUrl(authorizationUrl.toString());
   }
 }
@@ -193,7 +187,7 @@ export async function performAuth(mcpServer: MCPServerStatus, ide: IDE) {
 /**
  * handle the authentication code received from the oauth redirect
  */
-export async function handleMCPOauthCode(authorizationCode: string) {
+async function handleMCPOauthCode(authorizationCode: string) {
   if (!authenticatingMCPContext) {
     return;
   }
