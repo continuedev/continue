@@ -1255,7 +1255,7 @@ describe("streamNormalInput", () => {
   it("should handle streaming abort", async () => {
     // Create an AbortController that we'll abort during streaming
     const testAbortController = new AbortController();
-    
+
     // Create store with our test abort controller
     const mockStoreWithAbort = createMockStore({
       session: {
@@ -1331,16 +1331,16 @@ describe("streamNormalInput", () => {
     // Setup streaming generator that simulates abort by checking isStreaming state
     async function* mockStreamGeneratorWithAbort() {
       yield [{ role: "assistant", content: "First chunk" }];
-      
+
       // Simulate user clicking abort button - this would dispatch setInactive
       setTimeout(() => {
         mockStoreWithAbort.dispatch({ type: "session/setInactive" });
       }, 5);
-      
+
       // After first yield, wait a bit then yield second chunk (which should be ignored due to abort)
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
       yield [{ role: "assistant", content: "Second chunk" }];
-      
+
       return {
         prompt: "Hello",
         completion: "Complete response",
@@ -1348,10 +1348,14 @@ describe("streamNormalInput", () => {
       };
     }
 
-    mockIdeMessengerAbort.llmStreamChat.mockReturnValue(mockStreamGeneratorWithAbort());
+    mockIdeMessengerAbort.llmStreamChat.mockReturnValue(
+      mockStreamGeneratorWithAbort(),
+    );
 
     // Execute thunk - should be aborted
-    const result = await mockStoreWithAbort.dispatch(streamNormalInput({}) as any);
+    const result = await mockStoreWithAbort.dispatch(
+      streamNormalInput({}) as any,
+    );
 
     // Verify thunk completed successfully (abort just stops streaming early)
     expect(result.type).toBe("chat/streamNormalInput/fulfilled");
@@ -1419,10 +1423,13 @@ describe("streamNormalInput", () => {
     ]);
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [{ role: "user", content: "Hello" }],
-      options: {},
-    });
+    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [{ role: "user", content: "Hello" }],
+        options: {},
+      },
+    );
 
     expect(mockIdeMessengerAbort.llmStreamChat).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1435,7 +1442,10 @@ describe("streamNormalInput", () => {
     );
 
     // Dev data logging should not occur since streaming was stopped early
-    expect(mockIdeMessengerAbort.post).not.toHaveBeenCalledWith("devdata/log", expect.anything());
+    expect(mockIdeMessengerAbort.post).not.toHaveBeenCalledWith(
+      "devdata/log",
+      expect.anything(),
+    );
 
     // Verify final state - streaming should be stopped, partial content preserved
     const finalState = mockStoreWithAbort.getState();
@@ -1610,9 +1620,7 @@ describe("streamNormalInput", () => {
 
     // Setup streaming generator with tool call that will be rejected
     async function* mockStreamGeneratorWithRejectedTool() {
-      yield [
-        { role: "assistant", content: "I'll edit the file for you." },
-      ];
+      yield [{ role: "assistant", content: "I'll edit the file for you." }];
       yield [
         {
           role: "assistant",
@@ -1623,9 +1631,9 @@ describe("streamNormalInput", () => {
               type: "function",
               function: {
                 name: "edit_existing_file",
-                arguments: JSON.stringify({ 
+                arguments: JSON.stringify({
                   filepath: "test.js",
-                  changes: "const x = 1;" 
+                  changes: "const x = 1;",
                 }),
               },
             },
@@ -1640,7 +1648,7 @@ describe("streamNormalInput", () => {
     }
 
     mockIdeMessengerReject.llmStreamChat.mockReturnValue(
-      mockStreamGeneratorWithRejectedTool()
+      mockStreamGeneratorWithRejectedTool(),
     );
 
     // Execute thunk
@@ -1653,7 +1661,7 @@ describe("streamNormalInput", () => {
 
     // Verify action sequence includes tool generation but rejection handling
     const dispatchedActions = (mockStoreWithToolReject as any).getActions();
-    
+
     // Should contain the standard streaming setup actions
     expect(dispatchedActions).toContainEqual(
       expect.objectContaining({
@@ -1836,5 +1844,4 @@ describe("streamNormalInput", () => {
       },
     });
   });
-
 });
