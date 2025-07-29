@@ -39,28 +39,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
 
-  config-yaml-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
-
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Check config-yaml
-        run: |
-          cd packages/config-yaml
-          npx tsc --noEmit
-          # Tests are currently failing, commenting out for now
-          # npm test
 
   core-checks:
     runs-on: ubuntu-latest
@@ -69,8 +50,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
-      - uses: ./.github/actions/setup-component
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
         with:
           component: core
           include-root: true
@@ -106,12 +89,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
-      - uses: ./.github/actions/setup-component
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
         with:
           component: core
           include-root: true
-      - uses: ./.github/actions/setup-component
+      - name: Setup gui component
+        uses: ./.github/actions/setup-component
         with:
           component: gui
           include-packages: false
@@ -136,12 +122,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
-      - uses: ./.github/actions/setup-component
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
         with:
           component: core
           include-root: true
-      - uses: ./.github/actions/setup-component
+      - name: Setup binary component
+        uses: ./.github/actions/setup-component
         with:
           component: binary
           include-packages: false
@@ -158,12 +147,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
-      - uses: ./.github/actions/setup-component
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
         with:
           component: core
           include-root: true
-      - uses: ./.github/actions/setup-component
+      - name: Setup vscode component
+        uses: ./.github/actions/setup-component
         with:
           component: vscode
           include-packages: false
@@ -183,7 +175,7 @@ jobs:
           npm run vitest
 
 
-  test-packages:
+  packages-checks:
     needs: build-packages
     runs-on: ubuntu-latest
     strategy:
@@ -194,9 +186,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      - uses: ./.github/actions/setup-packages
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
 
-      - name: Test ${{ matrix.package }}
+      - name: Test and check ${{ matrix.package }}
         run: |
           cd packages/${{ matrix.package }}
           npm test
@@ -286,7 +279,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: ./.github/actions/build-vscode-extension
+      - name: Build VS Code extension
+        uses: ./.github/actions/build-vscode-extension
         with:
           platform: linux
           arch: x64
@@ -319,7 +313,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: ./.github/actions/build-vscode-extension
+      - name: Build VS Code extension
+        uses: ./.github/actions/build-vscode-extension
         with:
           platform: darwin
           arch: x64
@@ -341,48 +336,11 @@ jobs:
           name: darwin-x64-vsix
           path: "extensions/vscode/*.vsix"
 
-  vscode-download-e2e-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        id: vscode-node-modules-cache
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: storage-cache
-        with:
-          path: extensions/vscode/e2e/storage
-          key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - name: Build packages and download e2e dependencies
-        run: |
-          node ./scripts/build-packages.js
-          if [ "${{ steps.storage-cache.outputs.cache-hit }}" != "true" ]; then
-            cd core
-            npm ci
-            cd ../extensions/vscode
-            npm run e2e:ci:download
-          fi
-
-      - name: Upload e2e dependencies
-        uses: actions/upload-artifact@v4
-        with:
-          name: vscode-e2e-dependencies
-          path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
     name: ${{ matrix.test_file || 'unknown' }} (${{ matrix.command }})
     needs:
       [
-        vscode-download-e2e-dependencies,
         vscode-get-test-file-matrix,
         vscode-package-extension-linux,
       ]
@@ -395,7 +353,8 @@ jobs:
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/run-vscode-e2e-test
+      - name: Run VS Code E2E test
+        uses: ./.github/actions/run-vscode-e2e-test
         with:
           test_file: ${{ matrix.test_file }}
           command: ${{ matrix.command }}
@@ -541,14 +500,12 @@ jobs:
       - gui-checks
       - binary-checks
       - vscode-checks
-      - test-packages
+      - packages-checks
       - vscode-get-test-file-matrix
       - vscode-package-extension-linux
       - vscode-package-extension-macos
-      - vscode-download-e2e-dependencies
       - vscode-e2e-tests
       - jetbrains-tests
-      - config-yaml-checks
       - build-packages
 
     steps:

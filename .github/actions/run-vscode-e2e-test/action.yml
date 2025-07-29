@@ -38,24 +38,31 @@ runs:
         path: extensions/vscode/e2e/.test-extensions
         key: CONSTANT
 
+    - uses: actions/cache@v4
+      id: storage-cache
+      with:
+        path: extensions/vscode/e2e/storage
+        key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
     - name: Download build artifact
       uses: actions/download-artifact@v4
       with:
         name: vscode-extension-build-Linux
         path: extensions/vscode/build
 
-    - name: Download e2e dependencies
-      uses: actions/download-artifact@v4
-      with:
-        name: vscode-e2e-dependencies
-        path: extensions/vscode/e2e/storage
-
-    - name: Build packages and install core dependencies
+    - name: Build packages and download e2e dependencies
       shell: bash
       run: |
         node ./scripts/build-packages.js
-        cd core
-        npm ci
+        if [ "${{ steps.storage-cache.outputs.cache-hit }}" != "true" ]; then
+          cd core
+          npm ci
+          cd ../extensions/vscode
+          npm run e2e:ci:download
+        else
+          cd core
+          npm ci
+        fi
 
     - name: Fix VSCode binary permissions
       shell: bash
