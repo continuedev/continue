@@ -46,6 +46,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("llama.cpp"),
     z.literal("llamafile"),
     z.literal("lmstudio"),
+    z.literal("ollama"),
     z.literal("cerebras"),
     z.literal("kindo"),
     z.literal("msty"),

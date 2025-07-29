@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.68",
+  "version": "1.1.71",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -717,8 +717,8 @@
     "vscode-extension-tester": "^8.14.1"
   },
   "dependencies": {
-    "@continuedev/config-types": "^1.0.14",
-    "@continuedev/fetch": "^1.0.10",
+    "@continuedev/config-types": "file:../../packages/config-types",
+    "@continuedev/fetch": "file:../../packages/fetch",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@vscode/ripgrep": "^1.15.9",
