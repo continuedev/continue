@@ -41,8 +41,6 @@
       showCookieBanner();
     }
 
-    // Add preferences button to footer
-    addPreferencesButton();
   }
 
   function getStoredConsent() {
@@ -236,44 +234,6 @@
     if (dialogOverlay) dialogOverlay.remove();
   }
 
-  function addPreferencesButton() {
-    // Wait for Mintlify footer to load
-    const checkFooter = setInterval(function () {
-      const footer = document.querySelector("footer");
-      if (footer) {
-        clearInterval(checkFooter);
-
-        // Check if button already exists
-        if (document.getElementById("cookie-preferences-link")) {
-          return;
-        }
-
-        // Create a cookie preferences link
-        const preferencesLink = document.createElement("a");
-        preferencesLink.id = "cookie-preferences-link";
-        preferencesLink.href = "#";
-        preferencesLink.textContent = "Cookie Preferences";
-        preferencesLink.style.cursor = "pointer";
-        preferencesLink.style.marginLeft = "1rem";
-        preferencesLink.onclick = function (e) {
-          e.preventDefault();
-          showPreferencesDialog();
-        };
-
-        // Find the footer socials container or create a new container
-        const footerSocials = footer.querySelector('[class*="socials"]');
-        if (footerSocials && footerSocials.parentElement) {
-          footerSocials.parentElement.appendChild(preferencesLink);
-        } else {
-          // Fallback: append to footer
-          const footerContent = footer.querySelector("div");
-          if (footerContent) {
-            footerContent.appendChild(preferencesLink);
-          }
-        }
-      }
-    }, 1000);
-  }
 
   // Add styles
   const style = document.createElement("style");
