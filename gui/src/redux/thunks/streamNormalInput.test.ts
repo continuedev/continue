@@ -777,4 +777,173 @@ describe("streamNormalInput", () => {
       },
     });
   });
+
+  it("should throw error when no chat model is selected", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Create store with no selected chat model
+    const mockStoreNoModel = createMockStore({
+      session: {
+        history: [
+          {
+            message: { id: "1", role: "user", content: "Hello" },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: new AbortController(),
+        contextPercentage: 0,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: null, // No model selected
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        } as any,
+        lastSelectedModelByRole: {},
+      } as any,
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      } as any,
+    });
+
+    // Execute thunk and expect it to be rejected
+    const result = await mockStoreNoModel.dispatch(streamNormalInput({}) as any);
+
+    // Verify the thunk was rejected with correct error
+    expect(result.type).toBe("chat/streamNormalInput/rejected");
+    expect(result.error?.message).toBe("No chat model selected");
+
+    // Verify only the pending action was dispatched (no other actions should occur)
+    const dispatchedActions = (mockStoreNoModel as any).getActions();
+    expect(dispatchedActions).toEqual([
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "pending",
+        }),
+      },
+      {
+        type: "chat/streamNormalInput/rejected",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "rejected",
+        }),
+        error: expect.objectContaining({
+          message: "No chat model selected",
+        }),
+      },
+    ]);
+
+    // Verify no IDE messenger calls were made
+    expect(mockStoreNoModel.mockIdeMessenger.request).not.toHaveBeenCalled();
+    expect(mockStoreNoModel.mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
+
+    // Verify state remains unchanged from initial mock store values
+    const finalState = mockStoreNoModel.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            message: { id: "1", role: "user", content: "Hello" },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,  // Unchanged from initial
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0,  // Unchanged from initial
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,  // Unchanged from initial
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: null,  // No model selected
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {},
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
 });
