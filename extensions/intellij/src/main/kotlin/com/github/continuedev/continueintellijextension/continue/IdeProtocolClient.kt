@@ -196,11 +196,6 @@ class IdeProtocolClient(
                         respond(tags)
                     }
 
-                    "getWorkspaceConfigs" -> {
-                        val configs = ide.getWorkspaceConfigs()
-                        respond(configs)
-                    }
-
                     "getTerminalContents" -> {
                         val contents = ide.getTerminalContents()
                         respond(contents)
