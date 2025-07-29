@@ -1,5 +1,6 @@
 import iconv from "iconv-lite";
 import childProcess from "node:child_process";
+import os from "node:os";
 import util from "node:util";
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
 function getDecodedOutput(data: Buffer): string {
@@ -75,13 +76,25 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   if (ENABLED_FOR_REMOTES.includes(ideInfo.remoteName)) {
     // For streaming output
     if (extras.onPartialOutput) {
-      return new Promise((resolve, reject) => {
-        try {
-          const getWorkspaceDirsPromise = extras.ide.getWorkspaceDirs();
-          getWorkspaceDirsPromise
-            .then((workspaceDirs) => {
-              const cwd = fileURLToPath(workspaceDirs[0]);
-              let terminalOutput = "";
+      try {
+        const workspaceDirs = await extras.ide.getWorkspaceDirs();
+        
+        // Handle case where no workspace is available
+        let cwd: string;
+        if (workspaceDirs.length > 0) {
+          cwd = fileURLToPath(workspaceDirs[0]);
+        } else {
+          // Default to user's home directory with fallbacks
+          try {
+            cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
+          } catch (error) {
+            // Final fallback if even process.cwd() fails - use system temp directory
+            cwd = os.tmpdir();
+          }
+        }
+
+        return new Promise((resolve, reject) => {
+          let terminalOutput = "";
 
               if (!waitForCompletion) {
                 const status = "Command is running in the background...";
@@ -229,18 +242,27 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
                 reject(error);
               });
-            })
-            .catch((error) => {
-              reject(error);
             });
-        } catch (error: any) {
-          reject(error);
-        }
-      });
+      } catch (error: any) {
+        throw error;
+      }
     } else {
       // Fallback to non-streaming for older clients
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
-      const cwd = fileURLToPath(workspaceDirs[0]);
+      
+      // Handle case where no workspace is available
+      let cwd: string;
+      if (workspaceDirs.length > 0) {
+        cwd = fileURLToPath(workspaceDirs[0]);
+      } else {
+        // Default to user's home directory with fallbacks
+        try {
+          cwd = process.env.HOME || process.env.USERPROFILE || process.cwd();
+        } catch (error) {
+          // Final fallback if even process.cwd() fails - use system temp directory
+          cwd = os.tmpdir();
+        }
+      }
 
       if (waitForCompletion) {
         // Standard execution, waiting for completion
