@@ -1,30 +1,105 @@
-name: Build Extension on Main
+name: Main Branch Build
 
+# Download and republish VS Code extension artifacts when code is merged to main
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      test_pr_number:
+        description: "PR number to test with"
+        required: true
 
 jobs:
-  build:
-    uses: ./.github/workflows/build-vscode-extension.yml
-    with:
-      # Build only for macOS latest and Ubuntu latest
-      platforms: |
-        [
-          {
-            "os": "ubuntu-latest",
-            "platform": "linux",
-            "arch": "x64",
-            "npm_config_arch": "x64"
-          },
-          {
-            "os": "macos-latest",
-            "platform": "darwin",
-            "arch": "arm64",
-            "npm_config_arch": "arm64"
-          }
-        ]
-      pre-release: false
-      commit-sha: ${{ github.sha }}
-    secrets: inherit
+  republish-pr-artifacts:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [Linux, macOS]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Get the last 2 commits to find the merge commit
+
+      - name: Get merged PR number
+        id: get-pr
+        run: |
+          # Get the commit message of the merge commit
+          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Extract PR number from merge commit message (format: "Merge pull request #123 from...")
+          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -o "Merge pull request #[0-9]*" | grep -o "[0-9]*" || echo "6723")
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "❌ Could not extract PR number from commit message. This might not be a PR merge."
+            echo "Commit message was: $COMMIT_MSG"
+            exit 1
+          fi
+
+          echo "Found PR number: $PR_NUMBER"
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Find PR workflow run
+        id: find-run
+        env:
+          PR_NUMBER: ${{ steps.get-pr.outputs.pr_number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔍 Getting branch name for PR #$PR_NUMBER..."
+
+          # Get the branch name for the PR
+          BRANCH_NAME=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json headRefName --jq '.headRefName')
+
+          if [ -z "$BRANCH_NAME" ]; then
+            echo "❌ Could not find PR #$PR_NUMBER"
+            exit 1
+          fi
+
+          echo "Branch name: $BRANCH_NAME"
+
+          # Get the latest successful workflow run for the branch
+          RUN_ID=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow="pr_checks.yaml" \
+            --branch="$BRANCH_NAME" \
+            --json databaseId,status,conclusion \
+            --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+            | head -1)
+
+          if [ -z "$RUN_ID" ]; then
+            echo "❌ No successful workflow run found for PR #$PR_NUMBER (branch: $BRANCH_NAME)"
+            exit 1
+          fi
+
+          echo "Found successful workflow run: $RUN_ID"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+
+      - name: Download PR artifact
+        env:
+          RUN_ID: ${{ steps.find-run.outputs.run_id }}
+          PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📥 Downloading vscode-extension-build-$PLATFORM artifact from run $RUN_ID..."
+
+          # Create temporary directory for download
+          mkdir -p ./temp-download
+
+          # Download the artifact from the PR workflow run
+          if ! gh run download "$RUN_ID" \
+            --repo "${{ github.repository }}" \
+            --name "vscode-extension-build-$PLATFORM" \
+            --dir "./temp-download"; then
+            echo "❌ Failed to download artifact vscode-extension-build-$PLATFORM from run $RUN_ID"
+            exit 1
+          fi
+
+          echo "✅ Successfully downloaded artifact"
+
+      - name: Republish as main branch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-build-${{ matrix.platform }}
+          path: ./temp-download/*

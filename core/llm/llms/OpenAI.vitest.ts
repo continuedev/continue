@@ -275,7 +275,7 @@ describe("OpenAI", () => {
   test("should handle O1 models correctly", async () => {
     const openai = new OpenAI({
       apiKey: "test-api-key",
-      model: "o1-preview",
+      model: "o3-mini",
       apiBase: "https://api.openai.com/v1/",
     });
 
@@ -296,7 +296,7 @@ describe("OpenAI", () => {
           "api-key": "test-api-key",
         },
         body: {
-          model: "o1-preview",
+          model: "o3-mini",
           messages: [{ role: "user", content: "hello" }],
           stream: true,
           max_completion_tokens: 100,
