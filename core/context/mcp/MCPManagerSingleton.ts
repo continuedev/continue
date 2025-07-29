@@ -26,12 +26,12 @@ export class MCPManagerSingleton {
   }
 
   createConnection(id: string, options: MCPOptions): MCPConnection {
-    if (!this.connections.has(id)) {
+    if (this.connections.has(id)) {
+      return this.connections.get(id)!;
+    } else {
       const connection = new MCPConnection(options);
       this.connections.set(id, connection);
       return connection;
-    } else {
-      return this.connections.get(id)!;
     }
   }
 
@@ -77,15 +77,15 @@ export class MCPManagerSingleton {
 
     // Add any connections that are not yet in manager
     servers.forEach((server) => {
-      if (!this.connections.has(server.id)) {
-        refresh = true;
-        this.connections.set(server.id, new MCPConnection(server, extras));
-      } else {
+      if (this.connections.has(server.id)) {
         const conn = this.connections.get(server.id);
         if (conn) {
           // We need to update it. Some attributes may have changed, such as name, faviconUrl, etc.
           conn.options = server;
         }
+      } else {
+        refresh = true;
+        this.connections.set(server.id, new MCPConnection(server, extras));
       }
     });
 
