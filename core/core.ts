@@ -17,7 +17,6 @@ import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
-import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
@@ -39,7 +38,6 @@ import { TTS } from "./util/tts";
 import {
   CompleteOnboardingPayload,
   ContextItemId,
-  ContextItemWithId,
   IdeSettings,
   ModelDescription,
   Position,
@@ -914,10 +912,6 @@ export class Core {
       this.handleToolCall(toolCall),
     );
 
-    on("isItemTooBig", async ({ data: { item } }) => {
-      return this.isItemTooBig(item);
-    });
-
     // Process state handlers
     on("process/markAsBackgrounded", async ({ data: { toolCallId } }) => {
       markProcessAsBackgrounded(toolCallId);
@@ -976,26 +970,6 @@ export class Core {
     });
 
     return result;
-  }
-
-  private async isItemTooBig(item: ContextItemWithId) {
-    const { config } = await this.configHandler.loadConfig();
-    if (!config) {
-      return false;
-    }
-
-    const llm = config?.selectedModelByRole.chat;
-    if (!llm) {
-      throw new Error("No chat model selected");
-    }
-
-    const tokens = countTokens(item.content, llm.model);
-
-    if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
-      return true;
-    }
-
-    return false;
   }
 
   private handleAddAutocompleteModel(
