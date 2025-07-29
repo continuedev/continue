@@ -51,13 +51,6 @@ const server = http.createServer((req, res) => {
   }
 });
 
-// TODO: start the server only when mcp oauth process starts and kill when done
-server.listen(PORT, () => {
-  console.log(
-    `Server running for MCP Oauth process at http://localhost:${PORT}/`,
-  );
-});
-
 type MCPOauthStorage = GlobalContextType["mcpOauthStorage"][string];
 type MCPOauthStorageKey = keyof MCPOauthStorage;
 
@@ -166,6 +159,11 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
   }
 
   async redirectToAuthorization(authorizationUrl: URL) {
+    server.listen(PORT, () => {
+      console.debug(
+        `Server started for MCP Oauth process at http://localhost:${PORT}/`,
+      );
+    });
     this.ide.openUrl(authorizationUrl.toString());
   }
 }
@@ -210,7 +208,7 @@ export async function handleMCPOauthCode(authorizationCode: string) {
     ide.showToast("error", `No MCP authorization code found for ${serverUrl}`);
     return;
   }
-
+  server.close(() => console.debug("Server for MCP Oauth process was closed"));
   const authProvider = new MCPConnectionOauthProvider(serverUrl, ide);
   const authStatus = await auth(authProvider, {
     serverUrl,

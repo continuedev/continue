@@ -232,8 +232,6 @@ function MCPSection() {
     }));
   }, [servers, selectedProfile]);
 
-  console.log("debug1 servers->", servers);
-
   return (
     <div className="flex flex-col gap-1">
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
