@@ -49,6 +49,7 @@ import {
   getNextEditableRegion,
 } from "core/nextEdit/NextEditEditableRegionCalculator";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { isModelCapableOfNextEdit } from "core/nextEdit/utils";
 import { localPathOrUriToPath } from "core/util/pathToUri";
 import { JumpManager } from "../activation/JumpManager";
 import setupNextEditWindowManager, {
@@ -187,10 +188,13 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
-        if (newConfig?.experimental?.optInNextEditFeature) {
+        const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
+        if (
+          autocompleteModel &&
+          isModelCapableOfNextEdit(autocompleteModel.model)
+        ) {
           // Set up next edit window manager only for Continue team members
           await setupNextEditWindowManager(context);
-
           this.activateNextEdit();
           await NextEditWindowManager.freeTabAndEsc();
 
