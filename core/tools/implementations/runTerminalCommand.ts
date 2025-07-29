@@ -246,39 +246,48 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // Standard execution, waiting for completion
         try {
           // Use spawn approach for consistency with streaming version
-          const { shell: nonStreamingShell, args: nonStreamingArgs } = getShellCommand(command);
-          const output = await new Promise<{stdout: string, stderr: string}>((resolve, reject) => {
-            const childProc = childProcess.spawn(nonStreamingShell, nonStreamingArgs, {
-              cwd,
-              env: getColorEnv(),
-            });
-            
-            let stdout = '';
-            let stderr = '';
-            
-            childProc.stdout?.on('data', (data) => {
-              stdout += getDecodedOutput(data);
-            });
-            
-            childProc.stderr?.on('data', (data) => {
-              stderr += getDecodedOutput(data);
-            });
-            
-            childProc.on('close', (code) => {
-              if (code === 0) {
-                resolve({ stdout, stderr });
-              } else {
-                const error = new Error(`Command failed with exit code ${code}`);
-                (error as any).stderr = stderr;
+          const { shell: nonStreamingShell, args: nonStreamingArgs } =
+            getShellCommand(command);
+          const output = await new Promise<{ stdout: string; stderr: string }>(
+            (resolve, reject) => {
+              const childProc = childProcess.spawn(
+                nonStreamingShell,
+                nonStreamingArgs,
+                {
+                  cwd,
+                  env: getColorEnv(),
+                },
+              );
+
+              let stdout = "";
+              let stderr = "";
+
+              childProc.stdout?.on("data", (data) => {
+                stdout += getDecodedOutput(data);
+              });
+
+              childProc.stderr?.on("data", (data) => {
+                stderr += getDecodedOutput(data);
+              });
+
+              childProc.on("close", (code) => {
+                if (code === 0) {
+                  resolve({ stdout, stderr });
+                } else {
+                  const error = new Error(
+                    `Command failed with exit code ${code}`,
+                  );
+                  (error as any).stderr = stderr;
+                  reject(error);
+                }
+              });
+
+              childProc.on("error", (error) => {
                 reject(error);
-              }
-            });
-            
-            childProc.on('error', (error) => {
-              reject(error);
-            });
-          });
-          
+              });
+            },
+          );
+
           const status = "Command completed";
           return [
             {
@@ -299,7 +308,6 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             },
           ];
         }
-        
       } else {
         // For non-streaming but also not waiting for completion, use spawn
         // but don't attach any listeners other than error
