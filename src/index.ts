@@ -67,6 +67,16 @@ addCommonOptions(program)
       }
     }
 
+    // In headless mode, ensure we have a prompt
+    if (options.print && !prompt) {
+      console.error("Error: A prompt is required when using the -p/--print flag.\n");
+      console.error("Usage examples:");
+      console.error('  cn -p "please review my current git diff"');
+      console.error('  echo "hello" | cn -p');
+      console.error('  cn -p "analyze the code in src/"');
+      process.exit(1);
+    }
+
     // Map --print to headless mode
     options.headless = options.print;
     options.print = undefined;
