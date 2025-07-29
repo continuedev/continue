@@ -356,10 +356,12 @@ describe("runTerminalCommandImpl", () => {
   it("should handle missing workspace directory gracefully", async () => {
     // Mock IDE to return empty workspace directories
     const mockEmptyWorkspace = jest.fn().mockReturnValue(Promise.resolve([]));
-    
+
     // Create IDE mock with empty workspace
     const mockIde = {
-      getIdeInfo: jest.fn().mockReturnValue(Promise.resolve({ remoteName: "local" })),
+      getIdeInfo: jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ remoteName: "local" })),
       getWorkspaceDirs: mockEmptyWorkspace,
       runCommand: jest.fn(),
       getIdeSettings: jest.fn(),
@@ -393,7 +395,7 @@ describe("runTerminalCommandImpl", () => {
     expect(result[0].description).toBe("Terminal command output");
     expect(result[0].content).toContain("no workspace test");
     expect(result[0].status).toBe("Command completed");
-    
+
     // Verify workspace dirs was called but returned empty
     expect(mockEmptyWorkspace).toHaveBeenCalled();
   });
@@ -401,12 +403,12 @@ describe("runTerminalCommandImpl", () => {
   it("should handle case where cwd fallbacks all fail", async () => {
     // Mock IDE to return empty workspace directories
     const mockEmptyWorkspace = jest.fn().mockReturnValue(Promise.resolve([]));
-    
+
     // Save original environment variables and process.cwd
     const originalHome = process.env.HOME;
     const originalUserProfile = process.env.USERPROFILE;
     const originalCwd = process.cwd;
-    
+
     try {
       // Mock all fallbacks to fail
       delete process.env.HOME;
@@ -414,10 +416,12 @@ describe("runTerminalCommandImpl", () => {
       process.cwd = jest.fn().mockImplementation(() => {
         throw new Error("Current directory unavailable");
       });
-      
+
       // Create IDE mock with empty workspace
       const mockIde = {
-        getIdeInfo: jest.fn().mockReturnValue(Promise.resolve({ remoteName: "local" })),
+        getIdeInfo: jest
+          .fn()
+          .mockReturnValue(Promise.resolve({ remoteName: "local" })),
         getWorkspaceDirs: mockEmptyWorkspace,
         runCommand: jest.fn(),
         getIdeSettings: jest.fn(),
@@ -445,15 +449,17 @@ describe("runTerminalCommandImpl", () => {
 
       // This should now handle the case gracefully by falling back to temp directory
       const result = await runTerminalCommandImpl(args, extras);
-      
+
       // Should work using the temp directory as fallback
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe("Terminal");
       expect(result[0].content).toContain("fallback test");
       expect(result[0].status).toBe("Command completed");
-      
-      console.log("Successfully handled cwd fallback to temp directory:", result[0].status);
-      
+
+      console.log(
+        "Successfully handled cwd fallback to temp directory:",
+        result[0].status,
+      );
     } finally {
       // Always restore original values
       if (originalHome !== undefined) {
