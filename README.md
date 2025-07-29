@@ -2,6 +2,8 @@
 
 The Continue CLI (`cn`) is a customizable command line coding agent.
 
+![Continue CLI Demo](./media/demo.gif)
+
 ## Installation
 
 ```bash
