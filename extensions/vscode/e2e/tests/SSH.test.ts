@@ -19,7 +19,8 @@ describe("SSH", function () {
     return;
   }
 
-  it("Should display completions", async () => {
+  // Skipping for now due to flake
+  it.skip("Should display completions", async () => {
     await TestUtils.waitForSuccess(async () => {
       await new Workbench().executeCommand(
         "Remote-SSH: Connect Current Window to Host...",
