@@ -68,7 +68,9 @@ const isMacTarget = target?.startsWith("darwin");
 
 void (async () => {
   const startTime = Date.now();
-  console.log(`[info] Packaging extension for target ${target} - started at ${new Date().toISOString()}`);
+  console.log(
+    `[info] Packaging extension for target ${target} - started at ${new Date().toISOString()}`,
+  );
 
   // Make sure we have an initial timestamp file
   writeBuildTimestamp();
@@ -77,7 +79,9 @@ void (async () => {
     const installStart = Date.now();
     console.log(`[timer] Starting npm installs at ${new Date().toISOString()}`);
     await Promise.all([generateAndCopyConfigYamlSchema(), npmInstall()]);
-    console.log(`[timer] npm installs completed in ${Date.now() - installStart}ms`);
+    console.log(
+      `[timer] npm installs completed in ${Date.now() - installStart}ms`,
+    );
   }
 
   process.chdir(path.join(continueDir, "gui"));
@@ -86,7 +90,9 @@ void (async () => {
     const guiBuildStart = Date.now();
     console.log(`[timer] Starting GUI build at ${new Date().toISOString()}`);
     execCmdSync("npm run build");
-    console.log(`[timer] GUI build completed in ${Date.now() - guiBuildStart}ms`);
+    console.log(
+      `[timer] GUI build completed in ${Date.now() - guiBuildStart}ms`,
+    );
   }
 
   // Copy over the dist folder to the JetBrains extension //
@@ -119,7 +125,9 @@ void (async () => {
       resolve();
     });
   });
-  console.log(`[timer] JetBrains copy completed in ${Date.now() - jetbrainsCopyStart}ms`);
+  console.log(
+    `[timer] JetBrains copy completed in ${Date.now() - jetbrainsCopyStart}ms`,
+  );
 
   // Put back index.html
   if (fs.existsSync(indexHtmlPath)) {
@@ -149,7 +157,9 @@ void (async () => {
       }
     });
   });
-  console.log(`[timer] VSCode copy completed in ${Date.now() - vscodeCopyStart}ms`);
+  console.log(
+    `[timer] VSCode copy completed in ${Date.now() - vscodeCopyStart}ms`,
+  );
 
   if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
     throw new Error("gui build did not produce index.js");
@@ -165,7 +175,9 @@ void (async () => {
 
   // onnxruntime-node
   const onnxCopyStart = Date.now();
-  console.log(`[timer] Starting onnxruntime copy at ${new Date().toISOString()}`);
+  console.log(
+    `[timer] Starting onnxruntime copy at ${new Date().toISOString()}`,
+  );
   await new Promise((resolve, reject) => {
     ncp(
       path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
@@ -182,7 +194,9 @@ void (async () => {
       },
     );
   });
-  console.log(`[timer] onnxruntime copy completed in ${Date.now() - onnxCopyStart}ms`);
+  console.log(
+    `[timer] onnxruntime copy completed in ${Date.now() - onnxCopyStart}ms`,
+  );
   if (target) {
     // If building for production, only need the binaries for current platform
     try {
@@ -449,6 +463,8 @@ void (async () => {
     `out/node_modules/esbuild/lib/main.js`,
   ]);
 
-  console.log(`[timer] Prepackage completed in ${Date.now() - startTime}ms - finished at ${new Date().toISOString()}`);
+  console.log(
+    `[timer] Prepackage completed in ${Date.now() - startTime}ms - finished at ${new Date().toISOString()}`,
+  );
   process.exit(0);
 })();
