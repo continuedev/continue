@@ -8,6 +8,10 @@ import { DEFAULT_TIMEOUT } from "../constants";
 describe("Autocomplete", () => {
   let editor: TextEditor;
 
+  before(async function () {
+    process.env.NEXT_EDIT_TEST_ENABLED = "false";
+  })
+
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
