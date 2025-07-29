@@ -137,6 +137,7 @@ if (process.env.IGNORE_API_KEY_TESTS === "true") {
 } else {
   TESTS.forEach((config) => {
     describe(`${config.provider}/${config.model}`, () => {
+      jest.setTimeout(20000);
       testConfig({ name: config.model, ...config });
     });
   });
