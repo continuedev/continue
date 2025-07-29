@@ -440,14 +440,6 @@ export class VsCodeExtension {
         void this.core.invoke("config/ideSettingsUpdate", settings);
       }
     });
-
-    // TODO: this should practically only start listening when user has started an mcp oauth flow. how to do this?
-    this.uriHandler.event((uri) => {
-      console.log("debug1 uri->", uri);
-      this.core.invoke("mcp/sendOauthCode", {
-        code: new URLSearchParams(uri.query).get("code") ?? "",
-      });
-    });
   }
 
   static continueVirtualDocumentScheme = EXTENSION_NAME;

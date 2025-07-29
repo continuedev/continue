@@ -145,12 +145,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "mcp/startAuthentication": [MCPServerStatus, void];
-  "mcp/sendOauthCode": [
-    {
-      code: string;
-    },
-    void,
-  ];
   "mcp/removeAuthentication": [MCPServerStatus, void];
 
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
