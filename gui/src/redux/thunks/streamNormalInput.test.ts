@@ -264,8 +264,363 @@ describe("streamNormalInput", () => {
 
     // Verify final state after thunk completion
     const finalState = mockStore.getState();
-    expect(finalState.session.isStreaming).toBe(false); // Should be inactive
-    expect(finalState.session.contextPercentage).toBe(0.8); // Should be updated
-    expect(finalState.session.isPruned).toBe(false); // Should match compilation result
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: { id: "1", role: "user", content: "Hello" },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "First chunkSecond chunk", // Chunks get combined
+              id: expect.any(String),
+              role: "assistant",
+            },
+            promptLogs: [
+              {
+                completion: "Hi there!",
+                modelProvider: "anthropic", 
+                prompt: "Hello",
+              },
+            ],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0.8,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
+
+  it("should execute streaming flow with tool call execution", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Set up auto-approved tool setting for our test tool
+    const mockStoreWithToolSettings = createMockStore({
+      session: {
+        history: [
+          {
+            message: { id: "1", role: "user", content: "Please search the codebase" },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: new AbortController(),
+        contextPercentage: 0,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        } as any,
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+      } as any,
+      ui: {
+        toolSettings: {
+          search_codebase: "allowedWithoutPermission", // Auto-approve this tool
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      } as any,
+    });
+
+    const mockIdeMessengerWithTool = mockStoreWithToolSettings.mockIdeMessenger;
+
+    // Setup successful compilation and tool responses
+    mockIdeMessengerWithTool.request.mockImplementation((endpoint: string, data: any) => {
+      if (endpoint === "llm/compileChat") {
+        return Promise.resolve({
+          status: "success",
+          content: {
+            compiledChatMessages: [{ role: "user", content: "Please search the codebase" }],
+            didPrune: false,
+            contextPercentage: 0.9,
+          },
+        });
+      } else if (endpoint === "tools/call") {
+        // Mock server-side tool call response
+        return Promise.resolve({
+          status: "success",
+          content: {
+            contextItems: [
+              {
+                name: "Search Results",
+                description: "Found 3 matches",
+                content: "Result 1\nResult 2\nResult 3",
+                icon: "search",
+                hidden: false,
+              },
+            ],
+            errorMessage: undefined,
+          },
+        });
+      } else if (endpoint === "history/save") {
+        // Mock session save
+        return Promise.resolve({ status: "success" });
+      }
+      // Let other endpoints pass through or return success
+      return Promise.resolve({ status: "success", content: {} });
+    });
+
+    // Setup streaming generator with tool call
+    async function* mockStreamGeneratorWithTool() {
+      yield [{ role: "assistant", content: "I'll search the codebase for you." }];
+      yield [
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-call-1",
+              type: "function",
+              function: {
+                name: "search_codebase",
+                arguments: JSON.stringify({ query: "test function" }),
+              },
+            },
+          ],
+        },
+      ];
+      return {
+        prompt: "Please search the codebase",
+        completion: "I'll search the codebase for you.",
+        modelProvider: "anthropic",
+      };
+    }
+
+    // Mock different streaming responses for multiple calls
+    let streamCallCount = 0;
+    mockIdeMessengerWithTool.llmStreamChat.mockImplementation(() => {
+      streamCallCount++;
+      if (streamCallCount === 1) {
+        // First call - main streaming with tool call
+        return mockStreamGeneratorWithTool();
+      } else {
+        // Subsequent calls from streamResponseAfterToolCall - return minimal response
+        async function* simpleGenerator() {
+          yield [{ role: "assistant", content: "Search completed." }];
+          return {
+            prompt: "continuing after tool",
+            completion: "Search completed.",
+            modelProvider: "anthropic",
+          };
+        }
+        return simpleGenerator();
+      }
+    });
+
+    // Execute thunk
+    const result = await mockStoreWithToolSettings.dispatch(streamNormalInput({}) as any);
+
+    // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
+    const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
+
+    // Verify core streaming actions
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setAppliedRulesAtIndex",
+        payload: { index: 0, appliedRules: [] },
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/setActive" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setContextPercentage",
+        payload: 0.9,
+      }),
+    );
+
+    // Verify streaming updates (both regular content and tool call)
+    const streamUpdates = dispatchedActions.filter(
+      (action: any) => action.type === "session/streamUpdate",
+    );
+    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
+    expect(streamUpdates[0].payload).toEqual([
+      { role: "assistant", content: "I'll search the codebase for you." },
+    ]);
+    expect(streamUpdates[1].payload[0]).toEqual(
+      expect.objectContaining({
+        role: "assistant",
+        content: "",
+        toolCalls: [
+          {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: "search_codebase",
+              arguments: JSON.stringify({ query: "test function" }),
+            },
+          },
+        ],
+      }),
+    );
+
+    // Verify tool call execution actions
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolGenerated",
+        payload: expect.objectContaining({ toolCallId: "tool-call-1" }),
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolCallCalling",
+        payload: { toolCallId: "tool-call-1" },
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/updateToolCallOutput",
+        payload: {
+          toolCallId: "tool-call-1",
+          contextItems: [
+            {
+              name: "Search Results",
+              description: "Found 3 matches",
+              content: "Result 1\nResult 2\nResult 3",
+              icon: "search",
+              hidden: false,
+            },
+          ],
+        },
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/acceptToolCall",
+        payload: { toolCallId: "tool-call-1" },
+      }),
+    );
+
+    // Verify thunk completion
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamNormalInput/fulfilled",
+      }),
+    );
+
+    // Verify IDE messenger calls
+    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [{ role: "user", content: "Hello" }], // constructMessages mock returns this
+      options: {},
+    });
+
+    expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith("tools/call", {
+      toolCall: {
+        id: "tool-call-1",
+        type: "function",
+        function: {
+          name: "search_codebase",
+          arguments: JSON.stringify({ query: "test function" }),
+        },
+      },
+    });
+
+    // Verify that multiple compilation calls were made (due to tool call continuation)
+    const compileCallsCount = mockIdeMessengerWithTool.request.mock.calls.filter(
+      (call: any) => call[0] === "llm/compileChat",
+    ).length;
+    expect(compileCallsCount).toBeGreaterThanOrEqual(1);
+
+    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
   });
 });
