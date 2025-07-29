@@ -411,7 +411,7 @@ async function configYamlToContinueConfig(options: {
           const shownWarnings =
             globalContext.get("shownDeprecatedProviderWarnings") ?? {};
           if (!shownWarnings[providerTitle]) {
-            ide.showToast("warning", p.deprecationMessage);
+            void ide.showToast("warning", p.deprecationMessage);
             globalContext.update("shownDeprecatedProviderWarnings", {
               ...shownWarnings,
               [providerTitle]: true,
