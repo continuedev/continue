@@ -200,14 +200,14 @@ install_from_pr() {
         exit 1
     fi
 
-    # Map platform names to GitHub runner OS names
-    local artifact_suffix
+    # Map platform names to artifact names for the new workflow
+    local artifact_name
     case "$platform" in
         "macos")
-            artifact_suffix="macOS"
+            artifact_name="darwin-arm64-vsix"
             ;;
         "linux")
-            artifact_suffix="Linux"
+            artifact_name="linux-x64-vsix"
             ;;
         *)
             echo "❌ Unknown platform: $platform"
@@ -231,7 +231,7 @@ install_from_pr() {
     # Get the latest successful workflow run for the branch
     local run_id=$(gh run list \
         --repo "$REPO" \
-        --workflow="pr_checks.yaml" \
+        --workflow="pr-build-upload-vsix.yaml" \
         --branch="$branch_name" \
         --json databaseId,status,conclusion \
         --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
@@ -244,7 +244,7 @@ install_from_pr() {
     fi
 
     echo "✅ Found workflow run: $run_id"
-    echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
+    echo "📥 Downloading $artifact_name artifact..."
 
     # Create temporary directory for download
     local temp_dir=$(mktemp -d)
@@ -252,9 +252,9 @@ install_from_pr() {
     # Download the artifact
     if ! gh run download "$run_id" \
         --repo "$REPO" \
-        --name "vscode-extension-build-$artifact_suffix" \
+        --name "$artifact_name" \
         --dir "$temp_dir"; then
-        echo "❌ Failed to download artifact vscode-extension-build-$artifact_suffix"
+        echo "❌ Failed to download artifact $artifact_name"
         echo "   Make sure the workflow run completed successfully for $platform"
         rm -rf "$temp_dir"
         exit 1
