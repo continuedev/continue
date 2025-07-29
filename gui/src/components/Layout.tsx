@@ -62,7 +62,6 @@ const Layout = () => {
         "controlPlane/getEnvironment",
         undefined,
       );
-      console.log("debug2 response was", response);
       response.status === "success" &&
         setShowBorder(response.content.AUTH_TYPE.includes("staging"));
     })();
