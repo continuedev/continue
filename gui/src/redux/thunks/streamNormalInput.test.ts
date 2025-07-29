@@ -1251,4 +1251,590 @@ describe("streamNormalInput", () => {
       },
     });
   });
+
+  it("should handle streaming abort", async () => {
+    // Create an AbortController that we'll abort during streaming
+    const testAbortController = new AbortController();
+    
+    // Create store with our test abort controller
+    const mockStoreWithAbort = createMockStore({
+      session: {
+        history: [
+          {
+            message: { id: "1", role: "user", content: "Hello" },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: testAbortController, // Use our test controller
+        contextPercentage: 0,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        } as any,
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+      } as any,
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      } as any,
+    });
+
+    const mockIdeMessengerAbort = mockStoreWithAbort.mockIdeMessenger;
+
+    // Setup successful compilation
+    mockIdeMessengerAbort.request.mockResolvedValue({
+      status: "success",
+      content: {
+        compiledChatMessages: [{ role: "user", content: "Hello" }],
+        didPrune: false,
+        contextPercentage: 0.8,
+      },
+    });
+
+    // Setup streaming generator that simulates abort by checking isStreaming state
+    async function* mockStreamGeneratorWithAbort() {
+      yield [{ role: "assistant", content: "First chunk" }];
+      
+      // Simulate user clicking abort button - this would dispatch setInactive
+      setTimeout(() => {
+        mockStoreWithAbort.dispatch({ type: "session/setInactive" });
+      }, 5);
+      
+      // After first yield, wait a bit then yield second chunk (which should be ignored due to abort)
+      await new Promise(resolve => setTimeout(resolve, 10));
+      yield [{ role: "assistant", content: "Second chunk" }];
+      
+      return {
+        prompt: "Hello",
+        completion: "Complete response",
+        modelProvider: "anthropic",
+      };
+    }
+
+    mockIdeMessengerAbort.llmStreamChat.mockReturnValue(mockStreamGeneratorWithAbort());
+
+    // Execute thunk - should be aborted
+    const result = await mockStoreWithAbort.dispatch(streamNormalInput({}) as any);
+
+    // Verify thunk completed successfully (abort just stops streaming early)
+    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Verify exact action sequence - should start but then be aborted
+    const dispatchedActions = (mockStoreWithAbort as any).getActions();
+    expect(dispatchedActions).toEqual([
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "pending",
+        }),
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          index: 0,
+          appliedRules: [],
+        },
+      },
+      {
+        type: "session/setActive",
+      },
+      {
+        type: "session/setInlineErrorMessage",
+      },
+      {
+        type: "session/setIsPruned",
+        payload: false,
+      },
+      {
+        type: "session/setContextPercentage",
+        payload: 0.8,
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "First chunk",
+          },
+        ],
+      },
+      // User abort action
+      {
+        type: "session/setInactive",
+      },
+      // Stream abort dispatch (called by implementation)
+      {
+        type: "session/abortStream",
+      },
+      // Stream end cleanup
+      {
+        type: "session/setInactive",
+      },
+      // Stream completes but no more updates are processed
+      {
+        type: "chat/streamNormalInput/fulfilled",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "fulfilled",
+        }),
+      },
+    ]);
+
+    // Verify IDE messenger calls
+    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [{ role: "user", content: "Hello" }],
+      options: {},
+    });
+
+    expect(mockIdeMessengerAbort.llmStreamChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        completionOptions: {},
+        title: "Claude 3.5 Sonnet",
+        messages: [{ role: "user", content: "Hello" }],
+        messageOptions: { precompiled: true },
+      }),
+      expect.any(AbortSignal),
+    );
+
+    // Dev data logging should not occur since streaming was stopped early
+    expect(mockIdeMessengerAbort.post).not.toHaveBeenCalledWith("devdata/log", expect.anything());
+
+    // Verify final state - streaming should be stopped, partial content preserved
+    const finalState = mockStoreWithAbort.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: { id: "1", role: "user", content: "Hello" },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "First chunk", // Only first chunk before abort
+              id: expect.any(String),
+              role: "assistant",
+            },
+            // No promptLogs because streaming was stopped before completion
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false, // False because setInactive was called
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController), // New controller after abort
+        contextPercentage: 0.8,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
+
+  it("should handle tool call rejection error", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Create store with tool settings that will reject the tool call
+    const mockStoreWithToolReject = createMockStore({
+      session: {
+        history: [
+          {
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please edit this file",
+            },
+            contextItems: [],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: new AbortController(),
+        contextPercentage: 0,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        } as any,
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+      } as any,
+      ui: {
+        toolSettings: {
+          edit_existing_file: "disabled", // Tool is disabled/rejected
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      } as any,
+    });
+
+    const mockIdeMessengerReject = mockStoreWithToolReject.mockIdeMessenger;
+
+    // Setup successful compilation
+    mockIdeMessengerReject.request.mockResolvedValue({
+      status: "success",
+      content: {
+        compiledChatMessages: [
+          { role: "user", content: "Please edit this file" },
+        ],
+        didPrune: false,
+        contextPercentage: 0.7,
+      },
+    });
+
+    // Setup streaming generator with tool call that will be rejected
+    async function* mockStreamGeneratorWithRejectedTool() {
+      yield [
+        { role: "assistant", content: "I'll edit the file for you." },
+      ];
+      yield [
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-reject-1",
+              type: "function",
+              function: {
+                name: "edit_existing_file",
+                arguments: JSON.stringify({ 
+                  filepath: "test.js",
+                  changes: "const x = 1;" 
+                }),
+              },
+            },
+          ],
+        },
+      ];
+      return {
+        prompt: "Please edit this file",
+        completion: "I'll edit the file for you.",
+        modelProvider: "anthropic",
+      };
+    }
+
+    mockIdeMessengerReject.llmStreamChat.mockReturnValue(
+      mockStreamGeneratorWithRejectedTool()
+    );
+
+    // Execute thunk
+    const result = await mockStoreWithToolReject.dispatch(
+      streamNormalInput({}) as any,
+    );
+
+    // Verify thunk completed successfully (tool rejection is handled gracefully)
+    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Verify action sequence includes tool generation but rejection handling
+    const dispatchedActions = (mockStoreWithToolReject as any).getActions();
+    
+    // Should contain the standard streaming setup actions
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setAppliedRulesAtIndex",
+        payload: { index: 0, appliedRules: [] },
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/setActive" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setContextPercentage",
+        payload: 0.7,
+      }),
+    );
+
+    // Should contain streaming updates including the tool call
+    const streamUpdates = dispatchedActions.filter(
+      (action: any) => action.type === "session/streamUpdate",
+    );
+    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
+
+    // Tool call should be marked as generated but then rejected
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setToolGenerated",
+        payload: expect.objectContaining({ toolCallId: "tool-reject-1" }),
+      }),
+    );
+
+    // Should complete successfully despite tool rejection
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamNormalInput/fulfilled",
+      }),
+    );
+
+    // Verify IDE messenger calls - compilation should succeed, streaming should happen
+    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [{ role: "user", content: "Hello" }], // constructMessages mock
+        options: {},
+      },
+    );
+
+    expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalled();
+
+    // Verify final state contains the tool call but it's not executed
+    const finalState = mockStoreWithToolReject.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please edit this file",
+            },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "I'll edit the file for you.",
+              id: expect.any(String),
+              role: "assistant",
+              toolCalls: [
+                {
+                  id: "tool-reject-1",
+                  type: "function",
+                  function: {
+                    name: "edit_existing_file",
+                    arguments: JSON.stringify({
+                      filepath: "test.js",
+                      changes: "const x = 1;",
+                    }),
+                  },
+                },
+              ],
+            },
+            promptLogs: [
+              {
+                completion: "I'll edit the file for you.",
+                modelProvider: "anthropic",
+                prompt: "Please edit this file",
+              },
+            ],
+            toolCallStates: [
+              {
+                toolCallId: "tool-reject-1",
+                toolCall: {
+                  id: "tool-reject-1",
+                  type: "function",
+                  function: {
+                    name: "edit_existing_file",
+                    arguments: JSON.stringify({
+                      filepath: "test.js",
+                      changes: "const x = 1;",
+                    }),
+                  },
+                },
+                parsedArgs: {
+                  filepath: "test.js",
+                  changes: "const x = 1;",
+                },
+                status: "generated", // Tool call exists but isn't executed due to settings
+              },
+            ],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0.7,
+        isPruned: false,
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {
+          edit_existing_file: "disabled",
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
+
 });
