@@ -946,4 +946,145 @@ describe("streamNormalInput", () => {
       },
     });
   });
+
+  it("should handle compilation error - not enough context", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Mock compilation failure with "Not enough context" error
+    mockIdeMessenger.request.mockResolvedValue({
+      status: "error",
+      error: "Not enough context available for this request",
+    });
+
+    // Execute thunk
+    const result = await mockStore.dispatch(streamNormalInput({}) as any);
+
+    // Verify thunk completed successfully (doesn't throw, handles error gracefully)
+    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Verify exact action sequence for this error path
+    const dispatchedActions = (mockStore as any).getActions();
+    expect(dispatchedActions).toEqual([
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "pending",
+        }),
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          index: 0,
+          appliedRules: [],
+        },
+      },
+      {
+        type: "session/setActive",
+      },
+      {
+        type: "session/setInlineErrorMessage",
+      },
+      // Error handling actions
+      {
+        type: "session/setInlineErrorMessage",
+        payload: "out-of-context",
+      },
+      {
+        type: "session/setInactive",
+      },
+      {
+        type: "chat/streamNormalInput/fulfilled",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "fulfilled",
+        }),
+      },
+    ]);
+
+    // Verify IDE messenger was called for compilation but not streaming
+    expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [{ role: "user", content: "Hello" }],
+      options: {},
+    });
+    expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
+
+    // Verify final state shows error condition
+    const finalState = mockStore.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            isGatheringContext: false,
+            message: { id: "1", role: "user", content: "Hello" },
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false, // Should be inactive due to error
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0, // Unchanged - no successful compilation
+        isPruned: false, // Unchanged - no successful compilation  
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: "out-of-context", // Error message set
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
 });
