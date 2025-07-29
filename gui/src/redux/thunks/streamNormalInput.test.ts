@@ -1,5 +1,4 @@
-import { ModelDescription } from "core";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createMockStore } from "../../util/test/mockStore";
 import { streamNormalInput } from "./streamNormalInput";
 
@@ -31,6 +30,7 @@ vi.mock("core/config/shouldAutoEnableSystemMessageTools", () => ({
   shouldAutoEnableSystemMessageTools: vi.fn(() => undefined),
 }));
 
+import { ModelDescription } from "core";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { constructMessages } from "../util/constructMessages";
@@ -43,178 +43,176 @@ const mockAddSystemMessageToolsToSystemMessage = vi.mocked(
 const mockConstructMessages = vi.mocked(constructMessages);
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
-describe("streamNormalInput", () => {
-  const mockClaudeModel: ModelDescription = {
-    title: "Claude 3.5 Sonnet",
-    model: "claude-3-5-sonnet-20241022",
-    provider: "anthropic",
-    underlyingProviderName: "anthropic",
-    completionOptions: { reasoningBudgetTokens: 2048 },
-  };
+const mockClaudeModel: ModelDescription = {
+  title: "Claude 3.5 Sonnet",
+  model: "claude-3-5-sonnet-20241022",
+  provider: "anthropic",
+  underlyingProviderName: "anthropic",
+  completionOptions: { reasoningBudgetTokens: 2048 },
+};
 
-  function setupTest() {
-    vi.clearAllMocks();
+function setupTest() {
+  vi.clearAllMocks();
 
-    // Default mock implementations for external functions
-    mockModelSupportsNativeTools.mockReturnValue(true);
-    mockGetBaseSystemMessage.mockReturnValue("System message");
-    mockAddSystemMessageToolsToSystemMessage.mockReturnValue(
-      "System message with tools",
-    );
-    mockConstructMessages.mockReturnValue({
-      messages: [{ role: "user", content: "Hello" }],
-      appliedRules: [],
-      appliedRuleIndex: 0,
-    });
+  // Default mock implementations for external functions
+  mockModelSupportsNativeTools.mockReturnValue(true);
+  mockGetBaseSystemMessage.mockReturnValue("System message");
+  mockAddSystemMessageToolsToSystemMessage.mockReturnValue(
+    "System message with tools",
+  );
+  mockConstructMessages.mockReturnValue({
+    messages: [{ role: "user", content: "Hello" }],
+    appliedRules: [],
+    appliedRuleIndex: 0,
+  });
 
-    // Create store with realistic state that selectors can work with
-    const mockStore = createMockStore({
-      session: {
-        history: [
-          {
-            message: { id: "1", role: "user", content: "Hello" },
-            contextItems: [],
-          },
-        ],
-        hasReasoningEnabled: false,
-        isStreaming: true,
-        id: "session-123",
-        mode: "chat",
-        streamAborter: new AbortController(),
-        contextPercentage: 0,
-        isPruned: false,
-        isInEdit: false,
-        title: "",
-        lastSessionId: undefined,
-        isSessionMetadataLoading: false,
-        allSessionMetadata: [],
-        symbols: {},
-        codeBlockApplyStates: {
-          states: [],
-          curIndex: 0,
+  // Create store with realistic state that selectors can work with
+  const mockStore = createMockStore({
+    session: {
+      history: [
+        {
+          message: { id: "1", role: "user", content: "Hello" },
+          contextItems: [],
         },
-        newestToolbarPreviewForInput: {},
-        compactionLoading: {},
-        inlineErrorMessage: undefined,
+      ],
+      hasReasoningEnabled: false,
+      isStreaming: true,
+      id: "session-123",
+      mode: "chat",
+      streamAborter: new AbortController(),
+      contextPercentage: 0,
+      isPruned: false,
+      isInEdit: false,
+      title: "",
+      lastSessionId: undefined,
+      isSessionMetadataLoading: false,
+      allSessionMetadata: [],
+      symbols: {},
+      codeBlockApplyStates: {
+        states: [],
+        curIndex: 0,
       },
+      newestToolbarPreviewForInput: {},
+      compactionLoading: {},
+      inlineErrorMessage: undefined,
+    },
+    config: {
       config: {
-        config: {
-          tools: [],
-          rules: [],
-          tabAutocompleteModel: undefined,
-          selectedModelByRole: {
-            chat: mockClaudeModel,
-            apply: null,
-            edit: null,
-            summarize: null,
-            autocomplete: null,
-            rerank: null,
-            embed: null,
-          },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
-        } as any,
-        lastSelectedModelByRole: {
-          chat: mockClaudeModel.title,
+        tools: [],
+        rules: [],
+        tabAutocompleteModel: undefined,
+        selectedModelByRole: {
+          chat: mockClaudeModel,
+          apply: null,
+          edit: null,
+          summarize: null,
+          autocomplete: null,
+          rerank: null,
+          embed: null,
+        },
+        experimental: {
+          onlyUseSystemMessageTools: false,
         },
       } as any,
-      ui: {
-        toolSettings: {},
-        ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
-      } as any,
+      lastSelectedModelByRole: {
+        chat: mockClaudeModel.title,
+      },
+    } as any,
+    ui: {
+      toolSettings: {},
+      ruleSettings: {},
+      showDialog: false,
+      dialogMessage: undefined,
+    } as any,
+  });
+
+  const mockIdeMessenger = mockStore.mockIdeMessenger;
+
+  return { mockStore, mockIdeMessenger };
+}
+
+describe("streamNormalInput", () => {
+  it("should execute complete streaming flow with all dispatches", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+    // Setup successful compilation
+    mockIdeMessenger.request.mockResolvedValue({
+      status: "success",
+      content: {
+        compiledChatMessages: [{ role: "user", content: "Hello" }],
+        didPrune: false,
+        contextPercentage: 0.8,
+      },
     });
 
-    const mockIdeMessenger = mockStore.mockIdeMessenger;
+    // Setup streaming generator
+    async function* mockStreamGenerator() {
+      yield [{ role: "assistant", content: "First chunk" }];
+      yield [{ role: "assistant", content: "Second chunk" }];
+      return {
+        prompt: "Hello",
+        completion: "Hi there!",
+        modelProvider: "anthropic",
+      };
+    }
 
-    return { mockStore, mockIdeMessenger };
-  }
+    mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamGenerator());
 
-  describe("successful streaming flow", () => {
-    it("should execute complete streaming flow with all dispatches", async () => {
-      const { mockStore, mockIdeMessenger } = setupTest();
-      // Setup successful compilation
-      mockIdeMessenger.request.mockResolvedValue({
-        status: "success",
-        content: {
-          compiledChatMessages: [{ role: "user", content: "Hello" }],
-          didPrune: false,
-          contextPercentage: 0.8,
-        },
-      });
+    // Execute thunk
+    const result = await mockStore.dispatch(streamNormalInput({}) as any);
 
-      // Setup streaming generator
-      async function* mockStreamGenerator() {
-        yield [{ role: "assistant", content: "First chunk" }];
-        yield [{ role: "assistant", content: "Second chunk" }];
-        return {
-          prompt: "Hello",
-          completion: "Hi there!",
-          modelProvider: "anthropic",
-        };
-      }
+    // Verify dispatch calls in order
+    const dispatchedActions = (mockStore as any).getActions();
 
-      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamGenerator());
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/setAppliedRulesAtIndex" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/setActive" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setInlineErrorMessage",
+        payload: undefined,
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setIsPruned",
+        payload: false,
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "session/setContextPercentage",
+        payload: 0.8,
+      }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/streamUpdate" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/addPromptCompletionPair" }),
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({ type: "session/setInactive" }),
+    );
 
-      // Execute thunk
-      const result = await mockStore.dispatch(streamNormalInput({}) as any);
+    // Verify IDE messenger calls
+    expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [{ role: "user", content: "Hello" }],
+      options: {},
+    });
 
-      // Verify dispatch calls in order
-      const dispatchedActions = (mockStore as any).getActions();
-
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({ type: "session/setAppliedRulesAtIndex" }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({ type: "session/setActive" }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({
-          type: "session/setInlineErrorMessage",
-          payload: undefined,
-        }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({
-          type: "session/setIsPruned",
-          payload: false,
-        }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({
-          type: "session/setContextPercentage",
-          payload: 0.8,
-        }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({ type: "session/streamUpdate" }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({ type: "session/addPromptCompletionPair" }),
-      );
-      expect(dispatchedActions).toContainEqual(
-        expect.objectContaining({ type: "session/setInactive" }),
-      );
-
-      // Verify IDE messenger calls
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+    expect(mockIdeMessenger.llmStreamChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        completionOptions: {},
+        title: "Claude 3.5 Sonnet",
         messages: [{ role: "user", content: "Hello" }],
-        options: {},
-      });
+        messageOptions: { precompiled: true },
+      }),
+      expect.any(AbortSignal),
+    );
 
-      expect(mockIdeMessenger.llmStreamChat).toHaveBeenCalledWith(
-        expect.objectContaining({
-          completionOptions: {},
-          title: "Claude 3.5 Sonnet",
-          messages: [{ role: "user", content: "Hello" }],
-          messageOptions: { precompiled: true },
-        }),
-        expect.any(AbortSignal),
-      );
-
-      expect(result.type).toBe("chat/streamNormalInput/fulfilled");
-    });
+    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
   });
 });
