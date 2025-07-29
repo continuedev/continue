@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { tabAutocompleteOptionsSchema } from "../../../config-types/src/index.js";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import {
@@ -145,6 +146,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .optional(),
   prompts: z.array(blockOrSchema(promptSchema)).optional(),
   docs: z.array(blockOrSchema(docSchema)).optional(),
+  tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
 });
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
@@ -157,6 +159,7 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   rules: z.array(ruleSchema.nullable()).optional(),
   prompts: z.array(promptSchema.nullable()).optional(),
   docs: z.array(docSchema.nullable()).optional(),
+  tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
 });
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
@@ -169,6 +172,7 @@ export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
   rules: z.array(ruleSchema).optional(),
   prompts: z.array(promptSchema).optional(),
   docs: z.array(docSchema).optional(),
+  tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
 });
 
 export type AssistantUnrolledNonNullable = z.infer<
@@ -254,6 +258,7 @@ export const configSchema = z.object({
   proxy: z.string().optional(),
   api_base: z.string().optional(),
   api_key: z.string().optional(),
+  tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
