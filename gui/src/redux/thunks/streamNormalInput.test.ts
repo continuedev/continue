@@ -248,6 +248,18 @@ describe("streamNormalInput", () => {
       expect.any(AbortSignal),
     );
 
+    // Verify dev data logging call
+    expect(mockIdeMessenger.post).toHaveBeenCalledWith("devdata/log", {
+      name: "chatInteraction",
+      data: {
+        prompt: "Hello",
+        completion: "Hi there!",
+        modelProvider: "anthropic",
+        modelTitle: "Claude 3.5 Sonnet",
+        sessionId: "session-123",
+      },
+    });
+
     expect(result.type).toBe("chat/streamNormalInput/fulfilled");
 
     // Verify final state after thunk completion
