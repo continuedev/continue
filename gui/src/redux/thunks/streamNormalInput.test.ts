@@ -2420,27 +2420,161 @@ describe("streamNormalInput", () => {
 
     // Verify final state shows completed tool call and follow-up response
     const finalState = mockStoreWithApproval.getState();
-    
-    // Should have 4 messages: user → assistant → tool → assistant
-    expect(finalState.session.history).toHaveLength(4);
-    
-    // Verify tool call is in "done" state
-    const assistantWithTool = finalState.session.history[1];
-    expect(assistantWithTool.toolCallStates?.[0]?.status).toBe("done");
-    
-    // Verify tool message exists
-    const toolMessage = finalState.session.history[2];
-    expect(toolMessage.message.role).toBe("tool");
-    expect(toolMessage.message.toolCallId).toBe("tool-approval-flow-1");
-    expect(toolMessage.message.content).toContain("function testUserLogin");
-    
-    // Verify follow-up assistant response
-    const followupResponse = finalState.session.history[3];
-    expect(followupResponse.message.role).toBe("assistant");
-    expect(followupResponse.message.content).toContain("I found several test functions");
-    
-    // Should be inactive after complete flow
-    expect(finalState.session.isStreaming).toBe(false);
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: {
+              id: "1",
+              role: "user",
+              content: "Please search the codebase for test functions",
+            },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "I'll search for test functions in the codebase.",
+              id: expect.any(String),
+              role: "assistant",
+              toolCalls: [
+                {
+                  id: "tool-approval-flow-1",
+                  type: "function",
+                  function: {
+                    name: "search_codebase",
+                    arguments: JSON.stringify({ query: "test function" }),
+                  },
+                },
+              ],
+            },
+            promptLogs: [
+              {
+                completion: "I'll search for test functions in the codebase.",
+                modelProvider: "anthropic",
+                prompt: "Please search the codebase for test functions",
+              },
+            ],
+            toolCallStates: [
+              {
+                toolCallId: "tool-approval-flow-1",
+                toolCall: {
+                  id: "tool-approval-flow-1",
+                  type: "function",
+                  function: {
+                    name: "search_codebase",
+                    arguments: JSON.stringify({ query: "test function" }),
+                  },
+                },
+                parsedArgs: { query: "test function" },
+                status: "done", // Tool call completed successfully
+                output: [
+                  {
+                    name: "Search Results",
+                    description: "Found test functions",
+                    content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+                    icon: "search",
+                    hidden: false,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            contextItems: [],
+            message: {
+              content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+              id: expect.any(String),
+              role: "tool",
+              toolCallId: "tool-approval-flow-1",
+            },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "I found several test functions in your codebase. Here are the main ones I discovered...",
+              id: expect.any(String),
+              role: "assistant",
+            },
+            promptLogs: [
+              {
+                completion: "I found several test functions in your codebase. Here are the main ones I discovered...",
+                modelProvider: "anthropic",
+                prompt: "continuing after tool execution",
+              },
+            ],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false, // Inactive after complete flow
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0.85,
+        isPruned: false,
+        isInEdit: false,
+        title: "New Session",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: {},
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {
+          search_codebase: "askFirst",
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
   });
 
 });
