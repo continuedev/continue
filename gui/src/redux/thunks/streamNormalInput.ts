@@ -1,10 +1,10 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
+import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -19,14 +19,14 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
-import {
-  constructMessages,
-  getBaseSystemMessage,
-} from "../util/constructMessages";
+import { constructMessages } from "../util/constructMessages";
 
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
+import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
+import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -141,11 +141,15 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const allActiveTools = selectActiveTools(state);
     const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
-    const toolsSupported = modelSupportsTools(selectedChatModel);
+    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
+
+    // Use the centralized selector to determine if system message tools should be used
+    const useSystemTools = selectUseSystemMessageTools(state);
+    const useNativeTools = !useSystemTools && supportsNativeTools;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
-    if (toolsSupported && activeTools.length > 0) {
+    if (useNativeTools && activeTools.length > 0) {
       completionOptions = {
         tools: activeTools,
       };
@@ -166,15 +170,21 @@ export const streamNormalInput = createAsyncThunk<
       selectedChatModel,
     );
 
+    const systemMessage = useSystemTools
+      ? addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools)
+      : baseSystemMessage;
+
     const withoutMessageIds = state.session.history.map((item) => {
       const { id, ...messageWithoutId } = item.message;
       return { ...item, message: messageWithoutId };
     });
+
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
-      baseSystemMessage,
+      systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
+      !useNativeTools,
     );
 
     // TODO parallel tool calls will cause issues with this
@@ -212,7 +222,7 @@ export const streamNormalInput = createAsyncThunk<
 
     // Send request and stream response
     const streamAborter = state.session.streamAborter;
-    const gen = extra.ideMessenger.llmStreamChat(
+    let gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
@@ -222,6 +232,9 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
+    if (!useNativeTools && activeTools.length > 0) {
+      gen = interceptSystemToolCalls(gen, streamAborter);
+    }
 
     let next = await gen.next();
     while (!next.done) {
