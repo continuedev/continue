@@ -10,26 +10,33 @@ REPO="continuedev/continue"
 ONEPER_DIR="$HOME/.continue/.utils/oneper"
 
 show_help() {
-    echo "oneper - Install Continue VS Code extension from PR builds or latest pre-release"
+    echo "oneper - Install Continue VS Code extension from builds or latest pre-release"
     echo ""
     echo "Usage: oneper <command> [options]"
     echo "       oneper -h | --help"
+    echo "       oneper install                   # Install latest build from main branch (default)"
     echo ""
     echo "Commands:"
+    echo "  install                  Download and install VSIX from latest main branch build (default)"
     echo "  install --pr <number> [--platform <platform>]"
     echo "                           Download and install VSIX from specified PR number"
     echo "                           Platform options: macos, linux (auto-detected by default)"
     echo "  install --latest         Install latest pre-release from VS Code marketplace"
+    echo "  setup-cron               Set up automatic updates every 10 minutes"
+    echo "  remove-cron              Remove automatic updates"
     echo "  clean                    Remove all downloaded VSIX files from oneper cache"
     echo ""
     echo "Options:"
     echo "  -h, --help              Show this help message"
-    echo "  --platform <platform>   Specify platform for PR builds (macos, linux)"
+    echo "  --platform <platform>   Specify platform for builds (macos, linux)"
     echo ""
     echo "Examples:"
+    echo "  oneper install                       # Install latest build from main branch"
     echo "  oneper install --pr 123              # Install VSIX from PR #123"
     echo "  oneper install --pr 123 --platform linux   # Install Linux VSIX from PR #123"
     echo "  oneper install --latest              # Install latest pre-release"
+    echo "  oneper setup-cron                    # Auto-update every 10 minutes"
+    echo "  oneper remove-cron                   # Stop auto-updates"
     echo "  oneper clean                         # Clear cached VSIX files"
     echo "  oneper -h                            # Show help"
     echo ""
@@ -74,6 +81,114 @@ ensure_oneper_dir() {
     fi
 }
 
+install_from_main() {
+    local platform=${1:-$(detect_os)}  # Auto-detect OS if not specified
+
+    # Map platform names to GitHub runner OS names
+    local artifact_suffix
+    case "$platform" in
+        "macos")
+            artifact_suffix="macOS"
+            ;;
+        "linux")
+            artifact_suffix="Linux"
+            ;;
+        *)
+            echo "❌ Unknown platform: $platform"
+            echo "   Supported platforms: macos, linux"
+            exit 1
+            ;;
+    esac
+
+    echo "🔍 Finding latest main branch build..."
+
+    # Get the latest successful workflow run for main branch
+    local run_id=$(gh run list \
+        --repo "$REPO" \
+        --workflow="main-build.yaml" \
+        --branch="main" \
+        --json databaseId,status,conclusion \
+        --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+        | head -1)
+
+    if [ -z "$run_id" ]; then
+        echo "❌ No successful main branch build found"
+        echo "   Make sure there are recent commits to main with successful builds"
+        exit 1
+    fi
+
+    echo "✅ Found workflow run: https://github.com/$REPO/actions/runs/$run_id"
+    
+    # Try to get the original PR number from the workflow run
+    local original_pr=$(gh run view "$run_id" --repo "$REPO" --json displayTitle --jq '.displayTitle' | grep -o "pull request #[0-9]*" | grep -o "[0-9]*" || echo "")
+    
+    if [ -n "$original_pr" ]; then
+        echo "📦 This contains artifacts originally from PR #$original_pr"
+    fi
+    
+    echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
+
+    # Create temporary directory for download
+    local temp_dir=$(mktemp -d)
+
+    # Download the artifact
+    if ! gh run download "$run_id" \
+        --repo "$REPO" \
+        --name "vscode-extension-build-$artifact_suffix" \
+        --dir "$temp_dir"; then
+        echo "❌ Failed to download artifact vscode-extension-build-$artifact_suffix"
+        echo "   Make sure the workflow run completed successfully for $platform"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Find the VSIX file in the downloaded artifact
+    local vsix_file=$(find "$temp_dir" -name "*.vsix" | head -1)
+
+    if [ -z "$vsix_file" ]; then
+        echo "❌ No VSIX file found in artifact"
+        rm -rf "$temp_dir"
+        exit 1
+    fi
+
+    # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
+    local original_filename=$(basename "$vsix_file")
+    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+
+    if [ -z "$version" ]; then
+        echo "⚠️  Could not extract version from filename: $original_filename"
+        version="unknown"
+    fi
+
+    # Create new VSIX name with version and "main" suffix
+    local target_path="$ONEPER_DIR/continue-${version}-main.vsix"
+
+    # Check if file already exists and notify about overwrite
+    if [ -f "$target_path" ]; then
+        echo "⚠️  Overwriting existing VSIX: $target_path"
+    fi
+
+    echo "📦 Moving VSIX to: $target_path"
+    mv "$vsix_file" "$target_path"
+
+    # Clean up temp directory
+    rm -rf "$temp_dir"
+
+    # Install the extension
+    echo "🚀 Installing VS Code extension..."
+    if code --install-extension "$target_path" --force; then
+        echo "✅ Successfully installed Continue extension from main branch"
+        echo "📄 VSIX file saved to: $target_path"
+        echo ""
+        echo "💡 To use the new extension version, reload your VS Code window:"
+        echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
+        echo "   • Type 'Developer: Reload Window' and press Enter"
+        echo "   • Or restart VS Code entirely"
+    else
+        echo "❌ Failed to install extension"
+        exit 1
+    fi
+}
 
 install_from_pr() {
     local pr_number=$1
@@ -154,17 +269,17 @@ install_from_pr() {
         exit 1
     fi
 
-    # Extract full version from the original VSIX filename (e.g., continue-1.1.66-a1b2c3d.vsix -> 1.1.66-a1b2c3d)
+    # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
     local original_filename=$(basename "$vsix_file")
-    local full_version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
 
-    if [ -z "$full_version" ]; then
+    if [ -z "$version" ]; then
         echo "⚠️  Could not extract version from filename: $original_filename"
-        full_version="unknown-pr${pr_number}"
+        version="unknown"
     fi
 
-    # Use the full version (which includes commit SHA) for the target filename
-    local target_path="$ONEPER_DIR/continue-${full_version}.vsix"
+    # Create new VSIX name with version and PR number
+    local target_path="$ONEPER_DIR/continue-${version}-${pr_number}.vsix"
 
     # Check if file already exists and notify about overwrite
     if [ -f "$target_path" ]; then
@@ -182,7 +297,6 @@ install_from_pr() {
     if code --install-extension "$target_path"; then
         echo "✅ Successfully installed Continue extension from PR #$pr_number"
         echo "📄 VSIX file saved to: $target_path"
-        echo "🔖 Extension version: ${full_version} (includes commit SHA)"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"
         echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
@@ -196,7 +310,7 @@ install_from_pr() {
 
 install_latest() {
     echo "🚀 Installing latest pre-release Continue extension..."
-    if code --install-extension --pre-release Continue.continue; then
+    if code --install-extension --pre-release Continue.continue --force; then
         echo "✅ Successfully installed latest pre-release Continue extension"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"
@@ -207,6 +321,112 @@ install_latest() {
         echo "❌ Failed to install extension"
         exit 1
     fi
+}
+
+get_latest_main_run_id() {
+    gh run list \
+        --repo "$REPO" \
+        --workflow="main-build.yaml" \
+        --branch="main" \
+        --json databaseId,status,conclusion \
+        --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
+        | head -1
+}
+
+check_and_install_if_new() {
+    local current_run_id=$(get_latest_main_run_id)
+    
+    if [ -z "$current_run_id" ]; then
+        echo "$(date): ❌ No successful main branch build found" >&2
+        return 1
+    fi
+    
+    local last_run_file="$ONEPER_DIR/last_installed_run"
+    local last_run_id=""
+    
+    if [ -f "$last_run_file" ]; then
+        last_run_id=$(cat "$last_run_file")
+    fi
+    
+    if [ "$current_run_id" != "$last_run_id" ]; then
+        echo "$(date): 🔄 New build detected (run $current_run_id), installing..."
+        
+        # Install from main silently
+        if install_from_main > /dev/null 2>&1; then
+            echo "$current_run_id" > "$last_run_file"
+            echo "$(date): ✅ Successfully installed new build from run $current_run_id"
+        else
+            echo "$(date): ❌ Failed to install new build" >&2
+            return 1
+        fi
+    else
+        echo "$(date): 🔍 No new builds (current: $current_run_id)"
+    fi
+}
+
+setup_cron() {
+    echo "🔧 Setting up automatic updates every 10 minutes..."
+    
+    # Get the absolute path to this script
+    local script_path=$(realpath "$0")
+    
+    # Create a wrapper script that calls the check function
+    local cron_script="$ONEPER_DIR/oneper-cron.sh"
+    
+    cat > "$cron_script" << EOF
+#!/bin/bash
+# Auto-generated oneper cron script
+export PATH="/usr/local/bin:/usr/bin:/bin:\$PATH"
+cd "\$(dirname "$script_path")"
+"$script_path" --cron-check
+EOF
+    
+    chmod +x "$cron_script"
+    
+    # Create log file
+    local log_file="$ONEPER_DIR/oneper-cron.log"
+    touch "$log_file"
+    
+    # Add to crontab
+    local cron_line="*/10 * * * * $cron_script >> $log_file 2>&1"
+    
+    # Check if cron job already exists
+    if crontab -l 2>/dev/null | grep -q "oneper-cron.sh"; then
+        echo "⚠️  Oneper cron job already exists. Removing old one..."
+        crontab -l 2>/dev/null | grep -v "oneper-cron.sh" | crontab -
+    fi
+    
+    # Add new cron job
+    (crontab -l 2>/dev/null; echo "$cron_line") | crontab -
+    
+    echo "✅ Automatic updates configured!"
+    echo "📊 Logs will be written to: $log_file"
+    echo "🔍 Check status with: tail -f $log_file"
+    echo ""
+    echo "💡 To remove automatic updates: oneper remove-cron"
+}
+
+remove_cron() {
+    echo "🗑️  Removing automatic updates..."
+    
+    # Remove from crontab
+    if crontab -l 2>/dev/null | grep -q "oneper-cron.sh"; then
+        crontab -l 2>/dev/null | grep -v "oneper-cron.sh" | crontab -
+        echo "✅ Removed cron job"
+    else
+        echo "ℹ️  No oneper cron job found"
+    fi
+    
+    # Clean up files
+    local cron_script="$ONEPER_DIR/oneper-cron.sh"
+    local log_file="$ONEPER_DIR/oneper-cron.log"
+    local last_run_file="$ONEPER_DIR/last_installed_run"
+    
+    [ -f "$cron_script" ] && rm "$cron_script" && echo "🗑️  Removed cron script"
+    [ -f "$log_file" ] && rm "$log_file" && echo "🗑️  Removed log file"
+    [ -f "$last_run_file" ] && rm "$last_run_file" && echo "🗑️  Removed state file"
+    
+    echo "✅ Automatic updates removed successfully"
 }
 
 clean_cache() {
@@ -230,18 +450,27 @@ clean_cache() {
 }
 
 main() {
-    if [ $# -eq 0 ]; then
-        show_help
-        exit 1
-    fi
-
-    # Handle help flags first
+    # Handle special internal commands first
     case "$1" in
+        "--cron-check")
+            # Internal command used by cron job
+            ensure_oneper_dir
+            check_and_install_if_new
+            exit $?
+            ;;
         "-h"|"--help")
             show_help
             exit 0
             ;;
     esac
+
+    # If no arguments, default to installing from main
+    if [ $# -eq 0 ]; then
+        check_dependencies
+        ensure_oneper_dir
+        install_from_main
+        exit 0
+    fi
 
     check_dependencies
     ensure_oneper_dir
@@ -264,12 +493,27 @@ main() {
                 "--latest")
                     install_latest
                     ;;
+                "--platform")
+                    # Handle: oneper install --platform <platform> (install from main with specific platform)
+                    local platform="$3"
+                    install_from_main "$platform"
+                    ;;
+                "")
+                    # Handle: oneper install (install from main with auto-detected platform)
+                    install_from_main
+                    ;;
                 *)
                     echo "❌ Unknown install option: $2"
                     show_help
                     exit 1
                     ;;
             esac
+            ;;
+        "setup-cron")
+            setup_cron
+            ;;
+        "remove-cron")
+            remove_cron
             ;;
         "clean")
             clean_cache

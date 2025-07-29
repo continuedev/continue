@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const globSearchTool: Tool = {
   type: "function",
@@ -26,4 +27,9 @@ export const globSearchTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithoutPermission",
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.FileGlobSearch,
+    `To return a list of files based on a glob search pattern, use the ${BuiltInToolNames.FileGlobSearch} tool`,
+    [["pattern", "*.py"]],
+  ),
 };

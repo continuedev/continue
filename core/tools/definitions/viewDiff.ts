@@ -1,6 +1,7 @@
 import { Tool } from "../..";
 
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const viewDiffTool: Tool = {
   type: "function",
@@ -20,4 +21,9 @@ export const viewDiffTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithoutPermission",
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.ViewDiff,
+    `To view the current git diff, use the ${BuiltInToolNames.ViewDiff} tool. This will show you the changes made in the working directory compared to the last commit.`,
+    [],
+  ),
 };
