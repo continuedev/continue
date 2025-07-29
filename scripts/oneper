@@ -22,20 +22,22 @@ show_help() {
     echo "                           Download and install VSIX from specified PR number"
     echo "                           Platform options: macos, linux (auto-detected by default)"
     echo "  install --latest         Install latest pre-release from VS Code marketplace"
-    echo "  setup-cron               Set up automatic updates every 10 minutes"
+    echo "  setup-cron [--interval <minutes>]  Set up automatic updates (default: 10 minutes)"
     echo "  remove-cron              Remove automatic updates"
     echo "  clean                    Remove all downloaded VSIX files from oneper cache"
     echo ""
     echo "Options:"
     echo "  -h, --help              Show this help message"
-    echo "  --platform <platform>   Specify platform for builds (macos, linux)"
+    echo "  --platform <platform>   Specify platform for builds (macos, linux)
+  --interval <minutes>     Set update interval in minutes (for setup-cron)"
     echo ""
     echo "Examples:"
     echo "  oneper install                       # Install latest build from main branch"
     echo "  oneper install --pr 123              # Install VSIX from PR #123"
     echo "  oneper install --pr 123 --platform linux   # Install Linux VSIX from PR #123"
     echo "  oneper install --latest              # Install latest pre-release"
-    echo "  oneper setup-cron                    # Auto-update every 10 minutes"
+    echo "  oneper setup-cron                    # Auto-update every 10 minutes
+  oneper setup-cron --interval 5       # Auto-update every 5 minutes"
     echo "  oneper remove-cron                   # Stop auto-updates"
     echo "  oneper clean                         # Clear cached VSIX files"
     echo "  oneper -h                            # Show help"
@@ -349,23 +351,24 @@ check_and_install_if_new() {
     fi
     
     if [ "$current_run_id" != "$last_run_id" ]; then
-        echo "$(date): 🔄 New build detected (run $current_run_id), installing..."
+        echo "$(date): 🔄 New build detected (https://github.com/$REPO/runs/$current_run_id), installing..."
         
         # Install from main silently
         if install_from_main > /dev/null 2>&1; then
             echo "$current_run_id" > "$last_run_file"
-            echo "$(date): ✅ Successfully installed new build from run $current_run_id"
+            echo "$(date): ✅ Successfully installed new build from https://github.com/$REPO/actions/runs/$current_run_id"
         else
             echo "$(date): ❌ Failed to install new build" >&2
             return 1
         fi
     else
-        echo "$(date): 🔍 No new builds (current: $current_run_id)"
+        echo "$(date): 🔍 No new builds (current: https://github.com/$REPO/actions/runs/$current_run_id)"
     fi
 }
 
 setup_cron() {
-    echo "🔧 Setting up automatic updates every 10 minutes..."
+    local interval=${1:-10}  # Default to 10 minutes if not specified
+    echo "🔧 Setting up automatic updates every $interval minutes..."
     
     # Get the absolute path to this script
     local script_path=$(realpath "$0")
@@ -376,7 +379,7 @@ setup_cron() {
     cat > "$cron_script" << EOF
 #!/bin/bash
 # Auto-generated oneper cron script
-export PATH="/usr/local/bin:/usr/bin:/bin:\$PATH"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:\$PATH"
 cd "\$(dirname "$script_path")"
 "$script_path" --cron-check
 EOF
@@ -388,7 +391,7 @@ EOF
     touch "$log_file"
     
     # Add to crontab
-    local cron_line="*/10 * * * * $cron_script >> $log_file 2>&1"
+    local cron_line="*/$interval * * * * $cron_script >> $log_file 2>&1"
     
     # Check if cron job already exists
     if crontab -l 2>/dev/null | grep -q "oneper-cron.sh"; then
@@ -510,7 +513,17 @@ main() {
             esac
             ;;
         "setup-cron")
-            setup_cron
+            # Check for --interval option
+            local interval=10
+            if [ "$2" = "--interval" ] && [ -n "$3" ]; then
+                interval="$3"
+                # Validate interval is a positive integer
+                if ! [[ "$interval" =~ ^[1-9][0-9]*$ ]]; then
+                    echo "❌ Invalid interval: $interval. Must be a positive integer."
+                    exit 1
+                fi
+            fi
+            setup_cron "$interval"
             ;;
         "remove-cron")
             remove_cron
