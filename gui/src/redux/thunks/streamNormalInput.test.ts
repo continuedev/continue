@@ -44,9 +44,6 @@ const mockConstructMessages = vi.mocked(constructMessages);
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
 describe("streamNormalInput", () => {
-  let mockStore: ReturnType<typeof createMockStore>;
-  let mockIdeMessenger: any;
-
   const mockClaudeModel: ModelDescription = {
     title: "Claude 3.5 Sonnet",
     model: "claude-3-5-sonnet-20241022",
@@ -55,8 +52,7 @@ describe("streamNormalInput", () => {
     completionOptions: { reasoningBudgetTokens: 2048 },
   };
 
-
-  beforeEach(() => {
+  function setupTest() {
     vi.clearAllMocks();
 
     // Default mock implementations for external functions
@@ -72,7 +68,7 @@ describe("streamNormalInput", () => {
     });
 
     // Create store with realistic state that selectors can work with
-    mockStore = createMockStore({
+    const mockStore = createMockStore({
       session: {
         history: [
           {
@@ -131,12 +127,14 @@ describe("streamNormalInput", () => {
       } as any,
     });
 
-    // Use the store's ideMessenger instance
-    mockIdeMessenger = mockStore.mockIdeMessenger;
-  });
+    const mockIdeMessenger = mockStore.mockIdeMessenger;
+
+    return { mockStore, mockIdeMessenger };
+  }
 
   describe("successful streaming flow", () => {
     it("should execute complete streaming flow with all dispatches", async () => {
+      const { mockStore, mockIdeMessenger } = setupTest();
       // Setup successful compilation
       mockIdeMessenger.request.mockResolvedValue({
         status: "success",
