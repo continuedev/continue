@@ -266,6 +266,7 @@ jobs:
 
   vscode-package-extension-linux:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -300,6 +301,7 @@ jobs:
 
   vscode-package-extension-macos:
     runs-on: macos-13
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -336,6 +338,7 @@ jobs:
     name: ${{ matrix.test_file || 'unknown' }} (${{ matrix.command }})
     needs: [vscode-get-test-file-matrix, vscode-package-extension-linux]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Tests requiring secrets need approval from maintainers
     strategy:
       fail-fast: false
@@ -356,6 +359,7 @@ jobs:
   jetbrains-tests:
     needs: [core-checks]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
