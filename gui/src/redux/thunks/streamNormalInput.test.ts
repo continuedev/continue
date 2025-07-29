@@ -622,5 +622,159 @@ describe("streamNormalInput", () => {
     expect(compileCallsCount).toBeGreaterThanOrEqual(1);
 
     expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+
+    // Verify final state after tool call execution
+    const finalState = mockStoreWithToolSettings.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: { id: "1", role: "user", content: "Please search the codebase" },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "I'll search the codebase for you.",
+              id: expect.any(String),
+              role: "assistant",
+              toolCalls: [
+                {
+                  id: "tool-call-1",
+                  type: "function",
+                  function: {
+                    name: "search_codebase",
+                    arguments: JSON.stringify({ query: "test function" }),
+                  },
+                },
+              ],
+            },
+            promptLogs: [
+              {
+                completion: "I'll search the codebase for you.",
+                modelProvider: "anthropic",
+                prompt: "Please search the codebase",
+              },
+            ],
+            toolCallStates: [
+              {
+                toolCallId: "tool-call-1",
+                toolCall: {
+                  id: "tool-call-1",
+                  type: "function",
+                  function: {
+                    name: "search_codebase",
+                    arguments: JSON.stringify({ query: "test function" }),
+                  },
+                },
+                parsedArgs: { query: "test function" },
+                status: "done",
+                output: [
+                  {
+                    name: "Search Results",
+                    description: "Found 3 matches",
+                    content: "Result 1\nResult 2\nResult 3",
+                    icon: "search",
+                    hidden: false,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            contextItems: [],
+            message: {
+              content: "Result 1\nResult 2\nResult 3",
+              id: expect.any(String),
+              role: "tool",
+              toolCallId: "tool-call-1",
+            },
+          },
+          {
+            contextItems: [],
+            isGatheringContext: false,
+            message: {
+              content: "Search completed.",
+              id: expect.any(String),
+              role: "assistant",
+            },
+            promptLogs: [
+              {
+                completion: "Search completed.",
+                modelProvider: "anthropic",
+                prompt: "continuing after tool",
+              },
+            ],
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: false,
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0.9,
+        isPruned: false,
+        isInEdit: false,
+        title: "New Session",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: {},
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {
+          search_codebase: "allowedWithoutPermission",
+        },
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
   });
 });
