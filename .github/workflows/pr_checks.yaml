@@ -363,7 +363,7 @@ jobs:
           is_fork: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
 
   jetbrains-tests:
-    needs: [core-checks]
+    needs: [core-checks, gui-checks, binary-checks]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
