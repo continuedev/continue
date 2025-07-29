@@ -202,15 +202,15 @@ describe("streamNormalInput", () => {
 
       // Verify IDE messenger calls
       expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
-        messages: expect.any(Array),
-        options: expect.any(Object),
+        messages: [{ role: "user", content: "Hello" }],
+        options: {},
       });
 
       expect(mockIdeMessenger.llmStreamChat).toHaveBeenCalledWith(
         expect.objectContaining({
-          completionOptions: expect.any(Object),
+          completionOptions: {},
           title: "Claude 3.5 Sonnet",
-          messages: expect.any(Array),
+          messages: [{ role: "user", content: "Hello" }],
           messageOptions: { precompiled: true },
         }),
         expect.any(AbortSignal),
