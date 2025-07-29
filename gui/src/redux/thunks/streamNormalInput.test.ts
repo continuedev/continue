@@ -1114,4 +1114,141 @@ describe("streamNormalInput", () => {
       },
     });
   });
+
+  it("should throw error for other compilation errors", async () => {
+    const { mockStore, mockIdeMessenger } = setupTest();
+
+    // Mock compilation failure with generic error
+    mockIdeMessenger.request.mockResolvedValue({
+      status: "error",
+      error: "Model configuration is invalid",
+    });
+
+    // Execute thunk and expect it to be rejected
+    const result = await mockStore.dispatch(streamNormalInput({}) as any);
+
+    // Verify thunk was rejected with the compilation error
+    expect(result.type).toBe("chat/streamNormalInput/rejected");
+    expect(result.error?.message).toBe("Model configuration is invalid");
+
+    // Verify action sequence - should get to compilation, then fail
+    const dispatchedActions = (mockStore as any).getActions();
+    expect(dispatchedActions).toEqual([
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "pending",
+        }),
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          index: 0,
+          appliedRules: [],
+        },
+      },
+      {
+        type: "session/setActive",
+      },
+      {
+        type: "session/setInlineErrorMessage",
+      },
+      // Error causes thunk rejection - no cleanup actions
+      {
+        type: "chat/streamNormalInput/rejected",
+        meta: expect.objectContaining({
+          arg: {},
+          requestStatus: "rejected",
+        }),
+        error: expect.objectContaining({
+          message: "Model configuration is invalid",
+        }),
+      },
+    ]);
+
+    // Verify IDE messenger was called for compilation but not streaming
+    expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [{ role: "user", content: "Hello" }],
+      options: {},
+    });
+    expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
+
+    // Verify final state - error interrupted processing, so session remains active
+    const finalState = mockStore.getState();
+    expect(finalState).toEqual({
+      session: {
+        history: [
+          {
+            appliedRules: [],
+            contextItems: [],
+            message: { id: "1", role: "user", content: "Hello" },
+          },
+        ],
+        hasReasoningEnabled: false,
+        isStreaming: true, // TODO: fix this
+        id: "session-123",
+        mode: "chat",
+        streamAborter: expect.any(AbortController),
+        contextPercentage: 0, // Unchanged - no successful compilation
+        isPruned: false, // Unchanged - no successful compilation
+        isInEdit: false,
+        title: "",
+        lastSessionId: undefined,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined, // No special error message - error was thrown
+      },
+      config: {
+        config: {
+          tools: [],
+          rules: [],
+          tabAutocompleteModel: undefined,
+          selectedModelByRole: {
+            chat: mockClaudeModel,
+            apply: null,
+            edit: null,
+            summarize: null,
+            autocomplete: null,
+            rerank: null,
+            embed: null,
+          },
+          experimental: {
+            onlyUseSystemMessageTools: false,
+          },
+        },
+        lastSelectedModelByRole: {
+          chat: mockClaudeModel.title,
+        },
+        loading: false,
+        configError: undefined,
+      },
+      ui: {
+        toolSettings: {},
+        ruleSettings: {},
+        showDialog: false,
+        dialogMessage: undefined,
+      },
+      editModeState: {
+        isInEdit: false,
+        returnToMode: "chat",
+      },
+      indexing: {
+        indexingState: "disabled",
+      },
+      tabs: {
+        tabsItems: [],
+      },
+      profiles: {
+        profiles: [],
+      },
+    });
+  });
 });
