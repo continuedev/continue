@@ -28,9 +28,8 @@ import {
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
-const LayoutTopDiv = styled(CustomScrollbarDiv)<{ showBorder: boolean }>`
+const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
-  border-top: ${(props) => (props.showBorder ? "1px solid yellow" : "none")};
   position: relative;
   overflow-x: hidden;
 `;
@@ -43,7 +42,7 @@ const GridDiv = styled.div`
 `;
 
 const Layout = () => {
-  const [showBorder, setShowBorder] = useState(false);
+  const [showStagingIndicator, setShowStagingIndicator] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -63,7 +62,7 @@ const Layout = () => {
         undefined,
       );
       response.status === "success" &&
-        setShowBorder(response.content.AUTH_TYPE.includes("staging"));
+        setShowStagingIndicator(response.content.AUTH_TYPE.includes("staging"));
     })();
   }, []);
 
@@ -247,7 +246,16 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-        <LayoutTopDiv showBorder={showBorder}>
+        <LayoutTopDiv>
+          {showStagingIndicator && (
+            <div
+              title="running on staging"
+              className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
+              style={{
+                backgroundColor: "var(--vscode-list-warningForeground)",
+              }}
+            />
+          )}
           <LumpProvider>
             <OSRContextMenu />
             <div
