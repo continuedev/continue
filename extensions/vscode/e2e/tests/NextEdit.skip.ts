@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
+
 import { expect } from "chai";
-import * as fs from "fs/promises";
 import { EditorView, TextEditor } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
