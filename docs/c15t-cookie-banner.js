@@ -12,7 +12,7 @@
   const defaultConsent = {
     necessary: true,
     analytics: false,
-    identification: false,
+    marketing: false,
   };
 
   // Wait for the page to fully load
@@ -75,8 +75,8 @@
     if (window.gtag) {
       window.gtag("consent", "update", {
         analytics_storage: consent.analytics ? "granted" : "denied",
-        ad_user_data: consent.identification ? "granted" : "denied",
-        ad_personalization: consent.identification ? "granted" : "denied",
+        ad_user_data: consent.marketing ? "granted" : "denied",
+        ad_personalization: consent.marketing ? "granted" : "denied",
       });
     }
 
@@ -116,7 +116,7 @@
       const consent = {
         necessary: true,
         analytics: true,
-        identification: true,
+        marketing: true,
       };
       applyConsent(consent);
       hideCookieBanner();
@@ -184,7 +184,7 @@
         <div class="cookie-category">
           <div class="cookie-category-header">
             <label class="cookie-switch">
-              <input type="checkbox" id="cookie-identification" ${currentConsent.identification ? "checked" : ""}>
+              <input type="checkbox" id="cookie-marketing" ${currentConsent.marketing ? "checked" : ""}>
               <span class="cookie-slider"></span>
             </label>
             <div class="cookie-category-info">
@@ -211,7 +211,7 @@
       const consent = {
         necessary: true,
         analytics: false,
-        identification: false,
+        marketing: false,
       };
       applyConsent(consent);
       hidePreferencesDialog();
@@ -221,7 +221,7 @@
       const consent = {
         necessary: true,
         analytics: document.getElementById("cookie-analytics").checked,
-        identification: document.getElementById("cookie-identification")
+        marketing: document.getElementById("cookie-marketing")
           .checked,
       };
       applyConsent(consent);
