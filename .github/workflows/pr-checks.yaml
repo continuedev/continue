@@ -228,16 +228,11 @@ jobs:
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Build packages and get test files
-        id: get-test-files
+        id: vscode-get-test-file-matrix
         run: |
           node ./scripts/build-packages.js
-          if [ "${{ steps.vscode-cache.outputs.cache-hit }}" != "true" ]; then
-            cd core
-            npm ci
-            cd ../extensions/vscode
-            npm ci
-          fi
           cd extensions/vscode
+          npm ci
           npm run e2e:compile
           if [[ "${{ github.event.pull_request.head.repo.fork }}" == "true" || "${{ github.actor }}" == "dependabot[bot]" ]]; then
             # Exclude SSH tests for forks
@@ -255,7 +250,7 @@ jobs:
 
       - name: Debug Outputs
         run: |
-          echo "Test files: ${{ steps.get-test-files.outputs.test_file_matrix }}"
+          echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
 
   vscode-package-extension-linux:
     runs-on: ubuntu-latest
