@@ -129,8 +129,8 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
     (l) => l.type !== "hunk" && l.type !== "other"
   );
 
-  const truncatedLines = displayableLines;
-  const isTruncated = false;
+  const truncatedLines = displayableLines.slice(0, 16);
+  const isTruncated = displayableLines.length > 16;
 
   // Group consecutive add/delete lines for word-level diffing
   const groupedLines: Array<{ type: "group" | "single"; lines: DiffLine[] }> =
