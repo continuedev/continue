@@ -65,8 +65,8 @@ An error occurred while handling the model response.
 - Model: ${selectedModel?.title || "Unknown"}
 - Provider: ${selectedModel?.provider || "Unknown"}
 - Model ID: ${selectedModel?.model || "Unknown"}
-- Continue Version: <!-- Please fill this in -->
-- IDE: <!-- VS Code, JetBrains, etc. -->
+- Continue Version: getLocalStorage("extensionVersion");
+- IDE: getLocalStorage("ide");
 - OS: <!-- Windows, macOS, Linux -->
 
 **Error Details:**
