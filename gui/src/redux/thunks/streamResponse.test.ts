@@ -1301,48 +1301,233 @@ describe("streamResponseThunk", () => {
     });
 
     // Execute thunk
-    const result = await mockStore.dispatch(streamNormalInput({}) as any);
+    const result = await mockStore.dispatch(
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
+    );
 
     // Verify thunk completed successfully (doesn't throw, handles error gracefully)
-    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify exact action sequence for this error path
     const dispatchedActions = (mockStore as any).getActions();
     expect(dispatchedActions).toEqual([
       {
-        type: "chat/streamNormalInput/pending",
-        meta: expect.objectContaining({
-          arg: {},
+        type: "chat/streamResponse/pending",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
           requestStatus: "pending",
-        }),
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/submitEditorAndInitAtIndex",
+        payload: {
+          editorState: mockEditorState,
+          index: 1,
+        },
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/pending",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateHistoryItemAtIndex",
+        payload: {
+          index: 1,
+          updates: {
+            contextItems: [],
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+        },
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
       },
       {
         type: "session/setAppliedRulesAtIndex",
         payload: {
-          index: 0,
           appliedRules: [],
+          index: 1,
         },
       },
       {
         type: "session/setActive",
+        payload: undefined,
       },
       {
         type: "session/setInlineErrorMessage",
+        payload: undefined,
       },
-      // Error handling actions
       {
         type: "session/setInlineErrorMessage",
         payload: "out-of-context",
       },
       {
         type: "session/setInactive",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/fulfilled",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
       },
       {
         type: "chat/streamNormalInput/fulfilled",
-        meta: expect.objectContaining({
-          arg: {},
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
           requestStatus: "fulfilled",
-        }),
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/pending",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/update/pending",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateSessionMetadata",
+        payload: {
+          sessionId: "session-123",
+          title: "New Session",
+        },
+      },
+      {
+        type: "session/refreshMetadata/pending",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/refreshMetadata/rejected",
+        meta: {
+          aborted: false,
+          arg: {},
+          condition: false,
+          rejectedWithValue: false,
+          requestId: expect.any(String),
+          requestStatus: "rejected",
+        },
+        payload: undefined,
+        error: {
+          message: "Not enough context available for this request",
+          name: "Error",
+          stack: expect.any(String),
+        },
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
       },
     ]);
 
