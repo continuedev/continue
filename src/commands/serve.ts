@@ -105,7 +105,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   // Initialize chat history
   let chatHistory: ChatCompletionMessageParam[] = [];
-  const systemMessage = await constructSystemMessage("", options.rule);
+  const systemMessage = await constructSystemMessage("", options.rule, undefined, true);
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });
   }

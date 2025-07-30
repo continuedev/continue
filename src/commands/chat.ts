@@ -72,7 +72,8 @@ export async function initializeChatHistory(
     const systemMessage = await constructSystemMessage(
       rulesSystemMessage,
       options.rule,
-      options.format
+      options.format,
+      options.headless
     );
     if (systemMessage) {
       chatHistory.push({ role: "system", content: systemMessage });
