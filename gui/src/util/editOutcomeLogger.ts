@@ -109,31 +109,73 @@ function extractPromptAndCompletion(toolCallState: ToolCallState): {
 }
 
 /**
- * Extract code changes from apply state
+ * Extract only the changed lines from apply state using a simple diff approach
  */
 function extractCodeChanges(applyState: ApplyState): {
   previousCode: string;
-  newCode: string;
+  newCode: string;  
   previousCodeLines: number;
   newCodeLines: number;
   lineChange: number;
 } {
-  // Use the original file content if provided, otherwise empty string
-  const previousCode = applyState.originalFileContent || "";
-  const newCode = applyState.fileContent || "";
+  const originalContent = applyState.originalFileContent || "";
+  const newContent = applyState.fileContent || "";
 
-  // Calculate line counts properly - empty string should be 0 lines, not 1
-  const previousCodeLines =
-    previousCode === "" ? 0 : previousCode.split("\n").length;
-  const newCodeLines = newCode === "" ? 0 : newCode.split("\n").length;
-  const lineChange = newCodeLines - previousCodeLines;
+  // If either is empty, return the full content (new file or deleted file)
+  if (originalContent === "" || newContent === "") {
+    const previousCodeLines = originalContent === "" ? 0 : originalContent.split("\n").length;
+    const newCodeLines = newContent === "" ? 0 : newContent.split("\n").length;
+    
+    return {
+      previousCode: originalContent,
+      newCode: newContent,
+      previousCodeLines,
+      newCodeLines,
+      lineChange: newCodeLines - previousCodeLines,
+    };
+  }
+
+  // Split into lines for comparison
+  const originalLines = originalContent.split("\n");
+  const newLines = newContent.split("\n");
+
+  // Find the range of changed lines using a simple approach
+  let firstChangedLine = 0;
+  let lastChangedLineOriginal = originalLines.length - 1;
+  let lastChangedLineNew = newLines.length - 1;
+
+  // Find first differing line from the start
+  while (
+    firstChangedLine < originalLines.length &&
+    firstChangedLine < newLines.length &&
+    originalLines[firstChangedLine] === newLines[firstChangedLine]
+  ) {
+    firstChangedLine++;
+  }
+
+  // Find last differing line from the end
+  while (
+    lastChangedLineOriginal >= firstChangedLine &&
+    lastChangedLineNew >= firstChangedLine &&
+    originalLines[lastChangedLineOriginal] === newLines[lastChangedLineNew]
+  ) {
+    lastChangedLineOriginal--;
+    lastChangedLineNew--;
+  }
+
+  // Extract only the changed sections
+  const changedOriginalLines = originalLines.slice(firstChangedLine, lastChangedLineOriginal + 1);
+  const changedNewLines = newLines.slice(firstChangedLine, lastChangedLineNew + 1);
+
+  const previousCode = changedOriginalLines.join("\n");
+  const newCode = changedNewLines.join("\n");
 
   return {
     previousCode,
     newCode,
-    previousCodeLines,
-    newCodeLines,
-    lineChange,
+    previousCodeLines: changedOriginalLines.length,
+    newCodeLines: changedNewLines.length,
+    lineChange: changedNewLines.length - changedOriginalLines.length,
   };
 }
 
