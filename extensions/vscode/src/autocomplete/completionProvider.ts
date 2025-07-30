@@ -236,6 +236,15 @@ export class ContinueCompletionProvider
       let recentlyEditedRanges =
         await this.recentlyEditedTracker.getRecentlyEditedRanges();
 
+      console.log(
+        "chain exists?",
+        this.nextEditProvider.chainExists(),
+        ", length:",
+        this.nextEditProvider.getChainLength(),
+        ", next regions queue:",
+        this.nextEditProvider.getNextEditableRegionsInTheCurrentChainLength(),
+      );
+
       if (this.nextEditProvider.chainExists()) {
         // The chain of edits is alive because the user has accepted the previous completion.
         // Get the next editable region and set the pos to be within that range.
@@ -415,32 +424,50 @@ export class ContinueCompletionProvider
 
       if (this.isNextEditActive) {
         if (!this.nextEditProvider.isStartOfChain()) {
-          const jumpPosition = new vscode.Position(
-            (outcome as NextEditOutcome).editableRegionStartLine,
-            0,
-          );
+          // Try suggesting jumps for each location in the queue.
+          let jumpSuccessful = false;
 
-          // Suggest a jump if there is a valid next location.
-          // This will set isJumpInProgress if a jump is suggested.
-          await this.jumpManager.suggestJump(
-            currCursorPos,
-            jumpPosition,
-            outcome.completion,
-          );
+          while (
+            this.nextEditProvider.getNextEditableRegionsInTheCurrentChainLength() >
+              0 &&
+            !jumpSuccessful
+          ) {
+            const nextRegion =
+              this.nextEditProvider.shiftNextEditableRegionsInTheCurrentChain();
+            if (!nextRegion) continue;
 
-          // If a jump was just suggested, don't show ghost text yet.
-          if (this.jumpManager.isJumpInProgress()) {
-            // Store this completion to be rendered after jump is complete.
-            this.jumpManager.setCompletionAfterJump({
-              completionId: completionId,
-              outcome: outcome as NextEditOutcome,
-              currentPosition: jumpPosition,
-            });
+            const jumpPosition = new vscode.Position(
+              nextRegion.range.start.line,
+              nextRegion.range.start.character,
+            );
 
-            return undefined; // Don't show anything yet!
+            // Try to suggest a jump to this location.
+            jumpSuccessful = await this.jumpManager.suggestJump(
+              currCursorPos,
+              jumpPosition,
+              outcome.completion,
+            );
+
+            if (jumpSuccessful) {
+              // Store completion to be rendered after jump.
+              this.jumpManager.setCompletionAfterJump({
+                completionId: completionId,
+                outcome: outcome as NextEditOutcome,
+                currentPosition: jumpPosition,
+              });
+
+              return undefined; // Don't show anything yet!
+            }
           }
 
-          return undefined;
+          // If no jump was successful after trying multiple locations,
+          // proceed with other completion display logic or return undefined.
+          if (!jumpSuccessful) {
+            console.log(
+              "No suitable jump location found after trying multiple positions",
+            );
+            return undefined;
+          }
         }
 
         // Check the diff between old and new editable region.

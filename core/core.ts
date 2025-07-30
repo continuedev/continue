@@ -761,6 +761,9 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
+      console.log("deleteChain called from files/closed");
+      await NextEditProvider.getInstance().deleteChain();
+
       try {
         const fileUris = await this.ide.getOpenFiles();
         if (fileUris) {

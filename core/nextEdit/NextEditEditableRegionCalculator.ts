@@ -385,7 +385,7 @@ async function staticJump(ctx: {
       console.log("No identifier node found near cursor position");
       return null;
     }
-    console.log("closest identifier:", identifierNode.text);
+    // console.log("closest identifier:", identifierNode.text);
 
     // Get all references to this identifier using the IDE's API
     const references = await ide.getReferences({
@@ -401,17 +401,17 @@ async function staticJump(ctx: {
       return null;
     }
 
-    console.log(
-      "references:",
-      JSON.stringify(
-        references.map((ref) => ({
-          line: ref.range.start.line,
-          character: ref.range.start.character,
-        })),
-        null,
-        2,
-      ),
-    );
+    // console.log(
+    //   "references:",
+    //   JSON.stringify(
+    //     references.map((ref) => ({
+    //       line: ref.range.start.line,
+    //       character: ref.range.start.character,
+    //     })),
+    //     null,
+    //     2,
+    //   ),
+    // );
 
     return references.length > 1 ? references.slice(1) : null;
   } catch (error) {

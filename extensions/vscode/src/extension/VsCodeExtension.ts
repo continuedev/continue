@@ -426,6 +426,7 @@ export class VsCodeExtension {
     // Listen for editor changes to clean up decorations when editor closes.
     vscode.window.onDidChangeVisibleTextEditors(async () => {
       // If our active editor is no longer visible, clear decorations.
+      console.log("deleteChain called from onDidChangeVisibleTextEditors");
       await NextEditProvider.getInstance().deleteChain();
     });
 
@@ -442,7 +443,10 @@ export class VsCodeExtension {
       }
 
       // 2. A jump is in progress.
-      if (JumpManager.getInstance().isJumpInProgress()) {
+      if (
+        JumpManager.getInstance().isJumpInProgress() ||
+        JumpManager.getInstance().wasJumpJustAccepted()
+      ) {
         return;
       }
 
@@ -472,6 +476,7 @@ export class VsCodeExtension {
       }
 
       // Otherwise, delete the chain (for rejection or unrelated movement).
+      console.log("deleteChain called from onDidChangeTextEditorSelection");
       await NextEditProvider.getInstance().deleteChain();
 
       NextEditProvider.getInstance().loadNextEditableRegionsInTheCurrentChain(
