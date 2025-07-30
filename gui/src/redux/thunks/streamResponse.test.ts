@@ -3825,6 +3825,8 @@ describe("streamResponseThunk", () => {
           });
         } else if (endpoint === "history/save") {
           return Promise.resolve({ status: "success" });
+        } else if (endpoint === "history/list") {
+          return Promise.resolve({ status: "success", content: [] });
         }
         return Promise.resolve({ status: "success", content: {} });
       },
@@ -4147,6 +4149,49 @@ describe("streamResponseThunk", () => {
         payload: undefined,
       },
       {
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: [],
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: [],
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
         type: "chat/streamWrapper/fulfilled",
         meta: {
           arg: expect.any(Function),
@@ -4183,19 +4228,23 @@ describe("streamResponseThunk", () => {
     // Verify tool execution completed successfully
     expect(approvalResult.type).toBe("chat/callTool/fulfilled");
 
-    // Verify the approval flow actions
+    // Verify exact approval flow actions
     const approvalActions = (mockStoreWithApproval as any).getActions();
-
-    // Should contain tool execution actions
-    expect(approvalActions).toContainEqual(
-      expect.objectContaining({
+    expect(approvalActions).toEqual([
+      {
+        type: "chat/callTool/pending",
+        meta: {
+          arg: { toolCallId: "tool-approval-flow-1" },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
         type: "session/setToolCallCalling",
         payload: { toolCallId: "tool-approval-flow-1" },
-      }),
-    );
-
-    expect(approvalActions).toContainEqual(
-      expect.objectContaining({
+      },
+      {
         type: "session/updateToolCallOutput",
         payload: {
           toolCallId: "tool-approval-flow-1",
@@ -4210,22 +4259,142 @@ describe("streamResponseThunk", () => {
             },
           ],
         },
-      }),
-    );
-
-    expect(approvalActions).toContainEqual(
-      expect.objectContaining({
+      },
+      {
         type: "session/acceptToolCall",
         payload: { toolCallId: "tool-approval-flow-1" },
-      }),
-    );
-
-    // Should trigger follow-up streaming (streamAfterToolCall)
-    expect(approvalActions).toContainEqual(
-      expect.objectContaining({
+      },
+      {
+        type: "chat/streamAfterToolCall/pending",
+        meta: {
+          arg: {
+            toolCallId: "tool-approval-flow-1",
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            content:
+              "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+            role: "tool",
+            toolCallId: "tool-approval-flow-1",
+          },
+        ],
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          appliedRules: [],
+          index: 1,
+        },
+      },
+      {
+        type: "session/setActive",
+        payload: undefined,
+      },
+      {
+        type: "session/setInlineErrorMessage",
+        payload: undefined,
+      },
+      {
+        type: "session/setIsPruned",
+        payload: false,
+      },
+      {
+        type: "session/setContextPercentage",
+        payload: 0.85,
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content:
+              "I found several test functions in your codebase. Here are the main ones I discovered...",
+          },
+        ],
+      },
+      {
+        type: "session/addPromptCompletionPair",
+        payload: [
+          {
+            completion:
+              "I found several test functions in your codebase. Here are the main ones I discovered...",
+            modelProvider: "anthropic",
+            prompt: "continuing after tool execution",
+          },
+        ],
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
+      },
+      {
+        type: "chat/streamNormalInput/fulfilled",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
         type: "chat/streamAfterToolCall/fulfilled",
-      }),
-    );
+        meta: {
+          arg: {
+            toolCallId: "tool-approval-flow-1",
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/callTool/fulfilled",
+        meta: {
+          arg: { toolCallId: "tool-approval-flow-1" },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+    ]);
 
     // Verify IDE messenger calls for tool execution
     expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith(
