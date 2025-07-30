@@ -42,6 +42,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     modelTitle,
     providerName,
     apiKeyUrl,
+    requestId,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const githubIssueUrl = useMemo(() => {
@@ -60,6 +61,7 @@ An error occurred while handling the model response.
 
 **Environment Info:**
 - Status Code: ${statusCode || "N/A"}
+- Request ID: ${requestId || "N/A"}
 - Model: ${selectedModel?.title || "Unknown"}
 - Provider: ${selectedModel?.provider || "Unknown"}
 - Model ID: ${selectedModel?.model || "Unknown"}
@@ -84,7 +86,7 @@ ${parsedError}
     );
 
     return `${baseUrl}?${params.toString()}`;
-  }, [parsedError, statusCode, selectedModel]);
+  }, [parsedError, statusCode, selectedModel, requestId]);
 
   const handleRefreshProfiles = () => {
     void refreshProfiles();
@@ -94,6 +96,12 @@ ${parsedError}
 
   const copyErrorToClipboard = () => {
     void navigator.clipboard.writeText(parsedError);
+  };
+
+  const copyRequestIdToClipboard = () => {
+    if (requestId) {
+      void ideMessenger.post("copyText", { text: requestId });
+    }
   };
 
   const history = useAppSelector((store) => store.session.history);
@@ -300,6 +308,29 @@ ${parsedError}
         <div className="mb-2">
           <ToggleDiv title="View error output" testId="error-output-toggle">
             <div className="flex flex-col gap-0 rounded-sm">
+              {/* Request ID section */}
+              {requestId && (
+                <div className="border-b bg-gray-50 p-3 dark:bg-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                        Request ID
+                      </span>
+                      <code className="font-mono text-xs text-gray-900 dark:text-gray-100">
+                        {requestId}
+                      </code>
+                    </div>
+                    <GhostButton
+                      onClick={copyRequestIdToClipboard}
+                      className="flex items-center"
+                    >
+                      <ClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
+                      <span className="text-xs">Copy ID</span>
+                    </GhostButton>
+                  </div>
+                </div>
+              )}
+
               <code className="text-editor-foreground block max-h-48 overflow-y-auto p-3 font-mono text-xs">
                 {parsedError}
               </code>
