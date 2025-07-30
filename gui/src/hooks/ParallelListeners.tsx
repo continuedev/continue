@@ -38,7 +38,7 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
-import { logAgentModeEditOutcome } from "../util/editOutcomeLogger";
+import { logAgentModeEditOutcome, logChatModeEditOutcome } from "../util/editOutcomeLogger";
 import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -57,6 +57,9 @@ function ParallelListeners() {
   );
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
+  
+  // Track logged stream IDs to prevent duplicates
+  const loggedStreamIds = useRef(new Set<string>());
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
@@ -246,6 +249,7 @@ function ParallelListeners() {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
+      console.log("updateApplyState received:", state);
       if (state.streamId === EDIT_MODE_STREAM_ID) {
         dispatch(updateEditStateApplyState(state));
 
@@ -263,16 +267,37 @@ function ParallelListeners() {
         // chat or agent
         dispatch(updateApplyState(state));
 
-        // Handle apply status updates - use toolCallId from event payload
-        if (state.toolCallId) {
-          if (state.status === "done" && autoAcceptEditToolDiffs) {
-            ideMessenger.post("acceptDiff", {
-              streamId: state.streamId,
-              filepath: state.filepath,
-            });
+        // Handle apply status updates
+        if (state.status === "done" && autoAcceptEditToolDiffs && state.toolCallId) {
+          ideMessenger.post("acceptDiff", {
+            streamId: state.streamId,
+            filepath: state.filepath,
+          });
+        }
+        
+        if (state.status === "closed") {
+          // Prevent duplicate logging for the same streamId
+          if (loggedStreamIds.current.has(state.streamId)) {
+            console.log("Skipping duplicate logging for streamId:", state.streamId);
+            return;
           }
-          if (state.status === "closed") {
-            // Find the tool call to check if it was canceled
+          loggedStreamIds.current.add(state.streamId);
+
+          const currentState = store.getState();
+          const currentMode = currentState.session.mode;
+          const applyState = currentState.session.codeBlockApplyStates.states.find(
+            (s) => s.streamId === state.streamId,
+          );
+
+          console.log("ParallelListeners updateApplyState status=closed:", {
+            currentMode,
+            applyState,
+            hasToolCallId: !!state.toolCallId,
+            streamId: state.streamId,
+          });
+
+          // Handle tool call based interactions (agent mode or chat with tool calls)
+          if (state.toolCallId) {
             const toolCallState = findToolCallById(
               store.getState().session.history,
               state.toolCallId,
@@ -283,20 +308,23 @@ function ParallelListeners() {
 
               logToolUsage(toolCallState, accepted, true, ideMessenger);
 
-              // Log edit outcome for Agent Mode
-              const applyState = store
-                .getState()
-                .session.codeBlockApplyStates.states.find(
-                  (s) => s.streamId === state.streamId,
-                );
-
               if (applyState) {
-                void logAgentModeEditOutcome(
-                  toolCallState,
-                  applyState,
-                  accepted,
-                  ideMessenger,
-                );
+                if (currentMode === "agent") {
+                  console.log("Logging agent mode edit outcome");
+                  void logAgentModeEditOutcome(
+                    toolCallState,
+                    applyState,
+                    accepted,
+                    ideMessenger,
+                  );
+                } else {
+                  console.log("Logging chat mode edit outcome (with tool call)");
+                  void logChatModeEditOutcome(
+                    applyState,
+                    accepted,
+                    ideMessenger,
+                  );
+                }
               }
 
               if (accepted) {
@@ -312,13 +340,18 @@ function ParallelListeners() {
                 );
               }
             }
-            // const output: ContextItem = {
-            //   name: "Edit tool output",
-            //   content: "Completed edit",
-            //   description: "",
-            // };
-            // dispatch(setToolCallOutput([]));
+          } else if (applyState && currentMode === "chat") {
+            // Handle manual chat mode applies (no tool call)
+            // For manual applies, we assume accepted=true since the user manually triggered the apply
+            console.log("Logging manual chat mode edit outcome");
+            void logChatModeEditOutcome(
+              applyState,
+              true, // Manual applies are considered accepted
+              ideMessenger,
+            );
           }
+          
+          console.log("End of updateApplyState status=closed processing");
         }
       }
     },
