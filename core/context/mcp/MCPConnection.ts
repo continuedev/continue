@@ -1,3 +1,4 @@
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
@@ -346,29 +347,49 @@ class MCPConnection {
         return transport;
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
-      case "sse":
-        return new SSEClientTransport(new URL(options.transport.url), {
+      case "sse": {
+        const { url, requestOptions } = options.transport;
+        const agent =
+          typeof requestOptions?.verifySsl === "boolean" &&
+          !requestOptions.verifySsl
+            ? new HttpsProxyAgent({ rejectUnauthorized: false })
+            : undefined;
+
+        const customFetch = (
+          input: RequestInfo | URL,
+          init?: RequestInit,
+        ): Promise<Response> => {
+          return fetch(input, {
+            ...init,
+            // @ts-ignore
+            agent,
+          });
+        };
+
+        return new SSEClientTransport(new URL(url), {
           eventSourceInit: {
-            fetch: (input, init) =>
-              fetch(input, {
-                ...init,
-                headers: {
-                  ...init?.headers,
-                  ...(options.transport.requestOptions?.headers as
-                    | Record<string, string>
-                    | undefined),
-                },
-              }),
+            // @ts-ignore
+            fetch: customFetch,
           },
-          requestInit: { headers: options.transport.requestOptions?.headers },
+          requestInit: { headers: requestOptions?.headers },
         });
-      case "streamable-http":
-        return new StreamableHTTPClientTransport(
-          new URL(options.transport.url),
-          {
-            requestInit: { headers: options.transport.requestOptions?.headers },
+      }
+      case "streamable-http": {
+        const { url, requestOptions } = options.transport;
+        const agent =
+          typeof requestOptions?.verifySsl === "boolean" &&
+          !requestOptions.verifySsl
+            ? new HttpsProxyAgent({ rejectUnauthorized: false })
+            : undefined;
+
+        return new StreamableHTTPClientTransport(new URL(url), {
+          requestInit: {
+            headers: requestOptions?.headers,
+            // @ts-ignore
+            agent,
           },
-        );
+        });
+      }
       default:
         throw new Error(
           `Unsupported transport type: ${(options.transport as any).type}`,
