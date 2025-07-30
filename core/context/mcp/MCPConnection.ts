@@ -355,21 +355,20 @@ class MCPConnection {
             ? new HttpsProxyAgent({ rejectUnauthorized: false })
             : undefined;
 
-        const customFetch = (
-          input: RequestInfo | URL,
-          init?: RequestInit,
-        ): Promise<Response> => {
-          return fetch(input, {
-            ...init,
-            // @ts-ignore
-            agent,
-          });
-        };
-
         return new SSEClientTransport(new URL(url), {
           eventSourceInit: {
-            // @ts-ignore
-            fetch: customFetch,
+            fetch: (input, init) =>
+              fetch(input, {
+                ...init,
+                headers: {
+                  ...init?.headers,
+                  ...(requestOptions?.headers as
+                    | Record<string, string>
+                    | undefined),
+                },
+                // @ts-ignore
+                agent,
+              }),
           },
           requestInit: { headers: requestOptions?.headers },
         });
