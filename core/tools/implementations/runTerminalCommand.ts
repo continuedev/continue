@@ -1,28 +1,126 @@
-import iconv from "iconv-lite";
-import childProcess from "node:child_process";
-import util from "node:util";
-// Automatically decode the buffer according to the platform to avoid garbled Chinese
+import { decode } from "iconv-lite";
+import { execSync, exec, spawn } from "node:child_process";
+
+// Decode buffer output using the detected system encoding
 function getDecodedOutput(data: Buffer): string {
   if (process.platform === "win32") {
+    const { encoding } = detectSystemEncoding();
+
     try {
-      let out = iconv.decode(data, "utf-8");
-      if (/�/.test(out)) {
-        out = iconv.decode(data, "gbk");
-      }
-      return out;
+      return decode(data, encoding);
     } catch {
-      return iconv.decode(data, "gbk");
+      // Fallback: try the other common encoding
+      const fallbackEncoding = encoding === "utf-8" ? "gbk" : "utf-8";
+      try {
+        return decode(data, fallbackEncoding);
+      } catch {
+        // Final fallback: use Node's default
+        return data.toString();
+      }
     }
   } else {
     return data.toString();
   }
-} // Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
+}
+
+// Check if PowerShell Core is available (cached result)
+let hasPwsh: boolean | null = null;
+let systemEncoding: string | null = null;
+let shouldForceUtf8: boolean | null = null;
+
+function checkPwshAvailability(): boolean {
+  if (hasPwsh === null) {
+    try {
+      // Check if pwsh exists by trying to access it
+      execSync("pwsh -Version", { stdio: "ignore" });
+      hasPwsh = true;
+    } catch {
+      hasPwsh = false;
+    }
+  }
+  return hasPwsh;
+}
+
+function detectSystemEncoding(): { encoding: string; forceUtf8: boolean } {
+  if (systemEncoding !== null && shouldForceUtf8 !== null) {
+    return { encoding: systemEncoding, forceUtf8: shouldForceUtf8 };
+  }
+
+  if (process.platform !== "win32") {
+    systemEncoding = "utf-8";
+    shouldForceUtf8 = false;
+    return { encoding: systemEncoding, forceUtf8: shouldForceUtf8 };
+  }
+
+  try {
+    // Get current code page
+    const chcpOutput = execSync("chcp", { encoding: "ascii" }).toString();
+    const codePageMatch = chcpOutput.match(/(\d+)/);
+    const currentCodePage = codePageMatch ? codePageMatch[1] : "936"; // default to GBK
+
+    // Check if we're in a Chinese locale
+    const isChineseLocale =
+      process.env.LANG?.includes("zh") ||
+      process.env.LC_ALL?.includes("zh") ||
+      currentCodePage === "936"; // GBK code page
+
+    // Check Windows version (Windows 10+ has better UTF-8 support)
+    const isModernWindows =
+      process.platform === "win32" &&
+      parseInt(process.version.split(".")[0].substring(1)) >= 10;
+
+    // Force UTF-8 in modern scenarios
+    const hasPowerShellCore = checkPwshAvailability();
+    const shouldForce = isModernWindows || hasPowerShellCore;
+
+    if (shouldForce) {
+      // Modern Windows or PowerShell Core - prefer UTF-8
+      systemEncoding = "utf-8";
+      shouldForceUtf8 = true;
+    } else if (isChineseLocale) {
+      // Legacy Windows with Chinese locale - use GBK
+      systemEncoding = "gbk";
+      shouldForceUtf8 = false;
+    } else {
+      // Legacy Windows, non-Chinese - try UTF-8 but don't force
+      systemEncoding = currentCodePage === "65001" ? "utf-8" : "gbk";
+      shouldForceUtf8 = false;
+    }
+  } catch {
+    // Final fallback - prefer UTF-8 for better emoji support
+    // Most systems today can handle UTF-8 better than GBK
+    systemEncoding = "utf-8";
+    shouldForceUtf8 = false; // Don't force, but try UTF-8 first
+  }
+
+  return { encoding: systemEncoding, forceUtf8: shouldForceUtf8 };
+}
+
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
-    // Windows: Use PowerShell
+    const shell = checkPwshAvailability() ? "pwsh" : "powershell.exe";
+    const { forceUtf8 } = detectSystemEncoding();
+
+    let enhancedCommand = command;
+
+    if (forceUtf8) {
+      // Force UTF-8 for modern systems, PowerShell Core, or when explicitly needed
+      enhancedCommand = `chcp 65001 >$null 2>&1; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ${command}`;
+    } else {
+      // Use system defaults for legacy systems or Chinese locales
+      // Just ensure console output encoding matches the expected encoding
+      enhancedCommand = `[Console]::OutputEncoding = [Console]::InputEncoding; ${command}`;
+    }
+
     return {
-      shell: "powershell.exe",
-      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      shell,
+      args: [
+        "-NoLogo",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        enhancedCommand,
+      ],
     };
   } else {
     // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
@@ -39,17 +137,55 @@ import {
 } from "../../util/processTerminalBackgroundStates";
 import { getBooleanArg, getStringArg } from "../parseArgs";
 
-const asyncExec = util.promisify(childProcess.exec);
+// Add color-supporting environment variables with platform-specific optimizations
+const getColorEnv = () => {
+  const baseEnv = { ...process.env };
 
-// Add color-supporting environment variables
-const getColorEnv = () => ({
-  ...process.env,
-  FORCE_COLOR: "1",
-  COLORTERM: "truecolor",
-  TERM: "xterm-256color",
-  CLICOLOR: "1",
-  CLICOLOR_FORCE: "1",
-});
+  if (process.platform === "win32") {
+    const { encoding, forceUtf8 } = detectSystemEncoding();
+
+    const windowsEnv = {
+      ...baseEnv,
+      // Enable ANSI color sequences in Windows Console/PowerShell
+      FORCE_COLOR: "1",
+      // Some Node.js tools and npm packages respect this
+      NO_COLOR: undefined, // Remove NO_COLOR if it exists
+      // Enable virtual terminal processing for better ANSI support
+      ENABLE_VIRTUAL_TERMINAL_PROCESSING: "1",
+      // PowerShell Core specific
+      PSStyle: "1",
+    };
+
+    if (forceUtf8) {
+      // Set UTF-8 environment for modern systems
+      return {
+        ...windowsEnv,
+        PYTHONIOENCODING: "utf-8",
+        CHCP: "65001",
+        LC_ALL: "C.UTF-8",
+        LANG: "C.UTF-8",
+      };
+    } else {
+      // Use system defaults for legacy/Chinese systems
+      return {
+        ...windowsEnv,
+        // Let system encoding be respected
+        PYTHONIOENCODING: encoding === "utf-8" ? "utf-8" : "gbk",
+      };
+    }
+  } else {
+    // Unix/Linux/macOS specific color environment
+    return {
+      ...baseEnv,
+      FORCE_COLOR: "1",
+      COLORTERM: "truecolor",
+      TERM: "xterm-256color",
+      CLICOLOR: "1",
+      CLICOLOR_FORCE: "1",
+      NO_COLOR: undefined, // Remove NO_COLOR if it exists
+    };
+  }
+};
 
 const ENABLED_FOR_REMOTES = [
   "",
@@ -102,12 +238,11 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
               // Use spawn with color environment
               const { shell, args } = getShellCommand(command);
-              const childProc = childProcess.spawn(shell, args, {
+              const childProc = spawn(shell, args, {
                 cwd,
                 env: getColorEnv(), // Add enhanced environment for colors
               });
-
-              childProc.stdout?.on("data", (data) => {
+              childProc.stdout?.on("data", (data: Buffer) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
 
@@ -133,7 +268,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 }
               });
 
-              childProc.stderr?.on("data", (data) => {
+              childProc.stderr?.on("data", (data: Buffer) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
 
@@ -167,8 +302,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                   },
                 ]);
               }
-
-              childProc.on("close", (code) => {
+              childProc.on("close", (code: number | null) => {
                 // If this process has been backgrounded, clean it up from the map and return
                 if (isProcessBackgrounded(toolCallId)) {
                   removeBackgroundedProcess(toolCallId);
@@ -220,7 +354,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 }
               });
 
-              childProc.on("error", (error) => {
+              childProc.on("error", (error: Error) => {
                 // If this process has been backgrounded, clean it up from the map and return
                 if (isProcessBackgrounded(toolCallId)) {
                   removeBackgroundedProcess(toolCallId);
@@ -250,27 +384,22 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             getShellCommand(command);
           const output = await new Promise<{ stdout: string; stderr: string }>(
             (resolve, reject) => {
-              const childProc = childProcess.spawn(
-                nonStreamingShell,
-                nonStreamingArgs,
-                {
-                  cwd,
-                  env: getColorEnv(),
-                },
-              );
+              const childProc = spawn(nonStreamingShell, nonStreamingArgs, {
+                cwd,
+                env: getColorEnv(),
+              });
 
               let stdout = "";
               let stderr = "";
-
-              childProc.stdout?.on("data", (data) => {
+              childProc.stdout?.on("data", (data: Buffer) => {
                 stdout += getDecodedOutput(data);
               });
 
-              childProc.stderr?.on("data", (data) => {
+              childProc.stderr?.on("data", (data: Buffer) => {
                 stderr += getDecodedOutput(data);
               });
 
-              childProc.on("close", (code) => {
+              childProc.on("close", (code: number | null) => {
                 if (code === 0) {
                   resolve({ stdout, stderr });
                 } else {
@@ -282,7 +411,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 }
               });
 
-              childProc.on("error", (error) => {
+              childProc.on("error", (error: Error) => {
                 reject(error);
               });
             },
@@ -315,7 +444,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           // Use spawn with color environment
           const { shell: detachedShell, args: detachedArgs } =
             getShellCommand(command);
-          const childProc = childProcess.spawn(detachedShell, detachedArgs, {
+          const childProc = spawn(detachedShell, detachedArgs, {
             cwd,
             env: getColorEnv(), // Add color environment
             // Detach the process so it's not tied to the parent
