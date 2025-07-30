@@ -4,7 +4,6 @@ import {
   EDITABLE_REGION_START_TOKEN,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-  USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 
 export function insertCursorToken(
@@ -52,8 +51,6 @@ export function insertEditableRegionTokensWithStaticRange(
     );
   }
 
-  // console.log("editableRegionStart:", editableRegionStart);
-
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),
     EDITABLE_REGION_START_TOKEN,
@@ -63,23 +60,4 @@ export function insertEditableRegionTokensWithStaticRange(
   ];
 
   return instrumentedLines;
-}
-
-export function insertEditableRegionTokensWithAst(
-  lines: string[],
-  cursorPos: Position,
-) {
-  if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
-    return lines;
-  }
-
-  // Ensure character position is within bounds or at the end of the line.
-  const lineLength = lines[cursorPos.line].length;
-  const charPos = Math.min(Math.max(0, cursorPos.character), lineLength);
-
-  (lines[cursorPos.line] =
-    lines[cursorPos.line].slice(0, charPos) + USER_CURSOR_IS_HERE_TOKEN),
-    lines[cursorPos.line].slice(charPos);
-
-  return lines;
 }
