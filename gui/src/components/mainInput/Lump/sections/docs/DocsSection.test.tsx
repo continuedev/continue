@@ -28,20 +28,16 @@ vi.mock("../../../../Input", () => ({
   ),
 }));
 
-vi.mock("../../../../Select", () => ({
-  Select: ({ children, value, onValueChange }: any) => (
-    <div data-value={value} data-onchange={onValueChange}>
+vi.mock("../../../../gui/Select", () => ({
+  Select: ({ value, onChange, children }: any) => (
+    <select
+      value={value}
+      onChange={onChange}
+      data-testid="select"
+    >
       {children}
-    </div>
+    </select>
   ),
-  SelectTrigger: ({ children }: any) => (
-    <button data-testid="select-trigger">{children}</button>
-  ),
-  SelectContent: ({ children }: any) => <div>{children}</div>,
-  SelectItem: ({ children, value }: any) => (
-    <option value={value}>{children}</option>
-  ),
-  SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
 }));
 
 const createMockStore = (docs: any[] = [], statuses: any = {}) => {
@@ -67,7 +63,7 @@ describe("DocsIndexingStatuses", () => {
     renderWithProviders(<DocsIndexingStatuses />, store);
 
     expect(screen.getByTestId("search-input")).toBeInTheDocument();
-    expect(screen.getAllByTestId("select-trigger")).toHaveLength(2); // Sort and Group selects
+    expect(screen.getAllByTestId("select")).toHaveLength(2); // Sort and Group selects
   });
 
   it("filters docs based on search query", async () => {
