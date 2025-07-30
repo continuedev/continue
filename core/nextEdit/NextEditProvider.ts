@@ -364,10 +364,7 @@ export class NextEditProvider {
           ctx = {};
         }
 
-        const promptMetadata = await renderPrompt(
-          helper,
-          ctx,
-        );
+        const promptMetadata = await renderPrompt(helper, ctx);
 
         this.promptMetadata = promptMetadata;
 
