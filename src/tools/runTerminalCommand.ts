@@ -25,6 +25,7 @@ export const runTerminalCommandTool: Tool = {
       let stderr = "";
       let lastOutputTime = Date.now();
       let timeoutId: NodeJS.Timeout;
+      let isResolved = false;
 
       const TIMEOUT_MS = 30000; // 30 seconds
 
@@ -33,6 +34,8 @@ export const runTerminalCommandTool: Tool = {
           clearTimeout(timeoutId);
         }
         timeoutId = setTimeout(() => {
+          if (isResolved) return;
+          isResolved = true;
           child.kill();
           const output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           resolve(
@@ -57,20 +60,26 @@ export const runTerminalCommandTool: Tool = {
       });
 
       child.on("close", (code) => {
+        if (isResolved) return;
+        isResolved = true;
+        
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
 
-        // Track specific git operations
-        if (isGitCommitCommand(command)) {
-          telemetryService.recordCommitCreated();
-        } else if (isPullRequestCommand(command)) {
-          telemetryService.recordPullRequestCreated();
-        }
-
-        if (code !== 0) {
+        // Only reject on non-zero exit code if there's also stderr
+        if (code !== 0 && stderr) {
           reject(`Error (exit code ${code}): ${stderr}`);
           return;
+        }
+
+        // Track specific git operations only after successful execution
+        if (code === 0) {
+          if (isGitCommitCommand(command)) {
+            telemetryService.recordCommitCreated();
+          } else if (isPullRequestCommand(command)) {
+            telemetryService.recordPullRequestCreated();
+          }
         }
 
         if (stderr) {
@@ -81,6 +90,9 @@ export const runTerminalCommandTool: Tool = {
       });
 
       child.on("error", (error) => {
+        if (isResolved) return;
+        isResolved = true;
+        
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
