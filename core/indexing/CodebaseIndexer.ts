@@ -747,7 +747,7 @@ export class CodebaseIndexer {
     ) {
       return;
     }
-    const localController = new AbortController;
+    const localController = new AbortController();
     this.indexingCancellationController = localController;
 
     try {
@@ -817,7 +817,6 @@ export class CodebaseIndexer {
     config: newConfig,
   }: ConfigResult<ContinueConfig>) {
     if (newConfig) {
-
       const ideSettings = await this.ide.getIdeSettings();
       const pauseCodebaseIndexOnStart = ideSettings.pauseCodebaseIndexOnStart;
       if (pauseCodebaseIndexOnStart) {

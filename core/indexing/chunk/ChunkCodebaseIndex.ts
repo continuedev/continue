@@ -91,7 +91,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
           // Throw any errors other than duplicate tag
           // Possible the changes were already added by another instance of the extension
           // For example vscode running side by side with intellij
-          throw(e);
+          throw e;
         }
       }
       await markComplete([item], IndexResultType.AddTag);
