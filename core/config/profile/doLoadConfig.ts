@@ -10,7 +10,6 @@ import {
 
 import {
   ContinueConfig,
-  ContinueRcJson,
   IDE,
   IdeSettings,
   ILLMLogger,
@@ -87,7 +86,6 @@ export default async function doLoadConfig(options: {
     packageIdentifier,
   } = options;
 
-  const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ideSettingsPromise;
@@ -127,7 +125,6 @@ export default async function doLoadConfig(options: {
   } else {
     const result = await loadContinueConfigFromJson(
       ide,
-      workspaceConfigs,
       ideSettings,
       ideInfo,
       uniqueId,
@@ -383,22 +380,4 @@ async function injectControlPlaneProxyInfo(
   });
 
   return config;
-}
-
-async function getWorkspaceConfigs(ide: IDE): Promise<ContinueRcJson[]> {
-  const ideInfo = await ide.getIdeInfo();
-  let workspaceConfigs: ContinueRcJson[] = [];
-
-  try {
-    workspaceConfigs = await ide.getWorkspaceConfigs();
-
-    // Config is sent over the wire from JB so we need to parse it
-    if (ideInfo.ideType === "jetbrains") {
-      workspaceConfigs = (workspaceConfigs as any).map(JSON.parse);
-    }
-  } catch (e) {
-    console.debug("Failed to load workspace configs: ", e);
-  }
-
-  return workspaceConfigs;
 }

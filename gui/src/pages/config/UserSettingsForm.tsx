@@ -68,10 +68,6 @@ export function UserSettingsForm() {
     });
   };
 
-  const handleOptInNextEditToggle = (value: boolean) => {
-    handleUpdate({ optInNextEditFeature: value });
-  };
-
   const handleEnableStaticContextualizationToggle = (value: boolean) => {
     handleUpdate({ enableStaticContextualization: value });
   };
@@ -93,8 +89,8 @@ export function UserSettingsForm() {
     config.experimental?.useCurrentFileAsContext ?? false;
   const enableExperimentalTools =
     config.experimental?.enableExperimentalTools ?? false;
-  const optInNextEditFeature =
-    config.experimental?.optInNextEditFeature ?? false;
+  const onlyUseSystemMessageTools =
+    config.experimental?.onlyUseSystemMessageTools ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
   const enableStaticContextualization =
@@ -427,6 +423,16 @@ export function UserSettingsForm() {
                 />
 
                 <ToggleSwitch
+                  isToggled={onlyUseSystemMessageTools}
+                  onToggle={() =>
+                    handleUpdate({
+                      onlyUseSystemMessageTools: !onlyUseSystemMessageTools,
+                    })
+                  }
+                  text="Only use system message tools"
+                />
+
+                <ToggleSwitch
                   isToggled={codebaseToolCallingOnly}
                   onToggle={() =>
                     handleUpdate({
@@ -438,8 +444,6 @@ export function UserSettingsForm() {
 
                 {hasContinueEmail && (
                   <ContinueFeaturesMenu
-                    optInNextEditFeature={optInNextEditFeature}
-                    handleOptInNextEditToggle={handleOptInNextEditToggle}
                     enableStaticContextualization={
                       enableStaticContextualization
                     }

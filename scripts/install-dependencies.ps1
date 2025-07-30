@@ -77,7 +77,7 @@ Write-Host "`nInstalling root-level dependencies..." -ForegroundColor White
 npm install
 
 Write-Host "`nBuilding packages (fetch, openai-adapters, config-yaml)..." -ForegroundColor White
-& .\scripts\build-packages.ps1
+node ./scripts/build-packages.js
 
 Write-Host "`nInstalling Core extension dependencies..." -ForegroundColor White
 Push-Location core
