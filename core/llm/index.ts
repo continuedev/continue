@@ -961,9 +961,11 @@ export abstract class BaseLLM implements ILLM {
       messages = compiledChatMessages;
     }
 
+    const messagesCopy = [...messages]; // templateMessages may modify messages.
+
     const prompt = this.templateMessages
-      ? this.templateMessages(messages)
-      : this._formatChatMessages(messages);
+      ? this.templateMessages(messagesCopy)
+      : this._formatChatMessages(messagesCopy);
     if (logEnabled) {
       interaction?.logItem({
         kind: "startChat",
