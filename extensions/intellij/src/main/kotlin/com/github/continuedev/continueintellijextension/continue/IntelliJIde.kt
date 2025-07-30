@@ -4,7 +4,7 @@ import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.file.FileUtils
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
@@ -28,7 +28,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
@@ -374,7 +373,7 @@ class IntelliJIDE(
                 return results.split("\n")
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
-                service<ContinueErrorService>().report(exception, message)
+                service<ContinueSentryService>().report(exception, message)
                 showToast(ToastType.ERROR, message)
                 return emptyList()
             }
@@ -416,7 +415,7 @@ class IntelliJIDE(
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
-                service<ContinueErrorService>().report(exception, message)
+                service<ContinueSentryService>().report(exception, message)
                 showToast(ToastType.ERROR, message)
                 return "Error: Unable to execute ripgrep command."
             }

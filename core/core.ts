@@ -603,7 +603,7 @@ export class Core {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
         msg.data,
         undefined,
-        false,
+        { withChain: false },
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });

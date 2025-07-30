@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.error
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Attachment
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
@@ -16,8 +17,10 @@ import io.sentry.protocol.Message
 private typealias SentryAttachment = io.sentry.Attachment
 
 @Service
-class ContinueErrorService {
-    private val log = Logger.getInstance(ContinueErrorService::class.java)
+class ContinueSentryService(
+    private val telemetryStatus: ContinueTelemetryStatus = service<ContinueTelemetryStatusService>()
+) {
+    private val log = Logger.getInstance(ContinueSentryService::class.java)
 
     init {
         Sentry.init { config ->
@@ -35,8 +38,13 @@ class ContinueErrorService {
     fun report(
         throwable: Throwable,
         message: String? = null,
-        attachments: List<Attachment>? = null
+        attachments: List<Attachment>? = null,
+        ignoreTelemetrySettings: Boolean = false
     ) {
+        if (!ignoreTelemetrySettings && !telemetryStatus.allowAnonymousTelemetry) {
+            log.warn("Sentry report was ignored because telemetry is disabled")
+            return
+        }
         val sentryEvent = SentryEvent()
         sentryEvent.throwable = throwable
         sentryEvent.message = Message().apply { this.message = message }
@@ -48,6 +56,10 @@ class ContinueErrorService {
     fun reportMessage(
         message: String,
     ) {
+        if (!telemetryStatus.allowAnonymousTelemetry) {
+            log.warn("Sentry message report was ignored because telemetry is disabled")
+            return
+        }
         Sentry.captureMessage(message)
         log.warn("Message sent to Sentry: $message")
     }
