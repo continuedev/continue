@@ -134,6 +134,7 @@ const baseModelFields = {
   name: z.string(),
   model: z.string(),
   apiKey: z.string().optional(),
+  api_key: z.string().optional(),
   apiBase: z.string().optional(),
   maxStopWords: z.number().optional(),
   roles: modelRolesSchema.array().optional(),
@@ -151,37 +152,53 @@ const baseModelFields = {
   autocompleteOptions: autocompleteOptionsSchema.optional(),
 };
 
-export const modelSchema = z.union([
-  z.object({
-    ...baseModelFields,
-    provider: z.literal("continue-proxy"),
-    apiKeyLocation: z.string().optional(),
-    envSecretLocations: z.record(z.string(), z.string()).optional(),
-    orgScopeId: z.string().nullable(),
-    onPremProxyUrl: z.string().nullable(),
-  }),
-  z.object({
-    ...baseModelFields,
-    provider: z.string().refine((val) => val !== "continue-proxy"),
-    sourceFile: z.string().optional(),
-  }),
-]);
-
-export const partialModelSchema = z.union([
-  z
-    .object({
+export const modelSchema = z
+  .union([
+    z.object({
       ...baseModelFields,
       provider: z.literal("continue-proxy"),
       apiKeyLocation: z.string().optional(),
       envSecretLocations: z.record(z.string(), z.string()).optional(),
-    })
-    .partial(),
-  z
-    .object({
+      orgScopeId: z.string().nullable(),
+      onPremProxyUrl: z.string().nullable(),
+    }),
+    z.object({
       ...baseModelFields,
       provider: z.string().refine((val) => val !== "continue-proxy"),
-    })
-    .partial(),
-]);
+      sourceFile: z.string().optional(),
+    }),
+  ])
+  .transform((val) => {
+    if (val.api_key && !val.apiKey) {
+      val.apiKey = val.api_key;
+    }
+    delete val.api_key;
+    return val;
+  });
+
+export const partialModelSchema = z
+  .union([
+    z
+      .object({
+        ...baseModelFields,
+        provider: z.literal("continue-proxy"),
+        apiKeyLocation: z.string().optional(),
+        envSecretLocations: z.record(z.string(), z.string()).optional(),
+      })
+      .partial(),
+    z
+      .object({
+        ...baseModelFields,
+        provider: z.string().refine((val) => val !== "continue-proxy"),
+      })
+      .partial(),
+  ])
+  .transform((val) => {
+    if (val.api_key && !val.apiKey) {
+      val.apiKey = val.api_key;
+    }
+    delete val.api_key;
+    return val;
+  });
 
 export type ModelConfig = z.infer<typeof modelSchema>;
