@@ -135,6 +135,27 @@ If you are having persistent errors with indexing, our recommendation is to rebu
 
 This can be accomplished using the following command: `Continue: Rebuild codebase index`.
 
+### Agent mode is unavailable or tools aren't working
+
+If Agent mode is grayed out or tools aren't functioning properly, this is likely due to model capability configuration issues:
+
+1. **Check model support**: Not all models support tool/function calling. Models like GPT-3.5 or older Claude versions may not support tools.
+
+2. **Override capabilities**: If Continue's autodetection isn't working correctly, you can manually specify capabilities in your `config.yaml`:
+   ```yaml
+   models:
+     - name: my-model
+       provider: openai
+       model: gpt-4
+       capabilities:
+         - tool_use
+         - image_input
+   ```
+
+3. **Verify with provider**: Some proxy services (like OpenRouter) or custom deployments may not preserve tool calling capabilities. Check your provider's documentation.
+
+See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for detailed troubleshooting steps.
+
 ### Android Studio - "Nothing to show" in Chat
 
 This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178) for details.

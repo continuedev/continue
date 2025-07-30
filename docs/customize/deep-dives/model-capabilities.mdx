@@ -1,0 +1,211 @@
+---
+title: Model Capabilities
+description: Understanding and configuring model capabilities for tools and image support
+keywords: [capabilities, tools, function calling, image input, config]
+---
+
+# Model Capabilities
+
+Continue needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
+
+## What are Model Capabilities?
+
+Model capabilities tell Continue what features a model supports:
+
+- **`tool_use`** - Whether the model can use tools and functions (required for Agent mode)
+- **`image_input`** - Whether the model can process images
+
+Without proper capability configuration, you may encounter issues like:
+- Agent mode being unavailable
+- Tools not working as expected
+- Image uploads being disabled
+
+## How Continue Detects Capabilities
+
+Continue uses a two-tier system for determining model capabilities:
+
+### 1. Automatic Detection (Default)
+
+Continue automatically detects capabilities based on your provider and model name. For example:
+
+- **OpenAI**: GPT-4 models have tool support, GPT-3.5 doesn't
+- **Anthropic**: Claude 3.5+ models support both tools and images
+- **Ollama**: Most models support tools, vision models support images
+- **Google**: All Gemini models support function calling
+
+This works well for popular models, but may not cover custom deployments or newer models.
+
+### 2. Manual Override
+
+You can explicitly set capabilities in your `config.yaml` to override autodetection:
+
+```yaml
+models:
+  - name: my-custom-gpt4
+    provider: openai
+    apiBase: https://my-deployment.com/v1
+    model: gpt-4-custom
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+## When to Override Capabilities
+
+Override autodetection when:
+
+1. **Using custom deployments** - Your API endpoint serves a model with different capabilities than the standard version
+2. **Using newer models** - Continue doesn't yet recognize a newly released model
+3. **Experiencing issues** - Autodetection isn't working correctly for your setup
+4. **Using proxy services** - Some proxy services modify model capabilities
+
+## Configuration Examples
+
+### Basic Override
+
+Force tool support for a model that Continue doesn't recognize:
+
+```yaml
+models:
+  - name: custom-model
+    provider: openai
+    model: my-fine-tuned-gpt4
+    capabilities:
+      - tool_use
+```
+
+### Disable Capabilities
+
+Remove capabilities that aren't working properly:
+
+```yaml
+models:
+  - name: limited-claude
+    provider: anthropic
+    model: claude-3-sonnet-20240229
+    capabilities: []  # Disable all capabilities
+```
+
+### Multiple Capabilities
+
+Enable both tools and image support:
+
+```yaml
+models:
+  - name: multimodal-gpt
+    provider: openai
+    model: gpt-4-vision-preview
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+## Provider-Specific Notes
+
+### OpenRouter
+
+OpenRouter models often require capability overrides because the proxy may not preserve the original model's capabilities:
+
+```yaml
+models:
+  - name: openrouter-claude
+    provider: openrouter
+    model: anthropic/claude-3.5-sonnet
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+### Ollama
+
+Local Ollama models may need explicit capabilities if the model name doesn't match standard patterns:
+
+```yaml
+models:
+  - name: local-llama
+    provider: ollama
+    model: my-custom-llama
+    capabilities:
+      - tool_use
+```
+
+### Custom API Endpoints
+
+When using custom API endpoints that implement OpenAI-compatible interfaces:
+
+```yaml
+models:
+  - name: company-llm
+    provider: openai
+    apiBase: https://internal-api.company.com/v1
+    model: company-gpt
+    capabilities:
+      - tool_use  # Add if your endpoint supports function calling
+```
+
+## Troubleshooting
+
+### Agent Mode Unavailable
+
+If Agent mode is grayed out:
+
+1. Check if your model has `tool_use` capability
+2. Try adding `capabilities: ["tool_use"]` to your model config
+3. Verify your provider supports function calling
+
+### Tools Not Working
+
+If tools aren't being called:
+
+1. Ensure `tool_use` is in your capabilities
+2. Check that your API endpoint actually supports function calling
+3. Some providers may use different function calling formats
+
+### Images Not Uploading
+
+If you can't upload images:
+
+1. Add `image_input` to capabilities
+2. Ensure your model actually supports vision (e.g., gpt-4-vision, claude-3)
+3. Check that your provider passes through image data
+
+### Verifying Current Capabilities
+
+To see what capabilities Continue detected for your model:
+
+1. Check the mode selector tooltips - they indicate if tools are available
+2. Try uploading an image - if disabled, the model lacks `image_input`
+3. Check if Agent mode is available - requires `tool_use`
+
+## Migration from config.json
+
+If migrating from `config.json`, the format changes:
+
+```json
+// Old config.json format
+{
+  "models": [{
+    "capabilities": {
+      "tools": true,
+      "uploadImage": true
+    }
+  }]
+}
+```
+
+```yaml
+# New config.yaml format
+models:
+  - capabilities:
+      - tool_use
+      - image_input
+```
+
+## Best Practices
+
+1. **Start with autodetection** - Only override if you experience issues
+2. **Test after changes** - Verify tools and images work as expected
+3. **Document custom models** - Note why capabilities were overridden
+4. **Keep Continue updated** - Newer versions improve autodetection
+
+Remember: The capabilities field completely overrides autodetection. If you set it, Continue won't check its built-in knowledge about your model.
