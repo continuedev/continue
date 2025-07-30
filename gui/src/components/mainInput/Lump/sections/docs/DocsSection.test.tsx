@@ -56,10 +56,8 @@ const createMockStore = (docs: any[] = [], statuses: any = {}) => {
 const renderWithProviders = (component: JSX.Element, store: any) => {
   return render(
     <Provider store={store}>
-      <AuthProvider>
-        {component}
-      </AuthProvider>
-    </Provider>
+      <AuthProvider>{component}</AuthProvider>
+    </Provider>,
   );
 };
 
@@ -102,7 +100,9 @@ describe("DocsIndexingStatuses", () => {
     fireEvent.change(searchInput, { target: { value: "NonExistent" } });
 
     await waitFor(() => {
-      expect(screen.getByText(/No documentation found matching/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No documentation found matching/),
+      ).toBeInTheDocument();
     });
   });
 
@@ -222,7 +222,7 @@ describe("DocsIndexingStatuses", () => {
     renderWithProviders(<DocsIndexingStatuses />, store);
 
     const searchInput = screen.getByTestId("search-input");
-    
+
     // Type quickly
     fireEvent.change(searchInput, { target: { value: "R" } });
     fireEvent.change(searchInput, { target: { value: "Re" } });
@@ -234,9 +234,14 @@ describe("DocsIndexingStatuses", () => {
     expect(screen.getAllByTestId("doc-item")).toHaveLength(2);
 
     // Wait for debounce
-    await waitFor(() => {
-      expect(screen.getAllByTestId("doc-item")).toHaveLength(1);
-      expect(screen.getByTestId("doc-item")).toHaveTextContent("React Documentation");
-    }, { timeout: 400 });
+    await waitFor(
+      () => {
+        expect(screen.getAllByTestId("doc-item")).toHaveLength(1);
+        expect(screen.getByTestId("doc-item")).toHaveTextContent(
+          "React Documentation",
+        );
+      },
+      { timeout: 400 },
+    );
   });
 });
