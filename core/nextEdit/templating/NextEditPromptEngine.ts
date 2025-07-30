@@ -46,10 +46,10 @@ function templateRendererOfModel(
   };
 }
 
-export function renderPrompt(
+export async function renderPrompt(
   helper: HelperVars,
   userEdits: string,
-): PromptMetadata {
+): Promise<PromptMetadata> {
   let modelName = helper.modelName as NextEditModelName;
 
   if (modelName === "this field is not used") {
@@ -80,7 +80,9 @@ export function renderPrompt(
   }
 
   const renderer = templateRendererOfModel(modelName);
-  const editedCodeWithTokens = insertTokens(
+  let editedCodeWithTokens = "";
+
+  editedCodeWithTokens = insertTokens(
     helper.fileContents.split("\n"),
     helper.pos,
   );
@@ -264,9 +266,19 @@ export function renderDefaultUserPrompt(
 //   }
 // }
 
-function insertTokens(lines: string[], cursorPos: Position) {
+function insertTokens(
+  lines: string[],
+  cursorPos: Position,
+  editableRegionStart?: number,
+  editableRegionEnd?: number,
+) {
   const a = insertCursorToken(lines, cursorPos);
-  const b = insertEditableRegionTokensWithStaticRange(a, cursorPos);
+  const b = insertEditableRegionTokensWithStaticRange(
+    a,
+    cursorPos,
+    editableRegionStart,
+    editableRegionEnd,
+  );
   return b.join("\n");
 }
 
@@ -290,20 +302,28 @@ function insertCursorToken(lines: string[], cursorPos: Position) {
 function insertEditableRegionTokensWithStaticRange(
   lines: string[],
   cursorPos: Position,
+  editableRegionStart?: number,
+  editableRegionEnd?: number,
 ) {
   if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
     return lines;
   }
 
   // Ensure editable regions are within bounds.
-  const editableRegionStart = Math.max(
-    cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-    0,
-  );
-  const editableRegionEnd = Math.min(
-    cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-    lines.length - 1, // Line numbers should be zero-indexed.
-  );
+  if (editableRegionStart === undefined) {
+    editableRegionStart = Math.max(
+      cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      0,
+    );
+  }
+  if (editableRegionEnd === undefined) {
+    editableRegionEnd = Math.min(
+      cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+      lines.length - 1, // Line numbers should be zero-indexed.
+    );
+  }
+
+  // console.log("editableRegionStart:", editableRegionStart);
 
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),

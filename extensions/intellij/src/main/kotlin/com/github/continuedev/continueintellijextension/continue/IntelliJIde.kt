@@ -622,6 +622,14 @@ class IntelliJIDE(
         throw NotImplementedError("getSignatureHelp not implemented yet")
     }
 
+    override suspend fun getReferences(location: Location): List<RangeInFile> {
+        throw NotImplementedError("getReferences not implemented yet")
+    }
+
+    override suspend fun getDocumentSymbols(textDocumentIdentifier: String): List<DocumentSymbol> {
+        throw NotImplementedError("getDocumentSymbols not implemented yet")
+    }
+
     override fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit) {
         throw NotImplementedError("onDidChangeActiveTextEditor not implemented yet")
     }
