@@ -175,9 +175,10 @@ jobs:
       - name: Setup packages
         uses: ./.github/actions/setup-packages
 
-      - name: Test and check ${{ matrix.package }}
+      - name: Build and test ${{ matrix.package }}
         run: |
           cd packages/${{ matrix.package }}
+          npm run build
           npm test
         env:
           IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
