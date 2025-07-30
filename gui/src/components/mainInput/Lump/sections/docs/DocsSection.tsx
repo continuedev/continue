@@ -131,15 +131,32 @@ function DocsIndexingStatuses() {
 
   // Helper function to categorize docs
   const categorizeDoc = (doc: string): string => {
-    const url = doc.toLowerCase() || "";
-    if (url.includes("github.com")) return "GitHub";
-    if (url.includes("/docs") || url.includes("documentation"))
-      return "Documentation";
-    if (url.includes("/api") || url.includes("reference"))
-      return "API Reference";
-    if (url.includes("blog") || url.includes("article")) return "Blogs";
-    if (url.includes("tutorial") || url.includes("guide"))
-      return "Tutorials & Guides";
+    try {
+      const url = new URL(doc);
+      const hostname = url.hostname.toLowerCase();
+      const pathname = url.pathname.toLowerCase();
+      
+      // Check hostname for specific domains
+      if (hostname === "github.com" || hostname === "www.github.com") {
+        return "GitHub";
+      }
+      
+      // Check pathname for documentation patterns
+      if (pathname.includes("/docs") || pathname.includes("/documentation")) {
+        return "Documentation";
+      }
+      if (pathname.includes("/api") || pathname.includes("/reference")) {
+        return "API Reference";
+      }
+      if (pathname.includes("/blog") || pathname.includes("/article")) {
+        return "Blogs";
+      }
+      if (pathname.includes("/tutorial") || pathname.includes("/guide")) {
+        return "Tutorials & Guides";
+      }
+    } catch {
+      // If URL parsing fails, return "Other"
+    }
     return "Other";
   };
 
