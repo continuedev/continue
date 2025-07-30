@@ -1,18 +1,21 @@
-import { describe, expect, it, vi } from "vitest";
 import { JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
+import { describe, expect, it, vi } from "vitest";
 import { createMockStore } from "../../util/test/mockStore";
-import { streamResponseThunk } from "./streamResponse";
 import { streamNormalInput } from "./streamNormalInput";
+import { streamResponseThunk } from "./streamResponse";
 
 // Mock external dependencies only - let selectors run naturally
 // Removed: modelSupportsNativeTools - let it run naturally
 
 // Removed: addSystemMessageToolsToSystemMessage - let it run naturally
 
-// Removed: constructMessages - let it run naturally
+// Mock system message construction to keep test readable
+vi.mock("../util/getBaseSystemMessage", () => ({
+  getBaseSystemMessage: vi.fn(),
+}));
 
-// Removed: getBaseSystemMessage - let it run naturally
+import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
 // Removed: shouldAutoEnableSystemMessageTools - let it run naturally
 
@@ -27,13 +30,18 @@ vi.mock("uuid", () => ({
   v4: vi.fn(() => "mock-uuid-123"),
 }));
 
-vi.mock("../../components/mainInput/TipTapEditor/utils/resolveEditorContent", () => ({
-  resolveEditorContent: vi.fn(),
-}));
+vi.mock(
+  "../../components/mainInput/TipTapEditor/utils/resolveEditorContent",
+  () => ({
+    resolveEditorContent: vi.fn(),
+  }),
+);
 
 import { ModelDescription } from "core";
 import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+
+const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
 const mockPosthog = vi.mocked(posthog);
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
@@ -75,6 +83,9 @@ function setupTest() {
     content: "Hello, please help me with this code",
     legacyCommandWithInput: null,
   });
+
+  // Mock getBaseSystemMessage to return simple system message for readable tests
+  mockGetBaseSystemMessage.mockReturnValue("You are a helpful assistant.");
 
   // Create store with realistic state that selectors can work with
   const mockStore = createMockStore({
@@ -144,7 +155,7 @@ function setupTest() {
 describe("streamResponseThunk", () => {
   it.only("should execute complete streaming flow with all dispatches", async () => {
     const { mockStore, mockIdeMessenger } = setupTest();
-    
+
     // Mock all necessary IDE messenger calls
     mockIdeMessenger.request.mockImplementation((endpoint: string) => {
       if (endpoint === "llm/compileChat") {
@@ -185,10 +196,12 @@ describe("streamResponseThunk", () => {
     mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamGenerator());
 
     // Execute thunk
-    const result = await mockStore.dispatch(streamResponseThunk({ 
-      editorState: mockEditorState, 
-      modifiers: mockModifiers 
-    }) as any);
+    const result = await mockStore.dispatch(
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
+      }) as any,
+    );
 
     // Verify exact sequence of dispatched actions with payloads
     const dispatchedActions = (mockStore as any).getActions();
@@ -253,7 +266,7 @@ describe("streamResponseThunk", () => {
       {
         type: "session/setAppliedRulesAtIndex",
         payload: {
-          index: 0,
+          index: 1,
           appliedRules: [],
         },
       },
@@ -399,17 +412,46 @@ describe("streamResponseThunk", () => {
 
     // Verify IDE messenger calls
     expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [{ role: "user", content: "Hello" }],
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
       options: {},
     });
 
     expect(mockIdeMessenger.llmStreamChat).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         completionOptions: {},
-        title: "Claude 3.5 Sonnet",
-        messages: [{ role: "user", content: "Hello" }],
+        legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
-      }),
+        messages: [
+          {
+            role: "user",
+            content: "Hello",
+          },
+        ],
+        title: "Claude 3.5 Sonnet",
+      },
       expect.any(AbortSignal),
     );
 
@@ -426,7 +468,10 @@ describe("streamResponseThunk", () => {
     });
 
     // Verify session save was called
-    expect(mockIdeMessenger.request).toHaveBeenCalledWith("history/save", expect.anything());
+    expect(mockIdeMessenger.request).toHaveBeenCalledWith(
+      "history/save",
+      expect.anything(),
+    );
 
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
@@ -436,11 +481,11 @@ describe("streamResponseThunk", () => {
       session: {
         history: [
           {
-            appliedRules: [],
             contextItems: [],
             message: { id: "1", role: "user", content: "Hello" },
           },
           {
+            appliedRules: [],
             contextItems: [],
             editorState: mockEditorState,
             message: {
@@ -2063,7 +2108,7 @@ describe("streamResponseThunk", () => {
         config: {
           tools: [],
           rules: [],
-          tabAutocompleteModel: undefined,  
+          tabAutocompleteModel: undefined,
           selectedModelByRole: {
             chat: mockClaudeModel,
             apply: null,
@@ -2417,45 +2462,54 @@ describe("streamResponseThunk", () => {
     const mockIdeMessengerApproval = mockStoreWithApproval.mockIdeMessenger;
 
     // Setup successful compilation
-    mockIdeMessengerApproval.request.mockImplementation((endpoint: string, data: any) => {
-      if (endpoint === "llm/compileChat") {
-        return Promise.resolve({
-          status: "success",
-          content: {
-            compiledChatMessages: [
-              { role: "user", content: "Please search the codebase for test functions" },
-            ],
-            didPrune: false,
-            contextPercentage: 0.85,
-          },
-        });
-      } else if (endpoint === "tools/call") {
-        // Mock server-side tool call response for search_codebase
-        return Promise.resolve({
-          status: "success",
-          content: {
-            contextItems: [
-              {
-                name: "Search Results",
-                description: "Found test functions",
-                content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
-                icon: "search",
-                hidden: false,
-              },
-            ],
-            errorMessage: undefined,
-          },
-        });
-      } else if (endpoint === "history/save") {
-        return Promise.resolve({ status: "success" });
-      }
-      return Promise.resolve({ status: "success", content: {} });
-    });
+    mockIdeMessengerApproval.request.mockImplementation(
+      (endpoint: string, data: any) => {
+        if (endpoint === "llm/compileChat") {
+          return Promise.resolve({
+            status: "success",
+            content: {
+              compiledChatMessages: [
+                {
+                  role: "user",
+                  content: "Please search the codebase for test functions",
+                },
+              ],
+              didPrune: false,
+              contextPercentage: 0.85,
+            },
+          });
+        } else if (endpoint === "tools/call") {
+          // Mock server-side tool call response for search_codebase
+          return Promise.resolve({
+            status: "success",
+            content: {
+              contextItems: [
+                {
+                  name: "Search Results",
+                  description: "Found test functions",
+                  content:
+                    "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+                  icon: "search",
+                  hidden: false,
+                },
+              ],
+              errorMessage: undefined,
+            },
+          });
+        } else if (endpoint === "history/save") {
+          return Promise.resolve({ status: "success" });
+        }
+        return Promise.resolve({ status: "success", content: {} });
+      },
+    );
 
     // Setup streaming generator with tool call
     async function* mockStreamGeneratorWithApprovalFlow() {
       yield [
-        { role: "assistant", content: "I'll search for test functions in the codebase." },
+        {
+          role: "assistant",
+          content: "I'll search for test functions in the codebase.",
+        },
       ];
       yield [
         {
@@ -2491,14 +2545,16 @@ describe("streamResponseThunk", () => {
         // Subsequent calls from streamResponseAfterToolCall
         async function* followupGenerator() {
           yield [
-            { 
-              role: "assistant", 
-              content: "I found several test functions in your codebase. Here are the main ones I discovered..." 
+            {
+              role: "assistant",
+              content:
+                "I found several test functions in your codebase. Here are the main ones I discovered...",
             },
           ];
           return {
             prompt: "continuing after tool execution",
-            completion: "I found several test functions in your codebase. Here are the main ones I discovered...",
+            completion:
+              "I found several test functions in your codebase. Here are the main ones I discovered...",
             modelProvider: "anthropic",
           };
         }
@@ -2511,7 +2567,7 @@ describe("streamResponseThunk", () => {
       streamNormalInput({}) as any,
     );
 
-    // Verify initial streaming completed successfully 
+    // Verify initial streaming completed successfully
     expect(initialResult.type).toBe("chat/streamNormalInput/fulfilled");
 
     // Get initial actions to verify tool was generated
@@ -2519,7 +2575,9 @@ describe("streamResponseThunk", () => {
     expect(initialActions).toContainEqual(
       expect.objectContaining({
         type: "session/setToolGenerated",
-        payload: expect.objectContaining({ toolCallId: "tool-approval-flow-1" }),
+        payload: expect.objectContaining({
+          toolCallId: "tool-approval-flow-1",
+        }),
       }),
     );
 
@@ -2557,7 +2615,8 @@ describe("streamResponseThunk", () => {
             {
               name: "Search Results",
               description: "Found test functions",
-              content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+              content:
+                "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
               icon: "search",
               hidden: false,
             },
@@ -2581,16 +2640,19 @@ describe("streamResponseThunk", () => {
     );
 
     // Verify IDE messenger calls for tool execution
-    expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith("tools/call", {
-      toolCall: {
-        id: "tool-approval-flow-1",
-        type: "function",
-        function: {
-          name: "search_codebase",
-          arguments: JSON.stringify({ query: "test function" }),
+    expect(mockIdeMessengerApproval.request).toHaveBeenCalledWith(
+      "tools/call",
+      {
+        toolCall: {
+          id: "tool-approval-flow-1",
+          type: "function",
+          function: {
+            name: "search_codebase",
+            arguments: JSON.stringify({ query: "test function" }),
+          },
         },
       },
-    });
+    );
 
     // Verify second streaming call was made for continuation
     expect(streamCallCount).toBe(2);
@@ -2651,7 +2713,8 @@ describe("streamResponseThunk", () => {
                   {
                     name: "Search Results",
                     description: "Found test functions",
-                    content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+                    content:
+                      "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
                     icon: "search",
                     hidden: false,
                   },
@@ -2662,7 +2725,8 @@ describe("streamResponseThunk", () => {
           {
             contextItems: [],
             message: {
-              content: "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
+              content:
+                "function testUserLogin() {...}\\nfunction testDataValidation() {...}",
               id: expect.any(String),
               role: "tool",
               toolCallId: "tool-approval-flow-1",
@@ -2672,13 +2736,15 @@ describe("streamResponseThunk", () => {
             contextItems: [],
             isGatheringContext: false,
             message: {
-              content: "I found several test functions in your codebase. Here are the main ones I discovered...",
+              content:
+                "I found several test functions in your codebase. Here are the main ones I discovered...",
               id: expect.any(String),
               role: "assistant",
             },
             promptLogs: [
               {
-                completion: "I found several test functions in your codebase. Here are the main ones I discovered...",
+                completion:
+                  "I found several test functions in your codebase. Here are the main ones I discovered...",
                 modelProvider: "anthropic",
                 prompt: "continuing after tool execution",
               },
@@ -2753,5 +2819,4 @@ describe("streamResponseThunk", () => {
       },
     });
   });
-
 });
