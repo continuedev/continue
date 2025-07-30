@@ -58,7 +58,7 @@ export function updateAnthropicModelInYaml(yamlContent: string, apiKey: string):
     }
     
     // Filter out existing anthropic models
-    config.models = config.models.filter((model: any) => model && model.uses !== "anthropic/claude-4-sonnet")
+    config.models = config.models.filter((model: any) => 
       !model || model.uses !== "anthropic/claude-4-sonnet"
     );
     
