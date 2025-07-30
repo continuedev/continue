@@ -32,6 +32,13 @@ export async function createTestContext(): Promise<CLITestContext> {
   const cliPath = path.resolve("dist/index.js");
   const testDir = await fs.mkdtemp(path.join(os.tmpdir(), "cn-test-"));
 
+  // Ensure the CLI file exists before returning the context
+  try {
+    await fs.access(cliPath);
+  } catch (error) {
+    throw new Error(`CLI file not found at ${cliPath}. Please run 'npm run build' first.`);
+  }
+
   return {
     cliPath,
     testDir,

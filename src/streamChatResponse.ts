@@ -395,14 +395,10 @@ export async function preprocessStreamedToolCalls(
   callbacks?: StreamCallbacks
 ): Promise<{
   preprocessedCalls: PreprocessedToolCall[];
-  chatHistoryEntries: { role: "tool"; tool_call_id: string; content: string }[];
+  errorChatEntries: ChatCompletionToolMessageParam[];
 }> {
   const preprocessedCalls: PreprocessedToolCall[] = [];
-  const chatHistoryEntries: {
-    role: "tool";
-    tool_call_id: string;
-    content: string;
-  }[] = [];
+  const errorChatEntries: ChatCompletionToolMessageParam[] = [];
 
   // Get all available tools
   const availableTools: Tool[] = await getAvailableTools();
@@ -435,9 +431,7 @@ export async function preprocessStreamedToolCalls(
       preprocessedCalls.push(preprocessedCall);
     } catch (error) {
       // Notify the UI about the tool start, even though it failed
-      if (callbacks?.onToolStart) {
-        callbacks.onToolStart(toolCall.name, toolCall.arguments);
-      }
+      callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
       const errorMessage = `Error processing tool call: ${
         error instanceof Error ? error.message : String(error)
@@ -457,20 +451,18 @@ export async function preprocessStreamedToolCalls(
       );
 
       // Add error to chat history
-      chatHistoryEntries.push({
+      errorChatEntries.push({
         role: "tool",
         tool_call_id: toolCall.id,
         content: errorMessage,
       });
 
       // Notify about the error
-      if (callbacks?.onToolError) {
-        callbacks.onToolError(errorMessage, toolCall.name);
-      }
+      callbacks?.onToolError?.(errorMessage, toolCall.name);
     }
   }
 
-  return { preprocessedCalls, chatHistoryEntries };
+  return { preprocessedCalls, errorChatEntries };
 }
 
 /**
@@ -484,9 +476,23 @@ export async function executeStreamedToolCalls(
   callbacks?: StreamCallbacks
 ): Promise<ChatCompletionToolMessageParam[]> {
   const chatHistoryEntries: ChatCompletionToolMessageParam[] = [];
+  let remainingCanceled = false;
 
   // Execute each preprocessed tool call
   for (const toolCall of preprocessedCalls) {
+    if (remainingCanceled) {
+      const cancelledMessage = `Cancelled due to previous tool rejection`;
+      chatHistoryEntries.push({
+        role: "tool",
+        tool_call_id: toolCall.id,
+        content: cancelledMessage,
+      });
+
+      callbacks?.onToolResult?.(cancelledMessage, toolCall.name);
+      continue;
+    }
+
+    // Handle remaining tool calls in this batch to maintain chat history consistency
     try {
       logger.debug("Checking tool permissions", {
         name: toolCall.name,
@@ -495,9 +501,7 @@ export async function executeStreamedToolCalls(
 
       // Notify tool start - before permission check
       // This ensures the UI shows the tool call even if it's rejected
-      if (callbacks?.onToolStart) {
-        callbacks.onToolStart(toolCall.name, toolCall.arguments);
-      }
+      callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
       // Check tool permissions
       const permissionCheck = checkToolPermission(toolCall);
@@ -549,6 +553,9 @@ export async function executeStreamedToolCalls(
           // Fallback: deny if no UI callback available
           approved = false;
         }
+      } else if (permissionCheck.permission === "exclude") {
+        // This shouldn't happen as excluded tools are filtered out earlier
+        approved = false;
       }
 
       if (!approved) {
@@ -564,9 +571,10 @@ export async function executeStreamedToolCalls(
           content: deniedMessage,
         });
 
-        if (callbacks?.onToolResult) {
-          callbacks.onToolResult(deniedMessage, toolCall.name);
-        }
+        callbacks?.onToolResult?.(deniedMessage, toolCall.name);
+
+        logger.debug("Tool call rejected - stopping stream");
+        remainingCanceled = true;
         continue;
       }
 
@@ -583,9 +591,7 @@ export async function executeStreamedToolCalls(
         content: toolResult,
       });
 
-      if (callbacks?.onToolResult) {
-        callbacks.onToolResult(toolResult, toolCall.name);
-      }
+      callbacks?.onToolResult?.(toolResult, toolCall.name);
     } catch (error) {
       const errorMessage = `Error executing tool ${toolCall.name}: ${
         error instanceof Error ? error.message : String(error)
@@ -602,9 +608,7 @@ export async function executeStreamedToolCalls(
         content: errorMessage,
       });
 
-      if (callbacks?.onToolError) {
-        callbacks.onToolError(errorMessage, toolCall.name);
-      }
+      callbacks?.onToolError?.(errorMessage, toolCall.name);
     }
   }
 
@@ -693,13 +697,11 @@ export async function streamChatResponse(
       });
 
       // First preprocess the tool calls
-      const { preprocessedCalls, chatHistoryEntries: preprocessErrors } =
+      const { preprocessedCalls, errorChatEntries } =
         await preprocessStreamedToolCalls(toolCalls, callbacks);
 
       // Add any preprocessing errors to chat history
-      for (const entry of preprocessErrors) {
-        chatHistory.push(entry);
-      }
+      chatHistory.push(...errorChatEntries);
 
       // Execute the valid preprocessed tool calls
       const toolResults = await executeStreamedToolCalls(
@@ -707,10 +709,7 @@ export async function streamChatResponse(
         callbacks
       );
 
-      // Add tool results to chat history
-      for (const entry of toolResults) {
-        chatHistory.push(entry);
-      }
+      chatHistory.push(...toolResults);
     } else if (content) {
       // Just content, no tools
       chatHistory.push({ role: "assistant", content });
@@ -718,7 +717,6 @@ export async function streamChatResponse(
 
     // Check if we should continue
     if (!shouldContinue) {
-      logger.debug("Conversation complete - no more tool calls");
       break;
     }
   }

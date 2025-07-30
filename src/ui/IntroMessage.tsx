@@ -34,8 +34,8 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
   const allRules = [...commandLineRules, ...configRules];
 
-  // Check if model is capable
-  const modelCapable = isModelCapable(model.provider, model.name);
+  // Check if model is capable - now checking both name and model properties
+  const modelCapable = isModelCapable(model.provider, model.name, model.model);
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>

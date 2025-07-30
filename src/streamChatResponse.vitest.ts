@@ -375,12 +375,12 @@ describe("preprocessStreamedToolCalls", () => {
       onToolError: vi.fn(),
     };
 
-    const { preprocessedCalls, chatHistoryEntries } =
+    const { preprocessedCalls, errorChatEntries } =
       await preprocessStreamedToolCalls(toolCalls, callbacks);
 
     // Should have one preprocessed call and no errors
     expect(preprocessedCalls).toHaveLength(1);
-    expect(chatHistoryEntries).toHaveLength(0);
+    expect(errorChatEntries).toHaveLength(0);
     expect(preprocessedCalls[0].name).toBe("read_file");
     expect(preprocessedCalls[0].tool).toBeDefined();
     expect(preprocessedCalls[0].preprocessResult).toBeDefined();
@@ -414,15 +414,13 @@ describe("preprocessStreamedToolCalls", () => {
       onToolError: vi.fn(),
     };
 
-    const { preprocessedCalls, chatHistoryEntries } =
+    const { preprocessedCalls, errorChatEntries } =
       await preprocessStreamedToolCalls(toolCalls, callbacks);
 
     // Should have no preprocessed calls and one error
     expect(preprocessedCalls).toHaveLength(0);
-    expect(chatHistoryEntries).toHaveLength(1);
-    expect(chatHistoryEntries[0].content).toContain(
-      "Missing required argument"
-    );
+    expect(errorChatEntries).toHaveLength(1);
+    expect(errorChatEntries[0].content).toContain("Missing required argument");
 
     // Callbacks should be called for errors
     expect(callbacks.onToolStart).toHaveBeenCalledWith("read_file", {});
@@ -443,13 +441,13 @@ describe("preprocessStreamedToolCalls", () => {
       },
     ];
 
-    const { preprocessedCalls, chatHistoryEntries } =
+    const { preprocessedCalls, errorChatEntries } =
       await preprocessStreamedToolCalls(toolCalls);
 
     // Should have no preprocessed calls and one error
     expect(preprocessedCalls).toHaveLength(0);
-    expect(chatHistoryEntries).toHaveLength(1);
-    expect(chatHistoryEntries[0].content).toContain(
+    expect(errorChatEntries).toHaveLength(1);
+    expect(errorChatEntries[0].content).toContain(
       "Tool nonexistent_tool not found"
     );
   });
@@ -554,6 +552,14 @@ describe("executeStreamedToolCalls", () => {
         startNotified: false,
         tool: writeFileTool,
       },
+      {
+        id: "call_457",
+        name: "write_file",
+        arguments: { filepath: "/test.txt", content: "data" },
+        argumentsStr: '{"filepath": "/test.txt", "content": "data"}',
+        startNotified: false,
+        tool: writeFileTool,
+      },
     ];
 
     const callbacks = {
@@ -568,8 +574,11 @@ describe("executeStreamedToolCalls", () => {
     );
 
     // Verify results
-    expect(chatHistoryEntries).toHaveLength(1);
+    expect(chatHistoryEntries).toHaveLength(2);
     expect(chatHistoryEntries[0].content).toBe("Permission denied by user");
+    expect(chatHistoryEntries[1].content).toBe(
+      "Cancelled due to previous tool rejection"
+    );
     expect(callbacks.onToolStart).toHaveBeenCalledWith("write_file", {
       filepath: "/test.txt",
       content: "data",

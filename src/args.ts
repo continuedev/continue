@@ -11,6 +11,7 @@ export interface CommandLineArgs {
   readonly?: boolean; // Only allow readonly tools
   noTools?: boolean; // Disable all tools
   rules?: string[]; // Array of rule specifications
+  format?: 'json'; // Output format for headless mode
 }
 
 /**
@@ -136,6 +137,15 @@ export function parseArgs(): CommandLineArgs {
     result.noTools = true;
   }
 
+  // Get format from --format flag
+  const formatIndex = args.indexOf("--format");
+  if (formatIndex !== -1 && formatIndex + 1 < args.length) {
+    const formatValue = args[formatIndex + 1];
+    if (formatValue === 'json') {
+      result.format = 'json';
+    }
+  }
+
   // Get config path from --config flag
   const configIndex = args.indexOf("--config");
   if (configIndex !== -1 && configIndex + 1 < args.length) {
@@ -160,7 +170,7 @@ export function parseArgs(): CommandLineArgs {
   }
 
   // Find the last argument that's not a flag or a flag value
-  const flagsWithValues = ["--config", "--rule"];
+  const flagsWithValues = ["--config", "--rule", "--format"];
   const nonFlagArgs = args.filter((arg, index) => {
     // Skip flags (starting with --)
     if (arg.startsWith("--") || arg === "-p") return false;

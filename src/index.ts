@@ -38,11 +38,29 @@ program
 addCommonOptions(program)
   .argument("[prompt]", "Optional prompt to send to the assistant")
   .option("-p, --print", "Print response and exit (useful for pipes)")
+  .option(
+    "--format <format>",
+    "Output format for headless mode (json). Only works with -p/--print flag."
+  )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
+
+    // Validate --format flag only works with -p/--print
+    if (options.format && !options.print) {
+      console.error(
+        "Error: --format flag can only be used with -p/--print flag"
+      );
+      process.exit(1);
+    }
+
+    // Validate format value
+    if (options.format && options.format !== "json") {
+      console.error("Error: --format currently only supports 'json'");
+      process.exit(1);
+    }
 
     if (options.verbose) {
       logger.setLevel("debug");
@@ -60,11 +78,27 @@ addCommonOptions(program)
     }
 
     // Check for piped input when using -p flag
-    if (options.print && !prompt) {
+    if (options.print) {
       const stdinInput = readStdinSync();
       if (stdinInput) {
-        prompt = stdinInput;
+        if (prompt) {
+          // Combine stdin and prompt argument - stdin comes first in XML block
+          prompt = `<stdin>\n${stdinInput}\n</stdin>\n\n${prompt}`;
+        } else {
+          // Only stdin input, use as-is
+          prompt = stdinInput;
+        }
       }
+    }
+
+    // In headless mode, ensure we have a prompt
+    if (options.print && !prompt) {
+      console.error("Error: A prompt is required when using the -p/--print flag.\n");
+      console.error("Usage examples:");
+      console.error('  cn -p "please review my current git diff"');
+      console.error('  echo "hello" | cn -p');
+      console.error('  cn -p "analyze the code in src/"');
+      process.exit(1);
     }
 
     // Map --print to headless mode
@@ -102,7 +136,7 @@ program
   });
 
 // Serve subcommand
-const serveCommand = program
+program
   .command("serve [prompt]")
   .description("Start an HTTP server with /state and /message endpoints")
   .option(
@@ -114,12 +148,12 @@ const serveCommand = program
   .action(async (prompt, options) => {
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
-    
+
     if (mergedOptions.verbose) {
       logger.setLevel("debug");
       logger.debug("Verbose logging enabled");
     }
-    
+
     await serve(prompt, mergedOptions);
   });
 
