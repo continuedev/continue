@@ -553,7 +553,29 @@ export async function streamChatResponse(
             if (callbacks?.onToolResult) {
               callbacks.onToolResult(deniedMessage, toolCall.name);
             }
-            continue;
+            
+            // Handle remaining tool calls in this batch to maintain chat history consistency
+            for (let i = toolCalls.indexOf(toolCall) + 1; i < toolCalls.length; i++) {
+              const remainingToolCall = toolCalls[i];
+              const cancelledMessage = `Cancelled due to previous tool rejection`;
+              chatHistory.push({
+                role: "tool", 
+                tool_call_id: remainingToolCall.id,
+                content: cancelledMessage,
+              });
+              
+              if (callbacks?.onToolResult) {
+                callbacks.onToolResult(cancelledMessage, remainingToolCall.name);
+              }
+            }
+            
+            // Stop the stream immediately when a tool call is rejected
+            logger.debug("Tool call rejected - stopping stream");
+            
+            // Return the content we have so far - use existing isHeadless parameter
+            // Ensure we return the current content accumulated in this iteration
+            const responseToReturn = isHeadless ? (finalResponse || content) : fullResponse;
+            return responseToReturn;
           }
 
           logger.debug("Executing tool", {
