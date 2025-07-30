@@ -9,6 +9,7 @@ import * as vscode from "vscode";
 import {
   executeGotoProvider,
   executeSignatureHelpProvider,
+  executeSymbolProvider,
 } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
@@ -17,6 +18,7 @@ import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 import type {
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -107,6 +109,28 @@ class VsCodeIde implements IDE {
       line: location.position.line,
       character: location.position.character,
       name: "vscode.executeSignatureHelpProvider",
+    });
+
+    return result;
+  }
+
+  async getReferences(location: Location): Promise<RangeInFile[]> {
+    const result = await executeGotoProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeReferenceProvider",
+    });
+
+    return result;
+  }
+
+  async getDocumentSymbols(
+    textDocumentIdentifier: string, // uri
+  ): Promise<DocumentSymbol[]> {
+    const result = await executeSymbolProvider({
+      uri: vscode.Uri.parse(textDocumentIdentifier),
+      name: "vscode.executeDocumentSymbolProvider",
     });
 
     return result;

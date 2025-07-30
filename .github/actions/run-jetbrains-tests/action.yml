@@ -1,8 +1,16 @@
-name: 'Run JetBrains Tests'
-description: 'Setup and run JetBrains IntelliJ tests with all dependencies'
+name: "Run JetBrains Tests"
+description: "Setup and run JetBrains IntelliJ tests with all dependencies"
+
+inputs:
+  github-token:
+    description: "GitHub token for accessing repositories"
+    required: true
+  ci-github-token:
+    description: "CI GitHub token for vscode extension build"
+    required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: actions/setup-node@v4
       with:
@@ -29,7 +37,7 @@ runs:
     - name: Setup FFmpeg
       uses: AnimMouse/setup-ffmpeg@v1
       with:
-        token: ${{ env.GITHUB_TOKEN }}
+        token: ${{ inputs.github-token }}
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
@@ -70,7 +78,7 @@ runs:
         npm run prepackage
       env:
         # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.ci-github-token }}
 
     - uses: actions/cache@v4
       id: binary-cache

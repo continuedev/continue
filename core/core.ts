@@ -641,6 +641,7 @@ export class Core {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
         msg.data,
         undefined,
+        { withChain: false },
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });
@@ -798,6 +799,9 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
+      console.log("deleteChain called from files/closed");
+      await NextEditProvider.getInstance().deleteChain();
+
       try {
         const fileUris = await this.ide.getOpenFiles();
         if (fileUris) {
