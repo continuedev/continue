@@ -4,8 +4,6 @@ description: Understanding and configuring model capabilities for tools and imag
 keywords: [capabilities, tools, function calling, image input, config]
 ---
 
-# Model Capabilities
-
 Continue needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
 
 ## What are Model Capabilities?
@@ -16,6 +14,7 @@ Model capabilities tell Continue what features a model supports:
 - **`image_input`** - Whether the model can process images
 
 Without proper capability configuration, you may encounter issues like:
+
 - Agent mode being unavailable
 - Tools not working as expected
 - Image uploads being disabled
@@ -83,7 +82,7 @@ models:
   - name: limited-claude
     provider: anthropic
     model: claude-3-sonnet-20240229
-    capabilities: []  # Disable all capabilities
+    capabilities: [] # Disable all capabilities
 ```
 
 ### Multiple Capabilities
@@ -140,7 +139,7 @@ models:
     apiBase: https://internal-api.company.com/v1
     model: company-gpt
     capabilities:
-      - tool_use  # Add if your endpoint supports function calling
+      - tool_use # Add if your endpoint supports function calling
 ```
 
 ## Troubleshooting
@@ -184,12 +183,14 @@ If migrating from `config.json`, the format changes:
 ```json
 // Old config.json format
 {
-  "models": [{
-    "capabilities": {
-      "tools": true,
-      "uploadImage": true
+  "models": [
+    {
+      "capabilities": {
+        "tools": true,
+        "uploadImage": true
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -209,3 +210,77 @@ models:
 4. **Keep Continue updated** - Newer versions improve autodetection
 
 Remember: The capabilities field completely overrides autodetection. If you set it, Continue won't check its built-in knowledge about your model.
+
+## Model Compatibility Matrix
+
+This matrix shows which popular models support various Continue features. Continue auto-detects these capabilities, but you can override them if needed.
+
+### OpenAI / Azure
+
+| Model         | Chat | Apply | Edit | Tool Use | Image Input |
+| ------------- | ---- | ----- | ---- | -------- | ----------- |
+| GPT-4o        | ✅   | ✅    | ✅   | ✅       | ✅          |
+| GPT-4 Turbo   | ✅   | ✅    | ✅   | ✅       | ✅          |
+| GPT-4         | ✅   | ✅    | ✅   | ✅       | ❌          |
+| GPT-3.5 Turbo | ✅   | ✅    | ✅   | ❌       | ❌          |
+| O3-mini       | ✅   | ✅    | ✅   | ✅       | ❌          |
+
+### Anthropic
+
+| Model             | Chat | Apply | Edit | Tool Use | Image Input |
+| ----------------- | ---- | ----- | ---- | -------- | ----------- |
+| Claude 4 Opus     | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 4 Sonnet   | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3.5 Sonnet | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3.5 Haiku  | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3 Opus     | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3 Sonnet   | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3 Haiku    | ✅   | ✅    | ✅   | ✅       | ✅          |
+
+### Google
+
+| Model            | Chat | Apply | Edit | Tool Use | Image Input |
+| ---------------- | ---- | ----- | ---- | -------- | ----------- |
+| Gemini 2.0 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Gemini 1.5 Pro   | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Gemini 1.5 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
+
+### Mistral
+
+| Model          | Chat | Apply | Edit | Tool Use | Image Input |
+| -------------- | ---- | ----- | ---- | -------- | ----------- |
+| Mistral Large  | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Mistral Medium | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Mistral Small  | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Codestral      | ✅   | ✅    | ✅   | ✅       | ❌          |
+
+### DeepSeek
+
+| Model             | Chat | Apply | Edit | Tool Use | Image Input |
+| ----------------- | ---- | ----- | ---- | -------- | ----------- |
+| DeepSeek V3       | ✅   | ✅    | ✅   | ✅       | ❌          |
+| DeepSeek Coder V2 | ✅   | ✅    | ✅   | ✅       | ❌          |
+| DeepSeek Chat     | ✅   | ✅    | ✅   | ✅       | ❌          |
+
+### Ollama (Local Models)
+
+| Model          | Chat | Apply | Edit | Tool Use | Image Input |
+| -------------- | ---- | ----- | ---- | -------- | ----------- |
+| Llama 3.1      | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Llama 3        | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Mistral        | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Codestral      | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Qwen 2.5 Coder | ✅   | ✅    | ✅   | ✅       | ❌          |
+| LLaVA          | ✅   | ✅    | ✅   | ❌       | ✅          |
+
+### Notes
+
+- **Chat**: Basic conversation and code generation
+- **Apply**: Applying code changes to files
+- **Edit**: Editing existing code
+- **Tool Use**: Function calling for Agent mode
+- **Image Input**: Processing screenshots and images
+
+---
+
+**Is your model missing or incorrect?** Help improve this documentation! You can [edit this page on GitHub](https://github.com/continuedev/continue/edit/main/docs/customize/deep-dives/model-capabilities.mdx) to add your model's compatibility information.
