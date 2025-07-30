@@ -21,6 +21,7 @@ class ContinuePostHogService(
         }
         try {
             posthog.capture(distinctId, eventName, properties)
+            log.warn("Telemetry sent to PostHog: $eventName")
         } catch (_: Exception) {
         }
     }

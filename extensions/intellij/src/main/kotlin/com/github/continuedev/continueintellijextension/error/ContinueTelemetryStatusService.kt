@@ -10,7 +10,6 @@ import kotlin.time.Duration.Companion.seconds
 
 @Service
 class ContinueTelemetryStatusService : ContinueTelemetryStatus {
-    private val project get() = ProjectManager.getInstance().defaultProject // todo: hack? verify
     private val scope = CoroutineScope(Dispatchers.Default)
 
     @Volatile
@@ -27,6 +26,9 @@ class ContinueTelemetryStatusService : ContinueTelemetryStatus {
     }
 
     private fun poolTelemetryStatus() {
+        // this works, but ideally, the project should be a dependency injected via constructor
+        val project = ProjectManager.getInstance().openProjects.firstOrNull()
+            ?: return
         val coreMessenger = project.service<ContinuePluginService>().coreMessenger
             ?: return
         coreMessenger.request("config/getSerializedProfileInfo", null, null) { response ->
