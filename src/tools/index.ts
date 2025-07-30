@@ -108,6 +108,7 @@ export async function getAvailableTools() {
           description: t.description ?? "",
           parameters: convertInputSchemaToParameters(t.inputSchema),
           readonly: undefined, // MCP tools don't have readonly property, so we include them in readonly mode
+          isBuiltIn: false,
           run: async (args: any) => {
             const result = await MCPService.getInstance()?.runTool(
               t.name,

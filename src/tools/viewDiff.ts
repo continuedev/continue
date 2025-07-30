@@ -18,6 +18,7 @@ export const viewDiffTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
   preprocess: async (args) => {
     return {
       args,

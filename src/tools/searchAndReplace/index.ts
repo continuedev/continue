@@ -27,6 +27,7 @@ export const searchAndReplaceInFileTool: Tool = {
   name: "search_and_replace_in_file",
   displayName: "Search and Replace",
   readonly: false,
+  isBuiltIn: true,
   description: `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
   parameters: {
     filepath: {

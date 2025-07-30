@@ -30,6 +30,7 @@ export interface Tool {
   preprocess?: (args: any) => Promise<PreprocessToolCallResult>;
   run: (args: any) => Promise<string>;
   readonly?: boolean; // Indicates if the tool is readonly
+  isBuiltIn: boolean;
 }
 
 export interface ToolCall {

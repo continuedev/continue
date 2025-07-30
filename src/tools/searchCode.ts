@@ -30,6 +30,7 @@ export const searchCodeTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
   preprocess: async (args) => {
     const truncatedPattern =
       args.pattern.length > 50

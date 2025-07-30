@@ -14,6 +14,7 @@ export const readFileTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
   preprocess: async (args) => {
     return {
       args,

@@ -18,6 +18,7 @@ export const runTerminalCommandTool: Tool = {
     },
   },
   readonly: false,
+  isBuiltIn: true,
   preprocess: async (args) => {
     const truncatedCmd =
       args.command.length > 60

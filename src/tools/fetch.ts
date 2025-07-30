@@ -46,6 +46,7 @@ export const fetchTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
   preprocess: async (args) => {
     return {
       preview: [

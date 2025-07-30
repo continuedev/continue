@@ -71,6 +71,7 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 - Outputs to `dist/` directory
 - Source maps and inline sources enabled
 - JSX support for React components
+- Relative import paths require explicit file extensions, e.g. 'from "./test.js"' instead of 'from "./test"'
 
 ### Important rules
 

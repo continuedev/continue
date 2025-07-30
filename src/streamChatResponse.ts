@@ -6,6 +6,7 @@ import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
+  ChatCompletionToolMessageParam,
 } from "openai/resources.mjs";
 import { parseArgs } from "./args.js";
 import { MCPService } from "./mcp.js";
@@ -126,7 +127,7 @@ function getDefaultCompletionOptions(
 }
 
 // Process a single streaming response and return whether we need to continue
-async function processStreamingResponse(
+export async function processStreamingResponse(
   chatHistory: ChatCompletionMessageParam[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
@@ -168,7 +169,6 @@ async function processStreamingResponse(
   let firstTokenTime: number | null = null;
   let inputTokens = 0;
   let outputTokens = 0;
-  let hasToolCalls = false;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -236,7 +236,6 @@ async function processStreamingResponse(
 
       // Handle tool calls
       if (choice.delta.tool_calls) {
-        hasToolCalls = true;
         for (const toolCallDelta of choice.delta.tool_calls) {
           let toolCallId: string | undefined;
 
@@ -361,7 +360,7 @@ async function processStreamingResponse(
   const toolCalls = Array.from(toolCallsMap.values());
 
   // Validate tool calls have complete arguments
-  const preprocessedToolCalls = toolCalls.filter((tc) => {
+  const validToolCalls = toolCalls.filter((tc) => {
     if (!tc.arguments || !tc.name) {
       logger.error("Incomplete tool call", {
         id: tc.id,
@@ -380,9 +379,236 @@ async function processStreamingResponse(
   return {
     content: aiResponse,
     finalContent: finalContent,
-    toolCalls: preprocessedToolCalls,
-    shouldContinue: preprocessedToolCalls.length > 0,
+    toolCalls: validToolCalls,
+    shouldContinue: validToolCalls.length > 0,
   };
+}
+
+/**
+ * Processes tool calls by validating and preprocessing them
+ * @param toolCalls - The raw tool calls from the LLM
+ * @param callbacks - Optional callbacks for notifying of events
+ * @returns - Preprocessed tool calls that are ready for execution
+ */
+export async function preprocessStreamedToolCalls(
+  toolCalls: ToolCall[],
+  callbacks?: StreamCallbacks
+): Promise<{
+  preprocessedCalls: PreprocessedToolCall[];
+  chatHistoryEntries: { role: "tool"; tool_call_id: string; content: string }[];
+}> {
+  const preprocessedCalls: PreprocessedToolCall[] = [];
+  const chatHistoryEntries: {
+    role: "tool";
+    tool_call_id: string;
+    content: string;
+  }[] = [];
+
+  // Get all available tools
+  const availableTools: Tool[] = await getAvailableTools();
+
+  // Process each tool call
+  for (const toolCall of toolCalls) {
+    const startTime = Date.now();
+    try {
+      const tool = availableTools.find((t) => t.name === toolCall.name);
+      if (!tool) {
+        throw new Error(`Tool ${toolCall.name} not found`);
+      }
+
+      validateToolCallArgsPresent(toolCall, tool);
+
+      const preprocessedCall: PreprocessedToolCall = {
+        ...toolCall,
+        tool,
+      };
+
+      if (tool.preprocess) {
+        logger.debug("Preprocessing tool call args", {
+          name: toolCall.name,
+          arguments: toolCall.arguments,
+        });
+        const preprocessed = await tool.preprocess(toolCall.arguments);
+        preprocessedCall.preprocessResult = preprocessed;
+      }
+
+      preprocessedCalls.push(preprocessedCall);
+    } catch (error) {
+      // Notify the UI about the tool start, even though it failed
+      if (callbacks?.onToolStart) {
+        callbacks.onToolStart(toolCall.name, toolCall.arguments);
+      }
+
+      const errorMessage = `Error processing tool call: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+
+      logger.error("Invalid tool call", {
+        name: toolCall.name,
+        error: errorMessage,
+      });
+
+      const duration = Date.now() - startTime;
+      telemetryService.logToolResult(
+        toolCall.name,
+        false,
+        duration,
+        errorMessage
+      );
+
+      // Add error to chat history
+      chatHistoryEntries.push({
+        role: "tool",
+        tool_call_id: toolCall.id,
+        content: errorMessage,
+      });
+
+      // Notify about the error
+      if (callbacks?.onToolError) {
+        callbacks.onToolError(errorMessage, toolCall.name);
+      }
+    }
+  }
+
+  return { preprocessedCalls, chatHistoryEntries };
+}
+
+/**
+ * Executes preprocessed tool calls, handling permissions and results
+ * @param preprocessedCalls - The preprocessed tool calls ready for execution
+ * @param callbacks - Optional callbacks for notifying of events
+ * @returns - Chat history entries with tool results
+ */
+export async function executeStreamedToolCalls(
+  preprocessedCalls: PreprocessedToolCall[],
+  callbacks?: StreamCallbacks
+): Promise<ChatCompletionToolMessageParam[]> {
+  const chatHistoryEntries: ChatCompletionToolMessageParam[] = [];
+
+  // Execute each preprocessed tool call
+  for (const toolCall of preprocessedCalls) {
+    try {
+      logger.debug("Checking tool permissions", {
+        name: toolCall.name,
+        arguments: toolCall.arguments,
+      });
+
+      // Notify tool start - before permission check
+      // This ensures the UI shows the tool call even if it's rejected
+      if (callbacks?.onToolStart) {
+        callbacks.onToolStart(toolCall.name, toolCall.arguments);
+      }
+
+      // Check tool permissions
+      const permissionCheck = checkToolPermission(toolCall);
+      let approved = false;
+
+      if (permissionCheck.permission === "allow") {
+        approved = true;
+      } else if (permissionCheck.permission === "ask") {
+        // Request permission from user
+        if (callbacks?.onToolPermissionRequest) {
+          // Use the proper toolPermissionManager API
+          const toolCallRequest: ToolCallRequest = {
+            name: toolCall.name,
+            arguments: toolCall.preprocessResult?.args ?? toolCall.arguments,
+            preview: toolCall.preprocessResult?.preview,
+          };
+
+          // Set up listener for permissionRequested event
+          const handlePermissionRequested = (event: {
+            requestId: string;
+            toolCall: ToolCallRequest;
+          }) => {
+            if (event.toolCall.name === toolCall.name) {
+              toolPermissionManager.off(
+                "permissionRequested",
+                handlePermissionRequested
+              );
+              // Notify UI about permission request
+              callbacks.onToolPermissionRequest!(
+                event.toolCall.name,
+                event.toolCall.arguments,
+                event.requestId,
+                event.toolCall.preview
+              );
+            }
+          };
+
+          toolPermissionManager.on(
+            "permissionRequested",
+            handlePermissionRequested
+          );
+
+          // Request permission using the proper API
+          const permissionResult =
+            await toolPermissionManager.requestPermission(toolCallRequest);
+
+          approved = permissionResult.approved;
+        } else {
+          // Fallback: deny if no UI callback available
+          approved = false;
+        }
+      }
+
+      if (!approved) {
+        const deniedMessage = `Permission denied by user`;
+        logger.info("Tool call denied", {
+          name: toolCall.name,
+          arguments: toolCall.arguments,
+        });
+
+        chatHistoryEntries.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: deniedMessage,
+        });
+
+        if (callbacks?.onToolResult) {
+          callbacks.onToolResult(deniedMessage, toolCall.name);
+        }
+        continue;
+      }
+
+      logger.debug("Executing tool", {
+        name: toolCall.name,
+        arguments: toolCall.arguments,
+      });
+
+      const toolResult = await executeToolCall(toolCall);
+
+      chatHistoryEntries.push({
+        role: "tool",
+        tool_call_id: toolCall.id,
+        content: toolResult,
+      });
+
+      if (callbacks?.onToolResult) {
+        callbacks.onToolResult(toolResult, toolCall.name);
+      }
+    } catch (error) {
+      const errorMessage = `Error executing tool ${toolCall.name}: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+
+      logger.error("Tool execution failed", {
+        name: toolCall.name,
+        error: errorMessage,
+      });
+
+      chatHistoryEntries.push({
+        role: "tool",
+        tool_call_id: toolCall.id,
+        content: errorMessage,
+      });
+
+      if (callbacks?.onToolError) {
+        callbacks.onToolError(errorMessage, toolCall.name);
+      }
+    }
+  }
+
+  return chatHistoryEntries;
 }
 
 // Main function that handles the conversation loop
@@ -415,7 +641,7 @@ export async function streamChatResponse(
     logger.debug("Starting conversation iteration");
 
     // Get response from LLM
-    const { content, finalContent, toolCalls, shouldContinue } =
+    const { content, toolCalls, shouldContinue } =
       await processStreamingResponse(
         chatHistory,
         model,
@@ -466,194 +692,24 @@ export async function streamChatResponse(
         tool_calls: toolCallsForHistory,
       });
 
-      const availableTools: Tool[] =
-        toolCalls.length > 0 ? await getAvailableTools() : [];
+      // First preprocess the tool calls
+      const { preprocessedCalls, chatHistoryEntries: preprocessErrors } =
+        await preprocessStreamedToolCalls(toolCalls, callbacks);
 
-      // Run pre-permission args processing for tool calls
-      // If pre-processing fails we can just insert failure
-      // If it succeeds, we ask for permissions
-      const preProcessedToolCalls: PreprocessedToolCall[] = [];
-      for (const toolCall of toolCalls) {
-        const startTime = Date.now();
-        try {
-          const tool = availableTools.find((t) => t.name === toolCall.name);
-          if (!tool) {
-            throw new Error(`Tool ${toolCall.name} not found`);
-          }
-          validateToolCallArgsPresent(toolCall, tool);
-          const preprocessedCall: PreprocessedToolCall = {
-            ...toolCall,
-            tool,
-          };
-          if (tool.preprocess) {
-            logger.debug("Preprocessing tool call args", {
-              name: toolCall.name,
-              arguments: toolCall.arguments,
-            });
-            const preprocessed = await tool.preprocess(toolCall.arguments);
-            preprocessedCall.preprocessResult = preprocessed;
-          }
-          preProcessedToolCalls.push(preprocessedCall);
-        } catch (error) {
-          if (callbacks?.onToolStart) {
-            callbacks.onToolStart(toolCall.name, toolCall.arguments);
-          }
-
-          const errorMessage = `Error processing tool call: ${
-            error instanceof Error ? error.message : String(error)
-          }`;
-
-          logger.error("Invalid tool call", {
-            name: toolCall.name,
-            error: errorMessage,
-          });
-
-          const duration = Date.now() - startTime;
-          telemetryService.logToolResult(
-            toolCall.name,
-            false,
-            duration,
-            errorMessage
-          );
-
-          chatHistory.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: errorMessage,
-          });
-
-          if (callbacks?.onToolError) {
-            callbacks.onToolError(errorMessage, toolCall.name);
-          }
-        }
+      // Add any preprocessing errors to chat history
+      for (const entry of preprocessErrors) {
+        chatHistory.push(entry);
       }
 
-      // Execute tool calls
-      for (const toolCall of preProcessedToolCalls) {
-        try {
-          logger.debug("Checking tool permissions", {
-            name: toolCall.name,
-            arguments: toolCall.arguments,
-          });
+      // Execute the valid preprocessed tool calls
+      const toolResults = await executeStreamedToolCalls(
+        preprocessedCalls,
+        callbacks
+      );
 
-          // Check tool permissions
-          const permissionCheck = checkToolPermission(toolCall);
-
-          // Notify tool start immediately - before permission check
-          // This ensures the UI shows the tool call even if it's rejected
-          if (callbacks?.onToolStart) {
-            callbacks.onToolStart(toolCall.name, toolCall.arguments);
-          }
-
-          let approved = false;
-
-          if (permissionCheck.permission === "allow") {
-            approved = true;
-          } else if (permissionCheck.permission === "ask") {
-            // Request permission from user
-            if (callbacks?.onToolPermissionRequest) {
-              // Use the proper toolPermissionManager API
-              const toolCallRequest: ToolCallRequest = {
-                name: toolCall.name,
-                arguments:
-                  toolCall.preprocessResult?.args ?? toolCall.arguments,
-                preview: toolCall.preprocessResult?.preview,
-              };
-
-              // Set up listener for permissionRequested event
-              const handlePermissionRequested = (event: {
-                requestId: string;
-                toolCall: ToolCallRequest;
-              }) => {
-                if (event.toolCall.name === toolCall.name) {
-                  toolPermissionManager.off(
-                    "permissionRequested",
-                    handlePermissionRequested
-                  );
-                  // Notify UI about permission request
-                  callbacks.onToolPermissionRequest!(
-                    event.toolCall.name,
-                    event.toolCall.arguments,
-                    event.requestId,
-                    event.toolCall.preview
-                  );
-                }
-              };
-
-              toolPermissionManager.on(
-                "permissionRequested",
-                handlePermissionRequested
-              );
-
-              // Request permission using the proper API
-              const permissionResult =
-                await toolPermissionManager.requestPermission(toolCallRequest);
-
-              approved = permissionResult.approved;
-            } else {
-              // Fallback: deny if no UI callback available
-              approved = false;
-            }
-          } else if (permissionCheck.permission === "exclude") {
-            // This shouldn't happen as excluded tools are filtered out earlier
-            approved = false;
-          }
-
-          if (!approved) {
-            const deniedMessage = `Permission denied by user`;
-            logger.info("Tool call denied", {
-              name: toolCall.name,
-              arguments: toolCall.arguments,
-            });
-
-            chatHistory.push({
-              role: "tool",
-              tool_call_id: toolCall.id,
-              content: deniedMessage,
-            });
-
-            if (callbacks?.onToolResult) {
-              callbacks.onToolResult(deniedMessage, toolCall.name);
-            }
-            continue;
-          }
-
-          logger.debug("Executing tool", {
-            name: toolCall.name,
-            arguments: toolCall.arguments,
-          });
-
-          const toolResult = await executeToolCall(toolCall);
-
-          chatHistory.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: toolResult,
-          });
-
-          if (callbacks?.onToolResult) {
-            callbacks.onToolResult(toolResult, toolCall.name);
-          }
-        } catch (error) {
-          const errorMessage = `Error executing tool ${toolCall.name}: ${
-            error instanceof Error ? error.message : String(error)
-          }`;
-
-          logger.error("Tool execution failed", {
-            name: toolCall.name,
-            error: errorMessage,
-          });
-
-          chatHistory.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: errorMessage,
-          });
-
-          if (callbacks?.onToolError) {
-            callbacks.onToolError(errorMessage, toolCall.name);
-          }
-        }
+      // Add tool results to chat history
+      for (const entry of toolResults) {
+        chatHistory.push(entry);
       }
     } else if (content) {
       // Just content, no tools

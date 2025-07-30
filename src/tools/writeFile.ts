@@ -41,6 +41,7 @@ export const writeFileTool: Tool = {
     },
   },
   readonly: false,
+  isBuiltIn: true,
   preprocess: async (args) => {
     try {
       if (fs.existsSync(args.filepath)) {

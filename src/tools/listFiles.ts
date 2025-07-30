@@ -16,6 +16,7 @@ export const listFilesTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
   preprocess: async (args) => {
     return {
       args,
