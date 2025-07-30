@@ -68,7 +68,6 @@ function templateRendererOfModel(
 
 export async function renderPrompt(
   helper: HelperVars,
-  // userEdits: string,
   ctx: any,
 ): Promise<PromptMetadata> {
   let modelName = helper.modelName as NextEditModelName;
