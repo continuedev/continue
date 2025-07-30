@@ -1,0 +1,22 @@
+{
+  "name": "@continuedev/errors",
+  "version": "1.0.0",
+  "description": "Standardized error handling for Continue",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "author": "Nate Sesti and Ty Dunn",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@continuedev/config-types": "file:../config-types"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "typescript": "^5.5.2",
+    "vitest": "^3.2.0"
+  }
+}
