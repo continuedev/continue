@@ -6,7 +6,6 @@ import { anonymizeSentryEvent } from "./anonymization.js";
 import { SENTRY_DSN } from "./constants.js";
 
 export class SentryLogger {
-  // Set to undefined whenever telemetry is disabled
   static client: Sentry.NodeClient | undefined = undefined;
   static scope: Sentry.Scope | undefined = undefined;
   static uniqueId = "NOT_UNIQUE";
@@ -72,14 +71,11 @@ export class SentryLogger {
         },
 
         // Don't automatically capture unhandled rejections - we'll do this manually
-        // Note: These options may not be available in all Sentry versions
       });
 
       // Get the initialized client and create a new scope
       const client = Sentry.getClient() as Sentry.NodeClient | undefined;
       const scope = new Sentry.Scope();
-
-      // TODO: Add Hub info, e.g. username to scope
 
       return { client, scope };
     } catch (error) {

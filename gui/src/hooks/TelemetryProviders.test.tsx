@@ -6,6 +6,7 @@ import React from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AuthProvider } from "../context/Auth";
 import TelemetryProviders from "./TelemetryProviders";
 
 // Mock Sentry
@@ -20,6 +21,9 @@ vi.mock("@sentry/react", () => ({
   replayIntegration: vi.fn(() => ({ name: "Replay" })),
   feedbackIntegration: vi.fn(() => ({ name: "Feedback" })),
   contextLinesIntegration: vi.fn(() => ({ name: "ContextLines" })),
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="sentry-error-boundary">{children}</div>
+  ),
 }));
 
 // Mock PostHog
@@ -37,6 +41,25 @@ vi.mock("posthog-js/react", () => ({
   PostHogProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="posthog-provider">{children}</div>
   ),
+}));
+
+// Mock the Auth context
+vi.mock("../context/Auth", () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="auth-provider">{children}</div>
+  ),
+  useAuth: () => ({
+    session: {
+      account: {
+        id: "test@continue.dev", // Mock Continue team member email
+      },
+    },
+  }),
+}));
+
+// Mock isContinueTeamMember utility
+vi.mock("../util/isContinueTeamMember", () => ({
+  isContinueTeamMember: vi.fn(() => true), // Mock as Continue team member
 }));
 
 // Mock window.vscMachineId
@@ -83,7 +106,9 @@ const TestWrapper: React.FC<{
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={mockPersistor}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </PersistGate>
     </Provider>
   );
@@ -140,6 +165,9 @@ describe("TelemetryProviders", () => {
       );
       expect(mockSentry.setUser).toHaveBeenCalledWith({
         id: expect.stringMatching(/^[a-f0-9]{8}$/), // Should be 8-char hash
+        email: undefined,
+        username: undefined,
+        ip_address: undefined,
       });
 
       // Verify children are rendered
@@ -242,9 +270,12 @@ describe("TelemetryProviders", () => {
         </TestWrapper>,
       );
 
-      // Should still initialize but with fallback ID
+      // Should still initialize but with anonymized ID (hashed "anonymous")
       expect(mockSentry.setUser).toHaveBeenCalledWith({
-        id: "anonymous",
+        id: expect.stringMatching(/^[a-f0-9]{8}$/), // Should be 8-char hash
+        email: undefined,
+        username: undefined,
+        ip_address: undefined,
       });
 
       // Restore
