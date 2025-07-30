@@ -4,7 +4,7 @@ cd api && npm run build
 cd ..
 
 # Build the SDK
-tsc
+npx tsc
 
 # Create the necessary directory structure in dist
 mkdir -p dist/api/dist

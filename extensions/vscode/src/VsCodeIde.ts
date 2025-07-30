@@ -17,7 +17,6 @@ import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 import type {
-  ContinueRcJson,
   FileStatsMap,
   FileType,
   IDE,
@@ -264,32 +263,6 @@ class VsCodeIde implements IDE {
   }
   async getAvailableThreads(): Promise<Thread[]> {
     return await this.ideUtils.getAvailableThreads();
-  }
-
-  async getWorkspaceConfigs() {
-    const workspaceDirs =
-      vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
-    const configs: ContinueRcJson[] = [];
-    for (const workspaceDir of workspaceDirs) {
-      const files = await this.ideUtils.readDirectory(workspaceDir);
-      if (files === null) {
-        //Unlikely, but just in case...
-        continue;
-      }
-      for (const [filename, type] of files) {
-        if (
-          (type === vscode.FileType.File ||
-            type === vscode.FileType.SymbolicLink) &&
-          filename === ".continuerc.json"
-        ) {
-          const contents = await this.readFile(
-            vscode.Uri.joinPath(workspaceDir, filename).toString(),
-          );
-          configs.push(JSON.parse(contents));
-        }
-      }
-    }
-    return configs;
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
