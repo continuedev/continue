@@ -2599,63 +2599,358 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk
     const result = await mockStoreWithToolReject.dispatch(
-      streamNormalInput({}) as any,
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
     );
 
     // Verify thunk completed successfully (tool rejection is handled gracefully)
-    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
-    // Verify action sequence includes tool generation but rejection handling
+    // Verify exact action sequence includes tool generation but rejection handling
     const dispatchedActions = (mockStoreWithToolReject as any).getActions();
-
-    // Should contain the standard streaming setup actions
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+    expect(dispatchedActions).toEqual([
+      {
+        type: "chat/streamResponse/pending",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/submitEditorAndInitAtIndex",
+        payload: {
+          editorState: mockEditorState,
+          index: 1,
+        },
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/pending",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateHistoryItemAtIndex",
+        payload: {
+          index: 1,
+          updates: {
+            contextItems: [],
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+        },
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
         type: "session/setAppliedRulesAtIndex",
-        payload: { index: 0, appliedRules: [] },
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/setActive" }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+        payload: {
+          appliedRules: [],
+          index: 1,
+        },
+      },
+      {
+        type: "session/setActive",
+        payload: undefined,
+      },
+      {
+        type: "session/setInlineErrorMessage",
+        payload: undefined,
+      },
+      {
+        type: "session/setIsPruned",
+        payload: false,
+      },
+      {
         type: "session/setContextPercentage",
         payload: 0.7,
-      }),
-    );
-
-    // Should contain streaming updates including the tool call
-    const streamUpdates = dispatchedActions.filter(
-      (action: any) => action.type === "session/streamUpdate",
-    );
-    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
-
-    // Tool call should be marked as generated but then rejected
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+      },
+      {
+        type: "symbols/updateFromContextItems/fulfilled",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "I'll edit the file for you.",
+          },
+        ],
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-reject-1",
+                type: "function",
+                function: {
+                  name: "edit_existing_file",
+                  arguments: "{\"filepath\":\"test.js\",\"changes\":\"const x = 1;\"}",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "session/addPromptCompletionPair",
+        payload: [
+          {
+            completion: "I'll edit the file for you.",
+            modelProvider: "anthropic",
+            prompt: "Please edit this file",
+          },
+        ],
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
+      },
+      {
         type: "session/setToolGenerated",
-        payload: expect.objectContaining({ toolCallId: "tool-reject-1" }),
-      }),
-    );
-
-    // Should complete successfully despite tool rejection
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+        payload: {
+          toolCallId: "tool-reject-1",
+          tools: [],
+        },
+      },
+      {
         type: "chat/streamNormalInput/fulfilled",
-      }),
-    );
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/pending",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/update/pending",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateSessionMetadata",
+        payload: {
+          sessionId: "session-123",
+          title: "New Session",
+        },
+      },
+      {
+        type: "session/refreshMetadata/pending",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: {
+          compiledChatMessages: [
+            {
+              content: "Please edit this file",
+              role: "user",
+            },
+          ],
+          contextPercentage: 0.7,
+          didPrune: false,
+        },
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: {
+          compiledChatMessages: [
+            {
+              content: "Please edit this file",
+              role: "user",
+            },
+          ],
+          contextPercentage: 0.7,
+          didPrune: false,
+        },
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+    ]);
 
     // Verify IDE messenger calls - compilation should succeed, streaming should happen
-    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith(
-      "llm/compileChat",
+    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Please edit this file",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",  
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: {},
+    });
+
+    expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalledWith(
       {
-        messages: [{ role: "user", content: "Hello" }], // constructMessages mock
-        options: {},
+        completionOptions: {},
+        legacySlashCommandData: undefined, 
+        messageOptions: { precompiled: true },
+        messages: [
+          {
+            role: "user",
+            content: "Please edit this file",
+          },
+        ],
+        title: "Claude 3.5 Sonnet",
       },
+      expect.any(AbortSignal),
     );
 
-    expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalled();
+    // Should NOT call tools/call since tool is disabled/rejected
+    expect(mockIdeMessengerReject.request).not.toHaveBeenCalledWith(
+      "tools/call",
+      expect.anything(),
+    );
+
+    // Verify session save was called
+    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith(
+      "history/save",
+      expect.anything(),
+    );
 
     // Verify final state contains the tool call but it's not executed
     const finalState = mockStoreWithToolReject.getState();
@@ -2663,7 +2958,6 @@ describe("streamResponseThunk", () => {
       session: {
         history: [
           {
-            appliedRules: [],
             contextItems: [],
             message: {
               id: "1",
@@ -2672,11 +2966,21 @@ describe("streamResponseThunk", () => {
             },
           },
           {
+            appliedRules: [],
+            contextItems: [],
+            editorState: mockEditorState,
+            message: {
+              content: "Hello, please help me with this code",
+              id: expect.any(String),
+              role: "user",
+            },
+          },
+          {
             contextItems: [],
             isGatheringContext: false,
             message: {
               content: "I'll edit the file for you.",
-              id: expect.any(String),
+              id: "mock-uuid-123",
               role: "assistant",
               toolCalls: [
                 {
@@ -2730,10 +3034,19 @@ describe("streamResponseThunk", () => {
         contextPercentage: 0.7,
         isPruned: false,
         isInEdit: false,
-        title: "",
+        title: "New Session",
         lastSessionId: undefined,
         isSessionMetadataLoading: false,
-        allSessionMetadata: [],
+        allSessionMetadata: {
+          compiledChatMessages: [
+            {
+              content: "Please edit this file",
+              role: "user",
+            },
+          ],
+          contextPercentage: 0.7,
+          didPrune: false,
+        },
         symbols: {},
         codeBlockApplyStates: {
           states: [],
