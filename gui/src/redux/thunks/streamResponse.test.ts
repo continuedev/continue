@@ -153,7 +153,7 @@ function setupTest() {
 }
 
 describe("streamResponseThunk", () => {
-  it.only("should execute complete streaming flow with all dispatches", async () => {
+  it("should execute complete streaming flow with all dispatches", async () => {
     const { mockStore, mockIdeMessenger } = setupTest();
 
     // Mock all necessary IDE messenger calls
@@ -740,7 +740,10 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk
     const result = await mockStoreWithToolSettings.dispatch(
-      streamNormalInput({}) as any,
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
     );
 
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
@@ -836,7 +839,21 @@ describe("streamResponseThunk", () => {
     expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
       "llm/compileChat",
       {
-        messages: [{ role: "user", content: "Hello" }], // constructMessages mock returns this
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant.",
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please search the codebase",
+              },
+            ],
+          },
+        ],
         options: {},
       },
     );
@@ -862,7 +879,7 @@ describe("streamResponseThunk", () => {
       ).length;
     expect(compileCallsCount).toBeGreaterThanOrEqual(1);
 
-    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState();
@@ -1086,32 +1103,103 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk and expect it to be rejected
     const result = await mockStoreNoModel.dispatch(
-      streamNormalInput({}) as any,
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
     );
 
-    // Verify the thunk was rejected with correct error
-    expect(result.type).toBe("chat/streamNormalInput/rejected");
-    expect(result.error?.message).toBe("No chat model selected");
+    // Verify the thunk completed successfully but shows error dialog
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
-    // Verify only the pending action was dispatched (no other actions should occur)
+    // Verify the complete error handling flow
     const dispatchedActions = (mockStoreNoModel as any).getActions();
     expect(dispatchedActions).toEqual([
       {
-        type: "chat/streamNormalInput/pending",
-        meta: expect.objectContaining({
-          arg: {},
+        type: "chat/streamResponse/pending",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
           requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/cancelStream/pending",
+        meta: {
+          arg: undefined,
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
+      },
+      {
+        type: "session/abortStream",
+        payload: undefined,
+      },
+      {
+        type: "session/clearDanglingMessages",
+        payload: undefined,
+      },
+      {
+        type: "chat/cancelStream/fulfilled",
+        meta: {
+          arg: undefined,
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "ui/setDialogMessage",
+        payload: expect.objectContaining({
+          props: expect.objectContaining({
+            error: expect.objectContaining({
+              message: "No chat model selected",
+            }),
+          }),
         }),
       },
       {
-        type: "chat/streamNormalInput/rejected",
-        meta: expect.objectContaining({
-          arg: {},
-          requestStatus: "rejected",
-        }),
-        error: expect.objectContaining({
-          message: "No chat model selected",
-        }),
+        type: "ui/setShowDialog",
+        payload: true,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
       },
     ]);
 
@@ -1121,22 +1209,23 @@ describe("streamResponseThunk", () => {
       mockStoreNoModel.mockIdeMessenger.llmStreamChat,
     ).not.toHaveBeenCalled();
 
-    // Verify state remains unchanged from initial mock store values
+    // Verify final state shows error dialog and inactive streaming
     const finalState = mockStoreNoModel.getState();
     expect(finalState).toEqual({
       session: {
         history: [
           {
-            message: { id: "1", role: "user", content: "Hello" },
             contextItems: [],
+            isGatheringContext: false,
+            message: { id: "1", role: "user", content: "Hello" },
           },
         ],
         hasReasoningEnabled: false,
-        isStreaming: true, // Unchanged from initial
+        isStreaming: false, // Set to inactive after error
         id: "session-123",
         mode: "chat",
         streamAborter: expect.any(AbortController),
-        contextPercentage: 0, // Unchanged from initial
+        contextPercentage: 0,
         isPruned: false,
         isInEdit: false,
         title: "",
@@ -1150,7 +1239,7 @@ describe("streamResponseThunk", () => {
         },
         newestToolbarPreviewForInput: {},
         compactionLoading: {},
-        inlineErrorMessage: undefined, // Unchanged from initial
+        inlineErrorMessage: undefined,
       },
       config: {
         config: {
@@ -1177,8 +1266,14 @@ describe("streamResponseThunk", () => {
       ui: {
         toolSettings: {},
         ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
+        showDialog: true, // Error dialog is shown
+        dialogMessage: expect.objectContaining({
+          props: expect.objectContaining({
+            error: expect.objectContaining({
+              message: "No chat model selected",
+            }),
+          }),
+        }),
       },
       editModeState: {
         isInEdit: false,
