@@ -202,14 +202,14 @@ install_from_pr() {
         exit 1
     fi
 
-    # Map platform names to GitHub runner OS names
-    local artifact_suffix
+    # Map platform names to artifact names for the new workflow
+    local artifact_name
     case "$platform" in
         "macos")
-            artifact_suffix="macOS"
+            artifact_name="darwin-arm64-vsix"
             ;;
         "linux")
-            artifact_suffix="Linux"
+            artifact_name="linux-x64-vsix"
             ;;
         *)
             echo "❌ Unknown platform: $platform"
@@ -233,7 +233,7 @@ install_from_pr() {
     # Get the latest successful workflow run for the branch
     local run_id=$(gh run list \
         --repo "$REPO" \
-        --workflow="pr_checks.yaml" \
+        --workflow="pr-build-upload-vsix.yaml" \
         --branch="$branch_name" \
         --json databaseId,status,conclusion \
         --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
@@ -246,7 +246,7 @@ install_from_pr() {
     fi
 
     echo "✅ Found workflow run: $run_id"
-    echo "📥 Downloading vscode-extension-build-$artifact_suffix artifact..."
+    echo "📥 Downloading $artifact_name artifact..."
 
     # Create temporary directory for download
     local temp_dir=$(mktemp -d)
@@ -254,9 +254,9 @@ install_from_pr() {
     # Download the artifact
     if ! gh run download "$run_id" \
         --repo "$REPO" \
-        --name "vscode-extension-build-$artifact_suffix" \
+        --name "$artifact_name" \
         --dir "$temp_dir"; then
-        echo "❌ Failed to download artifact vscode-extension-build-$artifact_suffix"
+        echo "❌ Failed to download artifact $artifact_name"
         echo "   Make sure the workflow run completed successfully for $platform"
         rm -rf "$temp_dir"
         exit 1
@@ -271,17 +271,17 @@ install_from_pr() {
         exit 1
     fi
 
-    # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
+    # Extract full version from the original VSIX filename (e.g., continue-1.1.66-a1b2c3d.vsix -> 1.1.66-a1b2c3d)
     local original_filename=$(basename "$vsix_file")
-    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+    local full_version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
 
-    if [ -z "$version" ]; then
+    if [ -z "$full_version" ]; then
         echo "⚠️  Could not extract version from filename: $original_filename"
-        version="unknown"
+        full_version="unknown-pr${pr_number}"
     fi
 
-    # Create new VSIX name with version and PR number
-    local target_path="$ONEPER_DIR/continue-${version}-${pr_number}.vsix"
+    # Use the full version (which includes commit SHA) for the target filename
+    local target_path="$ONEPER_DIR/continue-${full_version}.vsix"
 
     # Check if file already exists and notify about overwrite
     if [ -f "$target_path" ]; then
@@ -299,6 +299,7 @@ install_from_pr() {
     if code --install-extension "$target_path"; then
         echo "✅ Successfully installed Continue extension from PR #$pr_number"
         echo "📄 VSIX file saved to: $target_path"
+        echo "🔖 Extension version: ${full_version} (includes commit SHA)"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"
         echo "   • Press Ctrl+Shift+P (Cmd+Shift+P on Mac)"
