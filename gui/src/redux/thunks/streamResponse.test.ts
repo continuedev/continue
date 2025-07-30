@@ -1944,7 +1944,10 @@ describe("streamResponseThunk", () => {
     // Create an AbortController that we'll abort during streaming
     const testAbortController = new AbortController();
 
-    // Create store with our test abort controller
+    // Use setupTest to get proper mock configuration
+    const { mockStore: baseStore, mockIdeMessenger: baseMessenger } = setupTest();
+
+    // Create store with our test abort controller, starting from setupTest config
     const mockStoreWithAbort = createMockStore({
       session: {
         history: [
@@ -2016,22 +2019,25 @@ describe("streamResponseThunk", () => {
       },
     });
 
-    // Setup streaming generator that simulates abort by checking isStreaming state
+    // Setup streaming generator that simulates abort by user interaction
     async function* mockStreamGeneratorWithAbort() {
       yield [{ role: "assistant", content: "First chunk" }];
 
-      // Simulate user clicking abort button - this would dispatch setInactive
-      setTimeout(() => {
-        mockStoreWithAbort.dispatch({ type: "session/setInactive" });
-      }, 5);
-
-      // After first yield, wait a bit then yield second chunk (which should be ignored due to abort)
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Add a delay to allow the first chunk to be processed
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      
+      // Simulate user clicking abort button - dispatch setInactive immediately
+      mockStoreWithAbort.dispatch({ type: "session/setInactive" });
+      
+      // Add a small delay to let the abort action be processed
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      
+      // Try to yield second chunk (should be ignored due to abort)
       yield [{ role: "assistant", content: "Second chunk" }];
 
       return {
         prompt: "Hello",
-        completion: "Complete response",
+        completion: "Complete response", 
         modelProvider: "anthropic",
       };
     }
@@ -2042,34 +2048,98 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk - should be aborted
     const result = await mockStoreWithAbort.dispatch(
-      streamNormalInput({}) as any,
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
     );
 
     // Verify thunk completed successfully (abort just stops streaming early)
-    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify exact action sequence - should start but then be aborted
     const dispatchedActions = (mockStoreWithAbort as any).getActions();
     expect(dispatchedActions).toEqual([
       {
-        type: "chat/streamNormalInput/pending",
-        meta: expect.objectContaining({
-          arg: {},
+        type: "chat/streamResponse/pending",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
           requestStatus: "pending",
-        }),
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/submitEditorAndInitAtIndex",
+        payload: {
+          editorState: mockEditorState,
+          index: 1,
+        },
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/pending",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateHistoryItemAtIndex",
+        payload: {
+          index: 1,
+          updates: {
+            contextItems: [],
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+        },
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
       },
       {
         type: "session/setAppliedRulesAtIndex",
         payload: {
-          index: 0,
           appliedRules: [],
+          index: 1,
         },
       },
       {
         type: "session/setActive",
+        payload: undefined,
       },
       {
         type: "session/setInlineErrorMessage",
+        payload: undefined,
       },
       {
         type: "session/setIsPruned",
@@ -2080,6 +2150,15 @@ describe("streamResponseThunk", () => {
         payload: 0.8,
       },
       {
+        type: "symbols/updateFromContextItems/fulfilled",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
         type: "session/streamUpdate",
         payload: [
           {
@@ -2088,44 +2167,199 @@ describe("streamResponseThunk", () => {
           },
         ],
       },
-      // User abort action
+      // User abort action (dispatched by the test)
       {
         type: "session/setInactive",
       },
       // Stream abort dispatch (called by implementation)
       {
         type: "session/abortStream",
+        payload: undefined,
       },
       // Stream end cleanup
       {
         type: "session/setInactive",
+        payload: undefined,
       },
-      // Stream completes but no more updates are processed
       {
         type: "chat/streamNormalInput/fulfilled",
-        meta: expect.objectContaining({
-          arg: {},
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
           requestStatus: "fulfilled",
-        }),
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/pending",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/update/pending",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateSessionMetadata",
+        payload: {
+          sessionId: "session-123",
+          title: "New Session",
+        },
+      },
+      {
+        type: "session/refreshMetadata/pending",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: {
+          compiledChatMessages: [
+            {
+              content: "Hello",
+              role: "user",
+            },
+          ],
+          contextPercentage: 0.8,
+          didPrune: false,
+        },
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: {
+          compiledChatMessages: [
+            {
+              content: "Hello",
+              role: "user",
+            },
+          ],
+          contextPercentage: 0.8,
+          didPrune: false,
+        },
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
       },
     ]);
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith(
-      "llm/compileChat",
-      {
-        messages: [{ role: "user", content: "Hello" }],
-        options: {},
-      },
-    );
+    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: {},
+    });
 
     expect(mockIdeMessengerAbort.llmStreamChat).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         completionOptions: {},
-        title: "Claude 3.5 Sonnet",
-        messages: [{ role: "user", content: "Hello" }],
+        legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
-      }),
+        messages: [
+          {
+            role: "user",
+            content: "Hello",
+          },
+        ],
+        title: "Claude 3.5 Sonnet",
+      },
       expect.any(AbortSignal),
     );
 
@@ -2135,22 +2369,37 @@ describe("streamResponseThunk", () => {
       expect.anything(),
     );
 
+    // Verify session save was called despite abort
+    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith(
+      "history/save",
+      expect.anything(),
+    );
+
     // Verify final state - streaming should be stopped, partial content preserved
     const finalState = mockStoreWithAbort.getState();
     expect(finalState).toEqual({
       session: {
         history: [
           {
-            appliedRules: [],
             contextItems: [],
             message: { id: "1", role: "user", content: "Hello" },
+          },
+          {
+            appliedRules: [],
+            contextItems: [],
+            editorState: mockEditorState,
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
           },
           {
             contextItems: [],
             isGatheringContext: false,
             message: {
               content: "First chunk", // Only first chunk before abort
-              id: expect.any(String),
+              id: "mock-uuid-123",
               role: "assistant",
             },
             // No promptLogs because streaming was stopped before completion
@@ -2164,10 +2413,19 @@ describe("streamResponseThunk", () => {
         contextPercentage: 0.8,
         isPruned: false,
         isInEdit: false,
-        title: "",
+        title: "New Session",
         lastSessionId: undefined,
         isSessionMetadataLoading: false,
-        allSessionMetadata: [],
+        allSessionMetadata: {
+          compiledChatMessages: [
+            {
+              content: "Hello",
+              role: "user",
+            },
+          ],
+          contextPercentage: 0.8,
+          didPrune: false,
+        },
         symbols: {},
         codeBlockApplyStates: {
           states: [],
