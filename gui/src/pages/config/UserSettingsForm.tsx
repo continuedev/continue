@@ -20,6 +20,7 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
+import { isContinueTeamMember } from "../../util/isContinueTeamMember";
 import { setLocalStorage } from "../../util/localStorage";
 import { ContinueFeaturesMenu } from "./ContinueFeaturesMenu";
 
@@ -133,8 +134,8 @@ export function UserSettingsForm() {
       });
   }, [ideMessenger]);
 
-  const hasContinueEmail = (session as HubSessionInfo)?.account?.id.includes(
-    "@continue.dev",
+  const hasContinueEmail = isContinueTeamMember(
+    (session as HubSessionInfo)?.account?.id,
   );
 
   return (
