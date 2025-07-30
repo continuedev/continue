@@ -68,7 +68,7 @@ export const runTerminalCommandTool: Tool = {
           telemetryService.recordPullRequestCreated();
         }
 
-        if (code !== 0 && stderr) {
+        if (code !== 0) {
           reject(`Error (exit code ${code}): ${stderr}`);
           return;
         }
