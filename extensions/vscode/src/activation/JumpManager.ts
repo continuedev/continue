@@ -17,6 +17,7 @@ export class JumpManager {
   private _disposables: vscode.Disposable[] = [];
 
   private _jumpInProgress: boolean = false;
+  private _jumpAccepted: boolean = false;
   private _completionAfterJump: CompletionDataForAfterJump | null = null;
   private _oldCursorPosition: vscode.Position | undefined;
 
@@ -48,13 +49,14 @@ export class JumpManager {
     currentPosition: vscode.Position,
     nextJumpLocation: vscode.Position,
     completionContent?: string,
-  ) {
+  ): Promise<boolean> {
     // Deduplication logic.
     // If the content at the next jump location is
     // identical to the completion content,
     // then we don't have to jump.
     if (completionContent !== undefined) {
       const editor = vscode.window.activeTextEditor;
+
       if (editor) {
         try {
           const completionLines = completionContent.split("\n");
@@ -102,14 +104,14 @@ export class JumpManager {
                   console.log(
                     "Skipping jump as content is identical at jump location",
                   );
-                  return; // Exit early, don't suggest jump.
+                  return false; // Exit early, don't suggest jump.
                 }
               } else {
                 // Only one line and it matches.
                 console.log(
                   "Skipping jump as content is identical at jump location",
                 );
-                return; // Exit early, don't suggest jump.
+                return false; // Exit early, don't suggest jump.
               }
             }
           }
@@ -120,53 +122,66 @@ export class JumpManager {
       }
     }
 
+    console.log("this._jumpInProgress");
     this._jumpInProgress = true;
     this._oldCursorPosition = currentPosition;
 
     const editor = vscode.window.activeTextEditor;
-
-    if (editor) {
-      const visibleRanges = editor.visibleRanges;
-
-      if (visibleRanges.length > 0) {
-        const visibleRange = visibleRanges[0];
-        const topLineNumber = visibleRange.start.line;
-        const bottomLineNumber = visibleRange.end.line;
-
-        const decorationLine = nextJumpLocation.line;
-
-        // Check if jump location is outside the visible range.
-        if (decorationLine < topLineNumber) {
-          await this.renderTabToJumpDecoration(
-            editor,
-            topLineNumber,
-            nextJumpLocation,
-          );
-        } else if (decorationLine > bottomLineNumber) {
-          await this.renderTabToJumpDecoration(
-            editor,
-            bottomLineNumber,
-            nextJumpLocation,
-          );
-        } else {
-          // No suggestion is made when the decoration is within visibleRange.
-          await this.renderTabToJumpDecoration(
-            editor,
-            decorationLine,
-            nextJumpLocation,
-          );
-        }
-
-        // Scroll to show the jump location.
-        editor.revealRange(
-          new vscode.Range(decorationLine, 0, decorationLine, 0),
-          vscode.TextEditorRevealType.InCenter,
-        );
-      }
+    if (!editor) {
+      console.log("No active editor, cannot suggest jump");
+      this._jumpInProgress = false;
+      return false;
     }
+
+    // if (editor) {
+    const visibleRanges = editor.visibleRanges;
+    if (visibleRanges.length === 0) {
+      console.log("No visible ranges in editor, cannot suggest jump");
+      this._jumpInProgress = false;
+      return false;
+    }
+
+    // if (visibleRanges.length > 0) {
+    const visibleRange = visibleRanges[0];
+    const topLineNumber = visibleRange.start.line;
+    const bottomLineNumber = visibleRange.end.line;
+
+    const decorationLine = nextJumpLocation.line;
+
+    // Check if jump location is outside the visible range.
+    if (decorationLine < topLineNumber) {
+      await this.renderTabToJumpDecoration(
+        editor,
+        topLineNumber,
+        nextJumpLocation,
+      );
+    } else if (decorationLine > bottomLineNumber) {
+      await this.renderTabToJumpDecoration(
+        editor,
+        bottomLineNumber,
+        nextJumpLocation,
+      );
+    } else {
+      // No suggestion is made when the decoration is within visibleRange.
+      await this.renderTabToJumpDecoration(
+        editor,
+        decorationLine,
+        nextJumpLocation,
+      );
+    }
+
+    // Scroll to show the jump location.
+    editor.revealRange(
+      new vscode.Range(decorationLine, 0, decorationLine, 0),
+      vscode.TextEditorRevealType.InCenter,
+    );
+    // }
+
+    // }
 
     // Set up a way to detect when the jump is complete.
     const disposable = vscode.window.onDidChangeTextEditorSelection(() => {
+      console.log("_jumpInProgress is false");
       this._jumpInProgress = false;
       disposable.dispose();
 
@@ -186,6 +201,8 @@ export class JumpManager {
       this._jumpInProgress = false;
       disposable.dispose();
     }, 5000);
+
+    return true;
   }
 
   private async renderTabToJumpDecoration(
@@ -256,9 +273,13 @@ export class JumpManager {
       "continue.acceptJump",
       async () => {
         if (this._jumpDecorationVisible) {
+          this._jumpAccepted = true;
+
           // Move cursor to the jump position.
           editor.selection = new vscode.Selection(jumpPosition, jumpPosition);
           await this.clearJumpDecoration();
+
+          this._jumpAccepted = false;
         }
       },
     );
@@ -310,6 +331,10 @@ export class JumpManager {
 
   isJumpInProgress(): boolean {
     return this._jumpInProgress;
+  }
+
+  wasJumpJustAccepted(): boolean {
+    return this._jumpAccepted;
   }
 
   setCompletionAfterJump(completionData: CompletionDataForAfterJump): void {
