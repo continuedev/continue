@@ -683,6 +683,8 @@ describe("streamResponseThunk", () => {
         } else if (endpoint === "history/save") {
           // Mock session save
           return Promise.resolve({ status: "success" });
+        } else if (endpoint === "history/list") {
+          return Promise.resolve({ status: "success", content: [] });
         }
         // Let other endpoints pass through or return success
         return Promise.resolve({ status: "success", content: {} });
@@ -749,91 +751,113 @@ describe("streamResponseThunk", () => {
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
     const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
 
-    // Verify core streaming actions
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "session/setAppliedRulesAtIndex",
-        payload: { index: 0, appliedRules: [] },
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({ type: "session/setActive" }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "session/setContextPercentage",
-        payload: 0.9,
-      }),
-    );
-
-    // Verify streaming updates (both regular content and tool call)
-    const streamUpdates = dispatchedActions.filter(
-      (action: any) => action.type === "session/streamUpdate",
-    );
-    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
-    expect(streamUpdates[0].payload).toEqual([
-      { role: "assistant", content: "I'll search the codebase for you." },
+    // Verify exact action sequence by comparing action types
+    const actionTypes = dispatchedActions.map((action: any) => action.type);
+    expect(actionTypes).toEqual([
+      "chat/streamResponse/pending",
+      "chat/streamWrapper/pending", 
+      "session/submitEditorAndInitAtIndex",
+      "session/resetNextCodeBlockToApplyIndex",
+      "symbols/updateFromContextItems/pending",
+      "session/updateHistoryItemAtIndex",
+      "chat/streamNormalInput/pending",
+      "session/setAppliedRulesAtIndex",
+      "session/setActive",
+      "session/setInlineErrorMessage",
+      "session/setIsPruned",
+      "session/setContextPercentage",
+      "symbols/updateFromContextItems/fulfilled",
+      "session/streamUpdate",
+      "session/streamUpdate",
+      "session/addPromptCompletionPair",
+      "session/setInactive",
+      "session/setToolGenerated",
+      "chat/callTool/pending",
+      "session/setToolCallCalling",
+      "session/updateToolCallOutput",
+      "session/acceptToolCall",
+      "chat/streamAfterToolCall/pending",
+      "chat/streamWrapper/pending",
+      "session/resetNextCodeBlockToApplyIndex",
+      "session/streamUpdate",
+      "chat/streamNormalInput/pending",
+      "session/setAppliedRulesAtIndex",
+      "session/setActive",
+      "session/setInlineErrorMessage",
+      "session/setIsPruned",
+      "session/setContextPercentage",
+      "session/streamUpdate",
+      "session/addPromptCompletionPair",
+      "session/setInactive",
+      "chat/streamNormalInput/fulfilled",
+      "session/saveCurrent/pending",
+      "session/update/pending",
+      "session/updateSessionMetadata",
+      "session/refreshMetadata/pending",
+      "session/setIsSessionMetadataLoading",
+      "session/setAllSessionMetadata",
+      "session/refreshMetadata/fulfilled",
+      "session/update/fulfilled",
+      "session/saveCurrent/fulfilled",
+      "chat/streamWrapper/fulfilled",
+      "chat/streamAfterToolCall/fulfilled", 
+      "chat/callTool/fulfilled",
+      "chat/streamNormalInput/fulfilled",
+      "session/saveCurrent/pending",
+      "session/update/pending",
+      "session/updateSessionMetadata",
+      "session/refreshMetadata/pending",
+      "session/setIsSessionMetadataLoading",
+      "session/setAllSessionMetadata",
+      "session/refreshMetadata/fulfilled",
+      "session/update/fulfilled",
+      "session/saveCurrent/fulfilled",
+      "chat/streamWrapper/fulfilled",
+      "chat/streamResponse/fulfilled",
     ]);
-    expect(streamUpdates[1].payload[0]).toEqual(
-      expect.objectContaining({
-        role: "assistant",
-        content: "",
-        toolCalls: [
-          {
-            id: "tool-call-1",
-            type: "function",
-            function: {
-              name: "search_codebase",
-              arguments: JSON.stringify({ query: "test function" }),
-            },
-          },
-        ],
-      }),
-    );
 
-    // Verify tool call execution actions
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "session/setToolGenerated",
-        payload: expect.objectContaining({ toolCallId: "tool-call-1" }),
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "session/setToolCallCalling",
-        payload: { toolCallId: "tool-call-1" },
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "session/updateToolCallOutput",
-        payload: {
-          toolCallId: "tool-call-1",
-          contextItems: [
-            {
-              name: "Search Results",
-              description: "Found 3 matches",
-              content: "Result 1\nResult 2\nResult 3",
-              icon: "search",
-              hidden: false,
-            },
-          ],
+    // Verify key payload data for important actions
+    const setContextPercentageAction = dispatchedActions.find((a: any) => a.type === "session/setContextPercentage");
+    expect(setContextPercentageAction.payload).toBe(0.9);
+
+    const streamUpdates = dispatchedActions.filter((a: any) => a.type === "session/streamUpdate");
+    expect(streamUpdates[0].payload).toEqual([
+      { role: "assistant", content: "I'll search the codebase for you." }
+    ]);
+    expect(streamUpdates[1].payload).toEqual([{
+      role: "assistant",
+      content: "",
+      toolCalls: [{
+        id: "tool-call-1",
+        type: "function", 
+        function: {
+          name: "search_codebase",
+          arguments: JSON.stringify({ query: "test function" }),
         },
-      }),
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "session/acceptToolCall",
-        payload: { toolCallId: "tool-call-1" },
-      }),
-    );
+      }],
+    }]);
 
-    // Verify thunk completion
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "chat/streamNormalInput/fulfilled",
-      }),
-    );
+    const completionPairs = dispatchedActions.filter((a: any) => a.type === "session/addPromptCompletionPair");
+    expect(completionPairs[0].payload).toEqual([{
+      completion: "I'll search the codebase for you.",
+      modelProvider: "anthropic",
+      prompt: "Please search the codebase",
+    }]);
+
+    const toolCallActions = dispatchedActions.filter((a: any) => a.type === "session/setToolCallCalling");
+    expect(toolCallActions[0].payload).toEqual({ toolCallId: "tool-call-1" });
+
+    const toolOutputActions = dispatchedActions.filter((a: any) => a.type === "session/updateToolCallOutput");
+    expect(toolOutputActions[0].payload).toEqual({
+      toolCallId: "tool-call-1",
+      contextItems: [{
+        name: "Search Results",
+        description: "Found 3 matches", 
+        content: "Result 1\nResult 2\nResult 3",
+        icon: "search",
+        hidden: false,
+      }],
+    });
 
     // Verify IDE messenger calls
     expect(mockIdeMessengerWithTool.request).toHaveBeenCalledWith(
@@ -850,6 +874,15 @@ describe("streamResponseThunk", () => {
               {
                 type: "text",
                 text: "Please search the codebase",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Hello, please help me with this code",
               },
             ],
           },
@@ -887,12 +920,21 @@ describe("streamResponseThunk", () => {
       session: {
         history: [
           {
-            appliedRules: [],
             contextItems: [],
             message: {
               id: "1",
               role: "user",
               content: "Please search the codebase",
+            },
+          },
+          {
+            appliedRules: [],
+            contextItems: [],
+            editorState: mockEditorState,
+            message: {
+              id: expect.any(String),
+              role: "user",
+              content: "Hello, please help me with this code",
             },
           },
           {
@@ -959,7 +1001,7 @@ describe("streamResponseThunk", () => {
             isGatheringContext: false,
             message: {
               content: "Search completed.",
-              id: expect.any(String),
+              id: "mock-uuid-123",
               role: "assistant",
             },
             promptLogs: [
@@ -982,7 +1024,7 @@ describe("streamResponseThunk", () => {
         title: "New Session",
         lastSessionId: undefined,
         isSessionMetadataLoading: false,
-        allSessionMetadata: {},
+        allSessionMetadata: [],
         symbols: {},
         codeBlockApplyStates: {
           states: [],
