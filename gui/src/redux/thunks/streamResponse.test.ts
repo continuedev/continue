@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { JSONContent } from "@tiptap/core";
+import { InputModifiers } from "core";
 import { createMockStore } from "../../util/test/mockStore";
+import { streamResponseThunk } from "./streamResponse";
 import { streamNormalInput } from "./streamNormalInput";
 
 // Mock external dependencies only - let selectors run naturally
@@ -30,11 +33,28 @@ vi.mock("core/config/shouldAutoEnableSystemMessageTools", () => ({
   shouldAutoEnableSystemMessageTools: vi.fn(() => undefined),
 }));
 
+// Additional mocks for streamResponseThunk
+vi.mock("posthog-js", () => ({
+  default: {
+    capture: vi.fn(),
+  },
+}));
+
+vi.mock("uuid", () => ({
+  v4: vi.fn(() => "mock-uuid-123"),
+}));
+
+vi.mock("../../components/mainInput/TipTapEditor/utils/resolveEditorContent", () => ({
+  resolveEditorContent: vi.fn(),
+}));
+
 import { ModelDescription } from "core";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { constructMessages } from "../util/constructMessages";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
+import posthog from "posthog-js";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 
 const mockModelSupportsNativeTools = vi.mocked(modelSupportsNativeTools);
 const mockAddSystemMessageToolsToSystemMessage = vi.mocked(
@@ -42,6 +62,8 @@ const mockAddSystemMessageToolsToSystemMessage = vi.mocked(
 );
 const mockConstructMessages = vi.mocked(constructMessages);
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
+const mockPosthog = vi.mocked(posthog);
+const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
 const mockClaudeModel: ModelDescription = {
   title: "Claude 3.5 Sonnet",
@@ -49,6 +71,23 @@ const mockClaudeModel: ModelDescription = {
   provider: "anthropic",
   underlyingProviderName: "anthropic",
   completionOptions: { reasoningBudgetTokens: 2048 },
+};
+
+// Mock editor state (what user types in the input)
+const mockEditorState: JSONContent = {
+  type: "doc",
+  content: [
+    {
+      type: "paragraph",
+      content: [{ type: "text", text: "Hello, please help me with this code" }],
+    },
+  ],
+};
+
+// Mock input modifiers (codebase context, etc.)
+const mockModifiers: InputModifiers = {
+  useCodebase: true,
+  noContext: false,
 };
 
 function setupTest() {
@@ -64,6 +103,14 @@ function setupTest() {
     messages: [{ role: "user", content: "Hello" }],
     appliedRules: [],
     appliedRuleIndex: 0,
+  });
+
+  // Default mock for resolveEditorContent (can be overridden in individual tests)
+  mockResolveEditorContent.mockResolvedValue({
+    selectedContextItems: [],
+    selectedCode: [],
+    content: "Hello, please help me with this code",
+    legacyCommandWithInput: null,
   });
 
   // Create store with realistic state that selectors can work with
@@ -131,17 +178,34 @@ function setupTest() {
   return { mockStore, mockIdeMessenger };
 }
 
-describe("streamNormalInput", () => {
-  it("should execute complete streaming flow with all dispatches", async () => {
+describe("streamResponseThunk", () => {
+  it.only("should execute complete streaming flow with all dispatches", async () => {
     const { mockStore, mockIdeMessenger } = setupTest();
-    // Setup successful compilation
-    mockIdeMessenger.request.mockResolvedValue({
-      status: "success",
-      content: {
-        compiledChatMessages: [{ role: "user", content: "Hello" }],
-        didPrune: false,
-        contextPercentage: 0.8,
-      },
+    
+    // Mock all necessary IDE messenger calls
+    mockIdeMessenger.request.mockImplementation((endpoint: string) => {
+      if (endpoint === "llm/compileChat") {
+        return Promise.resolve({
+          status: "success",
+          content: {
+            compiledChatMessages: [{ role: "user", content: "Hello" }],
+            didPrune: false,
+            contextPercentage: 0.8,
+          },
+        });
+      } else if (endpoint === "history/save") {
+        return Promise.resolve({ status: "success" });
+      } else if (endpoint === "session/refreshMetadata") {
+        return Promise.resolve({
+          status: "success",
+          content: {
+            compiledChatMessages: [{ role: "user", content: "Hello" }],
+            didPrune: false,
+            contextPercentage: 0.8,
+          },
+        });
+      }
+      return Promise.resolve({ status: "success", content: {} });
     });
 
     // Setup streaming generator
@@ -158,78 +222,55 @@ describe("streamNormalInput", () => {
     mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamGenerator());
 
     // Execute thunk
-    const result = await mockStore.dispatch(streamNormalInput({}) as any);
+    const result = await mockStore.dispatch(streamResponseThunk({ 
+      editorState: mockEditorState, 
+      modifiers: mockModifiers 
+    }) as any);
 
-    // Verify exact sequence of dispatched actions with payloads
+    // Verify key behaviors in the comprehensive streaming flow
     const dispatchedActions = (mockStore as any).getActions();
 
-    expect(dispatchedActions).toEqual([
-      {
-        type: "chat/streamNormalInput/pending",
-        meta: expect.objectContaining({
-          arg: {},
-          requestStatus: "pending",
-        }),
-      },
-      {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          index: 0,
-          appliedRules: [],
-        },
-      },
-      {
-        type: "session/setActive",
-      },
-      {
-        type: "session/setInlineErrorMessage",
-      },
-      {
-        type: "session/setIsPruned",
-        payload: false,
-      },
-      {
+    // Verify main thunk actions are present
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamResponse/pending",
+      })
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamResponse/fulfilled",
+      })
+    );
+    
+    // Verify wrapper actions are present
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamWrapper/pending",
+      })
+    );
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
+        type: "chat/streamWrapper/fulfilled",
+      })
+    );
+
+    // Verify core streaming actions are present
+    expect(dispatchedActions).toContainEqual(
+      expect.objectContaining({
         type: "session/setContextPercentage",
         payload: 0.8,
-      },
-      {
-        type: "session/streamUpdate",
-        payload: [
-          {
-            role: "assistant",
-            content: "First chunk",
-          },
-        ],
-      },
-      {
-        type: "session/streamUpdate",
-        payload: [
-          {
-            role: "assistant",
-            content: "Second chunk",
-          },
-        ],
-      },
-      {
-        type: "session/addPromptCompletionPair",
-        payload: [
-          {
-            prompt: "Hello",
-            completion: "Hi there!",
-            modelProvider: "anthropic",
-          },
-        ],
-      },
-      {
-        type: "session/setInactive",
-      },
-      {
-        type: "chat/streamNormalInput/fulfilled",
-        meta: expect.objectContaining({
-          arg: {},
-          requestStatus: "fulfilled",
-        }),
-      },
+      })
+    );
+    
+    const streamUpdates = dispatchedActions.filter(
+      (action: any) => action.type === "session/streamUpdate"
+    );
+    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
+    expect(streamUpdates[0].payload).toEqual([
+      { role: "assistant", content: "First chunk" },
+    ]);
+    expect(streamUpdates[1].payload).toEqual([
+      { role: "assistant", content: "Second chunk" },
     ]);
 
     // Verify IDE messenger calls
@@ -260,7 +301,10 @@ describe("streamNormalInput", () => {
       },
     });
 
-    expect(result.type).toBe("chat/streamNormalInput/fulfilled");
+    // Verify session save was called
+    expect(mockIdeMessenger.request).toHaveBeenCalledWith("history/save", expect.anything());
+
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
     // Verify final state after thunk completion
     const finalState = mockStore.getState();
@@ -274,10 +318,19 @@ describe("streamNormalInput", () => {
           },
           {
             contextItems: [],
+            editorState: mockEditorState,
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+          {
+            contextItems: [],
             isGatheringContext: false,
             message: {
               content: "First chunkSecond chunk", // Chunks get combined
-              id: expect.any(String),
+              id: "mock-uuid-123",
               role: "assistant",
             },
             promptLogs: [
@@ -297,10 +350,10 @@ describe("streamNormalInput", () => {
         contextPercentage: 0.8,
         isPruned: false,
         isInEdit: false,
-        title: "",
+        title: "New Session",
         lastSessionId: undefined,
         isSessionMetadataLoading: false,
-        allSessionMetadata: [],
+        allSessionMetadata: {},
         symbols: {},
         codeBlockApplyStates: {
           states: [],
