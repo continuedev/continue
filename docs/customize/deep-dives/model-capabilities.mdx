@@ -81,7 +81,7 @@ Remove capabilities that aren't working properly:
 models:
   - name: limited-claude
     provider: anthropic
-    model: claude-3-sonnet-20240229
+    model: claude-4.0-sonnet
     capabilities: [] # Disable all capabilities
 ```
 
@@ -109,7 +109,7 @@ OpenRouter models often require capability overrides because the proxy may not p
 models:
   - name: openrouter-claude
     provider: openrouter
-    model: anthropic/claude-3.5-sonnet
+    model: anthropic/claude-4.0-sonnet
     capabilities:
       - tool_use
       - image_input
@@ -144,63 +144,11 @@ models:
 
 ## Troubleshooting
 
-### Agent Mode Unavailable
-
-If Agent mode is grayed out:
-
-1. Check if your model has `tool_use` capability
-2. Try adding `capabilities: ["tool_use"]` to your model config
-3. Verify your provider supports function calling
-
-### Tools Not Working
-
-If tools aren't being called:
-
-1. Ensure `tool_use` is in your capabilities
-2. Check that your API endpoint actually supports function calling
-3. Some providers may use different function calling formats
-
-### Images Not Uploading
-
-If you can't upload images:
-
-1. Add `image_input` to capabilities
-2. Ensure your model actually supports vision (e.g., gpt-4-vision, claude-3)
-3. Check that your provider passes through image data
-
-### Verifying Current Capabilities
-
-To see what capabilities Continue detected for your model:
-
-1. Check the mode selector tooltips - they indicate if tools are available
-2. Try uploading an image - if disabled, the model lacks `image_input`
-3. Check if Agent mode is available - requires `tool_use`
+For troubleshooting capability-related issues like Agent mode being unavailable or tools not working, see the [Troubleshooting guide](/troubleshooting#agent-mode-is-unavailable-or-tools-arent-working).
 
 ## Migration from config.json
 
-If migrating from `config.json`, the format changes:
-
-```json
-// Old config.json format
-{
-  "models": [
-    {
-      "capabilities": {
-        "tools": true,
-        "uploadImage": true
-      }
-    }
-  ]
-}
-```
-
-```yaml
-# New config.yaml format
-models:
-  - capabilities:
-      - tool_use
-      - image_input
-```
+For information on migrating capabilities from config.json to config.yaml format, see the [YAML Migration guide](/reference/yaml-migration).
 
 ## Best Practices
 
@@ -283,4 +231,4 @@ This matrix shows which popular models support various Continue features. Contin
 
 ---
 
-**Is your model missing or incorrect?** Help improve this documentation! You can [edit this page on GitHub](https://github.com/continuedev/continue/edit/main/docs/customize/deep-dives/model-capabilities.mdx) to add your model's compatibility information.
+**Is your model missing or incorrect?** Help improve this documentation! You can edit this page on GitHub using the link below.

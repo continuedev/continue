@@ -137,24 +137,57 @@ This can be accomplished using the following command: `Continue: Rebuild codebas
 
 ### Agent mode is unavailable or tools aren't working
 
-If Agent mode is grayed out or tools aren't functioning properly, this is likely due to model capability configuration issues:
+If Agent mode is grayed out or tools aren't functioning properly, this is likely due to model capability configuration issues.
 
-1. **Check model support**: Not all models support tool/function calling. Models like GPT-3.5 or older Claude versions may not support tools.
+#### Check if your model has tool support
 
-2. **Override capabilities**: If Continue's autodetection isn't working correctly, you can manually specify capabilities in your `config.yaml`:
-   ```yaml
-   models:
-     - name: my-model
-       provider: openai
-       model: gpt-4
-       capabilities:
-         - tool_use
-         - image_input
-   ```
+1. Not all models support tool/function calling. Models like GPT-3.5 or older Claude versions may not support tools.
+2. Try adding `capabilities: ["tool_use"]` to your model config
+3. Verify your provider supports function calling
 
-3. **Verify with provider**: Some proxy services (like OpenRouter) or custom deployments may not preserve tool calling capabilities. Check your provider's documentation.
+#### Tools Not Working
 
-See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for detailed troubleshooting steps.
+If tools aren't being called:
+
+1. Ensure `tool_use` is in your capabilities
+2. Check that your API endpoint actually supports function calling
+3. Some providers may use different function calling formats
+
+#### Images Not Uploading
+
+If you can't upload images:
+
+1. Add `image_input` to capabilities
+2. Ensure your model actually supports vision (e.g., gpt-4-vision, claude-3)
+3. Check that your provider passes through image data
+
+#### Override capabilities
+
+If Continue's autodetection isn't working correctly, you can manually specify capabilities in your `config.yaml`:
+
+```yaml
+models:
+  - name: my-model
+    provider: openai
+    model: gpt-4
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+#### Verify with provider
+
+Some proxy services (like OpenRouter) or custom deployments may not preserve tool calling capabilities. Check your provider's documentation.
+
+#### Verifying Current Capabilities
+
+To see what capabilities Continue detected for your model:
+
+1. Check the mode selector tooltips - they indicate if tools are available
+2. Try uploading an image - if disabled, the model lacks `image_input`
+3. Check if Agent mode is available - requires `tool_use`
+
+See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for complete configuration details.
 
 ### Android Studio - "Nothing to show" in Chat
 
