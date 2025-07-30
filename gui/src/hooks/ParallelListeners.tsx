@@ -58,7 +58,8 @@ function ParallelListeners() {
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
   
-  // Track logged stream IDs to prevent duplicates
+  // Track logged stream IDs to prevent duplicates caused by multiple VS Code extension
+  // components (ApplyManager, processDiff, etc.) sending separate "closed" events
   const loggedStreamIds = useRef(new Set<string>());
 
   const handleConfigUpdate = useCallback(
@@ -276,9 +277,12 @@ function ParallelListeners() {
         }
         
         if (state.status === "closed") {
-          // Prevent duplicate logging for the same streamId
+          // Prevent duplicate logging for the same streamId - multiple VS Code extension
+          // components (extensions/vscode/src/apply/ApplyManager.ts:108 and 
+          // extensions/vscode/src/diff/processDiff.ts:58) can send separate "closed" 
+          // events for the same operation
           if (loggedStreamIds.current.has(state.streamId)) {
-            console.log("Skipping duplicate logging for streamId:", state.streamId);
+            console.log("Skipping duplicate editOutcome logging for streamId:", state.streamId);
             return;
           }
           loggedStreamIds.current.add(state.streamId);
