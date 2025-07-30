@@ -31,7 +31,7 @@ export function anonymizeFilePath(filePath: string): string {
   }
 
   // Replace absolute paths with generic identifier
-  if (normalized.startsWith("/") || normalized.match(/^[A-Z]:/)) {
+  if (normalized.startsWith("/") || normalized.match(/^[A-Za-z]:/)) {
     return "<file>";
   }
 

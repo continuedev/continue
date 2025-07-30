@@ -19,7 +19,6 @@ import {
 import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import { Telemetry } from "../util/posthog.js";
-import { SentryLogger } from "../util/sentry/index.js";
 import {
   ASSISTANTS,
   getAllDotContinueDefinitionFiles,

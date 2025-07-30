@@ -34,7 +34,7 @@ import { getMCPToolName } from "../../tools/mcpToolName";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
-import { SentryLogger } from "../../util/sentry";
+import { SentryLogger } from "../../util/sentry/SentryLogger";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";

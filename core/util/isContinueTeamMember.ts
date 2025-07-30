@@ -3,5 +3,5 @@
  */
 export function isContinueTeamMember(email?: string): boolean {
   if (!email) return false;
-  return email.includes("@continue.dev");
+  return email.endsWith("@continue.dev");
 }
