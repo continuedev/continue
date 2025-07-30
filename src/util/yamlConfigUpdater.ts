@@ -65,13 +65,8 @@ export function updateAnthropicModelInYaml(yamlContent: string, apiKey: string):
     // Add the new anthropic model
     config.models.push(newModel);
     
-    // Preserve comments by manually reconstructing the document
-    // Get all the top-level comments and structure
-    if (doc.has('models')) {
-      doc.set('models', config.models);
-    } else {
-      doc.set('models', config.models);
-    }
+    // Update the models array while preserving comments and structure
+    doc.set('models', config.models);
 
     return doc.toString();
   } catch (error) {
