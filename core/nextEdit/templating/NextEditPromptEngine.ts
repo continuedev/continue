@@ -3,26 +3,46 @@ import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
 import {
-  EDITABLE_REGION_END_TOKEN,
-  EDITABLE_REGION_START_TOKEN,
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+  CURRENT_FILE_CONTENT_CLOSE,
+  CURRENT_FILE_CONTENT_OPEN,
+  CURSOR,
+  EDIT_DIFF_HISTORY_CLOSE,
+  EDIT_DIFF_HISTORY_OPEN,
+  RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
+  RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
   USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 import {
+  MercuryTemplateVars,
+  Model1TemplateVars,
   NextEditTemplate,
   PromptMetadata,
   SystemPrompt,
   TemplateVars,
   UserPrompt,
 } from "../types";
+import {
+  currentFileContentBlock,
+  editHistoryBlock,
+  recentlyViewedCodeSnippetsBlock,
+} from "./mercuryCoderNextEdit";
+import {
+  insertCursorToken,
+  insertEditableRegionTokensWithStaticRange,
+} from "./utils";
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
-type NextEditModelName = "mercury-coder-nextedit" | "this field is not used";
+export type NextEditModelName =
+  | "mercury-coder-nextedit"
+  | "model-1"
+  | "this field is not used";
 
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "mercury-coder-nextedit": {
+    template: `${RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${CURRENT_FILE_CONTENT_CLOSE}\n\n${EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at [CURRENT FILE PATH].\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
+  },
+  "model-1": {
     template:
       "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
   },
@@ -48,7 +68,8 @@ function templateRendererOfModel(
 
 export async function renderPrompt(
   helper: HelperVars,
-  userEdits: string,
+  // userEdits: string,
+  ctx: any,
 ): Promise<PromptMetadata> {
   let modelName = helper.modelName as NextEditModelName;
 
@@ -58,7 +79,7 @@ export async function renderPrompt(
         role: "user",
         content: "NEXT_EDIT",
       },
-      userEdits,
+      userEdits: "",
       userExcerpts: helper.fileContents,
     };
   }
@@ -80,18 +101,60 @@ export async function renderPrompt(
   }
 
   const renderer = templateRendererOfModel(modelName);
+  let userEdits = "";
   let editedCodeWithTokens = "";
+  let tv: TemplateVars;
 
-  editedCodeWithTokens = insertTokens(
-    helper.fileContents.split("\n"),
-    helper.pos,
-  );
+  switch (modelName) {
+    case "mercury-coder-nextedit": {
+      userEdits = ctx.editDiffHistory;
 
-  const tv: TemplateVars = {
-    userEdits,
-    languageShorthand: helper.lang.name,
-    userExcerpts: editedCodeWithTokens,
-  };
+      editedCodeWithTokens = insertTokens(
+        helper.fileContents.split("\n"),
+        helper.pos,
+        CURSOR,
+      );
+
+      const mercuryCtx: MercuryTemplateVars = {
+        recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
+          ctx.recentlyViewedCodeSnippets,
+        ),
+        currentFileContent: currentFileContentBlock(
+          ctx.currentFileContent,
+          ctx.editableRegionStartLine,
+          ctx.editableRegionEndLine,
+          helper.pos,
+        ),
+        editDiffHistory: editHistoryBlock(ctx.editDiffHistory),
+      };
+
+      tv = mercuryCtx;
+
+      break;
+    }
+    case "model-1": {
+      userEdits = ctx.userEdits;
+
+      editedCodeWithTokens = insertTokens(
+        helper.fileContents.split("\n"),
+        helper.pos,
+        USER_CURSOR_IS_HERE_TOKEN,
+      );
+
+      const model1Ctx: Model1TemplateVars = {
+        userEdits: ctx.userEdits,
+        languageShorthand: ctx.languageShorthand,
+        userExcerpts: ctx.userExcerpts,
+      };
+
+      tv = model1Ctx;
+
+      break;
+    }
+    default:
+      tv = {};
+      break;
+  }
 
   return {
     prompt: {
@@ -174,105 +237,14 @@ export function renderDefaultUserPrompt(
   };
 }
 
-// export async function renderFineTunedUserPrompt(
-//   snippets: SnippetPayload,
-//   ide: IDE,
-//   helper: HelperVars,
-// ): Promise<UserPrompt> {
-//   const ideInfo = await ide.getIdeInfo();
-//   switch (ideInfo.ideType) {
-//     case "vscode":
-//       const editedCodeWithPins = insertTokens(
-//         helper.fileContents.split("\n"),
-//         helper.pos,
-//       );
-
-//       return {
-//         role: "user",
-//         content: renderStringTemplate(
-//           mercuryCoderTemplate,
-//           snippets.diffSnippets.join("\n"),
-//           helper.lang.name,
-//           editedCodeWithPins,
-//         ),
-//       };
-
-//     case "jetbrains":
-//       return {
-//         role: "user",
-//         content: "",
-//       };
-//   }
-// }
-
-// export async function renderDefaultBasicUserPrompt(
-//   snippets: SnippetPayload,
-//   ide: IDE,
-//   helper: HelperVars,
-// ): Promise<UserPrompt> {
-//   const ideInfo = await ide.getIdeInfo();
-//   switch (ideInfo.ideType) {
-//     case "vscode":
-//       const editedCodeWithPins = insertTokens(
-//         helper.fileContents.split("\n"),
-//         helper.pos,
-//       );
-
-//       return {
-//         role: "user",
-//         content: renderStringTemplate(
-//           mercuryCoderTemplate,
-//           JSON.stringify(snippets),
-//           helper.lang.name,
-//           editedCodeWithPins,
-//         ),
-//       };
-
-//     case "jetbrains":
-//       return {
-//         role: "user",
-//         content: "",
-//       };
-//   }
-// }
-
-// export async function renderFineTunedBasicUserPrompt(
-//   snippets: SnippetPayload,
-//   ide: IDE,
-//   helper: HelperVars,
-//   diffContext: string,
-// ): Promise<UserPrompt> {
-//   const ideInfo = await ide.getIdeInfo();
-//   switch (ideInfo.ideType) {
-//     case "vscode":
-//       const lines = helper.fileContents.split("\n");
-//       const editedCodeWithPins = insertTokens(lines, helper.pos);
-
-//       return {
-//         role: "user",
-//         content: renderStringTemplate(
-//           mercuryCoderTemplate,
-//           diffContext,
-//           helper.lang.name,
-//           editedCodeWithPins,
-//         ),
-//       };
-
-//     case "jetbrains":
-//       return {
-//         role: "user",
-//         content: "",
-//       };
-//   }
-// }
-
 function insertTokens(
   lines: string[],
   cursorPos: Position,
+  cursorToken: string,
   editableRegionStart?: number,
   editableRegionEnd?: number,
 ) {
-  const a = insertCursorToken(lines, cursorPos);
+  const a = insertCursorToken(lines, cursorPos, cursorToken);
   const b = insertEditableRegionTokensWithStaticRange(
     a,
     cursorPos,
@@ -280,77 +252,4 @@ function insertTokens(
     editableRegionEnd,
   );
   return b.join("\n");
-}
-
-function insertCursorToken(lines: string[], cursorPos: Position) {
-  if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
-    return lines;
-  }
-
-  // Ensure character position is within bounds or at the end of the line.
-  const lineLength = lines[cursorPos.line].length;
-  const charPos = Math.min(Math.max(0, cursorPos.character), lineLength);
-
-  lines[cursorPos.line] =
-    lines[cursorPos.line].slice(0, charPos) +
-    USER_CURSOR_IS_HERE_TOKEN +
-    lines[cursorPos.line].slice(charPos);
-
-  return lines;
-}
-
-function insertEditableRegionTokensWithStaticRange(
-  lines: string[],
-  cursorPos: Position,
-  editableRegionStart?: number,
-  editableRegionEnd?: number,
-) {
-  if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
-    return lines;
-  }
-
-  // Ensure editable regions are within bounds.
-  if (editableRegionStart === undefined) {
-    editableRegionStart = Math.max(
-      cursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-      0,
-    );
-  }
-  if (editableRegionEnd === undefined) {
-    editableRegionEnd = Math.min(
-      cursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-      lines.length - 1, // Line numbers should be zero-indexed.
-    );
-  }
-
-  // console.log("editableRegionStart:", editableRegionStart);
-
-  const instrumentedLines = [
-    ...lines.slice(0, editableRegionStart),
-    EDITABLE_REGION_START_TOKEN,
-    ...lines.slice(editableRegionStart, editableRegionEnd + 1),
-    EDITABLE_REGION_END_TOKEN,
-    ...lines.slice(editableRegionEnd + 1),
-  ];
-
-  return instrumentedLines;
-}
-
-function insertEditableRegionTokensWithAst(
-  lines: string[],
-  cursorPos: Position,
-) {
-  if (cursorPos.line < 0 || cursorPos.line >= lines.length) {
-    return lines;
-  }
-
-  // Ensure character position is within bounds or at the end of the line.
-  const lineLength = lines[cursorPos.line].length;
-  const charPos = Math.min(Math.max(0, cursorPos.character), lineLength);
-
-  (lines[cursorPos.line] =
-    lines[cursorPos.line].slice(0, charPos) + USER_CURSOR_IS_HERE_TOKEN),
-    lines[cursorPos.line].slice(charPos);
-
-  return lines;
 }
