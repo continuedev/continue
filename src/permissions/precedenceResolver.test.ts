@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals";
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { DEFAULT_TOOL_POLICIES, HEADLESS_TOOL_POLICIES } from "./defaultPolicies.js";
 import { resolvePermissionPrecedence } from "./precedenceResolver.js";
 import { ToolPermissionPolicy } from "./types.js";
 
@@ -139,6 +139,71 @@ describe("precedenceResolver", () => {
       // Should still have default policies
       const readPolicy = policies.find(p => p.tool === "read_file");
       expect(readPolicy).toBeDefined();
+    });
+
+    describe("headless mode", () => {
+      it("should use headless policies when headless: true", () => {
+        const policies = resolvePermissionPrecedence({
+          useDefaults: true,
+          personalSettings: false,
+          headless: true,
+        });
+
+        expect(policies).toEqual(HEADLESS_TOOL_POLICIES);
+      });
+
+      it("should use normal policies when headless: false", () => {
+        const policies = resolvePermissionPrecedence({
+          useDefaults: true,
+          personalSettings: false,
+          headless: false,
+        });
+
+        expect(policies).toEqual(DEFAULT_TOOL_POLICIES);
+      });
+
+      it("should use normal policies when headless is undefined", () => {
+        const policies = resolvePermissionPrecedence({
+          useDefaults: true,
+          personalSettings: false,
+        });
+
+        expect(policies).toEqual(DEFAULT_TOOL_POLICIES);
+      });
+
+      it("should allow CLI flags to override headless policies", () => {
+        const policies = resolvePermissionPrecedence({
+          commandLineFlags: {
+            exclude: ["write_file"],
+          },
+          useDefaults: true,
+          personalSettings: false,
+          headless: true,
+        });
+
+        // CLI exclusion should come first, overriding headless allow-all
+        expect(policies[0]).toEqual({ tool: "write_file", permission: "exclude" });
+        // Headless wildcard should still be present
+        expect(policies[1]).toEqual({ tool: "*", permission: "allow" });
+      });
+
+      it("should allow config policies to override headless defaults", () => {
+        const configPolicies: ToolPermissionPolicy[] = [
+          { tool: "run_terminal_command", permission: "ask" },
+        ];
+
+        const policies = resolvePermissionPrecedence({
+          configPermissions: configPolicies,
+          useDefaults: true,
+          personalSettings: false,
+          headless: true,
+        });
+
+        // Config policy should override headless default
+        expect(policies[0]).toEqual({ tool: "run_terminal_command", permission: "ask" });
+        // Headless wildcard should still be present
+        expect(policies[1]).toEqual({ tool: "*", permission: "allow" });
+      });
     });
   });
 });

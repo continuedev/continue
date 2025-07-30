@@ -23,7 +23,7 @@ describe("ToolPermissionService unit tests", () => {
       expect(state.permissions.policies).toBeDefined();
       expect(state.permissions.policies.length).toBeGreaterThan(0);
 
-      // Verify the overrides are in the policies
+      // Verify the overrides are in the policies (they should be at the beginning due to precedence)
       const toolNames = state.permissions.policies.map((p) => p.tool);
       expect(toolNames).toContain("TestTool3");
       expect(toolNames).toContain("TestTool2");
@@ -74,4 +74,6 @@ describe("ToolPermissionService unit tests", () => {
       expect(state.permissions.policies.length).toBe(2);
     });
   });
+
+  // Headless mode functionality is tested in precedenceResolver.test.ts and integration tests
 });

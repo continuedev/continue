@@ -6,7 +6,7 @@ export type {
   ToolPermissions,
 } from "./types.js";
 
-export { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+export { DEFAULT_TOOL_POLICIES, HEADLESS_TOOL_POLICIES } from "./defaultPolicies.js";
 export {
   checkToolPermission,
   filterExcludedTools,

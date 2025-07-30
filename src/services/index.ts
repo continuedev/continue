@@ -31,13 +31,13 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
   // Handle tool permissions specially for immediate availability
   if (options.toolPermissionOverrides) {
     // Initialize synchronously and register the value immediately
-    const permissionState = toolPermissionService.initializeSync(options.toolPermissionOverrides);
+    const permissionState = toolPermissionService.initializeSync(options.toolPermissionOverrides, options.headless);
     serviceContainer.registerValue(SERVICE_NAMES.TOOL_PERMISSIONS, permissionState);
   } else {
     // Register normal factory for lazy initialization
     serviceContainer.register(
       SERVICE_NAMES.TOOL_PERMISSIONS,
-      () => toolPermissionService.initialize(),
+      () => toolPermissionService.initialize(undefined, options.headless),
       []
     );
   }

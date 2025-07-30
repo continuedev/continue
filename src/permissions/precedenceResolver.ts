@@ -1,4 +1,4 @@
-import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
+import { DEFAULT_TOOL_POLICIES, HEADLESS_TOOL_POLICIES } from "./defaultPolicies.js";
 import { loadPermissionsYaml, yamlConfigToPolicies } from "./permissionsYamlLoader.js";
 import { normalizeToolName } from "./toolNameMapping.js";
 import { ToolPermissionPolicy } from "./types.js";
@@ -17,6 +17,8 @@ export interface PermissionSources {
   personalSettings?: boolean; // Whether to load from permissions.yaml
   /** Default policies - lowest precedence */
   useDefaults?: boolean;
+  /** Whether running in headless mode - affects default policies */
+  headless?: boolean;
 }
 
 /**
@@ -38,9 +40,10 @@ export function resolvePermissionPrecedence(sources: PermissionSources): ToolPer
 
   // Layer 4: Default policies (lowest precedence)
   if (sources.useDefaults !== false) {
+    const defaultPolicies = sources.headless ? HEADLESS_TOOL_POLICIES : DEFAULT_TOOL_POLICIES;
     layers.push({
-      name: "defaults",
-      policies: [...DEFAULT_TOOL_POLICIES]
+      name: sources.headless ? "headless-defaults" : "defaults",
+      policies: [...defaultPolicies]
     });
   }
 

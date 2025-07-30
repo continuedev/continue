@@ -82,3 +82,22 @@ exclude:
 Except that it's important to understand that this file is _not_ intended to be edited by the user. It is only for persistence, and users should interact with their permissions by using the TUI.
 
 This file should be created the first time that the CLI starts.
+
+## Headless mode permissions
+
+When running in headless mode (using the `-p` or `--print` flag), the CLI uses different default policies designed for non-interactive usage:
+
+- **Normal mode**: Write operations and terminal commands require confirmation (`ask`)
+- **Headless mode**: All tools are allowed by default (`*: allow`)
+
+This behavior can still be overridden using the standard precedence rules. For example:
+
+```bash
+# Headless mode with full access (default)
+cn -p "Write a hello world script"
+
+# Headless mode with specific restrictions
+cn -p --exclude Write "Clean up the codebase"
+```
+
+The headless default policies are defined in [`src/permissions/defaultPolicies.ts`](../src/permissions/defaultPolicies.ts) as `HEADLESS_TOOL_POLICIES`.
