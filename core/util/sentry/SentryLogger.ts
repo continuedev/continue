@@ -20,11 +20,17 @@ export class SentryLogger {
     try {
       // For shared environments like VSCode extensions, we need to be careful
       // Using Sentry.init() but with limited integrations to avoid global state pollution
+      // See https://docs.sentry.io/platforms/javascript/best-practices/shared-environments/
       Sentry.init({
         dsn: SENTRY_DSN,
         release,
         environment: process.env.NODE_ENV,
-        tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+
+        // For basic error tracking, a lower sample rate should be fine
+        tracesSampleRate: 0.25,
+
+        // Privacy-conscious default
+        sendDefaultPii: false,
 
         // Strip sensitive data and add basic properties before sending events
         beforeSend(event) {
@@ -92,11 +98,11 @@ export class SentryLogger {
   ) {
     // TODO: Remove Continue team member check once Sentry is ready for all users
     const isContinueTeam = isContinueTeamMember(userEmail);
-    
+
     // Disable Sentry in debug mode, test environments, or when telemetry is disabled
     const isDebugMode = process.env.CONTINUE_DEVELOPMENT === "true";
     const isTestEnv = process.env.NODE_ENV === "test";
-    
+
     SentryLogger.allowTelemetry =
       allow && !isTestEnv && !isDebugMode && isContinueTeam;
     SentryLogger.uniqueId = uniqueId;

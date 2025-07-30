@@ -48,11 +48,11 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
           Sentry.browserTracingIntegration(),
         ],
 
-        // Performance monitoring
-        tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+        // For basic error tracking, a lower sample rate should be fine
+        tracesSampleRate: 0.25,
 
-        // Enhanced error capture
-        sendDefaultPii: false, // Privacy-conscious default
+        // Privacy-conscious default
+        sendDefaultPii: false,
 
         // Strip sensitive data and add basic properties
         beforeSend(event) {
@@ -66,9 +66,6 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
           // Add environment information
           anonymizedEvent.tags.environment = process.env.NODE_ENV;
 
-          // Add platform information (browser environment)
-          anonymizedEvent.tags.platform = "browser";
-
           // Add ideInfo properties spread out as top-level properties (like PostHog)
           const extensionVersion = getLocalStorage("extensionVersion");
           const ideType = getLocalStorage("ide");
@@ -79,7 +76,6 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
 
           if (ideType) {
             anonymizedEvent.tags.ideType = ideType;
-            anonymizedEvent.tags.ideName = ideType; // Use ideType as ideName for consistency
           }
 
           // Add isPrerelease information

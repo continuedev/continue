@@ -49,9 +49,19 @@ import setupNextEditWindowManager, {
 import { getDefinitionsFromLsp } from "../autocomplete/lsp";
 import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { captureException } from "core/util/sentry/SentryLogger";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
+
+  private handleError = (error: Error, context: string) => {
+    console.error(`Error in VsCodeExtension.${context}:`, error);
+    try {
+      captureException(error, { context: `vscode_extension_${context}` });
+    } catch (sentryError) {
+      console.error("Failed to capture exception to Sentry:", sentryError);
+    }
+  };
 
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
@@ -71,10 +81,11 @@ export class VsCodeExtension {
   private completionProvider: ContinueCompletionProvider;
 
   constructor(context: vscode.ExtensionContext) {
-    // Register auth provider
-    this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
-    void this.workOsAuthProvider.refreshSessions();
-    context.subscriptions.push(this.workOsAuthProvider);
+    try {
+      // Register auth provider
+      this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
+      void this.workOsAuthProvider.refreshSessions();
+      context.subscriptions.push(this.workOsAuthProvider);
 
     this.editDecorationManager = new EditDecorationManager(context);
 
@@ -154,44 +165,54 @@ export class VsCodeExtension {
     );
 
     void this.configHandler.loadConfig().then(({ config }) => {
-      const { verticalDiffCodeLens } = registerAllCodeLensProviders(
-        context,
-        this.verticalDiffManager.fileUriToCodeLens,
-        config,
-      );
+      try {
+        const { verticalDiffCodeLens } = registerAllCodeLensProviders(
+          context,
+          this.verticalDiffManager.fileUriToCodeLens,
+          config,
+        );
 
-      this.verticalDiffManager.refreshCodeLens =
-        verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+        this.verticalDiffManager.refreshCodeLens =
+          verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+      } catch (error) {
+        this.handleError(error as Error, "loadConfig_callback");
+      }
+    }).catch((error) => {
+      this.handleError(error as Error, "loadConfig");
     });
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
-        const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
-        if (
-          autocompleteModel &&
-          isModelCapableOfNextEdit(autocompleteModel.model)
-        ) {
-          // Set up next edit window manager only for Continue team members
-          await setupNextEditWindowManager(context);
-          this.activateNextEdit();
-          await NextEditWindowManager.freeTabAndEsc();
-        } else {
-          NextEditWindowManager.clearInstance();
-          this.deactivateNextEdit();
-          await NextEditWindowManager.freeTabAndEsc();
-        }
+        try {
+          const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
+          if (
+            autocompleteModel &&
+            isModelCapableOfNextEdit(autocompleteModel.model)
+          ) {
+            // Set up next edit window manager only for Continue team members
+            await setupNextEditWindowManager(context);
+            this.activateNextEdit();
+            await NextEditWindowManager.freeTabAndEsc();
+          } else {
+            NextEditWindowManager.clearInstance();
+            this.deactivateNextEdit();
+            await NextEditWindowManager.freeTabAndEsc();
+          }
 
-        if (configLoadInterrupted) {
-          // Show error in status bar
-          setupStatusBar(undefined, undefined, true);
-        } else if (newConfig) {
-          setupStatusBar(undefined, undefined, false);
+          if (configLoadInterrupted) {
+            // Show error in status bar
+            setupStatusBar(undefined, undefined, true);
+          } else if (newConfig) {
+            setupStatusBar(undefined, undefined, false);
 
-          registerAllCodeLensProviders(
-            context,
-            this.verticalDiffManager.fileUriToCodeLens,
-            newConfig,
-          );
+            registerAllCodeLensProviders(
+              context,
+              this.verticalDiffManager.fileUriToCodeLens,
+              newConfig,
+            );
+          }
+        } catch (error) {
+          this.handleError(error as Error, "configUpdate_callback");
         }
       },
     );
@@ -286,32 +307,44 @@ export class VsCodeExtension {
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
-      if (stats.size === 0) {
-        return;
+      try {
+        if (stats.size === 0) {
+          return;
+        }
+        await this.configHandler.reloadConfig(
+          "Global JSON config updated - fs file watch",
+        );
+      } catch (error) {
+        this.handleError(error as Error, "configJsonWatch");
       }
-      await this.configHandler.reloadConfig(
-        "Global JSON config updated - fs file watch",
-      );
     });
 
     fs.watchFile(
       getConfigYamlPath("vscode"),
       { interval: 1000 },
       async (stats) => {
-        if (stats.size === 0) {
-          return;
+        try {
+          if (stats.size === 0) {
+            return;
+          }
+          await this.configHandler.reloadConfig(
+            "Global YAML config updated - fs file watch",
+          );
+        } catch (error) {
+          this.handleError(error as Error, "configYamlWatch");
         }
-        await this.configHandler.reloadConfig(
-          "Global YAML config updated - fs file watch",
-        );
       },
     );
 
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
-      if (stats.size === 0) {
-        return;
+      try {
+        if (stats.size === 0) {
+          return;
+        }
+        void this.configHandler.reloadConfig("config.ts updated - fs file watch");
+      } catch (error) {
+        this.handleError(error as Error, "configTsWatch");
       }
-      void this.configHandler.reloadConfig("config.ts updated - fs file watch");
     });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
@@ -443,6 +476,10 @@ export class VsCodeExtension {
         void this.core.invoke("config/ideSettingsUpdate", settings);
       }
     });
+    } catch (error) {
+      this.handleError(error as Error, "constructor");
+      throw error; // Re-throw to prevent partially initialized extension
+    }
   }
 
   static continueVirtualDocumentScheme = EXTENSION_NAME;

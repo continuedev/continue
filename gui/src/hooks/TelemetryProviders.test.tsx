@@ -158,7 +158,7 @@ describe("TelemetryProviders", () => {
         expect.objectContaining({
           dsn: "https://fe99934dcdc537d84209893a3f96a196@o4505462064283648.ingest.us.sentry.io/4508184596054016",
           environment: "development",
-          tracesSampleRate: 1.0,
+          tracesSampleRate: 0.25,
         }),
       );
       expect(mockSentry.setUser).toHaveBeenCalledWith({
@@ -171,27 +171,6 @@ describe("TelemetryProviders", () => {
       // Verify children are rendered
       expect(screen.getByTestId("test-child")).toBeInTheDocument();
       expect(screen.getByTestId("posthog-provider")).toBeInTheDocument();
-
-      process.env.NODE_ENV = originalNodeEnv;
-    });
-
-    it("should use production sample rate in production", () => {
-      const originalNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "production";
-
-      render(
-        <TestWrapper allowAnonymousTelemetry={true}>
-          <TelemetryProviders>
-            <div data-testid="test-child">Test Child</div>
-          </TelemetryProviders>
-        </TestWrapper>,
-      );
-
-      expect(mockSentry.init).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tracesSampleRate: 0.1,
-        }),
-      );
 
       process.env.NODE_ENV = originalNodeEnv;
     });
