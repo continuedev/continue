@@ -1,6 +1,6 @@
 package com.github.continuedev.continueintellijextension.auth
 
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -90,7 +90,7 @@ class ContinueAuthService {
             ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                 .handleUpdatedSessionInfo(sessionInfo)
         } catch (e: Exception) {
-            service<ContinueErrorService>().report(e, "Exception while refreshing token ${e.message}")
+            service<ContinueSentryService>().report(e, "Exception while refreshing token ${e.message}")
         }
     }
 

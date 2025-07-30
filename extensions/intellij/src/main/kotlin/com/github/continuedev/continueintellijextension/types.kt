@@ -16,11 +16,6 @@ enum class FileType(val value: Int) {
     SYMBOLIC_LINK(64)
 }
 
-enum class ConfigMergeType {
-    MERGE,
-    OVERWRITE
-}
-
 data class Position(val line: Int, val character: Int)
 
 data class Range(val start: Position, val end: Position)
@@ -149,10 +144,6 @@ data class IdeSettings(
     val continueTestEnvironment: String
 )
 
-data class ContinueRcJson(
-    val mergeBehavior: ConfigMergeType
-)
-
 data class TerminalOptions(
     val reuseTerminal: Boolean?,
     val terminalName: String?,
@@ -186,8 +177,6 @@ interface IDE {
     suspend fun getAvailableThreads(): List<Thread>
 
     suspend fun getWorkspaceDirs(): List<String>
-
-    suspend fun getWorkspaceConfigs(): List<ContinueRcJson>
 
     suspend fun fileExists(filepath: String): Boolean
 

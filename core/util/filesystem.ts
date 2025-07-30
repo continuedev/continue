@@ -2,7 +2,6 @@ import * as fs from "node:fs";
 
 import { fileURLToPath } from "node:url";
 import {
-  ContinueRcJson,
   FileStatsMap,
   FileType,
   IDE,
@@ -143,10 +142,6 @@ class FileSystemIde implements IDE {
 
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
-  }
-
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return Promise.resolve([]);
   }
 
   getDiff(includeUnstaged: boolean): Promise<string[]> {
