@@ -106,9 +106,7 @@ const TestWrapper: React.FC<{
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={mockPersistor}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </PersistGate>
     </Provider>
   );
