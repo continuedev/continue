@@ -3891,22 +3891,283 @@ describe("streamResponseThunk", () => {
 
     // Execute initial thunk - this should generate the tool call but not execute it
     const initialResult = await mockStoreWithApproval.dispatch(
-      streamNormalInput({}) as any,
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
     );
 
     // Verify initial streaming completed successfully
-    expect(initialResult.type).toBe("chat/streamNormalInput/fulfilled");
+    expect(initialResult.type).toBe("chat/streamResponse/fulfilled");
 
-    // Get initial actions to verify tool was generated
+    // Verify exact initial action sequence (same as manual approval test)
     const initialActions = (mockStoreWithApproval as any).getActions();
-    expect(initialActions).toContainEqual(
-      expect.objectContaining({
+    expect(initialActions).toEqual([
+      {
+        type: "chat/streamResponse/pending",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/submitEditorAndInitAtIndex",
+        payload: {
+          editorState: mockEditorState,
+          index: 1,
+        },
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/pending",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateHistoryItemAtIndex",
+        payload: {
+          index: 1,
+          updates: {
+            contextItems: [],
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+        },
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          appliedRules: [],
+          index: 1,
+        },
+      },
+      {
+        type: "session/setActive",
+        payload: undefined,
+      },
+      {
+        type: "session/setInlineErrorMessage",
+        payload: undefined,
+      },
+      {
+        type: "session/setIsPruned",
+        payload: false,
+      },
+      {
+        type: "session/setContextPercentage",
+        payload: 0.85,
+      },
+      {
+        type: "symbols/updateFromContextItems/fulfilled",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "I'll search for test functions in the codebase.",
+          },
+        ],
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-approval-flow-1",
+                type: "function",
+                function: {
+                  name: "search_codebase",
+                  arguments: JSON.stringify({ query: "test function" }),
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "session/addPromptCompletionPair",
+        payload: [
+          {
+            completion: "I'll search for test functions in the codebase.",
+            modelProvider: "anthropic",
+            prompt: "Please search the codebase for test functions",
+          },
+        ],
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
+      },
+      {
         type: "session/setToolGenerated",
-        payload: expect.objectContaining({
+        payload: {
           toolCallId: "tool-approval-flow-1",
-        }),
-      }),
-    );
+          tools: [],
+        },
+      },
+      {
+        type: "chat/streamNormalInput/fulfilled",
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/pending",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/update/pending",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateSessionMetadata",
+        payload: {
+          sessionId: "session-123",
+          title: "New Session",
+        },
+      },
+      {
+        type: "session/refreshMetadata/pending",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: {},
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: {},
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+    ]);
 
     // Clear the actions array to track only the approval flow
     (mockStoreWithApproval as any).clearActions();
@@ -3990,12 +4251,21 @@ describe("streamResponseThunk", () => {
       session: {
         history: [
           {
-            appliedRules: [],
             contextItems: [],
             message: {
               id: "1",
               role: "user",
               content: "Please search the codebase for test functions",
+            },
+          },
+          {
+            appliedRules: [],
+            contextItems: [],
+            editorState: mockEditorState,
+            message: {
+              content: "Hello, please help me with this code",
+              id: expect.any(String),
+              role: "user",
             },
           },
           {
@@ -4065,7 +4335,7 @@ describe("streamResponseThunk", () => {
             message: {
               content:
                 "I found several test functions in your codebase. Here are the main ones I discovered...",
-              id: expect.any(String),
+              id: "mock-uuid-123",
               role: "assistant",
             },
             promptLogs: [
