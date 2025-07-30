@@ -11,7 +11,6 @@ import {
   streamChatResponse,
 } from "../../streamChatResponse.js";
 import telemetryService from "../../telemetry/telemetryService.js";
-import { formatToolCall } from "../../tools/formatters.js";
 import { formatError } from "../../util/formatError.js";
 import logger from "../../util/logger.js";
 
@@ -19,6 +18,7 @@ import { initializeChatHistory } from "../../commands/chat.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { DisplayMessage } from "../types.js";
 import { ToolCallPreview } from "../../tools/types.js";
+import { formatToolCall } from "../../tools/index.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;

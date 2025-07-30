@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { Tool } from "./types.js";
-import { formatToolCall } from "./formatters.js";
+import { formatToolArgument } from "./formatters.js";
 
 export const readFileTool: Tool = {
   name: "read_file",
@@ -17,7 +17,12 @@ export const readFileTool: Tool = {
   preprocess: async (args) => {
     return {
       args,
-      preview: [{ type: "text", content: formatToolCall("read_file", args) }],
+      preview: [
+        {
+          type: "text",
+          content: `Will read ${formatToolArgument(args.filepath)}`,
+        },
+      ],
     };
   },
   run: async (args: { filepath: string }): Promise<string> => {

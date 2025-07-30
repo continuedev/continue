@@ -4,6 +4,7 @@ import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
+import { formatToolArgument } from "./formatters.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
@@ -48,32 +49,6 @@ export const BUILTIN_TOOLS: Tool[] = (() => {
 export function getToolDisplayName(toolName: string): string {
   const tool = BUILTIN_TOOLS.find((t) => t.name === toolName);
   return tool?.displayName || toolName;
-}
-
-export function getToolsDescription(): string {
-  return BUILTIN_TOOLS.map((tool) => {
-    const params = Object.entries(tool.parameters)
-      .map(
-        ([name, param]) =>
-          `    "${name}": { "type": "${param.type}", "description": "${param.description}", "required": ${param.required} }`
-      )
-      .join(",\n");
-
-    return `{
-  "name": "${tool.name}",
-  "description": "${tool.description}",
-  "parameters": {
-    "type": "object",
-    "properties": {
-${params}
-    },
-    "required": [${Object.entries(tool.parameters)
-      .filter(([_, param]) => param.required)
-      .map(([name]) => `"${name}"`)
-      .join(", ")}]
-}
-}`;
-  }).join(",\n");
 }
 
 export function extractToolCalls(
@@ -153,20 +128,6 @@ export async function getAvailableTools() {
   return allTools;
 }
 
-export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
-  for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
-    if (
-      paramDef.required &&
-      (toolCall.arguments[paramName] === undefined ||
-        toolCall.arguments[paramName] === null)
-    ) {
-      throw new Error(
-        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`
-      );
-    }
-  }
-}
-
 export async function executeToolCall(
   toolCall: PreprocessedToolCall
 ): Promise<string> {
@@ -217,4 +178,38 @@ export async function executeToolCall(
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }
+}
+
+export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
+  for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
+    if (
+      paramDef.required &&
+      (toolCall.arguments[paramName] === undefined ||
+        toolCall.arguments[paramName] === null)
+    ) {
+      throw new Error(
+        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`
+      );
+    }
+  }
+}
+
+/**
+ * Formats a tool call with its arguments for display
+ * @param toolName The name of the tool
+ * @param args The tool arguments
+ * @returns A formatted string like "ToolName(arg)" or just "ToolName" if no args
+ */
+export function formatToolCall(toolName: string, args?: any): string {
+  const displayName = getToolDisplayName(toolName);
+
+  if (!args || Object.keys(args).length === 0) {
+    return displayName;
+  }
+
+  // Get the first argument value
+  const firstValue = Object.values(args)[0];
+  const formattedValue = formatToolArgument(firstValue);
+
+  return `${displayName}(${formattedValue})`;
 }

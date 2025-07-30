@@ -62,6 +62,7 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 - Configuration in `jest.config.mjs`
 - Tests should be written with `.test.ts` extension
 - No existing test files found - tests should be added when writing new functionality
+- Run tests using `npm run test path/or/pattern`
 
 ### Build System
 

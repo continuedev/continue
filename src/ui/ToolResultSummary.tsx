@@ -1,8 +1,8 @@
 import { Box, Text } from "ink";
 import path from "path";
 import React from "react";
-import { getToolDisplayName } from "../tools.js";
 import { ColoredDiff } from "./ColoredDiff.js";
+import { getToolDisplayName } from "../tools/index.js";
 
 interface ToolResultSummaryProps {
   toolName?: string;

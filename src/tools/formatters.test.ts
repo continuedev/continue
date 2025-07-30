@@ -1,9 +1,8 @@
 import { jest } from "@jest/globals";
-import { formatToolCall, formatToolArgument } from "./formatters.js";
+import { formatToolArgument } from "./formatters.js";
+import { formatToolCall } from "./index.js";
 
 describe("formatToolCall", () => {
-  const originalCwd = process.cwd();
-
   beforeEach(() => {
     // Mock process.cwd to return a consistent value
     jest.spyOn(process, "cwd").mockReturnValue("/Users/test/project");

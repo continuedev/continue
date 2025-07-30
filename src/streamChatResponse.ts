@@ -17,9 +17,9 @@ import {
 import { toolPermissionManager } from "./permissions/permissionManager.js";
 import telemetryService from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
-import { executeToolCall } from "./tools.js";
 import {
   BUILTIN_TOOLS,
+  executeToolCall,
   getAvailableTools,
   Tool,
   ToolCall,

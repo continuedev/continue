@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
-import { formatToolCall } from "../../tools/formatters.js";
+import { formatToolCall } from "../../tools/index.js";
 import { ToolPreview } from "./ToolPreview.js";
 import { ToolCallPreview } from "../../tools/types.js";
 
