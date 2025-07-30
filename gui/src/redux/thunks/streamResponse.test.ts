@@ -1627,73 +1627,252 @@ describe("streamResponseThunk", () => {
     });
 
     // Execute thunk and expect it to be rejected
-    const result = await mockStore.dispatch(streamNormalInput({}) as any);
+    const result = await mockStore.dispatch(
+      streamResponseThunk({ 
+        editorState: mockEditorState, 
+        modifiers: mockModifiers 
+      }) as any,
+    );
 
-    // Verify thunk was rejected with the compilation error
-    expect(result.type).toBe("chat/streamNormalInput/rejected");
-    expect(result.error?.message).toBe("Model configuration is invalid");
+    // Verify thunk completed successfully but shows error dialog
+    expect(result.type).toBe("chat/streamResponse/fulfilled");
 
-    // Verify action sequence - should get to compilation, then fail
+    // Verify exact action sequence for compilation error with dialog
     const dispatchedActions = (mockStore as any).getActions();
     expect(dispatchedActions).toEqual([
       {
-        type: "chat/streamNormalInput/pending",
-        meta: expect.objectContaining({
-          arg: {},
+        type: "chat/streamResponse/pending",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
           requestStatus: "pending",
-        }),
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/pending",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/submitEditorAndInitAtIndex",
+        payload: {
+          editorState: mockEditorState,
+          index: 1,
+        },
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/pending",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateHistoryItemAtIndex",
+        payload: {
+          index: 1,
+          updates: {
+            contextItems: [],
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+        },
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: {
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
       },
       {
         type: "session/setAppliedRulesAtIndex",
         payload: {
-          index: 0,
           appliedRules: [],
+          index: 1,
         },
       },
       {
         type: "session/setActive",
+        payload: undefined,
       },
       {
         type: "session/setInlineErrorMessage",
+        payload: undefined,
       },
-      // Error causes thunk rejection - no cleanup actions
+      {
+        type: "symbols/updateFromContextItems/fulfilled",
+        meta: {
+          arg: [],
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
       {
         type: "chat/streamNormalInput/rejected",
-        meta: expect.objectContaining({
-          arg: {},
+        meta: {
+          aborted: false,
+          arg: {
+            legacySlashCommandData: undefined,
+          },
+          condition: false,
+          rejectedWithValue: false,
+          requestId: expect.any(String),
           requestStatus: "rejected",
-        }),
-        error: expect.objectContaining({
+        },
+        payload: undefined,
+        error: {
           message: "Model configuration is invalid",
+          name: "Error",
+          stack: expect.any(String),
+        },
+      },
+      {
+        type: "chat/cancelStream/pending",
+        meta: {
+          arg: undefined,
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
+      },
+      {
+        type: "session/abortStream",
+        payload: undefined,
+      },
+      {
+        type: "session/clearDanglingMessages",
+        payload: undefined,
+      },
+      {
+        type: "chat/cancelStream/fulfilled",
+        meta: {
+          arg: undefined,
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "ui/setDialogMessage",
+        payload: expect.objectContaining({
+          props: expect.objectContaining({
+            error: expect.objectContaining({
+              message: "Model configuration is invalid",
+            }),
+          }),
         }),
+      },
+      {
+        type: "ui/setShowDialog",
+        payload: true,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: {
+          arg: expect.any(Function),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: {
+          arg: {
+            editorState: mockEditorState,
+            modifiers: mockModifiers,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
       },
     ]);
 
     // Verify IDE messenger was called for compilation but not streaming
     expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [{ role: "user", content: "Hello" }],
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
       options: {},
     });
     expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
 
-    // Verify final state - error interrupted processing, so session remains active
+    // Verify final state shows error dialog and inactive streaming
     const finalState = mockStore.getState();
     expect(finalState).toEqual({
       session: {
         history: [
           {
-            appliedRules: [],
             contextItems: [],
             message: { id: "1", role: "user", content: "Hello" },
           },
+          {
+            appliedRules: [],
+            contextItems: [],
+            editorState: mockEditorState,
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
         ],
         hasReasoningEnabled: false,
-        isStreaming: true, // TODO: fix this
+        isStreaming: false, // Set to inactive after error
         id: "session-123",
         mode: "chat",
         streamAborter: expect.any(AbortController),
-        contextPercentage: 0, // Unchanged - no successful compilation
-        isPruned: false, // Unchanged - no successful compilation
+        contextPercentage: 0,
+        isPruned: false,
         isInEdit: false,
         title: "",
         lastSessionId: undefined,
@@ -1706,7 +1885,8 @@ describe("streamResponseThunk", () => {
         },
         newestToolbarPreviewForInput: {},
         compactionLoading: {},
-        inlineErrorMessage: undefined, // No special error message - error was thrown
+        inlineErrorMessage: undefined,
+        mainEditorContentTrigger: mockEditorState, // Editor content that triggered the request
       },
       config: {
         config: {
@@ -1735,8 +1915,14 @@ describe("streamResponseThunk", () => {
       ui: {
         toolSettings: {},
         ruleSettings: {},
-        showDialog: false,
-        dialogMessage: undefined,
+        showDialog: true, // Error dialog is shown
+        dialogMessage: expect.objectContaining({
+          props: expect.objectContaining({
+            error: expect.objectContaining({
+              message: "Model configuration is invalid",
+            }),
+          }),
+        }),
       },
       editModeState: {
         isInEdit: false,
