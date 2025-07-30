@@ -38,11 +38,29 @@ program
 addCommonOptions(program)
   .argument("[prompt]", "Optional prompt to send to the assistant")
   .option("-p, --print", "Print response and exit (useful for pipes)")
+  .option(
+    "--format <format>",
+    "Output format for headless mode (json). Only works with -p/--print flag."
+  )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
+
+    // Validate --format flag only works with -p/--print
+    if (options.format && !options.print) {
+      console.error(
+        "Error: --format flag can only be used with -p/--print flag"
+      );
+      process.exit(1);
+    }
+
+    // Validate format value
+    if (options.format && options.format !== "json") {
+      console.error("Error: --format currently only supports 'json'");
+      process.exit(1);
+    }
 
     if (options.verbose) {
       logger.setLevel("debug");
@@ -112,7 +130,7 @@ program
   });
 
 // Serve subcommand
-const serveCommand = program
+program
   .command("serve [prompt]")
   .description("Start an HTTP server with /state and /message endpoints")
   .option(
@@ -124,12 +142,12 @@ const serveCommand = program
   .action(async (prompt, options) => {
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
-    
+
     if (mergedOptions.verbose) {
       logger.setLevel("debug");
       logger.debug("Verbose logging enabled");
     }
-    
+
     await serve(prompt, mergedOptions);
   });
 

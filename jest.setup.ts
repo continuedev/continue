@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import { resetConsoleOverrides } from "./src/util/consoleOverride.js";
 
 // Disable telemetry for tests
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
@@ -15,7 +16,7 @@ jest.mock("./src/commands/commands.js");
 jest.mock("./src/services/index.js");
 jest.mock("./src/services/ServiceContainerContext.js");
 
-// Set up global afterEach hook to clear all timers
+// Set up global afterEach hook to clear all timers and reset console
 afterEach(() => {
   // Clear jest timers only if they're available
   if (typeof jest !== "undefined" && jest.clearAllTimers) {
@@ -24,5 +25,12 @@ afterEach(() => {
     } catch (e) {
       // Ignore errors when clearing timers
     }
+  }
+  
+  // Reset console overrides to ensure clean state for each test
+  try {
+    resetConsoleOverrides();
+  } catch (e) {
+    // Ignore errors when resetting console
   }
 });

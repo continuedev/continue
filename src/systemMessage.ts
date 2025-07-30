@@ -97,11 +97,13 @@ ${getGitStatus()}
  * Load and construct a comprehensive system message with base message and rules section
  * @param rulesSystemMessage - The rules system message from the assistant
  * @param additionalRules - Additional rules from --rule flags
+ * @param format - Output format for headless mode
  * @returns The comprehensive system message with base message and rules section
  */
 export async function constructSystemMessage(
   rulesSystemMessage: string,
-  additionalRules?: string[]
+  additionalRules?: string[],
+  format?: "json"
 ): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
@@ -138,6 +140,18 @@ export async function constructSystemMessage(
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
+
+  // Add JSON formatting instructions if format is json
+  if (format === "json") {
+    systemMessage += `
+
+IMPORTANT: You are operating in JSON output mode. Your final response MUST be valid JSON that can be parsed by JSON.parse(). The JSON should contain properties relevant to answer the user's question. You don't need to include any general "response" or "answer" field. Do not include any text before or after the JSON - the entire response must be parseable JSON.
+
+Example response format:
+{
+  "property": "value"
+}`;
+  }
 
   // Add rules section if we have any rules or agent content
   if (rulesSystemMessage || agentContent || processedRules.length > 0) {

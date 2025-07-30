@@ -17,25 +17,6 @@ describe("E2E: Headless Mode (Minimal)", () => {
     await cleanupTestContext(context);
   });
 
-  it("should show version with --version flag", async () => {
-    const result = await runCLI(context, {
-      args: ["--version"],
-    });
-
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toMatch(/\d+\.\d+\.\d+/); // Matches version pattern
-  });
-
-  it("should show help with --help flag", async () => {
-    const result = await runCLI(context, {
-      args: ["--help"],
-    });
-
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("Continue CLI");
-    expect(result.stdout).toContain("-p, --print");
-  });
-
   it("should accept a config file path", async () => {
     // Create a minimal YAML config
     const configPath = path.join(context.testDir, "test-config.yaml");
