@@ -366,7 +366,6 @@ export class NextEditProvider {
 
         const promptMetadata = await renderPrompt(
           helper,
-          // historyDiff ?? this.diffContext,
           ctx,
         );
 

@@ -423,46 +423,15 @@ export class ContinueCompletionProvider
       const currCursorPos = editor.selection.active;
 
       if (this.isNextEditActive) {
-        // if (!this.nextEditProvider.isStartOfChain()) {
-        //   const jumpPosition = new vscode.Position(
-        //     (outcome as NextEditOutcome).editableRegionStartLine,
-        //     0,
-        //   );
-
-        //   // Suggest a jump if there is a valid next location.
-        //   // This will set isJumpInProgress if a jump is suggested.
-        //   await this.jumpManager.suggestJump(
-        //     currCursorPos,
-        //     jumpPosition,
-        //     outcome.completion,
-        //   );
-
-        //   // If a jump was just suggested, don't show ghost text yet.
-        //   if (this.jumpManager.isJumpInProgress()) {
-        //     // Store this completion to be rendered after jump is complete.
-        //     this.jumpManager.setCompletionAfterJump({
-        //       completionId: completionId,
-        //       outcome: outcome as NextEditOutcome,
-        //       currentPosition: jumpPosition,
-        //     });
-
-        //     return undefined; // Don't show anything yet!
-        //   }
-
-        //   return undefined;
-        // }
         if (!this.nextEditProvider.isStartOfChain()) {
-          // Try suggesting jumps for each location in the queue
+          // Try suggesting jumps for each location in the queue.
           let jumpSuccessful = false;
-          // let attempts = 0;
 
           while (
             this.nextEditProvider.getNextEditableRegionsInTheCurrentChainLength() >
               0 &&
             !jumpSuccessful
           ) {
-            // Limit attempts
-            // attempts++;
             const nextRegion =
               this.nextEditProvider.shiftNextEditableRegionsInTheCurrentChain();
             if (!nextRegion) continue;
@@ -472,7 +441,7 @@ export class ContinueCompletionProvider
               nextRegion.range.start.character,
             );
 
-            // Try to suggest a jump to this location
+            // Try to suggest a jump to this location.
             jumpSuccessful = await this.jumpManager.suggestJump(
               currCursorPos,
               jumpPosition,
@@ -480,23 +449,24 @@ export class ContinueCompletionProvider
             );
 
             if (jumpSuccessful) {
-              // Store completion to be rendered after jump
+              // Store completion to be rendered after jump.
               this.jumpManager.setCompletionAfterJump({
                 completionId: completionId,
                 outcome: outcome as NextEditOutcome,
                 currentPosition: jumpPosition,
               });
 
-              return undefined; // Don't show anything yet
+              return undefined; // Don't show anything yet!
             }
           }
 
           // If no jump was successful after trying multiple locations,
-          // proceed with other completion display logic or return undefined
+          // proceed with other completion display logic or return undefined.
           if (!jumpSuccessful) {
             console.log(
               "No suitable jump location found after trying multiple positions",
             );
+            return undefined;
           }
         }
 

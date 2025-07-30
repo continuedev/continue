@@ -133,7 +133,6 @@ export class JumpManager {
       return false;
     }
 
-    // if (editor) {
     const visibleRanges = editor.visibleRanges;
     if (visibleRanges.length === 0) {
       console.log("No visible ranges in editor, cannot suggest jump");
@@ -141,7 +140,6 @@ export class JumpManager {
       return false;
     }
 
-    // if (visibleRanges.length > 0) {
     const visibleRange = visibleRanges[0];
     const topLineNumber = visibleRange.start.line;
     const bottomLineNumber = visibleRange.end.line;
@@ -175,9 +173,6 @@ export class JumpManager {
       new vscode.Range(decorationLine, 0, decorationLine, 0),
       vscode.TextEditorRevealType.InCenter,
     );
-    // }
-
-    // }
 
     // Set up a way to detect when the jump is complete.
     const disposable = vscode.window.onDidChangeTextEditorSelection(() => {
@@ -200,7 +195,7 @@ export class JumpManager {
     setTimeout(() => {
       this._jumpInProgress = false;
       disposable.dispose();
-    }, 5000);
+    }, 10000);
 
     return true;
   }
