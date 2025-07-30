@@ -118,4 +118,32 @@ describe('isModelCapable', () => {
       expect(isModelCapable('anthropic', 'CLAUDE-3-OPUS')).toBe(true);
     });
   });
+
+  describe('Model property matching', () => {
+    test('should consider models capable when model property matches even if name does not', () => {
+      // Case where name doesn't match but model property does
+      expect(isModelCapable('custom', 'some-custom-name', 'gpt-4')).toBe(true);
+      expect(isModelCapable('custom', 'random-name', 'claude-3-opus')).toBe(true);
+      expect(isModelCapable('custom', 'xyz', 'gemini-pro')).toBe(true);
+    });
+
+    test('should consider models capable when name matches even if model property does not', () => {
+      // Case where name matches but model property doesn't
+      expect(isModelCapable('custom', 'gpt-4', 'some-internal-id')).toBe(true);
+      expect(isModelCapable('custom', 'claude-3-opus', 'xyz')).toBe(true);
+      expect(isModelCapable('custom', 'gemini-pro', 'random')).toBe(true);
+    });
+
+    test('should consider models capable when both name and model match', () => {
+      // Case where both match
+      expect(isModelCapable('openai', 'gpt-4', 'gpt-4-turbo')).toBe(true);
+      expect(isModelCapable('anthropic', 'claude-3', 'claude-3-opus')).toBe(true);
+    });
+
+    test('should consider models not capable when neither name nor model match', () => {
+      // Case where neither matches
+      expect(isModelCapable('custom', 'llama-7b', 'local-model')).toBe(false);
+      expect(isModelCapable('custom', 'falcon-7b', 'random-model')).toBe(false);
+    });
+  });
 });
