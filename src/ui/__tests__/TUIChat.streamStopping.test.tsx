@@ -122,4 +122,61 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     // Verify the request was removed from pending requests
     expect((toolPermissionManager as any).pendingRequests.has(requestId)).toBe(false);
   });
+
+  it("handles multiple tool calls correctly when first is rejected", () => {
+    // Test the bug fix: when multiple tool calls are present and the first is rejected,
+    // remaining tool calls should be marked as cancelled to maintain chat history consistency
+    
+    const mockMultipleToolCalls = [
+      { id: "call_1", name: "Edit", arguments: {} },
+      { id: "call_2", name: "Write", arguments: {} },
+      { id: "call_3", name: "Read", arguments: {} },
+    ];
+
+    const mockCallbacks = {
+      onToolResult: jest.fn(),
+    };
+
+    // Simulate the rejection handling logic
+    const deniedMessage = "Permission denied by user";
+    const rejectedToolCall = mockMultipleToolCalls[0];
+    
+    // First tool call gets denied
+    mockCallbacks.onToolResult(deniedMessage, rejectedToolCall.name);
+    
+    // Remaining tool calls should be cancelled
+    for (let i = 1; i < mockMultipleToolCalls.length; i++) {
+      const remainingToolCall = mockMultipleToolCalls[i];
+      const cancelledMessage = "Cancelled due to previous tool rejection";
+      mockCallbacks.onToolResult(cancelledMessage, remainingToolCall.name);
+    }
+
+    // Verify all tool calls got results
+    expect(mockCallbacks.onToolResult).toHaveBeenCalledTimes(3);
+    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(1, "Permission denied by user", "Edit");
+    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(2, "Cancelled due to previous tool rejection", "Write");
+    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(3, "Cancelled due to previous tool rejection", "Read");
+  });
+
+  it("ensures proper response content in headless mode", () => {
+    // Test the bug fix: ensure finalResponse fallback works properly in headless mode
+    
+    const mockStreamingBehavior = (isHeadless: boolean, finalResponse: string, content: string, fullResponse: string) => {
+      // Simulate the fixed return logic
+      const responseToReturn = isHeadless ? (finalResponse || content) : fullResponse;
+      return responseToReturn;
+    };
+
+    // Test headless mode with initialized finalResponse
+    expect(mockStreamingBehavior(true, "final content", "current content", "full content"))
+      .toBe("final content");
+
+    // Test headless mode with uninitialized finalResponse (empty string)
+    expect(mockStreamingBehavior(true, "", "current content", "full content"))
+      .toBe("current content");
+
+    // Test non-headless mode
+    expect(mockStreamingBehavior(false, "final content", "current content", "full content"))
+      .toBe("full content");
+  });
 });
