@@ -31,7 +31,8 @@ import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
-  border-radius: 0;
+  position: relative;
+  overflow-x: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -75,34 +76,69 @@ const Layout = () => {
       } else {
         await dispatch(
           saveCurrentSession({
-            timestamp: Date.now(),
+            openNewSession: true,
+            generateTitle: true,
+          }),
+        );
+      }
+    },
+    [isInEdit],
+  );
+
+  useWebviewListener(
+    "isContinueInputFocused",
+    async () => {
+      return false;
+    },
+    [location.pathname],
+    location.pathname === ROUTES.HOME,
+  );
+
+  useWebviewListener(
+    "focusContinueInputWithNewSession",
+    async () => {
+      navigate(ROUTES.HOME);
+      if (isInEdit) {
+        await dispatch(
+          exitEdit({
+            openNewSession: true,
+          }),
+        );
+      } else {
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: true,
+            generateTitle: true,
           }),
         );
       }
     },
     [location.pathname, isInEdit],
+    location.pathname === ROUTES.HOME,
   );
 
   useWebviewListener(
-    "enterEdit",
-    async (data: { text: string }) => {
-      const text = data.text;
-      dispatch(setCodeToEdit(text));
-      await dispatch(enterEdit({}));
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "exitEdit",
+    "addModel",
     async () => {
-      await dispatch(exitEdit({}));
+      navigate("/models");
     },
-    [],
+    [navigate],
   );
 
   useWebviewListener(
-    "incrementFreeTrialCount",
+    "navigateTo",
+    async (data) => {
+      if (data.toggle && location.pathname === data.path) {
+        navigate("/");
+      } else {
+        navigate(data.path);
+      }
+    },
+    [location, navigate],
+  );
+
+  useWebviewListener(
+    "incrementFtc",
     async () => {
       incrementFreeTrialCount();
     },
@@ -110,120 +146,23 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "showOnboarding",
-    async (data) => {
-      const mode = data.mode;
-      switch (mode) {
-        case OnboardingModes.Best:
-          onboardingCard.open(
-            (onClose) => (
-              <OnboardingCard
-                onClose={onClose}
-                mode={OnboardingModes.Best}
-                title="Choose the best models for your use case"
-                description="Continue supports many of the most popular models and model providers. Here are some suggestions based on what the community has found works well."
-              />
-            ),
-            "top-onboarding-card",
-          );
-          break;
-        case OnboardingModes.Local:
-          onboardingCard.open(
-            (onClose) => (
-              <OnboardingCard
-                onClose={onClose}
-                mode={OnboardingModes.Local}
-                title="Use local models for free"
-                description="If you want to use Continue for free forever, you can run a local model from Ollama."
-              />
-            ),
-            "top-onboarding-card",
-          );
-          break;
-        case OnboardingModes.Quickstart:
-          onboardingCard.open((onClose) => <OnboardingCard onClose={onClose} />);
-          break;
-      }
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "onboardingViewModelDetails",
-    async (data) => {
-      const { mode } = data;
-      navigate(`/config?view=models&mode=${mode}`);
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "navigateToPage",
-    async (data) => {
-      navigate(data.page);
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "completeOnboarding",
-    async (data) => {
-      localStorage.setItem("onboardingComplete", "true");
-      onboardingCard.close();
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "openUrl",
-    async (data) => {
-      ideMessenger.post("openUrl", data.url);
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "openConfigPath",
+    "setupLocalConfig",
     async () => {
-      const result = await ideMessenger.request("getConfigJsonPath", undefined);
-      if (result.status === "success") {
-        ideMessenger.post("openFile", { path: result.content });
-      }
+      onboardingCard.open(OnboardingModes.LOCAL);
     },
     [],
   );
 
   useWebviewListener(
-    "showFeedback",
+    "freeTrialExceeded",
     async () => {
       dispatch(setShowDialog(true));
+      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
       dispatch(
         setDialogMessage(
-          <div className="p-4 text-center">
-            <h3 className="text-lg font-semibold mb-4">
-              How has your experience been so far?
-            </h3>
-            <div className="flex gap-4 justify-center">
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-                onClick={() => {
-                  ideMessenger.post("openUrl", "https://forms.gle/feedback-form");
-                  dispatch(setShowDialog(false));
-                }}
-              >
-                Great! 👍
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-500 text-white rounded"
-                onClick={() => {
-                  ideMessenger.post("openUrl", "https://github.com/continuedev/continue/issues");
-                  dispatch(setShowDialog(false));
-                }}
-              >
-                Could be better 📝
-              </button>
-            </div>
-          </div>
+          <div className="flex-1">
+            <OnboardingCard isDialog showFreeTrialExceededAlert />
+          </div>,
         ),
       );
     },
@@ -231,17 +170,39 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "signInToControlPlane",
+    "setupApiKey",
     async () => {
-      navigate("/config");
+      onboardingCard.open(OnboardingModes.API_KEY);
     },
     [],
   );
 
   useWebviewListener(
-    "navigateToOnboarding",
+    "focusEdit",
     async () => {
-      onboardingCard.open((onClose) => <OnboardingCard onClose={onClose} />);
+      await ideMessenger.request("edit/addCurrentSelection", undefined);
+      await dispatch(enterEdit({ editorContent: mainEditor?.getJSON() }));
+      mainEditor?.commands.focus();
+    },
+    [ideMessenger, mainEditor],
+  );
+
+  useWebviewListener(
+    "setCodeToEdit",
+    async (payload) => {
+      dispatch(
+        setCodeToEdit({
+          codeToEdit: payload,
+        }),
+      );
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "exitEditMode",
+    async () => {
+      await dispatch(exitEdit({}));
     },
     [],
   );
