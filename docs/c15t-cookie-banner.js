@@ -40,7 +40,6 @@
       applyConsent(defaultConsent);
       showCookieBanner();
     }
-
   }
 
   function getStoredConsent() {
@@ -221,8 +220,7 @@
       const consent = {
         necessary: true,
         analytics: document.getElementById("cookie-analytics").checked,
-        marketing: document.getElementById("cookie-marketing")
-          .checked,
+        marketing: document.getElementById("cookie-marketing").checked,
       };
       applyConsent(consent);
       hidePreferencesDialog();
@@ -233,7 +231,6 @@
     const dialogOverlay = document.querySelector(".cookie-dialog-overlay");
     if (dialogOverlay) dialogOverlay.remove();
   }
-
 
   // Add styles
   const style = document.createElement("style");
