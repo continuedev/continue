@@ -2,6 +2,15 @@ import { diffWordsWithSpace } from "diff";
 import { Box, Text } from "ink";
 import React from "react";
 
+// Color constants for diff display
+const COLORS = {
+  ADDITION_BG: "#325b30",
+  DELETION_BG: "#712f37",
+  ADDITION_HIGHLIGHT: "#59a467",
+  DELETION_HIGHLIGHT: "#a75e6d",
+  LINE_NUMBER: "gray",
+} as const;
+
 interface DiffLine {
   type: "add" | "del" | "context" | "hunk" | "other";
   oldLine?: number;
@@ -81,7 +90,7 @@ function renderWordLevelContent(
       if (change.removed) {
         // Highlight removed words with darker red
         segments.push(
-          <Text key={index} backgroundColor="redBright">
+          <Text key={index} backgroundColor={COLORS.DELETION_HIGHLIGHT}>
             {change.value}
           </Text>
         );
@@ -93,7 +102,7 @@ function renderWordLevelContent(
       if (change.added) {
         // Highlight added words with darker green
         segments.push(
-          <Text key={index} backgroundColor="greenBright">
+          <Text key={index} backgroundColor={COLORS.ADDITION_HIGHLIGHT}>
             {change.value}
           </Text>
         );
@@ -174,12 +183,12 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
           switch (line.type) {
             case "add":
               gutterNumStr = (line.newLine ?? "").toString();
-              backgroundColor = "green";
+              backgroundColor = COLORS.ADDITION_BG;
               prefixSymbol = "+";
               break;
             case "del":
               gutterNumStr = (line.oldLine ?? "").toString();
-              backgroundColor = "red";
+              backgroundColor = COLORS.DELETION_BG;
               prefixSymbol = "-";
               break;
             case "context":
@@ -193,7 +202,7 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
 
           return (
             <Box key={lineKey} flexDirection="row">
-              <Text color="gray">{gutterNumStr.padEnd(4)} </Text>
+              <Text color={COLORS.LINE_NUMBER}>{gutterNumStr.padEnd(4)} </Text>
               <Text backgroundColor={backgroundColor} dimColor={dim}>
                 {prefixSymbol}{" "}
               </Text>
@@ -212,20 +221,20 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
           return (
             <Box key={`group-${groupIndex}`} flexDirection="column">
               <Box flexDirection="row">
-                <Text color="gray">
+                <Text color={COLORS.LINE_NUMBER}>
                   {(delLines[0]?.oldLine ?? "").toString().padEnd(4)}{" "}
                 </Text>
-                <Text backgroundColor="red">- </Text>
-                <Text backgroundColor="red">
+                <Text backgroundColor={COLORS.DELETION_BG}>- </Text>
+                <Text backgroundColor={COLORS.DELETION_BG}>
                   {renderWordLevelContent(oldContent, newContent, "removed")}
                 </Text>
               </Box>
               <Box flexDirection="row">
-                <Text color="gray">
+                <Text color={COLORS.LINE_NUMBER}>
                   {(addLines[0]?.newLine ?? "").toString().padEnd(4)}{" "}
                 </Text>
-                <Text backgroundColor="green">+ </Text>
-                <Text backgroundColor="green">
+                <Text backgroundColor={COLORS.ADDITION_BG}>+ </Text>
+                <Text backgroundColor={COLORS.ADDITION_BG}>
                   {renderWordLevelContent(oldContent, newContent, "added")}
                 </Text>
               </Box>
