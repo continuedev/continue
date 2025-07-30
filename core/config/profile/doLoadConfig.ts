@@ -306,7 +306,7 @@ export default async function doLoadConfig(options: {
   } catch (error) {
     // Ignore errors getting session info, will default to no Sentry
   }
-  
+
   await SentryLogger.setup(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
