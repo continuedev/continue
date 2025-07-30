@@ -6,32 +6,15 @@ import { streamResponseThunk } from "./streamResponse";
 import { streamNormalInput } from "./streamNormalInput";
 
 // Mock external dependencies only - let selectors run naturally
-vi.mock("core/llm/toolSupport", () => ({
-  modelSupportsNativeTools: vi.fn(),
-}));
+// Removed: modelSupportsNativeTools - let it run naturally
 
-vi.mock(
-  "core/tools/systemMessageTools/buildToolsSystemMessage",
-  async (importOriginal) => {
-    const actual = (await importOriginal()) as any;
-    return {
-      ...actual,
-      addSystemMessageToolsToSystemMessage: vi.fn(),
-    };
-  },
-);
+// Removed: addSystemMessageToolsToSystemMessage - let it run naturally
 
-vi.mock("../util/constructMessages", () => ({
-  constructMessages: vi.fn(),
-}));
+// Removed: constructMessages - let it run naturally
 
-vi.mock("../util/getBaseSystemMessage", () => ({
-  getBaseSystemMessage: vi.fn(),
-}));
+// Removed: getBaseSystemMessage - let it run naturally
 
-vi.mock("core/config/shouldAutoEnableSystemMessageTools", () => ({
-  shouldAutoEnableSystemMessageTools: vi.fn(() => undefined),
-}));
+// Removed: shouldAutoEnableSystemMessageTools - let it run naturally
 
 // Additional mocks for streamResponseThunk
 vi.mock("posthog-js", () => ({
@@ -49,19 +32,9 @@ vi.mock("../../components/mainInput/TipTapEditor/utils/resolveEditorContent", ()
 }));
 
 import { ModelDescription } from "core";
-import { modelSupportsNativeTools } from "core/llm/toolSupport";
-import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
-import { constructMessages } from "../util/constructMessages";
-import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 
-const mockModelSupportsNativeTools = vi.mocked(modelSupportsNativeTools);
-const mockAddSystemMessageToolsToSystemMessage = vi.mocked(
-  addSystemMessageToolsToSystemMessage,
-);
-const mockConstructMessages = vi.mocked(constructMessages);
-const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 const mockPosthog = vi.mocked(posthog);
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
@@ -94,16 +67,6 @@ function setupTest() {
   vi.clearAllMocks();
 
   // Default mock implementations for external functions
-  mockModelSupportsNativeTools.mockReturnValue(true);
-  mockGetBaseSystemMessage.mockReturnValue("System message");
-  mockAddSystemMessageToolsToSystemMessage.mockReturnValue(
-    "System message with tools",
-  );
-  mockConstructMessages.mockReturnValue({
-    messages: [{ role: "user", content: "Hello" }],
-    appliedRules: [],
-    appliedRuleIndex: 0,
-  });
 
   // Default mock for resolveEditorContent (can be overridden in individual tests)
   mockResolveEditorContent.mockResolvedValue({
