@@ -81,8 +81,16 @@ export interface NextEditTemplate {
   template: string;
 }
 
-export interface TemplateVars {
+export interface TemplateVars {}
+
+export interface Model1TemplateVars extends TemplateVars {
   userEdits: string;
   languageShorthand: string;
   userExcerpts: string;
+}
+
+export interface MercuryTemplateVars extends TemplateVars {
+  recentlyViewedCodeSnippets: string;
+  currentFileContent: string;
+  editDiffHistory: string; // could be a singe large unified diff
 }
