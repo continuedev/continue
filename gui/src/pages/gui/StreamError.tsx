@@ -5,7 +5,7 @@ import {
   Cog6ToothIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
+import { DISCORD_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton, SecondaryButton } from "../../components";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
@@ -44,6 +44,48 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     apiKeyUrl,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
+  const githubIssueUrl = useMemo(() => {
+    const baseUrl = "https://github.com/continuedev/continue/issues/new";
+    const params = new URLSearchParams();
+
+    params.set(
+      "title",
+      `Model Response Error: ${statusCode ? `HTTP ${statusCode}` : "Unknown Error"}`,
+    );
+    params.set("labels", "bug");
+    params.set(
+      "body",
+      `**Bug Description:**
+An error occurred while handling the model response.
+
+**Environment Info:**
+- Status Code: ${statusCode || "N/A"}
+- Model: ${selectedModel?.title || "Unknown"}
+- Provider: ${selectedModel?.provider || "Unknown"}
+- Model ID: ${selectedModel?.model || "Unknown"}
+- Continue Version: <!-- Please fill this in -->
+- IDE: <!-- VS Code, JetBrains, etc. -->
+- OS: <!-- Windows, macOS, Linux -->
+
+**Error Details:**
+\`\`\`
+${parsedError}
+\`\`\`
+
+**To Reproduce:**
+<!-- Please describe what you were doing when this error occurred -->
+1.
+2.
+3.
+4. See error
+
+**Additional Context:**
+<!-- Add any other context about the problem here -->`,
+    );
+
+    return `${baseUrl}?${params.toString()}`;
+  }, [parsedError, statusCode, selectedModel]);
+
   const handleRefreshProfiles = () => {
     void refreshProfiles();
     dispatch(setShowDialog(false));
@@ -60,10 +102,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     <GhostButton
       className="flex items-center"
       onClick={() => {
-        ideMessenger.post("controlPlane/openUrl", {
-          path: apiKeyUrl,
-          orgSlug: undefined,
-        });
+        ideMessenger.post("openUrl", apiKeyUrl);
       }}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
@@ -295,10 +334,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("controlPlane/openUrl", {
-                path: GITHUB_LINK,
-                orgSlug: undefined,
-              });
+              ideMessenger.post("openUrl", githubIssueUrl);
             }}
           >
             <GithubIcon className="h-5 w-5" />
@@ -307,10 +343,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           <GhostButton
             className="flex flex-row items-center gap-2 rounded px-3 py-1.5"
             onClick={() => {
-              ideMessenger.post("controlPlane/openUrl", {
-                path: DISCORD_LINK,
-                orgSlug: undefined,
-              });
+              ideMessenger.post("openUrl", DISCORD_LINK);
             }}
           >
             <DiscordIcon className="h-5 w-5" />
