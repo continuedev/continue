@@ -10,7 +10,9 @@ export const readFileImpl: ToolImpl = async (args, extras) => {
 
   const firstUriMatch = await resolveRelativePathInDir(filepath, extras.ide);
   if (!firstUriMatch) {
-    throw new Error(`Could not find file ${filepath}`);
+    throw new Error(
+      `File "${filepath}" does not exist. You might want to check the path and try again.`,
+    );
   }
   const content = await extras.ide.readFile(firstUriMatch);
 

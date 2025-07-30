@@ -4,7 +4,7 @@ import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.file.FileUtils
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
@@ -28,7 +28,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
@@ -178,29 +177,6 @@ class IntelliJIDE(
 
     override suspend fun getWorkspaceDirs(): List<String> {
         return workspaceDirectories().toList()
-    }
-
-    override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {
-        val workspaceDirs = this.getWorkspaceDirs()
-
-        val configs = mutableListOf<String>()
-
-        for (workspaceDir in workspaceDirs) {
-            val dir = VirtualFileManager.getInstance().findFileByUrl(workspaceDir)
-            if (dir != null) {
-                val contents = dir.children.mapNotNull { it.toUriOrNull() }
-
-                // Find any .continuerc.json files
-                for (file in contents) {
-                    if (file.endsWith(".continuerc.json")) {
-                        val fileContent = UriUtils.uriToFile(file).readText()
-                        configs.add(fileContent)
-                    }
-                }
-            }
-        }
-
-        return configs as List<ContinueRcJson>
     }
 
     override suspend fun fileExists(filepath: String): Boolean =
@@ -397,7 +373,7 @@ class IntelliJIDE(
                 return results.split("\n")
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
-                service<ContinueErrorService>().report(exception, message)
+                service<ContinueSentryService>().report(exception, message)
                 showToast(ToastType.ERROR, message)
                 return emptyList()
             }
@@ -439,7 +415,7 @@ class IntelliJIDE(
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
-                service<ContinueErrorService>().report(exception, message)
+                service<ContinueSentryService>().report(exception, message)
                 showToast(ToastType.ERROR, message)
                 return "Error: Unable to execute ripgrep command."
             }

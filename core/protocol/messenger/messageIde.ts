@@ -2,7 +2,6 @@ import { FromIdeProtocol } from "..";
 import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
-  ContinueRcJson,
   FileStatsMap,
   FileType,
   IDE,
@@ -121,10 +120,6 @@ export class MessageIde implements IDE {
 
   getUniqueId(): Promise<string> {
     return this.request("getUniqueId", undefined);
-  }
-
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return this.request("getWorkspaceConfigs", undefined);
   }
 
   async getDiff(includeUnstaged: boolean) {
