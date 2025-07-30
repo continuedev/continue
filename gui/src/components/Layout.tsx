@@ -6,6 +6,7 @@ import { CustomScrollbarDiv } from ".";
 import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
+import TelemetryProviders from "../hooks/TelemetryProviders";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
@@ -235,7 +236,8 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-        <LayoutTopDiv>
+        <TelemetryProviders>
+          <LayoutTopDiv>
           <LumpProvider>
             <OSRContextMenu />
             <div
@@ -266,6 +268,7 @@ const Layout = () => {
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
           </LumpProvider>
         </LayoutTopDiv>
+        </TelemetryProviders>
       </AuthProvider>
     </LocalStorageProvider>
   );
