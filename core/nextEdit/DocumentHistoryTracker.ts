@@ -63,11 +63,12 @@ export class DocumentHistoryTracker {
     if (!astHistory || !documentHistory) {
       console.error(`Document ${documentPath} not found in AST tracker`);
       this.addDocument(documentPath, documentContent, ast);
+      return; // Early return - document was added with initial state
     }
 
-    // Push to top (LIFO).
-    astHistory!.unshift(ast);
-    documentHistory!.unshift(documentContent);
+    // Only execute this if the arrays already existed
+    astHistory.unshift(ast);
+    documentHistory.unshift(documentContent);
   }
 
   /**
