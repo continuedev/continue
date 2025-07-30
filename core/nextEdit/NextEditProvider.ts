@@ -247,7 +247,9 @@ export class NextEditProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
-    withChain: boolean,
+    opts?: {
+      withChain: boolean;
+    },
   ): Promise<NextEditOutcome | undefined> {
     try {
       this.previousRequest = input;
@@ -268,7 +270,9 @@ export class NextEditProvider {
 
       // Depending on whether this method is called from provideInlineCompletionItemsWithChain,
       // shift the next editable regions.
-      if (withChain) {
+      // This is handled here because this must run after the debouncer
+      // to prevent excessive shifts.
+      if (opts?.withChain) {
         this.shiftNextEditableRegionsInTheCurrentChain();
       }
 
@@ -534,8 +538,9 @@ export class NextEditProvider {
         return undefined;
       }
 
-      const WITH_CHAIN = true;
-      return await this.provideInlineCompletionItems(input, token, WITH_CHAIN);
+      return await this.provideInlineCompletionItems(input, token, {
+        withChain: true,
+      });
     } catch (e: any) {
       this.onError(e);
     }

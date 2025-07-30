@@ -276,7 +276,7 @@ export class ContinueCompletionProvider
           outcome = await this.nextEditProvider.provideInlineCompletionItems(
             input,
             signal,
-            false,
+            { withChain: false },
           );
 
           if (!outcome || !outcome.completion) {
