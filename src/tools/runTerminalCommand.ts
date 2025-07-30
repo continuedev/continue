@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import telemetryService from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -20,12 +20,45 @@ export const runTerminalCommandTool: Tool = {
   readonly: false,
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
-        const exitCode = error?.code || 0;
+      const child = spawn("sh", ["-c", command]);
+      let stdout = "";
+      let stderr = "";
+      let lastOutputTime = Date.now();
+      let timeoutId: NodeJS.Timeout;
 
-        if (error) {
-          reject(`Error: ${error.message}`);
-          return;
+      const TIMEOUT_MS = 30000; // 30 seconds
+
+      const resetTimeout = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(() => {
+          child.kill();
+          const output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
+          resolve(
+            output + "\n\n[Command timed out after 30 seconds of no output]"
+          );
+        }, TIMEOUT_MS);
+      };
+
+      // Start the initial timeout
+      resetTimeout();
+
+      child.stdout.on("data", (data) => {
+        stdout += data.toString();
+        lastOutputTime = Date.now();
+        resetTimeout();
+      });
+
+      child.stderr.on("data", (data) => {
+        stderr += data.toString();
+        lastOutputTime = Date.now();
+        resetTimeout();
+      });
+
+      child.on("close", (code) => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
         }
 
         // Track specific git operations
@@ -35,11 +68,23 @@ export const runTerminalCommandTool: Tool = {
           telemetryService.recordPullRequestCreated();
         }
 
+        if (code !== 0 && stderr) {
+          reject(`Error (exit code ${code}): ${stderr}`);
+          return;
+        }
+
         if (stderr) {
-          resolve(`Stderr: ${stderr}`);
+          resolve(stdout + `\nStderr: ${stderr}`);
           return;
         }
         resolve(stdout);
+      });
+
+      child.on("error", (error) => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        reject(`Error: ${error.message}`);
       });
     });
   },
