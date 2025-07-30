@@ -238,36 +238,36 @@ const Layout = () => {
       <AuthProvider>
         <TelemetryProviders>
           <LayoutTopDiv>
-          <LumpProvider>
-            <OSRContextMenu />
-            <div
-              style={{
-                scrollbarGutter: "stable both-edges",
-                minHeight: "100%",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
-              }}
-            >
-              <TextDialog
-                showDialog={showDialog}
-                onEnter={() => {
-                  dispatch(setShowDialog(false));
+            <LumpProvider>
+              <OSRContextMenu />
+              <div
+                style={{
+                  scrollbarGutter: "stable both-edges",
+                  minHeight: "100%",
+                  display: "grid",
+                  gridTemplateRows: "1fr auto",
                 }}
-                onClose={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                message={dialogMessage}
-              />
+              >
+                <TextDialog
+                  showDialog={showDialog}
+                  onEnter={() => {
+                    dispatch(setShowDialog(false));
+                  }}
+                  onClose={() => {
+                    dispatch(setShowDialog(false));
+                  }}
+                  message={dialogMessage}
+                />
 
-              <GridDiv className="">
-                <PostHogPageView />
-                <Outlet />
-                <FatalErrorIndicator />
-              </GridDiv>
-            </div>
-            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LumpProvider>
-        </LayoutTopDiv>
+                <GridDiv className="">
+                  <PostHogPageView />
+                  <Outlet />
+                  <FatalErrorIndicator />
+                </GridDiv>
+              </div>
+              <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+            </LumpProvider>
+          </LayoutTopDiv>
         </TelemetryProviders>
       </AuthProvider>
     </LocalStorageProvider>

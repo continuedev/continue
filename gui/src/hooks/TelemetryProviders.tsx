@@ -1,6 +1,9 @@
 import * as Sentry from "@sentry/react";
 import { HubSessionInfo } from "core/control-plane/AuthTypes";
-import { anonymizeSentryEvent, anonymizeUserInfo } from "core/util/sentry/anonymization";
+import {
+  anonymizeSentryEvent,
+  anonymizeUserInfo,
+} from "core/util/sentry/anonymization";
 import { SENTRY_DSN } from "core/util/sentry/constants";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
