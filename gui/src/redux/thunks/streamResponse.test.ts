@@ -227,50 +227,211 @@ describe("streamResponseThunk", () => {
       modifiers: mockModifiers 
     }) as any);
 
-    // Verify key behaviors in the comprehensive streaming flow
+    // Verify exact sequence of dispatched actions with payloads
     const dispatchedActions = (mockStore as any).getActions();
 
-    // Verify main thunk actions are present
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+    expect(dispatchedActions).toEqual([
+      {
         type: "chat/streamResponse/pending",
-      })
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "chat/streamResponse/fulfilled",
-      })
-    );
-    
-    // Verify wrapper actions are present
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+        meta: expect.objectContaining({
+          arg: { editorState: mockEditorState, modifiers: mockModifiers },
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
         type: "chat/streamWrapper/pending",
-      })
-    );
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
-        type: "chat/streamWrapper/fulfilled",
-      })
-    );
-
-    // Verify core streaming actions are present
-    expect(dispatchedActions).toContainEqual(
-      expect.objectContaining({
+        meta: expect.objectContaining({
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/submitEditorAndInitAtIndex",
+        payload: {
+          editorState: mockEditorState,
+          index: 1,
+        },
+      },
+      {
+        type: "session/resetNextCodeBlockToApplyIndex",
+        payload: undefined,
+      },
+      {
+        type: "symbols/updateFromContextItems/pending",
+        meta: expect.objectContaining({
+          arg: [],
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/updateHistoryItemAtIndex",
+        payload: {
+          index: 1,
+          updates: {
+            contextItems: [],
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+        },
+      },
+      {
+        type: "chat/streamNormalInput/pending",
+        meta: expect.objectContaining({
+          arg: { legacySlashCommandData: undefined },
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          index: 0,
+          appliedRules: [],
+        },
+      },
+      {
+        type: "session/setActive",
+        payload: undefined,
+      },
+      {
+        type: "session/setInlineErrorMessage",
+        payload: undefined,
+      },
+      {
+        type: "session/setIsPruned",
+        payload: false,
+      },
+      {
         type: "session/setContextPercentage",
         payload: 0.8,
-      })
-    );
-    
-    const streamUpdates = dispatchedActions.filter(
-      (action: any) => action.type === "session/streamUpdate"
-    );
-    expect(streamUpdates.length).toBeGreaterThanOrEqual(2);
-    expect(streamUpdates[0].payload).toEqual([
-      { role: "assistant", content: "First chunk" },
-    ]);
-    expect(streamUpdates[1].payload).toEqual([
-      { role: "assistant", content: "Second chunk" },
+      },
+      {
+        type: "symbols/updateFromContextItems/fulfilled",
+        meta: expect.objectContaining({
+          arg: [],
+          requestStatus: "fulfilled",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "First chunk",
+          },
+        ],
+      },
+      {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant",
+            content: "Second chunk",
+          },
+        ],
+      },
+      {
+        type: "session/addPromptCompletionPair",
+        payload: [
+          {
+            prompt: "Hello",
+            completion: "Hi there!",
+            modelProvider: "anthropic",
+          },
+        ],
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
+      },
+      {
+        type: "chat/streamNormalInput/fulfilled",
+        meta: expect.objectContaining({
+          arg: { legacySlashCommandData: undefined },
+          requestStatus: "fulfilled",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/pending",
+        meta: expect.objectContaining({
+          arg: { generateTitle: true, openNewSession: false },
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/update/pending",
+        meta: expect.objectContaining({
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/updateSessionMetadata",
+        payload: {
+          sessionId: "session-123",
+          title: "New Session",
+        },
+      },
+      {
+        type: "session/refreshMetadata/pending",
+        meta: expect.objectContaining({
+          requestStatus: "pending",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: {},
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
+        meta: expect.objectContaining({
+          requestStatus: "fulfilled",
+        }),
+        payload: {},
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: expect.objectContaining({
+          requestStatus: "fulfilled",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: expect.objectContaining({
+          arg: { generateTitle: true, openNewSession: false },
+          requestStatus: "fulfilled",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "chat/streamWrapper/fulfilled",
+        meta: expect.objectContaining({
+          requestStatus: "fulfilled",
+        }),
+        payload: undefined,
+      },
+      {
+        type: "chat/streamResponse/fulfilled",
+        meta: expect.objectContaining({
+          arg: { editorState: mockEditorState, modifiers: mockModifiers },
+          requestStatus: "fulfilled",
+        }),
+        payload: undefined,
+      },
     ]);
 
     // Verify IDE messenger calls
