@@ -92,8 +92,13 @@ export class SentryLogger {
   ) {
     // TODO: Remove Continue team member check once Sentry is ready for all users
     const isContinueTeam = isContinueTeamMember(userEmail);
+    
+    // Disable Sentry in debug mode, test environments, or when telemetry is disabled
+    const isDebugMode = process.env.CONTINUE_DEVELOPMENT === "true";
+    const isTestEnv = process.env.NODE_ENV === "test";
+    
     SentryLogger.allowTelemetry =
-      allow && process.env.NODE_ENV !== "test" && isContinueTeam;
+      allow && !isTestEnv && !isDebugMode && isContinueTeam;
     SentryLogger.uniqueId = uniqueId;
     SentryLogger.ideInfo = ideInfo;
     SentryLogger.os = os.platform();
