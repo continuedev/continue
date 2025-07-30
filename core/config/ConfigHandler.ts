@@ -19,7 +19,7 @@ import {
 import { getControlPlaneEnv } from "../control-plane/env.js";
 import { logger } from "../util/logger.js";
 import { Telemetry } from "../util/posthog.js";
-import { SentryLogger } from "../util/sentry.js";
+import { SentryLogger } from "../util/sentry/index.js";
 import {
   ASSISTANTS,
   getAllDotContinueDefinitionFiles,
@@ -118,8 +118,6 @@ export class ConfigHandler {
   }
 
   private async cascadeInit(reason: string) {
-    SentryLogger.lazyLogger?.info("cascadeInit");
-
     const signal = this.cascadeAbortController.signal;
     this.workspaceDirs = null; // forces workspace dirs reload
 
