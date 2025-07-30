@@ -564,7 +564,7 @@ async function streamChatResponseWithInterruption(
       abortController,
       callbacks
     );
-    return response;
+    return response || "";
   } finally {
     clearInterval(interruptionChecker);
     // Ensure any streaming message is finalized

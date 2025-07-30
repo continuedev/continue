@@ -553,7 +553,14 @@ export async function streamChatResponse(
             if (callbacks?.onToolResult) {
               callbacks.onToolResult(deniedMessage, toolCall.name);
             }
-            continue;
+            
+            // Stop the stream immediately when a tool call is rejected
+            logger.debug("Tool call rejected - stopping stream");
+            
+            // Return the content we have so far - respect headless vs full mode
+            const args = parseArgs();
+            const isHeadless = args.isHeadless;
+            return isHeadless ? finalResponse : fullResponse;
           }
 
           logger.debug("Executing tool", {

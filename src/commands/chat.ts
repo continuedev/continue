@@ -111,7 +111,7 @@ async function processMessage(
     );
 
     // In headless mode, only print the final response using safe stdout
-    if (isHeadless && finalResponse.trim()) {
+    if (isHeadless && finalResponse && finalResponse.trim()) {
       // Process output based on format
       const outputResponse =
         format === "json" ? processJsonOutput(finalResponse) : finalResponse;
