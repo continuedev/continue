@@ -988,6 +988,14 @@
     {
       "source": "/agent/context-selection",
       "destination": "/features/agent/context-selection"
+    },
+    {
+      "source": "/customization/overview#codebase-context",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/customization/overview#documentation-context",
+      "destination": "/customize/context/documentation"
     }
   ]
 }
