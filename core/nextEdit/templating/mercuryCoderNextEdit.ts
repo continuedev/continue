@@ -5,16 +5,16 @@ import { insertCursorToken } from "./utils";
 export function recentlyViewedCodeSnippetsBlock(
   recentlyViewedCodeSnippets: { filepath: string; content: string }[],
 ) {
-  return [
-    recentlyViewedCodeSnippets.reduce((acc, snippet) => {
-      const block = [
-        `code_snippet_file_path: ${snippet.filepath}`,
-        snippet.content,
-      ].join("\n");
+  return recentlyViewedCodeSnippets.reduce((acc, snippet, i) => {
+    const block = [
+      `code_snippet_file_path: ${snippet.filepath}`,
+      snippet.content,
+    ].join("\n");
 
-      return acc + block;
-    }, ""),
-  ].join("\n");
+    return (
+      acc + block + (i === recentlyViewedCodeSnippets.length - 1 ? "" : "\n")
+    );
+  }, "");
 }
 
 export function currentFileContentBlock(
