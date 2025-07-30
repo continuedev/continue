@@ -445,8 +445,8 @@ export class VsCodeExtension {
       // 2. A jump is in progress.
       if (
         JumpManager.getInstance().isJumpInProgress() ||
-        JumpManager.getInstance().wasJumpJustAccepted
-      ()) {
+        JumpManager.getInstance().wasJumpJustAccepted()
+      ) {
         return;
       }
 
