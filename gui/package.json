@@ -8,8 +8,6 @@
     "dev": "vite",
     "tsc:check": "tsc -p ./ --noEmit",
     "build": "tsc && vite build",
-    "build:sentry": "npm run build && npm run upload-sourcemaps",
-    "upload-sourcemaps": "node scripts/upload-sourcemaps.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
