@@ -78,10 +78,16 @@ addCommonOptions(program)
     }
 
     // Check for piped input when using -p flag
-    if (options.print && !prompt) {
+    if (options.print) {
       const stdinInput = readStdinSync();
       if (stdinInput) {
-        prompt = stdinInput;
+        if (prompt) {
+          // Combine stdin and prompt argument - stdin comes first in XML block
+          prompt = `<stdin>\n${stdinInput}\n</stdin>\n\n${prompt}`;
+        } else {
+          // Only stdin input, use as-is
+          prompt = stdinInput;
+        }
       }
     }
 
