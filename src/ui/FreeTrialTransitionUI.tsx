@@ -5,6 +5,7 @@ import * as os from "os";
 import * as path from "path";
 import React, { useState } from "react";
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
+import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
 import { env } from "../env.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
@@ -62,12 +63,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       }
     } else if (currentStep === "enterApiKey") {
       if (key.return) {
-        if (apiKey && apiKey.startsWith("sk-ant-")) {
+        if (isValidAnthropicApiKey(apiKey)) {
           handleApiKeySubmit();
         } else {
-          setErrorMessage(
-            "Please enter a valid Anthropic API key that starts with 'sk-ant-'"
-          );
+          setErrorMessage(getApiKeyValidationError(apiKey));
         }
       } else if (key.backspace || key.delete) {
         setApiKey(apiKey.slice(0, -1));

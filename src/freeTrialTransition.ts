@@ -6,6 +6,7 @@ import * as os from "os";
 import * as path from "path";
 import * as readlineSync from "readline-sync";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
+import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
 import { env } from "./env.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
@@ -35,7 +36,7 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
  * 2. Provides two specific options for continuing
  * 3. Returns to the chat without restarting the entire CLI
  */
-export async function handleMaxedOutFreeTrial(): Promise<void> {
+export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): Promise<void> {
   // Clear the screen but don't show ASCII art - keep it minimal since we're resuming a conversation
   console.clear();
 
@@ -80,19 +81,13 @@ export async function handleMaxedOutFreeTrial(): Promise<void> {
     const apiKey = readlineSync.question(
       chalk.white("\nEnter your Anthropic API key: "),
       {
-        limit: /^sk-ant-.+$/, // Must start with "sk-ant-" and have additional characters
-        limitMessage: chalk.dim(
-          "Please enter a valid Anthropic key that starts with 'sk-ant'"
-        ),
         hideEchoBack: true,
       }
     );
 
-    if (!apiKey || !apiKey.startsWith("sk-ant-")) {
+    if (!isValidAnthropicApiKey(apiKey)) {
       console.log(
-        chalk.red(
-          "❌ Invalid Anthropic API key. Please make sure it starts with 'sk-ant'"
-        )
+        chalk.red(`❌ ${getApiKeyValidationError(apiKey)}`)
       );
       process.exit(1);
     }
@@ -100,13 +95,20 @@ export async function handleMaxedOutFreeTrial(): Promise<void> {
     try {
       await createOrUpdateConfig(apiKey);
       console.log(chalk.green(`✓ API key saved successfully!`));
+      console.log(chalk.green("✓ Switching to local configuration..."));
+      
+      // If a reload callback is provided, use it instead of restarting
+      if (onReload) {
+        await onReload();
+        return;
+      }
     } catch (error) {
       console.log(chalk.red(`❌ Error saving API key: ${error}`));
       process.exit(1);
     }
   }
 
-  // After setup completes, restart the CLI to resume the conversation
+  // Fallback: restart the CLI if no reload callback was provided
   console.log(
     chalk.green("\n🔄 Restarting Continue CLI to resume your conversation...\n")
   );
