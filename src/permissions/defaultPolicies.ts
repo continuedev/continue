@@ -13,6 +13,10 @@ export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
 
   // Write operations should require confirmation
   { tool: "write_file", permission: "ask" },
+  { tool: "edit_file", permission: "ask" },
+
+  // Write to a checklist
+  { tool: "write_checklist", permission: "allow" },
 
   // Terminal commands should require confirmation by default
   { tool: "run_terminal_command", permission: "ask" },
@@ -26,4 +30,3 @@ export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
   // Default fallback - ask for any unmatched tools
   { tool: "*", permission: "ask" },
 ];
-
