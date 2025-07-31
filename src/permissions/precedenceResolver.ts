@@ -17,8 +17,6 @@ export interface PermissionSources {
   personalSettings?: boolean; // Whether to load from permissions.yaml
   /** Default policies - lowest precedence */
   useDefaults?: boolean;
-  /** Whether running in headless mode - affects default policies */
-  headless?: boolean;
 }
 
 /**

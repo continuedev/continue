@@ -23,18 +23,16 @@ export class ToolPermissionService {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
-  }, headless?: boolean): ToolPermissionServiceState {
+  }): ToolPermissionServiceState {
     logger.debug("Synchronously initializing ToolPermissionService", {
-      hasOverrides: !!runtimeOverrides,
-      headless: !!headless
+      hasOverrides: !!runtimeOverrides
     });
     
     // Use the precedence resolver to get properly ordered policies
     const compiledPolicies = resolvePermissionPrecedence({
       commandLineFlags: runtimeOverrides,
       personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
-      useDefaults: true,
-      headless: headless
+      useDefaults: true
     });
     
     this.state = {
@@ -51,12 +49,12 @@ export class ToolPermissionService {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
-  }, headless?: boolean): Promise<ToolPermissionServiceState> {
+  }): Promise<ToolPermissionServiceState> {
     // Ensure permissions.yaml exists before loading
     await ensurePermissionsYamlExists();
     
     // Use the synchronous version after ensuring the file exists
-    return this.initializeSync(runtimeOverrides, headless);
+    return this.initializeSync(runtimeOverrides);
   }
 
   /**

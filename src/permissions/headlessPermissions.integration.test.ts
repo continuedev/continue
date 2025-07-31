@@ -3,33 +3,23 @@ import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import { checkToolPermission } from "./permissionChecker.js";
 
 describe("Headless Permissions Integration", () => {
-  describe("precedence resolution with headless mode", () => {
-    it("should use same default policies for both headless and normal modes", () => {
-      const headlessPolicies = resolvePermissionPrecedence({
+  describe("precedence resolution", () => {
+    it("should use default policies", () => {
+      const policies = resolvePermissionPrecedence({
         useDefaults: true,
         personalSettings: false, // Disable to avoid file system dependencies
-        headless: true,
       });
 
-      const normalPolicies = resolvePermissionPrecedence({
-        useDefaults: true,
-        personalSettings: false,
-        headless: false,
-      });
-
-      expect(headlessPolicies).toEqual(DEFAULT_TOOL_POLICIES);
-      expect(normalPolicies).toEqual(DEFAULT_TOOL_POLICIES);
-      expect(headlessPolicies).toEqual(normalPolicies);
+      expect(policies).toEqual(DEFAULT_TOOL_POLICIES);
     });
 
-    it("should allow CLI overrides to supersede defaults in headless mode", () => {
+    it("should allow CLI overrides to supersede defaults", () => {
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
           exclude: ["dangerous_tool"],
         },
         useDefaults: true,
         personalSettings: false,
-        headless: true,
       });
 
       // CLI exclusion should come first
@@ -78,7 +68,7 @@ describe("Headless Permissions Integration", () => {
 
   describe("real-world headless scenarios", () => {
     it("should handle typical CLI workflow with permission overrides", () => {
-      // Simulate headless mode with some CLI overrides
+      // Simulate CLI with some overrides
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
           // Still exclude truly dangerous operations
@@ -88,7 +78,6 @@ describe("Headless Permissions Integration", () => {
         },
         useDefaults: true,
         personalSettings: false,
-        headless: true,
       });
 
       const permissions = { policies };
@@ -115,7 +104,6 @@ describe("Headless Permissions Integration", () => {
         },
         useDefaults: true,
         personalSettings: false,
-        headless: true,
       });
 
       const permissions = { policies };

@@ -141,26 +141,8 @@ describe("precedenceResolver", () => {
       expect(readPolicy).toBeDefined();
     });
 
-    describe("headless mode", () => {
-      it("should use same policies for headless and normal modes", () => {
-        const headlessPolicies = resolvePermissionPrecedence({
-          useDefaults: true,
-          personalSettings: false,
-          headless: true,
-        });
-
-        const normalPolicies = resolvePermissionPrecedence({
-          useDefaults: true,
-          personalSettings: false,
-          headless: false,
-        });
-
-        expect(headlessPolicies).toEqual(DEFAULT_TOOL_POLICIES);
-        expect(normalPolicies).toEqual(DEFAULT_TOOL_POLICIES);
-        expect(headlessPolicies).toEqual(normalPolicies);
-      });
-
-      it("should use default policies when headless is undefined", () => {
+    describe("precedence rules", () => {
+      it("should use default policies when no other sources provided", () => {
         const policies = resolvePermissionPrecedence({
           useDefaults: true,
           personalSettings: false,
@@ -169,14 +151,13 @@ describe("precedenceResolver", () => {
         expect(policies).toEqual(DEFAULT_TOOL_POLICIES);
       });
 
-      it("should allow CLI flags to override default policies in headless mode", () => {
+      it("should allow CLI flags to override default policies", () => {
         const policies = resolvePermissionPrecedence({
           commandLineFlags: {
             exclude: ["write_file"],
           },
           useDefaults: true,
           personalSettings: false,
-          headless: true,
         });
 
         // CLI exclusion should come first
@@ -185,7 +166,7 @@ describe("precedenceResolver", () => {
         expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
       });
 
-      it("should allow config policies to override defaults in headless mode", () => {
+      it("should allow config policies to override defaults", () => {
         const configPolicies: ToolPermissionPolicy[] = [
           { tool: "run_terminal_command", permission: "allow" },
         ];
@@ -194,7 +175,6 @@ describe("precedenceResolver", () => {
           configPermissions: configPolicies,
           useDefaults: true,
           personalSettings: false,
-          headless: true,
         });
 
         // Config policy should override default
