@@ -1,5 +1,5 @@
+import { tabAutocompleteOptionsSchema } from "@continuedev/config-types";
 import * as z from "zod";
-import { tabAutocompleteOptionsSchema } from "../../../config-types/src/index.js";
 import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import {
