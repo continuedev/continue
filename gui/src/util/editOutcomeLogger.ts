@@ -118,8 +118,45 @@ function extractCodeChanges(applyState: ApplyState): {
   newCodeLines: number;
   lineChange: number;
 } {
-  const originalContent = applyState.originalFileContent || "";
-  const newContent = applyState.fileContent || "";
+  // Use precise diff information if available (new approach)
+  if (applyState.changedLines) {
+    const { previousLines, newLines } = applyState.changedLines;
+    const result = {
+      previousCode: previousLines.join('\n'),
+      newCode: newLines.join('\n'),
+      previousCodeLines: previousLines.length,
+      newCodeLines: newLines.length,
+      lineChange: newLines.length - previousLines.length,
+    };
+    
+    console.log("LOGGER_DEBUG:", JSON.stringify({
+      usingChangedLines: true,
+      previousLinesCount: previousLines.length,
+      newLinesCount: newLines.length,
+      previousLinesPreview: previousLines.slice(0, 3),
+      newLinesPreview: newLines.slice(0, 3),
+      result
+    }, null, 2));
+    
+    return result;
+  }
+  
+  // Fallback to old approach for backward compatibility
+  let originalContent = applyState.originalFileContent || "";
+  let newContent = applyState.fileContent || "";
+  
+  
+  // Remove phantom leading newlines that appear in new content but not in original
+  // These are display artifacts that don't actually get written to the file
+  if (newContent.startsWith('\n') && !originalContent.startsWith('\n')) {
+    const leadingNewlineMatch = newContent.match(/^(\n+)/);
+    if (leadingNewlineMatch) {
+      const phantomNewlines = leadingNewlineMatch[1];
+      console.log(`Removing ${phantomNewlines.length} phantom leading newlines from newContent`);
+      newContent = newContent.substring(phantomNewlines.length);
+    }
+  }
+  
 
   // If either is empty, return the full content (new file or deleted file)
   if (originalContent === "" || newContent === "") {
@@ -139,7 +176,43 @@ function extractCodeChanges(applyState: ApplyState): {
   const originalLines = originalContent.split("\n");
   const newLines = newContent.split("\n");
 
-  // Find the range of changed lines using a simple approach
+  // For small changes (likely chat mode), try to identify actual content changes
+  // instead of positional differences caused by whitespace changes
+  const contentOnlyOriginal = originalLines.filter(line => line.trim() !== '');
+  const contentOnlyNew = newLines.filter(line => line.trim() !== '');
+  
+  // If this looks like a small content change, extract just the changed content
+  if (contentOnlyOriginal.length <= 20 && contentOnlyNew.length <= 20) {
+    
+    // For content-only changes, collect all different lines
+    const originalDiffLines = [];
+    const newDiffLines = [];
+    
+    const maxLength = Math.max(contentOnlyOriginal.length, contentOnlyNew.length);
+    for (let i = 0; i < maxLength; i++) {
+      const origLine = contentOnlyOriginal[i] || '';
+      const newLine = contentOnlyNew[i] || '';
+      
+      if (origLine !== newLine) {
+        if (origLine) originalDiffLines.push(origLine);
+        if (newLine) newDiffLines.push(newLine);
+      }
+    }
+    
+    // If we found different content, return just the differences
+    if (originalDiffLines.length > 0 || newDiffLines.length > 0) {
+      
+      return {
+        previousCode: originalDiffLines.join('\n'),
+        newCode: newDiffLines.join('\n'),
+        previousCodeLines: originalDiffLines.length,
+        newCodeLines: newDiffLines.length,
+        lineChange: newDiffLines.length - originalDiffLines.length,
+      };
+    }
+  }
+
+  // Fallback to positional diff for larger changes
   let firstChangedLine = 0;
   let lastChangedLineOriginal = originalLines.length - 1;
   let lastChangedLineNew = newLines.length - 1;
@@ -163,9 +236,18 @@ function extractCodeChanges(applyState: ApplyState): {
     lastChangedLineNew--;
   }
 
+
+
   // Extract only the changed sections
   const changedOriginalLines = originalLines.slice(firstChangedLine, lastChangedLineOriginal + 1);
   const changedNewLines = newLines.slice(firstChangedLine, lastChangedLineNew + 1);
+
+  console.log("EXTRACTED_LINES:", JSON.stringify({
+    changedOriginalLines,
+    changedNewLines,
+    originalSliceRange: `[${firstChangedLine}:${lastChangedLineOriginal + 1}]`,
+    newSliceRange: `[${firstChangedLine}:${lastChangedLineNew + 1}]`
+  }, null, 2));
 
   const previousCode = changedOriginalLines.join("\n");
   const newCode = changedNewLines.join("\n");
@@ -239,7 +321,6 @@ export async function logChatModeEditOutcome(
   accepted: boolean,
   ideMessenger: IIdeMessenger,
 ): Promise<void> {
-  console.log("logChatModeEditOutcome called with:", { applyState, accepted });
   // For chat mode, we need to find the tool call state from the apply state
   const history = store.getState().session.history;
   

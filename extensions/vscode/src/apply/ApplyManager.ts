@@ -8,6 +8,7 @@ import { myersDiff } from "core/diff/myers";
 import { generateLines } from "core/diff/util";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { VerticalDiffManager } from "../diff/vertical/manager";
+// import { computeChangedLines } from "../util/diffUtils"; // Removed - was comparing wrong data
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -48,6 +49,8 @@ export class ApplyManager {
       fileContent: text,
       originalFileContent,
       toolCallId,
+      // Don't compute changedLines here - text is LLM output, not actual applied diff
+      // changedLines: computeChangedLines(originalFileContent, text),
     });
 
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
@@ -109,6 +112,8 @@ export class ApplyManager {
       numDiffs: 0,
       fileContent: text,
       toolCallId,
+      // Don't compute changedLines for new files - the fallback approach handles this correctly
+      // changedLines: computeChangedLines("", text),
     });
   }
 

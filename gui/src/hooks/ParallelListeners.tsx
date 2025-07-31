@@ -250,7 +250,6 @@ function ParallelListeners() {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      console.log("updateApplyState received:", state);
       if (state.streamId === EDIT_MODE_STREAM_ID) {
         dispatch(updateEditStateApplyState(state));
 
@@ -282,7 +281,6 @@ function ParallelListeners() {
           // extensions/vscode/src/diff/processDiff.ts:58) can send separate "closed" 
           // events for the same operation
           if (loggedStreamIds.current.has(state.streamId)) {
-            console.log("Skipping duplicate editOutcome logging for streamId:", state.streamId);
             return;
           }
           loggedStreamIds.current.add(state.streamId);
@@ -293,12 +291,6 @@ function ParallelListeners() {
             (s) => s.streamId === state.streamId,
           );
 
-          console.log("ParallelListeners updateApplyState status=closed:", {
-            currentMode,
-            applyState,
-            hasToolCallId: !!state.toolCallId,
-            streamId: state.streamId,
-          });
 
           // Handle tool call based interactions (agent mode or chat with tool calls)
           if (state.toolCallId) {
@@ -314,7 +306,6 @@ function ParallelListeners() {
 
               if (applyState) {
                 if (currentMode === "agent") {
-                  console.log("Logging agent mode edit outcome");
                   void logAgentModeEditOutcome(
                     toolCallState,
                     applyState,
@@ -322,7 +313,6 @@ function ParallelListeners() {
                     ideMessenger,
                   );
                 } else {
-                  console.log("Logging chat mode edit outcome (with tool call)");
                   void logChatModeEditOutcome(
                     applyState,
                     accepted,
@@ -347,15 +337,12 @@ function ParallelListeners() {
           } else if (applyState && currentMode === "chat") {
             // Handle manual chat mode applies (no tool call)
             // For manual applies, we assume accepted=true since the user manually triggered the apply
-            console.log("Logging manual chat mode edit outcome");
             void logChatModeEditOutcome(
               applyState,
               true, // Manual applies are considered accepted
               ideMessenger,
             );
           }
-          
-          console.log("End of updateApplyState status=closed processing");
         }
       }
     },

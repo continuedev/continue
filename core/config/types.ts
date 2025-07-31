@@ -1056,6 +1056,15 @@ declare global {
     filepath?: string;
     fileContent?: string;
     originalFileContent?: string;
+    toolCallId?: string;
+    
+    // Precise diff information to avoid recomputing changes in GUI
+    changedLines?: {
+      previousLines: string[];  // The original lines that were changed
+      newLines: string[];       // The new lines that replaced them
+      startLine: number;        // Line number where changes start (0-based)
+      endLine: number;          // Line number where changes end (0-based)
+    };
   }
   
   export interface RangeInFileWithContents {

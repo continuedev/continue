@@ -4,6 +4,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { editOutcomeTracker } from "../extension/EditOutcomeTracker";
 import { VsCodeIde } from "../VsCodeIde";
 import { VerticalDiffManager } from "./vertical/manager";
+import { computeChangedLines } from "../util/diffUtils";
 
 export async function processDiff(
   action: "accept" | "reject",
@@ -51,6 +52,9 @@ export async function processDiff(
       DataLogger.getInstance(),
     );
 
+    // TODO: Get original content from VerticalDiffManager or apply state
+    // For now, we can't compute changedLines here since we don't have the original content
+    // The diff was already applied to the file, so fileContent is the final state
     await sidebar.webviewProtocol.request("updateApplyState", {
       fileContent,
       filepath: newOrCurrentUri,
@@ -58,6 +62,7 @@ export async function processDiff(
       status: "closed",
       numDiffs: 0,
       toolCallId,
+      // changedLines will be computed upstream in ApplyManager where we have both contents
     });
   }
 
