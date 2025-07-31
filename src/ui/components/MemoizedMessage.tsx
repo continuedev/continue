@@ -25,7 +25,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
         case "tool-result":
           const isFailure =
-            message.toolResult?.includes("Permission denied") ||
+            message.toolResult?.startsWith("Permission denied") ||
             message.toolResult?.startsWith("Error");
           return (
             <Box key={index} marginBottom={1} flexDirection="column">
