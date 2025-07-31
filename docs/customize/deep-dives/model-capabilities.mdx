@@ -146,10 +146,6 @@ models:
 
 For troubleshooting capability-related issues like Agent mode being unavailable or tools not working, see the [Troubleshooting guide](/troubleshooting#agent-mode-is-unavailable-or-tools-arent-working).
 
-## Migration from config.json
-
-For information on migrating capabilities from config.json to config.yaml format, see the [YAML Migration guide](/reference/yaml-migration).
-
 ## Best Practices
 
 1. **Start with autodetection** - Only override if you experience issues
@@ -166,7 +162,7 @@ This matrix shows which popular models support various Continue features. Contin
 ### OpenAI / Azure
 
 | Model         | Chat | Apply | Edit | Tool Use | Image Input |
-| ------------- | ---- | ----- | ---- | -------- | ----------- |
+| :------------ | ---- | ----- | ---- | -------- | ----------- |
 | GPT-4o        | ✅   | ✅    | ✅   | ✅       | ✅          |
 | GPT-4 Turbo   | ✅   | ✅    | ✅   | ✅       | ✅          |
 | GPT-4         | ✅   | ✅    | ✅   | ✅       | ❌          |
@@ -176,7 +172,7 @@ This matrix shows which popular models support various Continue features. Contin
 ### Anthropic
 
 | Model             | Chat | Apply | Edit | Tool Use | Image Input |
-| ----------------- | ---- | ----- | ---- | -------- | ----------- |
+| :---------------- | ---- | ----- | ---- | -------- | ----------- |
 | Claude 4 Opus     | ✅   | ✅    | ✅   | ✅       | ✅          |
 | Claude 4 Sonnet   | ✅   | ✅    | ✅   | ✅       | ✅          |
 | Claude 3.5 Sonnet | ✅   | ✅    | ✅   | ✅       | ✅          |
@@ -188,7 +184,7 @@ This matrix shows which popular models support various Continue features. Contin
 ### Google
 
 | Model            | Chat | Apply | Edit | Tool Use | Image Input |
-| ---------------- | ---- | ----- | ---- | -------- | ----------- |
+| :--------------- | ---- | ----- | ---- | -------- | ----------- |
 | Gemini 2.0 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
 | Gemini 1.5 Pro   | ✅   | ✅    | ✅   | ✅       | ✅          |
 | Gemini 1.5 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
@@ -196,7 +192,7 @@ This matrix shows which popular models support various Continue features. Contin
 ### Mistral
 
 | Model          | Chat | Apply | Edit | Tool Use | Image Input |
-| -------------- | ---- | ----- | ---- | -------- | ----------- |
+| :------------- | ---- | ----- | ---- | -------- | ----------- |
 | Mistral Large  | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Mistral Medium | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Mistral Small  | ✅   | ✅    | ✅   | ✅       | ❌          |
@@ -205,7 +201,7 @@ This matrix shows which popular models support various Continue features. Contin
 ### DeepSeek
 
 | Model             | Chat | Apply | Edit | Tool Use | Image Input |
-| ----------------- | ---- | ----- | ---- | -------- | ----------- |
+| :---------------- | ---- | ----- | ---- | -------- | ----------- |
 | DeepSeek V3       | ✅   | ✅    | ✅   | ✅       | ❌          |
 | DeepSeek Coder V2 | ✅   | ✅    | ✅   | ✅       | ❌          |
 | DeepSeek Chat     | ✅   | ✅    | ✅   | ✅       | ❌          |
@@ -213,7 +209,7 @@ This matrix shows which popular models support various Continue features. Contin
 ### Ollama (Local Models)
 
 | Model          | Chat | Apply | Edit | Tool Use | Image Input |
-| -------------- | ---- | ----- | ---- | -------- | ----------- |
+| :------------- | ---- | ----- | ---- | -------- | ----------- |
 | Llama 3.1      | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Llama 3        | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Mistral        | ✅   | ✅    | ✅   | ✅       | ❌          |
