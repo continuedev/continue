@@ -946,7 +946,7 @@ export class Core {
     });
 
     on("taskList/list", ({ data }) => {
-      return fetchTaskList(data.sessionId, this.messenger);
+      return fetchTaskList(this.messenger);
     });
   }
 

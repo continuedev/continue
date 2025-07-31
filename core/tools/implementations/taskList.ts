@@ -1,15 +1,22 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
-import { getTaskManagerForSession } from "../../context/taskList";
+import { getSessionTaskManager } from "../../context/taskList";
 import { TaskStatus } from "../../context/taskList/TaskManager";
 
 export const taskListImpl: ToolImpl = async (args, extras) => {
   let contextItem: ContextItem;
-  const manager = getTaskManagerForSession("abcd", extras.messenger!);
+  const manager = await getSessionTaskManager(extras.messenger!);
 
   const { action } = args;
 
-  console.log("debug1 task list", manager.list(), "and action", action);
+  console.log(
+    "debug1 task list",
+    manager.list(),
+    "and action",
+    action,
+    "and session",
+    await extras.messenger?.request("getCurrentSessionId", undefined),
+  );
 
   switch (action) {
     case "add": {

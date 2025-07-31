@@ -266,16 +266,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
-  "taskList/list": [{ sessionId: Session["sessionId"] }, TaskInfo[]];
-  "taskList/update": [
-    {
-      sessionId: Session["sessionId"];
-      task: Pick<TaskInfo, "id" | "name" | "description">;
-    },
-    void,
-  ];
-  "taskList/remove": [
-    { sessionId: Session["sessionId"]; taskId: TaskInfo["id"] },
-    void,
-  ];
+  "taskList/list": [undefined, TaskInfo[]];
 };

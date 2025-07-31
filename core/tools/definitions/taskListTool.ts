@@ -13,7 +13,7 @@ export const taskListTool: Tool = {
   function: {
     name: BuiltInToolNames.TaskList,
     description:
-      'Manage and execute tasks in a queue-based system. Supports adding, updating, reading tasks. Before executing any task, set the task to in progress by using the "runTask" action.',
+      'Manage and execute tasks in a queue-based system. Supports adding, updating, reading tasks. Before executing any task, set the task to in progress by using the "runTask" action. Avoid showing the "taskId" to the user.',
     parameters: {
       type: "object",
       required: ["action"],

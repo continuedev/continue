@@ -11,8 +11,6 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
     switch (task.status) {
       case "completed":
         return "text-green-500";
-      case "running":
-        return "text-blue-500";
       case "pending":
       default:
         return "text-yellow-500";
@@ -56,9 +54,7 @@ export function TasksSection() {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      const response = await ideMessenger.request("taskList/list", {
-        sessionId: "abcd",
-      });
+      const response = await ideMessenger.request("taskList/list", undefined);
       if (response.status === "success") {
         setTasks(response.content);
       }

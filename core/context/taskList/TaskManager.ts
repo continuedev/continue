@@ -14,7 +14,6 @@ export interface TaskEvent {
 }
 
 export class TaskManager {
-  private queue: TaskInfo["id"][] = [];
   private taskMap = new Map<TaskInfo["id"], TaskInfo>();
 
   constructor(
@@ -42,7 +41,6 @@ export class TaskManager {
       },
     };
     this.taskMap.set(taskId, task);
-    this.queue.push(taskId);
 
     this.emitEvent("add");
 
@@ -77,7 +75,6 @@ export class TaskManager {
     }
 
     this.taskMap.delete(taskId);
-    this.queue = this.queue.filter((id) => id !== taskId);
 
     this.emitEvent("remove");
   }
