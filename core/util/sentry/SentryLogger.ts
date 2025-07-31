@@ -116,9 +116,8 @@ export class SentryLogger {
     const isDebugMode = process.env.CONTINUE_DEVELOPMENT === "true";
     const isTestEnv = process.env.NODE_ENV === "test";
 
-    SentryLogger.allowTelemetry = true;
-    // SentryLogger.allowTelemetry =
-    //   allow && !isTestEnv && !isDebugMode && isContinueTeam;
+    SentryLogger.allowTelemetry =
+      allow && !isTestEnv && !isDebugMode && isContinueTeam;
     SentryLogger.uniqueId = uniqueId;
     SentryLogger.ideInfo = ideInfo;
     SentryLogger.os = os.platform();
