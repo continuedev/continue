@@ -3,6 +3,7 @@ import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -68,6 +69,15 @@ async function handleToolCallExecution(
 
   // Only run if we have auto-approve for all
   if (allAutoApproved && toolCallStates.length > 0) {
+    // Track auto-approved tool execution
+    toolCallStates.forEach((toolCallState) => {
+      posthog.capture("gui_tool_call_decision", {
+        decision: "auto_accept",
+        toolName: toolCallState.toolCall.function.name,
+        toolCallId: toolCallState.toolCallId,
+      });
+    });
+
     const toolCallPromises = toolCallStates.map(async (toolCallState) => {
       const response = await dispatch(
         callToolById({ toolCallId: toolCallState.toolCallId }),
@@ -276,7 +286,7 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-    
+
     // Check if we have any tool calls that were just generated
     const newState = getState();
     const toolSettings = newState.ui.toolSettings;
@@ -284,14 +294,16 @@ export const streamNormalInput = createAsyncThunk<
     const generatingToolCalls = allToolCallStates.filter(
       (toolCallState) => toolCallState.status === "generating",
     );
-    
+
     // Check if ALL generating tool calls are auto-approved
-    const allAutoApproved = generatingToolCalls.length > 0 && 
+    const allAutoApproved =
+      generatingToolCalls.length > 0 &&
       generatingToolCalls.every(
         (toolCallState) =>
-          toolSettings[toolCallState.toolCall.function.name] === "allowedWithoutPermission",
+          toolSettings[toolCallState.toolCall.function.name] ===
+          "allowedWithoutPermission",
       );
-    
+
     // Only set inactive if:
     // 1. There are no tool calls, OR
     // 2. There are tool calls but they require manual approval
@@ -299,7 +311,7 @@ export const streamNormalInput = createAsyncThunk<
     if (generatingToolCalls.length === 0 || !allAutoApproved) {
       dispatch(setInactive());
     }
-    
+
     await handleToolCallExecution(dispatch, getState);
   },
 );

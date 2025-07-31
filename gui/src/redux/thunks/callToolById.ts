@@ -31,7 +31,7 @@ export const callToolById = createAsyncThunk<
     return;
   }
 
-  // Capture telemetry for user accepting the tool call
+  // Track tool call acceptance
   posthog.capture("gui_tool_call_decision", {
     decision: "accept",
     toolName: toolCallState.toolCall.function.name,
