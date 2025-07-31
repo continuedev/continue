@@ -16,11 +16,6 @@ enum class FileType(val value: Int) {
     SYMBOLIC_LINK(64)
 }
 
-enum class ConfigMergeType {
-    MERGE,
-    OVERWRITE
-}
-
 data class Position(val line: Int, val character: Int)
 
 data class Range(val start: Position, val end: Position)
@@ -126,6 +121,13 @@ data class ParameterInformation(
     val label: String // Note: Kotlin doesn't have union types, so this represents the string case
 )
 
+data class DocumentSymbol(
+    val name: String,
+    val kind: String,
+    val range: Range,
+    val selectionRange: Range
+)
+
 data class ControlPlaneSessionInfo(
     val accessToken: String,
     val account: Account
@@ -147,10 +149,6 @@ data class IdeSettings(
     val userToken: String,
     val pauseCodebaseIndexOnStart: Boolean,
     val continueTestEnvironment: String
-)
-
-data class ContinueRcJson(
-    val mergeBehavior: ConfigMergeType
 )
 
 data class TerminalOptions(
@@ -186,8 +184,6 @@ interface IDE {
     suspend fun getAvailableThreads(): List<Thread>
 
     suspend fun getWorkspaceDirs(): List<String>
-
-    suspend fun getWorkspaceConfigs(): List<ContinueRcJson>
 
     suspend fun fileExists(filepath: String): Boolean
 
@@ -261,6 +257,8 @@ interface IDE {
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
     suspend fun gotoTypeDefinition(location: Location): List<RangeInFile>
     suspend fun getSignatureHelp(location: Location): SignatureHelp?
+    suspend fun getReferences(location: Location): List<RangeInFile>
+    suspend fun getDocumentSymbols(textDocumentIdentifier: String): List<DocumentSymbol>
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
@@ -290,6 +288,7 @@ data class ApplyState(
     val numDiffs: Int? = null,
     val filepath: String? = null,
     val fileContent: String? = null,
+    val originalFileContent: String? = null,
     val toolCallId: String? = null
 )
 

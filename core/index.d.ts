@@ -256,6 +256,8 @@ export interface IContextProvider {
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
+
+  get deprecationMessage(): string | null;
 }
 
 export interface Session {
@@ -806,8 +808,6 @@ export interface IDE {
 
   getWorkspaceDirs(): Promise<string[]>;
 
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-
   fileExists(fileUri: string): Promise<boolean>;
 
   writeFile(path: string, contents: string): Promise<void>;
@@ -876,6 +876,8 @@ export interface IDE {
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
   gotoTypeDefinition(location: Location): Promise<RangeInFile[]>; // TODO: add to jetbrains
   getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
+  getReferences(location: Location): Promise<RangeInFile[]>;
+  getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
@@ -1086,6 +1088,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
+  systemMessageDescription?: string;
 }
 
 interface ToolChoice {
@@ -1360,6 +1363,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  originalFileContent?: string;
   toolCallId?: string;
 }
 
@@ -1515,6 +1519,7 @@ export interface ExperimentalConfig {
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
   enableExperimentalTools?: boolean;
+  onlyUseSystemMessageTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1539,11 +1544,6 @@ export interface ExperimentalConfig {
    * If enabled, will add the current file as context.
    */
   useCurrentFileAsContext?: boolean;
-
-  /**
-   * If enabled, will enable next edit in place of autocomplete
-   */
-  optInNextEditFeature?: boolean;
 
   /**
    * If enabled, @codebase will only use tool calling
@@ -1798,4 +1798,57 @@ export interface CompiledMessagesResult {
 
 export interface MessageOption {
   precompiled: boolean;
+}
+
+/* LSP-specific interfaces. */
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolKind.
+// We shift this one index down to match vscode.SymbolKind.
+export enum SymbolKind {
+  File = 0,
+  Module = 1,
+  Namespace = 2,
+  Package = 3,
+  Class = 4,
+  Method = 5,
+  Property = 6,
+  Field = 7,
+  Constructor = 8,
+  Enum = 9,
+  Interface = 10,
+  Function = 11,
+  Variable = 12,
+  Constant = 13,
+  String = 14,
+  Number = 15,
+  Boolean = 16,
+  Array = 17,
+  Object = 18,
+  Key = 19,
+  Null = 20,
+  EnumMember = 21,
+  Struct = 22,
+  Event = 23,
+  Operator = 24,
+  TypeParameter = 25,
+}
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolTag.
+export namespace SymbolTag {
+  export const Deprecated: 1 = 1;
+}
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolTag.
+export type SymbolTag = 1;
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentSymbol.
+export interface DocumentSymbol {
+  name: string;
+  detail?: string;
+  kind: SymbolKind;
+  tags?: SymbolTag[];
+  deprecated?: boolean;
+  range: Range;
+  selectionRange: Range;
+  children?: DocumentSymbol[];
 }

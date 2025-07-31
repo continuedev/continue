@@ -14,9 +14,6 @@
         com.intellij.modules.json
     </depends>
 
-    <!-- com.intellij.openapi.module.ModuleManager.Companion is only available since this build -->
-    <idea-version since-build="223.7571.182"/>
-
     <extensions defaultExtensionNs="com.intellij">
         <editorFactoryListener
                 implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
@@ -40,6 +37,7 @@
         <errorHandler implementation="com.github.continuedev.continueintellijextension.error.ContinueErrorSubmitter"/>
         <postStartupActivity
                 implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
+        <postStartupActivity implementation="com.github.continuedev.continueintellijextension.proxy.ProxyPoolingActivity"/>
         <applicationConfigurable
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
