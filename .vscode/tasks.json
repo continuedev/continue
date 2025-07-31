@@ -225,10 +225,21 @@
       "problemMatcher": []
     },
     {
-      "label": "build-packages",
+      "label": "Build Continue packages",
       "type": "shell",
       "command": "node ./scripts/build-packages.js",
-      "problemMatcher": [],
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "__DUMMY_PATTERN_THAT_NEVER_MATCHES__",
+          "file": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "."
+        }
+      },
       "presentation": {
         "reveal": "silent",
         "panel": "shared"
@@ -236,7 +247,8 @@
     },
     {
       "label": "vscode-extension:build-with-packages",
-      "dependsOn": ["build-packages", "vscode-extension:build"],
+      // "dependsOn": ["vscode-extension:build"],
+      "dependsOn": ["Build Continue packages", "vscode-extension:build"],
       "type": "shell",
       "problemMatcher": []
     }
