@@ -366,8 +366,8 @@ describe("streamResponseThunk - tool calls", () => {
     unsubscribe();
 
     // Verify no UI flashing during auto-approved tool execution
-    // DESIRED: Should show: [true, false] - stream starts, then stops after everything is done
-    // This prevents the UI from switching between StreamingToolbar and PendingToolCallToolbar
+    // DESIRED: Should stay true throughout tool execution, only becoming false at the very end
+    // We expect [true, false] - streaming starts true, stays true during tool execution, then false when all done
     expect(streamingStateChanges).toEqual([true, false]);
 
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
@@ -392,7 +392,6 @@ describe("streamResponseThunk - tool calls", () => {
       "session/streamUpdate",
       "session/streamUpdate",
       "session/addPromptCompletionPair",
-      "session/setInactive",
       "session/setToolGenerated",
       "chat/callTool/pending",
       "session/setToolCallCalling",

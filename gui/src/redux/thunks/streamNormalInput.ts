@@ -276,7 +276,20 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-    dispatch(setInactive());
+    
+    // Check if we have any tool calls that were just generated
+    const newState = getState();
+    const allToolCallStates = selectCurrentToolCalls(newState);
+    const generatingToolCalls = allToolCallStates.filter(
+      (toolCallState) => toolCallState.status === "generating",
+    );
+    
+    // Only set inactive if there are no tool calls to process
+    // This prevents UI flashing when tool calls are about to be executed
+    if (generatingToolCalls.length === 0) {
+      dispatch(setInactive());
+    }
+    
     await handleToolCallExecution(dispatch, getState);
   },
 );
