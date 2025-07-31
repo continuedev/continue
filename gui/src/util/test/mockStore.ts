@@ -91,8 +91,12 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: {
-          ignoredPaths: ['session.streamAborter'],
-          ignoredActions: ['chat/streamNormalInput/pending', 'chat/streamNormalInput/fulfilled', 'chat/streamNormalInput/rejected'],
+          ignoredPaths: ["session.streamAborter"],
+          ignoredActions: [
+            "chat/streamNormalInput/pending",
+            "chat/streamNormalInput/fulfilled",
+            "chat/streamNormalInput/rejected",
+          ],
         },
         thunk: {
           extraArgument: {
@@ -105,17 +109,19 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
   // Add getActions method for testing
   const actions: any[] = [];
   const originalDispatch = store.dispatch;
-  
+
   // Override dispatch to track actions and inject ideMessenger
   store.dispatch = vi.fn((action: any) => {
-    if (typeof action === 'function') {
+    if (typeof action === "function") {
       // For thunks, provide the extra argument with ideMessenger
-      return action(store.dispatch, store.getState, { ideMessenger: mockIdeMessenger });
+      return action(store.dispatch, store.getState, {
+        ideMessenger: mockIdeMessenger,
+      });
     }
     actions.push(action);
     return originalDispatch(action);
   }) as any;
-  
+
   (store as any).getActions = () => actions;
   (store as any).clearActions = () => actions.splice(0, actions.length);
 
