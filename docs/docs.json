@@ -65,6 +65,7 @@
                 "pages": [
                   "features/agent/quick-start",
                   "features/agent/how-it-works",
+                  "features/agent/plan-mode",
                   "features/agent/model-setup",
                   "features/agent/how-to-customize",
                   "features/agent/context-selection"
@@ -987,6 +988,14 @@
     {
       "source": "/agent/context-selection",
       "destination": "/features/agent/context-selection"
+    },
+    {
+      "source": "/customization/overview#codebase-context",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/customization/overview#documentation-context",
+      "destination": "/customize/context/documentation"
     }
   ]
 }

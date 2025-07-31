@@ -7,19 +7,22 @@ import com.github.continuedev.continueintellijextension.`continue`.process.Conti
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
 
 class CoreMessenger(
     private val project: Project,
     private val ideProtocolClient: IdeProtocolClient,
     val coroutineScope: CoroutineScope,
-    private val onExit: () -> Unit
+    private val onUnexpectedExit: () -> Unit
 ) {
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
-    private val process = startContinueProcess()
+    private var process = startContinueProcess()
+    private val log = Logger.getInstance(CoreMessenger::class.java)
 
     fun request(messageType: String, data: Any?, messageId: String?, onResponse: (Any?) -> Unit) {
         val id = messageId ?: uuid()
@@ -33,18 +36,18 @@ class CoreMessenger(
         val process = if (isTcp)
             ContinueSocketProcess()
         else
-            ContinueBinaryProcess(onExit)
+            ContinueBinaryProcess(onUnexpectedExit)
         return ContinueProcessHandler(coroutineScope, process, ::handleMessage)
     }
 
     private fun handleMessage(json: String) {
-        val responseMap = gson.fromJson(json, Map::class.java)
+        val responseMap = tryToParse(json) ?: return
         val messageId = responseMap["messageId"].toString()
         val messageType = responseMap["messageType"].toString()
         val data = responseMap["data"]
 
         // IDE listeners
-        if (MessageTypes.IDE_MESSAGE_TYPES.contains(messageType)) {
+        if (messageType in MessageTypes.IDE_MESSAGE_TYPES) {
             ideProtocolClient.handleMessage(json) { data ->
                 val message = gson.toJson(mapOf("messageId" to messageId, "messageType" to messageType, "data" to data))
                 process.write(message)
@@ -52,8 +55,9 @@ class CoreMessenger(
         }
 
         // Forward to webview
-        if (MessageTypes.PASS_THROUGH_TO_WEBVIEW.contains(messageType)) {
+        if (messageType in MessageTypes.PASS_THROUGH_TO_WEBVIEW) {
             val continuePluginService = project.service<ContinuePluginService>()
+            // todo: is this a bug below (messageType = ID)? verify
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
 
@@ -68,7 +72,24 @@ class CoreMessenger(
         }
     }
 
-    fun killSubProcess() {
+    // todo: map<*, *> = code smell
+    private fun tryToParse(json: String): Map<*, *>? =
+        try {
+            gson.fromJson(json, Map::class.java)
+        } catch (_: JsonSyntaxException) {
+            log.warn("Invalid message JSON: $json") // example: NODE_ENV undefined
+            null
+        }
+
+    fun restart() {
+        log.warn("Restarting Continue process")
+        responseListeners.clear()
+        process.close()
+        process = startContinueProcess()
+    }
+
+    fun close() {
+        log.warn("Closing Continue process")
         process.close()
     }
 }

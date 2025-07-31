@@ -1,5 +1,5 @@
 import type {
-  ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -10,6 +10,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../";
@@ -51,7 +52,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
   getDiff: [{ includeUnstaged: boolean }, string[]];
-  getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   getDebugLocals: [{ threadIndex: number }, string];
   getTopLevelCallStackSources: [
@@ -82,6 +82,10 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
+  gotoTypeDefinition: [{ location: Location }, RangeInFile[]];
+  getSignatureHelp: [{ location: Location }, SignatureHelp | null];
+  getReferences: [{ location: Location }, RangeInFile[]];
+  getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

@@ -6,7 +6,11 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import { executeGotoProvider } from "./autocomplete/lsp";
+import {
+  executeGotoProvider,
+  executeSignatureHelpProvider,
+  executeSymbolProvider,
+} from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
@@ -14,7 +18,7 @@ import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 import type {
-  ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -24,6 +28,7 @@ import type {
   Location,
   Problem,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "core";
@@ -82,6 +87,50 @@ class VsCodeIde implements IDE {
       line: location.position.line,
       character: location.position.character,
       name: "vscode.executeDefinitionProvider",
+    });
+
+    return result;
+  }
+
+  async gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    const result = await executeGotoProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeTypeDefinitionProvider",
+    });
+
+    return result;
+  }
+
+  async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    const result = await executeSignatureHelpProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeSignatureHelpProvider",
+    });
+
+    return result;
+  }
+
+  async getReferences(location: Location): Promise<RangeInFile[]> {
+    const result = await executeGotoProvider({
+      uri: vscode.Uri.parse(location.filepath),
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeReferenceProvider",
+    });
+
+    return result;
+  }
+
+  async getDocumentSymbols(
+    textDocumentIdentifier: string, // uri
+  ): Promise<DocumentSymbol[]> {
+    const result = await executeSymbolProvider({
+      uri: vscode.Uri.parse(textDocumentIdentifier),
+      name: "vscode.executeDocumentSymbolProvider",
     });
 
     return result;
@@ -238,32 +287,6 @@ class VsCodeIde implements IDE {
   }
   async getAvailableThreads(): Promise<Thread[]> {
     return await this.ideUtils.getAvailableThreads();
-  }
-
-  async getWorkspaceConfigs() {
-    const workspaceDirs =
-      vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
-    const configs: ContinueRcJson[] = [];
-    for (const workspaceDir of workspaceDirs) {
-      const files = await this.ideUtils.readDirectory(workspaceDir);
-      if (files === null) {
-        //Unlikely, but just in case...
-        continue;
-      }
-      for (const [filename, type] of files) {
-        if (
-          (type === vscode.FileType.File ||
-            type === vscode.FileType.SymbolicLink) &&
-          filename === ".continuerc.json"
-        ) {
-          const contents = await this.readFile(
-            vscode.Uri.joinPath(workspaceDir, filename).toString(),
-          );
-          configs.push(JSON.parse(contents));
-        }
-      }
-    }
-    return configs;
   }
 
   async getWorkspaceDirs(): Promise<string[]> {

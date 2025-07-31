@@ -77,6 +77,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       onClick={() => {
         ideMessenger.post("config/openProfile", {
           profileId: undefined,
+          element: selectedModel ?? undefined,
         });
       }}
     >
@@ -245,8 +246,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       </div>
     );
   }
-
-  console.log({ message });
 
   return (
     <div className="flex flex-col gap-4 px-3 pb-3 pt-3">

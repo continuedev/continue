@@ -54,7 +54,7 @@ The `@Docs` context provider works by
 
 ### Hub `docs` Blocks
 
-@Docs uses [`docs` blocks](../../hub/blocks/block-types.md#docs) in Assistants from the hub. Visit the hub to [explore `docs` blocks](https://hub.continue.dev/explore/docs) or [create your own](https://hub.continue.dev/new?type=block&blockType=docs).
+@Docs uses [`docs` blocks](../../hub/blocks/block-types#docs) in Assistants from the hub. Visit the hub to [explore `docs` blocks](https://hub.continue.dev/explore/docs) or [create your own](https://hub.continue.dev/new?type=block&blockType=docs).
 
 ### Through the `@Docs` Context Provider
 
@@ -77,7 +77,7 @@ Documentation sources may be suggested based on package files in your repo. This
 - Packages with partial information (with a pen icon) can be clicked to fill the form with the available information
 - Note that you can hover over the information icon to see where the package suggestion was found.
 
-![Add documentation form](/img/docs-form.png)
+![Add documentation form](/images/docs-form.png)
 
 ### In a configuration file
 
@@ -212,8 +212,9 @@ If your documentation is private, you can skip the default crawler and use a loc
 </Tabs>
 
 <Info>
-  Chromium crawling has been deprecated
-  {/* The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../deep-dives/settings.md) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler. */}
+  The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../settings) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
+  
+  **Note:** Chromium crawling support is being deprecated and may be removed in future versions.
 </Info>
 
 Further notes:
@@ -230,11 +231,11 @@ You can view indexing statuses and manage your documentation sites from the `@do
 - Failed indexing attempts will show an error status bar and icon
 - Delete a documentation site from your configuration using the trash icon
 
-![More Page @docs indexes section](/img/docs-indexes.png)
+![More Page @docs indexes section](/images/docs-indexes.png)
 
 You can also view the overall status of currently indexing docs from a hideable progress bar at the bottom of the chat page
 
-![Documentation indexing peek](/img/docs-indexing-peek.png)
+![Documentation indexing peek](/images/docs-indexing-peek.png)
 
 You can also use the following IDE command to force a re-index of all docs: `Continue: Docs Force Re-Index`.
 
@@ -354,7 +355,6 @@ The following configuration example includes:
     - title: My Private Docs
       startUrl: http://10.2.1.2/docs
       faviconUrl: http://10.2.1.2/docs/assets/favicon.ico
-      maxDepth: 4
       useLocalCrawling: true
   ```
   </Tab>
@@ -401,4 +401,4 @@ The following configuration example includes:
   </Tab>
 </Tabs>
 
-{/* This could also involve enabling Chromium as a backup for local documentation the [User Settings Page](../deep-dives/settings.md). */}
+This setup could also involve enabling Chromium as a backup for local documentation through the [User Settings Page](../settings).

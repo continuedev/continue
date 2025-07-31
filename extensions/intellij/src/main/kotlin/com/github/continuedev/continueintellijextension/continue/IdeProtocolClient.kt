@@ -6,14 +6,15 @@ import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.protocol.*
-import com.github.continuedev.continueintellijextension.services.*
-import com.github.continuedev.continueintellijextension.utils.*
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
+import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -21,7 +22,10 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.ToolWindowManager
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
@@ -192,11 +196,6 @@ class IdeProtocolClient(
                         respond(tags)
                     }
 
-                    "getWorkspaceConfigs" -> {
-                        val configs = ide.getWorkspaceConfigs()
-                        respond(configs)
-                    }
-
                     "getTerminalContents" -> {
                         val contents = ide.getTerminalContents()
                         respond(contents)
@@ -323,7 +322,11 @@ class IdeProtocolClient(
                     }
 
                     "runCommand" -> {
-                        // Running commands not yet supported in JetBrains
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            RunCommandParams::class.java
+                        )
+                        ide.runCommand(params.command, params.options)
                         respond(null)
                     }
 
@@ -470,7 +473,7 @@ class IdeProtocolClient(
                 }
             } catch (exception: Exception) {
                 val exceptionMessage = "Error handling message of type $messageType: $exception"
-                service<ContinueErrorService>().report(exception, exceptionMessage)
+                service<ContinueSentryService>().report(exception, exceptionMessage)
                 ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }

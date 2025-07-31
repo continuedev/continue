@@ -121,6 +121,7 @@ export function PromptsSection() {
     } else {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
+        element: { sourceFile: (prompt as any).sourceFile },
       });
     }
   };
@@ -149,7 +150,6 @@ export function PromptsSection() {
         index = index + 1;
       }
     }
-
     return promptsWithSlug.sort((a, b) => {
       const aBookmarked = isCommandBookmarked(a.name);
       const bBookmarked = isCommandBookmarked(b.name);

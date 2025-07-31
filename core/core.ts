@@ -354,7 +354,10 @@ export class Core {
     });
 
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(msg.data.profileId);
+      await this.configHandler.openConfigProfile(
+        msg.data.profileId,
+        msg.data?.element,
+      );
     });
 
     on("config/reload", async (msg) => {
@@ -402,11 +405,18 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      let url = `${env.APP_URL}${msg.data.path}`;
+      const urlPath = msg.data.path.startsWith("/")
+        ? msg.data.path.slice(1)
+        : msg.data.path;
+      let url = `${env.APP_URL}${urlPath}`;
       if (msg.data.orgSlug) {
         url += `?org=${msg.data.orgSlug}`;
       }
       await this.messenger.request("openUrl", url);
+    });
+
+    on("controlPlane/getEnvironment", async (msg) => {
+      return await getControlPlaneEnv(this.ide.getIdeSettings());
     });
 
     on("controlPlane/getFreeTrialStatus", async (msg) => {
@@ -598,6 +608,7 @@ export class Core {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
         msg.data,
         undefined,
+        { withChain: false },
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });
@@ -755,6 +766,9 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
+      console.log("deleteChain called from files/closed");
+      await NextEditProvider.getInstance().deleteChain();
+
       try {
         const fileUris = await this.ide.getOpenFiles();
         if (fileUris) {

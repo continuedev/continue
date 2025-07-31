@@ -67,7 +67,7 @@ class Mistral extends OpenAI {
     return Mistral.modelConversion[model] ?? model;
   }
 
-  protected _convertArgs(options: any, messages: ChatMessage[]) {
+  _convertArgs(options: any, messages: ChatMessage[]) {
     const finalOptions = super._convertArgs(options, messages);
 
     const lastMessage = finalOptions.messages[finalOptions.messages.length - 1];
