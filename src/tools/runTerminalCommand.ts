@@ -18,6 +18,24 @@ export const runTerminalCommandTool: Tool = {
     },
   },
   readonly: false,
+  isBuiltIn: true,
+  preprocess: async (args) => {
+    const command = args.command;
+    if (!command || typeof command !== "string") {
+      throw new Error("command arg is required and must be a non-empty string");
+    }
+    const truncatedCmd =
+      command.length > 60 ? command.substring(0, 60) + "..." : command;
+    return {
+      args,
+      preview: [
+        {
+          type: "text",
+          content: `Will run: ${truncatedCmd}`,
+        },
+      ],
+    };
+  },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
       const child = spawn("sh", ["-c", command]);

@@ -30,6 +30,22 @@ export const searchCodeTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
+  preprocess: async (args) => {
+    const truncatedPattern =
+      args.pattern.length > 50
+        ? args.pattern.substring(0, 50) + "..."
+        : args.pattern;
+    return {
+      args,
+      preview: [
+        {
+          type: "text",
+          content: `Will search for: "${truncatedPattern}"`,
+        },
+      ],
+    };
+  },
   run: async (args: {
     pattern: string;
     path?: string;
@@ -56,7 +72,9 @@ export const searchCodeTool: Tool = {
         }
 
         if (!stdout.trim()) {
-          return `No matches found for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}.`;
+          return `No matches found for pattern "${args.pattern}"${
+            args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
+          }.`;
         }
 
         // Split the results into lines and limit the number of results
@@ -65,20 +83,28 @@ export const searchCodeTool: Tool = {
         const limitedLines = lines.slice(0, DEFAULT_MAX_RESULTS);
         const resultText = limitedLines.join("\n");
 
-        const truncationMessage = truncated 
-          ? `\n\n[Results truncated: showing ${DEFAULT_MAX_RESULTS} of ${lines.length} matches]` 
+        const truncationMessage = truncated
+          ? `\n\n[Results truncated: showing ${DEFAULT_MAX_RESULTS} of ${lines.length} matches]`
           : "";
 
-        return `Search results for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}:\n\n${resultText}${truncationMessage}`;
+        return `Search results for pattern "${args.pattern}"${
+          args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
+        }:\n\n${resultText}${truncationMessage}`;
       } catch (error: any) {
         if (error.code === 1) {
-          return `No matches found for pattern "${args.pattern}"${args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""}.`;
+          return `No matches found for pattern "${args.pattern}"${
+            args.file_pattern ? ` in files matching "${args.file_pattern}"` : ""
+          }.`;
         }
 
-        return `Error executing ripgrep: ${error instanceof Error ? error.message : String(error)}`;
+        return `Error executing ripgrep: ${
+          error instanceof Error ? error.message : String(error)
+        }`;
       }
     } catch (error) {
-      return `Error searching code: ${error instanceof Error ? error.message : String(error)}`;
+      return `Error searching code: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
     }
   },
 };

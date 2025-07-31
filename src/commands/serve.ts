@@ -4,21 +4,30 @@ import express, { Request, Response } from "express";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
 import { promisify } from "util";
-import {
-  getAssistantSlug,
-} from "../auth/workos.js";
+import { getAssistantSlug } from "../auth/workos.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { saveSession } from "../session.js";
-import { getService, initializeServices, SERVICE_NAMES } from "../services/index.js";
-import { AuthServiceState, ConfigServiceState, ModelServiceState } from "../services/types.js";
-import { streamChatResponse, type StreamCallbacks } from "../streamChatResponse.js";
+import {
+  getService,
+  initializeServices,
+  SERVICE_NAMES,
+} from "../services/index.js";
+import {
+  AuthServiceState,
+  ConfigServiceState,
+  ModelServiceState,
+} from "../services/types.js";
+import {
+  streamChatResponse,
+  type StreamCallbacks,
+} from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import telemetryService from "../telemetry/telemetryService.js";
-import { getToolDisplayName } from "../tools.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
+import { getToolDisplayName } from "../tools/index.js";
 
 const execAsync = promisify(exec);
 
@@ -33,7 +42,6 @@ interface PendingPermission {
   requestId: string;
   timestamp: number;
 }
-
 
 interface ServerState {
   chatHistory: ChatCompletionMessageParam[];
@@ -89,15 +97,21 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   // Log configuration information
-  const organizationId = authState.organizationId || 'personal';
+  const organizationId = authState.organizationId || "personal";
   const assistantName = config.name;
   const assistantSlug = getAssistantSlug(authState.authConfig);
   const modelProvider = model.provider;
   const modelName = model.model;
-  
+
   console.log(chalk.blue(`\nConfiguration:`));
   console.log(chalk.dim(`  Organization: ${organizationId}`));
-  console.log(chalk.dim(`  Assistant: ${assistantName}${assistantSlug ? ` (${assistantSlug})` : ''}`));
+  console.log(
+    chalk.dim(
+      `  Assistant: ${assistantName}${
+        assistantSlug ? ` (${assistantSlug})` : ""
+      }`
+    )
+  );
   console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
   if (options.config) {
     console.log(chalk.dim(`  Config file: ${options.config}`));
@@ -177,31 +191,31 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     state.lastActivity = Date.now();
 
     const { requestId, approved } = req.body;
-    
+
     if (!state.pendingPermission) {
       return res.status(400).json({ error: "No pending permission request" });
     }
-    
+
     if (state.pendingPermission.requestId !== requestId) {
       return res.status(400).json({ error: "Invalid request ID" });
     }
-    
+
     // Remove the permission request message
     const lastMsg = state.displayMessages[state.displayMessages.length - 1];
     if (lastMsg && lastMsg.messageType === "tool-permission-request") {
       state.displayMessages.pop();
     }
-    
+
     // Send the permission response to the toolPermissionManager
     if (approved) {
       toolPermissionManager.approveRequest(requestId);
     } else {
       toolPermissionManager.rejectRequest(requestId);
     }
-    
+
     // Clear pending permission state
     state.pendingPermission = null;
-    
+
     res.json({
       success: true,
       approved,
@@ -290,15 +304,21 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
-      chalk.dim("  POST /message    - Send a message (body: { message: string })")
+      chalk.dim(
+        "  POST /message    - Send a message (body: { message: string })"
+      )
     );
     console.log(
-      chalk.dim("  POST /permission - Approve/reject tool (body: { requestId, approved })")
+      chalk.dim(
+        "  POST /permission - Approve/reject tool (body: { requestId, approved })"
+      )
     );
     console.log(
       chalk.dim("  GET  /diff       - Get git diff against main branch")
     );
-    console.log(chalk.dim("  POST /exit       - Gracefully shut down the server"));
+    console.log(
+      chalk.dim("  POST /exit       - Gracefully shut down the server")
+    );
     console.log(
       chalk.dim(
         `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
