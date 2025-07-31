@@ -3,7 +3,10 @@ import {
   ArrowPathIcon,
   CircleStackIcon,
   CommandLineIcon,
+  GlobeAltIcon,
   InformationCircleIcon,
+  ShieldCheckIcon,
+  ShieldExclamationIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
@@ -14,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateConfig } from "../../../../../redux/slices/configSlice";
 import { fontSize } from "../../../../../util";
 import { ToolTip } from "../../../../gui/Tooltip";
+import { Button } from "../../../../ui";
 import EditBlockButton from "../../EditBlockButton";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
 
@@ -29,8 +33,9 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const promptsTooltipId = `${server.id}-prompts`;
   const resourcesTooltipId = `${server.id}-resources`;
   const errorsTooltipId = `${server.id}-errors`;
+  const mcpAuthTooltipId = `${server.id}-auth`;
 
-  async function onRefresh() {
+  const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
     // optimistic config update
     dispatch(
       updateConfig({
@@ -39,23 +44,37 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
           s.id === server.id
             ? {
                 ...s,
-                status: "connecting",
+                status,
               }
             : s,
         ),
       }),
     );
+  };
+
+  const onAuthenticate = async () => {
+    updateMCPServerStatus("authenticating");
+    await ideMessenger.request("mcp/startAuthentication", server);
+  };
+
+  const onRemoveAuth = async () => {
+    updateMCPServerStatus("authenticating");
+    await ideMessenger.request("mcp/removeAuthentication", server);
+  };
+
+  const onRefresh = async () => {
+    updateMCPServerStatus("connecting");
     ideMessenger.post("mcp/reloadServer", {
       id: server.id,
     });
-  }
+  };
 
   return (
     <div
       style={{
         fontSize: fontSize(-2),
       }}
-      className="flex flex-row items-center justify-between gap-3"
+      className={`flex flex-row items-center justify-between gap-3 ${server.status === "authenticating" ? "my-0.5" : ""}`}
     >
       <div className="flex flex-row items-center gap-3">
         {/* Name and Status */}
@@ -130,8 +149,43 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
       </div>
 
-      {/* Refresh button */}
       <div className="flex items-center gap-2">
+        {server.isProtectedResource && (
+          <>
+            <div
+              className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
+              data-tooltip-id={mcpAuthTooltipId}
+            >
+              {server.status === "error" ? (
+                <ShieldExclamationIcon className="h-3 w-3" />
+              ) : server.status === "authenticating" ? (
+                <GlobeAltIcon className="animate-spin-slow h-3 w-3" />
+              ) : (
+                <ShieldCheckIcon className="h-3 w-3" />
+              )}
+            </div>
+            <ToolTip
+              place="left"
+              delayHide={2000}
+              hidden={server.status === "authenticating"}
+              id={mcpAuthTooltipId}
+            >
+              <div className="pointer-events-auto">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={
+                    server.status === "connected"
+                      ? onRemoveAuth
+                      : onAuthenticate
+                  }
+                >
+                  {server.status === "error" ? "Authenticate" : "Logout"}
+                </Button>
+              </div>
+            </ToolTip>
+          </>
+        )}
         <EditBlockButton
           blockType={"mcpServers"}
           block={serverFromYaml}
