@@ -769,7 +769,6 @@ describe("streamResponseThunk", () => {
       "session/streamUpdate",
       "session/streamUpdate",
       "session/addPromptCompletionPair",
-      "session/setInactive",
       "session/setToolGenerated",
       "chat/callTool/pending",
       "session/setToolCallCalling",
@@ -956,7 +955,6 @@ describe("streamResponseThunk", () => {
           },
           {
             contextItems: [],
-            isGatheringContext: false,
             message: {
               content: "I'll search the codebase for you.",
               id: expect.any(String),

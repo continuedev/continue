@@ -581,7 +581,6 @@ describe("streamResponseThunk - tool calls", () => {
           },
           {
             contextItems: [],
-            isGatheringContext: false,
             message: {
               content: "I'll search the codebase for you.",
               id: expect.any(String),
