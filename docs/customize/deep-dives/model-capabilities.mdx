@@ -159,44 +159,38 @@ Remember: The capabilities field completely overrides autodetection. If you set 
 
 This matrix shows which popular models support various Continue features. Continue auto-detects these capabilities, but you can override them if needed.
 
-### OpenAI / Azure
+### OpenAI
 
 | Model         | Chat | Apply | Edit | Tool Use | Image Input |
 | :------------ | ---- | ----- | ---- | -------- | ----------- |
+| o3            | ✅   | ✅    | ✅   | ✅       | ❌          |
+| o3-mini       | ✅   | ✅    | ✅   | ✅       | ❌          |
 | GPT-4o        | ✅   | ✅    | ✅   | ✅       | ✅          |
 | GPT-4 Turbo   | ✅   | ✅    | ✅   | ✅       | ✅          |
 | GPT-4         | ✅   | ✅    | ✅   | ✅       | ❌          |
 | GPT-3.5 Turbo | ✅   | ✅    | ✅   | ❌       | ❌          |
-| O3-mini       | ✅   | ✅    | ✅   | ✅       | ❌          |
 
 ### Anthropic
 
-| Model             | Chat | Apply | Edit | Tool Use | Image Input |
-| :---------------- | ---- | ----- | ---- | -------- | ----------- |
-| Claude 4 Opus     | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 4 Sonnet   | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3.5 Sonnet | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3.5 Haiku  | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3 Opus     | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3 Sonnet   | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3 Haiku    | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Model              | Chat | Apply | Edit | Tool Use | Image Input |
+| :----------------- | ---- | ----- | ---- | -------- | ----------- |
+| Claude 4 Sonnet ⭐ | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3.5 Sonnet  | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Claude 3.5 Haiku   | ✅   | ✅    | ✅   | ✅       | ✅          |
 
 ### Google
 
 | Model            | Chat | Apply | Edit | Tool Use | Image Input |
 | :--------------- | ---- | ----- | ---- | -------- | ----------- |
+| Gemini 2.5 Pro   | ✅   | ✅    | ✅   | ✅       | ✅          |
 | Gemini 2.0 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Gemini 1.5 Pro   | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Gemini 1.5 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
 
 ### Mistral
 
-| Model          | Chat | Apply | Edit | Tool Use | Image Input |
-| :------------- | ---- | ----- | ---- | -------- | ----------- |
-| Mistral Large  | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Mistral Medium | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Mistral Small  | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Codestral      | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Model           | Chat | Apply | Edit | Tool Use | Image Input |
+| :-------------- | ---- | ----- | ---- | -------- | ----------- |
+| Devstral Medium | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Mistral         | ✅   | ✅    | ✅   | ✅       | ❌          |
 
 ### DeepSeek
 
@@ -206,24 +200,60 @@ This matrix shows which popular models support various Continue features. Contin
 | DeepSeek Coder V2 | ✅   | ✅    | ✅   | ✅       | ❌          |
 | DeepSeek Chat     | ✅   | ✅    | ✅   | ✅       | ❌          |
 
+### xAI
+
+| Model  | Chat | Apply | Edit | Tool Use | Image Input |
+| :----- | ---- | ----- | ---- | -------- | ----------- |
+| Grok 4 | ✅   | ✅    | ✅   | ✅       | ✅          |
+
+### Moonshot AI
+
+| Model   | Chat | Apply | Edit | Tool Use | Image Input |
+| :------ | ---- | ----- | ---- | -------- | ----------- |
+| Kimi K2 | ✅   | ✅    | ✅   | ✅       | ✅          |
+
+### Qwen
+
+| Model             | Chat | Apply | Edit | Tool Use | Image Input |
+| :---------------- | ---- | ----- | ---- | -------- | ----------- |
+| Qwen Coder 3 480B | ✅   | ✅    | ✅   | ✅       | ❌          |
+
 ### Ollama (Local Models)
 
 | Model          | Chat | Apply | Edit | Tool Use | Image Input |
 | :------------- | ---- | ----- | ---- | -------- | ----------- |
+| Qwen 3 Coder   | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Devstral Small | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Llama 3.1      | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Llama 3        | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Mistral        | ✅   | ✅    | ✅   | ✅       | ❌          |
 | Codestral      | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Qwen 2.5 Coder | ✅   | ✅    | ✅   | ✅       | ❌          |
-| LLaVA          | ✅   | ✅    | ✅   | ❌       | ✅          |
+| Gemma 3 4B     | ✅   | ✅    | ✅   | ✅       | ❌          |
+
+### Apply Models (Specialized)
+
+| Model                | Provider | Apply |
+| :------------------- | -------- | ----- |
+| Morph v3             | MorphLLM | ✅    |
+| Relace Instant Apply | Relace   | ✅    |
+
+### Autocomplete Models (Specialized)
+
+| Model                  | Provider       | Autocomplete |
+| :--------------------- | -------------- | ------------ |
+| Codestral ⭐           | Mistral        | ✅           |
+| Mercury Coder Small ⭐ | Inception Labs | ✅           |
+| Qwen 2.5 Coder 1.5B ⭐ | Ollama         | ✅           |
 
 ### Notes
 
 - **Chat**: Basic conversation and code generation
 - **Apply**: Applying code changes to files
 - **Edit**: Editing existing code
-- **Tool Use**: Function calling for Agent mode
+- **Tool Use**: Function calling for Agent mode (required for Agent mode)
 - **Image Input**: Processing screenshots and images
+- **⭐**: Recommended model for this feature
+- **Autocomplete**: Code completion (separate from chat models)
 
 ---
 
