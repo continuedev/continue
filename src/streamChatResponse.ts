@@ -239,7 +239,7 @@ async function processStreamingResponse(
         hasToolCalls = true;
         for (const toolCallDelta of choice.delta.tool_calls) {
           let toolCallId: string | undefined;
-          
+
           // If we have an ID, use it and map the index
           if (toolCallDelta.id) {
             toolCallId = toolCallDelta.id;
@@ -250,12 +250,14 @@ async function processStreamingResponse(
             // No ID, but we have an index - look up the ID from our map
             toolCallId = indexToIdMap.get(toolCallDelta.index);
           }
-          
+
           if (!toolCallId) {
-            logger.warn("Tool call delta without ID or valid index mapping", { toolCallDelta });
+            logger.warn("Tool call delta without ID or valid index mapping", {
+              toolCallDelta,
+            });
             continue;
           }
-          
+
           // Create tool call entry if it doesn't exist
           if (!toolCallsMap.has(toolCallId)) {
             toolCallsMap.set(toolCallId, {
@@ -478,7 +480,6 @@ export async function streamChatResponse(
             arguments: toolCall.arguments,
           });
 
-
           // Notify tool start immediately - before permission check
           // This ensures the UI shows the tool call even if it's rejected
           if (callbacks?.onToolStart) {
@@ -490,6 +491,23 @@ export async function streamChatResponse(
           if (permissionCheck.permission === "allow") {
             approved = true;
           } else if (permissionCheck.permission === "ask") {
+            // In headless mode, exit immediately with instructions
+            const tool = BUILTIN_TOOLS.find((t) => t.name === toolCall.name);
+            const toolName = tool?.displayName || toolCall.name;
+            if (isHeadless) {
+              console.error(
+                `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`
+              );
+              console.error(
+                `If you want to allow this tool, use --allow ${toolName}.`
+              );
+              console.error(
+                `If you don't want the tool to be included, use --exclude ${toolName}.`
+              );
+
+              process.exit(1);
+            }
+
             // Request permission from user
             if (callbacks?.onToolPermissionRequest) {
               // Use the proper toolPermissionManager API
@@ -497,7 +515,7 @@ export async function streamChatResponse(
                 name: toolCall.name,
                 arguments: toolCall.arguments,
               };
-              
+
               // Set up listener for permissionRequested event
               const handlePermissionRequested = (event: {
                 requestId: string;
@@ -516,17 +534,16 @@ export async function streamChatResponse(
                   );
                 }
               };
-              
+
               toolPermissionManager.on(
                 "permissionRequested",
                 handlePermissionRequested
               );
-              
+
               // Request permission using the proper API
-              const permissionResult = await toolPermissionManager.requestPermission(
-                toolCallRequest
-              );
-              
+              const permissionResult =
+                await toolPermissionManager.requestPermission(toolCallRequest);
+
               approved = permissionResult.approved;
             } else {
               // Fallback: deny if no UI callback available
