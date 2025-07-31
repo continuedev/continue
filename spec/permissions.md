@@ -85,19 +85,22 @@ This file should be created the first time that the CLI starts.
 
 ## Headless mode permissions
 
-When running in headless mode (using the `-p` or `--print` flag), the CLI uses different default policies designed for non-interactive usage:
+When running in headless mode (using the `-p` or `--print` flag), the CLI uses the same default policies as normal mode, but with different behavior for tools that require confirmation:
 
-- **Normal mode**: Write operations and terminal commands require confirmation (`ask`)
-- **Headless mode**: All tools are allowed by default (`*: allow`)
+- **Normal mode**: Write operations and terminal commands require confirmation (`ask`) - user is prompted
+- **Headless mode**: Same default policies, but tools requiring confirmation (`ask`) will cause the process to exit with an error message
 
-This behavior can still be overridden using the standard precedence rules. For example:
+To use tools that normally require confirmation in headless mode, you must explicitly allow them:
 
 ```bash
-# Headless mode with full access (default)
-cn -p "Write a hello world script"
+# Headless mode with explicit permissions for write operations
+cn -p --allow write_file "Write a hello world script"
+
+# Headless mode with wildcard permission (allow all tools)  
+cn -p --allow "*" "Write and run a script"
 
 # Headless mode with specific restrictions
-cn -p --exclude Write "Clean up the codebase"
+cn -p --exclude run_terminal_command "Clean up the codebase"
 ```
 
-The headless default policies are defined in [`src/permissions/defaultPolicies.ts`](../src/permissions/defaultPolicies.ts) as `HEADLESS_TOOL_POLICIES`.
+This approach ensures that headless mode is secure by default while providing clear guidance on how to enable the needed permissions.

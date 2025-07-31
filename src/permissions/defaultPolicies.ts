@@ -27,11 +27,3 @@ export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
   { tool: "*", permission: "ask" },
 ];
 
-/**
- * Headless mode permission policies where all tools are allowed by default.
- * Used when running with the "-p" flag for full access without prompts.
- */
-export const HEADLESS_TOOL_POLICIES: ToolPermissionPolicy[] = [
-  // Allow all tools by default in headless mode
-  { tool: "*", permission: "allow" },
-];
