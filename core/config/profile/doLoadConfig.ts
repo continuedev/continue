@@ -169,7 +169,7 @@ export default async function doLoadConfig(options: {
       const providerTitle = provider.description.title;
       const shownWarnings =
         globalContext.get("shownDeprecatedProviderWarnings") ?? {};
-      if (true) {
+      if (!shownWarnings[providerTitle]) {
         void ide.showToast("warning", provider.deprecationMessage);
         globalContext.update("shownDeprecatedProviderWarnings", {
           ...shownWarnings,
