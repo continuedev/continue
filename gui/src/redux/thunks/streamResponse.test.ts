@@ -1575,7 +1575,30 @@ describe("streamResponseThunk", () => {
 
     // Verify IDE messenger was called for compilation but not streaming
     expect(mockIdeMessenger.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [{ role: "user", content: "Hello" }],
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              text: "Hello",
+              type: "text",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              text: "Hello, please help me with this code",
+              type: "text",
+            },
+          ],
+        },
+      ],
       options: {},
     });
     expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
@@ -1586,10 +1609,39 @@ describe("streamResponseThunk", () => {
       session: {
         history: [
           {
+            contextItems: [],
+            message: {
+              content: "Hello",
+              id: "1",
+              role: "user",
+            },
+          },
+          {
             appliedRules: [],
             contextItems: [],
+            editorState: {
+              type: "doc",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Hello, please help me with this code" }],
+                },
+              ],
+            },
+            message: {
+              content: "Hello, please help me with this code",
+              id: "mock-uuid-123",
+              role: "user",
+            },
+          },
+          {
+            contextItems: [],
             isGatheringContext: false,
-            message: { id: "1", role: "user", content: "Hello" },
+            message: {
+              content: "",
+              id: "mock-uuid-123",
+              role: "assistant",
+            },
           },
         ],
         hasReasoningEnabled: false,
@@ -1600,7 +1652,7 @@ describe("streamResponseThunk", () => {
         contextPercentage: 0, // Unchanged - no successful compilation
         isPruned: false, // Unchanged - no successful compilation
         isInEdit: false,
-        title: "",
+        title: "New Session",
         lastSessionId: undefined,
         isSessionMetadataLoading: false,
         allSessionMetadata: [],
