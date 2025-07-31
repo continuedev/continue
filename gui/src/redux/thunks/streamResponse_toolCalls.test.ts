@@ -80,7 +80,7 @@ function setupTest() {
     selectedContextItems: [],
     selectedCode: [],
     content: "Hello, please help me with this code",
-    legacyCommandWithInput: null,
+    legacyCommandWithInput: undefined,
   });
 
   // Mock getBaseSystemMessage to return simple system message for readable tests
