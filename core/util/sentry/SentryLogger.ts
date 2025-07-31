@@ -1,3 +1,4 @@
+import { Extras } from "@sentry/core";
 import * as Sentry from "@sentry/node";
 import os from "node:os";
 import { IdeInfo } from "../../index.js";
@@ -235,5 +236,34 @@ export function captureException(error: Error, context?: Record<string, any>) {
     scope.captureException(error);
   } catch (e) {
     console.error(`Failed to capture exception to Sentry: ${e}`);
+  }
+}
+
+/**
+ * Capture a structured log message and send it to Sentry
+ *
+ * @param message The log message
+ * @param level The severity level (default: 'info')
+ * @param context Additional context information
+ */
+export function captureLog(
+  message: string,
+  level: Sentry.SeverityLevel = "info",
+  context?: Extras,
+) {
+  const scope = SentryLogger.lazyScope;
+  if (!scope) {
+    return;
+  }
+
+  try {
+    // Add context to scope if provided
+    if (context) {
+      scope.setExtras(context);
+    }
+    // Use scope's captureMessage to avoid global state
+    scope.captureMessage(message, level);
+  } catch (e) {
+    console.error(`Failed to capture log to Sentry: ${e}`);
   }
 }

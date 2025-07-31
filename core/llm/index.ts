@@ -7,7 +7,7 @@ import {
   constructLlmApi,
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
-import { captureException } from "../util/sentry/SentryLogger";
+import { captureException, captureLog } from "../util/sentry/SentryLogger";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
 import { DataLogger } from "../data/log.js";
@@ -451,14 +451,6 @@ export abstract class BaseLLM implements ILLM {
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-    captureException(new Error("FETCH_TEST_ERROR"), {
-      context: "llm_fetch",
-      url: String("FETCH_TEST_ERROR"),
-      method: init?.method || "GET",
-      model: this.model,
-      provider: this.providerName,
-    });
-
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
       try {
