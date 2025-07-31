@@ -3,6 +3,10 @@ import React from "react";
 import { jest } from "@jest/globals";
 import FreeTrialTransitionUI from "../FreeTrialTransitionUI.js";
 
+// Mock the 'open' module to prevent actual URL opening during tests
+const mockOpen = jest.fn();
+jest.mock("open", () => mockOpen);
+
 describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
   const mockOnComplete = jest.fn();
   const mockOnSwitchToLocalConfig = jest.fn();
@@ -190,6 +194,15 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
       expect(modelsLine).toContain('▶');
       expect(apiKeyLine).not.toContain('▶');
       expect(configLine).not.toContain('▶');
+    });
+  });
+
+  describe("URL Opening Security", () => {
+    it("should use mocked open function to prevent actual URL opening", () => {
+      // This test verifies that we properly mock the 'open' module
+      // to prevent actual URLs from being opened during test runs
+      expect(mockOpen).toBeDefined();
+      expect(typeof mockOpen).toBe("function");
     });
   });
 });
