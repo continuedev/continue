@@ -3,9 +3,9 @@ import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
 import { MCPServiceWrapper } from "./MCPServiceWrapper.js";
+import { modeService } from "./ModeService.js";
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { ToolPermissionService } from "./ToolPermissionService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -20,7 +20,6 @@ const configService = new ConfigService();
 const modelService = new ModelService();
 const apiClientService = new ApiClientService();
 const mcpServiceWrapper = new MCPServiceWrapper();
-const toolPermissionService = new ToolPermissionService();
 
 /**
  * Initialize all services and register them with the service container
@@ -28,19 +27,38 @@ const toolPermissionService = new ToolPermissionService();
 export async function initializeServices(options: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
-  // Handle tool permissions specially for immediate availability
+  // Initialize mode service with tool permission overrides
   if (options.toolPermissionOverrides) {
-    // Initialize synchronously and register the value immediately
-    const permissionState = toolPermissionService.initializeSync(options.toolPermissionOverrides);
-    serviceContainer.registerValue(SERVICE_NAMES.TOOL_PERMISSIONS, permissionState);
-  } else {
-    // Register normal factory for lazy initialization
-    serviceContainer.register(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      () => toolPermissionService.initialize(),
-      []
-    );
+    const overrides = { ...options.toolPermissionOverrides };
+    
+    // Convert mode to boolean flags for ModeService
+    const initArgs: Parameters<typeof modeService.initialize>[0] = {
+      allow: overrides.allow,
+      ask: overrides.ask,
+      exclude: overrides.exclude
+    };
+    
+    // Only set the boolean flag that corresponds to the mode
+    if (overrides.mode === "plan") {
+      initArgs.readonly = true;
+    } else if (overrides.mode === "auto") {
+      initArgs.auto = true;
+    }
+    // If mode is "normal" or undefined, no flags are set
+    
+    modeService.initialize(initArgs);
   }
+  
+  // Always register a factory that returns the current state from modeService
+  // This ensures the service container always has the latest mode state
+  serviceContainer.register(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
+    async () => {
+      // Always return the current state from the global mode service
+      return modeService.getToolPermissionService().getState();
+    },
+    []
+  );
 
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
@@ -200,7 +218,7 @@ export const services = {
   model: modelService,
   apiClient: apiClientService,
   mcp: mcpServiceWrapper,
-  toolPermissions: toolPermissionService,
+  mode: modeService,
 } as const;
 
 // Export the service container for advanced usage

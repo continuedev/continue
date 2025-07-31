@@ -18,7 +18,7 @@ import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
-import { BaseCommandOptions } from "./BaseCommandOptions.js";
+import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**
  * Processes and validates JSON output for headless mode
@@ -43,7 +43,7 @@ function processJsonOutput(response: string): string {
   }
 }
 
-export interface ChatOptions extends BaseCommandOptions {
+export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
   rule?: string[]; // Array of rule specifications
@@ -137,6 +137,14 @@ async function runHeadlessMode(
   options: ChatOptions
 ): Promise<void> {
   // Initialize services for headless mode
+  // Convert legacy flags to mode
+  let mode: any = undefined;
+  if (options.readonly) {
+    mode = "plan";
+  } else if (options.auto) {
+    mode = "auto";
+  }
+
   await initializeServices({
     configPath: options.config,
     rules: options.rule,
@@ -145,6 +153,7 @@ async function runHeadlessMode(
       allow: options.allow,
       ask: options.ask,
       exclude: options.exclude,
+      mode: mode,
     },
   });
 
@@ -218,11 +227,20 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       // Show ASCII art and version for TUI mode
       console.log(CONTINUE_ASCII_ART);
 
+      // Convert legacy flags to mode for TUI
+      let mode: any = undefined;
+      if (options.readonly) {
+        mode = "plan";
+      } else if (options.auto) {
+        mode = "auto";
+      }
+
       // Start TUI immediately - it will handle service loading
       await startTUIChat(prompt, options.resume, options.config, options.rule, {
         allow: options.allow,
         ask: options.ask,
         exclude: options.exclude,
+        mode: mode,
       });
       return;
     }

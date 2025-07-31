@@ -12,14 +12,14 @@ import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
 import {
   type Tool,
-  type ToolParameters,
   type ToolCall,
+  type ToolParameters,
   PreprocessedToolCall,
 } from "./types.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
-export type { Tool, ToolParameters, ToolCall };
+export type { Tool, ToolCall, ToolParameters };
 
 const ALL_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
@@ -35,16 +35,9 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
 ];
 
 export const BUILTIN_TOOLS: Tool[] = (() => {
-  const args = parseArgs();
-
-  if (args.noTools) {
-    return [];
-  }
-
-  if (args.readonly) {
-    return ALL_BUILTIN_TOOLS.filter((tool) => tool.readonly === true);
-  }
-
+  // Note: Tool filtering is now handled by the permission system
+  // This just returns all available tools, and the filtering happens
+  // at tool call time based on the current mode
   return ALL_BUILTIN_TOOLS;
 })();
 
@@ -97,35 +90,22 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
 export async function getAvailableTools() {
   const args = parseArgs();
 
-  let mcpTools: Tool[] = [];
-
-  // Don't load MCP tools if no-tools mode is enabled
-  if (!args.noTools) {
-    mcpTools =
-      MCPService.getInstance()
-        ?.getTools()
-        .map((t) => ({
-          name: t.name,
-          displayName: t.name.replace("mcp__", "").replace("ide__", ""),
-          description: t.description ?? "",
-          parameters: convertInputSchemaToParameters(t.inputSchema),
-          readonly: undefined, // MCP tools don't have readonly property, so we include them in readonly mode
-          isBuiltIn: false,
-          run: async (args: any) => {
-            const result = await MCPService.getInstance()?.runTool(
-              t.name,
-              args
-            );
-            return JSON.stringify(result?.content) ?? "";
-          },
-        })) || [];
-
-    // Filter MCP tools in readonly mode - include them since they don't have readonly property
-    if (args.readonly) {
-      // MCP tools are included in readonly mode since they don't have an explicit readonly property
-      // This is a design decision - you may want to exclude them entirely or handle them differently
-    }
-  }
+  // Load MCP tools
+  const mcpTools: Tool[] =
+    MCPService.getInstance()
+      ?.getTools()
+      .map((t) => ({
+        name: t.name,
+        displayName: t.name.replace("mcp__", "").replace("ide__", ""),
+        description: t.description ?? "",
+        parameters: convertInputSchemaToParameters(t.inputSchema),
+        readonly: undefined, // MCP tools don't have readonly property
+        isBuiltIn: false,
+        run: async (args: any) => {
+          const result = await MCPService.getInstance()?.runTool(t.name, args);
+          return JSON.stringify(result?.content) ?? "";
+        },
+      })) || [];
 
   const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
   return allTools;

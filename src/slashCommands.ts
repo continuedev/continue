@@ -129,6 +129,7 @@ export async function handleSlashCommands(
         // Open model selector UI
         return { openModelSelector: true };
 
+
       case "org":
         posthogService.capture("useSlashCommand", {
           name: "org",
