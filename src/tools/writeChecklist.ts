@@ -2,7 +2,7 @@ import type { Tool } from "./types.js";
 
 export const writeChecklistTool: Tool = {
   name: "write_checklist",
-  displayName: "Update Task List",
+  displayName: "Checklist",
   description:
     "Create or update a task checklist. The old checklist can be seen in the chat history if it exists. Use this tool to write a new checklist or edit the existing one.",
   readonly: false,

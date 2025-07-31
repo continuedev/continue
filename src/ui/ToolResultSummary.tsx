@@ -1,8 +1,8 @@
 import { Box, Text } from "ink";
 import path from "path";
 import React from "react";
-import { ColoredDiff } from "./ColoredDiff.js";
 import { getToolDisplayName } from "../tools/index.js";
+import { ColoredDiff } from "./ColoredDiff.js";
 import { ChecklistDisplay } from "./components/ChecklistDisplay.js";
 
 interface ToolResultSummaryProps {
@@ -41,7 +41,10 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   }
 
   // Handle write_file with diff specially
-  if (toolName === "write_file" && content.includes("Diff:\n")) {
+  if (
+    (toolName === "write_file" || toolName === "edit_file") &&
+    content.includes("Diff:\n")
+  ) {
     const diffSection = content.split("Diff:\n")[1];
     if (diffSection) {
       return (
@@ -127,6 +130,11 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         return content.includes("Successfully created file")
           ? "File created successfully"
           : "File written successfully";
+
+      case "edit_file":
+        return content.includes("Successfully edited file")
+          ? "File edited successfully"
+          : "File edited successfully";
 
       case "list_files":
         return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;

@@ -13,7 +13,6 @@ const TOOL_NAME_MAPPINGS: Record<string, string> = {
   Exit: "exit",
   Diff: "view_diff",
   Edit: "edit_file",
-  "Update Task List": "write_checklist",
   Checklist: "write_checklist",
 
   // Common variations (case insensitive)
@@ -78,7 +77,7 @@ export function getDisplayName(normalizedName: string): string {
     fetch: "Fetch",
     exit: "Exit",
     view_diff: "Diff",
-    write_checklist: "Update Task List",
+    write_checklist: "Checklist",
   };
 
   return reverseMapping[normalizedName] || normalizedName;
