@@ -1,11 +1,7 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
-import { initializeServices } from './index.js';
-import { ModeService } from './ModeService.js';
+import { jest } from '@jest/globals';
 
-// Mock dependencies
-jest.mock('./ServiceRegistry.js');
-jest.mock('./ToolPermissionService.js');
-jest.mock('../util/logger.js');
+import { initializeServices } from './index.js';
+import { modeService } from './ModeService.js';
 
 describe('initializeServices', () => {
   let mockModeService: any;
@@ -20,8 +16,9 @@ describe('initializeServices', () => {
       getCurrentMode: jest.fn()
     };
     
-    // Set up getInstance to return our mock
-    (ModeService.getInstance as jest.Mock).mockReturnValue(mockModeService);
+    // Set up modeService mock
+    (modeService as any).initialize = mockModeService.initialize;
+    (modeService as any).getCurrentMode = mockModeService.getCurrentMode;
   });
 
   afterEach(() => {
