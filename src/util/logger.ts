@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 import crypto from 'crypto';
+import sentryService from '../sentry.js';
 
 const { combine, timestamp, printf, errors } = winston.format;
 
@@ -72,14 +73,20 @@ export function setLogLevel(level: string) {
 export default {
   debug: (message: string, meta?: any) => logger.debug(message, meta),
   info: (message: string, meta?: any) => logger.info(message, meta),
-  warn: (message: string, meta?: any) => logger.warn(message, meta),
+  warn: (message: string, meta?: any) => {
+    logger.warn(message, meta);
+    sentryService.captureMessage(message, "warning", meta);
+  },
   error: (message: string, error?: Error | any, meta?: any) => {
     if (error instanceof Error) {
       logger.error(message, { ...meta, error: error.message, stack: error.stack });
+      sentryService.captureException(error, { message, ...meta });
     } else if (error) {
       logger.error(message, { ...meta, error });
+      sentryService.captureMessage(`${message}: ${String(error)}`, "error", meta);
     } else {
       logger.error(message, meta);
+      sentryService.captureMessage(message, "error", meta);
     }
   },
   setLevel: setLogLevel,
