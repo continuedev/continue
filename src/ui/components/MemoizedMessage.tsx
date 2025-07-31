@@ -24,8 +24,9 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
           );
 
         case "tool-result":
-          const isFailure = message.toolResult?.includes("Permission denied") || 
-                           message.toolResult?.includes("Error executing tool");
+          const isFailure =
+            message.toolResult?.startsWith("Permission denied") ||
+            message.toolResult?.startsWith("Error");
           return (
             <Box key={index} marginBottom={1} flexDirection="column">
               <Box>
@@ -50,7 +51,6 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               <Text color="red">Tool error: {message.content}</Text>
             </Box>
           );
-
 
         default:
           return (
