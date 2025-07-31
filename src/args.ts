@@ -8,8 +8,7 @@ export interface CommandLineArgs {
   configPath?: string;
   prompt?: string; // Optional prompt argument
   resume?: boolean; // Resume from last session
-  readonly?: boolean; // Only allow readonly tools
-  noTools?: boolean; // Disable all tools
+  readonly?: boolean; // Start in plan mode (backward compatibility)
   rules?: string[]; // Array of rule specifications
   format?: 'json'; // Output format for headless mode
 }
@@ -133,9 +132,6 @@ export function parseArgs(): CommandLineArgs {
     result.readonly = true;
   }
 
-  if (args.includes("--no-tools")) {
-    result.noTools = true;
-  }
 
   // Get format from --format flag
   const formatIndex = args.indexOf("--format");

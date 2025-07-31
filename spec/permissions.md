@@ -41,13 +41,12 @@ Each of the `--allow`, `--ask`, and `--exclude` flags allow you to set the permi
 # Allow Read, Ask Write, and Exclude Bash
 cn --allow Read --ask Write --exclude Bash
 
-# Start in plan mode (readonly tools only) 
+# Start in plan mode (read-only tools only) 
 cn --readonly "Help me understand this codebase"
 
 # Use mode switching during chat
 cn "Let me work on this feature"  # Starts in normal mode
-# Then use Shift+Tab or /plan to switch to planning mode
-# Use /auto to switch to auto mode for full automation
+# Then use Shift+Tab to cycle through modes
 ```
 
 ## `config.yaml` / Configuration (implement later)

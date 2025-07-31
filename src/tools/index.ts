@@ -112,34 +112,24 @@ export async function executeToolCall(toolCall: {
 
   const args = parseArgs();
 
-  let mcpTools: Tool[] = [];
-
-  // Don't load MCP tools if no-tools mode is enabled
-  if (!args.noTools) {
-    mcpTools =
-      MCPService.getInstance()
-        ?.getTools()
-        .map((t) => ({
-          name: t.name,
-          displayName: t.name.replace("mcp__", "").replace("ide__", ""),
-          description: t.description ?? "",
-          parameters: convertInputSchemaToParameters(t.inputSchema),
-          readonly: undefined, // MCP tools don't have readonly property, so we include them in readonly mode
-          run: async (args: any) => {
-            const result = await MCPService.getInstance()?.runTool(
-              t.name,
-              args
-            );
-            return JSON.stringify(result?.content) ?? "";
-          },
-        })) || [];
-
-    // Filter MCP tools in readonly mode - include them since they don't have readonly property
-    if (args.readonly) {
-      // MCP tools are included in readonly mode since they don't have an explicit readonly property
-      // This is a design decision - you may want to exclude them entirely or handle them differently
-    }
-  }
+  // Load MCP tools
+  const mcpTools: Tool[] =
+    MCPService.getInstance()
+      ?.getTools()
+      .map((t) => ({
+        name: t.name,
+        displayName: t.name.replace("mcp__", "").replace("ide__", ""),
+        description: t.description ?? "",
+        parameters: convertInputSchemaToParameters(t.inputSchema),
+        readonly: undefined, // MCP tools don't have readonly property
+        run: async (args: any) => {
+          const result = await MCPService.getInstance()?.runTool(
+            t.name,
+            args
+          );
+          return JSON.stringify(result?.content) ?? "";
+        },
+      })) || [];
 
   const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
 

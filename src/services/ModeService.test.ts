@@ -88,14 +88,12 @@ describe('ModeService', () => {
 
     it('should return all available modes with descriptions', () => {
       const modes = modeService.getAvailableModes();
-      expect(modes).toHaveLength(5);
+      expect(modes).toHaveLength(3);
       
       const modeNames = modes.map(m => m.mode);
       expect(modeNames).toContain('normal');
       expect(modeNames).toContain('plan');
       expect(modeNames).toContain('auto');
-      expect(modeNames).toContain('readonly');
-      expect(modeNames).toContain('no-tools');
       
       // Check that all modes have descriptions
       modes.forEach(mode => {

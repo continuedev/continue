@@ -51,7 +51,7 @@ export default {
     },
     {
       displayName: "unit",
-      testMatch: ["<rootDir>/src/**/*.test.ts"],
+      testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
       testPathIgnorePatterns: ["<rootDir>/src/e2e/"],
       transform: {
         "\\.[jt]sx?$": ["ts-jest", { useESM: true }],

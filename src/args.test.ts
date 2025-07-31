@@ -45,11 +45,6 @@ describe("parseArgs", () => {
     expect(result.readonly).toBe(true);
   });
 
-  it("should set noTools to true when --no-tools flag is present", () => {
-    process.argv = ["node", "script.js", "--no-tools"];
-    const result = parseArgs();
-    expect(result.noTools).toBe(true);
-  });
 
   it("should parse config path from --config flag", () => {
     process.argv = ["node", "script.js", "--config", "/path/to/config.yaml"];
@@ -220,11 +215,11 @@ describe("parseArgs", () => {
     });
   });
 
-  it("should handle flags with similar names", () => {
-    process.argv = ["node", "script.js", "--no-tools", "--readonly"];
+  it("should handle multiple boolean flags", () => {
+    process.argv = ["node", "script.js", "--readonly", "--resume"];
     const result = parseArgs();
-    expect(result.noTools).toBe(true);
     expect(result.readonly).toBe(true);
+    expect(result.resume).toBe(true);
   });
 
   it("should handle multiple rules with complex combinations", () => {

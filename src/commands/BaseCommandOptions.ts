@@ -20,8 +20,6 @@ export interface BaseCommandOptions {
 export interface ExtendedCommandOptions extends BaseCommandOptions {
   /** Enable verbose logging */
   verbose?: boolean;
-  /** Only allow readonly tools */
+  /** Start in plan mode (backward compatibility) */
   readonly?: boolean;
-  /** Disable all tools */
-  noTools?: boolean;
 }
