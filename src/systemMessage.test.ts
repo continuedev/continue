@@ -101,4 +101,29 @@ Rule 3: Third rule`;
     expect(result).toContain("AGENTS.md");
     expect(result).toContain("</context>");
   });
+
+  it("should add headless mode instructions when headless is true", async () => {
+    const result = await constructSystemMessage("", undefined, undefined, true);
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).toContain("IMPORTANT: You are running in headless mode");
+    expect(result).toContain("Provide ONLY your final answer");
+    expect(result).toContain("Do not include explanations, reasoning, or additional commentary");
+  });
+
+  it("should not add headless mode instructions when headless is false", async () => {
+    const result = await constructSystemMessage("", undefined, undefined, false);
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).not.toContain("IMPORTANT: You are running in headless mode");
+    expect(result).not.toContain("Provide ONLY your final answer");
+  });
+
+  it("should not add headless mode instructions when headless is undefined", async () => {
+    const result = await constructSystemMessage("");
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).not.toContain("IMPORTANT: You are running in headless mode");
+    expect(result).not.toContain("Provide ONLY your final answer");
+  });
 });

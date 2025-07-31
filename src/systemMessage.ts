@@ -98,12 +98,14 @@ ${getGitStatus()}
  * @param rulesSystemMessage - The rules system message from the assistant
  * @param additionalRules - Additional rules from --rule flags
  * @param format - Output format for headless mode
+ * @param headless - Whether running in headless mode
  * @returns The comprehensive system message with base message and rules section
  */
 export async function constructSystemMessage(
   rulesSystemMessage: string,
   additionalRules?: string[],
-  format?: "json"
+  format?: "json",
+  headless?: boolean
 ): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
@@ -140,6 +142,13 @@ export async function constructSystemMessage(
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
+
+  // In headless mode, add instructions to be concise and only provide final answers
+  if (headless) {
+    systemMessage += `
+
+IMPORTANT: You are running in headless mode. Provide ONLY your final answer to the user's question. Do not include explanations, reasoning, or additional commentary unless specifically requested. Be direct and concise.`;
+  }
 
   // Add JSON formatting instructions if format is json
   if (format === "json") {

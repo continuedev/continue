@@ -381,6 +381,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 toolName={activePermissionRequest.toolName}
                 toolArgs={activePermissionRequest.toolArgs}
                 requestId={activePermissionRequest.requestId}
+                toolCallPreview={activePermissionRequest.toolCallPreview}
                 onResponse={handleToolPermissionResponse}
               />
             ) : (

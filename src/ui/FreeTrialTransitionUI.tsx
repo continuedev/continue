@@ -4,7 +4,7 @@ import open from "open";
 import * as os from "os";
 import * as path from "path";
 import React, { useState } from "react";
-import * as YAML from "yaml";
+import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
 import { env } from "../env.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
@@ -25,60 +25,12 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  const newModel = {
-    uses: "anthropic/claude-4-sonnet",
-    with: {
-      ANTHROPIC_API_KEY: apiKey,
-    },
-  };
-
-  if (fs.existsSync(CONFIG_PATH)) {
-    const existingContent = fs.readFileSync(CONFIG_PATH, "utf8");
-    let config;
-
-    try {
-      config = YAML.parse(existingContent);
-
-      // Make sure models array exists
-      if (!config.models) {
-        config.models = [];
-      }
-
-      // Check if model already exists
-      const existingModelIndex = config.models.findIndex(
-        (model: any) => model.uses === "anthropic/claude-4-sonnet"
-      );
-
-      if (existingModelIndex >= 0) {
-        // Update existing model
-        config.models[existingModelIndex].with.ANTHROPIC_API_KEY = apiKey;
-      } else {
-        // Add new model
-        config.models.push(newModel);
-      }
-    } catch (error) {
-      // If parsing fails, create a new config
-      config = {
-        name: "Local Config",
-        version: "1.0.0",
-        schema: "v1",
-        models: [newModel],
-      };
-    }
-
-    // Write back to file
-    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
-  } else {
-    // Create new config file
-    const config = {
-      name: "Local Config",
-      version: "1.0.0",
-      schema: "v1",
-      models: [newModel],
-    };
-
-    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
-  }
+  const existingContent = fs.existsSync(CONFIG_PATH) 
+    ? fs.readFileSync(CONFIG_PATH, "utf8")
+    : "";
+    
+  const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
+  fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
 
 const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({

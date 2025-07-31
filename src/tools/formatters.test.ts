@@ -1,9 +1,8 @@
 import { jest } from "@jest/globals";
-import { formatToolCall, formatToolArgument } from "./formatters.js";
+import { formatToolArgument } from "./formatters.js";
+import { formatToolCall } from "./index.js";
 
 describe("formatToolCall", () => {
-  const originalCwd = process.cwd();
-
   beforeEach(() => {
     // Mock process.cwd to return a consistent value
     jest.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
@@ -16,8 +15,7 @@ describe("formatToolCall", () => {
   it("should format tool name without arguments", () => {
     expect(formatToolCall("write_file")).toBe("Write");
     expect(formatToolCall("read_file", {})).toBe("Read");
-    // edit_file doesn't exist, so it returns the original name
-    expect(formatToolCall("edit_file", null)).toBe("edit_file");
+    expect(formatToolCall("non_existent_tool", null)).toBe("non_existent_tool");
   });
 
   it("should format tool name with relative path argument", () => {
@@ -31,9 +29,11 @@ describe("formatToolCall", () => {
 
   it("should convert absolute paths to relative paths", () => {
     expect(
-      formatToolCall("write_file", { filepath: "/Users/test/project/README.md" })
+      formatToolCall("write_file", {
+        filepath: "/Users/test/project/README.md",
+      })
     ).toBe("Write(README.md)");
-    
+
     expect(
       formatToolCall("read_file", {
         filepath: "/Users/test/project/src/components/App.tsx",
@@ -79,7 +79,9 @@ describe("formatToolArgument", () => {
   });
 
   it("should convert absolute paths to relative", () => {
-    expect(formatToolArgument("/Users/test/project/README.md")).toBe("README.md");
+    expect(formatToolArgument("/Users/test/project/README.md")).toBe(
+      "README.md"
+    );
     expect(formatToolArgument("/Users/test/project/src/index.ts")).toBe(
       "src/index.ts"
     );

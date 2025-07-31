@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import React, { useEffect, useState, useRef } from "react";
-import { glob } from "glob";
+import { glob, GlobOptionsWithFileTypesFalse } from "glob";
+import { isGitRepo } from "../util/git.js";
 
 interface FileSearchUIProps {
   filter: string;
@@ -25,13 +26,14 @@ const initializeCache = async (): Promise<void> => {
   if (cacheInitialized) {
     return;
   }
-  
+
   if (cacheInitializationPromise) {
     return cacheInitializationPromise;
   }
-  
+
   cacheInitializationPromise = (async () => {
     try {
+      const inGitRepo = isGitRepo();
       // Use a single, more efficient pattern
       const patterns = [
         "**/*.{ts,tsx,js,jsx,py,java,cpp,c,h,hpp,cs,go,rs,rb,php,swift,kt,scala,md,json,yaml,yml,xml,html,css,scss,sass,less,sql,sh,dockerfile,makefile,cmake,gradle,toml,ini,env,txt,log}",
@@ -47,72 +49,58 @@ const initializeCache = async (): Promise<void> => {
         "**/.env*",
       ];
 
-      const allMatches: string[] = [];
-      
-      // Use Promise.all for parallel glob searches
-      const results = await Promise.all(
-        patterns.map(pattern => 
-          glob(pattern, {
-            ignore: [
-              "**/node_modules/**",
-              "**/dist/**",
-              "**/build/**",
-              "**/out/**",
-              "**/target/**",
-              "**/.git/**",
-              "**/.vscode/**",
-              "**/.idea/**",
-              "**/coverage/**",
-              "**/*.min.js",
-              "**/*.min.css",
-              "**/*.bundle.js",
-              "**/*.bundle.css",
-              "**/.DS_Store",
-              "**/Thumbs.db",
-              "**/*.log",
-              "**/*.tmp",
-              "**/*.temp",
-              "**/*.swp",
-              "**/*.swo",
-              "**/*.bak",
-              "**/*.orig",
-              "**/*.rej",
-              "**/*.pyc",
-              "**/*.pyo",
-              "**/*.class",
-              "**/*.o",
-              "**/*.obj",
-              "**/*.exe",
-              "**/*.dll",
-              "**/*.so",
-              "**/*.dylib",
-              "**/*.a",
-              "**/*.lib",
-              "**/*.jar",
-              "**/*.war",
-              "**/*.ear",
-              "**/*.zip",
-              "**/*.tar.gz",
-              "**/*.tgz",
-              "**/*.rar",
-              "**/*.7z",
-            ],
-            dot: true,
-            absolute: false,
-          })
-        )
-      );
-
-      // Flatten and deduplicate results
-      for (const matches of results) {
-        // Handle case where glob might return undefined
-        if (matches) {
-          allMatches.push(...matches);
-        }
-      }
+      const allMatches = await throttledGlob(patterns, {
+        maxDepth: inGitRepo ? 15 : 3,
+        ignore: [
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**",
+          "**/out/**",
+          "**/target/**",
+          "**/.git/**",
+          "**/.vscode/**",
+          "**/.idea/**",
+          "**/coverage/**",
+          "**/*.min.js",
+          "**/*.min.css",
+          "**/*.bundle.js",
+          "**/*.bundle.css",
+          "**/.DS_Store",
+          "**/Thumbs.db",
+          "**/*.log",
+          "**/*.tmp",
+          "**/*.temp",
+          "**/*.swp",
+          "**/*.swo",
+          "**/*.bak",
+          "**/*.orig",
+          "**/*.rej",
+          "**/*.pyc",
+          "**/*.pyo",
+          "**/*.class",
+          "**/*.o",
+          "**/*.obj",
+          "**/*.exe",
+          "**/*.dll",
+          "**/*.so",
+          "**/*.dylib",
+          "**/*.a",
+          "**/*.lib",
+          "**/*.jar",
+          "**/*.war",
+          "**/*.ear",
+          "**/*.zip",
+          "**/*.tar.gz",
+          "**/*.tgz",
+          "**/*.rar",
+          "**/*.7z",
+        ],
+        dot: true,
+        absolute: false,
+      });
 
       const uniqueFiles = [...new Set(allMatches)];
-      
+
       allFiles = uniqueFiles.map((path) => ({
         path,
         displayName: path,
@@ -123,7 +111,7 @@ const initializeCache = async (): Promise<void> => {
       console.error("Error initializing file cache:", error);
     }
   })();
-  
+
   return cacheInitializationPromise;
 };
 
@@ -142,15 +130,15 @@ const filterFiles = (filterText: string): FileItem[] => {
     // Show most recently modified files when no filter
     return allFiles
       .sort((a, b) => {
-        const aFileName = a.path.split('/').pop() || a.path;
-        const bFileName = b.path.split('/').pop() || b.path;
+        const aFileName = a.path.split("/").pop() || a.path;
+        const bFileName = b.path.split("/").pop() || b.path;
         return aFileName.localeCompare(bFileName);
       })
       .slice(0, 10);
   }
 
   const lowerFilter = filterText.toLowerCase();
-  
+
   // Check cache first
   const cacheKey = lowerFilter;
   if (fileCache.has(cacheKey)) {
@@ -165,23 +153,23 @@ const filterFiles = (filterText: string): FileItem[] => {
       );
     })
     .sort((a, b) => {
-      const aFileName = a.path.split('/').pop() || a.path;
-      const bFileName = b.path.split('/').pop() || b.path;
-      
+      const aFileName = a.path.split("/").pop() || a.path;
+      const bFileName = b.path.split("/").pop() || b.path;
+
       // Prioritize exact matches in file name
       const aNameMatch = aFileName.toLowerCase().includes(lowerFilter);
       const bNameMatch = bFileName.toLowerCase().includes(lowerFilter);
-      
+
       if (aNameMatch && !bNameMatch) return -1;
       if (!aNameMatch && bNameMatch) return 1;
-      
+
       // Then prioritize files that start with the filter
       const aStartsWith = aFileName.toLowerCase().startsWith(lowerFilter);
       const bStartsWith = bFileName.toLowerCase().startsWith(lowerFilter);
-      
+
       if (aStartsWith && !bStartsWith) return -1;
       if (!aStartsWith && bStartsWith) return 1;
-      
+
       // Finally, sort by file name
       return aFileName.localeCompare(bFileName);
     })
@@ -189,7 +177,7 @@ const filterFiles = (filterText: string): FileItem[] => {
 
   // Cache the result
   fileCache.set(cacheKey, filteredFiles);
-  
+
   // Limit cache size
   if (fileCache.size > 100) {
     const firstKey = fileCache.keys().next().value;
@@ -220,7 +208,7 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
 
       const filteredFiles = filterFiles(filter);
       setFiles(filteredFiles);
-      
+
       if (onFilesUpdated) {
         onFilesUpdated(filteredFiles);
       }
@@ -270,3 +258,42 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
 };
 
 export default FileSearchUI;
+
+export async function throttledGlob(
+  patterns: string[],
+  options: GlobOptionsWithFileTypesFalse,
+  batchSize = 100,
+  delay = 20
+): Promise<string[]> {
+  return new Promise<string[]>((resolve, reject) => {
+    const allMatches: string[] = [];
+    let processed = 0;
+
+    // Combine all patterns into a single glob stream using brace expansion
+    // This is more efficient than running separate glob operations
+    const globStream = glob.stream(patterns, options);
+
+    globStream.on("data", (file: string) => {
+      allMatches.push(file);
+      processed++;
+
+      // Pause the stream periodically to give other processes a chance
+      if (processed % batchSize === 0) {
+        if (globStream.emittedEnd) {
+          return;
+        }
+        globStream.pause();
+
+        setTimeout(() => {
+          if (globStream.emittedEnd) {
+            return;
+          }
+          globStream.resume();
+        }, delay); // Short pause
+      }
+    });
+
+    globStream.on("end", () => resolve(allMatches));
+    globStream.on("error", (err) => reject(err));
+  });
+}

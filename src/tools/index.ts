@@ -1,22 +1,29 @@
 import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
-import { modeService } from "../services/ModeService.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
+import { formatToolArgument } from "./formatters.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
+import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
-import { type Tool, type ToolParameters } from "./types.js";
+import {
+  type Tool,
+  type ToolCall,
+  type ToolParameters,
+  PreprocessedToolCall,
+} from "./types.js";
 import { writeFileTool } from "./writeFile.js";
 
-export type { Tool, ToolParameters };
+export type { Tool, ToolCall, ToolParameters };
 
 const ALL_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
+  searchAndReplaceInFileTool,
   listFilesTool,
   searchCodeTool,
   runTerminalCommandTool,
@@ -35,32 +42,6 @@ export const BUILTIN_TOOLS: Tool[] = (() => {
 export function getToolDisplayName(toolName: string): string {
   const tool = BUILTIN_TOOLS.find((t) => t.name === toolName);
   return tool?.displayName || toolName;
-}
-
-export function getToolsDescription(): string {
-  return BUILTIN_TOOLS.map((tool) => {
-    const params = Object.entries(tool.parameters)
-      .map(
-        ([name, param]) =>
-          `    "${name}": { "type": "${param.type}", "description": "${param.description}", "required": ${param.required} }`
-      )
-      .join(",\n");
-
-    return `{
-  "name": "${tool.name}",
-  "description": "${tool.description}",
-  "parameters": {
-    "type": "object",
-    "properties": {
-${params}
-    },
-    "required": [${Object.entries(tool.parameters)
-      .filter(([_, param]) => param.required)
-      .map(([name]) => `"${name}"`)
-      .join(", ")}]
-}
-}`;
-  }).join(",\n");
 }
 
 export function extractToolCalls(
@@ -104,12 +85,7 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
   return parameters;
 }
 
-export async function executeToolCall(toolCall: {
-  name: string;
-  arguments: Record<string, any>;
-}): Promise<string> {
-  const startTime = Date.now();
-
+export async function getAvailableTools() {
   const args = parseArgs();
 
   // Load MCP tools
@@ -122,42 +98,21 @@ export async function executeToolCall(toolCall: {
         description: t.description ?? "",
         parameters: convertInputSchemaToParameters(t.inputSchema),
         readonly: undefined, // MCP tools don't have readonly property
+        isBuiltIn: false,
         run: async (args: any) => {
-          const result = await MCPService.getInstance()?.runTool(
-            t.name,
-            args
-          );
+          const result = await MCPService.getInstance()?.runTool(t.name, args);
           return JSON.stringify(result?.content) ?? "";
         },
       })) || [];
 
   const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
+  return allTools;
+}
 
-  const tool = allTools.find((t) => t.name === toolCall.name);
-
-  if (!tool) {
-    const duration = Date.now() - startTime;
-    telemetryService.logToolResult(
-      toolCall.name,
-      false,
-      duration,
-      `Tool "${toolCall.name}" not found`
-    );
-    return `Error: Tool "${toolCall.name}" not found`;
-  }
-
-  for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
-    if (
-      paramDef.required &&
-      (toolCall.arguments[paramName] === undefined ||
-        toolCall.arguments[paramName] === null)
-    ) {
-      const duration = Date.now() - startTime;
-      const error = `Required parameter "${paramName}" missing for tool "${toolCall.name}"`;
-      telemetryService.logToolResult(toolCall.name, false, duration, error);
-      return `Error: ${error}`;
-    }
-  }
+export async function executeToolCall(
+  toolCall: PreprocessedToolCall
+): Promise<string> {
+  const startTime = Date.now();
 
   try {
     logger.debug("Executing tool", {
@@ -165,7 +120,11 @@ export async function executeToolCall(toolCall: {
       arguments: toolCall.arguments,
     });
 
-    const result = await tool.run(toolCall.arguments);
+    // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
+    // Preprocessed arg names may be different
+    const result = await toolCall.tool.run(
+      toolCall.preprocessResult?.args ?? toolCall.arguments
+    );
     const duration = Date.now() - startTime;
 
     telemetryService.logToolResult(
@@ -200,4 +159,38 @@ export async function executeToolCall(toolCall: {
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }
+}
+
+export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
+  for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
+    if (
+      paramDef.required &&
+      (toolCall.arguments[paramName] === undefined ||
+        toolCall.arguments[paramName] === null)
+    ) {
+      throw new Error(
+        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`
+      );
+    }
+  }
+}
+
+/**
+ * Formats a tool call with its arguments for display
+ * @param toolName The name of the tool
+ * @param args The tool arguments
+ * @returns A formatted string like "ToolName(arg)" or just "ToolName" if no args
+ */
+export function formatToolCall(toolName: string, args?: any): string {
+  const displayName = getToolDisplayName(toolName);
+
+  if (!args || Object.keys(args).length === 0) {
+    return displayName;
+  }
+
+  // Get the first argument value
+  const firstValue = Object.values(args)[0];
+  const formattedValue = formatToolArgument(firstValue);
+
+  return `${displayName}(${formattedValue})`;
 }

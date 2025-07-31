@@ -140,5 +140,48 @@ describe("precedenceResolver", () => {
       const readPolicy = policies.find(p => p.tool === "read_file");
       expect(readPolicy).toBeDefined();
     });
+
+    describe("precedence rules", () => {
+      it("should use default policies when no other sources provided", () => {
+        const policies = resolvePermissionPrecedence({
+          useDefaults: true,
+          personalSettings: false,
+        });
+
+        expect(policies).toEqual(DEFAULT_TOOL_POLICIES);
+      });
+
+      it("should allow CLI flags to override default policies", () => {
+        const policies = resolvePermissionPrecedence({
+          commandLineFlags: {
+            exclude: ["write_file"],
+          },
+          useDefaults: true,
+          personalSettings: false,
+        });
+
+        // CLI exclusion should come first
+        expect(policies[0]).toEqual({ tool: "write_file", permission: "exclude" });
+        // Default policies should follow
+        expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
+      });
+
+      it("should allow config policies to override defaults", () => {
+        const configPolicies: ToolPermissionPolicy[] = [
+          { tool: "run_terminal_command", permission: "allow" },
+        ];
+
+        const policies = resolvePermissionPrecedence({
+          configPermissions: configPolicies,
+          useDefaults: true,
+          personalSettings: false,
+        });
+
+        // Config policy should override default
+        expect(policies[0]).toEqual({ tool: "run_terminal_command", permission: "allow" });
+        // Default policies should follow  
+        expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
+      });
+    });
   });
 });

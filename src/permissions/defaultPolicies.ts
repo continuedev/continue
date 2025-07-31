@@ -26,3 +26,4 @@ export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
   // Default fallback - ask for any unmatched tools
   { tool: "*", permission: "ask" },
 ];
+
