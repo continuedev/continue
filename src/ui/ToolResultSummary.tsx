@@ -51,7 +51,11 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         <Box flexDirection="column">
           <Box>
             <Text color="gray">⎿ </Text>
-            <Text color="green"> File written successfully</Text>
+            <Text color="green">
+              {toolName === "edit_file"
+                ? " File edited successfully"
+                : " File written successfully"}
+            </Text>
           </Box>
           <ColoredDiff diffContent={diffSection} />
         </Box>
