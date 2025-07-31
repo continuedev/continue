@@ -1,6 +1,6 @@
 package com.github.continuedev.continueintellijextension.auth
 
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -90,7 +90,7 @@ class ContinueAuthService {
             ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                 .handleUpdatedSessionInfo(sessionInfo)
         } catch (e: Exception) {
-            service<ContinueErrorService>().report(e, "Exception while refreshing token ${e.message}")
+            service<ContinueSentryService>().report(e, "Exception while refreshing token ${e.message}")
         }
     }
 
@@ -112,8 +112,10 @@ class ContinueAuthService {
         val jsonBody = gson.toJson(mapOf("refreshToken" to refreshToken))
         val url = getControlPlaneUrl() + "/auth/refresh"
         val response = HttpRequests.post(url, HttpRequests.JSON_CONTENT_TYPE)
-            .connect { connection -> connection.write(jsonBody.toByteArray()) }
-            .toString()
+            .connect {
+                connection -> connection.write(jsonBody.toByteArray())
+                connection.readString()
+            }
         return gson.fromJson(response, RefreshTokenResponse::class.java)
     }
 

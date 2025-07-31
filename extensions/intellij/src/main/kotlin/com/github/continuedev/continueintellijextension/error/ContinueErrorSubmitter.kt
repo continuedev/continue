@@ -23,10 +23,11 @@ class ContinueErrorSubmitter : ErrorReportSubmitter() {
         try {
             val event = events.filterIsInstance<IdeaReportingEvent>()
                 .firstOrNull() ?: return false
-            service<ContinueErrorService>().report(
+            service<ContinueSentryService>().report(
                 throwable = event.data.throwable,
                 message = additionalInfo ?: event.data.message,
-                attachments = event.data.allAttachments
+                attachments = event.data.allAttachments,
+                ignoreTelemetrySettings = true
             )
         } catch (_: Exception) {
             consumer.consume(SubmittedReportInfo(SubmissionStatus.FAILED))
