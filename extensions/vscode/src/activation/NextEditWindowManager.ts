@@ -8,6 +8,7 @@ import { CodeRenderer } from "core/codeRenderer/CodeRenderer";
 import { myersCharDiff } from "core/diff/myers";
 import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { getThemeString } from "../util/getTheme";
 
 export interface TextApplier {
@@ -198,10 +199,13 @@ export class NextEditWindowManager {
     await NextEditWindowManager.freeTabAndEsc();
 
     // Register HIDE_TOOLTIP_COMMAND and ACCEPT_NEXT_EDIT_COMMAND with their corresponding callbacks.
-    this.registerCommandSafely(
-      HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
-      async () => await this.hideAllNextEditWindowsAndResetCompletionId(),
-    );
+    this.registerCommandSafely(HIDE_NEXT_EDIT_SUGGESTION_COMMAND, async () => {
+      console.log(
+        "deleteChain from NextEditWindowManager.ts: hide next edit command",
+      );
+      NextEditProvider.getInstance().deleteChain();
+      await this.hideAllNextEditWindowsAndResetCompletionId();
+    });
     this.registerCommandSafely(
       ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
       async () => await this.acceptNextEdit(),
@@ -404,9 +408,9 @@ export class NextEditWindowManager {
       // Disable inline suggestions temporarily.
       // This prevents the race condition between vscode's inline completion provider
       // and the next edit window manager's cursor repositioning logic.
-      await vscode.workspace
-        .getConfiguration()
-        .update("editor.inlineSuggest.enabled", false, true);
+      // await vscode.workspace
+      //   .getConfiguration()
+      //   .update("editor.inlineSuggest.enabled", false, true);
     }
 
     if (success && this.finalCursorPos) {
@@ -417,10 +421,10 @@ export class NextEditWindowManager {
       );
     }
 
-    // Reenable inline suggestions.
-    await vscode.workspace
-      .getConfiguration()
-      .update("editor.inlineSuggest.enabled", true, true);
+    // Reenable inline suggestions after we move the cursor.
+    // await vscode.workspace
+    //   .getConfiguration()
+    //   .update("editor.inlineSuggest.enabled", true, true);
 
     // Log with accept = true.
     await vscode.commands.executeCommand(
@@ -839,6 +843,10 @@ export class NextEditWindowManager {
 
     // If all else fails, return a reasonable default
     return SVG_CONFIG.fontSize * 0.6;
+  }
+
+  public hasAccepted() {
+    return this.accepted;
   }
 }
 
