@@ -241,6 +241,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
     handleReload();
   };
 
+  const handleFreeTrialShowConfigSelector = () => {
+    setIsShowingFreeTrialTransition(false);
+    showConfigSelectorUI();
+  };
+
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
@@ -349,6 +354,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             onComplete={handleFreeTrialTransitionComplete}
             onSwitchToLocalConfig={handleFreeTrialSwitchToLocal}
             onFullReload={handleFreeTrialFullReload}
+            onShowConfigSelector={handleFreeTrialShowConfigSelector}
           />
         )}
 

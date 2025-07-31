@@ -10,6 +10,7 @@ import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { MCPService } from "./mcp.js";
+import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
@@ -83,18 +84,12 @@ export async function runOnboardingFlow(
     const apiKey = readlineSync.question(
       chalk.white("\nEnter your Anthropic API key: "),
       {
-        limit: /^sk-ant-.+$/, // Must start with "sk-ant-" and have additional characters
-        limitMessage: chalk.dim(
-          "Please enter a valid Anthropic key that starts with 'sk-ant'"
-        ),
         hideEchoBack: true,
       }
     );
 
-    if (!apiKey || !apiKey.startsWith("sk-ant-")) {
-      throw new Error(
-        "Invalid Anthropic API key. Please make sure it starts with 'sk-ant-'"
-      );
+    if (!isValidAnthropicApiKey(apiKey)) {
+      throw new Error(getApiKeyValidationError(apiKey));
     }
 
     await createOrUpdateConfig(apiKey);
