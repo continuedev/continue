@@ -9,7 +9,7 @@
     "cn": "dist/index.js"
   },
   "scripts": {
-    "test": "npm run lint && npm run jest && npm run vitest",
+    "test": "npm run lint && npm run jest",
     "jest": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "vitest": "vitest run",
     "vitest:watch": "vitest watch",

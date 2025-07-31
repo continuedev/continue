@@ -24,8 +24,8 @@ export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
  * Our starting point is heavily inspired by Cline's `replace_in_file` tool: https://github.com/cline/cline/blob/2709ccefcddc616e89a70962f017bcbbca1f17bf/src/core/prompts/system.ts#L87-L121
  */
 export const searchAndReplaceInFileTool: Tool = {
-  name: "search_and_replace_in_file",
-  displayName: "Search and Replace",
+  name: "edit_file",
+  displayName: "Edit",
   readonly: false,
   isBuiltIn: true,
   description: `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
