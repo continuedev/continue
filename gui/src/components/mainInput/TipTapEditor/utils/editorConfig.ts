@@ -38,7 +38,7 @@ export function getPlaceholderText(
   }
 
   return historyLength === 0
-    ? "Ask anything, '/' for prompts, '@' to add context"
+    ? "Ask anything, '@' to add context"
     : "Ask a follow-up";
 }
 

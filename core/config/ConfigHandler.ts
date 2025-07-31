@@ -461,7 +461,10 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: injectErrors ?? [],
+        errors: [
+          { message: "Current profile not found", fatal: true },
+          ...(injectErrors ?? []),
+        ],
         configLoadInterrupted: true,
       };
     }
@@ -530,7 +533,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
@@ -543,7 +546,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
