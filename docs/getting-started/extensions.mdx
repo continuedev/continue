@@ -1,0 +1,54 @@
+---
+title: "Understanding Assistants"
+description: "Continue offers two ways to configure your AI assistants"
+---
+
+### Hub Assistants
+
+When you [sign in to Continue Hub](https://auth.continue.dev/), you get access to pre-configured assistants that sync automatically across your IDE sessions. To learn more about all the features available in Continue Hub, check out our [hub introduction](/hub/introduction). These assistants are:
+
+- **Easy to set up** - Add an assistant from [hub.continue.dev](https://hub.continue.dev/explore/assistants) to your account
+- **Managed online** - Configure models, add secrets, and customize settings through the web interface
+- **Automatically synced** - Changes made on the hub reflect immediately in your IDE
+- **Shareable** - Create and share custom assistants with your team
+
+![nextjs assistant](/images/nextjs-assistant.png)
+
+To use Hub assistants:
+
+1. Click the assistant selector above the chat input in your IDE
+2. Browse available assistants or create your own
+3. Add API keys as [User Secrets](https://hub.continue.dev/settings/secrets) on the hub
+4. Click "Reload config" to sync changes
+
+### Local Assistants (config.yaml)
+
+For advanced users who prefer local control, Continue supports configuration through a `config.yaml` file in your `~/.continue` directory. Local assistants offer:
+
+- **Full control** - All configuration stored locally on your machine
+- **Version control friendly** - Check your config into git for team consistency
+- **Offline usage** - No internet required once models are configured
+- **Advanced customization** - Access to all configuration options
+
+To create a local assistant:
+
+1. Create a `config.yaml` file in `~/.continue` (see [config.yaml reference page](/reference))
+2. Configure your models, context providers, and other settings
+3. Access local assistants through the gear icon in the assistant selector
+
+## Which Should You Use?
+
+**Choose Hub assistants if you:**
+
+- Want the quickest setup experience
+- Prefer managing configuration through a web interface
+- Want access to hosted models-addon
+- Need to sync settings across multiple machines
+- Want access to pre-configured assistants from the community
+
+**Choose local config.yaml if you:**
+
+- Need version control for your configuration
+- Require advanced customization options
+- Want complete offline control
+- Prefer managing configuration as code
