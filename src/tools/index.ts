@@ -1,5 +1,6 @@
 import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
+import { modeService } from "../services/ModeService.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
 import { exitTool } from "./exit.js";
@@ -25,16 +26,9 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
 ];
 
 export const BUILTIN_TOOLS: Tool[] = (() => {
-  const args = parseArgs();
-
-  if (args.noTools) {
-    return [];
-  }
-
-  if (args.readonly) {
-    return ALL_BUILTIN_TOOLS.filter((tool) => tool.readonly === true);
-  }
-
+  // Note: Tool filtering is now handled by the permission system
+  // This just returns all available tools, and the filtering happens
+  // at tool call time based on the current mode
   return ALL_BUILTIN_TOOLS;
 })();
 

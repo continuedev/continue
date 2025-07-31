@@ -55,11 +55,18 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const port = parseInt(options.port || "8000", 10);
 
   // Initialize services with tool permission overrides
+  // Convert legacy flags to mode
+  let mode: any = undefined;
+  if (options.readonly) {
+    mode = "plan";
+  }
+
   await initializeServices({
     toolPermissionOverrides: {
       allow: options.allow,
       ask: options.ask,
       exclude: options.exclude,
+      mode: mode,
     },
     configPath: options.config,
     rules: options.rule,

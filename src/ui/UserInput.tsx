@@ -2,6 +2,9 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
 import { getAllSlashCommands } from "../commands/commands.js";
+import { modeService } from "../services/ModeService.js";
+import { reloadService, SERVICE_NAMES } from "../services/index.js";
+import type { PermissionMode } from "../permissions/types.js";
 import { InputHistory } from "../util/inputHistory.js";
 import FileSearchUI from "./FileSearchUI.js";
 import SlashCommandUI from "./SlashCommandUI.js";
@@ -60,6 +63,24 @@ const UserInput: React.FC<UserInputProps> = ({
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
     ];
+  };
+
+  // Cycle through permission modes
+  const cycleModes = async () => {
+    const modes: PermissionMode[] = ["normal", "plan", "auto"];
+    const currentMode = modeService.getCurrentMode();
+    const currentIndex = modes.indexOf(currentMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const nextMode = modes[nextIndex];
+    
+    modeService.switchMode(nextMode);
+    
+    // Reload the tool permissions service to ensure the service container has the latest state
+    await reloadService(SERVICE_NAMES.TOOL_PERMISSIONS);
+    
+    // Show a brief indicator of the mode change
+    // This will be reflected in the ModeIndicator component
+    return nextMode;
   };
 
   // Update slash command UI state based on input
@@ -223,6 +244,14 @@ const UserInput: React.FC<UserInputProps> = ({
     }
     if (key.ctrl && (input === "c" || input === "d")) {
       exit();
+      return;
+    }
+
+    // Handle Shift+Tab to cycle through modes
+    if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
+      cycleModes().catch(error => {
+        console.error("Failed to cycle modes:", error);
+      });
       return;
     }
 

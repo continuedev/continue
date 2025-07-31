@@ -3,7 +3,7 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { AuthConfig } from "../auth/workos.js";
 import { MCPService } from "../mcp.js";
-import { ToolPermissions } from "../permissions/types.js";
+import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
 /**
  * Service lifecycle states
@@ -59,6 +59,8 @@ export interface ApiClientServiceState {
 
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
+  currentMode: PermissionMode;
+  modePolicyCount?: number;
 }
 
 /**
@@ -84,5 +86,6 @@ export interface ServiceInitOptions {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
+    mode?: PermissionMode;
   };
 }

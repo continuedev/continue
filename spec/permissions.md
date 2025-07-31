@@ -12,10 +12,16 @@ To make sure that users can oversee the actions of the LLM, we implement a permi
 
 There is a default set of permissions for the builtin tools in [`src/permissions/defaultPolicies.ts`](../src/permissions/defaultPolicies.ts). But these policies can be overriden by multiple layers. The order of precedence is as follows, which the earlier items taking precedence:
 
-1. Command line flags
-2. Permissions in `config.yaml` / configuration
-3. Permissions in `~/.continue/permissions.yaml`
-4. Default policies
+1. **Mode policies** (highest priority - see [modes.md](./modes.md))
+2. Command line flags (`--allow`, `--ask`, `--exclude`)
+3. Permissions in `config.yaml` / configuration
+4. Permissions in `~/.continue/permissions.yaml`
+5. Default policies
+
+**Note:** Mode policies **completely override all other permission settings** in plan and auto modes. Available modes:
+- `normal`: No mode policies (uses existing configuration)
+- `plan`: **Absolute override** - excludes all write tools, allows only read tools (ignores user config)
+- `auto`: **Absolute override** - allows all tools without asking (ignores user config)
 
 ## Tool matching patterns
 
@@ -35,13 +41,13 @@ Each of the `--allow`, `--ask`, and `--exclude` flags allow you to set the permi
 # Allow Read, Ask Write, and Exclude Bash
 cn --allow Read --ask Write --exclude Bash
 
-# No tools except for Read
-cn --no-tools --allow Read
+# Start in plan mode (readonly tools only) 
+cn --readonly "Help me understand this codebase"
 
-# Ideas for later
-# cn --only Read
-
-# cn --mcp anthropic/filesystem --no-tools --allow anthropic/filesystem/read_file
+# Use mode switching during chat
+cn "Let me work on this feature"  # Starts in normal mode
+# Then use Shift+Tab or /plan to switch to planning mode
+# Use /auto to switch to auto mode for full automation
 ```
 
 ## `config.yaml` / Configuration (implement later)

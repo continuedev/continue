@@ -29,11 +29,6 @@ dotenv.config();
 export function getAllTools() {
   const args = parseArgs();
 
-  // If no-tools mode is enabled, return empty array
-  if (args.noTools) {
-    return [];
-  }
-
   // Get all available tool names
   const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
   const mcpToolNames =
@@ -71,7 +66,7 @@ export function getAllTools() {
     },
   }));
 
-  // Add filtered MCP tools if not in no-tools mode
+  // Add filtered MCP tools
   const mcpTools = MCPService.getInstance()?.getTools() ?? [];
   const allowedMcpTools = mcpTools.filter((tool) =>
     allowedToolNamesSet.has(tool.name)

@@ -1,5 +1,7 @@
 export type PermissionPolicy = "allow" | "ask" | "exclude";
 
+export type PermissionMode = "normal" | "plan" | "auto";
+
 export interface ToolPermissionPolicy {
   /** The tool name to match against */
   tool: string;

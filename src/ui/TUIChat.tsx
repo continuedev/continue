@@ -25,8 +25,11 @@ import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
 import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
+import ModeIndicator from "./components/ModeIndicator.js";
 import { getGitRemoteUrl, getRepoUrl, isGitRepo } from "../util/git.js";
 import useTerminalSize from "./hooks/useTerminalSize.js";
+import { modeService } from "../services/ModeService.js";
+import type { PermissionMode } from "../permissions/types.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -98,6 +101,23 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   // State for intro message display
   const [showIntroMessage, setShowIntroMessage] = useState(false);
+
+  // State for current mode (for hiding cwd in plan/auto modes)
+  const [currentMode, setCurrentMode] = useState<PermissionMode>(
+    modeService.getCurrentMode()
+  );
+
+  // Listen for mode changes to update UI
+  useEffect(() => {
+    const handleModeChange = (newMode: PermissionMode) => {
+      setCurrentMode(newMode);
+    };
+
+    modeService.on('modeChanged', handleModeChange);
+    return () => {
+      modeService.off('modeChanged', handleModeChange);
+    };
+  }, []);
 
   // Start file indexing as soon as the component mounts
   useEffect(() => {
@@ -384,10 +404,17 @@ const TUIChat: React.FC<TUIChatProps> = ({
           justifyContent="space-between"
           alignItems="center"
         >
-          <Box>
-            <Text color="dim" wrap="truncate-start">
-              {repoURlText}
-            </Text>
+          <Box flexDirection="row" alignItems="center">
+            {/* Only show cwd in normal mode to save space in plan/auto modes */}
+            {currentMode === 'normal' && (
+              <>
+                <Text color="dim" wrap="truncate-start">
+                  {repoURlText}
+                </Text>
+                <Text> </Text>
+              </>
+            )}
+            <ModeIndicator />
           </Box>
           <Box>
             {!isRemoteMode && services.model?.model && (
