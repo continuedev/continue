@@ -25,13 +25,17 @@ export const FatalErrorIndicator = () => {
   }
   return (
     <div
-      className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+      className="z-50 cursor-pointer bg-red-600 px-4 py-3 text-center text-white"
       role="alert"
       onClick={showLumpErrorSection}
     >
       <strong className="font-bold">Error!</strong>{" "}
       <span className="block sm:inline">Could not load config</span>
+      <div className="flex flex-row items-center gap-1.5">
       <div className="mt-2 underline">Learn More</div>
+      <SecondaryButton>Reload</SecondaryButton>
+      </div>
+
     </div>
   );
 };
