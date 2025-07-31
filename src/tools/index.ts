@@ -16,6 +16,7 @@ import {
   type ToolCall,
   PreprocessedToolCall,
 } from "./types.js";
+import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolParameters, ToolCall };
@@ -28,6 +29,7 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
   searchCodeTool,
   runTerminalCommandTool,
   fetchTool,
+  writeChecklistTool,
   // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
   ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
