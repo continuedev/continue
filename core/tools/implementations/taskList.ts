@@ -9,15 +9,6 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
 
   const { action } = args;
 
-  console.log(
-    "debug1 task list",
-    manager.list(),
-    "and action",
-    action,
-    "and session",
-    await extras.messenger?.request("getCurrentSessionId", undefined),
-  );
-
   switch (action) {
     case "add": {
       const taskId = manager.add(args.name, args.description);
@@ -29,11 +20,11 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
       break;
     }
     case "update": {
-      manager.update(args.taskId, args.name, args.description);
+      manager.update(args.task_id, args.name, args.description);
       contextItem = {
         name: "Update task",
         description: "Task was updated",
-        content: `Task updated with ID: ${args.taskId}`,
+        content: `Task updated with ID: ${args.task_id}`,
       };
       break;
     }
@@ -46,11 +37,11 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
       };
       break;
     }
-    case "runTask": {
-      const task = manager.getTaskById(args.taskId);
-      manager.setTaskStatus(task.id, TaskStatus.Completed);
+    case "run_task": {
+      const task = manager.getTaskById(args.task_id);
+      manager.setTaskStatus(task.task_id, TaskStatus.Completed);
       contextItem = {
-        name: "Start task",
+        name: "Run task",
         description: "Perform the following task operation",
         content: JSON.stringify(task, null, 2),
       };
@@ -58,12 +49,10 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
     }
     default: {
       throw new Error(
-        `Unknown task action: ${action}. Valid actions are: add, update, remove, list, start`,
+        `Unknown task action: ${action}. Valid actions are: add, list, update, remove, start, clear`,
       );
     }
   }
-
-  console.log("debug1 context item", contextItem);
 
   return [contextItem];
 };

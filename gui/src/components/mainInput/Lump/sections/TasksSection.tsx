@@ -2,6 +2,7 @@ import { TaskInfo } from "core";
 import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../../hooks/useWebviewListener";
+import { useAppSelector } from "../../../../redux/hooks";
 import { useFontSize } from "../../../ui/font";
 
 const TaskItem = ({ task }: { task: TaskInfo }) => {
@@ -51,20 +52,20 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
 export function TasksSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
+  const currentSessionId = useAppSelector((state) => state.session.id);
 
   useWebviewListener("taskEvent", async (taskEvent) => {
     setTasks(taskEvent.tasks);
   });
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    void (async () => {
       const response = await ideMessenger.request("taskList/list", undefined);
       if (response.status === "success") {
         setTasks(response.content);
       }
-    };
-    void fetchTasks();
-  }, [ideMessenger]);
+    })();
+  }, [currentSessionId]);
 
   return (
     <div className="mt-1 flex flex-col gap-2">
@@ -73,7 +74,7 @@ export function TasksSection() {
           <span className="text-gray-400">No tasks found</span>
         </div>
       ) : (
-        tasks.map((task) => <TaskItem key={task.id} task={task} />)
+        tasks.map((task) => <TaskItem key={task.task_id} task={task} />)
       )}
     </div>
   );

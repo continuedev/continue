@@ -14,7 +14,7 @@ export interface TaskEvent {
 }
 
 export class TaskManager {
-  private taskMap = new Map<TaskInfo["id"], TaskInfo>();
+  private taskMap = new Map<TaskInfo["task_id"], TaskInfo>();
 
   constructor(
     private messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -30,7 +30,7 @@ export class TaskManager {
   add(name: string, description: string) {
     const taskId = uuidv4();
     const task: TaskInfo = {
-      id: taskId,
+      task_id: taskId,
       name,
       description,
       status: TaskStatus.Pending,
@@ -46,7 +46,7 @@ export class TaskManager {
     return taskId;
   }
 
-  update(taskId: TaskInfo["id"], name: string, description: string) {
+  update(taskId: TaskInfo["task_id"], name: string, description: string) {
     const previousTask = this.taskMap.get(taskId);
     if (!previousTask) {
       throw new Error(`Task with id "${taskId}" not found`);
@@ -67,7 +67,7 @@ export class TaskManager {
     this.emitEvent("update");
   }
 
-  remove(taskId: TaskInfo["id"]) {
+  remove(taskId: TaskInfo["task_id"]) {
     const task = this.taskMap.get(taskId);
     if (!task) {
       return;
@@ -82,7 +82,7 @@ export class TaskManager {
     return Array.from(this.taskMap.values());
   }
 
-  setTaskStatus(taskId: TaskInfo["id"], status: TaskStatus) {
+  setTaskStatus(taskId: TaskInfo["task_id"], status: TaskStatus) {
     if (!this.taskMap.has(taskId)) {
       throw new Error(`Task with id "${taskId}" not found`);
     }
@@ -92,7 +92,7 @@ export class TaskManager {
     });
   }
 
-  getTaskById(taskId: TaskInfo["id"]) {
+  getTaskById(taskId: TaskInfo["task_id"]) {
     if (!this.taskMap.has(taskId)) {
       throw new Error(`Task with id "${taskId}" not found`);
     }
