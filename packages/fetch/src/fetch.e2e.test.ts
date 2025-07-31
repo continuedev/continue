@@ -216,7 +216,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = await response.json() as { message: string; method: string };
       expect(data).toEqual({
         message: "Hello from HTTP server",
         method: "GET",
@@ -236,7 +236,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = await response.json() as { message: string; method: string };
       expect(data.method).toBe("POST");
     });
 
@@ -250,7 +250,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
         },
       );
 
-      const data = await response.json();
+      const data = await response.json() as { headers: Record<string, string> };
       expect(data.headers["x-custom-header"]).toBe("test-value");
     });
 
@@ -283,7 +283,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = await response.json() as { body: string; headers: Record<string, string> };
       const body = JSON.parse(data.body);
       expect(body).toEqual({ original: "data", extra: "property" });
     });
@@ -299,7 +299,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
         },
       );
 
-      const data = await response.json();
+      const data = await response.json() as { headers: Record<string, string> };
       expect(data.headers["x-request-options-header"]).toBe(
         "from-request-options",
       );
@@ -318,7 +318,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
         },
       );
 
-      const data = await response.json();
+      const data = await response.json() as { headers: Record<string, string> };
       expect(data.headers["x-init-header"]).toBe("from-init");
       expect(data.headers["x-request-options-header"]).toBe(
         "from-request-options",
@@ -364,7 +364,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = await response.json() as { message: string; secure: boolean };
       expect(data.secure).toBe(true);
     });
 
@@ -388,7 +388,7 @@ describe("fetchwithRequestOptions E2E tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = await response.json() as { message: string; secure: boolean };
       expect(data.secure).toBe(true);
     });
 
