@@ -279,9 +279,15 @@ export async function throttledGlob(
 
       // Pause the stream periodically to give other processes a chance
       if (processed % batchSize === 0) {
+        if (globStream.emittedEnd) {
+          return;
+        }
         globStream.pause();
 
         setTimeout(() => {
+          if (globStream.emittedEnd) {
+            return;
+          }
           globStream.resume();
         }, delay); // Short pause
       }
