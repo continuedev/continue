@@ -69,15 +69,6 @@ async function handleToolCallExecution(
 
   // Only run if we have auto-approve for all
   if (allAutoApproved && toolCallStates.length > 0) {
-    // Track auto-approved tool execution
-    toolCallStates.forEach((toolCallState) => {
-      posthog.capture("gui_tool_call_decision", {
-        decision: "auto_accept",
-        toolName: toolCallState.toolCall.function.name,
-        toolCallId: toolCallState.toolCallId,
-      });
-    });
-
     const toolCallPromises = toolCallStates.map(async (toolCallState) => {
       const response = await dispatch(
         callToolById({ toolCallId: toolCallState.toolCallId }),
