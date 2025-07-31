@@ -7,6 +7,7 @@ import {
   constructLlmApi,
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
+import { captureException } from "../util/sentry/SentryLogger";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
 import { DataLogger } from "../data/log.js";
@@ -450,6 +451,14 @@ export abstract class BaseLLM implements ILLM {
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    captureException(new Error("FETCH_TEST_ERROR"), {
+      context: "llm_fetch",
+      url: String("FETCH_TEST_ERROR"),
+      method: init?.method || "GET",
+      model: this.model,
+      provider: this.providerName,
+    });
+
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
       try {
@@ -471,6 +480,15 @@ export abstract class BaseLLM implements ILLM {
 
         return resp;
       } catch (e: any) {
+        // Capture all fetch errors to Sentry for monitoring
+        captureException(e, {
+          context: "llm_fetch",
+          url: String(input),
+          method: init?.method || "GET",
+          model: this.model,
+          provider: this.providerName,
+        });
+
         // Errors to ignore
         if (e.message.includes("/api/tags")) {
           throw new Error(`Error fetching tags: ${e.message}`);

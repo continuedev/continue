@@ -99,11 +99,7 @@ export class Core {
 
   private handleError = (error: Error, context: string) => {
     console.error(`Error in Core.${context}:`, error);
-    try {
-      captureException(error, { context: `core_${context}` });
-    } catch (sentryError) {
-      console.error("Failed to capture exception to Sentry:", sentryError);
-    }
+    captureException(error, { context: `core_${context}` });
   };
 
   private messageAbortControllers = new Map<string, AbortController>();
@@ -282,23 +278,6 @@ export class Core {
   /* eslint-disable max-lines-per-function */
   private registerMessageHandlers(ideSettingsPromise: Promise<IdeSettings>) {
     const on = this.messenger.on.bind(this.messenger);
-
-    // Wrapper for message handlers to add error handling
-    const safeOn = <T extends keyof ToCoreProtocol>(
-      messageType: T,
-      handler: (
-        msg: Message<ToCoreProtocol[T][0]>,
-      ) => ToCoreProtocol[T][1] | Promise<ToCoreProtocol[T][1]>,
-    ) => {
-      on(messageType, async (msg) => {
-        try {
-          return await handler(msg);
-        } catch (error) {
-          this.handleError(error as Error, `messageHandler_${messageType}`);
-          throw error; // Re-throw so the original error handling still works
-        }
-      });
-    };
 
     // Note, VsCode's in-process messenger doesn't do anything with this
     // It will only show for jetbrains

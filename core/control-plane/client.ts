@@ -11,6 +11,7 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
+import { captureException } from "../util/sentry/SentryLogger";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
@@ -142,6 +143,11 @@ export class ControlPlaneClient {
       });
       return (await resp.json()) as any;
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      captureException(e as Error, {
+        context: "control_plane_list_assistants",
+        organizationId,
+      });
       return [];
     }
   }
@@ -213,6 +219,11 @@ export class ControlPlaneClient {
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      captureException(e as Error, {
+        context: "control_plane_list_assistant_slugs",
+        organizationId,
+      });
       return null;
     }
   }
@@ -228,6 +239,10 @@ export class ControlPlaneClient {
       });
       return (await resp.json()) as FreeTrialStatus;
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      captureException(e as Error, {
+        context: "control_plane_free_trial_status",
+      });
       return null;
     }
   }
@@ -262,6 +277,11 @@ export class ControlPlaneClient {
       );
       return (await resp.json()) as { url: string };
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      captureException(e as Error, {
+        context: "control_plane_models_checkout_url",
+        vsCodeUriScheme,
+      });
       return null;
     }
   }

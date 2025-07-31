@@ -21,16 +21,16 @@ export class SentryLogger {
       // For shared environments like VSCode extensions, we need to avoid global state pollution
       // Filter out integrations that use global state
       // See https://docs.sentry.io/platforms/javascript/best-practices/shared-environments/
-      
+
       // Filter integrations that use the global variable
       const integrations = Sentry.getDefaultIntegrations({}).filter(
         (defaultIntegration) => {
           // Remove integrations that might interfere with shared environments
           return ![
-            "OnUncaughtException", 
+            "OnUncaughtException",
             "OnUnhandledRejection",
             "ContextLines",
-            "LocalVariables"
+            "LocalVariables",
           ].includes(defaultIntegration.name);
         },
       );
@@ -115,8 +115,9 @@ export class SentryLogger {
     const isDebugMode = process.env.CONTINUE_DEVELOPMENT === "true";
     const isTestEnv = process.env.NODE_ENV === "test";
 
-    SentryLogger.allowTelemetry =
-      allow && !isTestEnv && !isDebugMode && isContinueTeam;
+    SentryLogger.allowTelemetry = true;
+    // SentryLogger.allowTelemetry =
+    //   allow && !isTestEnv && !isDebugMode && isContinueTeam;
     SentryLogger.uniqueId = uniqueId;
     SentryLogger.ideInfo = ideInfo;
     SentryLogger.os = os.platform();

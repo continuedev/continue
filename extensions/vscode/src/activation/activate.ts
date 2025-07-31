@@ -8,24 +8,10 @@ import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 
-import { captureException } from "core/util/sentry/SentryLogger";
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
-const handleErrorWithSentry = (error: Error, contextName: string) => {
-  console.error(`Error in ${contextName}:`, error);
-
-  try {
-    captureException(error, {
-      context: contextName,
-    });
-  } catch (sentryError) {
-    console.error("Failed to capture exception to Sentry:", sentryError);
-  }
-};
-
 export async function activateExtension(context: vscode.ExtensionContext) {
-  try {
     // Add necessary files
     getTsConfigPath();
     getContinueRcPath();
@@ -76,19 +62,12 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         api.registerCustomContextProvider.bind(api),
     };
 
-    // 'export' public api-surface
-    // or entire extension for testing
-    return process.env.NODE_ENV === "test"
-      ? {
-          ...continuePublicApi,
-          extension: vscodeExtension,
-        }
-      : continuePublicApi;
-  } catch (error) {
-    // Catch any errors during extension activation
-    handleErrorWithSentry(error as Error, "vscode_activation");
-
-    // Re-throw to let VSCode know activation failed
-    throw error;
-  }
+  // 'export' public api-surface
+  // or entire extension for testing
+  return process.env.NODE_ENV === "test"
+    ? {
+        ...continuePublicApi,
+        extension: vscodeExtension,
+      }
+    : continuePublicApi;
 }
