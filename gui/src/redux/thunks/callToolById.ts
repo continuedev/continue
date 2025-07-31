@@ -31,7 +31,8 @@ export const callToolById = createAsyncThunk<
     return;
   }
 
-  // Track tool call acceptance
+  // Track tool call acceptance and start timing
+  const startTime = Date.now();
   posthog.capture("gui_tool_call_decision", {
     decision: "accept",
     toolName: toolCallState.toolCall.function.name,
@@ -115,11 +116,13 @@ export const callToolById = createAsyncThunk<
     );
   }
 
-  // Capture telemetry for tool call execution outcome
+  // Capture telemetry for tool call execution outcome with duration
+  const duration_ms = Date.now() - startTime;
   posthog.capture("gui_tool_call_outcome", {
     succeeded: errorMessage === undefined,
     toolName: toolCallState.toolCall.function.name,
     errorMessage: errorMessage,
+    duration_ms: duration_ms,
   });
 
   if (streamResponse) {
