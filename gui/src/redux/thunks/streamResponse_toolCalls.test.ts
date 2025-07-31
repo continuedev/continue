@@ -323,9 +323,12 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Subscribe to store changes to catch ALL state updates
     const unsubscribe = mockStoreWithToolSettings.subscribe(() => {
-      const currentState = mockStoreWithToolSettings.getState().session.isStreaming;
+      const currentState =
+        mockStoreWithToolSettings.getState().session.isStreaming;
       if (currentState !== lastStreamingState) {
-        console.log(`Store subscription: isStreaming changed from ${lastStreamingState} to ${currentState}`);
+        console.log(
+          `Store subscription: isStreaming changed from ${lastStreamingState} to ${currentState}`,
+        );
         streamingStateChanges.push(currentState);
         lastStreamingState = currentState;
       }
