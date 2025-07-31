@@ -1949,16 +1949,6 @@ describe("streamResponseThunk", () => {
             contextItems: [],
             message: { id: "1", role: "user", content: "Hello" },
           },
-          {
-            appliedRules: [],
-            contextItems: [],
-            editorState: mockEditorState,
-            message: {
-              content: "Hello, please help me with this code",
-              id: "mock-uuid-123",
-              role: "user",
-            },
-          },
         ],
         hasReasoningEnabled: false,
         isStreaming: false, // Set to inactive after error
