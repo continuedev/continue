@@ -210,9 +210,16 @@ export function formatToolCall(toolName: string, args?: any): string {
     return displayName;
   }
 
-  // Get the first argument value
-  const firstValue = Object.values(args)[0];
-  const formattedValue = formatToolArgument(firstValue);
+  // Get the first argument value if it's a simple one
+  let formattedValue = "";
+  const [key, value] = Object.entries(args)[0];
+  if (
+    key.toLowerCase().includes("path") ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    formattedValue = formatToolArgument(value);
+  }
 
   return `${displayName}(${formattedValue})`;
 }

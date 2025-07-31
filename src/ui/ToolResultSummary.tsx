@@ -29,7 +29,15 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
   // Handle write_checklist specially with styled display
   if (toolName === "write_checklist") {
-    return <ChecklistDisplay content={content} />;
+    return (
+      <Box flexDirection="column">
+        <Box marginBottom={1}>
+          <Text color="gray">⎿ </Text>
+          <Text color="blue">Task List Updated</Text>
+        </Box>
+        <ChecklistDisplay content={`Task list status:\n${content}`} />
+      </Box>
+    );
   }
 
   // Handle write_file with diff specially

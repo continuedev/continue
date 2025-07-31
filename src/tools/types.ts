@@ -11,7 +11,7 @@ export type ToolParameters = Record<
 >;
 
 export interface ToolCallPreview {
-  type: "text" | "diff";
+  type: "text" | "diff" | "checklist";
   content: string;
   color?: string;
   paddingLeft?: number;
