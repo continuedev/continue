@@ -33,5 +33,9 @@ export function mergeUnrolledAssistants(
     data: [...(current.data ?? []), ...(incoming.data ?? [])],
     mcpServers: [...(current.mcpServers ?? []), ...(incoming.mcpServers ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
+    env: {
+      ...current.env,
+      ...incoming.env,
+    },
   };
 }
