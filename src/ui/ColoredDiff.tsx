@@ -1,4 +1,4 @@
-import { diffWordsWithSpace } from "diff";
+import { diffWordsWithSpace, Change } from "diff";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
 
@@ -84,7 +84,7 @@ function useWordLevelDiff(oldContent: string, newContent: string) {
 }
 
 function renderWordLevelContent(
-  changes: ReturnType<typeof diffWordsWithSpace>,
+  changes: Change[],
   showType: "removed" | "added"
 ): React.ReactNode {
   const segments: React.ReactNode[] = [];
