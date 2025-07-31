@@ -22,6 +22,7 @@ import {
   BUILTIN_TOOLS,
   executeToolCall,
   getAvailableTools,
+  getToolDisplayName,
   Tool,
   ToolCall,
   validateToolCallArgsPresent,
@@ -473,7 +474,8 @@ export async function preprocessStreamedToolCalls(
  */
 export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
+  isHeadless?: boolean
 ): Promise<{
   hasRejection: boolean;
   chatHistoryEntries: ChatCompletionToolMessageParam[];
@@ -513,6 +515,23 @@ export async function executeStreamedToolCalls(
       if (permissionCheck.permission === "allow") {
         approved = true;
       } else if (permissionCheck.permission === "ask") {
+        if (isHeadless) {
+          // In headless mode, exit immediately with instructions
+          const tool = BUILTIN_TOOLS.find((t) => t.name === toolCall.name);
+          const toolName = tool?.displayName || toolCall.name;
+          console.error(
+            `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`
+          );
+          console.error(
+            `If you want to allow this tool, use --allow ${toolName}.`
+          );
+          console.error(
+            `If you don't want the tool to be included, use --exclude ${toolName}.`
+          );
+
+          process.exit(1);
+        }
+
         // Request permission from user
         if (callbacks?.onToolPermissionRequest) {
           // Use the proper toolPermissionManager API
@@ -711,7 +730,11 @@ export async function streamChatResponse(
 
       // Execute the valid preprocessed tool calls
       const { chatHistoryEntries: toolResults, hasRejection } =
-        await executeStreamedToolCalls(preprocessedCalls, callbacks);
+        await executeStreamedToolCalls(
+          preprocessedCalls,
+          callbacks,
+          isHeadless
+        );
 
       if (isHeadless && hasRejection) {
         logger.debug(
