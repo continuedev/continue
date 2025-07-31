@@ -562,7 +562,7 @@ describe("streamResponseThunk - tool calls", () => {
       toolName: "search_codebase",
       toolCallId: "tool-call-1",
     });
-    
+
     expect(mockPosthog.capture).toHaveBeenCalledWith("gui_tool_call_outcome", {
       succeeded: true,
       toolName: "search_codebase",
@@ -2742,7 +2742,7 @@ describe("streamResponseThunk - tool calls", () => {
       toolName: "search_codebase",
       toolCallId: "tool-approval-flow-1",
     });
-    
+
     expect(mockPosthog.capture).toHaveBeenCalledWith("gui_tool_call_outcome", {
       succeeded: true,
       toolName: "search_codebase",

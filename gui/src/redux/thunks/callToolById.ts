@@ -33,11 +33,13 @@ export const callToolById = createAsyncThunk<
 
   // Track tool call acceptance and start timing
   const startTime = Date.now();
-  
+
   // Check if this is an auto-approved tool
   const toolSettings = state.ui.toolSettings;
-  const isAutoApproved = toolSettings[toolCallState.toolCall.function.name] === "allowedWithoutPermission";
-  
+  const isAutoApproved =
+    toolSettings[toolCallState.toolCall.function.name] ===
+    "allowedWithoutPermission";
+
   posthog.capture("gui_tool_call_decision", {
     decision: isAutoApproved ? "auto_accept" : "accept",
     toolName: toolCallState.toolCall.function.name,
