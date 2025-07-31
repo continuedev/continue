@@ -314,6 +314,23 @@ describe("streamResponseThunk - tool calls", () => {
       }
     });
 
+    // Track isStreaming state changes to detect UI flashing during auto-approved tool execution
+    const streamingStateChanges: boolean[] = [];
+    let lastStreamingState =
+      mockStoreWithToolSettings.getState().session.isStreaming;
+    // Record the initial state
+    streamingStateChanges.push(lastStreamingState);
+
+    // Subscribe to store changes to catch ALL state updates
+    const unsubscribe = mockStoreWithToolSettings.subscribe(() => {
+      const currentState = mockStoreWithToolSettings.getState().session.isStreaming;
+      if (currentState !== lastStreamingState) {
+        console.log(`Store subscription: isStreaming changed from ${lastStreamingState} to ${currentState}`);
+        streamingStateChanges.push(currentState);
+        lastStreamingState = currentState;
+      }
+    });
+
     // Execute thunk
     const result = await mockStoreWithToolSettings.dispatch(
       streamResponseThunk({
@@ -321,6 +338,37 @@ describe("streamResponseThunk - tool calls", () => {
         modifiers: mockModifiers,
       }) as any,
     );
+
+    // Debug: check what happened
+    const debugState = mockStoreWithToolSettings.getState();
+    const finalStreamingState = debugState.session.isStreaming;
+    const toolCallStates = debugState.session.history.flatMap(
+      (item) => item.toolCallStates || [],
+    );
+
+    console.log("Initial streaming state:", lastStreamingState);
+    console.log("Final streaming state:", finalStreamingState);
+    console.log(
+      "Tool call states:",
+      toolCallStates.map((t) => ({
+        id: t.toolCallId,
+        status: t.status,
+        toolName: t.toolCall.function.name,
+      })),
+    );
+    console.log("Tool settings:", debugState.ui.toolSettings);
+    console.log(
+      "Auto-approved tool streaming state changes:",
+      streamingStateChanges,
+    );
+
+    // Unsubscribe from store updates
+    unsubscribe();
+
+    // Verify no UI flashing during auto-approved tool execution
+    // DESIRED: Should show: [true, false] - stream starts, then stops after everything is done
+    // This prevents the UI from switching between StreamingToolbar and PendingToolCallToolbar
+    expect(streamingStateChanges).toEqual([true, false]);
 
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
     const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
@@ -1415,6 +1463,18 @@ describe("streamResponseThunk - tool calls", () => {
       mockStreamGeneratorWithApprovalTool(),
     );
 
+    // Track isStreaming state changes to ensure it doesn't become false after tool generation
+    const streamingStates: boolean[] = [];
+    const originalDispatch = mockStoreWithManualApproval.dispatch;
+    mockStoreWithManualApproval.dispatch = ((action: any) => {
+      const result = originalDispatch(action);
+      // Capture isStreaming state after each action
+      const currentState =
+        mockStoreWithManualApproval.getState().session.isStreaming;
+      streamingStates.push(currentState);
+      return result;
+    }) as any;
+
     // Execute thunk
     const result = await mockStoreWithManualApproval.dispatch(
       streamResponseThunk({
@@ -1425,6 +1485,12 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Verify thunk completed successfully (tool waits for approval)
     expect(result.type).toBe("chat/streamResponse/fulfilled");
+
+    // Since tool requires approval, isStreaming should become false after completion
+    // but should stay true throughout the initial streaming phase
+    const finalStreamingState =
+      mockStoreWithManualApproval.getState().session.isStreaming;
+    expect(finalStreamingState).toBe(false); // Final state should be false since we're waiting for approval
 
     // Verify exact action sequence includes tool generation but NO execution
     const dispatchedActions = (mockStoreWithManualApproval as any).getActions();
@@ -2089,6 +2155,23 @@ describe("streamResponseThunk - tool calls", () => {
         return followupGenerator();
       }
     });
+
+    // Track isStreaming state changes throughout the entire test
+    const streamingStateChanges: boolean[] = [];
+    let lastStreamingState =
+      mockStoreWithApproval.getState().session.isStreaming;
+    const originalDispatch = mockStoreWithApproval.dispatch;
+    mockStoreWithApproval.dispatch = ((action: any) => {
+      const result = originalDispatch(action);
+      const currentStreamingState =
+        mockStoreWithApproval.getState().session.isStreaming;
+      // Only record when the state actually changes
+      if (currentStreamingState !== lastStreamingState) {
+        streamingStateChanges.push(currentStreamingState);
+        lastStreamingState = currentStreamingState;
+      }
+      return result;
+    }) as any;
 
     // Execute initial thunk - this should generate the tool call but not execute it
     const initialResult = await mockStoreWithApproval.dispatch(
