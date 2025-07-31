@@ -336,7 +336,7 @@ export class CodebaseIndexer {
     if (config.disableIndexing) {
       yield {
         progress,
-        desc: "Indexing is disabled in config.json",
+        desc: "Indexing is disabled",
         status: "disabled",
       };
       return;
@@ -707,7 +707,9 @@ export class CodebaseIndexer {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
-    this.indexingCancellationController = new AbortController();
+    const localController = new AbortController();
+    this.indexingCancellationController = localController;
+
     for await (const update of this.waitForDBIndex()) {
       this.updateProgress(update);
     }
@@ -721,7 +723,7 @@ export class CodebaseIndexer {
     try {
       for await (const update of this.refreshDirs(
         paths,
-        this.indexingCancellationController.signal,
+        localController.signal,
       )) {
         this.updateProgress(update);
 
@@ -743,7 +745,9 @@ export class CodebaseIndexer {
         providers: "all",
       });
     }
-    this.indexingCancellationController = undefined;
+    if (this.indexingCancellationController === localController) {
+      this.indexingCancellationController = undefined;
+    }
   }
 
   public async refreshCodebaseIndexFiles(files: string[]) {
@@ -754,7 +758,9 @@ export class CodebaseIndexer {
     ) {
       return;
     }
-    this.indexingCancellationController = new AbortController();
+    const localController = new AbortController();
+    this.indexingCancellationController = localController;
+
     try {
       for await (const update of this.refreshFiles(files)) {
         this.updateProgress(update);
@@ -774,7 +780,9 @@ export class CodebaseIndexer {
         providers: "all",
       });
     }
-    this.indexingCancellationController = undefined;
+    if (this.indexingCancellationController === localController) {
+      this.indexingCancellationController = undefined;
+    }
   }
 
   public async handleIndexingError(e: any) {
@@ -820,6 +828,12 @@ export class CodebaseIndexer {
     config: newConfig,
   }: ConfigResult<ContinueConfig>) {
     if (newConfig) {
+      const ideSettings = await this.ide.getIdeSettings();
+      const pauseCodebaseIndexOnStart = ideSettings.pauseCodebaseIndexOnStart;
+      if (pauseCodebaseIndexOnStart) {
+        this.paused = true;
+      }
+
       const needsReindex = !this.isIndexingConfigSame(this.config, newConfig);
 
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
@@ -838,7 +852,7 @@ export class CodebaseIndexer {
 
       if (needsReindex) {
         const dirs = await this.ide.getWorkspaceDirs();
-        await this.refreshCodebaseIndex(dirs);
+        void this.refreshCodebaseIndex(dirs);
       }
     }
   }
