@@ -474,13 +474,16 @@ export async function preprocessStreamedToolCalls(
 export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
   callbacks?: StreamCallbacks
-): Promise<ChatCompletionToolMessageParam[]> {
+): Promise<{
+  hasRejection: boolean;
+  chatHistoryEntries: ChatCompletionToolMessageParam[];
+}> {
   const chatHistoryEntries: ChatCompletionToolMessageParam[] = [];
-  let remainingCanceled = false;
+  let hasRejection = false;
 
   // Execute each preprocessed tool call
   for (const toolCall of preprocessedCalls) {
-    if (remainingCanceled) {
+    if (hasRejection) {
       const cancelledMessage = `Cancelled due to previous tool rejection`;
       chatHistoryEntries.push({
         role: "tool",
@@ -574,7 +577,7 @@ export async function executeStreamedToolCalls(
         callbacks?.onToolResult?.(deniedMessage, toolCall.name);
 
         logger.debug("Tool call rejected - stopping stream");
-        remainingCanceled = true;
+        hasRejection = true;
         continue;
       }
 
@@ -612,7 +615,10 @@ export async function executeStreamedToolCalls(
     }
   }
 
-  return chatHistoryEntries;
+  return {
+    hasRejection,
+    chatHistoryEntries,
+  };
 }
 
 // Main function that handles the conversation loop
@@ -704,10 +710,15 @@ export async function streamChatResponse(
       chatHistory.push(...errorChatEntries);
 
       // Execute the valid preprocessed tool calls
-      const toolResults = await executeStreamedToolCalls(
-        preprocessedCalls,
-        callbacks
-      );
+      const { chatHistoryEntries: toolResults, hasRejection } =
+        await executeStreamedToolCalls(preprocessedCalls, callbacks);
+
+      if (isHeadless && hasRejection) {
+        logger.debug(
+          "Tool call rejected in headless mode - returning current content"
+        );
+        return finalResponse || content || fullResponse;
+      }
 
       chatHistory.push(...toolResults);
     } else if (content) {

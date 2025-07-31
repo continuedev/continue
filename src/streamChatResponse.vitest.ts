@@ -492,7 +492,7 @@ describe("executeStreamedToolCalls", () => {
       onToolError: vi.fn(),
     };
 
-    const chatHistoryEntries = await executeStreamedToolCalls(
+    const { chatHistoryEntries } = await executeStreamedToolCalls(
       preprocessedCalls,
       callbacks
     );
@@ -568,12 +568,13 @@ describe("executeStreamedToolCalls", () => {
       onToolPermissionRequest: vi.fn(),
     };
 
-    const chatHistoryEntries = await executeStreamedToolCalls(
+    const { chatHistoryEntries, hasRejection } = await executeStreamedToolCalls(
       preprocessedCalls,
       callbacks
     );
 
     // Verify results
+    expect(hasRejection).toEqual(true);
     expect(chatHistoryEntries).toHaveLength(2);
     expect(chatHistoryEntries[0].content).toBe("Permission denied by user");
     expect(chatHistoryEntries[1].content).toBe(
@@ -624,7 +625,7 @@ describe("executeStreamedToolCalls", () => {
       onToolError: vi.fn(),
     };
 
-    const chatHistoryEntries = await executeStreamedToolCalls(
+    const { chatHistoryEntries, hasRejection } = await executeStreamedToolCalls(
       preprocessedCalls,
       callbacks
     );
