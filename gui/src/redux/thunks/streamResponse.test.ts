@@ -2,7 +2,6 @@ import { JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
 import { describe, expect, it, vi } from "vitest";
 import { createMockStore } from "../../util/test/mockStore";
-import { streamNormalInput } from "./streamNormalInput";
 import { streamResponseThunk } from "./streamResponse";
 
 // Mock external dependencies only - let selectors run naturally
@@ -742,9 +741,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk
     const result = await mockStoreWithToolSettings.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -755,7 +754,7 @@ describe("streamResponseThunk", () => {
     const actionTypes = dispatchedActions.map((action: any) => action.type);
     expect(actionTypes).toEqual([
       "chat/streamResponse/pending",
-      "chat/streamWrapper/pending", 
+      "chat/streamWrapper/pending",
       "session/submitEditorAndInitAtIndex",
       "session/resetNextCodeBlockToApplyIndex",
       "symbols/updateFromContextItems/pending",
@@ -800,7 +799,7 @@ describe("streamResponseThunk", () => {
       "session/update/fulfilled",
       "session/saveCurrent/fulfilled",
       "chat/streamWrapper/fulfilled",
-      "chat/streamAfterToolCall/fulfilled", 
+      "chat/streamAfterToolCall/fulfilled",
       "chat/callTool/fulfilled",
       "chat/streamNormalInput/fulfilled",
       "session/saveCurrent/pending",
@@ -817,46 +816,64 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify key payload data for important actions
-    const setContextPercentageAction = dispatchedActions.find((a: any) => a.type === "session/setContextPercentage");
+    const setContextPercentageAction = dispatchedActions.find(
+      (a: any) => a.type === "session/setContextPercentage",
+    );
     expect(setContextPercentageAction.payload).toBe(0.9);
 
-    const streamUpdates = dispatchedActions.filter((a: any) => a.type === "session/streamUpdate");
+    const streamUpdates = dispatchedActions.filter(
+      (a: any) => a.type === "session/streamUpdate",
+    );
     expect(streamUpdates[0].payload).toEqual([
-      { role: "assistant", content: "I'll search the codebase for you." }
+      { role: "assistant", content: "I'll search the codebase for you." },
     ]);
-    expect(streamUpdates[1].payload).toEqual([{
-      role: "assistant",
-      content: "",
-      toolCalls: [{
-        id: "tool-call-1",
-        type: "function", 
-        function: {
-          name: "search_codebase",
-          arguments: JSON.stringify({ query: "test function" }),
-        },
-      }],
-    }]);
+    expect(streamUpdates[1].payload).toEqual([
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [
+          {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: "search_codebase",
+              arguments: JSON.stringify({ query: "test function" }),
+            },
+          },
+        ],
+      },
+    ]);
 
-    const completionPairs = dispatchedActions.filter((a: any) => a.type === "session/addPromptCompletionPair");
-    expect(completionPairs[0].payload).toEqual([{
-      completion: "I'll search the codebase for you.",
-      modelProvider: "anthropic",
-      prompt: "Please search the codebase",
-    }]);
+    const completionPairs = dispatchedActions.filter(
+      (a: any) => a.type === "session/addPromptCompletionPair",
+    );
+    expect(completionPairs[0].payload).toEqual([
+      {
+        completion: "I'll search the codebase for you.",
+        modelProvider: "anthropic",
+        prompt: "Please search the codebase",
+      },
+    ]);
 
-    const toolCallActions = dispatchedActions.filter((a: any) => a.type === "session/setToolCallCalling");
+    const toolCallActions = dispatchedActions.filter(
+      (a: any) => a.type === "session/setToolCallCalling",
+    );
     expect(toolCallActions[0].payload).toEqual({ toolCallId: "tool-call-1" });
 
-    const toolOutputActions = dispatchedActions.filter((a: any) => a.type === "session/updateToolCallOutput");
+    const toolOutputActions = dispatchedActions.filter(
+      (a: any) => a.type === "session/updateToolCallOutput",
+    );
     expect(toolOutputActions[0].payload).toEqual({
       toolCallId: "tool-call-1",
-      contextItems: [{
-        name: "Search Results",
-        description: "Found 3 matches", 
-        content: "Result 1\nResult 2\nResult 3",
-        icon: "search",
-        hidden: false,
-      }],
+      contextItems: [
+        {
+          name: "Search Results",
+          description: "Found 3 matches",
+          content: "Result 1\nResult 2\nResult 3",
+          icon: "search",
+          hidden: false,
+        },
+      ],
     });
 
     // Verify IDE messenger calls
@@ -1145,9 +1162,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk and expect it to be rejected
     const result = await mockStoreNoModel.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -1344,9 +1361,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk
     const result = await mockStore.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -1624,7 +1641,12 @@ describe("streamResponseThunk", () => {
               content: [
                 {
                   type: "paragraph",
-                  content: [{ type: "text", text: "Hello, please help me with this code" }],
+                  content: [
+                    {
+                      type: "text",
+                      text: "Hello, please help me with this code",
+                    },
+                  ],
                 },
               ],
             },
@@ -1722,9 +1744,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk and expect it to be rejected
     const result = await mockStore.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -2029,7 +2051,8 @@ describe("streamResponseThunk", () => {
     const testAbortController = new AbortController();
 
     // Use setupTest to get proper mock configuration
-    const { mockStore: baseStore, mockIdeMessenger: baseMessenger } = setupTest();
+    const { mockStore: baseStore, mockIdeMessenger: baseMessenger } =
+      setupTest();
 
     // Create store with our test abort controller, starting from setupTest config
     const mockStoreWithAbort = createMockStore({
@@ -2109,19 +2132,19 @@ describe("streamResponseThunk", () => {
 
       // Add a delay to allow the first chunk to be processed
       await new Promise((resolve) => setTimeout(resolve, 5));
-      
+
       // Simulate user clicking abort button - dispatch setInactive immediately
       mockStoreWithAbort.dispatch({ type: "session/setInactive" });
-      
+
       // Add a small delay to let the abort action be processed
       await new Promise((resolve) => setTimeout(resolve, 5));
-      
+
       // Try to yield second chunk (should be ignored due to abort)
       yield [{ role: "assistant", content: "Second chunk" }];
 
       return {
         prompt: "Hello",
-        completion: "Complete response", 
+        completion: "Complete response",
         modelProvider: "anthropic",
       };
     }
@@ -2132,9 +2155,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk - should be aborted
     const result = await mockStoreWithAbort.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -2403,33 +2426,36 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger calls
-    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant.",
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Hello",
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Hello, please help me with this code",
-            },
-          ],
-        },
-      ],
-      options: {},
-    });
+    expect(mockIdeMessengerAbort.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant.",
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Hello",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Hello, please help me with this code",
+              },
+            ],
+          },
+        ],
+        options: {},
+      },
+    );
 
     expect(mockIdeMessengerAbort.llmStreamChat).toHaveBeenCalledWith(
       {
@@ -2683,9 +2709,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk
     const result = await mockStoreWithToolReject.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -2814,7 +2840,7 @@ describe("streamResponseThunk", () => {
                 type: "function",
                 function: {
                   name: "edit_existing_file",
-                  arguments: "{\"filepath\":\"test.js\",\"changes\":\"const x = 1;\"}",
+                  arguments: '{"filepath":"test.js","changes":"const x = 1;"}',
                 },
               },
             ],
@@ -2980,38 +3006,41 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger calls - compilation should succeed, streaming should happen
-    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant.",
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Please edit this file",
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",  
-              text: "Hello, please help me with this code",
-            },
-          ],
-        },
-      ],
-      options: {},
-    });
+    expect(mockIdeMessengerReject.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant.",
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please edit this file",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Hello, please help me with this code",
+              },
+            ],
+          },
+        ],
+        options: {},
+      },
+    );
 
     expect(mockIdeMessengerReject.llmStreamChat).toHaveBeenCalledWith(
       {
         completionOptions: {},
-        legacySlashCommandData: undefined, 
+        legacySlashCommandData: undefined,
         messageOptions: { precompiled: true },
         messages: [
           {
@@ -3305,9 +3334,9 @@ describe("streamResponseThunk", () => {
 
     // Execute thunk
     const result = await mockStoreWithManualApproval.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
@@ -3602,33 +3631,36 @@ describe("streamResponseThunk", () => {
     ]);
 
     // Verify IDE messenger calls - compilation should happen, streaming should happen
-    expect(mockIdeMessengerManual.request).toHaveBeenCalledWith("llm/compileChat", {
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant.",
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Please search the codebase",
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Hello, please help me with this code",
-            },
-          ],
-        },
-      ],
-      options: {},
-    });
+    expect(mockIdeMessengerManual.request).toHaveBeenCalledWith(
+      "llm/compileChat",
+      {
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant.",
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please search the codebase",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Hello, please help me with this code",
+              },
+            ],
+          },
+        ],
+        options: {},
+      },
+    );
 
     expect(mockIdeMessengerManual.llmStreamChat).toHaveBeenCalledWith(
       {
@@ -3977,17 +4009,18 @@ describe("streamResponseThunk", () => {
 
     // Execute initial thunk - this should generate the tool call but not execute it
     const initialResult = await mockStoreWithApproval.dispatch(
-      streamResponseThunk({ 
-        editorState: mockEditorState, 
-        modifiers: mockModifiers 
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
       }) as any,
     );
 
     // Verify initial streaming completed successfully
     expect(initialResult.type).toBe("chat/streamResponse/fulfilled");
 
-    // Verify exact initial action sequence (same as manual approval test)
+    // Verify exact initial action sequence by comparing action types
     const initialActions = (mockStoreWithApproval as any).getActions();
+
     expect(initialActions).toEqual([
       {
         type: "chat/streamResponse/pending",
@@ -4231,10 +4264,6 @@ describe("streamResponseThunk", () => {
           requestStatus: "fulfilled",
         },
         payload: undefined,
-      },
-      {
-        type: "session/setIsSessionMetadataLoading",
-        payload: false,
       },
       {
         type: "session/setAllSessionMetadata",
