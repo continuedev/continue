@@ -486,6 +486,10 @@ export class ConfigHandler {
       configLoadInterrupted,
     } = await this.currentProfile.reloadConfig(this.additionalContextProviders);
 
+    if (injectErrors) {
+      errors.unshift(...injectErrors);
+    }
+
     this.notifyConfigListeners({ config, errors, configLoadInterrupted });
 
     this.initter.emit("init");
@@ -499,10 +503,6 @@ export class ConfigHandler {
       totalConfigLoads: this.totalConfigReloads,
       configLoadInterrupted,
     });
-
-    if (injectErrors) {
-      errors.unshift(...injectErrors);
-    }
 
     return {
       config,
