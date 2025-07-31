@@ -7,7 +7,7 @@ import {
   constructLlmApi,
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
-import { captureException, captureLog } from "../util/sentry/SentryLogger";
+import { captureException } from "../util/sentry/SentryLogger";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
 import { DataLogger } from "../data/log.js";
@@ -645,6 +645,14 @@ export abstract class BaseLLM implements ILLM {
         undefined,
       );
     } catch (e) {
+      // Capture FIM (Fill-in-the-Middle) completion failures to Sentry
+      captureException(e as Error, {
+        context: "llm_stream_fim",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("streamFim"),
+      });
+
       status = this._logEnd(
         completionOptions.model,
         fimLog,
@@ -763,6 +771,15 @@ export abstract class BaseLLM implements ILLM {
         undefined,
       );
     } catch (e) {
+      // Capture streaming completion failures to Sentry
+      captureException(e as Error, {
+        context: "llm_stream_complete",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("streamComplete"),
+        streamEnabled: completionOptions.stream !== false,
+      });
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
@@ -860,6 +877,14 @@ export abstract class BaseLLM implements ILLM {
         undefined,
       );
     } catch (e) {
+      // Capture completion failures to Sentry
+      captureException(e as Error, {
+        context: "llm_complete",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("complete"),
+      });
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
@@ -1069,6 +1094,16 @@ export abstract class BaseLLM implements ILLM {
         usage,
       );
     } catch (e) {
+      // Capture chat streaming failures to Sentry
+      captureException(e as Error, {
+        context: "llm_stream_chat",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("streamChat"),
+        streamEnabled: completionOptions.stream !== false,
+        templateMessages: !!this.templateMessages,
+      });
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
