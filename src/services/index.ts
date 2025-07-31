@@ -29,16 +29,24 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
 
   // Initialize mode service with tool permission overrides
   if (options.toolPermissionOverrides) {
-    // Convert legacy readonly flags to mode if present
     const overrides = { ...options.toolPermissionOverrides };
     
-    // Use the global mode service for consistency
-    modeService.initialize({
+    // Convert mode to boolean flags for ModeService
+    const initArgs: Parameters<typeof modeService.initialize>[0] = {
       allow: overrides.allow,
       ask: overrides.ask,
-      exclude: overrides.exclude,
-      readonly: overrides.mode === "plan"
-    });
+      exclude: overrides.exclude
+    };
+    
+    // Only set the boolean flag that corresponds to the mode
+    if (overrides.mode === "plan") {
+      initArgs.readonly = true;
+    } else if (overrides.mode === "auto") {
+      initArgs.auto = true;
+    }
+    // If mode is "normal" or undefined, no flags are set
+    
+    modeService.initialize(initArgs);
   }
   
   // Always register a factory that returns the current state from modeService

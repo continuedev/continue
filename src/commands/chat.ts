@@ -141,6 +141,8 @@ async function runHeadlessMode(
   let mode: any = undefined;
   if (options.readonly) {
     mode = "plan";
+  } else if (options.auto) {
+    mode = "auto";
   }
 
   await initializeServices({
@@ -229,6 +231,8 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       let mode: any = undefined;
       if (options.readonly) {
         mode = "plan";
+      } else if (options.auto) {
+        mode = "auto";
       }
 
       // Start TUI immediately - it will handle service loading

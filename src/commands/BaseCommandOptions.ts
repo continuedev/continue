@@ -22,4 +22,6 @@ export interface ExtendedCommandOptions extends BaseCommandOptions {
   verbose?: boolean;
   /** Start in plan mode (backward compatibility) */
   readonly?: boolean;
+  /** Start in auto mode (all tools allowed) */
+  auto?: boolean;
 }

@@ -6,6 +6,7 @@ import { modeService } from "../services/ModeService.js";
 import { reloadService, SERVICE_NAMES } from "../services/index.js";
 import type { PermissionMode } from "../permissions/types.js";
 import { InputHistory } from "../util/inputHistory.js";
+import logger from "../util/logger.js";
 import FileSearchUI from "./FileSearchUI.js";
 import SlashCommandUI from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
@@ -250,7 +251,7 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle Shift+Tab to cycle through modes
     if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
       cycleModes().catch(error => {
-        console.error("Failed to cycle modes:", error);
+        logger.error("Failed to cycle modes:", error);
       });
       return;
     }

@@ -38,6 +38,7 @@ describe("E2E: Basic Commands", () => {
       expect(result.stdout).toContain("--config <path>");
       expect(result.stdout).toContain("--resume");
       expect(result.stdout).toContain("--readonly");
+      expect(result.stdout).toContain("--auto");
       expect(result.stdout).toContain("--rule <rule>");
     });
 

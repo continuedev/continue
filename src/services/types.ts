@@ -61,6 +61,7 @@ export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
   modePolicyCount?: number;
+  originalPolicies?: ToolPermissions;
 }
 
 /**

@@ -28,7 +28,7 @@ const ModeIndicator: React.FC<ModeIndicatorProps> = ({ mode }) => {
       return () => {
         modeService.off('modeChanged', handleModeChange);
       };
-    } else {
+    } else if (mode !== currentMode) {
       setCurrentMode(mode);
     }
   }, [mode]);

@@ -129,6 +129,52 @@ describe('ToolPermissionService - Mode Functionality', () => {
       expect(service.getCurrentMode()).toBe('normal');
     });
 
+    it('should preserve original user policies when switching modes', () => {
+      // Initialize with user-defined policies
+      service.initializeSync({
+        allow: ['customAllowedTool'],
+        exclude: ['customExcludedTool'],
+        ask: ['customAskTool']
+      });
+      
+      const originalPolicies = service.getPermissions().policies;
+      const userPolicyCount = originalPolicies.filter(p => 
+        p.tool === 'customAllowedTool' || 
+        p.tool === 'customExcludedTool' || 
+        p.tool === 'customAskTool'
+      ).length;
+      expect(userPolicyCount).toBe(3);
+      
+      // Switch to plan mode (should store original policies)
+      service.switchMode('plan');
+      const planPolicies = service.getPermissions().policies;
+      
+      // Plan mode should not have user policies
+      const planUserPolicyCount = planPolicies.filter(p => 
+        p.tool === 'customAllowedTool' || 
+        p.tool === 'customExcludedTool' || 
+        p.tool === 'customAskTool'
+      ).length;
+      expect(planUserPolicyCount).toBe(0);
+      
+      // Switch back to normal mode (should restore original policies)
+      service.switchMode('normal');
+      const restoredPolicies = service.getPermissions().policies;
+      
+      // Should have user policies restored
+      const restoredUserPolicyCount = restoredPolicies.filter(p => 
+        p.tool === 'customAllowedTool' || 
+        p.tool === 'customExcludedTool' || 
+        p.tool === 'customAskTool'
+      ).length;
+      expect(restoredUserPolicyCount).toBe(3);
+      
+      // Verify specific policies are restored correctly
+      expect(restoredPolicies.some(p => p.tool === 'customAllowedTool' && p.permission === 'allow')).toBe(true);
+      expect(restoredPolicies.some(p => p.tool === 'customExcludedTool' && p.permission === 'exclude')).toBe(true);
+      expect(restoredPolicies.some(p => p.tool === 'customAskTool' && p.permission === 'ask')).toBe(true);
+    });
+
     it('should override user permissions in plan mode', () => {
       // Initialize with user config that allows write tools
       service.initializeSync({

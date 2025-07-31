@@ -8,6 +8,7 @@ export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
   modePolicyCount?: number; // Track how many policies are from mode vs other sources
+  originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
 
 /**
@@ -165,27 +166,48 @@ export class ToolPermissionService {
   switchMode(newMode: PermissionMode): ToolPermissionServiceState {
     logger.debug(`Switching from mode '${this.state.currentMode}' to '${newMode}'`);
     
+    // Store original policies when leaving normal mode for the first time
+    if (this.state.currentMode === "normal" && newMode !== "normal" && !this.state.originalPolicies) {
+      // Deep copy the policies array to preserve the original state
+      this.state.originalPolicies = { 
+        policies: [...this.state.permissions.policies] 
+      };
+      logger.debug(`Stored ${this.state.permissions.policies.length} original policies`);
+    }
+    
     this.state.currentMode = newMode;
     
     // Regenerate policies with the new mode
     const modePolicies = this.generateModePolicies();
     
     // For plan and auto modes, use ONLY mode policies (absolute override)
-    // For normal mode, preserve existing non-mode policies
+    // For normal mode, restore original policies if available
     let allPolicies: ToolPermissionPolicy[];
     if (newMode === "plan" || newMode === "auto") {
       // Absolute override: ignore all user configuration
       allPolicies = modePolicies;
     } else {
-      // Normal mode: combine with existing non-mode policies
-      const existingPolicies = this.state.permissions.policies;
-      const previousModePolicyCount = this.state.modePolicyCount || 0;
-      const nonModePolicies = existingPolicies.length > previousModePolicyCount ? 
-        existingPolicies.slice(previousModePolicyCount) : [];
-      allPolicies = [...modePolicies, ...nonModePolicies];
+      // Normal mode: restore original policies if we have them
+      if (this.state.originalPolicies) {
+        // Restore the original user policies
+        // When original policies were stored in normal mode, they had 0 mode policies
+        // So we need to slice from the number of mode policies that were active when stored
+        const originalModePolicyCount = 0; // Normal mode has no mode policies
+        const originalNonModePolicies = this.state.originalPolicies.policies.slice(originalModePolicyCount);
+        allPolicies = [...modePolicies, ...originalNonModePolicies];
+        logger.debug(`Restored ${originalNonModePolicies.length} original user policies`);
+      } else {
+        // Fallback to existing behavior if no original policies stored
+        const existingPolicies = this.state.permissions.policies;
+        const previousModePolicyCount = this.state.modePolicyCount || 0;
+        const nonModePolicies = existingPolicies.length > previousModePolicyCount ? 
+          existingPolicies.slice(previousModePolicyCount) : [];
+        allPolicies = [...modePolicies, ...nonModePolicies];
+      }
     }
     
     this.state = {
+      ...this.state,
       permissions: { policies: allPolicies },
       currentMode: newMode,
       modePolicyCount: modePolicies.length

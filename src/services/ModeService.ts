@@ -28,6 +28,7 @@ export class ModeService extends EventEmitter {
    */
   public initialize(args: {
     readonly?: boolean;
+    auto?: boolean;
     allow?: string[];
     ask?: string[];
     exclude?: string[];
@@ -36,6 +37,8 @@ export class ModeService extends EventEmitter {
     let mode: PermissionMode = "normal";
     if (args.readonly) {
       mode = "plan";  // Legacy flag maps directly to plan mode
+    } else if (args.auto) {
+      mode = "auto";  // Auto flag maps to auto mode
     }
 
     this.toolPermissionService.initializeSync({

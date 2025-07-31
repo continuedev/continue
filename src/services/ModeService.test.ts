@@ -27,6 +27,11 @@ describe('ModeService', () => {
       expect(modeService.getCurrentMode()).toBe('plan');
     });
 
+    it('should convert auto flag to auto mode', () => {
+      modeService.initialize({ auto: true });
+      expect(modeService.getCurrentMode()).toBe('auto');
+    });
+
 
     it('should initialize tool permission service', () => {
       modeService.initialize({ allow: ['testTool'], exclude: ['badTool'] });

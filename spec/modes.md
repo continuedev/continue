@@ -24,6 +24,7 @@ Planning mode that **completely overrides all user permissions** to enforce read
 ### `auto`
 Auto mode that **completely overrides all user permissions** to allow everything without asking. This mode provides maximum automation by bypassing all permission policies and restrictions, regardless of user configuration.
 
+- **Command-line flag:** `--auto` (starts in auto mode)
 - **UI Indicator:** `[auto]` shown in green
 - **Current directory:** Hidden to save space and focus on automation
 - **Permission override:** **Absolute** - allows all tools with `*: allow` policy
@@ -35,6 +36,7 @@ Auto mode that **completely overrides all user permissions** to allow everything
 Modes can be set when starting the CLI:
 ```bash
 cn --readonly "Help me analyze this code"  # Starts in plan mode
+cn --auto "Fix all the linting errors"     # Starts in auto mode
 cn "Let me implement this feature"         # Starts in normal mode (default)
 ```
 

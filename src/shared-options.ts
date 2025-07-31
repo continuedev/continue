@@ -5,6 +5,7 @@ export function addCommonOptions(command: Command): Command {
   return command
     .option("--config <path>", "Path to configuration file")
     .option("--readonly", "Start in plan mode (read-only tools)")
+    .option("--auto", "Start in auto mode (all tools allowed)")
     .option("-v, --verbose", "Enable verbose logging")
     .option(
       "--rule <rule>",
@@ -57,6 +58,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
   const inheritableOptions = [
     'config',
     'readonly',
+    'auto',
     'tools',
     'verbose',
     'rule',
