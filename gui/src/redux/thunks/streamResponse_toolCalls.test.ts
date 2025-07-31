@@ -2311,45 +2311,6 @@ describe("streamResponseThunk - tool calls", () => {
       },
       {
         type: "session/setAllSessionMetadata",
-        payload: {},
-      },
-      {
-        type: "session/refreshMetadata/fulfilled",
-        meta: {
-          arg: {},
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: {},
-      },
-      {
-        type: "session/update/fulfilled",
-        meta: {
-          arg: expect.objectContaining({
-            history: expect.any(Array),
-            sessionId: "session-123",
-            title: "New Session",
-            workspaceDirectory: "",
-          }),
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/saveCurrent/fulfilled",
-        meta: {
-          arg: {
-            generateTitle: true,
-            openNewSession: false,
-          },
-          requestId: expect.any(String),
-          requestStatus: "fulfilled",
-        },
-        payload: undefined,
-      },
-      {
-        type: "session/setAllSessionMetadata",
         payload: [],
       },
       {
@@ -2562,6 +2523,91 @@ describe("streamResponseThunk - tool calls", () => {
         payload: undefined,
       },
       {
+        type: "session/saveCurrent/pending",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/update/pending",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/updateSessionMetadata",
+        payload: {
+          sessionId: "session-123",
+          title: "New Session",
+        },
+      },
+      {
+        type: "session/refreshMetadata/pending",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "pending",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/setIsSessionMetadataLoading",
+        payload: false,
+      },
+      {
+        type: "session/setAllSessionMetadata",
+        payload: [],
+      },
+      {
+        type: "session/refreshMetadata/fulfilled",
+        meta: {
+          arg: {},
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: [],
+      },
+      {
+        type: "session/update/fulfilled",
+        meta: {
+          arg: expect.objectContaining({
+            history: expect.any(Array),
+            sessionId: "session-123",
+            title: "New Session",
+            workspaceDirectory: "",
+          }),
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
+        type: "session/saveCurrent/fulfilled",
+        meta: {
+          arg: {
+            generateTitle: true,
+            openNewSession: false,
+          },
+          requestId: expect.any(String),
+          requestStatus: "fulfilled",
+        },
+        payload: undefined,
+      },
+      {
         type: "chat/streamWrapper/fulfilled",
         meta: {
           arg: expect.any(Function),
@@ -2724,7 +2770,7 @@ describe("streamResponseThunk - tool calls", () => {
         title: "New Session",
         lastSessionId: undefined,
         isSessionMetadataLoading: false,
-        allSessionMetadata: {},
+        allSessionMetadata: [],
         symbols: {},
         codeBlockApplyStates: {
           states: [],
