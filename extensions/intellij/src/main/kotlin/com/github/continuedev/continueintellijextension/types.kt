@@ -121,6 +121,13 @@ data class ParameterInformation(
     val label: String // Note: Kotlin doesn't have union types, so this represents the string case
 )
 
+data class DocumentSymbol(
+    val name: String,
+    val kind: String,
+    val range: Range,
+    val selectionRange: Range
+)
+
 data class ControlPlaneSessionInfo(
     val accessToken: String,
     val account: Account
@@ -250,6 +257,8 @@ interface IDE {
     suspend fun gotoDefinition(location: Location): List<RangeInFile>
     suspend fun gotoTypeDefinition(location: Location): List<RangeInFile>
     suspend fun getSignatureHelp(location: Location): SignatureHelp?
+    suspend fun getReferences(location: Location): List<RangeInFile>
+    suspend fun getDocumentSymbols(textDocumentIdentifier: String): List<DocumentSymbol>
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)

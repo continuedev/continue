@@ -178,6 +178,7 @@ jobs:
       - name: Test and check ${{ matrix.package }}
         run: |
           cd packages/${{ matrix.package }}
+          npm ci
           npm test
         env:
           IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
@@ -306,8 +307,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run JetBrains tests
         uses: ./.github/actions/run-jetbrains-tests
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ci-github-token: ${{ secrets.CI_GITHUB_TOKEN }}
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control

@@ -111,6 +111,7 @@ export class VsCodeIdeUtils {
 
   /**
    * Read the entire contents of a file from the given URI.
+   * If there are unsaved changes in an open editor, returns those instead of the file on disk.
    *
    * @param uri - The URI of the file to read.
    * @param ignoreMissingProviders - Optional flag to ignore missing file system providers for unsupported schemes.
@@ -124,6 +125,18 @@ export class VsCodeIdeUtils {
     uri: vscode.Uri,
     ignoreMissingProviders: boolean = true,
   ): Promise<Uint8Array | null> {
+    // First check if there's an open document with this URI that might have unsaved changes.
+    const openDocuments = vscode.workspace.textDocuments;
+    for (const document of openDocuments) {
+      if (document.uri.toString() === uri.toString()) {
+        // Found an open document with this URI.
+        // Return its current content (including any unsaved changes) as Uint8Array.
+        const docText = document.getText();
+        return Buffer.from(docText, "utf8");
+      }
+    }
+
+    // If no open document found or if it's not dirty, fall back to reading from disk.
     return await this.fsOperation(
       uri,
       async (u) => {

@@ -61,6 +61,8 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in agent mode.
 
+  If you need to use multiple tools, you can call call multiple read only tools simultaneously.
+
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 </important_rules>`;
 

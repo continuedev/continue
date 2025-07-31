@@ -1,8 +1,8 @@
-name: 'Setup Packages'
-description: 'Cache and build packages with npm caching'
+name: "Setup Packages"
+description: "Cache and build packages with npm caching"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: actions/setup-node@v4
       with:
@@ -21,17 +21,3 @@ runs:
     - name: Build packages
       shell: bash
       run: node ./scripts/build-packages.js
-
-    - name: Install package dependencies
-      shell: bash
-      run: |
-        for package_dir in packages/*/; do
-          if [ -f "$package_dir/package.json" ] && [ ! -d "$package_dir/node_modules" ]; then
-            echo "Installing dependencies for $package_dir"
-            cd "$package_dir"
-            npm ci
-            cd - > /dev/null
-          elif [ -d "$package_dir/node_modules" ]; then
-            echo "Using cached dependencies for $package_dir"
-          fi
-        done

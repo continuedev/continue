@@ -67,6 +67,7 @@ export class RecentlyEditedTracker {
           lines: contents.split("\n"),
           symbols: getSymbolsForSnippet(contents),
         };
+        this.recentlyEditedRanges[i] = range;
         return;
       }
     }
