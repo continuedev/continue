@@ -187,58 +187,8 @@ export class Core {
           });
         }
       };
-    });
 
-    // Dev Data Logger
-    const dataLogger = DataLogger.getInstance();
-    dataLogger.core = this;
-    dataLogger.ideInfoPromise = ideInfoPromise;
-    dataLogger.ideSettingsPromise = ideSettingsPromise;
-
-    void ideSettingsPromise.then((ideSettings) => {
-      // Index on initialization
-      void this.ide.getWorkspaceDirs().then(async (dirs) => {
-        // Respect pauseCodebaseIndexOnStart user settings
-        if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.codeBaseIndexer.paused = true;
-          void this.messenger.request("indexProgress", {
-            progress: 0,
-            desc: "Initial Indexing Skipped",
-            status: "paused",
-          });
-          return;
-        }
-
-        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
-      });
-    });
-
-    const getLlm = async () => {
-      const { config } = await this.configHandler.loadConfig();
-      if (!config) {
-        return undefined;
-      }
-      return config.selectedModelByRole.autocomplete ?? undefined;
-    };
-    this.completionProvider = new CompletionProvider(
-      this.configHandler,
-      ide,
-      getLlm,
-      (e) => {},
-      (..._) => Promise.resolve([]),
-    );
-
-    const codebaseRulesCache = CodebaseRulesCache.getInstance();
-    void codebaseRulesCache
-      .refresh(ide)
-      .catch((e) => console.error("Failed to initialize colocated rules cache"))
-      .then(() => {
-        void this.configHandler.reloadConfig(
-          "Initial codebase rules post-walkdir/load reload",
-        );
-      });
-
-    this.codeBaseIndexer = new CodebaseIndexer(
+      this.codeBaseIndexer = new CodebaseIndexer(
         this.configHandler,
         this.ide,
         this.messenger,
