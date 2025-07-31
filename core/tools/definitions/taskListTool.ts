@@ -13,22 +13,14 @@ export const taskListTool: Tool = {
   function: {
     name: BuiltInToolNames.TaskList,
     description:
-      'Manage and execute tasks in a queue-based system. Supports adding, updating, removing, and monitoring tasks. When you perform "runAllTasks" action, you should keep executing the tasks until hasNextTask is false. Before executing any task, set the task to in progress by using the "runTask" action.',
+      'Manage and execute tasks in a queue-based system. Supports adding, updating, reading tasks. Before executing any task, set the task to in progress by using the "runTask" action.',
     parameters: {
       type: "object",
       required: ["action"],
       properties: {
         action: {
           type: "string",
-          enum: [
-            "add",
-            "update",
-            "remove",
-            "list",
-            "runTask",
-            "runAllTasks",
-            "completeTask",
-          ],
+          enum: ["add", "update", "list", "runTask"],
           description: "The action to perform on the task.",
         },
         name: {
@@ -43,8 +35,7 @@ export const taskListTool: Tool = {
         },
         taskId: {
           type: "string",
-          description:
-            "Required when running, updating, completing or removing a specific task",
+          description: "Required when running or updating a specific task",
         },
       },
     },

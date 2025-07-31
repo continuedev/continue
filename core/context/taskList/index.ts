@@ -1,4 +1,4 @@
-import { Session, TaskInfo } from "../..";
+import { Session } from "../..";
 import type { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import type { IMessenger } from "../../protocol/messenger";
 import { TaskManager } from "./TaskManager";
@@ -22,24 +22,4 @@ export function fetchTaskList(
   messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
 ) {
   return getTaskManagerForSession(sessionId, messenger).list();
-}
-
-export function updateTaskInTaskList(
-  sessionId: Session["sessionId"],
-  task: Pick<TaskInfo, "id" | "name" | "description">,
-  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-) {
-  getTaskManagerForSession(sessionId, messenger).update(
-    task.id,
-    task.name,
-    task.description,
-  );
-}
-
-export function deleteTaskFromTaskList(
-  sessionId: Session["sessionId"],
-  taskId: TaskInfo["id"],
-  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-) {
-  getTaskManagerForSession(sessionId, messenger).remove(taskId);
 }

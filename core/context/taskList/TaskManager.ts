@@ -5,7 +5,6 @@ import type { IMessenger } from "../../protocol/messenger";
 
 export enum TaskStatus {
   Pending = "pending",
-  Running = "running",
   Completed = "completed",
 }
 
@@ -17,7 +16,6 @@ export interface TaskEvent {
 export class TaskManager {
   private queue: TaskInfo["id"][] = [];
   private taskMap = new Map<TaskInfo["id"], TaskInfo>();
-  private previousTaskId: TaskInfo["id"] | null = null;
 
   constructor(
     private messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -104,50 +102,4 @@ export class TaskManager {
     }
     return this.taskMap.get(taskId)!;
   }
-
-  next() {
-    if (this.previousTaskId) {
-      const previousTask = this.taskMap.get(this.previousTaskId);
-      if (previousTask) {
-        const updatedPreviousTask: TaskInfo = {
-          ...previousTask,
-          status: TaskStatus.Completed,
-        };
-        this.taskMap.set(this.previousTaskId, updatedPreviousTask);
-
-        this.emitEvent("update");
-      }
-    }
-
-    if (this.queue.length === 0) {
-      return null;
-    }
-
-    const currentTaskId = this.queue.shift()!;
-    const currentTask = this.taskMap.get(currentTaskId)!;
-    const updatedCurrentTask: TaskInfo = {
-      ...currentTask,
-      status: TaskStatus.Running,
-      metadata: {
-        ...currentTask.metadata,
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    this.taskMap.set(currentTaskId, updatedCurrentTask);
-    this.previousTaskId = currentTaskId;
-
-    this.emitEvent("update");
-
-    return updatedCurrentTask;
-  }
-
-  // TODO
-  //   start(taskId: TaskInfo["id"]) {
-  //     this.updatePreviousTask(taskId, TaskStatus.Pending); // this
-  //     this.taskMap.set(taskId, {
-  //       ...this.taskMap.get(taskId)!,
-  //       status: TaskStatus.Running,
-  //     });
-  //   }
 }

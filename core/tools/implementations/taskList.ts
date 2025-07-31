@@ -15,7 +15,7 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
     case "add": {
       const taskId = manager.add(args.name, args.description);
       contextItem = {
-        name: "Task added",
+        name: "Add task",
         description: "Task was added to the queue",
         content: `Task added with ID: ${taskId}`,
       };
@@ -24,78 +24,29 @@ export const taskListImpl: ToolImpl = async (args, extras) => {
     case "update": {
       manager.update(args.taskId, args.name, args.description);
       contextItem = {
-        name: "Task updated",
+        name: "Update task",
         description: "Task was updated",
         content: `Task updated with ID: ${args.taskId}`,
-      };
-      break;
-    }
-    case "remove": {
-      manager.remove(args.taskId);
-      contextItem = {
-        name: "Task removed",
-        description: "Task was removed",
-        content: `Task removed with ID: ${args.taskId}`,
       };
       break;
     }
     case "list": {
       const tasks = manager.list();
       contextItem = {
-        name: "Task list",
+        name: "List tasks",
         description: "Current task list",
         content: JSON.stringify(tasks, null, 2),
       };
       break;
     }
     case "runTask": {
-      manager.setTaskStatus(args.taskId, TaskStatus.Running);
       const task = manager.getTaskById(args.taskId);
+      manager.setTaskStatus(task.id, TaskStatus.Completed);
       contextItem = {
-        name: "Task started",
-        description: `Task ID: ${task.id} started`,
+        name: "Start task",
+        description: "Perform the following task operation",
         content: JSON.stringify(task, null, 2),
       };
-      break;
-    }
-    case "completeTask": {
-      manager.setTaskStatus(args.taskId, TaskStatus.Completed);
-      const task = manager.getTaskById(args.taskId);
-      contextItem = {
-        name: "Task completed",
-        description: `Task ID: ${args.taskId} completed`,
-        content: JSON.stringify(task, null, 2),
-      };
-      break;
-    }
-    case "runAllTasks": {
-      const task = manager.next();
-      if (task) {
-        contextItem = {
-          name: "Task started",
-          description: `Task ID: ${task.id} started`,
-          content: JSON.stringify(
-            {
-              ...task,
-              hasNextTask: true,
-            },
-            null,
-            2,
-          ),
-        };
-      } else {
-        contextItem = {
-          name: "Tasks completed",
-          description: "Tasks in queue completed",
-          content: JSON.stringify(
-            {
-              hasNextTask: false,
-            },
-            null,
-            2,
-          ),
-        };
-      }
       break;
     }
     default: {
