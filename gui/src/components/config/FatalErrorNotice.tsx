@@ -60,7 +60,6 @@ export const FatalErrorIndicator = () => {
             Reload
           </div>
         )}
-
         <div
           onClick={showLumpErrorSection}
           className={`cursor-pointer underline transition-all ${selectedSection === "error" ? "opacity-0" : ""}`}

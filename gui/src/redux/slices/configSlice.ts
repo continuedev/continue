@@ -37,7 +37,7 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
 };
 
 const initialState: ConfigState = {
-  configError: [{ fatal: true, message: "hi"}],
+  configError: undefined,
   config: EMPTY_CONFIG,
   loading: false,
 };
@@ -54,7 +54,7 @@ export const configSlice = createSlice({
     ) => {
       const { config, errors } = result;
       if (!errors || errors.length === 0) {
-        // state.configError = undefined;
+        state.configError = undefined;
       } else {
         state.configError = errors;
       }
