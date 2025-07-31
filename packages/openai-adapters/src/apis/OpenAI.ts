@@ -28,7 +28,8 @@ export class OpenAIApi implements BaseLlmApi {
   constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
     this.apiBase = config.apiBase ?? this.apiBase;
     this.openai = new OpenAI({
-      apiKey: config.apiKey,
+      // Necessary because `new OpenAI()` will throw an error if there is no API Key
+      apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
     });

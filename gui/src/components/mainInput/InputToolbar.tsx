@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { LightBulbIcon as LightBulbIconSolid } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
-import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
+import { modelSupportsImages } from "core/llm/autodetect";
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -57,8 +57,6 @@ function InputToolbar(props: InputToolbarProps) {
   const isEnterDisabled =
     props.disabled || (isInEdit && codeToEdit.length === 0);
 
-  const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
-
   const supportsImages =
     defaultModel &&
     modelSupportsImages(
@@ -75,7 +73,7 @@ function InputToolbar(props: InputToolbarProps) {
     <>
       <div
         onClick={props.onClick}
-        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
+        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto mt-2 cursor-text opacity-100"}`}
         style={{
           fontSize: smallFont,
         }}
@@ -178,7 +176,7 @@ function InputToolbar(props: InputToolbarProps) {
           {!isInEdit && <ContextStatus />}
           {!props.toolbarOptions?.hideUseCodebase && !isInEdit && (
             <div
-              className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
+              className={`hover:underline" hidden transition-colors duration-200 md:flex`}
             >
               <HoverItem
                 className={props.activeKey === "Alt" ? "underline" : ""}

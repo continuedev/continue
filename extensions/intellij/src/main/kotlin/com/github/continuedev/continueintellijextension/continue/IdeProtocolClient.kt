@@ -6,7 +6,7 @@ import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -194,11 +194,6 @@ class IdeProtocolClient(
                         )
                         val tags = ide.getTags(artifactId)
                         respond(tags)
-                    }
-
-                    "getWorkspaceConfigs" -> {
-                        val configs = ide.getWorkspaceConfigs()
-                        respond(configs)
                     }
 
                     "getTerminalContents" -> {
@@ -478,7 +473,7 @@ class IdeProtocolClient(
                 }
             } catch (exception: Exception) {
                 val exceptionMessage = "Error handling message of type $messageType: $exception"
-                service<ContinueErrorService>().report(exception, exceptionMessage)
+                service<ContinueSentryService>().report(exception, exceptionMessage)
                 ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }

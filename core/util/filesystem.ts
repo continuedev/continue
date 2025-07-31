@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 
 import { fileURLToPath } from "node:url";
 import {
-  ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -51,6 +51,14 @@ class FileSystemIde implements IDE {
 
   getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
     return Promise.resolve(null);
+  }
+
+  getReferences(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
+  getDocumentSymbols(fileUri: string): Promise<DocumentSymbol[]> {
+    return Promise.resolve([]);
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
@@ -143,10 +151,6 @@ class FileSystemIde implements IDE {
 
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
-  }
-
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return Promise.resolve([]);
   }
 
   getDiff(includeUnstaged: boolean): Promise<string[]> {

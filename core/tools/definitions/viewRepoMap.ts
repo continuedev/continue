@@ -1,6 +1,7 @@
 import { Tool } from "../..";
 
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const viewRepoMapTool: Tool = {
   type: "function",
@@ -19,4 +20,9 @@ export const viewRepoMapTool: Tool = {
       properties: {},
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.ViewRepoMap,
+    `To view the repository map, use the ${BuiltInToolNames.ViewRepoMap} tool. This will provide a visual representation of the project's structure and organization.`,
+    [],
+  ),
 };
