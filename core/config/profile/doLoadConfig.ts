@@ -30,6 +30,7 @@ import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
+import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
@@ -160,6 +161,23 @@ export default async function doLoadConfig(options: {
   ) {
     newConfig.contextProviders.push(new CurrentFileContextProvider({}));
   }
+
+  // Show deprecation warnings for providers
+  const globalContext = new GlobalContext();
+  newConfig.contextProviders.forEach((provider) => {
+    if (provider.deprecationMessage) {
+      const providerTitle = provider.description.title;
+      const shownWarnings =
+        globalContext.get("shownDeprecatedProviderWarnings") ?? {};
+      if (true) {
+        void ide.showToast("warning", provider.deprecationMessage);
+        globalContext.update("shownDeprecatedProviderWarnings", {
+          ...shownWarnings,
+          [providerTitle]: true,
+        });
+      }
+    }
+  });
 
   // Add rules from colocated rules.md files in the codebase
   const codebaseRulesCache = CodebaseRulesCache.getInstance();

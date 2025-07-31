@@ -383,10 +383,8 @@ async function configYamlToContinueConfig(options: {
     ({ description: { title } }) => title,
   );
 
-  const globalContext = new GlobalContext();
-
-  continueConfig.contextProviders =
-    (config.context?.map((context) => {
+  continueConfig.contextProviders = (config.context
+    ?.map((context) => {
       const cls = contextProviderClassFromName(context.provider) as any;
       if (!cls) {
         if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
@@ -401,23 +399,9 @@ async function configYamlToContinueConfig(options: {
         name: context.name,
         ...context.params,
       });
-
-      if (instance.deprecationMessage) {
-        const providerTitle = instance.description.title;
-        const shownWarnings =
-          globalContext.get("shownDeprecatedProviderWarnings") ?? {};
-        if (!shownWarnings[providerTitle]) {
-          void ide.showToast("warning", instance.deprecationMessage);
-          globalContext.update("shownDeprecatedProviderWarnings", {
-            ...shownWarnings,
-            [providerTitle]: true,
-          });
-        }
-      }
-
       return instance;
-    }) as IContextProvider[]) ?? [];
-
+    })
+    .filter((p) => !!p) ?? []) as IContextProvider[];
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   if (
