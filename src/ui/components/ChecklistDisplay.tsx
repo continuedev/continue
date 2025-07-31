@@ -27,11 +27,11 @@ export const ChecklistDisplay: React.FC<ChecklistDisplayProps> = ({
         {lines.map((line, index) => {
           // Match both completed [x] and incomplete [ ] checkboxes
           const checkboxMatch = line.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
-          
+
           if (checkboxMatch) {
             const [, indent, status, taskText] = checkboxMatch;
             const isCompleted = status === "x";
-            
+
             return (
               <Box key={index}>
                 <Text>{indent}</Text>
@@ -39,7 +39,10 @@ export const ChecklistDisplay: React.FC<ChecklistDisplayProps> = ({
                   {isCompleted ? "✓" : "○"}
                 </Text>
                 <Text> </Text>
-                <Text color={isCompleted ? "gray" : "white"} strikethrough={isCompleted}>
+                <Text
+                  color={isCompleted ? "gray" : "white"}
+                  strikethrough={isCompleted}
+                >
                   {taskText}
                 </Text>
               </Box>
