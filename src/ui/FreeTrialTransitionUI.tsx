@@ -14,6 +14,7 @@ interface FreeTrialTransitionUIProps {
   onComplete: () => void;
   onSwitchToLocalConfig?: () => void;
   onFullReload?: () => void;
+  onShowConfigSelector?: () => void;
 }
 
 /**
@@ -38,6 +39,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   onComplete,
   onSwitchToLocalConfig,
   onFullReload,
+  onShowConfigSelector,
 }) => {
   const [currentStep, setCurrentStep] = useState<
     "choice" | "enterApiKey" | "processing" | "success" | "error"
@@ -52,12 +54,14 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
     if (currentStep === "choice") {
       if (key.upArrow && selectedOption > 1) {
         setSelectedOption(selectedOption - 1);
-      } else if (key.downArrow && selectedOption < 2) {
+      } else if (key.downArrow && selectedOption < 3) {
         setSelectedOption(selectedOption + 1);
       } else if (input === "1") {
         setSelectedOption(1);
       } else if (input === "2") {
         setSelectedOption(2);
+      } else if (input === "3") {
+        setSelectedOption(3);
       } else if (key.return) {
         handleOptionSelect();
       }
@@ -106,10 +110,17 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         );
         setCurrentStep("error");
       }
-    } else {
+    } else if (selectedOption === 2) {
       // Option 2: Enter API key
       setCurrentStep("enterApiKey");
       setWasModelsSetup(false); // This is not models setup
+    } else if (selectedOption === 3) {
+      // Option 3: Switch to different configuration
+      if (onShowConfigSelector) {
+        onShowConfigSelector();
+      } else {
+        onComplete();
+      }
     }
   };
 
@@ -159,9 +170,12 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         <Text color={selectedOption === 2 ? "cyan" : "white"}>
           {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API key
         </Text>
+        <Text color={selectedOption === 3 ? "cyan" : "white"}>
+          {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different configuration
+        </Text>
         <Text></Text>
         <Text color="gray">
-          Use ↑↓ arrows or 1/2 to select, Enter to confirm
+          Use ↑↓ arrows or 1/2/3 to select, Enter to confirm
         </Text>
       </Box>
     );
