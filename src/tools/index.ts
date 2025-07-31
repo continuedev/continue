@@ -219,6 +219,11 @@ export function formatToolCall(toolName: string, args?: any): string {
     typeof value === "boolean"
   ) {
     formattedValue = formatToolArgument(value);
+  } else if (typeof value === "string") {
+    const valueLines = value.split("\n");
+    if (valueLines.length === 1) {
+      formattedValue = formatToolArgument(value);
+    }
   }
 
   return `${displayName}(${formattedValue})`;
