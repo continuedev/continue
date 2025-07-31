@@ -21,11 +21,10 @@ export class TaskManager {
   ) {}
 
   private emitEvent(eventType: TaskEvent["type"]): void {
-    // TODO: messenger.send is null - need to figure out the reason
-    // this.messenger.send("taskEvent", {
-    //   type: eventType,
-    //   tasks: this.list(),
-    // });
+    this.messenger.send("taskEvent", {
+      type: eventType,
+      tasks: this.list(),
+    });
   }
 
   add(name: string, description: string) {

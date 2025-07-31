@@ -1,6 +1,7 @@
 import { TaskInfo } from "core";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { useWebviewListener } from "../../../../hooks/useWebviewListener";
 import { useFontSize } from "../../../ui/font";
 
 const TaskItem = ({ task }: { task: TaskInfo }) => {
@@ -50,7 +51,10 @@ const TaskItem = ({ task }: { task: TaskInfo }) => {
 export function TasksSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
-  const fetchTaskIntervalRef = useRef<NodeJS.Timeout | null>();
+
+  useWebviewListener("taskEvent", async (taskEvent) => {
+    setTasks(taskEvent.tasks);
+  });
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -59,17 +63,7 @@ export function TasksSection() {
         setTasks(response.content);
       }
     };
-    fetchTaskIntervalRef.current = setInterval(() => {
-      void fetchTasks();
-    }, 1000);
-
     void fetchTasks();
-
-    return () => {
-      if (fetchTaskIntervalRef.current) {
-        clearInterval(fetchTaskIntervalRef.current);
-      }
-    };
   }, [ideMessenger]);
 
   return (

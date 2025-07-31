@@ -1,5 +1,6 @@
 import { ConfigResult } from "@continuedev/config-yaml";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
+import { TaskEvent } from "../context/taskList/TaskManager.js";
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes.js";
 import type {
   BrowserSerializedContinueConfig,
@@ -44,4 +45,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
   toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
   freeTrialExceeded: [undefined, void];
+  taskEvent: [TaskEvent, void];
 };
