@@ -16,6 +16,7 @@ import {
   type ToolCall,
   PreprocessedToolCall,
 } from "./types.js";
+import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolParameters, ToolCall };
@@ -28,6 +29,7 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
   searchCodeTool,
   runTerminalCommandTool,
   fetchTool,
+  writeChecklistTool,
   // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
   ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
@@ -208,9 +210,21 @@ export function formatToolCall(toolName: string, args?: any): string {
     return displayName;
   }
 
-  // Get the first argument value
-  const firstValue = Object.values(args)[0];
-  const formattedValue = formatToolArgument(firstValue);
+  // Get the first argument value if it's a simple one
+  let formattedValue = "";
+  const [key, value] = Object.entries(args)[0];
+  if (
+    key.toLowerCase().includes("path") ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    formattedValue = formatToolArgument(value);
+  } else if (typeof value === "string") {
+    const valueLines = value.split("\n");
+    if (valueLines.length === 1) {
+      formattedValue = formatToolArgument(value);
+    }
+  }
 
   return `${displayName}(${formattedValue})`;
 }

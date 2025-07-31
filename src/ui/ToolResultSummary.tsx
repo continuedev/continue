@@ -3,6 +3,7 @@ import path from "path";
 import React from "react";
 import { ColoredDiff } from "./ColoredDiff.js";
 import { getToolDisplayName } from "../tools/index.js";
+import { ChecklistDisplay } from "./components/ChecklistDisplay.js";
 
 interface ToolResultSummaryProps {
   toolName?: string;
@@ -25,6 +26,19 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   const lines = content.split("\n").length;
   const chars = content.length;
   const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
+
+  // Handle write_checklist specially with styled display
+  if (toolName === "write_checklist") {
+    return (
+      <Box flexDirection="column">
+        <Box marginBottom={1}>
+          <Text color="gray">⎿ </Text>
+          <Text color="blue">Task List Updated</Text>
+        </Box>
+        <ChecklistDisplay content={`Task list status:\n${content}`} />
+      </Box>
+    );
+  }
 
   // Handle write_file with diff specially
   if (toolName === "write_file" && content.includes("Diff:\n")) {

@@ -13,6 +13,8 @@ const TOOL_NAME_MAPPINGS: Record<string, string> = {
   Exit: "exit",
   Diff: "view_diff",
   Edit: "edit_file",
+  "Update Task List": "write_checklist",
+  Checklist: "write_checklist",
 
   // Common variations (case insensitive)
   read: "read_file",
@@ -27,6 +29,7 @@ const TOOL_NAME_MAPPINGS: Record<string, string> = {
   exit: "exit",
   diff: "view_diff",
   edit: "edit_file",
+  checklist: "write_checklist",
 
   // Actual tool names (passthrough)
   read_file: "read_file",
@@ -36,6 +39,7 @@ const TOOL_NAME_MAPPINGS: Record<string, string> = {
   run_terminal_command: "run_terminal_command",
   view_diff: "view_diff",
   edit_file: "edit_file",
+  write_checklist: "write_checklist",
 };
 
 /**
@@ -74,6 +78,7 @@ export function getDisplayName(normalizedName: string): string {
     fetch: "Fetch",
     exit: "Exit",
     view_diff: "Diff",
+    write_checklist: "Update Task List",
   };
 
   return reverseMapping[normalizedName] || normalizedName;
