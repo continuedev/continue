@@ -132,8 +132,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
           : "File written successfully";
 
       case "edit_file":
-        return content.includes("Successfully edited file")
-          ? "File edited successfully"
+        return content.includes("Successfully created file")
+          ? "File created successfully"
           : "File edited successfully";
 
       case "list_files":
