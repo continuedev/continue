@@ -49,6 +49,7 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
         ],
 
         // For basic error tracking, a lower sample rate should be fine
+        sampleRate: 0.1,
         tracesSampleRate: 0.25,
 
         // Privacy-conscious default

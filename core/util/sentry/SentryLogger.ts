@@ -45,7 +45,8 @@ export class SentryLogger {
         stackParser: Sentry.defaultStackParser,
 
         // For basic error tracking, a lower sample rate should be fine
-        tracesSampleRate: 0.25,
+        sampleRate: 0.1,
+        tracesSampleRate: 0.1,
 
         // Privacy-conscious default
         sendDefaultPii: false,
