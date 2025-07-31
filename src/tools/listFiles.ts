@@ -23,8 +23,8 @@ export const listFilesTool: Tool = {
       preview: [
         {
           type: "text",
-          content: args.dirPath
-            ? `Will list files in: ${formatToolArgument(args.dirPath)}`
+          content: args.dirpath
+            ? `Will list files in: ${formatToolArgument(args.dirpath)}`
             : "Will list files in current directory",
         },
       ],

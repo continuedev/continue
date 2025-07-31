@@ -79,7 +79,7 @@ describe("Tool preprocess functions", () => {
 
   describe("listFilesTool.preprocess", () => {
     it("should return preview with directory path when directory arg present", async () => {
-      const args = { dirPath: "some/path" };
+      const args = { dirpath: "some/path" };
       const result = await listFilesTool.preprocess!(args);
 
       expect(result).toEqual({

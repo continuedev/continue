@@ -20,10 +20,12 @@ export const runTerminalCommandTool: Tool = {
   readonly: false,
   isBuiltIn: true,
   preprocess: async (args) => {
+    const command = args.command;
+    if (!command || typeof command !== "string") {
+      throw new Error("command arg is required and must be a non-empty string");
+    }
     const truncatedCmd =
-      args.command.length > 60
-        ? args.command.substring(0, 60) + "..."
-        : args.command;
+      command.length > 60 ? command.substring(0, 60) + "..." : command;
     return {
       args,
       preview: [
