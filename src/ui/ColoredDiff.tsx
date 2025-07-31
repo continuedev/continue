@@ -1,6 +1,6 @@
 import { diffWordsWithSpace } from "diff";
 import { Box, Text } from "ink";
-import React from "react";
+import React, { useMemo } from "react";
 
 // Color constants for diff display
 const COLORS = {
@@ -77,12 +77,16 @@ function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
   return result;
 }
 
+function useWordLevelDiff(oldContent: string, newContent: string) {
+  return useMemo(() => {
+    return diffWordsWithSpace(oldContent, newContent);
+  }, [oldContent, newContent]);
+}
+
 function renderWordLevelContent(
-  oldContent: string,
-  newContent: string,
+  changes: ReturnType<typeof diffWordsWithSpace>,
   showType: "removed" | "added"
 ): React.ReactNode {
-  const changes = diffWordsWithSpace(oldContent, newContent);
   const segments: React.ReactNode[] = [];
 
   changes.forEach((change, index) => {
@@ -115,6 +119,39 @@ function renderWordLevelContent(
 
   return <>{segments}</>;
 }
+
+const WordLevelDiffGroup: React.FC<{
+  groupIndex: number;
+  delLines: DiffLine[];
+  addLines: DiffLine[];
+}> = ({ groupIndex, delLines, addLines }) => {
+  const oldContent = delLines.map(l => l.content).join('\n');
+  const newContent = addLines.map(l => l.content).join('\n');
+  const changes = useWordLevelDiff(oldContent, newContent);
+
+  return (
+    <Box key={`group-${groupIndex}`} flexDirection="column">
+      <Box flexDirection="row">
+        <Text color={COLORS.LINE_NUMBER}>
+          {(delLines[0]?.oldLine ?? "").toString().padEnd(4)}{" "}
+        </Text>
+        <Text backgroundColor={COLORS.DELETION_BG}>- </Text>
+        <Text backgroundColor={COLORS.DELETION_BG}>
+          {renderWordLevelContent(changes, "removed")}
+        </Text>
+      </Box>
+      <Box flexDirection="row">
+        <Text color={COLORS.LINE_NUMBER}>
+          {(addLines[0]?.newLine ?? "").toString().padEnd(4)}{" "}
+        </Text>
+        <Text backgroundColor={COLORS.ADDITION_BG}>+ </Text>
+        <Text backgroundColor={COLORS.ADDITION_BG}>
+          {renderWordLevelContent(changes, "added")}
+        </Text>
+      </Box>
+    </Box>
+  );
+};
 
 export const ColoredDiff: React.FC<{ diffContent: string }> = ({
   diffContent,
@@ -215,30 +252,14 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
           // Word-level diff group
           const delLines = group.lines.filter((l) => l.type === "del");
           const addLines = group.lines.filter((l) => l.type === "add");
-          const oldContent = delLines.map((l) => l.content).join("\n");
-          const newContent = addLines.map((l) => l.content).join("\n");
 
           return (
-            <Box key={`group-${groupIndex}`} flexDirection="column">
-              <Box flexDirection="row">
-                <Text color={COLORS.LINE_NUMBER}>
-                  {(delLines[0]?.oldLine ?? "").toString().padEnd(4)}{" "}
-                </Text>
-                <Text backgroundColor={COLORS.DELETION_BG}>- </Text>
-                <Text backgroundColor={COLORS.DELETION_BG}>
-                  {renderWordLevelContent(oldContent, newContent, "removed")}
-                </Text>
-              </Box>
-              <Box flexDirection="row">
-                <Text color={COLORS.LINE_NUMBER}>
-                  {(addLines[0]?.newLine ?? "").toString().padEnd(4)}{" "}
-                </Text>
-                <Text backgroundColor={COLORS.ADDITION_BG}>+ </Text>
-                <Text backgroundColor={COLORS.ADDITION_BG}>
-                  {renderWordLevelContent(oldContent, newContent, "added")}
-                </Text>
-              </Box>
-            </Box>
+            <WordLevelDiffGroup
+              key={`group-${groupIndex}`}
+              groupIndex={groupIndex}
+              delLines={delLines}
+              addLines={addLines}
+            />
           );
         }
       })}
