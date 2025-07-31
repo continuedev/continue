@@ -279,14 +279,24 @@ export const streamNormalInput = createAsyncThunk<
     
     // Check if we have any tool calls that were just generated
     const newState = getState();
+    const toolSettings = newState.ui.toolSettings;
     const allToolCallStates = selectCurrentToolCalls(newState);
     const generatingToolCalls = allToolCallStates.filter(
       (toolCallState) => toolCallState.status === "generating",
     );
     
-    // Only set inactive if there are no tool calls to process
-    // This prevents UI flashing when tool calls are about to be executed
-    if (generatingToolCalls.length === 0) {
+    // Check if ALL generating tool calls are auto-approved
+    const allAutoApproved = generatingToolCalls.length > 0 && 
+      generatingToolCalls.every(
+        (toolCallState) =>
+          toolSettings[toolCallState.toolCall.function.name] === "allowedWithoutPermission",
+      );
+    
+    // Only set inactive if:
+    // 1. There are no tool calls, OR
+    // 2. There are tool calls but they require manual approval
+    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
+    if (generatingToolCalls.length === 0 || !allAutoApproved) {
       dispatch(setInactive());
     }
     
