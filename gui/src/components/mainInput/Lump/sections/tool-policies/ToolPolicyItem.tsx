@@ -157,10 +157,10 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         </div>
         <Tooltip id={disabledTooltipId}>
           {mode === "chat"
-            ? "Tool cannot be enabled in chat mode"
+            ? "Tool disabled in chat mode"
             : !props.isGroupEnabled
               ? "Group is turned off"
-              : "This tool cannot be enabled in plan mode"}
+              : "Tool disabled in plan mode"}
         </Tooltip>
       </div>
       <div
