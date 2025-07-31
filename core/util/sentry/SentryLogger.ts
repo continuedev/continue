@@ -18,13 +18,30 @@ export class SentryLogger {
     scope: Sentry.Scope | undefined;
   } {
     try {
-      // For shared environments like VSCode extensions, we need to be careful
-      // Using Sentry.init() but with limited integrations to avoid global state pollution
+      // For shared environments like VSCode extensions, we need to avoid global state pollution
+      // Filter out integrations that use global state
       // See https://docs.sentry.io/platforms/javascript/best-practices/shared-environments/
-      Sentry.init({
+      
+      // Filter integrations that use the global variable
+      const integrations = Sentry.getDefaultIntegrations({}).filter(
+        (defaultIntegration) => {
+          // Remove integrations that might interfere with shared environments
+          return ![
+            "OnUncaughtException", 
+            "OnUnhandledRejection",
+            "ContextLines",
+            "LocalVariables"
+          ].includes(defaultIntegration.name);
+        },
+      );
+
+      // Create client manually without polluting global state
+      const client = new Sentry.NodeClient({
         dsn: SENTRY_DSN,
         release,
         environment: process.env.NODE_ENV,
+        transport: Sentry.makeNodeTransport,
+        stackParser: Sentry.defaultStackParser,
 
         // For basic error tracking, a lower sample rate should be fine
         tracesSampleRate: 0.25,
@@ -62,26 +79,21 @@ export class SentryLogger {
           return anonymizedEvent;
         },
 
-        // Minimal integrations for Node.js/VSCode shared environment
-        integrations: [
-          // Keep only essential integrations
-          Sentry.nodeContextIntegration(),
-          Sentry.functionToStringIntegration(),
-          Sentry.linkedErrorsIntegration({ key: "cause", limit: 5 }),
-          Sentry.modulesIntegration(),
-        ],
+        // Use filtered integrations for Node.js/VSCode shared environment
+        integrations,
 
         // Enable structured logging
         _experiments: {
           enableLogs: true,
         },
-
-        // Don't automatically capture unhandled rejections - we'll do this manually
       });
 
-      // Get the initialized client and create a new scope
-      const client = Sentry.getClient() as Sentry.NodeClient | undefined;
+      // Create a new scope and set the client
       const scope = new Sentry.Scope();
+      scope.setClient(client);
+
+      // Initialize the client after setting it on the scope
+      client.init();
 
       return { client, scope };
     } catch (error) {
@@ -183,18 +195,22 @@ export function createSpan<T>(
   name: string,
   callback: () => T | Promise<T>,
 ): T | Promise<T> {
-  if (!SentryLogger.lazyClient) {
+  const client = SentryLogger.lazyClient;
+  if (!client) {
     return callback();
   }
 
-  // Use Sentry's startSpan function
-  return Sentry.startSpan(
-    {
-      op: operation,
-      name,
-    },
-    () => callback(),
-  );
+  // Use withScope from Sentry to isolate the span context
+  return Sentry.withScope((isolatedScope) => {
+    isolatedScope.setClient(client);
+    return Sentry.startSpan(
+      {
+        op: operation,
+        name,
+      },
+      () => callback(),
+    );
+  });
 }
 
 /**
@@ -204,13 +220,18 @@ export function createSpan<T>(
  * @param context Additional context information
  */
 export function captureException(error: Error, context?: Record<string, any>) {
-  if (!SentryLogger.lazyClient) {
+  const scope = SentryLogger.lazyScope;
+  if (!scope) {
     return;
   }
 
   try {
-    // Use Sentry's global captureException with context
-    Sentry.captureException(error, { extra: context });
+    // Add context to scope if provided
+    if (context) {
+      scope.setExtras(context);
+    }
+    // Use scope's captureException to avoid global state
+    scope.captureException(error);
   } catch (e) {
     console.error(`Failed to capture exception to Sentry: ${e}`);
   }
