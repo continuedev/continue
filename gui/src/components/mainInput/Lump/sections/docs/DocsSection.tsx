@@ -135,12 +135,12 @@ function DocsIndexingStatuses() {
       const url = new URL(doc);
       const hostname = url.hostname.toLowerCase();
       const pathname = url.pathname.toLowerCase();
-      
+
       // Check hostname for specific domains
       if (hostname === "github.com" || hostname === "www.github.com") {
         return "GitHub";
       }
-      
+
       // Check pathname for documentation patterns
       if (pathname.includes("/docs") || pathname.includes("/documentation")) {
         return "Documentation";

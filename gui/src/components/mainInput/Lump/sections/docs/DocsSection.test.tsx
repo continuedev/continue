@@ -30,11 +30,7 @@ vi.mock("../../../../Input", () => ({
 
 vi.mock("../../../../gui/Select", () => ({
   Select: ({ value, onChange, children }: any) => (
-    <select
-      value={value}
-      onChange={onChange}
-      data-testid="select"
-    >
+    <select value={value} onChange={onChange} data-testid="select">
       {children}
     </select>
   ),
