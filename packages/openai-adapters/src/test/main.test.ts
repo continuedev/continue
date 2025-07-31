@@ -1,5 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import * as dotenv from "dotenv";
+import { vi } from "vitest";
 import { DEEPSEEK_API_BASE } from "../apis/DeepSeek.js";
 import { INCEPTION_API_BASE } from "../apis/Inception.js";
 import { OpenAIApi } from "../apis/OpenAI.js";
@@ -137,6 +138,7 @@ if (process.env.IGNORE_API_KEY_TESTS === "true") {
 } else {
   TESTS.forEach((config) => {
     describe(`${config.provider}/${config.model}`, () => {
+      vi.setConfig({ testTimeout: 30000 });
       testConfig({ name: config.model, ...config });
     });
   });

@@ -1,4 +1,6 @@
+import { Position } from "shiki";
 import { DiffLine } from "../..";
+import { myersDiff } from "../../diff/myers";
 
 /**
  * Given a diff of two editable regions, get the offset position at the last new line inside the editable region.
@@ -134,6 +136,8 @@ export function checkFim(
       isFim: false;
       fimText: null;
     } {
+  // console.log("oldEditRange", oldEditRange);
+  // console.log("newEditRange", newEditRange);
   // Find the common prefix.
   let prefixLength = 0;
   while (
@@ -168,12 +172,19 @@ export function checkFim(
   // Convert cursor position to an offset in the string.
   // For simplicity, we need to calculate the cursor's position in the string.
   // This requires knowledge of line endings in the oldEditRange.
-  const lines = oldEditRange.substring(0, prefixLength).split("\n");
+  // const lines = oldEditRange.substring(0, prefixLength).split("\n");
+  // const lines = oldEditRange.split("\n");
+  // const cursorOffset =
+  //   lines.length > 1
+  //     ? lines.slice(0, -1).reduce((sum, line) => sum + line.length + 1, 0) +
+  //       cursorPosition.character
+  //     : cursorPosition.character;
+  const oldEditLines = oldEditRange.split("\n");
   const cursorOffset =
-    lines.length > 1
-      ? lines.slice(0, -1).reduce((sum, line) => sum + line.length + 1, 0) +
-        cursorPosition.character
-      : cursorPosition.character;
+    oldEditLines
+      .slice(0, cursorPosition.line)
+      .reduce((sum, line) => sum + line.length + 1, 0) +
+    cursorPosition.character;
 
   // Check if the cursor is positioned between the prefix and suffix.
   const cursorBetweenPrefixAndSuffix =
@@ -191,4 +202,67 @@ export function checkFim(
   } else {
     return { isFim, fimText: null };
   }
+}
+
+export function calculateFinalCursorPosition(
+  currCursorPos: Position,
+  editableRegionStartLine: number,
+  oldEditRangeSlice: string,
+  newEditRangeSlice: string,
+) {
+  // How far away is the current line from the start of the editable region?
+  const lineOffsetAtCursorPos = currCursorPos.line - editableRegionStartLine;
+
+  // How long is the line at the current cursor position?
+  const lineContentAtCursorPos =
+    newEditRangeSlice.split("\n")[lineOffsetAtCursorPos];
+
+  const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+
+  const offset = getOffsetPositionAtLastNewLine(
+    diffLines,
+    lineContentAtCursorPos,
+    lineOffsetAtCursorPos,
+  );
+
+  // Calculate the actual line number in the editor by adding the startPos offset
+  // to the line number from the diff calculation.
+  const finalCursorPos: Position = {
+    line: editableRegionStartLine + offset.line,
+    character: offset.character,
+  };
+
+  return finalCursorPos;
+}
+
+/**
+ * Applies a completion to file content by replacing lines starting from a specific line number
+ *
+ * @param fileContent The original file content
+ * @param completion The completion text to apply
+ * @param startLineNumber The line number (0-based) where replacement should start
+ * @param linesToReplace Optional number of lines to replace; if not provided, will replace the same number of lines as in the completion
+ * @returns The file content with the completion applied
+ */
+export function applyCompletionToFile(
+  fileContent: string,
+  completion: string,
+  startLineNumber: number,
+  linesToReplace?: number,
+): string {
+  const lines = fileContent.split("\n");
+  const completionLines = completion.split("\n");
+
+  // Determine how many lines to replace
+  const numLinesToReplace =
+    linesToReplace !== undefined ? linesToReplace : completionLines.length;
+
+  // Replace the lines
+  const newLines = [
+    ...lines.slice(0, startLineNumber),
+    ...completionLines,
+    ...lines.slice(startLineNumber + numLinesToReplace),
+  ];
+
+  return newLines.join("\n");
 }
