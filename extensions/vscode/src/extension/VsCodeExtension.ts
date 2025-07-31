@@ -63,7 +63,6 @@ import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
-
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
@@ -95,9 +94,9 @@ export class VsCodeExtension {
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
-      this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
-      void this.workOsAuthProvider.refreshSessions();
-      context.subscriptions.push(this.workOsAuthProvider);
+    this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
+    void this.workOsAuthProvider.refreshSessions();
+    context.subscriptions.push(this.workOsAuthProvider);
 
     this.editDecorationManager = new EditDecorationManager(context);
 
