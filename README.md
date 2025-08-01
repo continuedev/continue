@@ -32,6 +32,8 @@ and [hub of models, rules, prompts, docs, and other building blocks](https://hub
 
 <p></p>
 
+<!-- Continue is an open-source AI code assistant that helps developers build software faster -->
+
 ## Agent
 
 [Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
