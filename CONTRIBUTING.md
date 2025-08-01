@@ -212,7 +212,7 @@ Guidelines for using theme colors:
 Guidelines for adding/updating theme colors:
 
 - Choose sensible VS Code variables to add/update in [gui/src/styles/theme.ts](gui/src/styles/theme.ts) (see [here](https://code.visualstudio.com/api/references/theme-color) and [here](https://www.notion.so/1fa1d55165f78097b551e3bc296fcf76?pvs=25) for inspiration)
-- Choose sensible Jetbrains named colors to add/update in `GetTheme.kt` (flagship LLMs can give you good suggestions to try)
+- Choose sensible JetBrains named colors to add/update in `GetTheme.kt` (flagship LLMs can give you good suggestions to try)
 - Update `tailwind.config.js` if needed
 - Use the Theme Test Page to check colors. This can be accessed by going to `Settings` -> `Help` -> `Theme Test Page` in dev/debug mode.
 
