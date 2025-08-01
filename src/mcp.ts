@@ -460,7 +460,7 @@ export class MCPConnection {
         name,
         command: config.command,
       });
-      await client.connect(transport);
+      await client.connect(transport, {});
 
       // Update connection with successful client
       (connection as any).client = client;

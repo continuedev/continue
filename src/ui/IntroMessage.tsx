@@ -53,7 +53,9 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {!modelCapable && (
         <>
           <Text> </Text>
-          <ModelCapabilityWarning modelName={model.name.split("/").pop() || model.name} />
+          <ModelCapabilityWarning
+            modelName={model.name.split("/").pop() || model.name}
+          />
         </>
       )}
 
@@ -91,7 +93,8 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         </>
       )}
 
-      {/* MCP Servers */}
+      {/* Decided this is noisy for now */}
+      {/* // MCP Servers
       {config.mcpServers?.length && (
         <>
           <Text color="blue">MCP Servers:</Text>
@@ -102,7 +105,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
           ))}
           <Text> </Text>
         </>
-      )}
+      )} */}
     </Box>
   );
 };

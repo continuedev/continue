@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from "ink";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useServices } from "../hooks/useService.js";
 import { MCPServiceState } from "../services/types.js";
 
@@ -25,6 +25,11 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const { services } = useServices<{ mcp: MCPServiceState }>(["mcp"]);
   const mcpService = services.mcp?.mcpService;
 
+  const connections = useMemo(() => {
+    return services.mcp?.connections ?? [];
+  }, [services.mcp?.connections]);
+  const backItem = { label: "Back", value: "back" };
+
   const handleBack = () => {
     if (menuState === "server-detail") {
       setSelectedServer(null);
@@ -40,32 +45,23 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
   // Main menu items
   const getMainMenuItems = (): MCPMenuItem[] => {
-    const connections = services.mcp?.connections || [];
+    const options: MCPMenuItem[] = [];
 
-    if (connections.length === 0) {
-      return [
-        { label: "No servers configured", value: "no-servers", disabled: true },
-        { label: "← Back", value: "back" },
-      ];
+    if (connections.length > 0) {
+      options.push(
+        { label: "🔄 Restart all servers", value: "restart-all" },
+        { label: "⏹️  Stop all servers", value: "stop-all" },
+        { label: "👁️  View servers", value: "view-servers" }
+      );
     }
-
-    return [
-      { label: "🔄 Restart all servers", value: "restart-all" },
-      { label: "⏹️  Stop all servers", value: "stop-all" },
-      { label: "👁️  View servers", value: "view-servers" },
-      { label: "← Back", value: "back" },
-    ];
+    options.push(backItem);
+    return options;
   };
 
   // Server list items
   const getServerItems = (): MCPMenuItem[] => {
-    const connections = services.mcp?.connections || [];
-
     if (connections.length === 0) {
-      return [
-        { label: "No servers", value: "no-servers", disabled: true },
-        { label: "← Back", value: "back" },
-      ];
+      return [backItem];
     }
 
     const serverItems = connections.map((conn) => {
@@ -82,7 +78,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
       };
     });
 
-    return [...serverItems, { label: "← Back", value: "back" }];
+    return [...serverItems, { label: "Back", value: "back" }];
   };
 
   // Server detail items
@@ -135,7 +131,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     }
 
     items.push({ label: "", value: "spacer4", disabled: true });
-    items.push({ label: "← Back", value: "back" });
+    items.push({ label: "Back", value: "back" });
 
     return items;
   };
@@ -242,7 +238,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const handleServerSelect = (value: string) => {
     if (value === "back") {
       handleBack();
-    } else if (value !== "no-servers") {
+    } else {
       setSelectedServer(value);
       setMenuState("server-detail");
       setSelectedIndex(0);
@@ -268,7 +264,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   };
 
   const renderHeader = () => {
-    let title = "MCP Management";
+    let title = "MCP Servers";
     let subtitle = "";
 
     if (menuState === "servers") {
@@ -293,6 +289,9 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         <Text bold color="cyan">
           {title}
         </Text>
+        {connections.length === 0 && (
+          <Text color="gray">No servers configured</Text>
+        )}
         {subtitle && <Text color="dim">{subtitle}</Text>}
       </Box>
     );
