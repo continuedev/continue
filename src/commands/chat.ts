@@ -123,11 +123,8 @@ async function processMessage(
     // Save session after each successful response
     saveSession(chatHistory);
   } catch (e: any) {
-    // In headless mode, ensure errors are visible on stderr
-    if (isHeadless) {
-      console.error(chalk.red(`Error: ${formatError(e)}`));
-    } else {
-      logger.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
+    logger.error(`Error: ${formatError(e)}`, e);
+    if (!isHeadless) {
       logger.info(
         chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
       );
