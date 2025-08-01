@@ -28,10 +28,6 @@ import {
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import { calculateFinalCursorPosition } from "./diff/diff.js";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
-import {
-  EditableRegionStrategy,
-  getNextEditableRegion,
-} from "./NextEditEditableRegionCalculator.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import {
   renderDefaultSystemPrompt,
@@ -71,7 +67,7 @@ export class NextEditProvider {
   private currentEditChainId: string | null = null;
   private previousRequest: AutocompleteInput | null = null;
   private previousCompletions: NextEditOutcome[] = [];
-  private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
+  // private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -220,7 +216,8 @@ export class NextEditProvider {
   public async deleteChain(): Promise<void> {
     this.currentEditChainId = null;
     this.previousCompletions = [];
-    this.nextEditableRegionsInTheCurrentChain = [];
+    // TODO: this should be cleaned up in the prefetch queue.
+    // this.nextEditableRegionsInTheCurrentChain = [];
 
     if (this.previousRequest) {
       const fileContent = (
@@ -271,14 +268,6 @@ export class NextEditProvider {
       // Debounce
       if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
-      }
-
-      // Depending on whether this method is called from provideInlineCompletionItemsWithChain,
-      // shift the next editable regions.
-      // This is handled here because this must run after the debouncer
-      // to prevent excessive shifts.
-      if (opts?.withChain) {
-        this.shiftNextEditableRegionsInTheCurrentChain();
       }
 
       const llm = await this._prepareLlm();
@@ -527,6 +516,7 @@ export class NextEditProvider {
       recentlyVisitedRanges: AutocompleteCodeSnippet[];
       recentlyEditedRanges: RecentlyEditedRange[];
     },
+    nextEditLocation: RangeInFile,
     token: AbortSignal | undefined,
   ) {
     try {
@@ -535,31 +525,10 @@ export class NextEditProvider {
         return undefined;
       }
 
-      const filepath = localPathOrUriToPath(previousOutcome.fileUri);
-
-      // If we don't have a precomputed list of next editable regions already, compute and load it.
-      if (this.nextEditableRegionsInTheCurrentChain.length === 0) {
-        this.loadNextEditableRegionsInTheCurrentChain(
-          (await getNextEditableRegion(EditableRegionStrategy.Static, {
-            cursorPosition: previousOutcome.cursorPosition,
-            filepath,
-            ide: this.ide,
-          })) ?? [],
-        );
-
-        if (this.nextEditableRegionsInTheCurrentChain.length === 0) {
-          console.log(
-            "deleteChain called from provideInlineCompletionItemsWithChain",
-          );
-          await this.deleteChain();
-          return undefined;
-        }
-      }
-
       // Use the frontmost RangeInFile to build an input.
-      const input = await this.buildAutocompleteInputFromChain(
+      const input = this.buildAutocompleteInputFromChain(
         previousOutcome,
-        this.nextEditableRegionsInTheCurrentChain[0], // this will be shifted after debouncer check
+        nextEditLocation,
         ctx,
       );
       if (!input) {
@@ -600,21 +569,5 @@ export class NextEditProvider {
     };
 
     return input;
-  }
-
-  public loadNextEditableRegionsInTheCurrentChain(regions: RangeInFile[]) {
-    this.nextEditableRegionsInTheCurrentChain = regions;
-  }
-
-  public shiftNextEditableRegionsInTheCurrentChain() {
-    return this.nextEditableRegionsInTheCurrentChain.shift();
-  }
-
-  public getNextEditableRegionsInTheCurrentChainLength() {
-    return this.nextEditableRegionsInTheCurrentChain.length;
-  }
-
-  public getNextEditableRegionsInTheCurrentChain(): RangeInFile[] {
-    return [...this.nextEditableRegionsInTheCurrentChain]; // Return a copy to prevent external modification
   }
 }

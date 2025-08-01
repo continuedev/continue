@@ -1,26 +1,43 @@
+import { RangeInFile } from "..";
 import { NextEditProvider } from "./NextEditProvider";
+import { NextEditOutcome } from "./types";
+
+interface ProcessedItem {
+  location: RangeInFile;
+  outcome: NextEditOutcome; // Result from the model
+}
 
 export class PrefetchQueue {
-  private unprocessedQueue: EditLocation[] = [];
+  private static instance: PrefetchQueue | null = null;
+
+  private unprocessedQueue: RangeInFile[] = [];
   private processedQueue: ProcessedItem[] = [];
   private prefetchLimit: number;
   private abortController: AbortController;
 
-  constructor(prefetchLimit: number = 3) {
+  private constructor(prefetchLimit: number = 3) {
     this.prefetchLimit = prefetchLimit;
     this.abortController = new AbortController();
   }
 
+  public static getInstance(prefetchLimit: number = 3): PrefetchQueue {
+    if (!PrefetchQueue.instance) {
+      PrefetchQueue.instance = new PrefetchQueue(prefetchLimit);
+    }
+
+    return PrefetchQueue.instance;
+  }
+
   // Queue management methods
-  enqueueUnprocessed(location: EditLocation): void {
+  enqueueUnprocessed(location: RangeInFile): void {
     this.unprocessedQueue.push(location);
   }
 
-  dequeueUnprocessed(): EditLocation | undefined {
+  private dequeueUnprocessed(): RangeInFile | undefined {
     return this.unprocessedQueue.shift();
   }
 
-  enqueueProcessed(item: ProcessedItem): void {
+  private enqueueProcessed(item: ProcessedItem): void {
     this.processedQueue.push(item);
   }
 
@@ -30,11 +47,9 @@ export class PrefetchQueue {
 
   // Process items from unprocessed queue
   async process(ctx: any): Promise<void> {
-    let processCount = 0;
-
     while (
       this.unprocessedQueue.length > 0 &&
-      processCount < this.prefetchLimit &&
+      this.processedQueue.length < this.prefetchLimit &&
       !this.abortController.signal.aborted
     ) {
       const location = this.dequeueUnprocessed();
@@ -48,12 +63,12 @@ export class PrefetchQueue {
             this.abortController.signal,
           );
 
+        if (!outcome) continue;
+
         this.enqueueProcessed({
           location,
           outcome,
         });
-
-        processCount++;
       } catch (error) {
         if (!this.abortController.signal.aborted) {
           // Handle error
@@ -79,15 +94,21 @@ export class PrefetchQueue {
     this.unprocessedQueue = [];
     this.processedQueue = [];
   }
-}
 
-// Types
-interface EditLocation {
-  // Define properties for edit location
-  // e.g., file, position, etc.
-}
+  // Additional helper methods
+  get unprocessedCount(): number {
+    return this.unprocessedQueue.length;
+  }
 
-interface ProcessedItem {
-  location: EditLocation;
-  outcome: any; // Result from the model
+  get processedCount(): number {
+    return this.processedQueue.length;
+  }
+
+  peekProcessed(): ProcessedItem | undefined {
+    return this.processedQueue[0];
+  }
+
+  setPreetchLimit(limit: number): void {
+    this.prefetchLimit = limit;
+  }
 }
