@@ -12,7 +12,7 @@ class Cerebras extends OpenAI {
 
   constructor(options: LLMOptions) {
     super(options);
-    
+
     // Set context length based on whether the model is the free version
     if (options.model === "qwen-3-coder-480b-free") {
       this._contextLength = 64000;
@@ -23,28 +23,28 @@ class Cerebras extends OpenAI {
 
   private filterThinkingTags(content: string): string {
     // Remove <thinking>...</thinking> tags (including multiline)
-    return content.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').trim();
+    return content.replace(/<thinking>[\s\S]*?<\/thinking>/gi, "").trim();
   }
 
   private filterThinkingFromMessages(messages: ChatMessage[]): ChatMessage[] {
-    return messages.map(message => {
-      if (typeof message.content === 'string') {
+    return messages.map((message) => {
+      if (typeof message.content === "string") {
         return {
           ...message,
-          content: this.filterThinkingTags(message.content)
+          content: this.filterThinkingTags(message.content),
         } as ChatMessage;
       } else if (Array.isArray(message.content)) {
         return {
           ...message,
-          content: message.content.map(part => {
-            if (part.type === 'text' && typeof part.text === 'string') {
+          content: message.content.map((part) => {
+            if (part.type === "text" && typeof part.text === "string") {
               return {
                 ...part,
-                text: this.filterThinkingTags(part.text)
+                text: this.filterThinkingTags(part.text),
               };
             }
             return part;
-          })
+          }),
         } as ChatMessage;
       }
       return message;
