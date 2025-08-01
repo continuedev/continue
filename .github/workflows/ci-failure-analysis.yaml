@@ -1,0 +1,42 @@
+name: CI Failure Analysis
+
+# Triggers when PR Checks workflow completes with failure
+on:
+  workflow_run:
+    workflows: ["PR Checks"]
+    types: [completed]
+    branches: [main]
+
+# Only run on pull requests where the workflow failed
+jobs:
+  analyze-failures:
+    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Get PR number from workflow run
+        id: get-pr-number
+        run: |
+          # Get the PR number from the workflow run
+          pr_number=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }} --jq '.pull_requests[0].number // empty')
+          if [ -n "$pr_number" ]; then
+            echo "pr_number=$pr_number" >> $GITHUB_OUTPUT
+            echo "Found PR number: $pr_number"
+          else
+            echo "pr_number=" >> $GITHUB_OUTPUT
+            echo "No PR number found"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Analyze CI failures
+        uses: ./.github/actions/ci-failure-analyzer
+        with:
+          workflow_run_id: ${{ github.event.workflow_run.id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          assistant_config: "nate/default-assistant"
+          pr_number: ${{ steps.get-pr-number.outputs.pr_number }}
+          dry_run: "false"  # Enable actual PR commenting
+          continue_api_key: ${{ secrets.CONTINUE_API_KEY }}
