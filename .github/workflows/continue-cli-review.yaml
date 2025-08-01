@@ -1,0 +1,97 @@
+name: Continue CLI Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
+    continue-on-error: true
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          # cache: "npm"
+
+      - name: Install cn
+        run: npm i -g @continuedev/cli
+
+      - name: Build prompt
+        run: |
+          gh pr diff ${{ github.event.number }} > prompt.txt
+
+          printf "\n\n---\n\n" >> prompt.txt
+
+          echo "Above is the git diff of the current PR. Please use it to review the changes. You can investigate the codebase as much as needed in order to better understand, but you do not need to make any changes. Once you are done investigating, you should create a file called 'review.txt' that includes the final results of your analysis. You should list only important findings, be extremely concise in your description, and always offer a solution." >> prompt.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Run cn check
+        run: cat prompt.txt | cn --config continuedev/default-agent -p
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-review
+          path: review.txt
+
+      - name: Add PR review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let reviewContent = '';
+            try {
+              reviewContent = fs.readFileSync('review.txt', 'utf8');
+            } catch (error) {
+              reviewContent = 'Review file not found or could not be read.';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('PR Review')
+            );
+
+            if (botComment) {
+              // Update existing bot comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: `## PR Review\n\n${reviewContent}`
+              });
+            } else {
+              // Create new bot comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: reviewContent
+              });
+            }
