@@ -10,6 +10,10 @@ import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { getThemeString } from "../util/getTheme";
+import {
+  HandlerPriority,
+  SelectionChangeManager,
+} from "./SelectionChangeManager";
 
 export interface TextApplier {
   applyText(
@@ -847,6 +851,24 @@ export class NextEditWindowManager {
 
   public hasAccepted() {
     return this.accepted;
+  }
+
+  public registerSelectionChangeHandler(): void {
+    const manager = SelectionChangeManager.getInstance();
+
+    manager.registerListener(
+      "nextEditWindowManager",
+      async (e, state) => {
+        if (state.nextEditWindowAccepted) {
+          console.log(
+            "NextEditWindowManager: Edit was just accepted, preserving chain",
+          );
+          return true;
+        }
+        return false;
+      },
+      HandlerPriority.CRITICAL,
+    );
   }
 }
 

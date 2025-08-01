@@ -1,6 +1,10 @@
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditOutcome } from "core/nextEdit/types";
 import * as vscode from "vscode";
+import {
+  HandlerPriority,
+  SelectionChangeManager,
+} from "./SelectionChangeManager";
 
 export interface CompletionDataForAfterJump {
   completionId: string;
@@ -346,5 +350,24 @@ export class JumpManager {
 
   get completionAfterJump() {
     return this._completionAfterJump;
+  }
+
+  public registerSelectionChangeHandler(): void {
+    const manager = SelectionChangeManager.getInstance();
+
+    manager.registerListener(
+      "jumpManager",
+      async (e, state) => {
+        if (state.jumpInProgress || state.jumpJustAccepted) {
+          console.log(
+            "JumpManager: jump in progress or just accepted, preserving chain",
+          );
+          return true;
+        }
+
+        return false;
+      },
+      HandlerPriority.HIGH,
+    );
   }
 }

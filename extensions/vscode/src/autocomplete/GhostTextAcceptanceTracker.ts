@@ -1,4 +1,8 @@
 import * as vscode from "vscode";
+import {
+  HandlerPriority,
+  SelectionChangeManager,
+} from "../activation/SelectionChangeManager";
 
 export interface ExpectedGhostTextAcceptance {
   documentUri: string;
@@ -113,5 +117,29 @@ export class GhostTextAcceptanceTracker {
     }
 
     return false;
+  }
+
+  public registerSelectionChangeHandler(): void {
+    const manager = SelectionChangeManager.getInstance();
+
+    manager.registerListener(
+      "ghostTextTracker",
+      async (e, state) => {
+        const wasGhostTextAccepted = this.checkGhostTextWasAccepted(
+          e.textEditor.document,
+          e.selections[0].active,
+        );
+
+        if (wasGhostTextAccepted) {
+          console.log(
+            "GhostTextAcceptanceTracker: ghost text was accepted, preserving chain",
+          );
+          return true;
+        }
+
+        return false;
+      },
+      HandlerPriority.HIGH,
+    );
   }
 }
