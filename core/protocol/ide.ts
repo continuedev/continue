@@ -1,4 +1,5 @@
 import type {
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -83,6 +84,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   gotoDefinition: [{ location: Location }, RangeInFile[]];
   gotoTypeDefinition: [{ location: Location }, RangeInFile[]];
   getSignatureHelp: [{ location: Location }, SignatureHelp | null];
+  getReferences: [{ location: Location }, RangeInFile[]];
+  getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

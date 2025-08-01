@@ -5,6 +5,7 @@ export default defineConfig({
     environment: "node",
     timeout: 10000,
     globals: true,
+    include: ["**/*.{test,spec}.?(c|m)[jt]s?(x)"],
   },
   resolve: {
     alias: {
@@ -12,6 +13,8 @@ export default defineConfig({
       "./getAgentOptions.js": "./getAgentOptions.ts",
       "./stream.js": "./stream.ts",
       "./util.js": "./util.ts",
+      "./certs.js": "./certs.ts",
+      "./fetch.js": "./fetch.ts",
     },
   },
 });

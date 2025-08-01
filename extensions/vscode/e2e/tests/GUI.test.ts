@@ -7,7 +7,7 @@ import {
   WebDriver,
   WebElement,
   WebView,
-  until
+  until,
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -376,7 +376,7 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
     }).timeout(DEFAULT_TIMEOUT.XL * 1000);
-  })
+  });
 
   describe("Chat Paths", () => {
     it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {
