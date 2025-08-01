@@ -178,28 +178,10 @@ export class JumpManager {
       vscode.TextEditorRevealType.InCenter,
     );
 
-    // Set up a way to detect when the jump is complete.
-    const disposable = vscode.window.onDidChangeTextEditorSelection(() => {
-      console.log("_jumpInProgress is false");
-      this._jumpInProgress = false;
-      disposable.dispose();
-
-      // If there's a completion waiting to be shown after the jump,
-      // execute the command to show it.
-      if (this._completionAfterJump) {
-        vscode.commands.executeCommand(
-          "continue.showNextEditAfterJump",
-          this._completionAfterJump,
-        );
-        this._completionAfterJump = null;
-      }
-    });
-
     // Clean up after timeout if no jump has been made.
-    setTimeout(() => {
-      this._jumpInProgress = false;
-      disposable.dispose();
-    }, 10000);
+    // setTimeout(() => {
+    //   this._jumpInProgress = false;
+    // }, 10000);
 
     return true;
   }
@@ -215,8 +197,8 @@ export class JumpManager {
     // Create a decoration for jump.
     this._jumpDecoration = vscode.window.createTextEditorDecorationType({
       before: {
-        contentText: "🦘 Press Tab to jump, Esc to cancel",
-        color: new vscode.ThemeColor("editorInfo.foreground"),
+        contentText: "📍 Press Tab to jump, Esc to cancel",
+        color: new vscode.ThemeColor("editor.foreground"),
         backgroundColor: new vscode.ThemeColor("editorInfo.background"),
         margin: `0 0 0 4px`,
       },
