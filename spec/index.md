@@ -2,9 +2,11 @@
 
 ## Overall development goals
 
+Fight to keep `cn` simple. This is an active process. The default is that `cn` will become disastrously complicated.
+
 ### Maintainability
 
-Maintain minimal code (avoid new features unless there is overwhelming demand or they remove a clear blocker for many users)
+Maintain minimal code (avoid new features unless there is overwhelming demand or they remove a clear blocker for many users). If someone offers up a feature you should seek to understand what they actually want and then decide as a maintainer of `cn` whether this can fit into some larger concept in a simple way. If someone asks to make something configurable, you should probably consider just changing the default.
 
 ### Don't write code by hand
 
