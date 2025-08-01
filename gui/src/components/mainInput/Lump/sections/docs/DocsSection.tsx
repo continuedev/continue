@@ -1,12 +1,67 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus } from "core";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, ChangeEvent } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { useAppSelector } from "../../../../../redux/hooks";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
 import DocsIndexingStatus from "./DocsIndexingStatus";
+import { Input } from "../../../../";
+import { Select } from "../../../../gui/Select";
+
+type SortOption = "status" | "name" | "url";
+type GroupOption = "none" | "domain" | "category";
+
+interface CollapsibleGroupProps {
+  title: string;
+  count: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const CollapsibleGroup: React.FC<CollapsibleGroupProps> = ({
+  title,
+  count,
+  isExpanded,
+  onToggle,
+  children,
+}) => {
+  return (
+    <div className="mb-2">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center gap-1 rounded p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        {isExpanded ? (
+          <ChevronDownIcon className="h-4 w-4" />
+        ) : (
+          <ChevronRightIcon className="h-4 w-4" />
+        )}
+        <span className="text-sm font-medium">{title}</span>
+        <span className="ml-1 text-xs text-gray-500">({count})</span>
+      </button>
+      {isExpanded && <div className="ml-4">{children}</div>}
+    </div>
+  );
+};
 
 function DocsIndexingStatuses() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("status");
+  const [groupBy, setGroupBy] = useState<GroupOption>("none");
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const config = useAppSelector((store) => store.config.config);
   const indexingStatuses = useAppSelector(
     (store) => store.indexing.indexing.statuses,
@@ -22,51 +77,251 @@ function DocsIndexingStatuses() {
     }));
   }, [config.docs, selectedProfile?.rawYaml]);
 
+  // Filter docs based on search query
+  const filteredDocs = useMemo(() => {
+    const allDocs = mergedDocs ?? [];
+    if (!debouncedSearchQuery) return allDocs;
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return allDocs.filter(
+      ({ doc }) =>
+        doc.title?.toLowerCase().includes(query) ||
+        doc.startUrl?.toLowerCase().includes(query),
+    );
+  }, [mergedDocs, debouncedSearchQuery]);
+
+  // Sort docs
   const sortedConfigDocs = useMemo(() => {
-    const sorter = (status: IndexingStatus["status"]) => {
-      if (status === "complete") return 0;
-      if (status === "indexing" || status === "paused") return 1;
-      if (status === "failed") return 2;
-      if (status === "aborted" || status === "pending") return 3;
-      return 4;
-    };
+    const sorted = [...filteredDocs];
+    switch (sortBy) {
+      case "status":
+        const statusOrder = {
+          indexing: 0,
+          failed: 1,
+          complete: 2,
+          pending: 3,
+          aborted: 4,
+          paused: 5,
+        };
+        sorted.sort((a, b) => {
+          const orderA =
+            statusOrder[
+              indexingStatuses[a.doc.startUrl]?.status ?? "pending"
+            ] ?? 5;
+          const orderB =
+            statusOrder[
+              indexingStatuses[b.doc.startUrl]?.status ?? "pending"
+            ] ?? 5;
+          return orderA - orderB;
+        });
+        break;
+      case "name":
+        sorted.sort((a, b) =>
+          (a.doc.title || "").localeCompare(b.doc.title || ""),
+        );
+        break;
+      case "url":
+        sorted.sort((a, b) =>
+          (a.doc.startUrl || "").localeCompare(b.doc.startUrl || ""),
+        );
+        break;
+    }
+    return sorted;
+  }, [filteredDocs, sortBy, indexingStatuses]);
 
-    const docs = [...mergedDocs];
-    docs.sort((a, b) => {
-      const statusA = indexingStatuses[a.doc.startUrl]?.status ?? "pending";
-      const statusB = indexingStatuses[b.doc.startUrl]?.status ?? "pending";
+  // Helper function to categorize docs
+  const categorizeDoc = (doc: string): string => {
+    try {
+      const url = new URL(doc);
+      const hostname = url.hostname.toLowerCase();
+      const pathname = url.pathname.toLowerCase();
 
-      // First, compare by status
-      const statusCompare = sorter(statusA) - sorter(statusB);
-      if (statusCompare !== 0) return statusCompare;
+      // Check hostname for specific domains
+      if (hostname === "github.com" || hostname === "www.github.com") {
+        return "GitHub";
+      }
 
-      // If status is the same, sort by presence of icon
-      const hasIconA = !!a.doc.faviconUrl;
-      const hasIconB = !!b.doc.faviconUrl;
-      return hasIconB === hasIconA ? 0 : hasIconB ? 1 : -1;
+      // Check pathname for documentation patterns
+      if (pathname.includes("/docs") || pathname.includes("/documentation")) {
+        return "Documentation";
+      }
+      if (pathname.includes("/api") || pathname.includes("/reference")) {
+        return "API Reference";
+      }
+      if (pathname.includes("/blog") || pathname.includes("/article")) {
+        return "Blogs";
+      }
+      if (pathname.includes("/tutorial") || pathname.includes("/guide")) {
+        return "Tutorials & Guides";
+      }
+    } catch {
+      // If URL parsing fails, return "Other"
+    }
+    return "Other";
+  };
+
+  // Group docs
+  const groupedConfigDocs = useMemo(() => {
+    if (groupBy === "none") {
+      return { "All Documents": sortedConfigDocs };
+    }
+
+    const groups: Record<string, { doc: any; docFromYaml: any }[]> = {};
+
+    sortedConfigDocs.forEach((docConfig) => {
+      let groupKey: string;
+
+      if (groupBy === "domain") {
+        try {
+          const url = new URL(docConfig.doc.startUrl || "");
+          groupKey = url.hostname;
+        } catch {
+          groupKey = "Unknown Domain";
+        }
+      } else {
+        // groupBy === "category"
+        groupKey = categorizeDoc(docConfig.doc.startUrl);
+      }
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(docConfig);
     });
-    return docs;
-  }, [mergedDocs, indexingStatuses]);
+
+    // Sort groups by number of docs (descending)
+    const sortedGroups: Record<string, { doc: any; docFromYaml: any }[]> = {};
+    Object.entries(groups)
+      .sort(([, a], [, b]) => b.length - a.length)
+      .forEach(([key, value]) => {
+        sortedGroups[key] = value;
+      });
+
+    return sortedGroups;
+  }, [sortedConfigDocs, groupBy]);
+
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupName)) {
+        newSet.delete(groupName);
+      } else {
+        newSet.add(groupName);
+      }
+      return newSet;
+    });
+  };
+
+  // Auto-expand groups when there's only one group or when searching
+  useEffect(() => {
+    const groupNames = Object.keys(groupedConfigDocs);
+    if (groupNames.length === 1 || debouncedSearchQuery) {
+      setExpandedGroups(new Set(groupNames));
+    }
+  }, [groupedConfigDocs, debouncedSearchQuery]);
+
+  const totalDocs = filteredDocs.length;
+  const isEmpty = totalDocs === 0 && debouncedSearchQuery;
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-col overflow-y-auto overflow-x-hidden pr-2">
-        {sortedConfigDocs.map((docConfig) => {
-          return (
-            <div
-              key={docConfig.doc.startUrl}
-              className="flex items-center gap-2"
-            >
-              <div className="flex-grow">
-                <DocsIndexingStatus
-                  docFromYaml={docConfig.docFromYaml}
-                  docConfig={docConfig.doc}
-                />
-              </div>
-            </div>
-          );
-        })}
+    <div className="space-y-4 overflow-y-auto">
+      {/* Search and Filter Controls */}
+      <div className="sticky top-0 z-10 space-y-2 bg-white pb-2 dark:bg-gray-900">
+        <Input
+          type="text"
+          placeholder="Search documentation..."
+          value={searchQuery}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setSearchQuery(e.target.value)
+          }
+          className="w-full"
+        />
+
+        <div className="flex gap-2">
+          <Select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="flex-1"
+          >
+            <option value="status">Status</option>
+            <option value="name">Name</option>
+            <option value="url">URL</option>
+          </Select>
+
+          <Select
+            value={groupBy}
+            onChange={(e) => setGroupBy(e.target.value as GroupOption)}
+            className="flex-1"
+          >
+            <option value="none">No Grouping</option>
+            <option value="domain">Domain</option>
+            <option value="category">Category</option>
+          </Select>
+        </div>
+
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+          >
+            Clear search
+          </button>
+        )}
       </div>
+
+      {/* Results */}
+      {isEmpty ? (
+        <div className="py-8 text-center text-gray-500">
+          <p>No documentation found matching "{debouncedSearchQuery}"</p>
+          <button
+            onClick={() => setSearchQuery("")}
+            className="mt-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+          >
+            Clear search
+          </button>
+        </div>
+      ) : (
+        <div>
+          {Object.entries(groupedConfigDocs).map(([groupName, docs]) => {
+            const isExpanded = expandedGroups.has(groupName);
+            const showGroup = groupBy !== "none";
+
+            if (showGroup) {
+              return (
+                <CollapsibleGroup
+                  key={groupName}
+                  title={groupName}
+                  count={docs.length}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleGroup(groupName)}
+                >
+                  {docs.map(({ doc, docFromYaml }) => (
+                    <div key={doc.startUrl} className="flex items-center gap-2">
+                      <div className="flex-grow">
+                        <DocsIndexingStatus
+                          docFromYaml={docFromYaml}
+                          docConfig={doc}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </CollapsibleGroup>
+              );
+            } else {
+              return docs.map(({ doc, docFromYaml }) => (
+                <div key={doc.startUrl} className="flex items-center gap-2">
+                  <div className="flex-grow">
+                    <DocsIndexingStatus
+                      docFromYaml={docFromYaml}
+                      docConfig={doc}
+                    />
+                  </div>
+                </div>
+              ));
+            }
+          })}
+        </div>
+      )}
       <ExploreBlocksButton blockType="docs" />
     </div>
   );
