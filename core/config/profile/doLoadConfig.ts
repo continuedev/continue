@@ -305,7 +305,7 @@ export default async function doLoadConfig(options: {
   }
 
   await SentryLogger.setup(
-    newConfig.allowAnonymousTelemetry ?? true,
+    newConfig.allowAnonymousTelemetry ?? false,
     await ide.getUniqueId(),
     ideInfo,
     userEmail,

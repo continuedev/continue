@@ -2,6 +2,7 @@ import { IdeInfo } from "../../index.js";
 import {
   SentryLogger,
   captureException,
+  captureLog,
   createSpan,
   initializeSentry,
 } from "./SentryLogger";
@@ -58,9 +59,12 @@ describe("SentryLogger Integration Tests", () => {
         "test@continue.dev",
       );
 
-      expect(SentryLogger.allowTelemetry).toBe(false);
-      expect(SentryLogger.client).toBeUndefined();
-      expect(SentryLogger.scope).toBeUndefined();
+      // In the updated implementation, the Continue team member check is used instead of NODE_ENV check
+      // so we're not setting allowTelemetry to false just because we're in test environment anymore
+      expect(SentryLogger.allowTelemetry).toBe(true);
+      // But client and scope should still be initialized
+      expect(SentryLogger.client).toBeDefined();
+      expect(SentryLogger.scope).toBeDefined();
 
       process.env.NODE_ENV = originalNodeEnv;
     });
@@ -367,6 +371,48 @@ describe("Sentry Utility Functions", () => {
     });
   });
 
+  describe("captureLog", () => {
+    it("should not throw when telemetry is disabled", () => {
+      expect(() => captureLog("test message")).not.toThrow();
+      expect(() => captureLog("test message", "info", { context: "test" })).not.toThrow();
+    });
+
+    it("should not throw when telemetry is enabled", async () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+
+      await SentryLogger.setup(
+        true,
+        "test-id",
+        mockIdeInfo,
+        "test@continue.dev",
+      );
+
+      expect(() => captureLog("test message")).not.toThrow();
+      expect(() => captureLog("test message", "error", { context: "test" })).not.toThrow();
+
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+
+    it("should handle malformed context gracefully", async () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+
+      await SentryLogger.setup(
+        true,
+        "test-id",
+        mockIdeInfo,
+        "test@continue.dev",
+      );
+
+      expect(() => captureLog("test message", "info", null as any)).not.toThrow();
+      expect(() => captureLog("test message", "warning", undefined)).not.toThrow();
+      expect(() => captureLog("test message", "error", { circular: {} })).not.toThrow();
+
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+  });
+
   describe("Integration Tests", () => {
     it("should maintain consistent state across utility functions", async () => {
       const originalNodeEnv = process.env.NODE_ENV;
@@ -400,6 +446,7 @@ describe("Sentry Utility Functions", () => {
 
       const error = new Error("test error");
       expect(() => captureException(error, { test: "context" })).not.toThrow();
+      expect(() => captureLog("test log message", "info", { test: "context" })).not.toThrow();
 
       // Disable telemetry again
       await SentryLogger.setup(
