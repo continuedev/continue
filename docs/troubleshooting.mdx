@@ -139,11 +139,15 @@ This can be accomplished using the following command: `Continue: Rebuild codebas
 
 If Agent mode is grayed out or tools aren't functioning properly, this is likely due to model capability configuration issues.
 
+<Info>
+  Continue uses system message tools as a fallback for models without native tool support, so most models should work with Agent mode automatically.
+</Info>
+
 #### Check if your model has tool support
 
-1. Not all models support tool/function calling. Models like GPT-3.5 or older Claude versions may not support tools.
-2. Try adding `capabilities: ["tool_use"]` to your model config
-3. Verify your provider supports function calling
+1. Not all models support native tool/function calling, but Continue will automatically use system message tools as a fallback
+2. Try adding `capabilities: ["tool_use"]` to your model config to force tool support
+3. Verify your provider supports function calling or that system message tools are working correctly
 
 #### Tools Not Working
 

@@ -16,7 +16,7 @@ Model capabilities tell Continue what features a model supports:
 Without proper capability configuration, you may encounter issues like:
 
 - Agent mode being unavailable
-- Tools not working as expected
+- Tools not working at all
 - Image uploads being disabled
 
 ## How Continue Detects Capabilities
@@ -33,6 +33,10 @@ Continue automatically detects capabilities based on your provider and model nam
 - **Google**: All Gemini models support function calling
 
 This works well for popular models, but may not cover custom deployments or newer models.
+
+For implementation details, see:
+- [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
+- [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
 
 ### 2. Manual Override
 
@@ -73,17 +77,25 @@ models:
       - tool_use
 ```
 
+<Info>
+  Note: The `tool_use` capability is for native tool/function calling support. The model must actually support tools for this to work. If your model doesn't support native tools, Continue will automatically use system message tools instead.
+</Info>
+
 ### Disable Capabilities
 
-Remove capabilities that aren't working properly:
+Explicitly set no capabilities (autodetection will still apply):
 
 ```yaml
 models:
   - name: limited-claude
     provider: anthropic
     model: claude-4.0-sonnet
-    capabilities: [] # Disable all capabilities
+    capabilities: [] # Empty array doesn't disable autodetection
 ```
+
+<Warning>
+  An empty capabilities array does not disable autodetection. Continue will still detect and use the model's actual capabilities. To truly limit a model's capabilities, you would need to use a model that doesn't support those features.
+</Warning>
 
 ### Multiple Capabilities
 
@@ -99,47 +111,25 @@ models:
       - image_input
 ```
 
-## Provider-Specific Notes
+## Common Scenarios
 
-### OpenRouter
+Some providers and custom deployments may require explicit capability configuration:
 
-OpenRouter models often require capability overrides because the proxy may not preserve the original model's capabilities:
+- **OpenRouter**: May not preserve the original model's capabilities
+- **Custom API endpoints**: May have different capabilities than standard models
+- **Local models**: May need explicit capabilities if using non-standard model names
 
-```yaml
-models:
-  - name: openrouter-claude
-    provider: openrouter
-    model: anthropic/claude-4.0-sonnet
-    capabilities:
-      - tool_use
-      - image_input
-```
-
-### Ollama
-
-Local Ollama models may need explicit capabilities if the model name doesn't match standard patterns:
+Example configuration:
 
 ```yaml
 models:
-  - name: local-llama
-    provider: ollama
-    model: my-custom-llama
-    capabilities:
-      - tool_use
-```
-
-### Custom API Endpoints
-
-When using custom API endpoints that implement OpenAI-compatible interfaces:
-
-```yaml
-models:
-  - name: company-llm
+  - name: custom-deployment
     provider: openai
-    apiBase: https://internal-api.company.com/v1
-    model: company-gpt
+    apiBase: https://custom-api.company.com/v1
+    model: custom-gpt
     capabilities:
-      - tool_use # Add if your endpoint supports function calling
+      - tool_use      # If supports function calling
+      - image_input   # If supports vision
 ```
 
 ## Troubleshooting
@@ -150,110 +140,89 @@ For troubleshooting capability-related issues like Agent mode being unavailable 
 
 1. **Start with autodetection** - Only override if you experience issues
 2. **Test after changes** - Verify tools and images work as expected
-3. **Document custom models** - Note why capabilities were overridden
-4. **Keep Continue updated** - Newer versions improve autodetection
+3. **Keep Continue updated** - Newer versions improve autodetection
 
-Remember: The capabilities field completely overrides autodetection. If you set it, Continue won't check its built-in knowledge about your model.
+Remember: Setting capabilities only supplements autodetection. Continue will still use its built-in knowledge about your model in addition to your specified capabilities.
 
-## Model Compatibility Matrix
+## Model Capability Support
 
-This matrix shows which popular models support various Continue features. Continue auto-detects these capabilities, but you can override them if needed.
+This matrix shows which models support tool use and image input capabilities. Continue auto-detects these capabilities, but you can override them if needed.
 
 ### OpenAI
 
-| Model         | Chat | Apply | Edit | Tool Use | Image Input |
-| :------------ | ---- | ----- | ---- | -------- | ----------- |
-| o3            | ✅   | ✅    | ✅   | ✅       | ❌          |
-| o3-mini       | ✅   | ✅    | ✅   | ✅       | ❌          |
-| GPT-4o        | ✅   | ✅    | ✅   | ✅       | ✅          |
-| GPT-4 Turbo   | ✅   | ✅    | ✅   | ✅       | ✅          |
-| GPT-4         | ✅   | ✅    | ✅   | ✅       | ❌          |
-| GPT-3.5 Turbo | ✅   | ✅    | ✅   | ❌       | ❌          |
+| Model         | Tool Use | Image Input |
+| :------------ | -------- | ----------- |
+| o3            | ✅       | ❌          |
+| o3-mini       | ✅       | ❌          |
+| GPT-4o        | ✅       | ✅          |
+| GPT-4 Turbo   | ✅       | ✅          |
+| GPT-4         | ✅       | ❌          |
+| GPT-3.5 Turbo | ❌       | ❌          |
 
 ### Anthropic
 
-| Model              | Chat | Apply | Edit | Tool Use | Image Input |
-| :----------------- | ---- | ----- | ---- | -------- | ----------- |
-| Claude 4 Sonnet ⭐ | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3.5 Sonnet  | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Claude 3.5 Haiku   | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Model              | Tool Use | Image Input |
+| :----------------- | -------- | ----------- |
+| Claude 4 Sonnet    | ✅       | ✅          |
+| Claude 3.5 Sonnet  | ✅       | ✅          |
+| Claude 3.5 Haiku   | ✅       | ✅          |
 
 ### Google
 
-| Model            | Chat | Apply | Edit | Tool Use | Image Input |
-| :--------------- | ---- | ----- | ---- | -------- | ----------- |
-| Gemini 2.5 Pro   | ✅   | ✅    | ✅   | ✅       | ✅          |
-| Gemini 2.0 Flash | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Model            | Tool Use | Image Input |
+| :--------------- | -------- | ----------- |
+| Gemini 2.5 Pro   | ✅       | ✅          |
+| Gemini 2.0 Flash | ✅       | ✅          |
 
 ### Mistral
 
-| Model           | Chat | Apply | Edit | Tool Use | Image Input |
-| :-------------- | ---- | ----- | ---- | -------- | ----------- |
-| Devstral Medium | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Mistral         | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Model           | Tool Use | Image Input |
+| :-------------- | -------- | ----------- |
+| Devstral Medium | ✅       | ❌          |
+| Mistral         | ✅       | ❌          |
 
 ### DeepSeek
 
-| Model             | Chat | Apply | Edit | Tool Use | Image Input |
-| :---------------- | ---- | ----- | ---- | -------- | ----------- |
-| DeepSeek V3       | ✅   | ✅    | ✅   | ✅       | ❌          |
-| DeepSeek Coder V2 | ✅   | ✅    | ✅   | ✅       | ❌          |
-| DeepSeek Chat     | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Model             | Tool Use | Image Input |
+| :---------------- | -------- | ----------- |
+| DeepSeek V3       | ✅       | ❌          |
+| DeepSeek Coder V2 | ✅       | ❌          |
+| DeepSeek Chat     | ✅       | ❌          |
 
 ### xAI
 
-| Model  | Chat | Apply | Edit | Tool Use | Image Input |
-| :----- | ---- | ----- | ---- | -------- | ----------- |
-| Grok 4 | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Model  | Tool Use | Image Input |
+| :----- | -------- | ----------- |
+| Grok 4 | ✅       | ✅          |
 
 ### Moonshot AI
 
-| Model   | Chat | Apply | Edit | Tool Use | Image Input |
-| :------ | ---- | ----- | ---- | -------- | ----------- |
-| Kimi K2 | ✅   | ✅    | ✅   | ✅       | ✅          |
+| Model   | Tool Use | Image Input |
+| :------ | -------- | ----------- |
+| Kimi K2 | ✅       | ✅          |
 
 ### Qwen
 
-| Model             | Chat | Apply | Edit | Tool Use | Image Input |
-| :---------------- | ---- | ----- | ---- | -------- | ----------- |
-| Qwen Coder 3 480B | ✅   | ✅    | ✅   | ✅       | ❌          |
+| Model             | Tool Use | Image Input |
+| :---------------- | -------- | ----------- |
+| Qwen Coder 3 480B | ✅       | ❌          |
 
 ### Ollama (Local Models)
 
-| Model          | Chat | Apply | Edit | Tool Use | Image Input |
-| :------------- | ---- | ----- | ---- | -------- | ----------- |
-| Qwen 3 Coder   | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Devstral Small | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Llama 3.1      | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Llama 3        | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Mistral        | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Codestral      | ✅   | ✅    | ✅   | ✅       | ❌          |
-| Gemma 3 4B     | ✅   | ✅    | ✅   | ✅       | ❌          |
-
-### Apply Models (Specialized)
-
-| Model                | Provider | Apply |
-| :------------------- | -------- | ----- |
-| Morph v3             | MorphLLM | ✅    |
-| Relace Instant Apply | Relace   | ✅    |
-
-### Autocomplete Models (Specialized)
-
-| Model                  | Provider       | Autocomplete |
-| :--------------------- | -------------- | ------------ |
-| Codestral ⭐           | Mistral        | ✅           |
-| Mercury Coder Small ⭐ | Inception Labs | ✅           |
-| Qwen 2.5 Coder 1.5B ⭐ | Ollama         | ✅           |
+| Model          | Tool Use | Image Input |
+| :------------- | -------- | ----------- |
+| Qwen 3 Coder   | ✅       | ❌          |
+| Devstral Small | ✅       | ❌          |
+| Llama 3.1      | ✅       | ❌          |
+| Llama 3        | ✅       | ❌          |
+| Mistral        | ✅       | ❌          |
+| Codestral      | ✅       | ❌          |
+| Gemma 3 4B     | ✅       | ❌          |
 
 ### Notes
 
-- **Chat**: Basic conversation and code generation
-- **Apply**: Applying code changes to files
-- **Edit**: Editing existing code
 - **Tool Use**: Function calling for Agent mode (required for Agent mode)
 - **Image Input**: Processing screenshots and images
-- **⭐**: Recommended model for this feature
-- **Autocomplete**: Code completion (separate from chat models)
 
 ---
 

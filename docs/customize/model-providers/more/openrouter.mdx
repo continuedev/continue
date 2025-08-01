@@ -74,7 +74,13 @@ Learn more about available settings [here](https://openrouter.ai/docs).
 
 ## Model Capabilities
 
-OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the original model's function calling support. If you're experiencing issues with Agent mode or tools not working, add the capabilities field:
+OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the original model's function calling support. 
+
+<Info>
+  Continue automatically uses system message tools for models that don't support native function calling, so Agent mode should work even without explicit capability configuration. However, you can still override capabilities if needed.
+</Info>
+
+If you're experiencing issues with Agent mode or tools not working, you can add the capabilities field:
 
 <Tabs>
   <Tab title="YAML">
