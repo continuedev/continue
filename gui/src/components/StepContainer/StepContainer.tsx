@@ -22,6 +22,7 @@ export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const sessionId = useAppSelector((state) => state.session.id);
   const historyItemAfterThis = useAppSelector(
     (state) => state.session.history[props.index + 1],
   );
@@ -123,6 +124,7 @@ export default function StepContainer(props: StepContainerProps) {
               index={props.index}
               item={props.item}
               isLast={props.isLast}
+              sessionId={sessionId}
             />
           )}
         </div>
