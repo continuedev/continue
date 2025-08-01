@@ -4,6 +4,7 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { ROUTES } from "../../util/navigation";
+import Alert from "../gui/Alert";
 import { useLump } from "../mainInput/Lump/LumpContext";
 
 export const FatalErrorIndicator = () => {
@@ -25,18 +26,24 @@ export const FatalErrorIndicator = () => {
     setSelectedSection("error");
   };
 
+  const { selectedProfile } = useAuth();
+
   if (!hasFatalErrors) {
     return null;
   }
 
+  const displayName =
+    selectedProfile?.title ??
+    `${selectedProfile?.fullSlug?.ownerSlug}/${selectedProfile?.fullSlug?.packageSlug}` ??
+    "assistant";
+
   return (
-    <div
-      className="bg-error z-50 px-4 py-3 text-center text-white"
-      role="alert"
-    >
-      <strong className="font-bold">Error!</strong>{" "}
-      <span className="block sm:inline">Could not load config</span>
-      <div className="mt-2 flex flex-row items-center justify-center gap-3">
+    <Alert type="error" className="mx-2 my-1 px-2">
+      <span>{`Error loading`}</span>{" "}
+      <span className="italic">{displayName}</span>
+      {". "}
+      <span>{`Chat is disabled until a model is available.`}</span>
+      <div className="mt-2 flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5">
         <div
           onClick={() => {
             ideMessenger.post(
@@ -67,6 +74,6 @@ export const FatalErrorIndicator = () => {
           View
         </div>
       </div>
-    </div>
+    </Alert>
   );
 };
