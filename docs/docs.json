@@ -239,6 +239,7 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
+              "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/llama3.1",
               "guides/set-up-codestral",
