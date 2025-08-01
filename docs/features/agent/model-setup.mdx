@@ -1,8 +1,12 @@
 The models you set up for Chat mode will be used with Agent mode if the model supports tool calling. The recommended models and how to set them up can be found [here](/features/chat/model-setup).
 
-## Virtual Tool Calling
+## System Message Tools
 
-Continue implements an innovative approach called **virtual tool calling** that ensures consistent tool functionality across all models, regardless of their native capabilities. This allows Agent mode to work seamlessly with a wider range of models and providers.
+<Info>
+  System message tools are experimental and may change in future releases.
+</Info>
+
+Continue implements an innovative approach called **system message tools** that ensures consistent tool functionality across all models, regardless of their native capabilities. This allows Agent mode to work seamlessly with a wider range of models and providers.
 
 ### How It Works
 
@@ -10,7 +14,7 @@ Instead of relying solely on native tool calling APIs (which vary between provid
 
 - **Universal compatibility** - Any model capable of following instructions can use tools, not just those with native tool support
 - **Consistent behavior** - Tool calls work identically across OpenAI, Anthropic, local models, and others
-- **Better reliability** - Models that struggle with native tools often perform better with virtual tool calling
+- **Better reliability** - Models that struggle with native tools often perform better with system message tools
 - **Seamless switching** - Change between providers without modifying your workflow
 
 ### Recommended Models
@@ -23,11 +27,11 @@ For the best Agent mode experience, we recommend models with strong reasoning an
 - **DeepSeek** models - Strong performance with competitive pricing
 
 **Local Models:**
-While more limited in capabilities, these models can work with virtual tool calling:
+While more limited in capabilities, these models can work with system message tools:
 - Qwen2.5-Coder 32B - Best local option for Agent mode
 - Devstral 27B - Good for code-specific tasks
 - Smaller models (7B-13B) - May struggle with complex tool interactions
 
 ### Configuration
 
-Agent mode automatically determines whether to use native or virtual tool calling based on the model's capabilities. No additional configuration is required - simply select your model and Continue handles the rest.
+Agent mode automatically determines whether to use native or system message tools based on the model's capabilities. No additional configuration is required - simply select your model and Continue handles the rest.
