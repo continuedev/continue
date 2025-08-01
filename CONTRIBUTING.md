@@ -26,13 +26,13 @@
     - [Testing](#testing)
     - [Review Process](#review-process)
     - [Getting help](#getting-help)
-  - [Contribtuing new LLM Providers/Models](#contribtuing-new-llm-providersmodels)
+  - [Contributing new LLM Providers/Models](#contributing-new-llm-providersmodels)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
   - [📐 Continue Architecture](#-continue-architecture)
     - [Continue VS Code Extension](#continue-vs-code-extension)
     - [Continue JetBrains Extension](#continue-jetbrains-extension)
-  - [Contibutor License Agreement](#contributor-license-agreement-cla)
+  - [Contributor License Agreement](#contributor-license-agreement-cla)
 
 # ❤️ Ways to Contribute
 
@@ -219,10 +219,10 @@ Guidelines for adding/updating theme colors:
 ### Testing
 
 We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on
-each pull request. If your PR causes one of these tests to fail, we will ask that you to resolve the issue before we
+each pull request. If your PR causes one of these tests to fail, we will ask you to resolve the issue before we
 merge.
 
-When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
+When contributing, please update or create the appropriate tests to help verify the correctness of your implementation.
 
 ### Review Process
 
@@ -235,7 +235,7 @@ When contributing, please update or create the appropriate tests to help verify 
 
 Join [#contribute on Discord](https://discord.gg/vapESyrFmJ) to engage with maintainers and other contributors.
 
-## Contribtuing new LLM Providers/Models
+## Contributing new LLM Providers/Models
 
 ### Adding an LLM Provider
 
