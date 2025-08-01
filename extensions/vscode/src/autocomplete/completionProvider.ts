@@ -432,9 +432,28 @@ export class ContinueCompletionProvider
               0 &&
             !jumpSuccessful
           ) {
+            // NOTE: Outcome has to be re-computed for each next editable location.
             const nextRegion =
-              this.nextEditProvider.shiftNextEditableRegionsInTheCurrentChain();
+              this.nextEditProvider.getNextEditableRegionsInTheCurrentChain()[0];
             if (!nextRegion) continue;
+
+            // Getting the outcome shifts the next editable region queue,
+            // deleting the item denoted by nextRegion above.
+            outcome =
+              await this.nextEditProvider.provideInlineCompletionItemsWithChain(
+                {
+                  completionId,
+                  manuallyPassFileContents,
+                  manuallyPassPrefix,
+                  selectedCompletionInfo,
+                  isUntitledFile: document.isUntitled,
+                  recentlyVisitedRanges,
+                  recentlyEditedRanges,
+                },
+                signal,
+              );
+
+            if (!outcome) continue;
 
             const jumpPosition = new vscode.Position(
               nextRegion.range.start.line,
