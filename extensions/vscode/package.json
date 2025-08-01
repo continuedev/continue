@@ -351,6 +351,16 @@
         "title": "Continue: Force Next Edit"
       },
       {
+        "command": "continue.acceptJump",
+        "category": "Continue",
+        "title": "Continue: Accept Jump Suggestion"
+      },
+      {
+        "command": "continue.rejectJump",
+        "category": "Continue",
+        "title": "Continue: Reject Jump Suggestion"
+      },
+      {
         "command": "continue.generateRule",
         "category": "Continue",
         "title": "Generate Rule",
@@ -451,12 +461,22 @@
       {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",
         "key": "escape",
-        "when": "editorTextFocus && nextEditWindowActive"
+        "when": "editorTextFocus && nextEditWindowActive && !continue.jumpDecorationVisible"
       },
       {
         "command": "continue.nextEditWindow.acceptNextEditSuggestion",
         "key": "tab",
-        "when": "editorTextFocus && nextEditWindowActive"
+        "when": "editorTextFocus && nextEditWindowActive && !continue.jumpDecorationVisible"
+      },
+      {
+        "command": "continue.acceptJump",
+        "key": "tab",
+        "when": "editorTextFocus && continue.jumpDecorationVisible"
+      },
+      {
+        "command": "continue.rejectJump",
+        "key": "escape",
+        "when": "editorTextFocus && continue.jumpDecorationVisible"
       }
     ],
     "submenus": [
@@ -717,8 +737,8 @@
     "vscode-extension-tester": "^8.14.1"
   },
   "dependencies": {
-    "@continuedev/config-types": "^1.0.14",
-    "@continuedev/fetch": "^1.0.10",
+    "@continuedev/config-types": "file:../../packages/config-types",
+    "@continuedev/fetch": "file:../../packages/fetch",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@vscode/ripgrep": "^1.15.9",

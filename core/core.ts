@@ -204,24 +204,6 @@ export class Core {
     dataLogger.ideInfoPromise = ideInfoPromise;
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
-    void ideSettingsPromise.then((ideSettings) => {
-      // Index on initialization
-      void this.ide.getWorkspaceDirs().then(async (dirs) => {
-        // Respect pauseCodebaseIndexOnStart user settings
-        if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.codeBaseIndexer.paused = true;
-          void this.messenger.request("indexProgress", {
-            progress: 0,
-            desc: "Initial Indexing Skipped",
-            status: "paused",
-          });
-          return;
-        }
-
-        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
-      });
-    });
-
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
@@ -603,6 +585,7 @@ export class Core {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
         msg.data,
         undefined,
+        { withChain: false },
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });
@@ -760,6 +743,9 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
+      console.log("deleteChain called from files/closed");
+      await NextEditProvider.getInstance().deleteChain();
+
       try {
         const fileUris = await this.ide.getOpenFiles();
         if (fileUris) {

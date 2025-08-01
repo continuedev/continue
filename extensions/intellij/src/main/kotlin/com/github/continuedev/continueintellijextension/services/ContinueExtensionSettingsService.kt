@@ -1,7 +1,7 @@
 package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
@@ -132,7 +132,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
                 response.configJs.let { file.writeText(it!!) }
                 response.configJson.let { file.writeText(it!!) }
             } catch (e: IOException) {
-                service<ContinueErrorService>().report(e, "Unexpected exception during remote config sync")
+                service<ContinueSentryService>().report(e, "Unexpected exception during remote config sync")
             }
         }
     }

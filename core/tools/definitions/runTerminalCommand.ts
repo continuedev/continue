@@ -11,7 +11,7 @@ function getPreferredShell(): string {
   const platform = os.platform();
 
   if (platform === "win32") {
-    return process.env.COMSPEC || "cmd.exe";
+    return "powershell.exe";
   } else if (platform === "darwin") {
     return process.env.SHELL || "/bin/zsh";
   } else {

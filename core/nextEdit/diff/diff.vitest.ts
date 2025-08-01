@@ -79,6 +79,46 @@ describe("checkFim", () => {
           "const data = fetchData();\n  const result = processData(data);",
       },
     },
+    {
+      name: "interesting case",
+      oldEditRange: ["  }", "}", ""].join("\n"),
+      newEditRange: ["  }", "}", "", "module.exports = Calculator;"].join("\n"),
+      cursorPosition: { line: 0, character: 0 },
+      expected: {
+        isFim: false,
+        fimText: null,
+      },
+    },
+    {
+      name: "calculator.js divide",
+      oldEditRange: [
+        "    ",
+        "    if (number === 0) {",
+        '      throw new Error("Cannot divide by zero");',
+        "    }",
+        "    this.result /= number;",
+        "    return this;",
+      ].join("\n"),
+      newEditRange: [
+        "    if (typeof number !== 'number') {",
+        '      throw new Error("Invalid input: must be a number");',
+        "    }",
+        "    if (number === 0) {",
+        '      throw new Error("Cannot divide by zero");',
+        "    }",
+        "    this.result /= number;",
+        "    return this;",
+      ].join("\n"),
+      cursorPosition: { line: 0, character: 4 },
+      expected: {
+        isFim: true,
+        fimText: [
+          "if (typeof number !== 'number') {",
+          '      throw new Error("Invalid input: must be a number");',
+          "    }",
+        ].join("\n"),
+      },
+    },
   ];
 
   testCases.forEach(
