@@ -1,0 +1,7 @@
+# Act configuration for testing CI failure analyzer
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+--container-architecture linux/amd64
+--env GITHUB_TOKEN=test_token
+--env CONTINUE_API_KEY=test_api_key
+--secret CONTINUE_API_KEY=test_api_key
+--artifact-server-path /tmp/act-artifacts

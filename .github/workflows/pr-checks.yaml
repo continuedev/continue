@@ -1,16 +1,20 @@
 name: PR Checks
 
-# PR Checks run on all PRs to the main branch and must pass before merging.
 on:
   pull_request:
     branches:
       - main
 
-  push:
-    branches:
-      - main
-
 jobs:
+  # Temporary test step to trigger CI failure analyzer
+  test-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Intentional test failure
+        run: |
+          echo "This step will fail to test our CI failure analyzer"
+          exit 1
+
   prettier-check:
     runs-on: ubuntu-latest
     steps:
@@ -311,13 +315,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           ci-github-token: ${{ secrets.CI_GITHUB_TOKEN }}
 
-  # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
-  # This action at least lets us manage the list of required tests via source control
-  # so that creators of new jobs can add them to this list
-  require-all-checks-to-pass:
-    if: always()
+  # Analyze CI failures when jobs fail on PRs
+  analyze-failures:
+    if: failure() && always()
     runs-on: ubuntu-latest
     needs:
+      - test-failure
       - prettier-check
       - core-checks
       - gui-checks
@@ -329,6 +332,51 @@ jobs:
       - vscode-package-extension-linux
       - vscode-e2e-tests
       - jetbrains-tests
+
+    steps:
+      - name: Get current workflow run ID
+        id: get-run-id
+        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Extract PR number
+        id: get-pr-number
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "pr_number=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Analyze CI failures
+        uses: ./.github/actions/ci-failure-analyzer
+        with:
+          workflow_run_id: ${{ steps.get-run-id.outputs.run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          assistant_config: "nate/default-assistant"
+          pr_number: ${{ steps.get-pr-number.outputs.pr_number }}
+          dry_run: "true" # Enable dry-run mode for now
+          continue_api_key: ${{ secrets.CONTINUE_API_KEY }}
+
+  # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
+  # This action at least lets us manage the list of required tests via source control
+  # so that creators of new jobs can add them to this list
+  require-all-checks-to-pass:
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - test-failure
+      - prettier-check
+      - core-checks
+      - gui-checks
+      - binary-checks
+      - vscode-checks
+      - get-packages-matrix
+      - packages-checks
+      - vscode-get-test-file-matrix
+      - vscode-package-extension-linux
+      - vscode-e2e-tests
+      - jetbrains-tests
+      - analyze-failures
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed

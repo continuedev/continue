@@ -1,0 +1,763 @@
+﻿2025-08-01T02:41:16.9847417Z Current runner version: '2.327.1'
+2025-08-01T02:41:16.9870719Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:16.9871644Z Hosted Compute Agent
+2025-08-01T02:41:16.9872210Z Version: 20250711.363
+2025-08-01T02:41:16.9872771Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:16.9873523Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:16.9874107Z ##[endgroup]
+2025-08-01T02:41:16.9874592Z ##[group]Operating System
+2025-08-01T02:41:16.9875192Z Ubuntu
+2025-08-01T02:41:16.9875655Z 24.04.2
+2025-08-01T02:41:16.9876076Z LTS
+2025-08-01T02:41:16.9876616Z ##[endgroup]
+2025-08-01T02:41:16.9877371Z ##[group]Runner Image
+2025-08-01T02:41:16.9877951Z Image: ubuntu-24.04
+2025-08-01T02:41:16.9878533Z Version: 20250728.1.0
+2025-08-01T02:41:16.9879501Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:16.9881139Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:16.9882072Z ##[endgroup]
+2025-08-01T02:41:16.9883230Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:16.9885188Z Contents: read
+2025-08-01T02:41:16.9885718Z Metadata: read
+2025-08-01T02:41:16.9886322Z Packages: read
+2025-08-01T02:41:16.9886822Z ##[endgroup]
+2025-08-01T02:41:16.9889370Z Secret source: Actions
+2025-08-01T02:41:16.9890461Z Prepare workflow directory
+2025-08-01T02:41:17.0207731Z Prepare all required actions
+2025-08-01T02:41:17.0244658Z Getting action download info
+2025-08-01T02:41:17.2960302Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:17.2961295Z Version: 4.2.2
+2025-08-01T02:41:17.2962352Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:17.2963515Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:17.2964225Z ##[endgroup]
+2025-08-01T02:41:17.4765520Z Complete job name: gui-checks
+2025-08-01T02:41:17.5490729Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:17.5491543Z with:
+2025-08-01T02:41:17.5492178Z   repository: continuedev/continue
+2025-08-01T02:41:17.5492960Z   token: ***
+2025-08-01T02:41:17.5493515Z   ssh-strict: true
+2025-08-01T02:41:17.5493896Z   ssh-user: git
+2025-08-01T02:41:17.5494292Z   persist-credentials: true
+2025-08-01T02:41:17.5494729Z   clean: true
+2025-08-01T02:41:17.5495119Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:17.5495587Z   fetch-depth: 1
+2025-08-01T02:41:17.5495966Z   fetch-tags: false
+2025-08-01T02:41:17.5496358Z   show-progress: true
+2025-08-01T02:41:17.5496751Z   lfs: false
+2025-08-01T02:41:17.5497252Z   submodules: false
+2025-08-01T02:41:17.5497653Z   set-safe-directory: true
+2025-08-01T02:41:17.5498344Z ##[endgroup]
+2025-08-01T02:41:17.6569027Z Syncing repository: continuedev/continue
+2025-08-01T02:41:17.6570727Z ##[group]Getting Git version info
+2025-08-01T02:41:17.6571577Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:17.6572593Z [command]/usr/bin/git version
+2025-08-01T02:41:17.6634778Z git version 2.50.1
+2025-08-01T02:41:17.6660315Z ##[endgroup]
+2025-08-01T02:41:17.6673971Z Temporarily overriding HOME='/home/runner/work/_temp/2a1ea512-016e-4378-9502-27127eeabc37' before making global git config changes
+2025-08-01T02:41:17.6676109Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:17.6679077Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:17.6711146Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:17.6714559Z ##[group]Initializing the repository
+2025-08-01T02:41:17.6718487Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:17.6797601Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:17.6799026Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:17.6799933Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:17.6801471Z hint:
+2025-08-01T02:41:17.6802117Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:17.6803065Z hint:
+2025-08-01T02:41:17.6804062Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:17.6805706Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:17.6807172Z hint:
+2025-08-01T02:41:17.6807925Z hint: 	git branch -m <name>
+2025-08-01T02:41:17.6808751Z hint:
+2025-08-01T02:41:17.6809758Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:17.6811414Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:17.6814939Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:17.6848449Z ##[endgroup]
+2025-08-01T02:41:17.6849628Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:17.6853223Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:17.6881691Z ##[endgroup]
+2025-08-01T02:41:17.6882922Z ##[group]Setting up auth
+2025-08-01T02:41:17.6889244Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:17.6919331Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:17.7213233Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:17.7241267Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:17.7465617Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:17.7500176Z ##[endgroup]
+2025-08-01T02:41:17.7501467Z ##[group]Fetching the repository
+2025-08-01T02:41:17.7509961Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:21.5749702Z From https://github.com/continuedev/continue
+2025-08-01T02:41:21.5751855Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:21.5775977Z ##[endgroup]
+2025-08-01T02:41:21.5778135Z ##[group]Determining the checkout info
+2025-08-01T02:41:21.5780203Z ##[endgroup]
+2025-08-01T02:41:21.5783907Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:21.5902619Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:21.5930984Z ##[group]Checking out the ref
+2025-08-01T02:41:21.5934533Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:22.5984347Z Updating files:  87% (2070/2354)
+2025-08-01T02:41:22.5994255Z Updating files:  88% (2072/2354)
+2025-08-01T02:41:22.6005600Z Updating files:  89% (2096/2354)
+2025-08-01T02:41:22.6026447Z Updating files:  90% (2119/2354)
+2025-08-01T02:41:22.6039599Z Updating files:  91% (2143/2354)
+2025-08-01T02:41:22.6048234Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:22.6056542Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:22.6067849Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:22.6081752Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:22.6096114Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:22.6111069Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:22.6123303Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:22.6138137Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:22.6138658Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:22.6139208Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:22.6166610Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:22.6167435Z 
+2025-08-01T02:41:22.6167934Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:22.6168598Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:22.6169501Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:22.6169895Z 
+2025-08-01T02:41:22.6170151Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:22.6170725Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:22.6171082Z 
+2025-08-01T02:41:22.6171264Z   git switch -c <new-branch-name>
+2025-08-01T02:41:22.6171507Z 
+2025-08-01T02:41:22.6171649Z Or undo this operation with:
+2025-08-01T02:41:22.6171858Z 
+2025-08-01T02:41:22.6171986Z   git switch -
+2025-08-01T02:41:22.6172145Z 
+2025-08-01T02:41:22.6172429Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:22.6172812Z 
+2025-08-01T02:41:22.6173262Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:22.6234963Z ##[endgroup]
+2025-08-01T02:41:22.6274585Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:22.6297165Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:22.6548220Z Prepare all required actions
+2025-08-01T02:41:22.6548704Z Getting action download info
+2025-08-01T02:41:22.8478364Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:22.8478771Z Version: 4.4.0
+2025-08-01T02:41:22.8479097Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:22.8479556Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:22.8479861Z ##[endgroup]
+2025-08-01T02:41:22.9363575Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:22.9363936Z Version: 4.2.3
+2025-08-01T02:41:22.9364259Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:22.9364693Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:22.9365106Z ##[endgroup]
+2025-08-01T02:41:23.0585512Z ##[group]Run ./.github/actions/setup-packages
+2025-08-01T02:41:23.0585900Z ##[endgroup]
+2025-08-01T02:41:23.0790774Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:23.0791028Z with:
+2025-08-01T02:41:23.0791226Z   node-version-file: .nvmrc
+2025-08-01T02:41:23.0791464Z   always-auth: false
+2025-08-01T02:41:23.0791656Z   check-latest: false
+2025-08-01T02:41:23.0791967Z   token: ***
+2025-08-01T02:41:23.0792144Z ##[endgroup]
+2025-08-01T02:41:23.2456601Z Node version file is not JSON file
+2025-08-01T02:41:23.2458941Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:23.2471055Z Attempting to download 20.19.0...
+2025-08-01T02:41:23.5620675Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:23.9747256Z Extracting ...
+2025-08-01T02:41:23.9883578Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/b9a4787b-dd78-4904-b475-7143417839a8 -f /home/runner/work/_temp/c4345fca-bcb6-4a12-ae00-e53a7d65603c
+2025-08-01T02:41:24.9817742Z Adding to the cache ...
+2025-08-01T02:41:26.6664822Z ##[group]Environment details
+2025-08-01T02:41:26.8871556Z node: v20.19.0
+2025-08-01T02:41:26.8872165Z npm: 10.8.2
+2025-08-01T02:41:26.8872445Z yarn: 1.22.22
+2025-08-01T02:41:26.8873435Z ##[endgroup]
+2025-08-01T02:41:26.9685177Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:26.9685419Z with:
+2025-08-01T02:41:26.9685600Z   path: ~/.npm
+2025-08-01T02:41:26.9686013Z   key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:26.9686489Z   enableCrossOsArchive: false
+2025-08-01T02:41:26.9686729Z   fail-on-cache-miss: false
+2025-08-01T02:41:26.9687171Z   lookup-only: false
+2025-08-01T02:41:26.9687467Z   save-always: false
+2025-08-01T02:41:26.9687658Z ##[endgroup]
+2025-08-01T02:41:27.1710508Z Cache hit for: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:27.6623759Z Received 69543054 of 69543054 (100.0%), 144.5 MBs/sec
+2025-08-01T02:41:27.6625456Z Cache Size: ~66 MB (69543054 B)
+2025-08-01T02:41:27.6652871Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ecfbcdc4-5bf0-4931-a8c7-8d83ec8973db/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:27.9173504Z Cache restored successfully
+2025-08-01T02:41:27.9381884Z Cache restored from key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:28.0118480Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:28.0118712Z with:
+2025-08-01T02:41:28.0118897Z   path: packages/*/node_modules
+
+2025-08-01T02:41:28.0119363Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:28.0119858Z   enableCrossOsArchive: false
+2025-08-01T02:41:28.0120092Z   fail-on-cache-miss: false
+2025-08-01T02:41:28.0120301Z   lookup-only: false
+2025-08-01T02:41:28.0120495Z   save-always: false
+2025-08-01T02:41:28.0120684Z ##[endgroup]
+2025-08-01T02:41:28.2208435Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:28.7864171Z Received 83741540 of 83741540 (100.0%), 156.6 MBs/sec
+2025-08-01T02:41:28.7865741Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:41:28.7898084Z [command]/usr/bin/tar -xf /home/runner/work/_temp/f7593c49-1646-4705-a217-599775e0ba31/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:31.2833646Z Cache restored successfully
+2025-08-01T02:41:31.3067860Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:31.3181108Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:31.3181500Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:31.3215358Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:31.3215702Z ##[endgroup]
+2025-08-01T02:41:31.3515842Z 🚀 Starting package builds...
+2025-08-01T02:41:31.3516133Z 
+2025-08-01T02:41:31.3522509Z Starting config-types (install): npm ci
+2025-08-01T02:41:31.9806402Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:31.9807765Z Starting config-types (build): npm run build
+2025-08-01T02:41:33.7332220Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:33.7333061Z Starting fetch (install): npm ci
+2025-08-01T02:41:33.7353675Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:33.7401032Z Starting llm-info (install): npm ci
+2025-08-01T02:41:34.7875217Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:34.7879850Z Starting llm-info (build): npm run build
+2025-08-01T02:41:35.7805381Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:41:35.7806532Z Starting fetch (build): npm run build
+2025-08-01T02:41:37.4090216Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:41:39.0790826Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:41:40.5718750Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:41:40.5719301Z Starting config-yaml (build): npm run build
+2025-08-01T02:41:44.5122902Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:41:44.5124105Z 🧹 Cleaning node_modules for openai-adapters
+2025-08-01T02:41:44.5131246Z 🧹 Cleaning node_modules for continue-sdk
+2025-08-01T02:41:45.2766239Z Starting continue-sdk (install): npm ci
+2025-08-01T02:41:45.2809343Z Starting openai-adapters (install): npm ci
+2025-08-01T02:41:51.6091664Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:41:51.6092449Z Starting openai-adapters (build): npm run build
+2025-08-01T02:41:55.0940422Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:41:55.0941766Z Starting continue-sdk (build): npm run build
+2025-08-01T02:41:55.2720822Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:41:57.1735201Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:41:57.1736070Z 🎉 All packages built successfully!
+2025-08-01T02:41:57.1932919Z Prepare all required actions
+2025-08-01T02:41:57.1933276Z Getting action download info
+2025-08-01T02:41:57.3924892Z ##[group]Run ./.github/actions/setup-component
+2025-08-01T02:41:57.3925174Z with:
+2025-08-01T02:41:57.3925355Z   component: core
+2025-08-01T02:41:57.3925561Z   include-root: true
+2025-08-01T02:41:57.3925779Z   include-packages: true
+2025-08-01T02:41:57.3925983Z ##[endgroup]
+2025-08-01T02:41:57.3958866Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:57.3959106Z with:
+2025-08-01T02:41:57.3959287Z   node-version-file: .nvmrc
+2025-08-01T02:41:57.3959506Z   always-auth: false
+2025-08-01T02:41:57.3959700Z   check-latest: false
+2025-08-01T02:41:57.3959990Z   token: ***
+2025-08-01T02:41:57.3960173Z ##[endgroup]
+2025-08-01T02:41:57.5678696Z Node version file is not JSON file
+2025-08-01T02:41:57.5680883Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:57.5694172Z Found in cache @ /opt/hostedtoolcache/node/20.19.0/x64
+2025-08-01T02:41:57.5700607Z ##[group]Environment details
+2025-08-01T02:41:57.7326601Z node: v20.19.0
+2025-08-01T02:41:57.7327257Z npm: 10.8.2
+2025-08-01T02:41:57.7327564Z yarn: 1.22.22
+2025-08-01T02:41:57.7329463Z ##[endgroup]
+2025-08-01T02:41:57.7958243Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:57.7958477Z with:
+2025-08-01T02:41:57.7958652Z   path: ~/.npm
+2025-08-01T02:41:57.7959034Z   key: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:57.7959482Z   enableCrossOsArchive: false
+2025-08-01T02:41:57.7959716Z   fail-on-cache-miss: false
+2025-08-01T02:41:57.7959940Z   lookup-only: false
+2025-08-01T02:41:57.7960139Z   save-always: false
+2025-08-01T02:41:57.7960330Z ##[endgroup]
+2025-08-01T02:41:57.9995730Z Cache hit for: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:59.0630761Z Received 155189248 of 322896480 (48.1%), 147.7 MBs/sec
+2025-08-01T02:41:59.9826411Z Received 322896480 of 322896480 (100.0%), 160.2 MBs/sec
+2025-08-01T02:41:59.9829020Z Cache Size: ~308 MB (322896480 B)
+2025-08-01T02:41:59.9932656Z [command]/usr/bin/tar -xf /home/runner/work/_temp/c88cdb77-154e-40c9-9702-6baba437e2d1/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:00.8530507Z Cache restored successfully
+2025-08-01T02:42:00.9237304Z Cache restored from key: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:00.9979204Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:00.9979442Z with:
+2025-08-01T02:42:00.9979640Z   path: packages/*/node_modules
+
+2025-08-01T02:42:00.9980125Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:00.9980621Z   enableCrossOsArchive: false
+2025-08-01T02:42:00.9980865Z   fail-on-cache-miss: false
+2025-08-01T02:42:00.9981091Z   lookup-only: false
+2025-08-01T02:42:00.9981296Z   save-always: false
+2025-08-01T02:42:00.9981494Z ##[endgroup]
+2025-08-01T02:42:01.2004680Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:01.6863966Z Received 83741540 of 83741540 (100.0%), 184.0 MBs/sec
+2025-08-01T02:42:01.6865014Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:42:01.6895727Z [command]/usr/bin/tar -xf /home/runner/work/_temp/39111ff1-227f-4ebd-bd52-df7c93295961/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:05.2498347Z Cache restored successfully
+2025-08-01T02:42:05.2755548Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:05.3412267Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:05.3412511Z with:
+2025-08-01T02:42:05.3412713Z   path: node_modules
+2025-08-01T02:42:05.3413135Z   key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:05.3413623Z   enableCrossOsArchive: false
+2025-08-01T02:42:05.3414041Z   fail-on-cache-miss: false
+2025-08-01T02:42:05.3414485Z   lookup-only: false
+2025-08-01T02:42:05.3414704Z   save-always: false
+2025-08-01T02:42:05.3414916Z ##[endgroup]
+2025-08-01T02:42:05.5556024Z Cache hit for: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:05.7333690Z Received 12019642 of 12019642 (100.0%), 80.2 MBs/sec
+2025-08-01T02:42:05.7336157Z Cache Size: ~11 MB (12019642 B)
+2025-08-01T02:42:05.7363492Z [command]/usr/bin/tar -xf /home/runner/work/_temp/63c647ab-9ab3-4847-9247-36f6236edc90/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:06.3413776Z Cache restored successfully
+2025-08-01T02:42:06.3518045Z Cache restored from key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:06.4160261Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:06.4160526Z with:
+2025-08-01T02:42:06.4160723Z   path: core/node_modules
+2025-08-01T02:42:06.4161192Z   key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:06.4161694Z   enableCrossOsArchive: false
+2025-08-01T02:42:06.4161953Z   fail-on-cache-miss: false
+2025-08-01T02:42:06.4162192Z   lookup-only: false
+2025-08-01T02:42:06.4162409Z   save-always: false
+2025-08-01T02:42:06.4162626Z ##[endgroup]
+2025-08-01T02:42:06.6251770Z Cache hit for: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:07.5912026Z Received 155660310 of 155660310 (100.0%), 164.2 MBs/sec
+2025-08-01T02:42:07.5912967Z Cache Size: ~148 MB (155660310 B)
+2025-08-01T02:42:07.5942555Z [command]/usr/bin/tar -xf /home/runner/work/_temp/b13399e3-0d40-4635-839b-b171876b8f89/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:10.7948065Z Cache restored successfully
+2025-08-01T02:42:10.8335972Z Cache restored from key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:10.8526198Z Prepare all required actions
+2025-08-01T02:42:10.8526591Z Getting action download info
+2025-08-01T02:42:11.0123180Z ##[group]Run ./.github/actions/setup-component
+2025-08-01T02:42:11.0123495Z with:
+2025-08-01T02:42:11.0123693Z   component: gui
+2025-08-01T02:42:11.0123926Z   include-packages: false
+2025-08-01T02:42:11.0124173Z   include-root: false
+2025-08-01T02:42:11.0124397Z env:
+2025-08-01T02:42:11.0124978Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:11.0125202Z ##[endgroup]
+2025-08-01T02:42:11.0161024Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:42:11.0161288Z with:
+2025-08-01T02:42:11.0161505Z   node-version-file: .nvmrc
+2025-08-01T02:42:11.0161754Z   always-auth: false
+2025-08-01T02:42:11.0161988Z   check-latest: false
+2025-08-01T02:42:11.0162301Z   token: ***
+2025-08-01T02:42:11.0162506Z env:
+2025-08-01T02:42:11.0162982Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:11.0163205Z ##[endgroup]
+2025-08-01T02:42:11.1940761Z Node version file is not JSON file
+2025-08-01T02:42:11.1964025Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:42:11.1966522Z Found in cache @ /opt/hostedtoolcache/node/20.19.0/x64
+2025-08-01T02:42:11.1975520Z ##[group]Environment details
+2025-08-01T02:42:11.3707261Z node: v20.19.0
+2025-08-01T02:42:11.3707810Z npm: 10.8.2
+2025-08-01T02:42:11.3708162Z yarn: 1.22.22
+2025-08-01T02:42:11.3708834Z ##[endgroup]
+2025-08-01T02:42:11.5218956Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:11.5219395Z with:
+2025-08-01T02:42:11.5219736Z   path: ~/.npm
+2025-08-01T02:42:11.5220441Z   key: Linux-npm-cache-gui-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:11.5221646Z   enableCrossOsArchive: false
+2025-08-01T02:42:11.5222102Z   fail-on-cache-miss: false
+2025-08-01T02:42:11.5222525Z   lookup-only: false
+2025-08-01T02:42:11.5222902Z   save-always: false
+2025-08-01T02:42:11.5223260Z env:
+2025-08-01T02:42:11.5224226Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:11.5224600Z ##[endgroup]
+2025-08-01T02:42:11.7766690Z Cache hit for: Linux-npm-cache-gui-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:12.8287850Z Received 184549376 of 333861592 (55.3%), 175.8 MBs/sec
+2025-08-01T02:42:13.7865444Z Received 333861592 of 333861592 (100.0%), 162.5 MBs/sec
+2025-08-01T02:42:13.7868090Z Cache Size: ~318 MB (333861592 B)
+2025-08-01T02:42:13.7973181Z [command]/usr/bin/tar -xf /home/runner/work/_temp/73e76f84-9b11-4e4e-b494-f0373c972a22/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:14.7599271Z Cache restored successfully
+2025-08-01T02:42:14.8313879Z Cache restored from key: Linux-npm-cache-gui-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:14.8959395Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:14.8959667Z with:
+2025-08-01T02:42:14.8959875Z   path: gui/node_modules
+2025-08-01T02:42:14.8960341Z   key: Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:14.8960849Z   enableCrossOsArchive: false
+2025-08-01T02:42:14.8961144Z   fail-on-cache-miss: false
+2025-08-01T02:42:14.8961402Z   lookup-only: false
+2025-08-01T02:42:14.8961632Z   save-always: false
+2025-08-01T02:42:14.8961846Z env:
+2025-08-01T02:42:14.8962740Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:14.8962986Z ##[endgroup]
+2025-08-01T02:42:15.1084510Z Cache hit for: Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:16.0105661Z Received 122456594 of 122456594 (100.0%), 137.9 MBs/sec
+2025-08-01T02:42:16.0106437Z Cache Size: ~117 MB (122456594 B)
+2025-08-01T02:42:16.0134619Z [command]/usr/bin/tar -xf /home/runner/work/_temp/acfa49f7-2fca-4174-9ca2-43333d9a521a/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:18.6301410Z Cache restored successfully
+2025-08-01T02:42:18.6627149Z Cache restored from key: Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:18.6770549Z ##[group]Run cd gui
+2025-08-01T02:42:18.6771566Z [36;1mcd gui[0m
+2025-08-01T02:42:18.6771986Z [36;1mnpx tsc --noEmit[0m
+2025-08-01T02:42:18.6772445Z [36;1mnpm run lint[0m
+2025-08-01T02:42:18.6805109Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:18.6805408Z ##[endgroup]
+2025-08-01T02:42:33.4261825Z 
+2025-08-01T02:42:33.4262353Z > lint
+2025-08-01T02:42:33.4262756Z > eslint --ext ts
+2025-08-01T02:42:33.4262935Z 
+2025-08-01T02:42:33.6428218Z ##[group]Run cd gui
+2025-08-01T02:42:33.6428731Z [36;1mcd gui[0m
+2025-08-01T02:42:33.6429124Z [36;1mnpm test[0m
+2025-08-01T02:42:33.6458944Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:33.6459418Z ##[endgroup]
+2025-08-01T02:42:33.7626640Z 
+2025-08-01T02:42:33.7627267Z > test
+2025-08-01T02:42:33.7627715Z > vitest run
+2025-08-01T02:42:33.7627967Z 
+2025-08-01T02:42:34.3816795Z [sentry-vite-plugin] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
+2025-08-01T02:42:34.5035999Z 
+2025-08-01T02:42:34.5037650Z [7m[1m[36m RUN [39m[22m[27m [36mv2.1.3[39m [90m/home/runner/work/continue/continue/gui[39m
+2025-08-01T02:42:34.5038432Z 
+2025-08-01T02:42:39.3488371Z [90mstderr[2m | src/redux/thunks/streamResponse_errorHandling.test.ts[2m > [22m[2mstreamResponseThunk[2m > [22m[2mshould throw error when no chat model is selected[22m[39m
+2025-08-01T02:42:39.3491277Z  [32m✓[39m src/redux/thunks/streamResponse.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 99[2mms[22m[39m
+2025-08-01T02:42:39.3493214Z  [32m✓[39m src/redux/thunks/streamResponse_errorHandling.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 99[2mms[22m[39m
+2025-08-01T02:42:39.3496083Z A non-serializable value was detected in an action, in the path: `payload.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3497555Z Take a look at the logic that dispatched this action:  {
+2025-08-01T02:42:39.3498430Z   type: [32m'ui/setDialogMessage'[39m,
+2025-08-01T02:42:39.3499004Z   payload: {
+2025-08-01T02:42:39.3499918Z     [32m'$$typeof'[39m: [32mSymbol(react.element)[39m,
+2025-08-01T02:42:39.3501308Z     type: [36m[Function: StreamErrorDialog][39m,
+2025-08-01T02:42:39.3502365Z     key: [1mnull[22m,
+2025-08-01T02:42:39.3503091Z     ref: [1mnull[22m,
+2025-08-01T02:42:39.3503667Z     props: {
+2025-08-01T02:42:39.3504302Z       error: Error: No chat model selected
+2025-08-01T02:42:39.3505813Z           at runStream [90m(/home/runner/work/continue/continue/gui/[39msrc/redux/thunks/streamResponse.ts:36:17[90m)[39m
+2025-08-01T02:42:39.3507906Z           at [90m/home/runner/work/continue/continue/gui/[39msrc/redux/thunks/streamThunkWrapper.tsx:18:11
+2025-08-01T02:42:39.3509945Z           at [90mfile:///home/runner/work/continue/continue/gui/[39mnode_modules/[4m@reduxjs[24m/toolkit/src/createAsyncThunk.ts:333:79
+2025-08-01T02:42:39.3513423Z           at action [90m(file:///home/runner/work/continue/continue/gui/[39mnode_modules/[4m@reduxjs[24m/toolkit/src/createAsyncThunk.ts:372:9[90m)[39m
+2025-08-01T02:42:39.3515194Z           at [90m/home/runner/work/continue/continue/gui/[39msrc/util/test/mockStore.ts:117:14
+2025-08-01T02:42:39.3517170Z           at mockCall [90m(file:///home/runner/work/continue/continue/gui/[39mnode_modules/[4m@vitest[24m/spy/dist/index.js:61:17[90m)[39m
+2025-08-01T02:42:39.3519181Z           at dispatch [90m(file:///home/runner/work/continue/continue/gui/[39mnode_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[39m
+2025-08-01T02:42:39.3520886Z           at [90m/home/runner/work/continue/continue/gui/[39msrc/redux/thunks/streamResponse.ts:29:11
+2025-08-01T02:42:39.3522665Z           at [90mfile:///home/runner/work/continue/continue/gui/[39mnode_modules/[4m@reduxjs[24m/toolkit/src/createAsyncThunk.ts:333:79
+2025-08-01T02:42:39.3524595Z           at [90mfile:///home/runner/work/continue/continue/gui/[39mnode_modules/[4m@reduxjs[24m/toolkit/src/createAsyncThunk.ts:372:9
+2025-08-01T02:42:39.3525635Z     },
+2025-08-01T02:42:39.3526107Z     _owner: [1mnull[22m,
+2025-08-01T02:42:39.3526564Z     _store: {}
+2025-08-01T02:42:39.3527166Z   }
+2025-08-01T02:42:39.3527524Z } 
+2025-08-01T02:42:39.3528894Z (See https://redux.js.org/faq/actions#why-should-type-be-a-string-or-at-least-serializable-why-should-my-action-types-be-constants) 
+2025-08-01T02:42:39.3531266Z (To allow non-serializable values see: https://redux-toolkit.js.org/usage/usage-guide#working-with-non-serializable-data)
+2025-08-01T02:42:39.3533374Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3534803Z Take a look at the reducer(s) handling this action type: ui/setDialogMessage.
+2025-08-01T02:42:39.3536443Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3538420Z SerializableStateInvariantMiddleware took 40ms, which is more than the warning threshold of 32ms. 
+2025-08-01T02:42:39.3540761Z If your state or actions are very large, you may want to disable the middleware as it might cause too much of a slowdown in development mode. See https://redux-toolkit.js.org/api/getDefaultMiddleware for instructions.
+2025-08-01T02:42:39.3542640Z It is disabled in production builds, so you don't need to worry about that.
+2025-08-01T02:42:39.3544428Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3545828Z Take a look at the reducer(s) handling this action type: ui/setShowDialog.
+2025-08-01T02:42:39.3547645Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3549827Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3551327Z Take a look at the reducer(s) handling this action type: chat/streamWrapper/fulfilled.
+2025-08-01T02:42:39.3552995Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3555449Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3557126Z Take a look at the reducer(s) handling this action type: chat/streamResponse/fulfilled.
+2025-08-01T02:42:39.3558825Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3559806Z 
+2025-08-01T02:42:39.3561358Z [90mstderr[2m | src/redux/thunks/streamResponse_errorHandling.test.ts[2m > [22m[2mstreamResponseThunk[2m > [22m[2mshould throw error for other compilation errors[22m[39m
+2025-08-01T02:42:39.3563590Z A non-serializable value was detected in an action, in the path: `payload.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3564833Z Take a look at the logic that dispatched this action:  {
+2025-08-01T02:42:39.3565666Z   type: [32m'ui/setDialogMessage'[39m,
+2025-08-01T02:42:39.3566210Z   payload: {
+2025-08-01T02:42:39.3566874Z     [32m'$$typeof'[39m: [32mSymbol(react.element)[39m,
+2025-08-01T02:42:39.3567916Z     type: [36m[Function: StreamErrorDialog][39m,
+2025-08-01T02:42:39.3568572Z     key: [1mnull[22m,
+2025-08-01T02:42:39.3569069Z     ref: [1mnull[22m,
+2025-08-01T02:42:39.3569652Z     props: { error: [36m[Object][39m },
+2025-08-01T02:42:39.3570254Z     _owner: [1mnull[22m,
+2025-08-01T02:42:39.3570699Z     _store: {}
+2025-08-01T02:42:39.3571077Z   }
+2025-08-01T02:42:39.3571427Z } 
+2025-08-01T02:42:39.3572774Z (See https://redux.js.org/faq/actions#why-should-type-be-a-string-or-at-least-serializable-why-should-my-action-types-be-constants) 
+2025-08-01T02:42:39.3574787Z (To allow non-serializable values see: https://redux-toolkit.js.org/usage/usage-guide#working-with-non-serializable-data)
+2025-08-01T02:42:39.3576858Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3578536Z Take a look at the reducer(s) handling this action type: ui/setDialogMessage.
+2025-08-01T02:42:39.3580208Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3582708Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3584239Z Take a look at the reducer(s) handling this action type: ui/setShowDialog.
+2025-08-01T02:42:39.3585890Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3588304Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3589884Z Take a look at the reducer(s) handling this action type: chat/streamWrapper/fulfilled.
+2025-08-01T02:42:39.3591623Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3593774Z A non-serializable value was detected in the state, in the path: `ui.dialogMessage.$$typeof`. Value: [32mSymbol(react.element)[39m 
+2025-08-01T02:42:39.3595240Z Take a look at the reducer(s) handling this action type: chat/streamResponse/fulfilled.
+2025-08-01T02:42:39.3597093Z (See https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state)
+2025-08-01T02:42:39.3598111Z 
+2025-08-01T02:42:39.3848439Z [90mstdout[2m | src/redux/thunks/streamResponse_toolCalls.test.ts[2m > [22m[2mstreamResponseThunk - tool calls[2m > [22m[2mshould execute streaming flow with tool call execution[22m[39m
+2025-08-01T02:42:39.3851327Z Store subscription: isStreaming changed from true to false
+2025-08-01T02:42:39.3852234Z Initial streaming state: [33mfalse[39m
+2025-08-01T02:42:39.3855436Z Final streaming state: [33mfalse[39m
+2025-08-01T02:42:39.3856704Z Tool call states: [ { id: [32m'tool-call-1'[39m, status: [32m'done'[39m, toolName: [32m'search_codebase'[39m } ]
+2025-08-01T02:42:39.3858345Z Tool settings: { search_codebase: [32m'allowedWithoutPermission'[39m }
+2025-08-01T02:42:39.3859587Z Auto-approved tool streaming state changes: [ [33mtrue[39m, [33mfalse[39m ]
+2025-08-01T02:42:39.3860262Z 
+2025-08-01T02:42:39.3865354Z  [32m✓[39m src/redux/thunks/streamResponse_toolCalls.test.ts [2m ([22m[2m4 tests[22m[2m)[22m[90m 132[2mms[22m[39m
+2025-08-01T02:42:40.3801982Z  [32m✓[39m src/util/clientTools/searchReplaceImpl.test.ts [2m ([22m[2m17 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+2025-08-01T02:42:40.4060362Z  [32m✓[39m src/util/errorAnalysis.test.ts [2m ([22m[2m48 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+2025-08-01T02:42:40.5938520Z  [32m✓[39m src/redux/util/constructMessages.test.ts [2m ([22m[2m13 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+2025-08-01T02:42:41.2561192Z  [32m✓[39m src/util/toolCallState.test.ts [2m ([22m[2m15 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+2025-08-01T02:42:42.4924621Z  [32m✓[39m src/hooks/TelemetryProviders.test.tsx [2m ([22m[2m5 tests[22m[2m)[22m[90m 79[2mms[22m[39m
+2025-08-01T02:42:43.3836844Z  [32m✓[39m src/redux/util/index.test.ts [2m ([22m[2m18 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+2025-08-01T02:42:43.7072509Z  [32m✓[39m src/redux/slices/sessionSlice.test.ts [2m ([22m[2m9 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+2025-08-01T02:42:43.9204247Z  [32m✓[39m src/components/mainInput/TipTapEditor/utils/processEditorContent.test.ts [2m ([22m[2m12 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+2025-08-01T02:42:44.8787252Z  [32m✓[39m src/components/StyledMarkdownPreview/utils/patchNestedMarkdown.test.ts [2m ([22m[2m18 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+2025-08-01T02:42:46.1514984Z  [32m✓[39m src/components/gui/Shortcut.test.tsx [2m ([22m[2m38 tests[22m[2m)[22m[90m 133[2mms[22m[39m
+2025-08-01T02:42:47.1352852Z  [32m✓[39m src/components/mainInput/TipTapEditor/utils/renderPromptv1.test.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 93[2mms[22m[39m
+2025-08-01T02:42:47.5384202Z [90mstdout[2m | src/pages/gui/chat-tests/EditToolScenarios.test.tsx[2m > [22m[2mEdit run with ask first policy and no auto apply[22m[39m
+2025-08-01T02:42:47.5385659Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:47.5386193Z   "role": "assistant",
+2025-08-01T02:42:47.5386700Z   "content": "I'll edit the file for you."
+2025-08-01T02:42:47.5387393Z }
+2025-08-01T02:42:47.5387851Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:47.5388359Z   "role": "assistant",
+2025-08-01T02:42:47.5388758Z   "content": "",
+2025-08-01T02:42:47.5389145Z   "toolCalls": [
+2025-08-01T02:42:47.5389535Z     {
+2025-08-01T02:42:47.5389929Z       "id": "known-id",
+2025-08-01T02:42:47.5390348Z       "function": {
+2025-08-01T02:42:47.5390825Z         "name": "edit_existing_file",
+2025-08-01T02:42:47.5391622Z         "arguments": "{\"filepath\":\"test.txt\",\"changes\":\"New content\"}"
+2025-08-01T02:42:47.5392267Z       }
+2025-08-01T02:42:47.5392601Z     }
+2025-08-01T02:42:47.5392946Z   ]
+2025-08-01T02:42:47.5393280Z }
+2025-08-01T02:42:47.5393466Z 
+2025-08-01T02:42:47.8741976Z [90mstdout[2m | src/pages/gui/chat-tests/ParallelToolCalls.test.tsx[2m > [22m[2mParallel Tool Calls[2m > [22m[2mshould handle assistant message with multiple tool calls[22m[39m
+2025-08-01T02:42:47.8743486Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:47.8744032Z   "role": "assistant",
+2025-08-01T02:42:47.8744597Z   "content": "I'll call both tools in parallel."
+2025-08-01T02:42:47.8745140Z }
+2025-08-01T02:42:47.8745580Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:47.8746070Z   "role": "assistant",
+2025-08-01T02:42:47.8746497Z   "content": "",
+2025-08-01T02:42:47.8747224Z   "toolCalls": [
+2025-08-01T02:42:47.8747641Z     {
+2025-08-01T02:42:47.8748034Z       "id": "tool-call-1",
+2025-08-01T02:42:47.8749258Z       "type": "function",
+2025-08-01T02:42:47.8749720Z       "function": {
+2025-08-01T02:42:47.8750153Z         "name": "read_file",
+2025-08-01T02:42:47.8750709Z         "arguments": "{\"filepath\":\"test.js\"}"
+2025-08-01T02:42:47.8751231Z       }
+2025-08-01T02:42:47.8751571Z     },
+2025-08-01T02:42:47.8751938Z     {
+2025-08-01T02:42:47.8752321Z       "id": "tool-call-2",
+2025-08-01T02:42:47.8752775Z       "type": "function",
+2025-08-01T02:42:47.8753208Z       "function": {
+2025-08-01T02:42:47.8753630Z         "name": "write_file",
+2025-08-01T02:42:47.8754330Z         "arguments": "{\"filepath\":\"output.js\",\"content\":\"test\"}"
+2025-08-01T02:42:47.8754963Z       }
+2025-08-01T02:42:47.8755298Z     }
+2025-08-01T02:42:47.8755635Z   ]
+2025-08-01T02:42:47.8755984Z }
+2025-08-01T02:42:47.8756183Z 
+2025-08-01T02:42:48.0266472Z  [32m✓[39m src/redux/selectors/selectUseSystemMessageTools.test.ts [2m ([22m[2m8 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+2025-08-01T02:42:48.6573501Z [90mstdout[2m | src/pages/gui/chat-tests/ParallelToolCalls.test.tsx[2m > [22m[2mParallel Tool Calls[2m > [22m[2mshould handle individual tool call actions without breaking other calls[22m[39m
+2025-08-01T02:42:48.6575401Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:48.6576084Z   "role": "assistant",
+2025-08-01T02:42:48.6576769Z   "content": "I'll call both tools in parallel."
+2025-08-01T02:42:48.6577626Z }
+2025-08-01T02:42:48.6578211Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:48.6578842Z   "role": "assistant",
+2025-08-01T02:42:48.6579369Z   "content": "",
+2025-08-01T02:42:48.6579889Z   "toolCalls": [
+2025-08-01T02:42:48.6580398Z     {
+2025-08-01T02:42:48.6580860Z       "id": "tool-call-1",
+2025-08-01T02:42:48.6581400Z       "type": "function",
+2025-08-01T02:42:48.6581928Z       "function": {
+2025-08-01T02:42:48.6582418Z         "name": "read_file",
+2025-08-01T02:42:48.6583068Z         "arguments": "{\"filepath\":\"test.js\"}"
+2025-08-01T02:42:48.6583697Z       }
+2025-08-01T02:42:48.6584114Z     },
+2025-08-01T02:42:48.6584560Z     {
+2025-08-01T02:42:48.6585012Z       "id": "tool-call-2",
+2025-08-01T02:42:48.6585578Z       "type": "function",
+2025-08-01T02:42:48.6586088Z       "function": {
+2025-08-01T02:42:48.6586634Z         "name": "write_file",
+2025-08-01T02:42:48.6587593Z         "arguments": "{\"filepath\":\"output.js\",\"content\":\"test\"}"
+2025-08-01T02:42:48.6588790Z       }
+2025-08-01T02:42:48.6589317Z     }
+2025-08-01T02:42:48.6589778Z   ]
+2025-08-01T02:42:48.6590210Z }
+2025-08-01T02:42:48.6590500Z 
+2025-08-01T02:42:48.7308176Z  [32m✓[39m src/components/mainInput/TipTapEditor/utils/renderPromptv2.test.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+2025-08-01T02:42:49.4165850Z  [32m✓[39m src/components/StyledMarkdownPreview/utils/commandExtractor.test.ts [2m ([22m[2m10 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+2025-08-01T02:42:49.4236248Z [90mstdout[2m | src/pages/gui/chat-tests/ParallelToolCalls.test.tsx[2m > [22m[2mParallel Tool Calls[2m > [22m[2mshould handle streaming deltas for multiple tool calls[22m[39m
+2025-08-01T02:42:49.4254017Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:49.4255017Z   "role": "assistant",
+2025-08-01T02:42:49.4255598Z   "content": "I'll call both tools in parallel."
+2025-08-01T02:42:49.4256144Z }
+2025-08-01T02:42:49.4256597Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:49.4257272Z   "role": "assistant",
+2025-08-01T02:42:49.4257690Z   "content": "",
+2025-08-01T02:42:49.4258068Z   "toolCalls": [
+2025-08-01T02:42:49.4258435Z     {
+2025-08-01T02:42:49.4258792Z       "id": "tool-call-1",
+2025-08-01T02:42:49.4259207Z       "type": "function",
+2025-08-01T02:42:49.4259617Z       "function": {
+2025-08-01T02:42:49.4260000Z         "name": "read_file",
+2025-08-01T02:42:49.4260423Z         "arguments": ""
+2025-08-01T02:42:49.4260808Z       }
+2025-08-01T02:42:49.4261123Z     }
+2025-08-01T02:42:49.4261445Z   ]
+2025-08-01T02:42:49.4261749Z }
+2025-08-01T02:42:49.4262180Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:49.4263014Z   "role": "assistant",
+2025-08-01T02:42:49.4263391Z   "content": "",
+2025-08-01T02:42:49.4263753Z   "toolCalls": [
+2025-08-01T02:42:49.4264116Z     {
+2025-08-01T02:42:49.4264457Z       "id": "tool-call-1",
+2025-08-01T02:42:49.4264874Z       "type": "function",
+2025-08-01T02:42:49.4265274Z       "function": {
+2025-08-01T02:42:49.4265657Z         "name": "read_file",
+2025-08-01T02:42:49.4266199Z         "arguments": "{\"filepath\": \"test.js\"}"
+2025-08-01T02:42:49.4266702Z       }
+2025-08-01T02:42:49.4267167Z     }
+2025-08-01T02:42:49.4267469Z   ]
+2025-08-01T02:42:49.4267774Z }
+2025-08-01T02:42:49.4268180Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:49.4268621Z   "role": "assistant",
+2025-08-01T02:42:49.4269000Z   "content": "",
+2025-08-01T02:42:49.4269368Z   "toolCalls": [
+2025-08-01T02:42:49.4269726Z     {
+2025-08-01T02:42:49.4270043Z       "id": "tool-call-2",
+2025-08-01T02:42:49.4270455Z       "type": "function",
+2025-08-01T02:42:49.4270855Z       "function": {
+2025-08-01T02:42:49.4271218Z         "name": "write_file",
+2025-08-01T02:42:49.4271834Z         "arguments": "{\"filepath\": \"output.js\", \"content\": \"test\"}"
+2025-08-01T02:42:49.4272378Z       }
+2025-08-01T02:42:49.4272678Z     }
+2025-08-01T02:42:49.4272976Z   ]
+2025-08-01T02:42:49.4273270Z }
+2025-08-01T02:42:49.4273440Z 
+2025-08-01T02:42:50.0038829Z  [32m✓[39m src/pages/gui/chat-tests/ParallelToolCalls.test.tsx [2m ([22m[2m3 tests[22m[2m)[22m[33m 2818[2mms[22m[39m
+2025-08-01T02:42:50.7569804Z [90mstdout[2m | src/pages/gui/chat-tests/EditToolScenarios.test.tsx[2m > [22m[2mEdit run with no policy and yolo mode[22m[39m
+2025-08-01T02:42:50.7571434Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:50.7572266Z   "role": "assistant",
+2025-08-01T02:42:50.7573116Z   "content": "I'll edit the file for you."
+2025-08-01T02:42:50.7573864Z }
+2025-08-01T02:42:50.7574740Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:50.7575443Z   "role": "assistant",
+2025-08-01T02:42:50.7576070Z   "content": "",
+2025-08-01T02:42:50.7576732Z   "toolCalls": [
+2025-08-01T02:42:50.7577659Z     {
+2025-08-01T02:42:50.7578257Z       "id": "known-id",
+2025-08-01T02:42:50.7578893Z       "function": {
+2025-08-01T02:42:50.7579569Z         "name": "edit_existing_file",
+2025-08-01T02:42:50.7580549Z         "arguments": "{\"filepath\":\"test.txt\",\"changes\":\"New content\"}"
+2025-08-01T02:42:50.7581400Z       }
+2025-08-01T02:42:50.7582380Z     }
+2025-08-01T02:42:50.7583012Z   ]
+2025-08-01T02:42:50.7583610Z }
+2025-08-01T02:42:50.7584014Z 
+2025-08-01T02:42:51.8487754Z  [32m✓[39m src/components/dialogs/ConfirmationDialog.test.tsx [2m ([22m[2m5 tests[22m[2m)[22m[90m 67[2mms[22m[39m
+2025-08-01T02:42:52.6667249Z [90mstdout[2m | src/util/editOutcomeLogger.test.ts[2m > [22m[2massembleEditOutcomeData[2m > [22m[2mshould assemble complete edit outcome data correctly[22m[39m
+2025-08-01T02:42:52.6668491Z {
+2025-08-01T02:42:52.6669020Z   streamId: [32m'stream-123'[39m,
+2025-08-01T02:42:52.6669733Z   timestamp: [32m'2025-08-01T02:42:52.657Z'[39m,
+2025-08-01T02:42:52.6670446Z   modelProvider: [32m'test'[39m,
+2025-08-01T02:42:52.6671101Z   modelTitle: [32m'test-model'[39m,
+2025-08-01T02:42:52.6671775Z   prompt: [32m'Unknown prompt'[39m,
+2025-08-01T02:42:52.6672477Z   completion: [32m'Unknown completion'[39m,
+2025-08-01T02:42:52.6673188Z   previousCode: [32m'const old = 1;'[39m,
+2025-08-01T02:42:52.6674012Z   newCode: [32m'const new = 2;\nconst another = 3;'[39m,
+2025-08-01T02:42:52.6674764Z   filepath: [32m'/test/file.ts'[39m,
+2025-08-01T02:42:52.6675399Z   previousCodeLines: [33m1[39m,
+2025-08-01T02:42:52.6675952Z   newCodeLines: [33m2[39m,
+2025-08-01T02:42:52.6676480Z   lineChange: [33m1[39m,
+2025-08-01T02:42:52.6677190Z   accepted: [33mtrue[39m
+2025-08-01T02:42:52.6677633Z }
+2025-08-01T02:42:52.6677817Z 
+2025-08-01T02:42:52.6678711Z  [32m✓[39m src/util/editOutcomeLogger.test.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+2025-08-01T02:42:52.9297348Z  [32m✓[39m src/pages/gui/chat-tests/ApplyScenarios.test.tsx [2m ([22m[2m2 tests[22m[2m)[22m[33m 608[2mms[22m[39m
+2025-08-01T02:42:53.5604357Z  [32m✓[39m src/pages/gui/chat-tests/EditToolScenarios.test.tsx [2m ([22m[2m2 tests[22m[2m)[22m[33m 6749[2mms[22m[39m
+2025-08-01T02:42:54.5039168Z  [32m✓[39m src/components/ConversationStarters/__tests__/utils.test.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+2025-08-01T02:42:55.3779081Z  [32m✓[39m src/redux/util/getBaseSystemMessage.test.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 4[2mms[22m[39m
+2025-08-01T02:42:56.1726329Z [90mstderr[2m | src/components/mainInput/TipTapEditor/extensions/CodeBlock/CodeBlockPreview.test.tsx[2m > [22m[2mCodeBlockPreview[2m > [22m[2mopens file when title is clicked[22m[39m
+2025-08-01T02:42:56.1732300Z Warning: validateDOMNesting(...): <div> cannot appear as a descendant of <p>.
+2025-08-01T02:42:56.1737200Z     at div
+2025-08-01T02:42:56.1737958Z     at div
+2025-08-01T02:42:56.1738594Z     at div
+2025-08-01T02:42:56.1739703Z     at I (/home/runner/work/continue/continue/gui/node_modules/styled-components/dist/styled-components.cjs.js:1:19114)
+2025-08-01T02:42:56.1741834Z     at ExpandableToolbarPreview (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/components/ExpandableToolbarPreview.tsx:60:61)
+2025-08-01T02:42:56.1743244Z     at p
+2025-08-01T02:42:56.1744162Z     at file:///home/runner/work/continue/continue/gui/node_modules/@tiptap/react/dist/index.js:1152:29
+2025-08-01T02:42:56.1745967Z     at NodeViewWrapper (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/components/NodeViewWrapper.tsx:7:28)
+2025-08-01T02:42:56.1748417Z     at CodeBlockPreview (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/extensions/CodeBlock/CodeBlockPreview.tsx:24:33)
+2025-08-01T02:42:56.1750425Z     at LumpProvider (/home/runner/work/continue/continue/gui/src/components/mainInput/Lump/LumpContext.tsx:12:29)
+2025-08-01T02:42:56.1752299Z     at MainEditorProvider (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/MainEditorProvider.tsx:23:35)
+2025-08-01T02:42:56.1753948Z     at AuthProvider (/home/runner/work/continue/continue/gui/src/context/Auth.tsx:16:25)
+2025-08-01T02:42:56.1755392Z     at Provider (/home/runner/work/continue/continue/gui/node_modules/react-redux/lib/components/Provider.js:19:3)
+2025-08-01T02:42:56.1757541Z     at IdeMessengerProvider (/home/runner/work/continue/continue/gui/src/context/IdeMessenger.tsx:162:33)
+2025-08-01T02:42:56.1759261Z     at Router (/home/runner/work/continue/continue/gui/node_modules/react-router/dist/umd/react-router.development.js:1174:17)
+2025-08-01T02:42:56.1761094Z     at MemoryRouter (/home/runner/work/continue/continue/gui/node_modules/react-router/dist/umd/react-router.development.js:1069:7)
+2025-08-01T02:42:56.1762607Z     at Wrapper (/home/runner/work/continue/continue/gui/src/util/test/render.tsx:40:24)
+2025-08-01T02:42:56.1763838Z Warning: validateDOMNesting(...): <pre> cannot appear as a descendant of <p>.
+2025-08-01T02:42:56.1764620Z     at pre
+2025-08-01T02:42:56.1765648Z     at I (/home/runner/work/continue/continue/gui/node_modules/styled-components/dist/styled-components.cjs.js:1:19114)
+2025-08-01T02:42:56.1817956Z     at SyntaxHighlightedPre (/home/runner/work/continue/continue/gui/src/components/StyledMarkdownPreview/SyntaxHighlightedPre.tsx:32:48)
+2025-08-01T02:42:56.1819842Z     at pre (/home/runner/work/continue/continue/gui/src/components/StyledMarkdownPreview/index.tsx:275:28)
+2025-08-01T02:42:56.1820823Z     at div
+2025-08-01T02:42:56.1821876Z     at I (/home/runner/work/continue/continue/gui/node_modules/styled-components/dist/styled-components.cjs.js:1:19114)
+2025-08-01T02:42:56.1823639Z     at StyledMarkdownPreview (/home/runner/work/continue/continue/gui/src/components/StyledMarkdownPreview/index.tsx:166:44)
+2025-08-01T02:42:56.1824752Z     at div
+2025-08-01T02:42:56.1825804Z     at I (/home/runner/work/continue/continue/gui/node_modules/styled-components/dist/styled-components.cjs.js:1:19114)
+2025-08-01T02:42:56.1827325Z     at div
+2025-08-01T02:42:56.1828346Z     at I (/home/runner/work/continue/continue/gui/node_modules/styled-components/dist/styled-components.cjs.js:1:19114)
+2025-08-01T02:42:56.1829373Z     at div
+2025-08-01T02:42:56.1830400Z     at I (/home/runner/work/continue/continue/gui/node_modules/styled-components/dist/styled-components.cjs.js:1:19114)
+2025-08-01T02:42:56.1832487Z     at ExpandableToolbarPreview (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/components/ExpandableToolbarPreview.tsx:60:61)
+2025-08-01T02:42:56.1833863Z     at p
+2025-08-01T02:42:56.1834765Z     at file:///home/runner/work/continue/continue/gui/node_modules/@tiptap/react/dist/index.js:1152:29
+2025-08-01T02:42:56.1836516Z     at NodeViewWrapper (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/components/NodeViewWrapper.tsx:7:28)
+2025-08-01T02:42:56.1838926Z     at CodeBlockPreview (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/extensions/CodeBlock/CodeBlockPreview.tsx:24:33)
+2025-08-01T02:42:56.1840875Z     at LumpProvider (/home/runner/work/continue/continue/gui/src/components/mainInput/Lump/LumpContext.tsx:12:29)
+2025-08-01T02:42:56.1842716Z     at MainEditorProvider (/home/runner/work/continue/continue/gui/src/components/mainInput/TipTapEditor/MainEditorProvider.tsx:23:35)
+2025-08-01T02:42:56.1844326Z     at AuthProvider (/home/runner/work/continue/continue/gui/src/context/Auth.tsx:16:25)
+2025-08-01T02:42:56.1845750Z     at Provider (/home/runner/work/continue/continue/gui/node_modules/react-redux/lib/components/Provider.js:19:3)
+2025-08-01T02:42:56.1847533Z     at IdeMessengerProvider (/home/runner/work/continue/continue/gui/src/context/IdeMessenger.tsx:162:33)
+2025-08-01T02:42:56.1849228Z     at Router (/home/runner/work/continue/continue/gui/node_modules/react-router/dist/umd/react-router.development.js:1174:17)
+2025-08-01T02:42:56.1851047Z     at MemoryRouter (/home/runner/work/continue/continue/gui/node_modules/react-router/dist/umd/react-router.development.js:1069:7)
+2025-08-01T02:42:56.1852562Z     at Wrapper (/home/runner/work/continue/continue/gui/src/util/test/render.tsx:40:24)
+2025-08-01T02:42:56.1853214Z 
+2025-08-01T02:42:56.1924418Z  [32m✓[39m src/components/mainInput/TipTapEditor/extensions/CodeBlock/CodeBlockPreview.test.tsx [2m ([22m[2m1 test[22m[2m)[22m[90m 229[2mms[22m[39m
+2025-08-01T02:42:56.2516419Z  [32m✓[39m src/styles/theme.test.ts [2m ([22m[2m3 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+2025-08-01T02:42:57.1821384Z  [32m✓[39m src/util/localStorage.test.ts [2m ([22m[2m1 test[22m[2m)[22m[90m 5[2mms[22m[39m
+2025-08-01T02:42:57.2732143Z [90mstdout[2m | src/pages/gui/chat-tests/Chat.test.tsx[2m > [22m[2mshould send a message and receive a response[22m[39m
+2025-08-01T02:42:57.2733283Z MockIdeMessenger: Yielding chunk {
+2025-08-01T02:42:57.2733811Z   "role": "assistant",
+2025-08-01T02:42:57.2734310Z   "content": "Expected response"
+2025-08-01T02:42:57.2734827Z }
+2025-08-01T02:42:57.2735013Z 
+2025-08-01T02:42:57.3919685Z  [32m✓[39m src/pages/gui/chat-tests/Chat.test.tsx [2m ([22m[2m3 tests[22m[2m)[22m[33m 1147[2mms[22m[39m
+2025-08-01T02:43:00.9811271Z  [32m✓[39m src/pages/history/history.test.tsx [2m ([22m[2m2 tests[22m[2m)[22m[33m 2089[2mms[22m[39m
+2025-08-01T02:43:01.0055314Z 
+2025-08-01T02:43:01.0076392Z [2m Test Files [22m [1m[32m29 passed[39m[22m[90m (29)[39m
+2025-08-01T02:43:01.0077594Z [2m      Tests [22m [1m[32m260 passed[39m[22m[90m (260)[39m
+2025-08-01T02:43:01.0078356Z [2m   Start at [22m 02:42:34
+2025-08-01T02:43:01.0080864Z [2m   Duration [22m 26.50s[2m (transform 2.26s, setup 3.06s, collect 33.20s, tests 14.57s, environment 14.18s, prepare 2.65s)[22m
+2025-08-01T02:43:01.0081449Z 
+2025-08-01T02:43:01.1193765Z Post job cleanup.
+2025-08-01T02:43:01.1744491Z Post job cleanup.
+2025-08-01T02:43:01.2979751Z Cache hit occurred on the primary key Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a, not saving cache.
+2025-08-01T02:43:01.3580448Z Post job cleanup.
+2025-08-01T02:43:01.4817334Z Cache hit occurred on the primary key Linux-npm-cache-gui-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a, not saving cache.
+2025-08-01T02:43:01.4905194Z Post job cleanup.
+2025-08-01T02:43:01.6584950Z Post job cleanup.
+2025-08-01T02:43:01.7153596Z Post job cleanup.
+2025-08-01T02:43:01.8396149Z Cache hit occurred on the primary key Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:43:01.9001517Z Post job cleanup.
+2025-08-01T02:43:02.0255932Z Cache hit occurred on the primary key Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1, not saving cache.
+2025-08-01T02:43:02.0957923Z Post job cleanup.
+2025-08-01T02:43:02.2203087Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:43:02.2805397Z Post job cleanup.
+2025-08-01T02:43:02.4053877Z Cache hit occurred on the primary key Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:43:02.4141667Z Post job cleanup.
+2025-08-01T02:43:02.5758760Z Post job cleanup.
+2025-08-01T02:43:02.6445536Z Post job cleanup.
+2025-08-01T02:43:02.7682942Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:43:02.8389206Z Post job cleanup.
+2025-08-01T02:43:02.9627155Z Cache hit occurred on the primary key Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:43:02.9702149Z Post job cleanup.
+2025-08-01T02:43:03.1344329Z Post job cleanup.
+2025-08-01T02:43:03.2268591Z [command]/usr/bin/git version
+2025-08-01T02:43:03.2310514Z git version 2.50.1
+2025-08-01T02:43:03.2353958Z Temporarily overriding HOME='/home/runner/work/_temp/5d77ad89-6280-40e6-9af6-f3cc49b2f8a4' before making global git config changes
+2025-08-01T02:43:03.2355617Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:43:03.2360277Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:43:03.2394352Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:43:03.2427126Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:43:03.2651456Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:43:03.2671261Z http.https://github.com/.extraheader
+2025-08-01T02:43:03.2683700Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:43:03.2714228Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:43:03.3059218Z Cleaning up orphan processes

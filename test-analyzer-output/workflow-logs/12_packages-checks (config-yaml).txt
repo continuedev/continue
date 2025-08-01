@@ -1,0 +1,383 @@
+﻿2025-08-01T02:41:29.3296418Z Current runner version: '2.327.1'
+2025-08-01T02:41:29.3319025Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:29.3319969Z Hosted Compute Agent
+2025-08-01T02:41:29.3320624Z Version: 20250711.363
+2025-08-01T02:41:29.3321291Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:29.3322086Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:29.3322718Z ##[endgroup]
+2025-08-01T02:41:29.3323308Z ##[group]Operating System
+2025-08-01T02:41:29.3324009Z Ubuntu
+2025-08-01T02:41:29.3324726Z 24.04.2
+2025-08-01T02:41:29.3325310Z LTS
+2025-08-01T02:41:29.3325829Z ##[endgroup]
+2025-08-01T02:41:29.3326452Z ##[group]Runner Image
+2025-08-01T02:41:29.3327081Z Image: ubuntu-24.04
+2025-08-01T02:41:29.3327686Z Version: 20250728.1.0
+2025-08-01T02:41:29.3328819Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:29.3330411Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:29.3331508Z ##[endgroup]
+2025-08-01T02:41:29.3332687Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:29.3334905Z Contents: read
+2025-08-01T02:41:29.3335633Z Metadata: read
+2025-08-01T02:41:29.3336340Z Packages: read
+2025-08-01T02:41:29.3336943Z ##[endgroup]
+2025-08-01T02:41:29.3339059Z Secret source: Actions
+2025-08-01T02:41:29.3339963Z Prepare workflow directory
+2025-08-01T02:41:29.3663140Z Prepare all required actions
+2025-08-01T02:41:29.3713734Z Getting action download info
+2025-08-01T02:41:29.7944097Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:29.7945475Z Version: 4.2.2
+2025-08-01T02:41:29.7946458Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:29.7947778Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:29.7948526Z ##[endgroup]
+2025-08-01T02:41:29.9620577Z Complete job name: packages-checks (config-yaml)
+2025-08-01T02:41:30.0210957Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:30.0211835Z with:
+2025-08-01T02:41:30.0212266Z   repository: continuedev/continue
+2025-08-01T02:41:30.0213230Z   token: ***
+2025-08-01T02:41:30.0213769Z   ssh-strict: true
+2025-08-01T02:41:30.0214440Z   ssh-user: git
+2025-08-01T02:41:30.0215033Z   persist-credentials: true
+2025-08-01T02:41:30.0215524Z   clean: true
+2025-08-01T02:41:30.0215979Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:30.0216499Z   fetch-depth: 1
+2025-08-01T02:41:30.0216930Z   fetch-tags: false
+2025-08-01T02:41:30.0217376Z   show-progress: true
+2025-08-01T02:41:30.0217824Z   lfs: false
+2025-08-01T02:41:30.0218234Z   submodules: false
+2025-08-01T02:41:30.0218691Z   set-safe-directory: true
+2025-08-01T02:41:30.0219442Z ##[endgroup]
+2025-08-01T02:41:30.1321537Z Syncing repository: continuedev/continue
+2025-08-01T02:41:30.1323599Z ##[group]Getting Git version info
+2025-08-01T02:41:30.1324349Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:30.1325738Z [command]/usr/bin/git version
+2025-08-01T02:41:30.1363399Z git version 2.50.1
+2025-08-01T02:41:30.1390944Z ##[endgroup]
+2025-08-01T02:41:30.1404793Z Temporarily overriding HOME='/home/runner/work/_temp/36a28bfe-698f-4f32-9912-c99021c8ff6d' before making global git config changes
+2025-08-01T02:41:30.1406233Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:30.1410857Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:30.1447249Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:30.1451143Z ##[group]Initializing the repository
+2025-08-01T02:41:30.1456160Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:30.1521457Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:30.1523168Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:30.1524373Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:30.1526285Z hint:
+2025-08-01T02:41:30.1527564Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:30.1528655Z hint:
+2025-08-01T02:41:30.1529691Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:30.1531334Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:30.1532630Z hint:
+2025-08-01T02:41:30.1533337Z hint: 	git branch -m <name>
+2025-08-01T02:41:30.1534131Z hint:
+2025-08-01T02:41:30.1535471Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:30.1537334Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:30.1540414Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:30.1585323Z ##[endgroup]
+2025-08-01T02:41:30.1586630Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:30.1590353Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:30.1620160Z ##[endgroup]
+2025-08-01T02:41:30.1620889Z ##[group]Setting up auth
+2025-08-01T02:41:30.1626904Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:30.1657703Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:30.1929371Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:30.1960744Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:30.2183927Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:30.2219748Z ##[endgroup]
+2025-08-01T02:41:30.2220567Z ##[group]Fetching the repository
+2025-08-01T02:41:30.2228640Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:33.7388285Z From https://github.com/continuedev/continue
+2025-08-01T02:41:33.7390580Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:33.7410785Z ##[endgroup]
+2025-08-01T02:41:33.7412156Z ##[group]Determining the checkout info
+2025-08-01T02:41:33.7413582Z ##[endgroup]
+2025-08-01T02:41:33.7418972Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:33.7477205Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:33.7506264Z ##[group]Checking out the ref
+2025-08-01T02:41:33.7509139Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:34.7732534Z Updating files:  86% (2040/2354)
+2025-08-01T02:41:34.7764776Z Updating files:  87% (2048/2354)
+2025-08-01T02:41:34.7776487Z Updating files:  88% (2072/2354)
+2025-08-01T02:41:34.7787380Z Updating files:  89% (2096/2354)
+2025-08-01T02:41:34.7808181Z Updating files:  90% (2119/2354)
+2025-08-01T02:41:34.7821086Z Updating files:  91% (2143/2354)
+2025-08-01T02:41:34.7830090Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:34.7838610Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:34.7849229Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:34.7863365Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:34.7877931Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:34.7892974Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:34.7905052Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:34.7920226Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:34.7920890Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:34.7921469Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:34.7949388Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:34.7950041Z 
+2025-08-01T02:41:34.7950513Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:34.7951622Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:34.7952343Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:34.7952757Z 
+2025-08-01T02:41:34.7952993Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:34.7953574Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:34.7953905Z 
+2025-08-01T02:41:34.7954054Z   git switch -c <new-branch-name>
+2025-08-01T02:41:34.7954277Z 
+2025-08-01T02:41:34.7954416Z Or undo this operation with:
+2025-08-01T02:41:34.7954825Z 
+2025-08-01T02:41:34.7954944Z   git switch -
+2025-08-01T02:41:34.7955112Z 
+2025-08-01T02:41:34.7955373Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:34.7955736Z 
+2025-08-01T02:41:34.7956172Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:34.8017733Z ##[endgroup]
+2025-08-01T02:41:34.8057164Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:34.8078903Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:34.8322287Z Prepare all required actions
+2025-08-01T02:41:34.8322902Z Getting action download info
+2025-08-01T02:41:35.0159439Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:35.0159890Z Version: 4.4.0
+2025-08-01T02:41:35.0160307Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:35.0160824Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:35.0161187Z ##[endgroup]
+2025-08-01T02:41:35.1491784Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:35.1492217Z Version: 4.2.3
+2025-08-01T02:41:35.1492623Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:35.1493145Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:35.1493545Z ##[endgroup]
+2025-08-01T02:41:35.3266097Z ##[group]Run ./.github/actions/setup-packages
+2025-08-01T02:41:35.3266467Z ##[endgroup]
+2025-08-01T02:41:35.3400241Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:35.3400580Z with:
+2025-08-01T02:41:35.3400829Z   node-version-file: .nvmrc
+2025-08-01T02:41:35.3401119Z   always-auth: false
+2025-08-01T02:41:35.3401382Z   check-latest: false
+2025-08-01T02:41:35.3401770Z   token: ***
+2025-08-01T02:41:35.3402010Z ##[endgroup]
+2025-08-01T02:41:35.5081451Z Node version file is not JSON file
+2025-08-01T02:41:35.5083003Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:35.5137097Z Attempting to download 20.19.0...
+2025-08-01T02:41:36.0192519Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:36.4954279Z Extracting ...
+2025-08-01T02:41:36.5055268Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/1877c3bf-30dc-403b-871d-059435cd2468 -f /home/runner/work/_temp/4d9a6f5c-1c3c-4117-bce1-d1cd8a628553
+2025-08-01T02:41:37.4840532Z Adding to the cache ...
+2025-08-01T02:41:39.0695159Z ##[group]Environment details
+2025-08-01T02:41:39.4034127Z node: v20.19.0
+2025-08-01T02:41:39.4034711Z npm: 10.8.2
+2025-08-01T02:41:39.4035028Z yarn: 1.22.22
+2025-08-01T02:41:39.4041627Z ##[endgroup]
+2025-08-01T02:41:39.4903816Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:39.4904092Z with:
+2025-08-01T02:41:39.4904284Z   path: ~/.npm
+2025-08-01T02:41:39.4905022Z   key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:39.4905649Z   enableCrossOsArchive: false
+2025-08-01T02:41:39.4905913Z   fail-on-cache-miss: false
+2025-08-01T02:41:39.4906147Z   lookup-only: false
+2025-08-01T02:41:39.4906357Z   save-always: false
+2025-08-01T02:41:39.4906567Z ##[endgroup]
+2025-08-01T02:41:39.8928716Z Cache hit for: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:41.2162410Z Received 0 of 69543054 (0.0%), 0.0 MBs/sec
+2025-08-01T02:41:42.0212155Z Received 69543054 of 69543054 (100.0%), 36.8 MBs/sec
+2025-08-01T02:41:42.0215577Z Cache Size: ~66 MB (69543054 B)
+2025-08-01T02:41:42.0258235Z [command]/usr/bin/tar -xf /home/runner/work/_temp/4b5850d8-2e3f-45e8-9064-11f7c5d6b9f0/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:42.2872485Z Cache restored successfully
+2025-08-01T02:41:42.3088943Z Cache restored from key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:42.3825257Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:42.3825544Z with:
+2025-08-01T02:41:42.3825758Z   path: packages/*/node_modules
+
+2025-08-01T02:41:42.3826285Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:42.3826869Z   enableCrossOsArchive: false
+2025-08-01T02:41:42.3827129Z   fail-on-cache-miss: false
+2025-08-01T02:41:42.3827382Z   lookup-only: false
+2025-08-01T02:41:42.3827604Z   save-always: false
+2025-08-01T02:41:42.3827818Z ##[endgroup]
+2025-08-01T02:41:42.7915608Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:44.1143685Z Received 0 of 83741540 (0.0%), 0.0 MBs/sec
+2025-08-01T02:41:44.9185536Z Received 83741540 of 83741540 (100.0%), 44.2 MBs/sec
+2025-08-01T02:41:44.9187356Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:41:44.9295402Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ba924e3d-f7e2-493c-8051-ad1db2d8d7a0/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:47.4242138Z Cache restored successfully
+2025-08-01T02:41:47.4495691Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:47.4599752Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:47.4600155Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:47.4632397Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:47.4632764Z ##[endgroup]
+2025-08-01T02:41:47.4929172Z 🚀 Starting package builds...
+2025-08-01T02:41:47.4929612Z 
+2025-08-01T02:41:47.4935810Z Starting config-types (install): npm ci
+2025-08-01T02:41:48.1972277Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:48.1973044Z Starting config-types (build): npm run build
+2025-08-01T02:41:49.8770670Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:49.8771297Z Starting fetch (install): npm ci
+2025-08-01T02:41:49.8785296Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:49.8801193Z Starting llm-info (install): npm ci
+2025-08-01T02:41:50.8093008Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:50.8096918Z Starting llm-info (build): npm run build
+2025-08-01T02:41:51.7631125Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:41:51.7631993Z Starting fetch (build): npm run build
+2025-08-01T02:41:52.8887004Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:41:54.8141481Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:41:56.1977516Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:41:56.1978428Z Starting config-yaml (build): npm run build
+2025-08-01T02:42:00.4216203Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:42:00.4217136Z 🧹 Cleaning node_modules for openai-adapters
+2025-08-01T02:42:00.4224851Z 🧹 Cleaning node_modules for continue-sdk
+2025-08-01T02:42:01.2869780Z Starting continue-sdk (install): npm ci
+2025-08-01T02:42:01.2911699Z Starting openai-adapters (install): npm ci
+2025-08-01T02:42:07.5563621Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:42:07.5564177Z Starting openai-adapters (build): npm run build
+2025-08-01T02:42:10.8009422Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:42:10.8010373Z Starting continue-sdk (build): npm run build
+2025-08-01T02:42:10.9802588Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:42:13.1062237Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:42:13.1063122Z 🎉 All packages built successfully!
+2025-08-01T02:42:13.1240801Z ##[group]Run cd packages/config-yaml
+2025-08-01T02:42:13.1260882Z [36;1mcd packages/config-yaml[0m
+2025-08-01T02:42:13.1261213Z [36;1mnpm ci[0m
+2025-08-01T02:42:13.1261444Z [36;1mnpm test[0m
+2025-08-01T02:42:13.1290208Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:13.1290469Z env:
+2025-08-01T02:42:13.1290682Z   IGNORE_API_KEY_TESTS: false
+2025-08-01T02:42:13.1291652Z   OPENAI_API_KEY: ***
+2025-08-01T02:42:13.1292262Z   ANTHROPIC_API_KEY: ***
+2025-08-01T02:42:13.1292593Z   GEMINI_API_KEY: ***
+2025-08-01T02:42:13.1292885Z   MISTRAL_API_KEY: ***
+2025-08-01T02:42:13.1293162Z   AZURE_OPENAI_API_KEY: ***
+2025-08-01T02:42:13.1293726Z   AZURE_FOUNDRY_CODESTRAL_API_KEY: ***
+2025-08-01T02:42:13.1294329Z   AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ***
+2025-08-01T02:42:13.1294897Z   AZURE_OPENAI_GPT41_API_KEY: ***
+2025-08-01T02:42:13.1295260Z   VOYAGE_API_KEY: ***
+2025-08-01T02:42:13.1295492Z ##[endgroup]
+2025-08-01T02:42:16.1496445Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-01T02:42:16.2825064Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:17.2217787Z 
+2025-08-01T02:42:17.2218300Z added 593 packages, and audited 856 packages in 4s
+2025-08-01T02:42:17.2218582Z 
+2025-08-01T02:42:17.2218863Z 120 packages are looking for funding
+2025-08-01T02:42:17.2219177Z   run `npm fund` for details
+2025-08-01T02:42:17.2253994Z 
+2025-08-01T02:42:17.2254867Z 3 vulnerabilities (1 low, 1 moderate, 1 high)
+2025-08-01T02:42:17.2255289Z 
+2025-08-01T02:42:17.2255531Z To address all issues, run:
+2025-08-01T02:42:17.2256042Z   npm audit fix
+2025-08-01T02:42:17.2256385Z 
+2025-08-01T02:42:17.2256619Z Run `npm audit` for details.
+2025-08-01T02:42:17.3531527Z 
+2025-08-01T02:42:17.3532257Z > @continuedev/config-yaml@1.0.96 test
+2025-08-01T02:42:17.3533199Z > cross-env NODE_OPTIONS=--experimental-vm-modules jest
+2025-08-01T02:42:17.3533675Z 
+2025-08-01T02:42:22.2812854Z (node:2488) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+2025-08-01T02:42:22.2845924Z (Use `node --trace-warnings ...` to show where the warning was created)
+2025-08-01T02:42:22.3825296Z PASS src/registryClient.test.ts
+2025-08-01T02:42:26.5228895Z (node:2481) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+2025-08-01T02:42:26.5230064Z (Use `node --trace-warnings ...` to show where the warning was created)
+2025-08-01T02:42:26.5269306Z PASS src/markdown/markdownToRule.test.ts (8.558 s)
+2025-08-01T02:42:26.5615604Z   ● Console
+2025-08-01T02:42:26.5618788Z 
+2025-08-01T02:42:26.5619180Z     console.warn
+2025-08-01T02:42:26.5622406Z       Error parsing markdown frontmatter: YAMLParseError: Implicit map keys need to be followed by map values at line 2, column 10:
+2025-08-01T02:42:26.5624801Z       
+2025-08-01T02:42:26.5628391Z       globs: - "**/test/**/*.kt"
+2025-08-01T02:42:26.5631120Z                ^^^^^^^^^^^^^^^^^
+2025-08-01T02:42:26.5633627Z       
+2025-08-01T02:42:26.5636758Z           at Composer.onError (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/composer.js:69:34)
+2025-08-01T02:42:26.5640708Z           at Object.resolveBlockMap (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/resolve-block-map.js:98:17)
+2025-08-01T02:42:26.5645159Z           at resolveCollection (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/compose-collection.js:13:27)
+2025-08-01T02:42:26.5648713Z           at Object.composeCollection (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/compose-collection.js:59:16)
+2025-08-01T02:42:26.5659534Z           at Object.composeNode (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/compose-node.js:33:38)
+2025-08-01T02:42:26.5661789Z           at Object.composeDoc (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/compose-doc.js:35:23)
+2025-08-01T02:42:26.5663669Z           at Composer.next (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/composer.js:149:40)
+2025-08-01T02:42:26.5664995Z           at next (<anonymous>)
+2025-08-01T02:42:26.5666213Z           at Composer.compose (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/compose/composer.js:131:25)
+2025-08-01T02:42:26.5667368Z           at compose.next (<anonymous>)
+2025-08-01T02:42:26.5668524Z           at parseDocument (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/public-api.js:46:16)
+2025-08-01T02:42:26.5670271Z           at Module.parse (/home/runner/work/continue/continue/packages/config-yaml/node_modules/yaml/dist/public-api.js:68:17)
+2025-08-01T02:42:26.5671980Z           at parseMarkdownRule (/home/runner/work/continue/continue/packages/config-yaml/src/markdown/markdownToRule.ts:38:32)
+2025-08-01T02:42:26.5673659Z           at markdownToRule (/home/runner/work/continue/continue/packages/config-yaml/src/markdown/markdownToRule.ts:106:37)
+2025-08-01T02:42:26.5685193Z           at Object.<anonymous> (/home/runner/work/continue/continue/packages/config-yaml/src/markdown/markdownToRule.test.ts:203:20)
+2025-08-01T02:42:26.5686992Z           at Promise.then.completed (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/utils.js:298:28)
+2025-08-01T02:42:26.5688201Z           at new Promise (<anonymous>)
+2025-08-01T02:42:26.5689425Z           at callAsyncCircusFn (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/utils.js:231:10)
+2025-08-01T02:42:26.5691262Z           at _callCircusTest (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/run.js:316:40)
+2025-08-01T02:42:26.5692619Z           at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-08-01T02:42:26.5693995Z           at _runTest (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/run.js:252:3)
+2025-08-01T02:42:26.5695954Z           at _runTestsForDescribeBlock (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/run.js:126:9)
+2025-08-01T02:42:26.5697796Z           at _runTestsForDescribeBlock (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/run.js:121:9)
+2025-08-01T02:42:26.5699496Z           at run (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/run.js:71:3)
+2025-08-01T02:42:26.5701636Z           at runAndTransformResultsToJestFormat (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2025-08-01T02:42:26.5704085Z           at jestAdapter (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2025-08-01T02:42:26.5706221Z           at runTestInternal (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-runner/build/runTest.js:367:16)
+2025-08-01T02:42:26.5708007Z           at runTest (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-runner/build/runTest.js:444:34)
+2025-08-01T02:42:26.5709819Z           at Object.worker (/home/runner/work/continue/continue/packages/config-yaml/node_modules/jest-runner/build/testWorker.js:106:12) {
+2025-08-01T02:42:26.5710876Z         code: 'MISSING_CHAR',
+2025-08-01T02:42:26.5711361Z         pos: [ 10, 27 ],
+2025-08-01T02:42:26.5711944Z         linePos: [ { line: 2, col: 10 }, { line: 2, col: 27 } ]
+2025-08-01T02:42:26.5712857Z       }
+2025-08-01T02:42:26.5713052Z 
+2025-08-01T02:42:26.5713602Z     [0m [90m 40 |[39m     } [36mcatch[39m (e) {
+2025-08-01T02:42:26.5715017Z      [90m 41 |[39m       [90m// Error parsing frontmatter, treat as markdown only[39m
+2025-08-01T02:42:26.5716528Z     [31m[1m>[22m[39m[90m 42 |[39m       console[33m.[39mwarn([32m"Error parsing markdown frontmatter:"[39m[33m,[39m e)[33m;[39m
+2025-08-01T02:42:26.5717683Z      [90m    |[39m               [31m[1m^[22m[39m
+2025-08-01T02:42:26.5718999Z      [90m 43 |[39m       [36mreturn[39m { frontmatter[33m:[39m {}[33m,[39m markdown[33m:[39m normalizedContent }[33m;[39m
+2025-08-01T02:42:26.5720045Z      [90m 44 |[39m     }
+2025-08-01T02:42:26.5720558Z      [90m 45 |[39m   }[0m
+2025-08-01T02:42:26.5720846Z 
+2025-08-01T02:42:26.5721254Z       at parseMarkdownRule (src/markdown/markdownToRule.ts:42:15)
+2025-08-01T02:42:26.5722107Z       at markdownToRule (src/markdown/markdownToRule.ts:106:37)
+2025-08-01T02:42:26.5723009Z       at Object.<anonymous> (src/markdown/markdownToRule.test.ts:203:20)
+2025-08-01T02:42:26.5723527Z 
+2025-08-01T02:42:26.5723847Z PASS src/__tests__/index.test.ts (8.626 s)
+2025-08-01T02:42:26.5891669Z   ● Console
+2025-08-01T02:42:26.5892377Z 
+2025-08-01T02:42:26.5896612Z     console.error
+2025-08-01T02:42:26.5898536Z       Failed to unroll block test-org/non-existing-package: ENOENT: no such file or directory, open './src/__tests__/packages/test-org/non-existing-package.yaml'
+2025-08-01T02:42:26.5899981Z 
+2025-08-01T02:42:26.5908049Z     [0m [90m 403 |[39m               [36mreturn[39m { index[33m,[39m rule[33m:[39m block [33m||[39m [36mnull[39m[33m,[39m error[33m:[39m [36mnull[39m }[33m;[39m
+2025-08-01T02:42:26.5910493Z      [90m 404 |[39m             } [36mcatch[39m (err) {
+2025-08-01T02:42:26.5911450Z     [31m[1m>[22m[39m[90m 405 |[39m               console[33m.[39merror(
+2025-08-01T02:42:26.5912308Z      [90m     |[39m                       [31m[1m^[22m[39m
+2025-08-01T02:42:26.5913431Z      [90m 406 |[39m                 [32m`Failed to unroll block ${rule.uses}: ${(err as Error).message}`[39m[33m,[39m
+2025-08-01T02:42:26.5914437Z      [90m 407 |[39m               )[33m;[39m
+2025-08-01T02:42:26.5915249Z      [90m 408 |[39m[0m
+2025-08-01T02:42:26.5915531Z 
+2025-08-01T02:42:26.5915779Z       at src/load/unroll.ts:405:23
+2025-08-01T02:42:26.5916400Z           at async Promise.all (index 0)
+2025-08-01T02:42:26.5917138Z       at src/load/unroll.ts:422:29
+2025-08-01T02:42:26.5917732Z           at async Promise.all (index 1)
+2025-08-01T02:42:26.5918398Z       at unrollBlocks (src/load/unroll.ts:509:57)
+2025-08-01T02:42:26.5919164Z       at unrollAssistantFromContent (src/load/unroll.ts:264:7)
+2025-08-01T02:42:26.5919993Z       at Object.<anonymous> (src/__tests__/index.test.ts:103:28)
+2025-08-01T02:42:26.5920455Z 
+2025-08-01T02:42:26.5921200Z (node:2482) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+2025-08-01T02:42:26.5922455Z (Use `node --trace-warnings ...` to show where the warning was created)
+2025-08-01T02:42:26.9386767Z PASS src/markdown/createMarkdownRule.test.ts
+2025-08-01T02:42:27.1171045Z PASS src/interfaces/slugs.test.ts
+2025-08-01T02:42:27.4276263Z PASS src/markdown/getRuleType.test.ts
+2025-08-01T02:42:27.6119603Z PASS src/modelName.test.ts
+2025-08-01T02:42:27.9690615Z PASS src/interfaces/SecretResult.test.ts
+2025-08-01T02:42:28.2962217Z PASS src/load/unroll.test.ts
+2025-08-01T02:42:28.3573606Z 
+2025-08-01T02:42:28.3577029Z Test Suites: 9 passed, 9 total
+2025-08-01T02:42:28.3577605Z Tests:       1 skipped, 95 passed, 96 total
+2025-08-01T02:42:28.3577960Z Snapshots:   0 total
+2025-08-01T02:42:28.3578362Z Time:        10.611 s
+2025-08-01T02:42:28.3578731Z Ran all test suites.
+2025-08-01T02:42:28.3867146Z Post job cleanup.
+2025-08-01T02:42:28.4510889Z Post job cleanup.
+2025-08-01T02:42:28.5756213Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:28.6529355Z Post job cleanup.
+2025-08-01T02:42:28.7782991Z Cache hit occurred on the primary key Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:28.7864022Z Post job cleanup.
+2025-08-01T02:42:28.9600556Z Post job cleanup.
+2025-08-01T02:42:29.0525561Z [command]/usr/bin/git version
+2025-08-01T02:42:29.0569455Z git version 2.50.1
+2025-08-01T02:42:29.0613148Z Temporarily overriding HOME='/home/runner/work/_temp/72fef67c-835d-4ccc-a1a2-9dfcc3239dc3' before making global git config changes
+2025-08-01T02:42:29.0614958Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:42:29.0619776Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:42:29.0657673Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:42:29.0691796Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:42:29.0920327Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:42:29.0942064Z http.https://github.com/.extraheader
+2025-08-01T02:42:29.0954740Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:42:29.0985930Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:42:29.1340011Z Cleaning up orphan processes

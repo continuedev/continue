@@ -1,0 +1,376 @@
+# GitHub Actions Workflow Failure Analysis
+## Failed Jobs and Their Logs
+
+### 🔴 Job: prettier-check
+
+```
+﻿2025-08-01T02:41:18.3551947Z Current runner version: '2.327.1'
+2025-08-01T02:41:18.3586839Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:18.3588462Z Hosted Compute Agent
+2025-08-01T02:41:18.3589438Z Version: 20250711.363
+2025-08-01T02:41:18.3590578Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:18.3591738Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:18.3592788Z ##[endgroup]
+2025-08-01T02:41:18.3593696Z ##[group]Operating System
+2025-08-01T02:41:18.3594808Z Ubuntu
+2025-08-01T02:41:18.3595611Z 24.04.2
+2025-08-01T02:41:18.3596527Z LTS
+2025-08-01T02:41:18.3597345Z ##[endgroup]
+2025-08-01T02:41:18.3598500Z ##[group]Runner Image
+2025-08-01T02:41:18.3599688Z Image: ubuntu-24.04
+2025-08-01T02:41:18.3600582Z Version: 20250728.1.0
+2025-08-01T02:41:18.3602363Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:18.3604958Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:18.3606533Z ##[endgroup]
+2025-08-01T02:41:18.3608738Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:18.3611205Z Contents: read
+2025-08-01T02:41:18.3612275Z Metadata: read
+2025-08-01T02:41:18.3613125Z Packages: read
+2025-08-01T02:41:18.3614036Z ##[endgroup]
+2025-08-01T02:41:18.3617852Z Secret source: Actions
+2025-08-01T02:41:18.3619568Z Prepare workflow directory
+2025-08-01T02:41:18.4100450Z Prepare all required actions
+2025-08-01T02:41:18.4156987Z Getting action download info
+2025-08-01T02:41:18.6388235Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:18.6389291Z Version: 4.2.2
+2025-08-01T02:41:18.6390427Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:18.6391624Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:18.6392308Z ##[endgroup]
+2025-08-01T02:41:18.7405151Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:18.7405951Z Version: 4.4.0
+2025-08-01T02:41:18.7406729Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:18.7408010Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:18.7408701Z ##[endgroup]
+2025-08-01T02:41:18.8365134Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:18.8365906Z Version: 4.2.3
+2025-08-01T02:41:18.8366707Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:18.8368193Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:18.8369171Z ##[endgroup]
+2025-08-01T02:41:19.0237290Z Complete job name: prettier-check
+2025-08-01T02:41:19.0905445Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:19.0906265Z with:
+2025-08-01T02:41:19.0906657Z   repository: continuedev/continue
+2025-08-01T02:41:19.0907302Z   token: ***
+2025-08-01T02:41:19.0907834Z   ssh-strict: true
+2025-08-01T02:41:19.0908230Z   ssh-user: git
+2025-08-01T02:41:19.0908635Z   persist-credentials: true
+2025-08-01T02:41:19.0909100Z   clean: true
+2025-08-01T02:41:19.0909500Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:19.0909969Z   fetch-depth: 1
+2025-08-01T02:41:19.0910355Z   fetch-tags: false
+2025-08-01T02:41:19.0910754Z   show-progress: true
+2025-08-01T02:41:19.0911150Z   lfs: false
+2025-08-01T02:41:19.0911510Z   submodules: false
+2025-08-01T02:41:19.0911917Z   set-safe-directory: true
+2025-08-01T02:41:19.0912591Z ##[endgroup]
+2025-08-01T02:41:19.1978847Z Syncing repository: continuedev/continue
+2025-08-01T02:41:19.1980753Z ##[group]Getting Git version info
+2025-08-01T02:41:19.1981439Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:19.1982498Z [command]/usr/bin/git version
+2025-08-01T02:41:19.2043836Z git version 2.50.1
+2025-08-01T02:41:19.2071200Z ##[endgroup]
+2025-08-01T02:41:19.2085798Z Temporarily overriding HOME='/home/runner/work/_temp/72efb500-bceb-4af7-b650-6f3b11980d78' before making global git config changes
+2025-08-01T02:41:19.2088392Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:19.2092385Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:19.2131184Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:19.2135430Z ##[group]Initializing the repository
+2025-08-01T02:41:19.2140169Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:19.2219749Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:19.2221396Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:19.2222620Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:19.2223757Z hint:
+2025-08-01T02:41:19.2224620Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:19.2225867Z hint:
+2025-08-01T02:41:19.2226864Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:19.2228770Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:19.2230044Z hint:
+2025-08-01T02:41:19.2230712Z hint: 	git branch -m <name>
+2025-08-01T02:41:19.2231465Z hint:
+2025-08-01T02:41:19.2232484Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:19.2234245Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:19.2237098Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:19.2268498Z ##[endgroup]
+2025-08-01T02:41:19.2269769Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:19.2273335Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:19.2302566Z ##[endgroup]
+2025-08-01T02:41:19.2303848Z ##[group]Setting up auth
+2025-08-01T02:41:19.2310152Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:19.2341384Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:19.2642092Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:19.2670655Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:19.2896270Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:19.2929866Z ##[endgroup]
+2025-08-01T02:41:19.2930612Z ##[group]Fetching the repository
+2025-08-01T02:41:19.2938740Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:22.2699583Z From https://github.com/continuedev/continue
+2025-08-01T02:41:22.2700782Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:22.2732259Z ##[endgroup]
+2025-08-01T02:41:22.2733572Z ##[group]Determining the checkout info
+2025-08-01T02:41:22.2735222Z ##[endgroup]
+2025-08-01T02:41:22.2740867Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:22.2783762Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:22.2813976Z ##[group]Checking out the ref
+2025-08-01T02:41:22.2816829Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:23.2876226Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:23.2885425Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:23.2900188Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:23.2915104Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:23.2930456Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:23.2943375Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:23.2958806Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:23.2959709Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:23.2960023Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:23.2987087Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:23.2987576Z 
+2025-08-01T02:41:23.2988112Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:23.2988966Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:23.2989801Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:23.2990314Z 
+2025-08-01T02:41:23.2990678Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:23.2991540Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:23.2991814Z 
+2025-08-01T02:41:23.2991945Z   git switch -c <new-branch-name>
+2025-08-01T02:41:23.2992160Z 
+2025-08-01T02:41:23.2992309Z Or undo this operation with:
+2025-08-01T02:41:23.2992506Z 
+2025-08-01T02:41:23.2992610Z   git switch -
+2025-08-01T02:41:23.2992767Z 
+2025-08-01T02:41:23.2993040Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:23.2993374Z 
+2025-08-01T02:41:23.2993763Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:23.3054066Z ##[endgroup]
+2025-08-01T02:41:23.3092628Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:23.3115278Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:23.3347007Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:23.3347366Z with:
+2025-08-01T02:41:23.3347600Z   node-version-file: .nvmrc
+2025-08-01T02:41:23.3348032Z   always-auth: false
+2025-08-01T02:41:23.3348272Z   check-latest: false
+2025-08-01T02:41:23.3348656Z   token: ***
+2025-08-01T02:41:23.3348898Z ##[endgroup]
+2025-08-01T02:41:23.5055533Z Node version file is not JSON file
+2025-08-01T02:41:23.5057658Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:23.5073421Z Attempting to download 20.19.0...
+2025-08-01T02:41:23.8296494Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:24.2428904Z Extracting ...
+2025-08-01T02:41:24.2535047Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/512eae6c-d55a-45d8-a965-f9857e8083dc -f /home/runner/work/_temp/4725ec64-deea-433a-9c66-52e677c68ad3
+2025-08-01T02:41:25.2424643Z Adding to the cache ...
+2025-08-01T02:41:26.8787041Z ##[group]Environment details
+2025-08-01T02:41:27.1045962Z node: v20.19.0
+2025-08-01T02:41:27.1046346Z npm: 10.8.2
+2025-08-01T02:41:27.1046748Z yarn: 1.22.22
+2025-08-01T02:41:27.1047602Z ##[endgroup]
+2025-08-01T02:41:27.1830445Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:27.1830723Z with:
+2025-08-01T02:41:27.1830904Z   path: node_modules
+2025-08-01T02:41:27.1831323Z   key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:41:27.1831804Z   enableCrossOsArchive: false
+2025-08-01T02:41:27.1832057Z   fail-on-cache-miss: false
+2025-08-01T02:41:27.1832285Z   lookup-only: false
+2025-08-01T02:41:27.1832472Z   save-always: false
+2025-08-01T02:41:27.1832652Z ##[endgroup]
+2025-08-01T02:41:27.3967228Z Cache hit for: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:41:27.5689386Z Received 12019642 of 12019642 (100.0%), 94.7 MBs/sec
+2025-08-01T02:41:27.5690247Z Cache Size: ~11 MB (12019642 B)
+2025-08-01T02:41:27.5715781Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ecdb56c7-eeef-4450-b4ca-1d03b4583932/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:28.0369660Z Cache restored successfully
+2025-08-01T02:41:28.0523914Z Cache restored from key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:41:28.0678846Z ##[group]Run npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
+2025-08-01T02:41:28.0679900Z [36;1mnpx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore[0m
+2025-08-01T02:41:28.0711505Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:41:28.0711768Z ##[endgroup]
+2025-08-01T02:41:28.4514644Z Checking formatting...
+2025-08-01T02:41:39.1864236Z [warn] core/util/sentry/SentryLogger.test.ts
+2025-08-01T02:41:50.4339357Z [warn] Code style issues found in the above file. Run Prettier with --write to fix.
+2025-08-01T02:41:50.4786626Z ##[error]Process completed with exit code 1.
+2025-08-01T02:41:50.4866525Z Post job cleanup.
+2025-08-01T02:41:50.5842665Z [command]/usr/bin/git version
+2025-08-01T02:41:50.5892278Z git version 2.50.1
+2025-08-01T02:41:50.5934869Z Temporarily overriding HOME='/home/runner/work/_temp/8e677016-e80e-4508-ac91-814c1f258944' before making global git config changes
+2025-08-01T02:41:50.5935765Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:50.5940236Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:50.5974128Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:50.6005505Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:50.6251947Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:50.6278453Z http.https://github.com/.extraheader
+2025-08-01T02:41:50.6294942Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:41:50.6333549Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:50.6735062Z Cleaning up orphan processes
+```
+
+---
+
+### 🔴 Job: require-all-checks-to-pass
+
+```
+﻿2025-08-01T02:50:49.1533892Z Current runner version: '2.327.1'
+2025-08-01T02:50:49.1558190Z ##[group]Runner Image Provisioner
+2025-08-01T02:50:49.1558965Z Hosted Compute Agent
+2025-08-01T02:50:49.1559598Z Version: 20250711.363
+2025-08-01T02:50:49.1560191Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:50:49.1560826Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:50:49.1561465Z ##[endgroup]
+2025-08-01T02:50:49.1562011Z ##[group]Operating System
+2025-08-01T02:50:49.1562679Z Ubuntu
+2025-08-01T02:50:49.1563297Z 24.04.2
+2025-08-01T02:50:49.1563740Z LTS
+2025-08-01T02:50:49.1564200Z ##[endgroup]
+2025-08-01T02:50:49.1564697Z ##[group]Runner Image
+2025-08-01T02:50:49.1565305Z Image: ubuntu-24.04
+2025-08-01T02:50:49.1565765Z Version: 20250728.1.0
+2025-08-01T02:50:49.1567096Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:50:49.1568630Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:50:49.1569648Z ##[endgroup]
+2025-08-01T02:50:49.1570681Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:50:49.1572697Z Contents: read
+2025-08-01T02:50:49.1573360Z Metadata: read
+2025-08-01T02:50:49.1573856Z Packages: read
+2025-08-01T02:50:49.1574300Z ##[endgroup]
+2025-08-01T02:50:49.1576359Z Secret source: Actions
+2025-08-01T02:50:49.1577638Z Prepare workflow directory
+2025-08-01T02:50:49.1988575Z Prepare all required actions
+2025-08-01T02:50:49.2042568Z Getting action download info
+2025-08-01T02:50:49.4710250Z Download action repository 're-actors/alls-green@release/v1' (SHA:05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe)
+2025-08-01T02:50:49.8110672Z Complete job name: require-all-checks-to-pass
+2025-08-01T02:50:49.8781053Z ##[group]Run re-actors/alls-green@release/v1
+2025-08-01T02:50:49.8781938Z with:
+2025-08-01T02:50:49.8786882Z   jobs: {
+  "prettier-check": {
+    "result": "failure",
+    "outputs": {}
+  },
+  "core-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "gui-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "binary-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "vscode-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "get-packages-matrix": {
+    "result": "success",
+    "outputs": {
+      "packages": "[\"config-types\",\"config-yaml\",\"continue-sdk\",\"fetch\",\"hub\",\"llm-info\",\"openai-adapters\"]"
+    }
+  },
+  "packages-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "vscode-get-test-file-matrix": {
+    "result": "success",
+    "outputs": {
+      "test_file_matrix": "[\n  \"e2e/_output/tests/Autocomplete.test.js\",\n  \"e2e/_output/tests/Edit.test.js\",\n  \"e2e/_output/tests/GUI.test.js\",\n  \"e2e/_output/tests/KeyboardShortcuts.test.js\",\n  \"e2e/_output/tests/PromptFile.test.js\"\n]"
+    }
+  },
+  "vscode-package-extension-linux": {
+    "result": "success",
+    "outputs": {}
+  },
+  "vscode-e2e-tests": {
+    "result": "success",
+    "outputs": {}
+  },
+  "jetbrains-tests": {
+    "result": "success",
+    "outputs": {}
+  }
+}
+2025-08-01T02:50:49.8792047Z   allowed-failures: []
+2025-08-01T02:50:49.8792456Z   allowed-skips: []
+2025-08-01T02:50:49.8793119Z ##[endgroup]
+2025-08-01T02:50:49.8922339Z ##[group]Run python -m normalize_needed_jobs_status \
+2025-08-01T02:50:49.8923096Z [36;1mpython -m normalize_needed_jobs_status \[0m
+2025-08-01T02:50:49.8923648Z [36;1m"$(cat << EOM[0m
+2025-08-01T02:50:49.8924050Z [36;1m  [][0m
+2025-08-01T02:50:49.8924406Z [36;1mEOM[0m
+2025-08-01T02:50:49.8924757Z [36;1m)" \[0m
+2025-08-01T02:50:49.8925115Z [36;1m"$(cat << EOM[0m
+2025-08-01T02:50:49.8925513Z [36;1m  [][0m
+2025-08-01T02:50:49.8925859Z [36;1mEOM[0m
+2025-08-01T02:50:49.8926207Z [36;1m)" \[0m
+2025-08-01T02:50:49.8926902Z [36;1m"$(cat << EOM[0m
+2025-08-01T02:50:49.8927388Z [36;1m  {[0m
+2025-08-01T02:50:49.8927780Z [36;1m  "prettier-check": {[0m
+2025-08-01T02:50:49.8928243Z [36;1m    "result": "failure",[0m
+2025-08-01T02:50:49.8928720Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8929131Z [36;1m  },[0m
+2025-08-01T02:50:49.8929507Z [36;1m  "core-checks": {[0m
+2025-08-01T02:50:49.8930194Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8930670Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8931080Z [36;1m  },[0m
+2025-08-01T02:50:49.8931449Z [36;1m  "gui-checks": {[0m
+2025-08-01T02:50:49.8931880Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8932336Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8932746Z [36;1m  },[0m
+2025-08-01T02:50:49.8933113Z [36;1m  "binary-checks": {[0m
+2025-08-01T02:50:49.8933554Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8934007Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8934553Z [36;1m  },[0m
+2025-08-01T02:50:49.8934930Z [36;1m  "vscode-checks": {[0m
+2025-08-01T02:50:49.8935378Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8935842Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8936251Z [36;1m  },[0m
+2025-08-01T02:50:49.8936941Z [36;1m  "get-packages-matrix": {[0m
+2025-08-01T02:50:49.8937428Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8937895Z [36;1m    "outputs": {[0m
+2025-08-01T02:50:49.8938698Z [36;1m      "packages": "[\"config-types\",\"config-yaml\",\"continue-sdk\",\"fetch\",\"hub\",\"llm-info\",\"openai-adapters\"]"[0m
+2025-08-01T02:50:49.8939534Z [36;1m    }[0m
+2025-08-01T02:50:49.8939888Z [36;1m  },[0m
+2025-08-01T02:50:49.8940275Z [36;1m  "packages-checks": {[0m
+2025-08-01T02:50:49.8940944Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8941524Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8942125Z [36;1m  },[0m
+2025-08-01T02:50:49.8942527Z [36;1m  "vscode-get-test-file-matrix": {[0m
+2025-08-01T02:50:49.8943046Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8943680Z [36;1m    "outputs": {[0m
+2025-08-01T02:50:49.8945103Z [36;1m      "test_file_matrix": "[\n  \"e2e/_output/tests/Autocomplete.test.js\",\n  \"e2e/_output/tests/Edit.test.js\",\n  \"e2e/_output/tests/GUI.test.js\",\n  \"e2e/_output/tests/KeyboardShortcuts.test.js\",\n  \"e2e/_output/tests/PromptFile.test.js\"\n]"[0m
+2025-08-01T02:50:49.8946668Z [36;1m    }[0m
+2025-08-01T02:50:49.8947029Z [36;1m  },[0m
+2025-08-01T02:50:49.8947451Z [36;1m  "vscode-package-extension-linux": {[0m
+2025-08-01T02:50:49.8947974Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8948432Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8948839Z [36;1m  },[0m
+2025-08-01T02:50:49.8949219Z [36;1m  "vscode-e2e-tests": {[0m
+2025-08-01T02:50:49.8949683Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8950137Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8950554Z [36;1m  },[0m
+2025-08-01T02:50:49.8950922Z [36;1m  "jetbrains-tests": {[0m
+2025-08-01T02:50:49.8951387Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8951844Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8952254Z [36;1m  }[0m
+2025-08-01T02:50:49.8952598Z [36;1m}[0m
+2025-08-01T02:50:49.8952939Z [36;1mEOM[0m
+2025-08-01T02:50:49.8953281Z [36;1m)"[0m
+2025-08-01T02:50:49.8985649Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:50:49.8986280Z env:
+2025-08-01T02:50:49.8987005Z   PYTHONPATH: /home/runner/work/_actions/re-actors/alls-green/release/v1/src
+2025-08-01T02:50:49.8987686Z ##[endgroup]
+2025-08-01T02:50:49.9410915Z # ❌ Some of the required to succeed jobs failed 😢😢😢
+2025-08-01T02:50:49.9411552Z 
+2025-08-01T02:50:49.9411781Z 📝 Job statuses:
+2025-08-01T02:50:49.9412364Z 📝 prettier-check → ❌ failure [required to succeed]
+2025-08-01T02:50:49.9413076Z 📝 core-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9413703Z 📝 gui-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9414338Z 📝 binary-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9415028Z 📝 vscode-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9415715Z 📝 get-packages-matrix → ✓ success [required to succeed]
+2025-08-01T02:50:49.9416394Z 📝 packages-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9417313Z 📝 vscode-get-test-file-matrix → ✓ success [required to succeed]
+2025-08-01T02:50:49.9418142Z 📝 vscode-package-extension-linux → ✓ success [required to succeed]
+2025-08-01T02:50:49.9419219Z 📝 vscode-e2e-tests → ✓ success [required to succeed]
+2025-08-01T02:50:49.9419881Z 📝 jetbrains-tests → ✓ success [required to succeed]
+2025-08-01T02:50:49.9454958Z ##[error]Process completed with exit code 1.
+2025-08-01T02:50:49.9627738Z Cleaning up orphan processes
+```
+
+---
+

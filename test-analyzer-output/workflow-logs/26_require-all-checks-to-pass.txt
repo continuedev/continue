@@ -1,0 +1,167 @@
+﻿2025-08-01T02:50:49.1533892Z Current runner version: '2.327.1'
+2025-08-01T02:50:49.1558190Z ##[group]Runner Image Provisioner
+2025-08-01T02:50:49.1558965Z Hosted Compute Agent
+2025-08-01T02:50:49.1559598Z Version: 20250711.363
+2025-08-01T02:50:49.1560191Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:50:49.1560826Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:50:49.1561465Z ##[endgroup]
+2025-08-01T02:50:49.1562011Z ##[group]Operating System
+2025-08-01T02:50:49.1562679Z Ubuntu
+2025-08-01T02:50:49.1563297Z 24.04.2
+2025-08-01T02:50:49.1563740Z LTS
+2025-08-01T02:50:49.1564200Z ##[endgroup]
+2025-08-01T02:50:49.1564697Z ##[group]Runner Image
+2025-08-01T02:50:49.1565305Z Image: ubuntu-24.04
+2025-08-01T02:50:49.1565765Z Version: 20250728.1.0
+2025-08-01T02:50:49.1567096Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:50:49.1568630Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:50:49.1569648Z ##[endgroup]
+2025-08-01T02:50:49.1570681Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:50:49.1572697Z Contents: read
+2025-08-01T02:50:49.1573360Z Metadata: read
+2025-08-01T02:50:49.1573856Z Packages: read
+2025-08-01T02:50:49.1574300Z ##[endgroup]
+2025-08-01T02:50:49.1576359Z Secret source: Actions
+2025-08-01T02:50:49.1577638Z Prepare workflow directory
+2025-08-01T02:50:49.1988575Z Prepare all required actions
+2025-08-01T02:50:49.2042568Z Getting action download info
+2025-08-01T02:50:49.4710250Z Download action repository 're-actors/alls-green@release/v1' (SHA:05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe)
+2025-08-01T02:50:49.8110672Z Complete job name: require-all-checks-to-pass
+2025-08-01T02:50:49.8781053Z ##[group]Run re-actors/alls-green@release/v1
+2025-08-01T02:50:49.8781938Z with:
+2025-08-01T02:50:49.8786882Z   jobs: {
+  "prettier-check": {
+    "result": "failure",
+    "outputs": {}
+  },
+  "core-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "gui-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "binary-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "vscode-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "get-packages-matrix": {
+    "result": "success",
+    "outputs": {
+      "packages": "[\"config-types\",\"config-yaml\",\"continue-sdk\",\"fetch\",\"hub\",\"llm-info\",\"openai-adapters\"]"
+    }
+  },
+  "packages-checks": {
+    "result": "success",
+    "outputs": {}
+  },
+  "vscode-get-test-file-matrix": {
+    "result": "success",
+    "outputs": {
+      "test_file_matrix": "[\n  \"e2e/_output/tests/Autocomplete.test.js\",\n  \"e2e/_output/tests/Edit.test.js\",\n  \"e2e/_output/tests/GUI.test.js\",\n  \"e2e/_output/tests/KeyboardShortcuts.test.js\",\n  \"e2e/_output/tests/PromptFile.test.js\"\n]"
+    }
+  },
+  "vscode-package-extension-linux": {
+    "result": "success",
+    "outputs": {}
+  },
+  "vscode-e2e-tests": {
+    "result": "success",
+    "outputs": {}
+  },
+  "jetbrains-tests": {
+    "result": "success",
+    "outputs": {}
+  }
+}
+2025-08-01T02:50:49.8792047Z   allowed-failures: []
+2025-08-01T02:50:49.8792456Z   allowed-skips: []
+2025-08-01T02:50:49.8793119Z ##[endgroup]
+2025-08-01T02:50:49.8922339Z ##[group]Run python -m normalize_needed_jobs_status \
+2025-08-01T02:50:49.8923096Z [36;1mpython -m normalize_needed_jobs_status \[0m
+2025-08-01T02:50:49.8923648Z [36;1m"$(cat << EOM[0m
+2025-08-01T02:50:49.8924050Z [36;1m  [][0m
+2025-08-01T02:50:49.8924406Z [36;1mEOM[0m
+2025-08-01T02:50:49.8924757Z [36;1m)" \[0m
+2025-08-01T02:50:49.8925115Z [36;1m"$(cat << EOM[0m
+2025-08-01T02:50:49.8925513Z [36;1m  [][0m
+2025-08-01T02:50:49.8925859Z [36;1mEOM[0m
+2025-08-01T02:50:49.8926207Z [36;1m)" \[0m
+2025-08-01T02:50:49.8926902Z [36;1m"$(cat << EOM[0m
+2025-08-01T02:50:49.8927388Z [36;1m  {[0m
+2025-08-01T02:50:49.8927780Z [36;1m  "prettier-check": {[0m
+2025-08-01T02:50:49.8928243Z [36;1m    "result": "failure",[0m
+2025-08-01T02:50:49.8928720Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8929131Z [36;1m  },[0m
+2025-08-01T02:50:49.8929507Z [36;1m  "core-checks": {[0m
+2025-08-01T02:50:49.8930194Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8930670Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8931080Z [36;1m  },[0m
+2025-08-01T02:50:49.8931449Z [36;1m  "gui-checks": {[0m
+2025-08-01T02:50:49.8931880Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8932336Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8932746Z [36;1m  },[0m
+2025-08-01T02:50:49.8933113Z [36;1m  "binary-checks": {[0m
+2025-08-01T02:50:49.8933554Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8934007Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8934553Z [36;1m  },[0m
+2025-08-01T02:50:49.8934930Z [36;1m  "vscode-checks": {[0m
+2025-08-01T02:50:49.8935378Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8935842Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8936251Z [36;1m  },[0m
+2025-08-01T02:50:49.8936941Z [36;1m  "get-packages-matrix": {[0m
+2025-08-01T02:50:49.8937428Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8937895Z [36;1m    "outputs": {[0m
+2025-08-01T02:50:49.8938698Z [36;1m      "packages": "[\"config-types\",\"config-yaml\",\"continue-sdk\",\"fetch\",\"hub\",\"llm-info\",\"openai-adapters\"]"[0m
+2025-08-01T02:50:49.8939534Z [36;1m    }[0m
+2025-08-01T02:50:49.8939888Z [36;1m  },[0m
+2025-08-01T02:50:49.8940275Z [36;1m  "packages-checks": {[0m
+2025-08-01T02:50:49.8940944Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8941524Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8942125Z [36;1m  },[0m
+2025-08-01T02:50:49.8942527Z [36;1m  "vscode-get-test-file-matrix": {[0m
+2025-08-01T02:50:49.8943046Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8943680Z [36;1m    "outputs": {[0m
+2025-08-01T02:50:49.8945103Z [36;1m      "test_file_matrix": "[\n  \"e2e/_output/tests/Autocomplete.test.js\",\n  \"e2e/_output/tests/Edit.test.js\",\n  \"e2e/_output/tests/GUI.test.js\",\n  \"e2e/_output/tests/KeyboardShortcuts.test.js\",\n  \"e2e/_output/tests/PromptFile.test.js\"\n]"[0m
+2025-08-01T02:50:49.8946668Z [36;1m    }[0m
+2025-08-01T02:50:49.8947029Z [36;1m  },[0m
+2025-08-01T02:50:49.8947451Z [36;1m  "vscode-package-extension-linux": {[0m
+2025-08-01T02:50:49.8947974Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8948432Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8948839Z [36;1m  },[0m
+2025-08-01T02:50:49.8949219Z [36;1m  "vscode-e2e-tests": {[0m
+2025-08-01T02:50:49.8949683Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8950137Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8950554Z [36;1m  },[0m
+2025-08-01T02:50:49.8950922Z [36;1m  "jetbrains-tests": {[0m
+2025-08-01T02:50:49.8951387Z [36;1m    "result": "success",[0m
+2025-08-01T02:50:49.8951844Z [36;1m    "outputs": {}[0m
+2025-08-01T02:50:49.8952254Z [36;1m  }[0m
+2025-08-01T02:50:49.8952598Z [36;1m}[0m
+2025-08-01T02:50:49.8952939Z [36;1mEOM[0m
+2025-08-01T02:50:49.8953281Z [36;1m)"[0m
+2025-08-01T02:50:49.8985649Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:50:49.8986280Z env:
+2025-08-01T02:50:49.8987005Z   PYTHONPATH: /home/runner/work/_actions/re-actors/alls-green/release/v1/src
+2025-08-01T02:50:49.8987686Z ##[endgroup]
+2025-08-01T02:50:49.9410915Z # ❌ Some of the required to succeed jobs failed 😢😢😢
+2025-08-01T02:50:49.9411552Z 
+2025-08-01T02:50:49.9411781Z 📝 Job statuses:
+2025-08-01T02:50:49.9412364Z 📝 prettier-check → ❌ failure [required to succeed]
+2025-08-01T02:50:49.9413076Z 📝 core-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9413703Z 📝 gui-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9414338Z 📝 binary-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9415028Z 📝 vscode-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9415715Z 📝 get-packages-matrix → ✓ success [required to succeed]
+2025-08-01T02:50:49.9416394Z 📝 packages-checks → ✓ success [required to succeed]
+2025-08-01T02:50:49.9417313Z 📝 vscode-get-test-file-matrix → ✓ success [required to succeed]
+2025-08-01T02:50:49.9418142Z 📝 vscode-package-extension-linux → ✓ success [required to succeed]
+2025-08-01T02:50:49.9419219Z 📝 vscode-e2e-tests → ✓ success [required to succeed]
+2025-08-01T02:50:49.9419881Z 📝 jetbrains-tests → ✓ success [required to succeed]
+2025-08-01T02:50:49.9454958Z ##[error]Process completed with exit code 1.
+2025-08-01T02:50:49.9627738Z Cleaning up orphan processes

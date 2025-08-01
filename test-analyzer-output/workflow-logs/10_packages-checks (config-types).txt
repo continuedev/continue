@@ -1,0 +1,278 @@
+﻿2025-08-01T02:41:28.3926736Z Current runner version: '2.327.1'
+2025-08-01T02:41:28.3951038Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:28.3951887Z Hosted Compute Agent
+2025-08-01T02:41:28.3952477Z Version: 20250711.363
+2025-08-01T02:41:28.3953278Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:28.3954004Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:28.3954692Z ##[endgroup]
+2025-08-01T02:41:28.3955265Z ##[group]Operating System
+2025-08-01T02:41:28.3955857Z Ubuntu
+2025-08-01T02:41:28.3956442Z 24.04.2
+2025-08-01T02:41:28.3956988Z LTS
+2025-08-01T02:41:28.3957530Z ##[endgroup]
+2025-08-01T02:41:28.3958144Z ##[group]Runner Image
+2025-08-01T02:41:28.3958778Z Image: ubuntu-24.04
+2025-08-01T02:41:28.3959698Z Version: 20250728.1.0
+2025-08-01T02:41:28.3960828Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:28.3962499Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:28.3963627Z ##[endgroup]
+2025-08-01T02:41:28.3964865Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:28.3966862Z Contents: read
+2025-08-01T02:41:28.3967518Z Metadata: read
+2025-08-01T02:41:28.3968100Z Packages: read
+2025-08-01T02:41:28.3968728Z ##[endgroup]
+2025-08-01T02:41:28.3971596Z Secret source: Actions
+2025-08-01T02:41:28.3972874Z Prepare workflow directory
+2025-08-01T02:41:28.4307116Z Prepare all required actions
+2025-08-01T02:41:28.4345879Z Getting action download info
+2025-08-01T02:41:28.7695978Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:28.7697188Z Version: 4.2.2
+2025-08-01T02:41:28.7698259Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:28.7699971Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:28.7700818Z ##[endgroup]
+2025-08-01T02:41:28.9553538Z Complete job name: packages-checks (config-types)
+2025-08-01T02:41:29.0206081Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:29.0207073Z with:
+2025-08-01T02:41:29.0207567Z   repository: continuedev/continue
+2025-08-01T02:41:29.0208350Z   token: ***
+2025-08-01T02:41:29.0208823Z   ssh-strict: true
+2025-08-01T02:41:29.0209304Z   ssh-user: git
+2025-08-01T02:41:29.0210215Z   persist-credentials: true
+2025-08-01T02:41:29.0210772Z   clean: true
+2025-08-01T02:41:29.0211277Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:29.0211859Z   fetch-depth: 1
+2025-08-01T02:41:29.0212339Z   fetch-tags: false
+2025-08-01T02:41:29.0212821Z   show-progress: true
+2025-08-01T02:41:29.0213331Z   lfs: false
+2025-08-01T02:41:29.0213783Z   submodules: false
+2025-08-01T02:41:29.0214283Z   set-safe-directory: true
+2025-08-01T02:41:29.0215140Z ##[endgroup]
+2025-08-01T02:41:29.1314439Z Syncing repository: continuedev/continue
+2025-08-01T02:41:29.1316603Z ##[group]Getting Git version info
+2025-08-01T02:41:29.1317465Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:29.1318703Z [command]/usr/bin/git version
+2025-08-01T02:41:29.1379240Z git version 2.50.1
+2025-08-01T02:41:29.1407554Z ##[endgroup]
+2025-08-01T02:41:29.1423366Z Temporarily overriding HOME='/home/runner/work/_temp/605a82ad-d19c-47b1-bbac-dca955b68125' before making global git config changes
+2025-08-01T02:41:29.1425838Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:29.1428587Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:29.1468450Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:29.1472409Z ##[group]Initializing the repository
+2025-08-01T02:41:29.1476358Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:29.1561424Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:29.1563485Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:29.1565247Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:29.1566401Z hint:
+2025-08-01T02:41:29.1566994Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:29.1567668Z hint:
+2025-08-01T02:41:29.1568302Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:29.1569302Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:29.1570665Z hint:
+2025-08-01T02:41:29.1571160Z hint: 	git branch -m <name>
+2025-08-01T02:41:29.1571698Z hint:
+2025-08-01T02:41:29.1572382Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:29.1573505Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:29.1577038Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:29.1614426Z ##[endgroup]
+2025-08-01T02:41:29.1615309Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:29.1618453Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:29.1648452Z ##[endgroup]
+2025-08-01T02:41:29.1649281Z ##[group]Setting up auth
+2025-08-01T02:41:29.1655430Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:29.1688504Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:29.1987478Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:29.2017305Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:29.2250990Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:29.2287555Z ##[endgroup]
+2025-08-01T02:41:29.2288497Z ##[group]Fetching the repository
+2025-08-01T02:41:29.2296309Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:32.1150752Z From https://github.com/continuedev/continue
+2025-08-01T02:41:32.1153025Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:32.1176912Z ##[endgroup]
+2025-08-01T02:41:32.1178281Z ##[group]Determining the checkout info
+2025-08-01T02:41:32.1179983Z ##[endgroup]
+2025-08-01T02:41:32.1185113Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:32.1225424Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:32.1254457Z ##[group]Checking out the ref
+2025-08-01T02:41:32.1257566Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:33.1337722Z Updating files:  87% (2052/2354)
+2025-08-01T02:41:33.1353829Z Updating files:  88% (2072/2354)
+2025-08-01T02:41:33.1370325Z Updating files:  89% (2096/2354)
+2025-08-01T02:41:33.1399845Z Updating files:  90% (2119/2354)
+2025-08-01T02:41:33.1420179Z Updating files:  91% (2143/2354)
+2025-08-01T02:41:33.1434776Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:33.1447431Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:33.1465093Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:33.1486944Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:33.1509924Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:33.1532443Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:33.1552469Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:33.1567997Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:33.1568538Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:33.1569035Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:33.1598923Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:33.1601001Z 
+2025-08-01T02:41:33.1601471Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:33.1602755Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:33.1603570Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:33.1604099Z 
+2025-08-01T02:41:33.1604429Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:33.1605172Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:33.1605657Z 
+2025-08-01T02:41:33.1605874Z   git switch -c <new-branch-name>
+2025-08-01T02:41:33.1606186Z 
+2025-08-01T02:41:33.1606357Z Or undo this operation with:
+2025-08-01T02:41:33.1606631Z 
+2025-08-01T02:41:33.1606782Z   git switch -
+2025-08-01T02:41:33.1606997Z 
+2025-08-01T02:41:33.1607362Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:33.1607889Z 
+2025-08-01T02:41:33.1608517Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:33.1670430Z ##[endgroup]
+2025-08-01T02:41:33.1712039Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:33.1734707Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:33.1985515Z Prepare all required actions
+2025-08-01T02:41:33.1986021Z Getting action download info
+2025-08-01T02:41:33.3345633Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:33.3346138Z Version: 4.4.0
+2025-08-01T02:41:33.3346589Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:33.3347199Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:33.3347614Z ##[endgroup]
+2025-08-01T02:41:33.4265421Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:33.4265809Z Version: 4.2.3
+2025-08-01T02:41:33.4266173Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:33.4266656Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:33.4266977Z ##[endgroup]
+2025-08-01T02:41:33.5574478Z ##[group]Run ./.github/actions/setup-packages
+2025-08-01T02:41:33.5574827Z ##[endgroup]
+2025-08-01T02:41:33.5717773Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:33.5718090Z with:
+2025-08-01T02:41:33.5718309Z   node-version-file: .nvmrc
+2025-08-01T02:41:33.5718559Z   always-auth: false
+2025-08-01T02:41:33.5718785Z   check-latest: false
+2025-08-01T02:41:33.5719147Z   token: ***
+2025-08-01T02:41:33.5719556Z ##[endgroup]
+2025-08-01T02:41:33.7453722Z Node version file is not JSON file
+2025-08-01T02:41:33.7455451Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:33.7471180Z Attempting to download 20.19.0...
+2025-08-01T02:41:34.0596033Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:34.4254871Z Extracting ...
+2025-08-01T02:41:34.4367986Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/1f46350d-b116-42b5-8b60-30507b794de9 -f /home/runner/work/_temp/5591e98e-914b-4741-a3de-677922e21ff7
+2025-08-01T02:41:35.4508896Z Adding to the cache ...
+2025-08-01T02:41:37.1752552Z ##[group]Environment details
+2025-08-01T02:41:37.3948635Z node: v20.19.0
+2025-08-01T02:41:37.3949038Z npm: 10.8.2
+2025-08-01T02:41:37.3949349Z yarn: 1.22.22
+2025-08-01T02:41:37.3950471Z ##[endgroup]
+2025-08-01T02:41:37.4765934Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:37.4766187Z with:
+2025-08-01T02:41:37.4766378Z   path: ~/.npm
+2025-08-01T02:41:37.4766823Z   key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:37.4767330Z   enableCrossOsArchive: false
+2025-08-01T02:41:37.4767589Z   fail-on-cache-miss: false
+2025-08-01T02:41:37.4767825Z   lookup-only: false
+2025-08-01T02:41:37.4768037Z   save-always: false
+2025-08-01T02:41:37.4768247Z ##[endgroup]
+2025-08-01T02:41:37.7022581Z Cache hit for: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:38.2458150Z Received 69543054 of 69543054 (100.0%), 136.2 MBs/sec
+2025-08-01T02:41:38.2459743Z Cache Size: ~66 MB (69543054 B)
+2025-08-01T02:41:38.2491840Z [command]/usr/bin/tar -xf /home/runner/work/_temp/b03b8b37-84aa-490c-95d7-343a87672a96/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:38.5076847Z Cache restored successfully
+2025-08-01T02:41:38.5287407Z Cache restored from key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:38.6051208Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:38.6051465Z with:
+2025-08-01T02:41:38.6051685Z   path: packages/*/node_modules
+
+2025-08-01T02:41:38.6052208Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:38.6052749Z   enableCrossOsArchive: false
+2025-08-01T02:41:38.6053014Z   fail-on-cache-miss: false
+2025-08-01T02:41:38.6053259Z   lookup-only: false
+2025-08-01T02:41:38.6053482Z   save-always: false
+2025-08-01T02:41:38.6053716Z ##[endgroup]
+2025-08-01T02:41:38.8027044Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:39.2359301Z Received 83741540 of 83741540 (100.0%), 199.2 MBs/sec
+2025-08-01T02:41:39.2360565Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:41:39.2390779Z [command]/usr/bin/tar -xf /home/runner/work/_temp/78c7763b-6892-4e3d-bf8c-9fbebe32559d/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:41.9372681Z Cache restored successfully
+2025-08-01T02:41:41.9673134Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:41.9819685Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:41.9820173Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:41.9851674Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:41.9852115Z ##[endgroup]
+2025-08-01T02:41:42.0170582Z 🚀 Starting package builds...
+2025-08-01T02:41:42.0171075Z 
+2025-08-01T02:41:42.0177526Z Starting config-types (install): npm ci
+2025-08-01T02:41:42.6588546Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:42.6589652Z Starting config-types (build): npm run build
+2025-08-01T02:41:44.4039081Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:44.4039839Z Starting fetch (install): npm ci
+2025-08-01T02:41:44.4054577Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:44.4070686Z Starting llm-info (install): npm ci
+2025-08-01T02:41:45.4063811Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:45.4068775Z Starting llm-info (build): npm run build
+2025-08-01T02:41:46.2780571Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:41:46.2784387Z Starting fetch (build): npm run build
+2025-08-01T02:41:47.5270145Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:41:49.3562175Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:41:50.7496339Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:41:50.7496891Z Starting config-yaml (build): npm run build
+2025-08-01T02:41:55.3754950Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:41:55.3756057Z 🧹 Cleaning node_modules for openai-adapters
+2025-08-01T02:41:55.3764950Z 🧹 Cleaning node_modules for continue-sdk
+2025-08-01T02:41:56.2545905Z Starting continue-sdk (install): npm ci
+2025-08-01T02:41:56.2589044Z Starting openai-adapters (install): npm ci
+2025-08-01T02:42:02.8534843Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:42:02.8535738Z Starting openai-adapters (build): npm run build
+2025-08-01T02:42:06.1995872Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:42:06.1998642Z Starting continue-sdk (build): npm run build
+2025-08-01T02:42:06.3628961Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:42:08.6299800Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:42:08.6300873Z 🎉 All packages built successfully!
+2025-08-01T02:42:08.6486193Z ##[group]Run cd packages/config-types
+2025-08-01T02:42:08.6486568Z [36;1mcd packages/config-types[0m
+2025-08-01T02:42:08.6486852Z [36;1mnpm ci[0m
+2025-08-01T02:42:08.6487076Z [36;1mnpm test[0m
+2025-08-01T02:42:08.6515392Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:08.6515665Z env:
+2025-08-01T02:42:08.6515885Z   IGNORE_API_KEY_TESTS: false
+2025-08-01T02:42:08.6540388Z   OPENAI_API_KEY: ***
+2025-08-01T02:42:08.6541076Z   ANTHROPIC_API_KEY: ***
+2025-08-01T02:42:08.6541477Z   GEMINI_API_KEY: ***
+2025-08-01T02:42:08.6541780Z   MISTRAL_API_KEY: ***
+2025-08-01T02:42:08.6542090Z   AZURE_OPENAI_API_KEY: ***
+2025-08-01T02:42:08.6542673Z   AZURE_FOUNDRY_CODESTRAL_API_KEY: ***
+2025-08-01T02:42:08.6543291Z   AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ***
+2025-08-01T02:42:08.6543660Z   AZURE_OPENAI_GPT41_API_KEY: ***
+2025-08-01T02:42:08.6544026Z   VOYAGE_API_KEY: ***
+2025-08-01T02:42:08.6544259Z ##[endgroup]
+2025-08-01T02:42:09.3161652Z 
+2025-08-01T02:42:09.3162488Z added 4 packages, and audited 5 packages in 599ms
+2025-08-01T02:42:09.3163002Z 
+2025-08-01T02:42:09.3163293Z 1 package is looking for funding
+2025-08-01T02:42:09.3163824Z   run `npm fund` for details
+2025-08-01T02:42:09.3171588Z 
+2025-08-01T02:42:09.3172030Z found 0 vulnerabilities
+2025-08-01T02:42:09.4307244Z 
+2025-08-01T02:42:09.4307903Z > @continuedev/config-types@1.0.14 test
+2025-08-01T02:42:09.4308511Z > echo 'No tests to run'
+2025-08-01T02:42:09.4308794Z 
+2025-08-01T02:42:09.4347257Z No tests to run
+2025-08-01T02:42:09.4463135Z Post job cleanup.
+2025-08-01T02:42:09.5141963Z Post job cleanup.
+2025-08-01T02:42:09.6420470Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:09.7148979Z Post job cleanup.
+2025-08-01T02:42:09.8427561Z Cache hit occurred on the primary key Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:09.8532033Z Post job cleanup.
+2025-08-01T02:42:10.0217106Z Post job cleanup.
+2025-08-01T02:42:10.1211445Z [command]/usr/bin/git version
+2025-08-01T02:42:10.1255293Z git version 2.50.1
+2025-08-01T02:42:10.1300321Z Temporarily overriding HOME='/home/runner/work/_temp/7d43a4db-f8d3-46b9-a5e7-09691a7cec58' before making global git config changes
+2025-08-01T02:42:10.1301926Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:42:10.1306493Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:42:10.1342723Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:42:10.1376664Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:42:10.1610666Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:42:10.1633398Z http.https://github.com/.extraheader
+2025-08-01T02:42:10.1646520Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:42:10.1680564Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:42:10.2013101Z Cleaning up orphan processes

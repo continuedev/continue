@@ -1,0 +1,147 @@
+﻿2025-08-01T02:41:17.3724177Z Current runner version: '2.327.1'
+2025-08-01T02:41:17.3748467Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:17.3749210Z Hosted Compute Agent
+2025-08-01T02:41:17.3749862Z Version: 20250711.363
+2025-08-01T02:41:17.3750428Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:17.3751100Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:17.3751686Z ##[endgroup]
+2025-08-01T02:41:17.3752271Z ##[group]Operating System
+2025-08-01T02:41:17.3753176Z Ubuntu
+2025-08-01T02:41:17.3753679Z 24.04.2
+2025-08-01T02:41:17.3754171Z LTS
+2025-08-01T02:41:17.3754594Z ##[endgroup]
+2025-08-01T02:41:17.3755114Z ##[group]Runner Image
+2025-08-01T02:41:17.3755673Z Image: ubuntu-24.04
+2025-08-01T02:41:17.3756180Z Version: 20250728.1.0
+2025-08-01T02:41:17.3757125Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:17.3759181Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:17.3760177Z ##[endgroup]
+2025-08-01T02:41:17.3761276Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:17.3763567Z Contents: read
+2025-08-01T02:41:17.3764194Z Metadata: read
+2025-08-01T02:41:17.3764690Z Packages: read
+2025-08-01T02:41:17.3765163Z ##[endgroup]
+2025-08-01T02:41:17.3767115Z Secret source: Actions
+2025-08-01T02:41:17.3768188Z Prepare workflow directory
+2025-08-01T02:41:17.4087103Z Prepare all required actions
+2025-08-01T02:41:17.4125736Z Getting action download info
+2025-08-01T02:41:17.7137501Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:17.7138465Z Version: 4.2.2
+2025-08-01T02:41:17.7139438Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:17.7140693Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:17.7141413Z ##[endgroup]
+2025-08-01T02:41:18.0816523Z Complete job name: get-packages-matrix
+2025-08-01T02:41:18.1460586Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:18.1461388Z with:
+2025-08-01T02:41:18.1461798Z   repository: continuedev/continue
+2025-08-01T02:41:18.1462430Z   token: ***
+2025-08-01T02:41:18.1462981Z   ssh-strict: true
+2025-08-01T02:41:18.1463369Z   ssh-user: git
+2025-08-01T02:41:18.1463760Z   persist-credentials: true
+2025-08-01T02:41:18.1464193Z   clean: true
+2025-08-01T02:41:18.1464588Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:18.1465051Z   fetch-depth: 1
+2025-08-01T02:41:18.1465430Z   fetch-tags: false
+2025-08-01T02:41:18.1465812Z   show-progress: true
+2025-08-01T02:41:18.1466204Z   lfs: false
+2025-08-01T02:41:18.1466568Z   submodules: false
+2025-08-01T02:41:18.1466973Z   set-safe-directory: true
+2025-08-01T02:41:18.1467634Z ##[endgroup]
+2025-08-01T02:41:18.2509700Z Syncing repository: continuedev/continue
+2025-08-01T02:41:18.2511341Z ##[group]Getting Git version info
+2025-08-01T02:41:18.2512273Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:18.2513550Z [command]/usr/bin/git version
+2025-08-01T02:41:18.2553245Z git version 2.50.1
+2025-08-01T02:41:18.2578392Z ##[endgroup]
+2025-08-01T02:41:18.2591887Z Temporarily overriding HOME='/home/runner/work/_temp/ac87b616-91b6-42e8-b93d-1dc625d02dac' before making global git config changes
+2025-08-01T02:41:18.2593752Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:18.2597947Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:18.2629044Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:18.2632432Z ##[group]Initializing the repository
+2025-08-01T02:41:18.2636593Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:18.2697159Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:18.2698754Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:18.2700106Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:18.2701570Z hint:
+2025-08-01T02:41:18.2702410Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:18.2703798Z hint:
+2025-08-01T02:41:18.2704774Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:18.2706368Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:18.2707614Z hint:
+2025-08-01T02:41:18.2708258Z hint: 	git branch -m <name>
+2025-08-01T02:41:18.2708988Z hint:
+2025-08-01T02:41:18.2709997Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:18.2711752Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:18.2714640Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:18.2744640Z ##[endgroup]
+2025-08-01T02:41:18.2745813Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:18.2749381Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:18.2777332Z ##[endgroup]
+2025-08-01T02:41:18.2778556Z ##[group]Setting up auth
+2025-08-01T02:41:18.2784757Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:18.2814487Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:18.3071989Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:18.3102085Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:18.3323441Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:18.3356800Z ##[endgroup]
+2025-08-01T02:41:18.3358064Z ##[group]Fetching the repository
+2025-08-01T02:41:18.3366328Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:22.2690970Z From https://github.com/continuedev/continue
+2025-08-01T02:41:22.2692859Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:22.2715682Z ##[endgroup]
+2025-08-01T02:41:22.2716968Z ##[group]Determining the checkout info
+2025-08-01T02:41:22.2719392Z ##[endgroup]
+2025-08-01T02:41:22.2723874Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:22.2762274Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:22.2791249Z ##[group]Checking out the ref
+2025-08-01T02:41:22.2797811Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:23.2856793Z Updating files:  95% (2238/2354)
+2025-08-01T02:41:23.2870748Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:23.2885824Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:23.2898466Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:23.2913874Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:23.2915086Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:23.2916979Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:23.2942832Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:23.2943790Z 
+2025-08-01T02:41:23.2944577Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:23.2945446Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:23.2946291Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:23.2946759Z 
+2025-08-01T02:41:23.2947097Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:23.2947928Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:23.2948400Z 
+2025-08-01T02:41:23.2948600Z   git switch -c <new-branch-name>
+2025-08-01T02:41:23.2949184Z 
+2025-08-01T02:41:23.2949431Z Or undo this operation with:
+2025-08-01T02:41:23.2949721Z 
+2025-08-01T02:41:23.2949913Z   git switch -
+2025-08-01T02:41:23.2950166Z 
+2025-08-01T02:41:23.2950524Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:23.2951033Z 
+2025-08-01T02:41:23.2951735Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:23.3011790Z ##[endgroup]
+2025-08-01T02:41:23.3049803Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:23.3072124Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:23.3264800Z ##[group]Run packages=$(find packages/ -maxdepth 1 -type d -not -path packages/ -exec basename {} \; | sort | jq -R -s -c 'split("\n")[:-1]')
+2025-08-01T02:41:23.3265756Z [36;1mpackages=$(find packages/ -maxdepth 1 -type d -not -path packages/ -exec basename {} \; | sort | jq -R -s -c 'split("\n")[:-1]')[0m
+2025-08-01T02:41:23.3266354Z [36;1mecho "packages=$packages" >> $GITHUB_OUTPUT[0m
+2025-08-01T02:41:23.3266711Z [36;1mecho "Found packages: $packages"[0m
+2025-08-01T02:41:23.3297719Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:41:23.3298011Z ##[endgroup]
+2025-08-01T02:41:23.3453189Z Found packages: ["config-types","config-yaml","continue-sdk","fetch","hub","llm-info","openai-adapters"]
+2025-08-01T02:41:23.3556282Z Post job cleanup.
+2025-08-01T02:41:23.4475165Z [command]/usr/bin/git version
+2025-08-01T02:41:23.4516113Z git version 2.50.1
+2025-08-01T02:41:23.4557171Z Temporarily overriding HOME='/home/runner/work/_temp/9c4a5a79-e711-4c55-94e2-595b2d6d4a3a' before making global git config changes
+2025-08-01T02:41:23.4558013Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:23.4562159Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:23.4595671Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:23.4627350Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:23.4849294Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:23.4868786Z http.https://github.com/.extraheader
+2025-08-01T02:41:23.4880478Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:41:23.4909737Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:23.5227377Z Evaluate and set job outputs
+2025-08-01T02:41:23.5234504Z Set output 'packages'
+2025-08-01T02:41:23.5236318Z Cleaning up orphan processes
