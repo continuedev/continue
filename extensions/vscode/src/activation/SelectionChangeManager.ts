@@ -11,11 +11,11 @@ import { JumpManager } from "./JumpManager";
 import { NextEditWindowManager } from "./NextEditWindowManager";
 
 export enum HandlerPriority {
-  CRITICAL = 1000,
-  HIGH = 800,
-  NORMAL = 500,
-  LOW = 200,
-  FALLBACK = 100,
+  CRITICAL = 5,
+  HIGH = 4,
+  NORMAL = 3,
+  LOW = 2,
+  FALLBACK = 1,
 }
 
 interface StateSnapshot {
@@ -24,6 +24,8 @@ interface StateSnapshot {
   jumpJustAccepted: boolean;
   lastDocumentChangeTime: number;
   isTypingSession: boolean;
+  document?: vscode.TextDocument;
+  cursorPosition?: vscode.Position;
 }
 
 type SelectionChangeHandler = (
@@ -37,6 +39,74 @@ interface HandlerRegistration {
   handler: SelectionChangeHandler;
 }
 
+/**
+ * SelectionChangeManager handles cursor movement events in a coordinated way
+ * to prevent race conditions and ensure consistent behavior across features.
+ *
+ * Case 1: User just moves the cursor around.
+ * - vscode fires onDidChangeTextEditorSelection.
+ * - State is captured. All fields in StateSnapshot are false.
+ * - All registered handlers return false.
+ * - Fallback handler runs, deleting the chain.
+ *
+ * Case 2: User accepts a next edit suggestion from a window.
+ * - vscode fires onDidChangeTextEditorSelection.
+ * - State is captured. nextEditWindowAccepted is true.
+ * - NextEditWindowManager's handler returns true.
+ * - No other handlers run, and edit chain is preserved.
+ *
+ * Case 3: User accepts a next edit suggestion from a ghost text.
+ * - vscode fires onDidChangeTextEditorSelection.
+ * - State is captured with document and cursorPosition.
+ * - GhostTextTracker's handler checks if ghost text was accepted at that position.
+ * - If accepted, handler returns true and edit chain is preserved.
+ *
+ * Case 4: User is actively typing code.
+ * - Each keystroke triggers documentChanged() to update lastDocumentChangeTime.
+ * - When cursor moves due to typing, onDidChangeTextEditorSelection fires.
+ * - State is captured with isTypingSession=true and recent lastDocumentChangeTime.
+ * - Typing session handler detects time since last edit is < TYPING_DELAY.
+ * - Handler returns true, preserving the edit chain during typing.
+ *
+ * Case 5: User performs a jump operation.
+ * - Jump is initiated, setting jumpInProgress to true.
+ * - When cursor position changes due to jump, onDidChangeTextEditorSelection fires.
+ * - State is captured with jumpInProgress=true.
+ * - JumpManager's handler returns true, preserving the edit chain.
+ *
+ * Case 6: User just completed a jump operation.
+ * - Jump completes, setting jumpJustAccepted to true.
+ * - onDidChangeTextEditorSelection fires for the final position.
+ * - State is captured with jumpJustAccepted=true.
+ * - JumpManager's handler returns true, preserving the edit chain.
+ *
+ * Case 7: Rapid cursor movements (debouncing).
+ * - User rapidly moves cursor (e.g., holding an arrow key).
+ * - Multiple onDidChangeTextEditorSelection events fire in quick succession.
+ * - Events within DEBOUNCE_DELAY of each other are queued.
+ * - Only the most recent event in a rapid sequence gets processed.
+ * - Prevents performance issues from too many events.
+ *
+ * Case 8: Event processing timeout.
+ * - An event handler takes longer than PROCESSING_TIMEOUT.
+ * - The timeout promise resolves first, throwing an error.
+ * - Error is caught, processing state is reset to prevent deadlocks.
+ * - System can continue processing the next event.
+ * - NOTE: At the current moment, there should not be any deadlocks, but I'm just making sure.
+ *
+ * Case 9: Error in handler.
+ * - One of the handlers throws an exception.
+ * - The error is caught and logged.
+ * - Processing continues with the next handler rather than failing completely.
+ * - Ensures stability even when individual handlers have problems.
+ *
+ * Case 10: Multiple queued events.
+ * - An event is being processed when new events arrive.
+ * - New events are added to eventQueue.
+ * - After current event is processed, queued events are handled sequentially.
+ * - Ensures all events are processed in the order they were received.
+ * - NOTE: I'm not sure if we even want to queue these events...
+ */
 export class SelectionChangeManager {
   private static instance: SelectionChangeManager;
   private listeners: HandlerRegistration[] = [];
@@ -57,7 +127,6 @@ export class SelectionChangeManager {
   private typingTimer: NodeJS.Timeout | null = null;
   private lastDocumentChangeTime = 0;
   private readonly TYPING_SESSION_TIMEOUT = 2000; // ms
-  private readonly TYPING_DELAY = 500; // ms
 
   private constructor() {}
 
@@ -147,6 +216,7 @@ export class SelectionChangeManager {
     this.lastEventTime = now;
 
     // Queue this event for later if the manager is already processing an event.
+    // NOTE: Depending on if we want an event bus or not, do an early return instead.
     if (this.isProcessingEvent) {
       this.eventQueue.push(e);
       return;
@@ -157,6 +227,7 @@ export class SelectionChangeManager {
       await this.processEventWithTimeout(e);
 
       // Process remaining queued events sequentially.
+      // NOTE: Depending on if we want an event bus or not, skip this.
       while (this.eventQueue.length > 0) {
         const nextEvent = this.eventQueue.shift()!;
         await this.processEventWithTimeout(nextEvent);
@@ -208,7 +279,7 @@ export class SelectionChangeManager {
   private async processEvent(
     e: vscode.TextEditorSelectionChangeEvent,
   ): Promise<void> {
-    const snapshot = this.captureState();
+    const snapshot = this.captureState(e);
 
     for (const { handler } of this.listeners) {
       try {
@@ -222,7 +293,9 @@ export class SelectionChangeManager {
     }
   }
 
-  private captureState(): StateSnapshot {
+  private captureState(
+    e: vscode.TextEditorSelectionChangeEvent,
+  ): StateSnapshot {
     return {
       nextEditWindowAccepted:
         NextEditWindowManager.isInstantiated() &&
@@ -231,6 +304,8 @@ export class SelectionChangeManager {
       jumpJustAccepted: JumpManager.getInstance().wasJumpJustAccepted(),
       lastDocumentChangeTime: this.lastDocumentChangeTime,
       isTypingSession: this.isTypingSession,
+      document: e.textEditor.document,
+      cursorPosition: e.selections[0].active,
     };
   }
 
