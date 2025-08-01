@@ -123,7 +123,7 @@ async function processMessage(
     // Save session after each successful response
     saveSession(chatHistory);
   } catch (e: any) {
-    logger.error(`Error: ${formatError(e)}`, e);
+    logger.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
     if (!isHeadless) {
       logger.info(
         chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
