@@ -2,7 +2,7 @@ import logger from "../util/logger.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
-import { MCPServiceWrapper } from "./MCPServiceWrapper.js";
+import { MCPService } from "../mcp.js";
 import { modeService } from "./ModeService.js";
 import { ModelService } from "./ModelService.js";
 import { serviceContainer } from "./ServiceContainer.js";
@@ -19,7 +19,7 @@ const authService = new AuthService();
 const configService = new ConfigService();
 const modelService = new ModelService();
 const apiClientService = new ApiClientService();
-const mcpServiceWrapper = new MCPServiceWrapper();
+const mcpService = new MCPService();
 
 /**
  * Initialize all services and register them with the service container
@@ -159,7 +159,7 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
         throw new Error("Config not available for MCP service");
       }
 
-      return mcpServiceWrapper.initialize(configState.config);
+      return mcpService.initialize(configState.config);
     },
     [SERVICE_NAMES.CONFIG] // Depends on config
   );
@@ -217,7 +217,7 @@ export const services = {
   config: configService,
   model: modelService,
   apiClient: apiClientService,
-  mcp: mcpServiceWrapper,
+  mcp: mcpService,
   mode: modeService,
 } as const;
 

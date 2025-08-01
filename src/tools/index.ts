@@ -91,21 +91,19 @@ export async function getAvailableTools() {
   const args = parseArgs();
 
   // Load MCP tools
-  const mcpTools: Tool[] =
-    MCPService.getInstance()
-      ?.getTools()
-      .map((t) => ({
-        name: t.name,
-        displayName: t.name.replace("mcp__", "").replace("ide__", ""),
-        description: t.description ?? "",
-        parameters: convertInputSchemaToParameters(t.inputSchema),
-        readonly: undefined, // MCP tools don't have readonly property
-        isBuiltIn: false,
-        run: async (args: any) => {
-          const result = await MCPService.getInstance()?.runTool(t.name, args);
-          return JSON.stringify(result?.content) ?? "";
-        },
-      })) || [];
+  const mcpService = (await import('../services/index.js')).getServiceSync('mcp');
+  const mcpTools: Tool[] = (mcpService as any)?.mcpService?.getTools().map((t: any) => ({
+    name: t.name,
+    displayName: t.name.replace("mcp__", "").replace("ide__", ""),
+    description: t.description ?? "",
+    parameters: convertInputSchemaToParameters(t.inputSchema),
+    readonly: undefined, // MCP tools don't have readonly property
+    isBuiltIn: false,
+    run: async (args: any) => {
+      const result = await (mcpService as any).mcpService?.runTool(t.name, args);
+      return JSON.stringify(result?.content) ?? "";
+    },
+  })) || [];
 
   const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
   return allTools;

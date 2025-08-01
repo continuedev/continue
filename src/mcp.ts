@@ -2,43 +2,134 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import logger from "./util/logger.js";
+import { MCPServiceState } from "./services/types.js";
+
+export interface MCPConnectionInfo {
+  command: string;
+  status: 'connected' | 'disconnected' | 'error';
+  toolCount: number;
+  promptCount: number;
+  error?: Error;
+}
 
 export class MCPService {
-  private readonly connections: MCPConnection[] = [];
-  private static instance: MCPService | null = null;
+  private connections: MCPConnection[] = [];
+  private currentState: MCPServiceState;
+  private assistant: AssistantConfig | null = null;
 
-  private constructor(private readonly assistant: AssistantConfig) {
-    this.assistant = assistant;
+  constructor() {
+    this.currentState = {
+      mcpService: null,
+      connections: [],
+      toolCount: 0,
+      promptCount: 0,
+      isReady: false
+    };
   }
 
-  public static async create(assistant: AssistantConfig) {
-    // If instance already exists, return it
-    if (MCPService.instance) {
-      return MCPService.instance;
+  /**
+   * Initialize the MCP service
+   */
+  async initialize(assistant: AssistantConfig): Promise<MCPServiceState> {
+    logger.debug('Initializing MCPService');
+    
+    try {
+      this.assistant = assistant;
+      this.connections = [];
+      
+      if (assistant.mcpServers?.length) {
+        logger.debug('Creating MCP connections', { serverCount: assistant.mcpServers.length });
+        const connectionPromises = assistant.mcpServers.map((server) =>
+          MCPConnection.create(server)
+        );
+        const connections = await Promise.all(connectionPromises);
+        this.connections.push(...connections);
+        logger.debug('MCP connections established', { connectionCount: connections.length });
+      }
+
+      this.currentState = {
+        mcpService: this,
+        connections: this.getConnectionInfo(),
+        toolCount: this.getTools().length,
+        promptCount: this.getPrompts().length,
+        isReady: true
+      };
+
+      logger.debug('MCPService initialized successfully', {
+        toolCount: this.currentState.toolCount,
+        promptCount: this.currentState.promptCount,
+        connectionCount: this.connections.length
+      });
+
+      return this.currentState;
+    } catch (error: any) {
+      logger.error('Failed to initialize MCPService:', error);
+      this.currentState = {
+        mcpService: null,
+        connections: [],
+        toolCount: 0,
+        promptCount: 0,
+        isReady: false,
+        error
+      };
+      throw error;
     }
+  }
 
-    // Otherwise create a new instance
-    const service = new MCPService(assistant);
+  /**
+   * Get current MCP service state
+   */
+  getState(): MCPServiceState {
+    return { ...this.currentState };
+  }
 
-    if (assistant.mcpServers?.length) {
-      logger.debug('Creating MCP connections', { serverCount: assistant.mcpServers.length });
-      const connectionPromises = assistant.mcpServers.map((server) =>
-        MCPConnection.create(server)
-      );
-      const connections = await Promise.all(connectionPromises);
-      service.connections.push(...connections);
-      logger.debug('MCP connections established', { connectionCount: connections.length });
+  /**
+   * Update the MCP service with a new assistant config
+   */
+  async update(assistant: AssistantConfig): Promise<MCPServiceState> {
+    logger.debug('Updating MCPService');
+    
+    try {
+      // Close existing connections
+      this.connections = [];
+      
+      return await this.initialize(assistant);
+    } catch (error: any) {
+      logger.error('Failed to update MCPService:', error);
+      throw error;
     }
-
-    // Store the instance and return it
-    MCPService.instance = service;
-    return service;
   }
 
-  // Method to get the singleton instance (returns null if not initialized)
-  public static getInstance(): MCPService | null {
-    return MCPService.instance;
+  /**
+   * Check if the MCP service is ready
+   */
+  isReady(): boolean {
+    return this.currentState.isReady;
   }
+
+  /**
+   * Get connection information for display
+   */
+  getConnectionInfo(): MCPConnectionInfo[] {
+    return this.connections.map(connection => ({
+      command: connection.command,
+      status: 'connected',
+      toolCount: connection.tools.length,
+      promptCount: connection.prompts.length
+    }));
+  }
+
+  /**
+   * Get MCP service information for display
+   */
+  getMCPInfo(): { toolCount: number; promptCount: number; connectionCount: number } {
+    return {
+      toolCount: this.currentState.toolCount,
+      promptCount: this.currentState.promptCount,
+      connectionCount: this.connections.length
+    };
+  }
+
   public getPrompts() {
     return this.connections.flatMap((connection) => connection.prompts);
   }
@@ -64,8 +155,11 @@ export class MCPService {
 export class MCPConnection {
   prompts: Awaited<ReturnType<Client["listPrompts"]>>["prompts"] = [];
   tools: Awaited<ReturnType<Client["listTools"]>>["tools"] = [];
+  public readonly command: string;
 
-  private constructor(public readonly client: Client) {}
+  private constructor(public readonly client: Client, command: string) {
+    this.command = command;
+  }
 
   public static async create(
     config: NonNullable<AssistantConfig["mcpServers"]>[number]
@@ -95,7 +189,7 @@ export class MCPConnection {
     });
 
     // Connect and get all prompts and tools
-    const connection = new MCPConnection(client);
+    const connection = new MCPConnection(client, config.command);
     logger.debug('Connecting to MCP server', { command: config.command });
     await client.connect(transport);
     const capabilities = client.getServerCapabilities();

@@ -139,7 +139,8 @@ export async function initialize(
   const result = await loadConfiguration(authConfig, configPath, apiClient);
   const config = result.config;
   const [llmApi, model] = getLlmApi(config, authConfig);
-  const mcpService = await MCPService.create(config);
+  const mcpService = new MCPService();
+  await mcpService.initialize(config);
 
   return { config, llmApi, model, mcpService, apiClient };
 }

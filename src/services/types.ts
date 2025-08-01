@@ -51,6 +51,17 @@ export interface ModelServiceState {
 
 export interface MCPServiceState {
   mcpService: MCPService | null;
+  connections: Array<{
+    command: string;
+    status: 'connected' | 'disconnected' | 'error';
+    toolCount: number;
+    promptCount: number;
+    error?: Error;
+  }>;
+  toolCount: number;
+  promptCount: number;
+  isReady: boolean;
+  error?: Error;
 }
 
 export interface ApiClientServiceState {

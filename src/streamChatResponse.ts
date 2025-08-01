@@ -36,15 +36,13 @@ import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
 
 dotenv.config();
 
-export function getAllTools() {
+export async function getAllTools() {
   const args = parseArgs();
 
   // Get all available tool names
   const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
-  const mcpToolNames =
-    MCPService.getInstance()
-      ?.getTools()
-      .map((tool) => tool.name) ?? [];
+  const mcpService = (await import('./services/index.js')).getServiceSync('mcp');
+  const mcpToolNames = (mcpService as any)?.mcpService?.getTools().map((tool: any) => tool.name) ?? [];
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
   // Filter out excluded tools based on permissions
@@ -77,13 +75,13 @@ export function getAllTools() {
   }));
 
   // Add filtered MCP tools
-  const mcpTools = MCPService.getInstance()?.getTools() ?? [];
-  const allowedMcpTools = mcpTools.filter((tool) =>
+  const mcpTools = (mcpService as any)?.mcpService?.getTools() ?? [];
+  const allowedMcpTools = mcpTools.filter((tool: any) =>
     allowedToolNamesSet.has(tool.name)
   );
 
   allTools.push(
-    ...allowedMcpTools.map((tool) => ({
+    ...allowedMcpTools.map((tool: any) => ({
       type: "function" as const,
       function: {
         name: tool.name,
@@ -651,7 +649,7 @@ export async function streamChatResponse(
 
   const args = parseArgs();
   const isHeadless = args.isHeadless;
-  const tools = getAllTools();
+  const tools = await getAllTools();
 
   logger.debug("Tools prepared", {
     toolCount: tools.length,
