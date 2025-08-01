@@ -328,11 +328,23 @@ export class JumpManager {
     return this._jumpInProgress;
   }
 
+  setJumpInProgress(jumpInProgress: boolean) {
+    this._jumpInProgress = jumpInProgress;
+  }
+
   wasJumpJustAccepted(): boolean {
     return this._jumpAccepted;
   }
 
   setCompletionAfterJump(completionData: CompletionDataForAfterJump): void {
     this._completionAfterJump = completionData;
+  }
+
+  clearCompletionAfterJump(): void {
+    this._completionAfterJump = null;
+  }
+
+  get completionAfterJump() {
+    return this._completionAfterJump;
   }
 }
