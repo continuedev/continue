@@ -20,12 +20,12 @@
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
     - [Our Git Workflow](#our-git-workflow)
-    - [Development workflow](#development-workflow)
+    - [Development Workflow](#development-workflow)
     - [Formatting](#formatting)
     - [Theme Colors](#theme-colors)
     - [Testing](#testing)
     - [Review Process](#review-process)
-    - [Getting help](#getting-help)
+    - [Getting Help](#getting-help)
   - [Contributing new LLM Providers/Models](#contributing-new-llm-providersmodels)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
@@ -231,11 +231,11 @@ When contributing, please update or create the appropriate tests to help verify 
   maintainable and follows our patterns.
 - **Approval & Merge** - Once the PR is approved, it will be merged into the `main` branch.
 
-### Getting help
+### Getting Help
 
 Join [#contribute on Discord](https://discord.gg/vapESyrFmJ) to engage with maintainers and other contributors.
 
-## Contributing new LLM Providers/Models
+## Contributing New LLM Providers/Models
 
 ### Adding an LLM Provider
 
