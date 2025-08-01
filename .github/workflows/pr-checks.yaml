@@ -335,6 +335,8 @@ jobs:
       # - jetbrains-tests
 
     steps:
+      - uses: actions/checkout@v4
+      
       - name: Get current workflow run ID
         id: get-run-id
         run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
