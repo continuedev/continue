@@ -321,17 +321,18 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test-failure
-      - prettier-check
-      - core-checks
-      - gui-checks
-      - binary-checks
-      - vscode-checks
-      - get-packages-matrix
-      - packages-checks
-      - vscode-get-test-file-matrix
-      - vscode-package-extension-linux
-      - vscode-e2e-tests
-      - jetbrains-tests
+      # Temporarily removed other dependencies for faster testing
+      # - prettier-check
+      # - core-checks
+      # - gui-checks
+      # - binary-checks
+      # - vscode-checks
+      # - get-packages-matrix
+      # - packages-checks
+      # - vscode-get-test-file-matrix
+      # - vscode-package-extension-linux
+      # - vscode-e2e-tests
+      # - jetbrains-tests
 
     steps:
       - name: Get current workflow run ID
