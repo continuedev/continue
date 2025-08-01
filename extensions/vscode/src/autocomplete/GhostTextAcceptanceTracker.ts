@@ -125,9 +125,13 @@ export class GhostTextAcceptanceTracker {
     manager.registerListener(
       "ghostTextTracker",
       async (e, state) => {
+        if (!state.document || !state.cursorPosition) {
+          return false;
+        }
+
         const wasGhostTextAccepted = this.checkGhostTextWasAccepted(
-          e.textEditor.document,
-          e.selections[0].active,
+          state.document,
+          state.cursorPosition,
         );
 
         if (wasGhostTextAccepted) {
