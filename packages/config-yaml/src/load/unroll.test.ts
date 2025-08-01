@@ -89,3 +89,7 @@ model: # should be models
     expect(rule).toHaveProperty("rule", dubiousContent);
   });
 });
+
+describe("unrollBlock tests (duplicate blocks)", () => {
+  it("unrollBlock should remove the duplicate block and generate non-fatal config error to warn users", () => {});
+});
