@@ -1,4 +1,5 @@
 import { ModelRole } from "@continuedev/config-yaml";
+import { ContinueError } from "@continuedev/errors";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -406,6 +407,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private async parseError(resp: any): Promise<Error> {
+    const requestId = resp.headers.get("x-request-id") || undefined;
     let text = await resp.text();
 
     if (resp.status === 404 && !resp.url.includes("/v1")) {
@@ -418,7 +420,10 @@ export abstract class BaseLLM implements ILLM {
       let model = error?.match(/model '(.*)' not found/)?.[1];
       if (model && resp.url.match("127.0.0.1:11434")) {
         text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-        return new LLMError(text, this); // No need to add HTTP status details
+        return new ContinueError(text, {
+          requestId,
+          statusCode: resp.status,
+        });
       } else if (text.includes("/api/chat")) {
         text =
           "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
@@ -435,17 +440,29 @@ export abstract class BaseLLM implements ILLM {
         resp.url.includes("codestral.mistral.ai"))
     ) {
       if (resp.url.includes("codestral.mistral.ai")) {
-        return new Error(
+        return new ContinueError(
           "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
+          {
+            requestId,
+            statusCode: resp.status,
+          }
         );
       } else {
-        return new Error(
+        return new ContinueError(
           "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
+          {
+            requestId,
+            statusCode: resp.status,
+          }
         );
       }
     }
-    return new Error(
+    return new ContinueError(
       `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
+      {
+        requestId,
+        statusCode: resp.status,
+      }
     );
   }
 
@@ -492,7 +509,7 @@ export abstract class BaseLLM implements ILLM {
             const message = (await isOllamaInstalled())
               ? "Unable to connect to local Ollama instance. Ollama may not be running."
               : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
-            throw new Error(message);
+            throw new ContinueError(message);
           }
         }
         throw e;

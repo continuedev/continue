@@ -1,4 +1,5 @@
 import { RequestOptions } from "@continuedev/config-types";
+import { ContinueError, ErrorCodes } from "@continuedev/errors";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -177,6 +178,26 @@ export async function fetchwithRequestOptions(
         statusText: "Client Closed Request",
       });
     }
-    throw error;
+
+    // Convert network errors to structured ContinueError
+    if (error instanceof Error) {
+      // Check for common network error patterns
+      const errorCode = (error as any).code;
+      if (
+        errorCode === "ECONNREFUSED" ||
+        errorCode === "ENOTFOUND" ||
+        errorCode === "ETIMEDOUT" ||
+        error.message.toLowerCase().includes("network") ||
+        error.message.toLowerCase().includes("connection")
+      ) {
+        throw new ContinueError(`Network error: ${error.message}`, {
+          code: ErrorCodes.NETWORK_ERROR,
+          originalError: error,
+        });
+      }
+    }
+
+    // For other errors, convert to ContinueError
+    throw ContinueError.fromUnknown(error);
   }
 }
