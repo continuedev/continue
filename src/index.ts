@@ -47,6 +47,7 @@ addCommonOptions(program)
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
+    logger.configureHeadlessMode(isHeadless);
 
     // Validate --format flag only works with -p/--print
     if (options.format && !options.print) {

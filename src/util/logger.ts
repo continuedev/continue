@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 import crypto from 'crypto';
+import chalk from 'chalk';
 
 const { combine, timestamp, printf, errors } = winston.format;
 
@@ -45,6 +46,9 @@ const logFormat = printf(({ level, message, timestamp, stack, ...metadata }) => 
   return msg;
 });
 
+// Track headless mode
+let isHeadlessMode = false;
+
 // Create the logger instance
 const logger = winston.createLogger({
   level: 'info', // Default level
@@ -68,6 +72,11 @@ export function setLogLevel(level: string) {
   logger.level = level;
 }
 
+// Function to configure headless mode
+export function configureHeadlessMode(headless: boolean) {
+  isHeadlessMode = headless;
+}
+
 // Export logger methods
 export default {
   debug: (message: string, meta?: any) => logger.debug(message, meta),
@@ -81,8 +90,20 @@ export default {
     } else {
       logger.error(message, meta);
     }
+    
+    // In headless mode, also output to stderr
+    if (isHeadlessMode) {
+      if (error instanceof Error) {
+        console.error(chalk.red(`${message}: ${error.message}`));
+      } else if (error) {
+        console.error(chalk.red(`${message}: ${error}`));
+      } else {
+        console.error(chalk.red(message));
+      }
+    }
   },
   setLevel: setLogLevel,
+  configureHeadlessMode,
   getLogPath: getLogFilePath,
   getSessionId: () => SESSION_ID,
 };
