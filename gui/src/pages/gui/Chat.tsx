@@ -48,7 +48,6 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
-import { initTool } from "../../redux/slices/uiSlice";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -125,23 +124,6 @@ export function Chat() {
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
-
-  const availableTools = useAppSelector((state) => state.config.config.tools);
-  // Mark if initialized
-  const [toolSettingsInitialized, setToolSettingsInitialized] = useState(false);
-
-  useEffect(() => {
-    if (
-      !toolSettingsInitialized &&
-      Array.isArray(availableTools) &&
-      availableTools.length > 0
-    ) {
-      for (const tool of availableTools) {
-        dispatch(initTool(tool));
-      }
-      setToolSettingsInitialized(true);
-    }
-  }, [availableTools, toolSettingsInitialized, dispatch]);
 
   useAutoScroll(stepsDivRef, history);
 
