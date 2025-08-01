@@ -52,11 +52,13 @@ export interface ModelServiceState {
 export interface MCPServiceState {
   mcpService: MCPService | null;
   connections: Array<{
+    name: string;
     command: string;
-    status: 'connected' | 'disconnected' | 'error';
+    status: 'idle' | 'connecting' | 'connected' | 'error';
     toolCount: number;
     promptCount: number;
     error?: Error;
+    warnings: string[];
   }>;
   toolCount: number;
   promptCount: number;

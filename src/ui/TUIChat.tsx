@@ -20,12 +20,14 @@ import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import IntroMessage from "./IntroMessage.js";
 import LoadingAnimation from "./LoadingAnimation.js";
+import MCPSelector from "./MCPSelector.js";
 import ModelSelector from "./ModelSelector.js";
 import OrganizationSelector from "./OrganizationSelector.js";
 import Timer from "./Timer.js";
 import UpdateNotification from "./UpdateNotification.js";
 import UserInput from "./UserInput.js";
 import ModeIndicator from "./components/ModeIndicator.js";
+import MCPStatusIndicator from "./components/MCPStatusIndicator.js";
 import { getGitRemoteUrl, getRepoUrl, isGitRepo } from "../util/git.js";
 import useTerminalSize from "./hooks/useTerminalSize.js";
 import { modeService } from "../services/ModeService.js";
@@ -106,6 +108,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const [currentMode, setCurrentMode] = useState<PermissionMode>(
     modeService.getCurrentMode()
   );
+
+  // State for MCP selector
+  const [showMCPSelector, setShowMCPSelector] = useState(false);
 
   // Listen for mode changes to update UI
   useEffect(() => {
@@ -198,6 +203,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowOrgSelector: () => showOrganizationSelector(),
     onShowConfigSelector: () => showConfigSelectorUI(),
     onShowModelSelector: () => showModelSelectorUI(),
+    onShowMCPSelector: () => setShowMCPSelector(true),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration
@@ -266,12 +272,18 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showConfigSelectorUI();
   };
 
+  // MCP selector handlers
+  const handleMCPCancel = () => {
+    setShowMCPSelector(false);
+  };
+
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
     showOrgSelector ||
     showConfigSelector ||
     showModelSelector ||
+    showMCPSelector ||
     !!loginPrompt ||
     isShowingFreeTrialTransition ||
     !!activePermissionRequest;
@@ -368,6 +380,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
           />
         )}
 
+        {/* MCP selector - shows above input when active */}
+        {showMCPSelector && (
+          <MCPSelector
+            onCancel={handleMCPCancel}
+          />
+        )}
+
         {/* Free trial transition UI - replaces input when active */}
         {isShowingFreeTrialTransition && (
           <FreeTrialTransitionUI
@@ -422,6 +441,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
               </>
             )}
             <ModeIndicator />
+            {services.mcp && (
+              <>
+                <Text> </Text>
+                <MCPStatusIndicator mcpState={services.mcp} />
+              </>
+            )}
           </Box>
           <Box>
             {!isRemoteMode && services.model?.model && (

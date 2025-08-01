@@ -20,6 +20,7 @@ export async function handleSlashCommands(
   clear?: boolean;
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
+  openMCPSelector?: boolean;
 } | null> {
   // Only trigger slash commands if slash is the very first character
   if (input.startsWith("/") && input.trim().startsWith("/")) {
@@ -129,6 +130,12 @@ export async function handleSlashCommands(
         // Open model selector UI
         return { openModelSelector: true };
 
+      case "mcp":
+        posthogService.capture("useSlashCommand", {
+          name: "mcp",
+        });
+        // Open MCP management UI
+        return { openMCPSelector: true };
 
       case "org":
         posthogService.capture("useSlashCommand", {

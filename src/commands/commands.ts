@@ -57,6 +57,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "Switch configuration",
     category: "system",
   },
+  {
+    name: "mcp",
+    description: "Manage MCP server connections",
+    category: "system",
+  },
 ];
 
 // Remote mode specific commands
