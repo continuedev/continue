@@ -13,6 +13,7 @@ import {
 
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
+import { captureException } from "../util/sentry/SentryLogger";
 
 export interface ProfileDescription {
   fullSlug: FullSlug;
@@ -96,6 +97,11 @@ export class ProfileLifecycleManager {
         try {
           result = await this.profileLoader.doLoadConfig();
         } catch (e) {
+          // Capture config loading system failures to Sentry
+          captureException(e as Error, {
+            context: "profile_config_loading",
+          });
+
           const message =
             e instanceof Error
               ? `${e.message}\n${e.stack ? e.stack : ""}`
