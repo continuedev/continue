@@ -580,9 +580,7 @@ export class ContinueCompletionProvider
         // At this point, there is no way that diffLines.length === 0.
         // Only time we ever reach this point would be after the jump was taken, or if its after the very first repsonse.
         // In case of jump, this is impossible, as the JumpManager wouldn't have suggested a jump here in the first place.
-        // In case of initial response, this could actually happen.
-        // We just suggest a jump at this point.
-        // If this were to be true, we wouldn't have even
+        // In case of initial response, we suggested a jump.
         console.log(
           "deleteChain from completionProvider.ts: diffLines.length === 0",
         );
