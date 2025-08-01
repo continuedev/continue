@@ -4,40 +4,15 @@ description: Learn how to access and manage Continue assistant configurations th
 keywords: [config, settings, customize]
 ---
 
-Continue offers two ways to configure your AI assistants: Hub Assistants and Local Assistants (config.yaml).
-
 You can easily access your assistant configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Assistant selector above the main chat input. Then, you can hover over an assistant and click the `new window` (hub assistants) or `gear` (local assistants) icon.
 
 ![configure an assistant](/images/configure-continue.png)
 
 ## Hub Assistants
 
-When you [sign in to Continue Hub](https://auth.continue.dev/), you get access to pre-configured assistants that sync automatically across your IDE sessions. To learn more about all the features available in Continue Hub, check out our [hub introduction](/hub/introduction). These assistants are:
+Hub Assistants can be managed in [the Hub](https://hub.continue.dev). See [Editing an Assistant](../../hub/assistants/edit-an-assistant.md)
 
-- **Easy to set up** - Add an assistant from [hub.continue.dev](https://hub.continue.dev/explore/assistants) to your account
-- **Managed online** - Configure models, add secrets, and customize settings through the web interface
-- **Automatically synced** - Changes made on the hub reflect immediately in your IDE
-- **Shareable** - Create and share custom assistants with your team
-
-![nextjs assistant](/images/nextjs-assistant.png)
-
-To use Hub assistants:
-
-1. Click the assistant selector above the chat input in your IDE
-2. Browse available assistants or create your own
-3. Add API keys as [User Secrets](https://hub.continue.dev/settings/secrets) on the hub
-4. Click "Reload config" to sync changes
-
-Hub Assistants can be managed in [the Hub](https://hub.continue.dev). See [Editing an Assistant](../../hub/assistants/edit-an-assistant.md) for more details.
-
-## Local Assistants (config.yaml)
-
-For advanced users who prefer local control, Continue supports configuration through a `config.yaml` file. Local assistants offer:
-
-- **Full control** - All configuration stored locally on your machine
-- **Version control friendly** - Check your config into git for team consistency
-- **Offline usage** - No internet required once models are configured
-- **Advanced customization** - Access to all configuration options
+## YAML Config
 
 Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
@@ -51,23 +26,6 @@ To open this `config.yaml`, you need to open the assistants dropdown in the top-
 When editing this file, you can see the available options suggested as you type, or check the reference below. When you save a config file from the IDE, Continue will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continue, and always automatically generated with default values if it doesn't exist.
 
 See the full reference for `config.yaml` [here](/reference).
-
-## Which Should You Use?
-
-**Choose Hub assistants if you:**
-
-- Want the quickest setup experience
-- Prefer managing configuration through a web interface
-- Want access to hosted models-addon
-- Need to sync settings across multiple machines
-- Want access to pre-configured assistants from the community
-
-**Choose local config.yaml if you:**
-
-- Need version control for your configuration
-- Require advanced customization options
-- Want complete offline control
-- Prefer managing configuration as code
 
 ## Deprecated configuration methods
 

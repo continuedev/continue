@@ -19,8 +19,7 @@
             "pages": [
               "index",
               "getting-started/overview",
-              "getting-started/install",
-              "getting-started/extensions"
+              "getting-started/install"
             ]
           },
           {
@@ -240,6 +239,7 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
+              "guides/understanding-assistants",
               "guides/ollama-guide",
               "guides/llama3.1",
               "guides/set-up-codestral",
