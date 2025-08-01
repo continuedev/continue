@@ -29,6 +29,7 @@ import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import { calculateFinalCursorPosition } from "./diff/diff.js";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
+import { PrefetchQueue } from "./NextEditPrefetchQueue.js";
 import {
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
@@ -214,6 +215,8 @@ export class NextEditProvider {
   }
 
   public async deleteChain(): Promise<void> {
+    PrefetchQueue.getInstance().abort();
+
     this.currentEditChainId = null;
     this.previousCompletions = [];
     // TODO: this should be cleaned up in the prefetch queue.
