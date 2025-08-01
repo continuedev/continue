@@ -11,7 +11,7 @@
 **[Continue](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our
 open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions
-and [hub of models, rules, prompts, docs, and other building blocks](https://hub.continue.dev)**
+and [hub of models, rules, and MCP tools](https://hub.continue.dev)**
 
 </div>
 
