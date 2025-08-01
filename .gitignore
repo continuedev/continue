@@ -171,3 +171,4 @@ extensions/.continue-debug/
 .continuerules
 **/.continue/assistants/
 keysgui/.env.sentry-build-plugin
+core/.sentryclirc
