@@ -429,6 +429,7 @@ async function configYamlToContinueConfig(options: {
     })),
     false,
   );
+  continueConfig.tabAutocompleteOptions = config.tabAutocompleteOptions;
 
   return { config: continueConfig, errors: localErrors };
 }
