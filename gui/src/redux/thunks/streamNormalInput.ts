@@ -156,12 +156,13 @@ export const streamNormalInput = createAsyncThunk<
         ...tool,
         function: {
           ...tool.function,
-          description: [tool.function.description, tool.systemMessageDescription]
-            .filter(Boolean)
-            .join('\n\n') || tool.function.description
-        }
+          description:
+            [tool.function.description, tool.systemMessageDescription]
+              .filter(Boolean)
+              .join("\n\n") || tool.function.description,
+        },
       }));
-      
+
       completionOptions = {
         tools: toolsWithEnhancedDescriptions,
       };
