@@ -86,7 +86,7 @@ async function main() {
     await buildPackagesInParallel(["fetch", "config-yaml", "llm-info"]);
 
     // Phase 3: Build packages that depend on other local packages
-    await buildPackagesInParallel(["openai-adapters", "continue-sdk"], true);
+    await buildPackagesInParallel(["openai-adapters", "continue-sdk"]);
 
     console.log("🎉 All packages built successfully!");
   } catch (error) {
