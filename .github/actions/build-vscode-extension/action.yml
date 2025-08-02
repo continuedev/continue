@@ -95,6 +95,7 @@ runs:
       shell: bash
       run: |
         cd gui
+        npm i -g vite
         npm run build
 
     - name: Install core dependencies
