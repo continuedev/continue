@@ -61,6 +61,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { fetchTaskList } from "./context/taskList";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -920,6 +921,10 @@ export class Core {
       const isValid = setMdmLicenseKey(licenseKey);
       return isValid;
     });
+
+    on("taskList/list", ({ data }) => {
+      return fetchTaskList(this.messenger);
+    });
   }
 
   private async handleToolCall(toolCall: ToolCall) {
@@ -958,6 +963,7 @@ export class Core {
       toolCallId: toolCall.id,
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
+      messenger: this.messenger,
     });
 
     return result;

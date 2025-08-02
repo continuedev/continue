@@ -4,8 +4,11 @@ import {
   PromptTemplates,
 } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { TaskStatus } from "./context/taskList/TaskManager";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { IMessenger } from "./protocol/messenger";
 
 declare global {
   interface Window {
@@ -1066,6 +1069,7 @@ export interface ToolExtras {
     contextItems: ContextItem[];
   }) => void;
   config: ContinueConfig;
+  messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>;
   codeBaseIndexer?: CodebaseIndexer;
 }
 
@@ -1800,6 +1804,20 @@ export interface MessageOption {
   precompiled: boolean;
 }
 
+// Task Manager
+
+type TaskMetadata = {
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TaskInfo = {
+  task_id: string;
+  name: string;
+  description: string;
+  status: TaskStatus;
+  metadata: TaskMetadata;
+};
 /* LSP-specific interfaces. */
 
 // See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolKind.
