@@ -31,7 +31,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return ['auth', 'apiClient'];
+    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT];
   }
 
   /**

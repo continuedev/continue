@@ -1,5 +1,5 @@
-import logger from "../util/logger.js";
 import { EventEmitter } from "events";
+import logger from "../util/logger.js";
 
 /**
  * Base abstract class for all services
@@ -27,19 +27,19 @@ export abstract class BaseService<TState> extends EventEmitter {
    */
   async initialize(...args: any[]): Promise<TState> {
     logger.debug(`Initializing ${this.serviceName}`);
-    this.emit('initializing');
-    
+    this.emit("initializing");
+
     try {
       const state = await this.doInitialize(...args);
       this.currentState = state;
       this.isInitialized = true;
       logger.debug(`${this.serviceName} initialized successfully`);
-      this.emit('initialized', state);
+      this.emit("initialized", state);
       return state;
     } catch (error: any) {
       logger.error(`Failed to initialize ${this.serviceName}:`, error);
-      if (this.listenerCount('error') > 0) {
-        this.emit('error', error);
+      if (this.listenerCount("error") > 0) {
+        this.emit("error", error);
       }
       throw error;
     }
@@ -60,9 +60,9 @@ export abstract class BaseService<TState> extends EventEmitter {
     this.currentState = { ...this.currentState, ...newState };
     logger.debug(`${this.serviceName} state updated`, {
       previous: previousState,
-      current: this.currentState
+      current: this.currentState,
     });
-    this.emit('stateChanged', this.currentState, previousState);
+    this.emit("stateChanged", this.currentState, previousState);
   }
 
   /**
@@ -94,10 +94,11 @@ export abstract class BaseService<TState> extends EventEmitter {
    * Deep copy helper for immutable state
    */
   private deepCopy<T>(obj: T): T {
-    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj === null || typeof obj !== "object") return obj;
     if (obj instanceof Date) return new Date(obj.getTime()) as any;
-    if (Array.isArray(obj)) return obj.map(item => this.deepCopy(item)) as any;
-    
+    if (Array.isArray(obj))
+      return obj.map((item) => this.deepCopy(item)) as any;
+
     const cloned = {} as T;
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
@@ -118,6 +119,8 @@ export interface ServiceWithDependencies {
 /**
  * Helper to check if a service has dependencies
  */
-export function hasDependencies(service: any): service is ServiceWithDependencies {
-  return service != null && typeof service.getDependencies === 'function';
+export function hasDependencies(
+  service: any
+): service is ServiceWithDependencies {
+  return !!service && typeof service.getDependencies === "function";
 }
