@@ -1,0 +1,1620 @@
+﻿2025-08-01T02:41:17.2045886Z Current runner version: '2.327.1'
+2025-08-01T02:41:17.2070418Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:17.2071264Z Hosted Compute Agent
+2025-08-01T02:41:17.2071814Z Version: 20250711.363
+2025-08-01T02:41:17.2072483Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:17.2073209Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:17.2073795Z ##[endgroup]
+2025-08-01T02:41:17.2074348Z ##[group]Operating System
+2025-08-01T02:41:17.2074909Z Ubuntu
+2025-08-01T02:41:17.2075330Z 24.04.2
+2025-08-01T02:41:17.2075828Z LTS
+2025-08-01T02:41:17.2076310Z ##[endgroup]
+2025-08-01T02:41:17.2076764Z ##[group]Runner Image
+2025-08-01T02:41:17.2077354Z Image: ubuntu-24.04
+2025-08-01T02:41:17.2077830Z Version: 20250728.1.0
+2025-08-01T02:41:17.2078831Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:17.2080693Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:17.2081641Z ##[endgroup]
+2025-08-01T02:41:17.2082750Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:17.2084539Z Contents: read
+2025-08-01T02:41:17.2085130Z Metadata: read
+2025-08-01T02:41:17.2085682Z Packages: read
+2025-08-01T02:41:17.2086173Z ##[endgroup]
+2025-08-01T02:41:17.2088292Z Secret source: Actions
+2025-08-01T02:41:17.2089019Z Prepare workflow directory
+2025-08-01T02:41:17.2427911Z Prepare all required actions
+2025-08-01T02:41:17.2470263Z Getting action download info
+2025-08-01T02:41:17.5900692Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:17.5901814Z Version: 4.2.2
+2025-08-01T02:41:17.5903120Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:17.5904464Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:17.5905250Z ##[endgroup]
+2025-08-01T02:41:17.6847356Z ##[group]Download immutable action package 'actions/upload-artifact@v4'
+2025-08-01T02:41:17.6848315Z Version: 4.6.2
+2025-08-01T02:41:17.6849502Z Digest: sha256:290722aa3281d5caf23d0acdc3dbeb3424786a1a01a9cc97e72f147225e37c38
+2025-08-01T02:41:17.6850559Z Source commit SHA: ea165f8d65b6e75b540449e92b4886f43607fa02
+2025-08-01T02:41:17.6851312Z ##[endgroup]
+2025-08-01T02:41:17.9306770Z Complete job name: vscode-package-extension-linux
+2025-08-01T02:41:18.0020729Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:18.0021644Z with:
+2025-08-01T02:41:18.0022079Z   fetch-depth: 0
+2025-08-01T02:41:18.0022550Z   repository: continuedev/continue
+2025-08-01T02:41:18.0023267Z   token: ***
+2025-08-01T02:41:18.0023684Z   ssh-strict: true
+2025-08-01T02:41:18.0024124Z   ssh-user: git
+2025-08-01T02:41:18.0024555Z   persist-credentials: true
+2025-08-01T02:41:18.0025020Z   clean: true
+2025-08-01T02:41:18.0025456Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:18.0025962Z   fetch-tags: false
+2025-08-01T02:41:18.0026393Z   show-progress: true
+2025-08-01T02:41:18.0026823Z   lfs: false
+2025-08-01T02:41:18.0027214Z   submodules: false
+2025-08-01T02:41:18.0027674Z   set-safe-directory: true
+2025-08-01T02:41:18.0028482Z ##[endgroup]
+2025-08-01T02:41:18.1238740Z Syncing repository: continuedev/continue
+2025-08-01T02:41:18.1241419Z ##[group]Getting Git version info
+2025-08-01T02:41:18.1242187Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:18.1243330Z [command]/usr/bin/git version
+2025-08-01T02:41:18.3711104Z git version 2.50.1
+2025-08-01T02:41:18.3737629Z ##[endgroup]
+2025-08-01T02:41:18.3752248Z Temporarily overriding HOME='/home/runner/work/_temp/503cd974-fde2-47d7-a4b7-80f82e11d06b' before making global git config changes
+2025-08-01T02:41:18.3753699Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:18.3757594Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:18.3794183Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:18.3797860Z ##[group]Initializing the repository
+2025-08-01T02:41:18.3801870Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:18.3875010Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:18.3876803Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:18.3878370Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:18.3879348Z hint:
+2025-08-01T02:41:18.3879981Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:18.3880605Z hint:
+2025-08-01T02:41:18.3881190Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:18.3882213Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:18.3883397Z hint:
+2025-08-01T02:41:18.3883823Z hint: 	git branch -m <name>
+2025-08-01T02:41:18.3884290Z hint:
+2025-08-01T02:41:18.3884907Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:18.3886137Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:18.3888371Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:18.3920969Z ##[endgroup]
+2025-08-01T02:41:18.3921737Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:18.3924716Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:18.3953182Z ##[endgroup]
+2025-08-01T02:41:18.3953895Z ##[group]Setting up auth
+2025-08-01T02:41:18.3959826Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:18.3988733Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:18.4249684Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:18.4278508Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:18.4515124Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:18.4551271Z ##[endgroup]
+2025-08-01T02:41:18.4552406Z ##[group]Fetching the repository
+2025-08-01T02:41:18.4560653Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:34.8131688Z From https://github.com/continuedev/continue
+2025-08-01T02:41:34.8132733Z  * [new branch]          210-release              -> origin/210-release
+2025-08-01T02:41:34.8133743Z  * [new branch]          LLukas22-intellij-show-toast -> origin/LLukas22-intellij-show-toast
+2025-08-01T02:41:34.8134845Z  * [new branch]          Patrick-Erichsen-patch-1 -> origin/Patrick-Erichsen-patch-1
+2025-08-01T02:41:34.8135918Z  * [new branch]          Patrick-Erichsen-patch-2 -> origin/Patrick-Erichsen-patch-2
+2025-08-01T02:41:34.8139048Z  * [new branch]          Patrick-Erichsen-patch-3 -> origin/Patrick-Erichsen-patch-3
+2025-08-01T02:41:34.8140412Z  * [new branch]          Patrick-Erichsen-patch-4 -> origin/Patrick-Erichsen-patch-4
+2025-08-01T02:41:34.8142674Z  * [new branch]          bdougie/build-failure    -> origin/bdougie/build-failure
+2025-08-01T02:41:34.8145169Z  * [new branch]          bdougie/con-2329-add-a-cookie-banner-site -> origin/bdougie/con-2329-add-a-cookie-banner-site
+2025-08-01T02:41:34.8147814Z  * [new branch]          bdougie/con-2740         -> origin/bdougie/con-2740
+2025-08-01T02:41:34.8149330Z  * [new branch]          bdougie/con-2740-b       -> origin/bdougie/con-2740-b
+2025-08-01T02:41:34.8151203Z  * [new branch]          bdougie/con-2786         -> origin/bdougie/con-2786
+2025-08-01T02:41:34.8153032Z  * [new branch]          bdougie/docs-quick-start -> origin/bdougie/docs-quick-start
+2025-08-01T02:41:34.8155697Z  * [new branch]          bhaktatejas922/main      -> origin/bhaktatejas922/main
+2025-08-01T02:41:34.8157336Z  * [new branch]          cla-signatures           -> origin/cla-signatures
+2025-08-01T02:41:34.8160534Z  * [new branch]          dallin/agent-poooling    -> origin/dallin/agent-poooling
+2025-08-01T02:41:34.8162677Z  * [new branch]          dallin/allow-onprem-local -> origin/dallin/allow-onprem-local
+2025-08-01T02:41:34.8164365Z  * [new branch]          dallin/autodetect-label  -> origin/dallin/autodetect-label
+2025-08-01T02:41:34.8166411Z  * [new branch]          dallin/bedrock-docs      -> origin/dallin/bedrock-docs
+2025-08-01T02:41:34.8168332Z  * [new branch]          dallin/bump-fetch        -> origin/dallin/bump-fetch
+2025-08-01T02:41:34.8172354Z  * [new branch]          dallin/capabilitiy-notes -> origin/dallin/capabilitiy-notes
+2025-08-01T02:41:34.8175139Z  * [new branch]          dallin/catch-hub-loading-errors -> origin/dallin/catch-hub-loading-errors
+2025-08-01T02:41:34.8177399Z  * [new branch]          dallin/catch-rerank-error -> origin/dallin/catch-rerank-error
+2025-08-01T02:41:34.8184416Z  * [new branch]          dallin/chat-flex-dir-2   -> origin/dallin/chat-flex-dir-2
+2025-08-01T02:41:34.8185346Z  * [new branch]          dallin/config-error-link -> origin/dallin/config-error-link
+2025-08-01T02:41:34.8190878Z  * [new branch]          dallin/config-error-reload-buttons -> origin/dallin/config-error-reload-buttons
+2025-08-01T02:41:34.8193195Z  * [new branch]          dallin/config-yaml-env   -> origin/dallin/config-yaml-env
+2025-08-01T02:41:34.8194639Z  * [new branch]          dallin/content-parts     -> origin/dallin/content-parts
+2025-08-01T02:41:34.8198680Z  * [new branch]          dallin/context-length-fix -> origin/dallin/context-length-fix
+2025-08-01T02:41:34.8200057Z  * [new branch]          dallin/continue-proxy-destination -> origin/dallin/continue-proxy-destination
+2025-08-01T02:41:34.8201215Z  * [new branch]          dallin/copy-prompt-logs-button -> origin/dallin/copy-prompt-logs-button
+2025-08-01T02:41:34.8212117Z  * [new branch]          dallin/create-edit-codeblock-fences -> origin/dallin/create-edit-codeblock-fences
+2025-08-01T02:41:34.8213529Z  * [new branch]          dallin/create-ui         -> origin/dallin/create-ui
+2025-08-01T02:41:34.8214415Z  * [new branch]          dallin/edit-tool         -> origin/dallin/edit-tool
+2025-08-01T02:41:34.8215358Z  * [new branch]          dallin/edit-tool-results -> origin/dallin/edit-tool-results
+2025-08-01T02:41:34.8216132Z  * [new branch]          dallin/embedding-chunking-fixes -> origin/dallin/embedding-chunking-fixes
+2025-08-01T02:41:34.8217116Z  * [new branch]          dallin/fix-free-trial    -> origin/dallin/fix-free-trial
+2025-08-01T02:41:34.8217621Z  * [new branch]          dallin/gemini-2.0        -> origin/dallin/gemini-2.0
+2025-08-01T02:41:34.8218243Z  * [new branch]          dallin/giga-assistant    -> origin/dallin/giga-assistant
+2025-08-01T02:41:34.8219239Z  * [new branch]          dallin/grep-glob-ls      -> origin/dallin/grep-glob-ls
+2025-08-01T02:41:34.8219950Z  * [new branch]          dallin/handle-tool-interruption -> origin/dallin/handle-tool-interruption
+2025-08-01T02:41:34.8220637Z  * [new branch]          dallin/hot-fixes         -> origin/dallin/hot-fixes
+2025-08-01T02:41:34.8221540Z  * [new branch]          dallin/ignore-schemas    -> origin/dallin/ignore-schemas
+2025-08-01T02:41:34.8222109Z  * [new branch]          dallin/instruction-based-tools -> origin/dallin/instruction-based-tools
+2025-08-01T02:41:34.8222894Z  * [new branch]          dallin/instruction-tools -> origin/dallin/instruction-tools
+2025-08-01T02:41:34.8223795Z  * [new branch]          dallin/jetbrains-config-error -> origin/dallin/jetbrains-config-error
+2025-08-01T02:41:34.8225130Z  * [new branch]          dallin/jetbrains-crashing -> origin/dallin/jetbrains-crashing
+2025-08-01T02:41:34.8227181Z  * [new branch]          dallin/legacy-apply      -> origin/dallin/legacy-apply
+2025-08-01T02:41:34.8229442Z  * [new branch]          dallin/limit-tool-output -> origin/dallin/limit-tool-output
+2025-08-01T02:41:34.8231471Z  * [new branch]          dallin/llm-info          -> origin/dallin/llm-info
+2025-08-01T02:41:34.8233885Z  * [new branch]          dallin/local-rules-loading -> origin/dallin/local-rules-loading
+2025-08-01T02:41:34.8235745Z  * [new branch]          dallin/mcp-items         -> origin/dallin/mcp-items
+2025-08-01T02:41:34.8237738Z  * [new branch]          dallin/mode-toggling     -> origin/dallin/mode-toggling
+2025-08-01T02:41:34.8240050Z  * [new branch]          dallin/morph             -> origin/dallin/morph
+2025-08-01T02:41:34.8242189Z  * [new branch]          dallin/no-explicit-colors -> origin/dallin/no-explicit-colors
+2025-08-01T02:41:34.8244269Z  * [new branch]          dallin/no-proxy-updates  -> origin/dallin/no-proxy-updates
+2025-08-01T02:41:34.8246358Z  * [new branch]          dallin/non-native-tools-experiment -> origin/dallin/non-native-tools-experiment
+2025-08-01T02:41:34.8248027Z  * [new branch]          dallin/openai-38         -> origin/dallin/openai-38
+2025-08-01T02:41:34.8250467Z  * [new branch]          dallin/optional-context-name -> origin/dallin/optional-context-name
+2025-08-01T02:41:34.8252496Z  * [new branch]          dallin/pending-toolcall-bug -> origin/dallin/pending-toolcall-bug
+2025-08-01T02:41:34.8254473Z  * [new branch]          dallin/prettier-update   -> origin/dallin/prettier-update
+2025-08-01T02:41:34.8256352Z  * [new branch]          dallin/proxy             -> origin/dallin/proxy
+2025-08-01T02:41:34.8258528Z  * [new branch]          dallin/remote-context-provider -> origin/dallin/remote-context-provider
+2025-08-01T02:41:34.8260771Z  * [new branch]          dallin/remove-account-dialog -> origin/dallin/remove-account-dialog
+2025-08-01T02:41:34.8262897Z  * [new branch]          dallin/remove-stream-complete -> origin/dallin/remove-stream-complete
+2025-08-01T02:41:34.8264949Z  * [new branch]          dallin/remove-thinking-message -> origin/dallin/remove-thinking-message
+2025-08-01T02:41:34.8266949Z  * [new branch]          dallin/remove-too-big-check -> origin/dallin/remove-too-big-check
+2025-08-01T02:41:34.8269215Z  * [new branch]          dallin/rules-for-tool-messages -> origin/dallin/rules-for-tool-messages
+2025-08-01T02:41:34.8271690Z  * [new branch]          dallin/secret-storage-improvements -> origin/dallin/secret-storage-improvements
+2025-08-01T02:41:34.8273425Z  * [new branch]          dallin/single-file-edit  -> origin/dallin/single-file-edit
+2025-08-01T02:41:34.8275721Z  * [new branch]          dallin/standardize-codeblocks -> origin/dallin/standardize-codeblocks
+2025-08-01T02:41:34.8277808Z  * [new branch]          dallin/system-tools-plug-and-play -> origin/dallin/system-tools-plug-and-play
+2025-08-01T02:41:34.8279844Z  * [new branch]          dallin/tool-errors-interruptions -> origin/dallin/tool-errors-interruptions
+2025-08-01T02:41:34.8282027Z  * [new branch]          dallin/tool-group        -> origin/dallin/tool-group
+2025-08-01T02:41:34.8284206Z  * [new branch]          dallin/tool-ui-improvements -> origin/dallin/tool-ui-improvements
+2025-08-01T02:41:34.8286092Z  * [new branch]          dallin/yaml-env          -> origin/dallin/yaml-env
+2025-08-01T02:41:34.8290450Z  * [new branch]          dependabot/npm_and_yarn/docs/axios-1.11.0 -> origin/dependabot/npm_and_yarn/docs/axios-1.11.0
+2025-08-01T02:41:34.8294259Z  * [new branch]          dependabot/npm_and_yarn/packages/openai-adapters/form-data-4.0.4 -> origin/dependabot/npm_and_yarn/packages/openai-adapters/form-data-4.0.4
+2025-08-01T02:41:34.8295428Z  * [new branch]          dev                      -> origin/dev
+2025-08-01T02:41:34.8298413Z  * [new branch]          exigow/migrate-files-to-vfs -> origin/exigow/migrate-files-to-vfs
+2025-08-01T02:41:34.8300186Z  * [new branch]          exigow/pass-ide-proxy    -> origin/exigow/pass-ide-proxy
+2025-08-01T02:41:34.8302219Z  * [new branch]          fake                     -> origin/fake
+2025-08-01T02:41:34.8304606Z  * [new branch]          feat-aws-bedrock-agents-as-provider -> origin/feat-aws-bedrock-agents-as-provider
+2025-08-01T02:41:34.8306259Z  * [new branch]          fix-stopSequences        -> origin/fix-stopSequences
+2025-08-01T02:41:34.8308400Z  * [new branch]          improve-filtering        -> origin/improve-filtering
+2025-08-01T02:41:34.8310165Z  * [new branch]          intellij-show-toast      -> origin/intellij-show-toast
+2025-08-01T02:41:34.8313904Z  * [new branch]          jacob/bug/wsl-workspace-rules -> origin/jacob/bug/wsl-workspace-rules
+2025-08-01T02:41:34.8316582Z  * [new branch]          jacob/bugfix/autocomplete-dev-data -> origin/jacob/bugfix/autocomplete-dev-data
+2025-08-01T02:41:34.8319446Z  * [new branch]          jacob/feature/nextedit-chain-of-edits -> origin/jacob/feature/nextedit-chain-of-edits
+2025-08-01T02:41:34.8321330Z  * [new branch]          main                     -> origin/main
+2025-08-01T02:41:34.8324054Z  * [new branch]          nate/anthropic-stop-reason -> origin/nate/anthropic-stop-reason
+2025-08-01T02:41:34.8325965Z  * [new branch]          nate/assistant-sdk       -> origin/nate/assistant-sdk
+2025-08-01T02:41:34.8327902Z  * [new branch]          nate/autocomplete-cleanup -> origin/nate/autocomplete-cleanup
+2025-08-01T02:41:34.8330049Z  * [new branch]          nate/azure-openai-adapters -> origin/nate/azure-openai-adapters
+2025-08-01T02:41:34.8332059Z  * [new branch]          nate/bedrock-oai-adapter -> origin/nate/bedrock-oai-adapter
+2025-08-01T02:41:34.8333968Z  * [new branch]          nate/better-apply        -> origin/nate/better-apply
+2025-08-01T02:41:34.8336090Z  * [new branch]          nate/better-feature-flag-cache -> origin/nate/better-feature-flag-cache
+2025-08-01T02:41:34.8337725Z  * [new branch]          nate/bump-config-yamll   -> origin/nate/bump-config-yamll
+2025-08-01T02:41:34.8339935Z  * [new branch]          nate/bump-oai            -> origin/nate/bump-oai
+2025-08-01T02:41:34.8342118Z  * [new branch]          nate/bump-openai-adapters -> origin/nate/bump-openai-adapters
+2025-08-01T02:41:34.8344350Z  * [new branch]          nate/cache-extensions-folder-v2 -> origin/nate/cache-extensions-folder-v2
+2025-08-01T02:41:34.8345917Z  * [new branch]          nate/ci                  -> origin/nate/ci
+2025-08-01T02:41:34.8348258Z  * [new branch]          nate/cmd-i-sidebar       -> origin/nate/cmd-i-sidebar
+2025-08-01T02:41:34.8350311Z  * [new branch]          nate/codebase-eval       -> origin/nate/codebase-eval
+2025-08-01T02:41:34.8352593Z  * [new branch]          nate/config-yaml-no-node-packages -> origin/nate/config-yaml-no-node-packages
+2025-08-01T02:41:34.8354307Z  * [new branch]          nate/context-items-deduplication-fix -> origin/nate/context-items-deduplication-fix
+2025-08-01T02:41:34.8356397Z  * [new branch]          nate/continue-cli-review-workflow -> origin/nate/continue-cli-review-workflow
+2025-08-01T02:41:34.8358004Z  * [new branch]          nate/continue-org-mdm    -> origin/nate/continue-org-mdm
+2025-08-01T02:41:34.8360544Z  * [new branch]          nate/fix-find-replace-again -> origin/nate/fix-find-replace-again
+2025-08-01T02:41:34.8362426Z  * [new branch]          nate/fix-script          -> origin/nate/fix-script
+2025-08-01T02:41:34.8364749Z  * [new branch]          nate/fix-search-replace-tool-description -> origin/nate/fix-search-replace-tool-description
+2025-08-01T02:41:34.8366497Z  * [new branch]          nate/fix-vscode-build-button -> origin/nate/fix-vscode-build-button
+2025-08-01T02:41:34.8368612Z  * [new branch]          nate/fixes0129190        -> origin/nate/fixes0129190
+2025-08-01T02:41:34.8370819Z  * [new branch]          nate/fixes3089           -> origin/nate/fixes3089
+2025-08-01T02:41:34.8372757Z  * [new branch]          nate/gfm-rendering       -> origin/nate/gfm-rendering
+2025-08-01T02:41:34.8374902Z  * [new branch]          nate/gh-actions-docs     -> origin/nate/gh-actions-docs
+2025-08-01T02:41:34.8377160Z  * [new branch]          nate/improve-github-issue-reporting -> origin/nate/improve-github-issue-reporting
+2025-08-01T02:41:34.8379566Z  * [new branch]          nate/inject-blocks       -> origin/nate/inject-blocks
+2025-08-01T02:41:34.8381904Z  * [new branch]          nate/inline-typing       -> origin/nate/inline-typing
+2025-08-01T02:41:34.8384253Z  * [new branch]          nate/intellij-autocomplete-official-api -> origin/nate/intellij-autocomplete-official-api
+2025-08-01T02:41:34.8386308Z  * [new branch]          nate/keep-alive          -> origin/nate/keep-alive
+2025-08-01T02:41:34.8388598Z  * [new branch]          nate/lancedb-migration   -> origin/nate/lancedb-migration
+2025-08-01T02:41:34.8391053Z  * [new branch]          nate/lazy-edit           -> origin/nate/lazy-edit
+2025-08-01T02:41:34.8393620Z  * [new branch]          nate/mcp-context-provider -> origin/nate/mcp-context-provider
+2025-08-01T02:41:34.8395943Z  * [new branch]          nate/no-fail-on-non-conv-commit -> origin/nate/no-fail-on-non-conv-commit
+2025-08-01T02:41:34.8398090Z  * [new branch]          nate/on-prem-proxy-update -> origin/nate/on-prem-proxy-update
+2025-08-01T02:41:34.8400599Z  * [new branch]          nate/path-in-cache-key   -> origin/nate/path-in-cache-key
+2025-08-01T02:41:34.8403515Z  * [new branch]          nate/pe/jb-enum-fix      -> origin/nate/pe/jb-enum-fix
+2025-08-01T02:41:34.8405744Z  * [new branch]          nate/pe/jb-enum-fix-bisect-1 -> origin/nate/pe/jb-enum-fix-bisect-1
+2025-08-01T02:41:34.8407938Z  * [new branch]          nate/print-req-id        -> origin/nate/print-req-id
+2025-08-01T02:41:34.8410484Z  * [new branch]          nate/quick-edit-2171     -> origin/nate/quick-edit-2171
+2025-08-01T02:41:34.8412849Z  * [new branch]          nate/quick-edit-34ef     -> origin/nate/quick-edit-34ef
+2025-08-01T02:41:34.8415088Z  * [new branch]          nate/quick-edit-36b8     -> origin/nate/quick-edit-36b8
+2025-08-01T02:41:34.8417471Z  * [new branch]          nate/quick-edit-40b8     -> origin/nate/quick-edit-40b8
+2025-08-01T02:41:34.8420058Z  * [new branch]          nate/quick-edit-48e5     -> origin/nate/quick-edit-48e5
+2025-08-01T02:41:34.8422153Z  * [new branch]          nate/quick-edit-5578     -> origin/nate/quick-edit-5578
+2025-08-01T02:41:34.8424334Z  * [new branch]          nate/quick-edit-58a8     -> origin/nate/quick-edit-58a8
+2025-08-01T02:41:34.8426704Z  * [new branch]          nate/quick-edit-85b6     -> origin/nate/quick-edit-85b6
+2025-08-01T02:41:34.8429540Z  * [new branch]          nate/quick-edit-8e10     -> origin/nate/quick-edit-8e10
+2025-08-01T02:41:34.8431803Z  * [new branch]          nate/quick-edit-d1c3     -> origin/nate/quick-edit-d1c3
+2025-08-01T02:41:34.8434101Z  * [new branch]          nate/quick-edit-f214     -> origin/nate/quick-edit-f214
+2025-08-01T02:41:34.8436446Z  * [new branch]          nate/remove-codebase-button -> origin/nate/remove-codebase-button
+2025-08-01T02:41:34.8438677Z  * [new branch]          nate/remove-log          -> origin/nate/remove-log
+2025-08-01T02:41:34.8441329Z  * [new branch]          nate/review-feature-merge-dev -> origin/nate/review-feature-merge-dev
+2025-08-01T02:41:34.8443567Z  * [new branch]          nate/spec-version        -> origin/nate/spec-version
+2025-08-01T02:41:34.8445973Z  * [new branch]          nate/terminal-tool-output -> origin/nate/terminal-tool-output
+2025-08-01T02:41:34.8448297Z  * [new branch]          nate/text-decorations-canvas -> origin/nate/text-decorations-canvas
+2025-08-01T02:41:34.8450970Z  * [new branch]          nate/toggle-rules        -> origin/nate/toggle-rules
+2025-08-01T02:41:34.8453369Z  * [new branch]          nate/update-issue-assignees -> origin/nate/update-issue-assignees
+2025-08-01T02:41:34.8455627Z  * [new branch]          nate/uses-everywhere     -> origin/nate/uses-everywhere
+2025-08-01T02:41:34.8458044Z  * [new branch]          nate/validate-cmd-i      -> origin/nate/validate-cmd-i
+2025-08-01T02:41:34.8461234Z  * [new branch]          nathants/range-replace   -> origin/nathants/range-replace
+2025-08-01T02:41:34.8463374Z  * [new branch]          nathants/tasks           -> origin/nathants/tasks
+2025-08-01T02:41:34.8465712Z  * [new branch]          oneper                   -> origin/oneper
+2025-08-01T02:41:34.8467891Z  * [new branch]          ovms                     -> origin/ovms
+2025-08-01T02:41:34.8471002Z  * [new branch]          p/autoscroll-fixes       -> origin/p/autoscroll-fixes
+2025-08-01T02:41:34.8473053Z  * [new branch]          patch-1                  -> origin/patch-1
+2025-08-01T02:41:34.8476080Z  * [new branch]          pe/android-studio-faq    -> origin/pe/android-studio-faq
+2025-08-01T02:41:34.8478178Z  * [new branch]          pe/auto-assign           -> origin/pe/auto-assign
+2025-08-01T02:41:34.8480624Z  * [new branch]          pe/auto-pre-releases     -> origin/pe/auto-pre-releases
+2025-08-01T02:41:34.8482748Z  * [new branch]          pe/auto-pre-releases-2   -> origin/pe/auto-pre-releases-2
+2025-08-01T02:41:34.8484914Z  * [new branch]          pe/azure-tests           -> origin/pe/azure-tests
+2025-08-01T02:41:34.8487029Z  * [new branch]          pe/badge-ui-edits        -> origin/pe/badge-ui-edits
+2025-08-01T02:41:34.8489323Z  * [new branch]          pe/baseSystemPrompt      -> origin/pe/baseSystemPrompt
+2025-08-01T02:41:34.8491679Z  * [new branch]          pe/bugfix-vsc-diff-line-count -> origin/pe/bugfix-vsc-diff-line-count
+2025-08-01T02:41:34.8493816Z  * [new branch]          pe/build-package-in-ci   -> origin/pe/build-package-in-ci
+2025-08-01T02:41:34.8495969Z  * [new branch]          pe/bump-core             -> origin/pe/bump-core
+2025-08-01T02:41:34.8498220Z  * [new branch]          pe/capital-h-hub         -> origin/pe/capital-h-hub
+2025-08-01T02:41:34.8500650Z  * [new branch]          pe/ci-speedup            -> origin/pe/ci-speedup
+2025-08-01T02:41:34.8502943Z  * [new branch]          pe/code-tag-links        -> origin/pe/code-tag-links
+2025-08-01T02:41:34.8505117Z  * [new branch]          pe/config-schema-fix     -> origin/pe/config-schema-fix
+2025-08-01T02:41:34.8507393Z  * [new branch]          pe/core-eslint-bulk-fix  -> origin/pe/core-eslint-bulk-fix
+2025-08-01T02:41:34.8509605Z  * [new branch]          pe/db-docs-update        -> origin/pe/db-docs-update
+2025-08-01T02:41:34.8512051Z  * [new branch]          pe/discord-invite-link-update -> origin/pe/discord-invite-link-update
+2025-08-01T02:41:34.8514153Z  * [new branch]          pe/docker_localhost      -> origin/pe/docker_localhost
+2025-08-01T02:41:34.8516621Z  * [new branch]          pe/downgrade-dbinfoz     -> origin/pe/downgrade-dbinfoz
+2025-08-01T02:41:34.8518711Z  * [new branch]          pe/downgrade-dbinfoz-fix -> origin/pe/downgrade-dbinfoz-fix
+2025-08-01T02:41:34.8521166Z  * [new branch]          pe/edit-docs-udpate      -> origin/pe/edit-docs-udpate
+2025-08-01T02:41:34.8523355Z  * [new branch]          pe/error-indicator-in-lump -> origin/pe/error-indicator-in-lump
+2025-08-01T02:41:34.8525540Z  * [new branch]          pe/filename-in-codeblocks -> origin/pe/filename-in-codeblocks
+2025-08-01T02:41:34.8527756Z  * [new branch]          pe/find-and-replace-edit -> origin/pe/find-and-replace-edit
+2025-08-01T02:41:34.8530107Z  * [new branch]          pe/fix-delete-btn        -> origin/pe/fix-delete-btn
+2025-08-01T02:41:34.8532600Z  * [new branch]          pe/fix-jb-ci-tests       -> origin/pe/fix-jb-ci-tests
+2025-08-01T02:41:34.8534937Z  * [new branch]          pe/fix-tsc-checks        -> origin/pe/fix-tsc-checks
+2025-08-01T02:41:34.8537277Z  * [new branch]          pe/handle-null-status-bar -> origin/pe/handle-null-status-bar
+2025-08-01T02:41:34.8539576Z  * [new branch]          pe/if-clause-docs        -> origin/pe/if-clause-docs
+2025-08-01T02:41:34.8542077Z  * [new branch]          pe/insert-file-toolbar-btn -> origin/pe/insert-file-toolbar-btn
+2025-08-01T02:41:34.8544315Z  * [new branch]          pe/jb-contributing-update -> origin/pe/jb-contributing-update
+2025-08-01T02:41:34.8546506Z  * [new branch]          pe/jb-e2e-testing-2      -> origin/pe/jb-e2e-testing-2
+2025-08-01T02:41:34.8548710Z  * [new branch]          pe/jb-e2e-testing-2B     -> origin/pe/jb-e2e-testing-2B
+2025-08-01T02:41:34.8551243Z  * [new branch]          pe/jb-enum-fix           -> origin/pe/jb-enum-fix
+2025-08-01T02:41:34.8553458Z  * [new branch]          pe/jb-gui-test-updates   -> origin/pe/jb-gui-test-updates
+2025-08-01T02:41:34.8555657Z  * [new branch]          pe/jb-gui-white-flash    -> origin/pe/jb-gui-white-flash
+2025-08-01T02:41:34.8557877Z  * [new branch]          pe/jb-json-module        -> origin/pe/jb-json-module
+2025-08-01T02:41:34.8560249Z  * [new branch]          pe/jb-readme-update      -> origin/pe/jb-readme-update
+2025-08-01T02:41:34.8562540Z  * [new branch]          pe/jb-release-notes      -> origin/pe/jb-release-notes
+2025-08-01T02:41:34.8564965Z  * [new branch]          pe/jb-tooltip-editor-disposed-bugfix -> origin/pe/jb-tooltip-editor-disposed-bugfix
+2025-08-01T02:41:34.8567091Z  * [new branch]          pe/jb-tooltip-hint       -> origin/pe/jb-tooltip-hint
+2025-08-01T02:41:34.8569502Z  * [new branch]          pe/jb-win-ci             -> origin/pe/jb-win-ci
+2025-08-01T02:41:34.8571933Z  * [new branch]          pe/mfe-followups         -> origin/pe/mfe-followups
+2025-08-01T02:41:34.8574393Z  * [new branch]          pe/move-right-tutorial-card -> origin/pe/move-right-tutorial-card
+2025-08-01T02:41:34.8576502Z  * [new branch]          pe/oai-bump              -> origin/pe/oai-bump
+2025-08-01T02:41:34.8578837Z  * [new branch]          pe/ollama-docs           -> origin/pe/ollama-docs
+2025-08-01T02:41:34.8581445Z  * [new branch]          pe/onboarding-config-json-fixes -> origin/pe/onboarding-config-json-fixes
+2025-08-01T02:41:34.8583564Z  * [new branch]          pe/oneper                -> origin/pe/oneper
+2025-08-01T02:41:34.8586008Z  * [new branch]          pe/pixtral-img-support   -> origin/pe/pixtral-img-support
+2025-08-01T02:41:34.8588220Z  * [new branch]          pe/prompt-docs           -> origin/pe/prompt-docs
+2025-08-01T02:41:34.8590929Z  * [new branch]          pe/prompt-docs-v2        -> origin/pe/prompt-docs-v2
+2025-08-01T02:41:34.8593231Z  * [new branch]          pe/publish-local-blocks  -> origin/pe/publish-local-blocks
+2025-08-01T02:41:34.8595555Z  * [new branch]          pe/remove-husky          -> origin/pe/remove-husky
+2025-08-01T02:41:34.8597902Z  * [new branch]          pe/repo-map-enhancements -> origin/pe/repo-map-enhancements
+2025-08-01T02:41:34.8600189Z  * [new branch]          pe/required-tool-tests   -> origin/pe/required-tool-tests
+2025-08-01T02:41:34.8603001Z  * [new branch]          pe/root-docs             -> origin/pe/root-docs
+2025-08-01T02:41:34.8605094Z  * [new branch]          pe/rules-docs            -> origin/pe/rules-docs
+2025-08-01T02:41:34.8607312Z  * [new branch]          pe/sentry                -> origin/pe/sentry
+2025-08-01T02:41:34.8609715Z  * [new branch]          pe/shortcut-bg-color     -> origin/pe/shortcut-bg-color
+2025-08-01T02:41:34.8612205Z  * [new branch]          pe/token-count-err-msg   -> origin/pe/token-count-err-msg
+2025-08-01T02:41:34.8614531Z  * [new branch]          pe/tsc-fix-edit-folder   -> origin/pe/tsc-fix-edit-folder
+2025-08-01T02:41:34.8616848Z  * [new branch]          pe/tutorial-java-update  -> origin/pe/tutorial-java-update
+2025-08-01T02:41:34.8619437Z  * [new branch]          pe/vsc-diff-line-count-bugfix -> origin/pe/vsc-diff-line-count-bugfix
+2025-08-01T02:41:34.8621826Z  * [new branch]          pe/vscode-readme         -> origin/pe/vscode-readme
+2025-08-01T02:41:34.8624134Z  * [new branch]          pe/win-arm64-lancedb     -> origin/pe/win-arm64-lancedb
+2025-08-01T02:41:34.8626321Z  * [new branch]          posthog-docusaurus       -> origin/posthog-docusaurus
+2025-08-01T02:41:34.8628523Z  * [new branch]          pr-3066                  -> origin/pr-3066
+2025-08-01T02:41:34.8631069Z  * [new branch]          readme-gifs              -> origin/readme-gifs
+2025-08-01T02:41:34.8648286Z  * [new branch]          release-0.9.195          -> origin/release-0.9.195
+2025-08-01T02:41:34.8650306Z  * [new branch]          reo-fix                  -> origin/reo-fix
+2025-08-01T02:41:34.8652355Z  * [new branch]          rules-tuple              -> origin/rules-tuple
+2025-08-01T02:41:34.8654319Z  * [new branch]          staging                  -> origin/staging
+2025-08-01T02:41:34.8656418Z  * [new branch]          test-flaky-1             -> origin/test-flaky-1
+2025-08-01T02:41:34.8658604Z  * [new branch]          test-flaky-2             -> origin/test-flaky-2
+2025-08-01T02:41:34.8660764Z  * [new branch]          test-flaky-3             -> origin/test-flaky-3
+2025-08-01T02:41:34.8662739Z  * [new branch]          test-flaky-4             -> origin/test-flaky-4
+2025-08-01T02:41:34.8664682Z  * [new branch]          test-flaky-5             -> origin/test-flaky-5
+2025-08-01T02:41:34.8666818Z  * [new branch]          test-flaky-fix-1         -> origin/test-flaky-fix-1
+2025-08-01T02:41:34.8668858Z  * [new branch]          test-flaky-fix-2         -> origin/test-flaky-fix-2
+2025-08-01T02:41:34.8671329Z  * [new branch]          test-flaky-fix-3         -> origin/test-flaky-fix-3
+2025-08-01T02:41:34.8673539Z  * [new branch]          test-flaky-fix-4         -> origin/test-flaky-fix-4
+2025-08-01T02:41:34.8675798Z  * [new branch]          test-flaky-fix-5         -> origin/test-flaky-fix-5
+2025-08-01T02:41:34.8678241Z  * [new branch]          test-macos-latest-ci-fix -> origin/test-macos-latest-ci-fix
+2025-08-01T02:41:34.8681909Z  * [new branch]          tingwai/con-3005-resolve-all-valid-eg-not-noisy-sentry-logs-to-get-to-inbox -> origin/tingwai/con-3005-resolve-all-valid-eg-not-noisy-sentry-logs-to-get-to-inbox
+2025-08-01T02:41:34.8683583Z  * [new branch]          tingwai/con-3005-resolve-intellij-NullPointerException -> origin/tingwai/con-3005-resolve-intellij-NullPointerException
+2025-08-01T02:41:34.8685607Z  * [new branch]          tingwai/con-3080         -> origin/tingwai/con-3080
+2025-08-01T02:41:34.8688771Z  * [new branch]          tingwai/tingwai/con-3005-resolve-intellij-NullPointerException -> origin/tingwai/tingwai/con-3005-resolve-intellij-NullPointerException
+2025-08-01T02:41:34.8690836Z  * [new branch]          toggles-test             -> origin/toggles-test
+2025-08-01T02:41:34.8693802Z  * [new branch]          tomasz/comment-diff-snippet -> origin/tomasz/comment-diff-snippet
+2025-08-01T02:41:34.8696170Z  * [new branch]          tomasz/eager-autocomplete -> origin/tomasz/eager-autocomplete
+2025-08-01T02:41:34.8698470Z  * [new branch]          tomasz/fix-filter-tests  -> origin/tomasz/fix-filter-tests
+2025-08-01T02:41:34.8700997Z  * [new branch]          tomasz/full-screen-ui    -> origin/tomasz/full-screen-ui
+2025-08-01T02:41:34.8703063Z  * [new branch]          tomasz/improve-navigation -> origin/tomasz/improve-navigation
+2025-08-01T02:41:34.8705235Z  * [new branch]          tomasz/telemetry         -> origin/tomasz/telemetry
+2025-08-01T02:41:34.8707439Z  * [new branch]          tomasz/typescript-definitions -> origin/tomasz/typescript-definitions
+2025-08-01T02:41:34.8710102Z  * [new branch]          update-together-recc     -> origin/update-together-recc
+2025-08-01T02:41:34.8712261Z  * [new branch]          v0.8.57-vscode-release   -> origin/v0.8.57-vscode-release
+2025-08-01T02:41:34.8714519Z  * [new branch]          v0.8.58-vscode-release   -> origin/v0.8.58-vscode-release
+2025-08-01T02:41:34.8716761Z  * [new branch]          v0.8.60-vscode-release   -> origin/v0.8.60-vscode-release
+2025-08-01T02:41:34.8719026Z  * [new branch]          v0.8.61-vscode-release   -> origin/v0.8.61-vscode-release
+2025-08-01T02:41:34.8721544Z  * [new branch]          v0.8.62-vscode-release   -> origin/v0.8.62-vscode-release
+2025-08-01T02:41:34.8723756Z  * [new branch]          v0.8.63-vscode-release   -> origin/v0.8.63-vscode-release
+2025-08-01T02:41:34.8726109Z  * [new branch]          v0.8.64-vscode-release   -> origin/v0.8.64-vscode-release
+2025-08-01T02:41:34.8728401Z  * [new branch]          v0.8.65-vscode-release   -> origin/v0.8.65-vscode-release
+2025-08-01T02:41:34.8730975Z  * [new branch]          v0.8.67-vscode-release   -> origin/v0.8.67-vscode-release
+2025-08-01T02:41:34.8733312Z  * [new branch]          v0.8.67-vscode-release-actual -> origin/v0.8.67-vscode-release-actual
+2025-08-01T02:41:34.8735522Z  * [new branch]          v0.8.68-vscode-release   -> origin/v0.8.68-vscode-release
+2025-08-01T02:41:34.8737891Z  * [new branch]          v1.0.10-vscode-release   -> origin/v1.0.10-vscode-release
+2025-08-01T02:41:34.8740156Z  * [new branch]          v1.0.11-vscode-release   -> origin/v1.0.11-vscode-release
+2025-08-01T02:41:34.8742627Z  * [new branch]          v1.0.12-vscode-release   -> origin/v1.0.12-vscode-release
+2025-08-01T02:41:34.8744875Z  * [new branch]          v1.0.13-vscode-release   -> origin/v1.0.13-vscode-release
+2025-08-01T02:41:34.8747186Z  * [new branch]          v1.0.14-vscode-release   -> origin/v1.0.14-vscode-release
+2025-08-01T02:41:34.8749925Z  * [new branch]          v1.0.15-vscode-v1.0.25-jetbrains-release -> origin/v1.0.15-vscode-v1.0.25-jetbrains-release
+2025-08-01T02:41:34.8752087Z  * [new branch]          v1.0.16-vscode-release   -> origin/v1.0.16-vscode-release
+2025-08-01T02:41:34.8754355Z  * [new branch]          v1.0.17-vscode-release   -> origin/v1.0.17-vscode-release
+2025-08-01T02:41:34.8756676Z  * [new branch]          v1.0.18-vscode-release   -> origin/v1.0.18-vscode-release
+2025-08-01T02:41:34.8758994Z  * [new branch]          v1.0.19-vscode-release   -> origin/v1.0.19-vscode-release
+2025-08-01T02:41:34.8761469Z  * [new branch]          v1.0.2-vscode-release    -> origin/v1.0.2-vscode-release
+2025-08-01T02:41:34.8763700Z  * [new branch]          v1.0.3-vscode-release    -> origin/v1.0.3-vscode-release
+2025-08-01T02:41:34.8766095Z  * [new branch]          v1.0.4-vscode-release    -> origin/v1.0.4-vscode-release
+2025-08-01T02:41:34.8768383Z  * [new branch]          v1.0.5-vscode-release    -> origin/v1.0.5-vscode-release
+2025-08-01T02:41:34.8770899Z  * [new branch]          v1.0.6-vscode-release    -> origin/v1.0.6-vscode-release
+2025-08-01T02:41:34.8773082Z  * [new branch]          v1.0.7-vscode-release    -> origin/v1.0.7-vscode-release
+2025-08-01T02:41:34.8775393Z  * [new branch]          v1.0.8-vscode-release    -> origin/v1.0.8-vscode-release
+2025-08-01T02:41:34.8777733Z  * [new branch]          v1.0.9-vscode-release    -> origin/v1.0.9-vscode-release
+2025-08-01T02:41:34.8780337Z  * [new branch]          v1.1.61-vscode-release   -> origin/v1.1.61-vscode-release
+2025-08-01T02:41:34.8782570Z  * [new branch]          v1.1.62-vscode-release   -> origin/v1.1.62-vscode-release
+2025-08-01T02:41:34.8784817Z  * [new tag]             0.9.212-vscode           -> 0.9.212-vscode
+2025-08-01T02:41:34.8786109Z  * [new tag]             @continuedev/config-yaml@1.0.94 -> @continuedev/config-yaml@1.0.94
+2025-08-01T02:41:34.8787252Z  * [new tag]             @continuedev/config-yaml@1.0.95 -> @continuedev/config-yaml@1.0.95
+2025-08-01T02:41:34.8788666Z  * [new tag]             @continuedev/config-yaml@1.1.0 -> @continuedev/config-yaml@1.1.0
+2025-08-01T02:41:34.8791576Z  * [new tag]             @continuedev/config-yaml@1.2.0 -> @continuedev/config-yaml@1.2.0
+2025-08-01T02:41:34.8792731Z  * [new tag]             @continuedev/config-yaml@1.3.0 -> @continuedev/config-yaml@1.3.0
+2025-08-01T02:41:34.8794151Z  * [new tag]             @continuedev/config-yaml@1.4.0 -> @continuedev/config-yaml@1.4.0
+2025-08-01T02:41:34.8795841Z  * [new tag]             @continuedev/config-yaml@1.5.0 -> @continuedev/config-yaml@1.5.0
+2025-08-01T02:41:34.8797352Z  * [new tag]             @continuedev/config-yaml@1.6.0 -> @continuedev/config-yaml@1.6.0
+2025-08-01T02:41:34.8798972Z  * [new tag]             @continuedev/openai-adapters@1.0.0 -> @continuedev/openai-adapters@1.0.0
+2025-08-01T02:41:34.8800791Z  * [new tag]             @continuedev/openai-adapters@1.1.0 -> @continuedev/openai-adapters@1.1.0
+2025-08-01T02:41:34.8802360Z  * [new tag]             @continuedev/openai-adapters@1.2.0 -> @continuedev/openai-adapters@1.2.0
+2025-08-01T02:41:34.8880568Z  * [new tag]             @continuedev/openai-adapters@1.3.0 -> @continuedev/openai-adapters@1.3.0
+2025-08-01T02:41:34.8881943Z  * [new tag]             @continuedev/openai-adapters@1.4.0 -> @continuedev/openai-adapters@1.4.0
+2025-08-01T02:41:34.8883234Z  * [new tag]             @continuedev/openai-adapters@1.4.1 -> @continuedev/openai-adapters@1.4.1
+2025-08-01T02:41:34.8884408Z  * [new tag]             nate/apple-developer-finally -> nate/apple-developer-finally
+2025-08-01T02:41:34.8885504Z  * [new tag]             pe/ai-demo-night         -> pe/ai-demo-night
+2025-08-01T02:41:34.8886258Z  * [new tag]             pe/docs-documentation    -> pe/docs-documentation
+2025-08-01T02:41:34.8887059Z  * [new tag]             pe/tagToString-fix       -> pe/tagToString-fix
+2025-08-01T02:41:34.8888013Z  * [new tag]             pe/unsupported-cpu-check-pt-2 -> pe/unsupported-cpu-check-pt-2
+2025-08-01T02:41:34.8888967Z  * [new tag]             pe/win-arm64-lancedb-pt2 -> pe/win-arm64-lancedb-pt2
+2025-08-01T02:41:34.8889942Z  * [new tag]             v0.0.38-jetbrains        -> v0.0.38-jetbrains
+2025-08-01T02:41:34.8890634Z  * [new tag]             v0.0.39-jetbrains        -> v0.0.39-jetbrains
+2025-08-01T02:41:34.8891341Z  * [new tag]             v0.0.42-jetbrains        -> v0.0.42-jetbrains
+2025-08-01T02:41:34.8892138Z  * [new tag]             v0.0.43-jetbrains        -> v0.0.43-jetbrains
+2025-08-01T02:41:34.8892874Z  * [new tag]             v0.0.44-jetbrains        -> v0.0.44-jetbrains
+2025-08-01T02:41:34.8893559Z  * [new tag]             v0.0.45-jetbrains        -> v0.0.45-jetbrains
+2025-08-01T02:41:34.8894240Z  * [new tag]             v0.0.50-jetbrains        -> v0.0.50-jetbrains
+2025-08-01T02:41:34.8894935Z  * [new tag]             v0.0.51-jetbrains        -> v0.0.51-jetbrains
+2025-08-01T02:41:34.8895699Z  * [new tag]             v0.0.52-jetbrains        -> v0.0.52-jetbrains
+2025-08-01T02:41:34.8896448Z  * [new tag]             v0.0.53-jetbrains        -> v0.0.53-jetbrains
+2025-08-01T02:41:34.8897122Z  * [new tag]             v0.0.54-jetbrains        -> v0.0.54-jetbrains
+2025-08-01T02:41:34.8897591Z  * [new tag]             v0.0.55-jetbrains        -> v0.0.55-jetbrains
+2025-08-01T02:41:34.8898032Z  * [new tag]             v0.0.56-jetbrains        -> v0.0.56-jetbrains
+2025-08-01T02:41:34.8898547Z  * [new tag]             v0.0.62-jetbrains        -> v0.0.62-jetbrains
+2025-08-01T02:41:34.8899549Z  * [new tag]             v0.0.63-jetbrains        -> v0.0.63-jetbrains
+2025-08-01T02:41:34.8900287Z  * [new tag]             v0.0.64-jetbrains        -> v0.0.64-jetbrains
+2025-08-01T02:41:34.8900994Z  * [new tag]             v0.0.65-jetbrains        -> v0.0.65-jetbrains
+2025-08-01T02:41:34.8901876Z  * [new tag]             v0.0.66-jetbrains        -> v0.0.66-jetbrains
+2025-08-01T02:41:34.8902558Z  * [new tag]             v0.0.67-jetbrains        -> v0.0.67-jetbrains
+2025-08-01T02:41:34.8903229Z  * [new tag]             v0.0.68-jetbrains        -> v0.0.68-jetbrains
+2025-08-01T02:41:34.8903894Z  * [new tag]             v0.0.69-jetbrains        -> v0.0.69-jetbrains
+2025-08-01T02:41:34.8904546Z  * [new tag]             v0.0.70-jetbrains        -> v0.0.70-jetbrains
+2025-08-01T02:41:34.8905207Z  * [new tag]             v0.0.71-jetbrains        -> v0.0.71-jetbrains
+2025-08-01T02:41:34.8905862Z  * [new tag]             v0.0.72-jetbrains        -> v0.0.72-jetbrains
+2025-08-01T02:41:34.8906521Z  * [new tag]             v0.0.74-jetbrains        -> v0.0.74-jetbrains
+2025-08-01T02:41:34.8907183Z  * [new tag]             v0.0.75-jetbrains        -> v0.0.75-jetbrains
+2025-08-01T02:41:34.8907835Z  * [new tag]             v0.0.76-jetbrains        -> v0.0.76-jetbrains
+2025-08-01T02:41:34.8908503Z  * [new tag]             v0.0.77-jetbrains        -> v0.0.77-jetbrains
+2025-08-01T02:41:34.8909313Z  * [new tag]             v0.0.78-jetbrains        -> v0.0.78-jetbrains
+2025-08-01T02:41:34.8909973Z  * [new tag]             v0.0.79-jetbrains        -> v0.0.79-jetbrains
+2025-08-01T02:41:34.8910630Z  * [new tag]             v0.0.80-jetbrains        -> v0.0.80-jetbrains
+2025-08-01T02:41:34.8911285Z  * [new tag]             v0.0.81-jetbrains        -> v0.0.81-jetbrains
+2025-08-01T02:41:34.8911934Z  * [new tag]             v0.0.82-jetbrains        -> v0.0.82-jetbrains
+2025-08-01T02:41:34.8912595Z  * [new tag]             v0.0.83-jetbrains        -> v0.0.83-jetbrains
+2025-08-01T02:41:34.8913245Z  * [new tag]             v0.0.84-jetbrains        -> v0.0.84-jetbrains
+2025-08-01T02:41:34.8914097Z  * [new tag]             v0.0.85-jetbrains        -> v0.0.85-jetbrains
+2025-08-01T02:41:34.8914763Z  * [new tag]             v0.0.86-jetbrains        -> v0.0.86-jetbrains
+2025-08-01T02:41:34.8915423Z  * [new tag]             v0.0.87-jetbrains        -> v0.0.87-jetbrains
+2025-08-01T02:41:34.8916084Z  * [new tag]             v0.0.88-jetbrains        -> v0.0.88-jetbrains
+2025-08-01T02:41:34.8916752Z  * [new tag]             v0.0.89-jetbrains        -> v0.0.89-jetbrains
+2025-08-01T02:41:34.8917455Z  * [new tag]             v0.0.90-jetbrains        -> v0.0.90-jetbrains
+2025-08-01T02:41:34.8918119Z  * [new tag]             v0.0.91-jetbrains        -> v0.0.91-jetbrains
+2025-08-01T02:41:34.8918783Z  * [new tag]             v0.0.92-jetbrains        -> v0.0.92-jetbrains
+2025-08-01T02:41:34.8919569Z  * [new tag]             v0.8.20-vscode           -> v0.8.20-vscode
+2025-08-01T02:41:34.8920219Z  * [new tag]             v0.8.21-vscode           -> v0.8.21-vscode
+2025-08-01T02:41:34.8920909Z  * [new tag]             v0.8.22-vscode           -> v0.8.22-vscode
+2025-08-01T02:41:34.8921549Z  * [new tag]             v0.8.23-vscode           -> v0.8.23-vscode
+2025-08-01T02:41:34.8922192Z  * [new tag]             v0.8.24-vscode           -> v0.8.24-vscode
+2025-08-01T02:41:34.8922827Z  * [new tag]             v0.8.25-vscode           -> v0.8.25-vscode
+2025-08-01T02:41:34.8923459Z  * [new tag]             v0.8.26-vscode           -> v0.8.26-vscode
+2025-08-01T02:41:34.8924091Z  * [new tag]             v0.8.27-vscode           -> v0.8.27-vscode
+2025-08-01T02:41:34.8924710Z  * [new tag]             v0.8.28-vscode           -> v0.8.28-vscode
+2025-08-01T02:41:34.8925341Z  * [new tag]             v0.8.29-vscode           -> v0.8.29-vscode
+2025-08-01T02:41:34.8926023Z  * [new tag]             v0.8.30-vscode           -> v0.8.30-vscode
+2025-08-01T02:41:34.8926649Z  * [new tag]             v0.8.31-vscode           -> v0.8.31-vscode
+2025-08-01T02:41:34.8927289Z  * [new tag]             v0.8.32-vscode           -> v0.8.32-vscode
+2025-08-01T02:41:34.8927933Z  * [new tag]             v0.8.33-vscode           -> v0.8.33-vscode
+2025-08-01T02:41:34.8928551Z  * [new tag]             v0.8.34-vscode           -> v0.8.34-vscode
+2025-08-01T02:41:34.8929490Z  * [new tag]             v0.8.35-vscode           -> v0.8.35-vscode
+2025-08-01T02:41:34.8930148Z  * [new tag]             v0.8.36-vscode           -> v0.8.36-vscode
+2025-08-01T02:41:34.8930802Z  * [new tag]             v0.8.37-vscode           -> v0.8.37-vscode
+2025-08-01T02:41:34.8931441Z  * [new tag]             v0.8.38-vscode           -> v0.8.38-vscode
+2025-08-01T02:41:34.8932064Z  * [new tag]             v0.8.39-vscode           -> v0.8.39-vscode
+2025-08-01T02:41:34.8932694Z  * [new tag]             v0.8.40-vscode           -> v0.8.40-vscode
+2025-08-01T02:41:34.8933329Z  * [new tag]             v0.8.41-vscode           -> v0.8.41-vscode
+2025-08-01T02:41:34.8933950Z  * [new tag]             v0.8.42-vscode           -> v0.8.42-vscode
+2025-08-01T02:41:34.8934600Z  * [new tag]             v0.8.43-vscode           -> v0.8.43-vscode
+2025-08-01T02:41:34.8935241Z  * [new tag]             v0.8.44-vscode           -> v0.8.44-vscode
+2025-08-01T02:41:34.8935859Z  * [new tag]             v0.8.45-vscode           -> v0.8.45-vscode
+2025-08-01T02:41:34.8936502Z  * [new tag]             v0.8.46-vscode           -> v0.8.46-vscode
+2025-08-01T02:41:34.8937129Z  * [new tag]             v0.8.47-vscode           -> v0.8.47-vscode
+2025-08-01T02:41:34.8937752Z  * [new tag]             v0.8.48-vscode           -> v0.8.48-vscode
+2025-08-01T02:41:34.8938375Z  * [new tag]             v0.8.49-vscode           -> v0.8.49-vscode
+2025-08-01T02:41:34.8938998Z  * [new tag]             v0.8.50-vscode           -> v0.8.50-vscode
+2025-08-01T02:41:34.8939772Z  * [new tag]             v0.8.51-vscode           -> v0.8.51-vscode
+2025-08-01T02:41:34.8940406Z  * [new tag]             v0.8.52-vscode           -> v0.8.52-vscode
+2025-08-01T02:41:34.8941054Z  * [new tag]             v0.8.53-vscode           -> v0.8.53-vscode
+2025-08-01T02:41:34.8941902Z  * [new tag]             v0.8.54-vscode           -> v0.8.54-vscode
+2025-08-01T02:41:34.8942537Z  * [new tag]             v0.8.55-vscode           -> v0.8.55-vscode
+2025-08-01T02:41:34.8943168Z  * [new tag]             v0.8.56-vscode           -> v0.8.56-vscode
+2025-08-01T02:41:34.8943796Z  * [new tag]             v0.8.57-vscode           -> v0.8.57-vscode
+2025-08-01T02:41:34.8944424Z  * [new tag]             v0.8.58-vscode           -> v0.8.58-vscode
+2025-08-01T02:41:34.8945048Z  * [new tag]             v0.8.59-vscode           -> v0.8.59-vscode
+2025-08-01T02:41:34.8945678Z  * [new tag]             v0.8.60-vscode           -> v0.8.60-vscode
+2025-08-01T02:41:34.8946305Z  * [new tag]             v0.8.61-vscode           -> v0.8.61-vscode
+2025-08-01T02:41:34.8946931Z  * [new tag]             v0.8.62-vscode           -> v0.8.62-vscode
+2025-08-01T02:41:34.8947559Z  * [new tag]             v0.8.63-vscode           -> v0.8.63-vscode
+2025-08-01T02:41:34.8948180Z  * [new tag]             v0.8.64-vscode           -> v0.8.64-vscode
+2025-08-01T02:41:34.8948837Z  * [new tag]             v0.8.65-vscode           -> v0.8.65-vscode
+2025-08-01T02:41:34.8949620Z  * [new tag]             v0.8.66-vscode           -> v0.8.66-vscode
+2025-08-01T02:41:34.8950393Z  * [new tag]             v0.8.67-vscode-release-actual -> v0.8.67-vscode-release-actual
+2025-08-01T02:41:34.8951146Z  * [new tag]             v0.8.68-vscode           -> v0.8.68-vscode
+2025-08-01T02:41:34.8951790Z  * [new tag]             v0.9.119-vscode          -> v0.9.119-vscode
+2025-08-01T02:41:34.8952444Z  * [new tag]             v0.9.120-vscode          -> v0.9.120-vscode
+2025-08-01T02:41:34.8953095Z  * [new tag]             v0.9.121-vscode          -> v0.9.121-vscode
+2025-08-01T02:41:34.8953758Z  * [new tag]             v0.9.122-vscode          -> v0.9.122-vscode
+2025-08-01T02:41:34.8954404Z  * [new tag]             v0.9.123-vscode          -> v0.9.123-vscode
+2025-08-01T02:41:34.8955727Z  * [new tag]             v0.9.124-vscode          -> v0.9.124-vscode
+2025-08-01T02:41:34.8957537Z  * [new tag]             v0.9.125-vscode          -> v0.9.125-vscode
+2025-08-01T02:41:34.8958627Z  * [new tag]             v0.9.126-vscode          -> v0.9.126-vscode
+2025-08-01T02:41:34.8960434Z  * [new tag]             v0.9.127-vscode          -> v0.9.127-vscode
+2025-08-01T02:41:34.8961486Z  * [new tag]             v0.9.128-vscode          -> v0.9.128-vscode
+2025-08-01T02:41:34.8962775Z  * [new tag]             v0.9.129-vscode          -> v0.9.129-vscode
+2025-08-01T02:41:34.8964065Z  * [new tag]             v0.9.130-vscode          -> v0.9.130-vscode
+2025-08-01T02:41:34.8965372Z  * [new tag]             v0.9.131-vscode          -> v0.9.131-vscode
+2025-08-01T02:41:34.8966621Z  * [new tag]             v0.9.132-vscode          -> v0.9.132-vscode
+2025-08-01T02:41:34.8967903Z  * [new tag]             v0.9.133-vscode          -> v0.9.133-vscode
+2025-08-01T02:41:34.8969468Z  * [new tag]             v0.9.134-vscode          -> v0.9.134-vscode
+2025-08-01T02:41:34.8970981Z  * [new tag]             v0.9.135-vscode          -> v0.9.135-vscode
+2025-08-01T02:41:34.8972279Z  * [new tag]             v0.9.137-vscode          -> v0.9.137-vscode
+2025-08-01T02:41:34.8973883Z  * [new tag]             v0.9.138-vscode          -> v0.9.138-vscode
+2025-08-01T02:41:34.8975154Z  * [new tag]             v0.9.139-vscode          -> v0.9.139-vscode
+2025-08-01T02:41:34.8976446Z  * [new tag]             v0.9.140-vscode          -> v0.9.140-vscode
+2025-08-01T02:41:34.8977834Z  * [new tag]             v0.9.141-vscode          -> v0.9.141-vscode
+2025-08-01T02:41:34.8980323Z  * [new tag]             v0.9.142-vscode          -> v0.9.142-vscode
+2025-08-01T02:41:34.8981425Z  * [new tag]             v0.9.143-vscode          -> v0.9.143-vscode
+2025-08-01T02:41:34.8982689Z  * [new tag]             v0.9.144-vscode          -> v0.9.144-vscode
+2025-08-01T02:41:34.8983956Z  * [new tag]             v0.9.145-vscode          -> v0.9.145-vscode
+2025-08-01T02:41:34.8985258Z  * [new tag]             v0.9.146-vscode          -> v0.9.146-vscode
+2025-08-01T02:41:34.8986584Z  * [new tag]             v0.9.147-vscode          -> v0.9.147-vscode
+2025-08-01T02:41:34.8987894Z  * [new tag]             v0.9.148-vscode          -> v0.9.148-vscode
+2025-08-01T02:41:34.8989329Z  * [new tag]             v0.9.149-vscode          -> v0.9.149-vscode
+2025-08-01T02:41:34.8991080Z  * [new tag]             v0.9.150-vscode          -> v0.9.150-vscode
+2025-08-01T02:41:34.8992197Z  * [new tag]             v0.9.151-vscode          -> v0.9.151-vscode
+2025-08-01T02:41:34.8993460Z  * [new tag]             v0.9.152-vscode          -> v0.9.152-vscode
+2025-08-01T02:41:34.8994787Z  * [new tag]             v0.9.153-vscode          -> v0.9.153-vscode
+2025-08-01T02:41:34.8996590Z  * [new tag]             v0.9.154-vscode          -> v0.9.154-vscode
+2025-08-01T02:41:34.8997714Z  * [new tag]             v0.9.155-vscode          -> v0.9.155-vscode
+2025-08-01T02:41:34.8999011Z  * [new tag]             v0.9.156-vscode          -> v0.9.156-vscode
+2025-08-01T02:41:34.9000979Z  * [new tag]             v0.9.157-vscode          -> v0.9.157-vscode
+2025-08-01T02:41:34.9002335Z  * [new tag]             v0.9.158-vscode          -> v0.9.158-vscode
+2025-08-01T02:41:34.9004006Z  * [new tag]             v0.9.159-vscode          -> v0.9.159-vscode
+2025-08-01T02:41:34.9005770Z  * [new tag]             v0.9.162-vscode          -> v0.9.162-vscode
+2025-08-01T02:41:34.9007073Z  * [new tag]             v0.9.163-vscode          -> v0.9.163-vscode
+2025-08-01T02:41:34.9008746Z  * [new tag]             v0.9.164-vscode          -> v0.9.164-vscode
+2025-08-01T02:41:34.9010471Z  * [new tag]             v0.9.165-vscode          -> v0.9.165-vscode
+2025-08-01T02:41:34.9011879Z  * [new tag]             v0.9.166-vscode          -> v0.9.166-vscode
+2025-08-01T02:41:34.9013552Z  * [new tag]             v0.9.167-vscode          -> v0.9.167-vscode
+2025-08-01T02:41:34.9014914Z  * [new tag]             v0.9.168-vscode          -> v0.9.168-vscode
+2025-08-01T02:41:34.9016611Z  * [new tag]             v0.9.169-vscode          -> v0.9.169-vscode
+2025-08-01T02:41:34.9018405Z  * [new tag]             v0.9.170-vscode          -> v0.9.170-vscode
+2025-08-01T02:41:34.9019952Z  * [new tag]             v0.9.171-vscode          -> v0.9.171-vscode
+2025-08-01T02:41:34.9022207Z  * [new tag]             v0.9.172-vscode          -> v0.9.172-vscode
+2025-08-01T02:41:34.9023423Z  * [new tag]             v0.9.174-vscode          -> v0.9.174-vscode
+2025-08-01T02:41:34.9025185Z  * [new tag]             v0.9.175-vscode          -> v0.9.175-vscode
+2025-08-01T02:41:34.9026472Z  * [new tag]             v0.9.176-vscode          -> v0.9.176-vscode
+2025-08-01T02:41:34.9028712Z  * [new tag]             v0.9.177-vscode          -> v0.9.177-vscode
+2025-08-01T02:41:34.9031236Z  * [new tag]             v0.9.178-vscode          -> v0.9.178-vscode
+2025-08-01T02:41:34.9032545Z  * [new tag]             v0.9.179-vscode          -> v0.9.179-vscode
+2025-08-01T02:41:34.9034244Z  * [new tag]             v0.9.180-vscode          -> v0.9.180-vscode
+2025-08-01T02:41:34.9035666Z  * [new tag]             v0.9.181-vscode          -> v0.9.181-vscode
+2025-08-01T02:41:34.9038213Z  * [new tag]             v0.9.182-vscode          -> v0.9.182-vscode
+2025-08-01T02:41:34.9039612Z  * [new tag]             v0.9.184-vscode          -> v0.9.184-vscode
+2025-08-01T02:41:34.9042405Z  * [new tag]             v0.9.185-vscode          -> v0.9.185-vscode
+2025-08-01T02:41:34.9043791Z  * [new tag]             v0.9.186-vscode          -> v0.9.186-vscode
+2025-08-01T02:41:34.9046425Z  * [new tag]             v0.9.187-vscode          -> v0.9.187-vscode
+2025-08-01T02:41:34.9049681Z  * [new tag]             v0.9.188-vscode          -> v0.9.188-vscode
+2025-08-01T02:41:34.9051040Z  * [new tag]             v0.9.189-vscode          -> v0.9.189-vscode
+2025-08-01T02:41:34.9054644Z  * [new tag]             v0.9.190-vscode          -> v0.9.190-vscode
+2025-08-01T02:41:34.9057262Z  * [new tag]             v0.9.191-vscode          -> v0.9.191-vscode
+2025-08-01T02:41:34.9060291Z  * [new tag]             v0.9.192-vscode          -> v0.9.192-vscode
+2025-08-01T02:41:34.9061790Z  * [new tag]             v0.9.193-vscode          -> v0.9.193-vscode
+2025-08-01T02:41:34.9064683Z  * [new tag]             v0.9.194-vscode          -> v0.9.194-vscode
+2025-08-01T02:41:34.9066070Z  * [new tag]             v0.9.195-vscode          -> v0.9.195-vscode
+2025-08-01T02:41:34.9067645Z  * [new tag]             v0.9.196-vscode          -> v0.9.196-vscode
+2025-08-01T02:41:34.9068927Z  * [new tag]             v0.9.197-vscode          -> v0.9.197-vscode
+2025-08-01T02:41:34.9070797Z  * [new tag]             v0.9.198-vscode          -> v0.9.198-vscode
+2025-08-01T02:41:34.9072183Z  * [new tag]             v0.9.199-vscode          -> v0.9.199-vscode
+2025-08-01T02:41:34.9073752Z  * [new tag]             v0.9.200-vscode          -> v0.9.200-vscode
+2025-08-01T02:41:34.9075014Z  * [new tag]             v0.9.201-vscode          -> v0.9.201-vscode
+2025-08-01T02:41:34.9076356Z  * [new tag]             v0.9.202-vscode          -> v0.9.202-vscode
+2025-08-01T02:41:34.9077671Z  * [new tag]             v0.9.203-vscode          -> v0.9.203-vscode
+2025-08-01T02:41:34.9079497Z  * [new tag]             v0.9.204-vscode          -> v0.9.204-vscode
+2025-08-01T02:41:34.9081141Z  * [new tag]             v0.9.205-vscode          -> v0.9.205-vscode
+2025-08-01T02:41:34.9082536Z  * [new tag]             v0.9.206-vscode          -> v0.9.206-vscode
+2025-08-01T02:41:34.9084124Z  * [new tag]             v0.9.207-vscode          -> v0.9.207-vscode
+2025-08-01T02:41:34.9085527Z  * [new tag]             v0.9.208-vscode          -> v0.9.208-vscode
+2025-08-01T02:41:34.9087230Z  * [new tag]             v0.9.209-vscode          -> v0.9.209-vscode
+2025-08-01T02:41:34.9088509Z  * [new tag]             v0.9.210-vscode          -> v0.9.210-vscode
+2025-08-01T02:41:34.9090114Z  * [new tag]             v0.9.211-vscode          -> v0.9.211-vscode
+2025-08-01T02:41:34.9091696Z  * [new tag]             v0.9.212-vscode          -> v0.9.212-vscode
+2025-08-01T02:41:34.9093093Z  * [new tag]             v0.9.213-vscode          -> v0.9.213-vscode
+2025-08-01T02:41:34.9094820Z  * [new tag]             v0.9.214-vscode          -> v0.9.214-vscode
+2025-08-01T02:41:34.9096036Z  * [new tag]             v0.9.215-vscode          -> v0.9.215-vscode
+2025-08-01T02:41:34.9097961Z  * [new tag]             v0.9.216-vscode          -> v0.9.216-vscode
+2025-08-01T02:41:34.9099312Z  * [new tag]             v0.9.217-vscode          -> v0.9.217-vscode
+2025-08-01T02:41:34.9101026Z  * [new tag]             v0.9.221-vscode          -> v0.9.221-vscode
+2025-08-01T02:41:34.9102334Z  * [new tag]             v0.9.222-vscode          -> v0.9.222-vscode
+2025-08-01T02:41:34.9104055Z  * [new tag]             v0.9.224-vscode          -> v0.9.224-vscode
+2025-08-01T02:41:34.9105365Z  * [new tag]             v0.9.225-vscode          -> v0.9.225-vscode
+2025-08-01T02:41:34.9107073Z  * [new tag]             v0.9.226-vscode          -> v0.9.226-vscode
+2025-08-01T02:41:34.9108414Z  * [new tag]             v0.9.227-vscode          -> v0.9.227-vscode
+2025-08-01T02:41:34.9110458Z  * [new tag]             v0.9.228-vscode          -> v0.9.228-vscode
+2025-08-01T02:41:34.9111806Z  * [new tag]             v0.9.229-vscode          -> v0.9.229-vscode
+2025-08-01T02:41:34.9113516Z  * [new tag]             v0.9.230-vscode          -> v0.9.230-vscode
+2025-08-01T02:41:34.9117740Z  * [new tag]             v0.9.231-vscode          -> v0.9.231-vscode
+2025-08-01T02:41:34.9118450Z  * [new tag]             v0.9.232-vscode          -> v0.9.232-vscode
+2025-08-01T02:41:34.9119290Z  * [new tag]             v0.9.233-vscode          -> v0.9.233-vscode
+2025-08-01T02:41:34.9120313Z  * [new tag]             v0.9.234-vscode          -> v0.9.234-vscode
+2025-08-01T02:41:34.9122249Z  * [new tag]             v0.9.235-vscode          -> v0.9.235-vscode
+2025-08-01T02:41:34.9123416Z  * [new tag]             v0.9.236-vscode          -> v0.9.236-vscode
+2025-08-01T02:41:34.9125184Z  * [new tag]             v0.9.237-vscode          -> v0.9.237-vscode
+2025-08-01T02:41:34.9126768Z  * [new tag]             v0.9.238-vscode          -> v0.9.238-vscode
+2025-08-01T02:41:34.9128465Z  * [new tag]             v0.9.239-vscode          -> v0.9.239-vscode
+2025-08-01T02:41:34.9130584Z  * [new tag]             v0.9.240-vscode          -> v0.9.240-vscode
+2025-08-01T02:41:34.9132299Z  * [new tag]             v0.9.242-vscode          -> v0.9.242-vscode
+2025-08-01T02:41:34.9133911Z  * [new tag]             v0.9.243-vscode          -> v0.9.243-vscode
+2025-08-01T02:41:34.9135800Z  * [new tag]             v0.9.244-vscode          -> v0.9.244-vscode
+2025-08-01T02:41:34.9137645Z  * [new tag]             v0.9.245-vscode          -> v0.9.245-vscode
+2025-08-01T02:41:34.9139572Z  * [new tag]             v0.9.246-vscode          -> v0.9.246-vscode
+2025-08-01T02:41:34.9141421Z  * [new tag]             v0.9.247-vscode          -> v0.9.247-vscode
+2025-08-01T02:41:34.9143276Z  * [new tag]             v0.9.248-vscode          -> v0.9.248-vscode
+2025-08-01T02:41:34.9145051Z  * [new tag]             v0.9.249-vscode          -> v0.9.249-vscode
+2025-08-01T02:41:34.9146822Z  * [new tag]             v0.9.250-vscode          -> v0.9.250-vscode
+2025-08-01T02:41:34.9148895Z  * [new tag]             v0.9.251-vscode          -> v0.9.251-vscode
+2025-08-01T02:41:34.9150535Z  * [new tag]             v0.9.252-vscode          -> v0.9.252-vscode
+2025-08-01T02:41:34.9151898Z  * [new tag]             v0.9.253-vscode          -> v0.9.253-vscode
+2025-08-01T02:41:34.9153702Z  * [new tag]             v0.9.254-vscode          -> v0.9.254-vscode
+2025-08-01T02:41:34.9155140Z  * [new tag]             v0.9.255-vscode          -> v0.9.255-vscode
+2025-08-01T02:41:34.9156910Z  * [new tag]             v0.9.256-vscode          -> v0.9.256-vscode
+2025-08-01T02:41:34.9158484Z  * [new tag]             v0.9.257-vscode          -> v0.9.257-vscode
+2025-08-01T02:41:34.9160699Z  * [new tag]             v0.9.258-vscode          -> v0.9.258-vscode
+2025-08-01T02:41:34.9162614Z  * [new tag]             v0.9.259-vscode          -> v0.9.259-vscode
+2025-08-01T02:41:34.9163933Z  * [new tag]             v0.9.260-vscode          -> v0.9.260-vscode
+2025-08-01T02:41:34.9165842Z  * [new tag]             v0.9.261-vscode          -> v0.9.261-vscode
+2025-08-01T02:41:34.9166972Z  * [new tag]             v0.9.262-vscode          -> v0.9.262-vscode
+2025-08-01T02:41:34.9169372Z  * [new tag]             v0.9.263-vscode          -> v0.9.263-vscode
+2025-08-01T02:41:34.9170556Z  * [new tag]             v0.9.264-vscode          -> v0.9.264-vscode
+2025-08-01T02:41:34.9172397Z  * [new tag]             v0.9.265-vscode          -> v0.9.265-vscode
+2025-08-01T02:41:34.9173780Z  * [new tag]             v0.9.266-vscode          -> v0.9.266-vscode
+2025-08-01T02:41:34.9175742Z  * [new tag]             v0.9.267-vscode          -> v0.9.267-vscode
+2025-08-01T02:41:34.9177166Z  * [new tag]             v0.9.268-vscode          -> v0.9.268-vscode
+2025-08-01T02:41:34.9179302Z  * [new tag]             v0.9.269-vscode          -> v0.9.269-vscode
+2025-08-01T02:41:34.9180491Z  * [new tag]             v0.9.270-vscode          -> v0.9.270-vscode
+2025-08-01T02:41:34.9182457Z  * [new tag]             v0.9.271-vscode          -> v0.9.271-vscode
+2025-08-01T02:41:34.9183880Z  * [new tag]             v1.0.0-jetbrains         -> v1.0.0-jetbrains
+2025-08-01T02:41:34.9185142Z  * [new tag]             v1.0.1-jetbrains         -> v1.0.1-jetbrains
+2025-08-01T02:41:34.9187047Z  * [new tag]             v1.0.1-vscode            -> v1.0.1-vscode
+2025-08-01T02:41:34.9188506Z  * [new tag]             v1.0.10-jetbrains        -> v1.0.10-jetbrains
+2025-08-01T02:41:34.9190186Z  * [new tag]             v1.0.10-vscode           -> v1.0.10-vscode
+2025-08-01T02:41:34.9192178Z  * [new tag]             v1.0.11-jetbrains        -> v1.0.11-jetbrains
+2025-08-01T02:41:34.9193463Z  * [new tag]             v1.0.11-vscode           -> v1.0.11-vscode
+2025-08-01T02:41:34.9194874Z  * [new tag]             v1.0.12-jetbrains        -> v1.0.12-jetbrains
+2025-08-01T02:41:34.9196248Z  * [new tag]             v1.0.12-vscode           -> v1.0.12-vscode
+2025-08-01T02:41:34.9197955Z  * [new tag]             v1.0.13-jetbrains        -> v1.0.13-jetbrains
+2025-08-01T02:41:34.9199497Z  * [new tag]             v1.0.13-vscode           -> v1.0.13-vscode
+2025-08-01T02:41:34.9201430Z  * [new tag]             v1.0.14-jetbrains        -> v1.0.14-jetbrains
+2025-08-01T02:41:34.9202729Z  * [new tag]             v1.0.14-vscode           -> v1.0.14-vscode
+2025-08-01T02:41:34.9204624Z  * [new tag]             v1.0.15-jetbrains        -> v1.0.15-jetbrains
+2025-08-01T02:41:34.9205865Z  * [new tag]             v1.0.15-vscode           -> v1.0.15-vscode
+2025-08-01T02:41:34.9207703Z  * [new tag]             v1.0.16-jetbrains        -> v1.0.16-jetbrains
+2025-08-01T02:41:34.9208995Z  * [new tag]             v1.0.16-vscode           -> v1.0.16-vscode
+2025-08-01T02:41:34.9211114Z  * [new tag]             v1.0.17-jetbrains        -> v1.0.17-jetbrains
+2025-08-01T02:41:34.9212351Z  * [new tag]             v1.0.17-vscode           -> v1.0.17-vscode
+2025-08-01T02:41:34.9214173Z  * [new tag]             v1.0.18-jetbrains        -> v1.0.18-jetbrains
+2025-08-01T02:41:34.9215469Z  * [new tag]             v1.0.18-vscode           -> v1.0.18-vscode
+2025-08-01T02:41:34.9217091Z  * [new tag]             v1.0.19-release          -> v1.0.19-release
+2025-08-01T02:41:34.9218406Z  * [new tag]             v1.0.19-vscode           -> v1.0.19-vscode
+2025-08-01T02:41:34.9220512Z  * [new tag]             v1.0.2-jetbrains         -> v1.0.2-jetbrains
+2025-08-01T02:41:34.9221677Z  * [new tag]             v1.0.2-vscode            -> v1.0.2-vscode
+2025-08-01T02:41:34.9223560Z  * [new tag]             v1.0.21-jetbrains        -> v1.0.21-jetbrains
+2025-08-01T02:41:34.9225002Z  * [new tag]             v1.0.22-jetbrains        -> v1.0.22-jetbrains
+2025-08-01T02:41:34.9226786Z  * [new tag]             v1.0.23-jetbrains        -> v1.0.23-jetbrains
+2025-08-01T02:41:34.9228481Z  * [new tag]             v1.0.24-jetbrains        -> v1.0.24-jetbrains
+2025-08-01T02:41:34.9230052Z  * [new tag]             v1.0.25-jetbrains        -> v1.0.25-jetbrains
+2025-08-01T02:41:34.9231844Z  * [new tag]             v1.0.26-jetbrains        -> v1.0.26-jetbrains
+2025-08-01T02:41:34.9233211Z  * [new tag]             v1.0.27-jetbrains        -> v1.0.27-jetbrains
+2025-08-01T02:41:34.9235233Z  * [new tag]             v1.0.28-jetbrains        -> v1.0.28-jetbrains
+2025-08-01T02:41:34.9236735Z  * [new tag]             v1.0.29-jetbrains        -> v1.0.29-jetbrains
+2025-08-01T02:41:34.9238529Z  * [new tag]             v1.0.3-jetbrains         -> v1.0.3-jetbrains
+2025-08-01T02:41:34.9239988Z  * [new tag]             v1.0.3-vscode            -> v1.0.3-vscode
+2025-08-01T02:41:34.9241849Z  * [new tag]             v1.0.30-jetbrains        -> v1.0.30-jetbrains
+2025-08-01T02:41:34.9243575Z  * [new tag]             v1.0.31-jetbrains        -> v1.0.31-jetbrains
+2025-08-01T02:41:34.9245237Z  * [new tag]             v1.0.33-jetbrains        -> v1.0.33-jetbrains
+2025-08-01T02:41:34.9246929Z  * [new tag]             v1.0.4-jetbrains         -> v1.0.4-jetbrains
+2025-08-01T02:41:34.9248224Z  * [new tag]             v1.0.4-vscode            -> v1.0.4-vscode
+2025-08-01T02:41:34.9250187Z  * [new tag]             v1.0.5-jetbrains         -> v1.0.5-jetbrains
+2025-08-01T02:41:34.9251468Z  * [new tag]             v1.0.5-vscode            -> v1.0.5-vscode
+2025-08-01T02:41:34.9253406Z  * [new tag]             v1.0.6-jetbrains         -> v1.0.6-jetbrains
+2025-08-01T02:41:34.9254702Z  * [new tag]             v1.0.6-vscode            -> v1.0.6-vscode
+2025-08-01T02:41:34.9256619Z  * [new tag]             v1.0.7-jetbrains         -> v1.0.7-jetbrains
+2025-08-01T02:41:34.9257943Z  * [new tag]             v1.0.7-vscode            -> v1.0.7-vscode
+2025-08-01T02:41:34.9260030Z  * [new tag]             v1.0.8-jetbrains         -> v1.0.8-jetbrains
+2025-08-01T02:41:34.9261425Z  * [new tag]             v1.0.8-vscode            -> v1.0.8-vscode
+2025-08-01T02:41:34.9263284Z  * [new tag]             v1.0.9-jetbrains         -> v1.0.9-jetbrains
+2025-08-01T02:41:34.9264626Z  * [new tag]             v1.0.9-vscode            -> v1.0.9-vscode
+2025-08-01T02:41:34.9266173Z  * [new tag]             v1.1.0-vscode            -> v1.1.0-vscode
+2025-08-01T02:41:34.9267971Z  * [new tag]             v1.1.1-vscode            -> v1.1.1-vscode
+2025-08-01T02:41:34.9269952Z  * [new tag]             v1.1.10-vscode           -> v1.1.10-vscode
+2025-08-01T02:41:34.9271698Z  * [new tag]             v1.1.12-vscode           -> v1.1.12-vscode
+2025-08-01T02:41:34.9278180Z  * [new tag]             v1.1.13-vscode           -> v1.1.13-vscode
+2025-08-01T02:41:34.9278893Z  * [new tag]             v1.1.14-vscode           -> v1.1.14-vscode
+2025-08-01T02:41:34.9279697Z  * [new tag]             v1.1.15-vscode           -> v1.1.15-vscode
+2025-08-01T02:41:34.9280328Z  * [new tag]             v1.1.16-vscode           -> v1.1.16-vscode
+2025-08-01T02:41:34.9281255Z  * [new tag]             v1.1.17-vscode           -> v1.1.17-vscode
+2025-08-01T02:41:34.9282261Z  * [new tag]             v1.1.18-vscode           -> v1.1.18-vscode
+2025-08-01T02:41:34.9283571Z  * [new tag]             v1.1.19-vscode           -> v1.1.19-vscode
+2025-08-01T02:41:34.9284258Z  * [new tag]             v1.1.2-vscode            -> v1.1.2-vscode
+2025-08-01T02:41:34.9285979Z  * [new tag]             v1.1.20-vscode           -> v1.1.20-vscode
+2025-08-01T02:41:34.9288200Z  * [new tag]             v1.1.21-vscode           -> v1.1.21-vscode
+2025-08-01T02:41:34.9290966Z  * [new tag]             v1.1.22-vscode           -> v1.1.22-vscode
+2025-08-01T02:41:34.9292634Z  * [new tag]             v1.1.23-vscode           -> v1.1.23-vscode
+2025-08-01T02:41:34.9294254Z  * [new tag]             v1.1.24-vscode           -> v1.1.24-vscode
+2025-08-01T02:41:34.9296558Z  * [new tag]             v1.1.25-vscode           -> v1.1.25-vscode
+2025-08-01T02:41:34.9297598Z  * [new tag]             v1.1.26-vscode           -> v1.1.26-vscode
+2025-08-01T02:41:34.9299764Z  * [new tag]             v1.1.27-vscode           -> v1.1.27-vscode
+2025-08-01T02:41:34.9300481Z  * [new tag]             v1.1.28-vscode           -> v1.1.28-vscode
+2025-08-01T02:41:34.9303243Z  * [new tag]             v1.1.29-vscode           -> v1.1.29-vscode
+2025-08-01T02:41:34.9303926Z  * [new tag]             v1.1.3-vscode            -> v1.1.3-vscode
+2025-08-01T02:41:34.9305792Z  * [new tag]             v1.1.30-vscode           -> v1.1.30-vscode
+2025-08-01T02:41:34.9306470Z  * [new tag]             v1.1.31-vscode           -> v1.1.31-vscode
+2025-08-01T02:41:34.9309346Z  * [new tag]             v1.1.32-vscode           -> v1.1.32-vscode
+2025-08-01T02:41:34.9310293Z  * [new tag]             v1.1.33-vscode           -> v1.1.33-vscode
+2025-08-01T02:41:34.9310996Z  * [new tag]             v1.1.34-vscode           -> v1.1.34-vscode
+2025-08-01T02:41:34.9313808Z  * [new tag]             v1.1.35-vscode           -> v1.1.35-vscode
+2025-08-01T02:41:34.9314680Z  * [new tag]             v1.1.36-vscode           -> v1.1.36-vscode
+2025-08-01T02:41:34.9316715Z  * [new tag]             v1.1.37-vscode           -> v1.1.37-vscode
+2025-08-01T02:41:34.9317404Z  * [new tag]             v1.1.39-vscode           -> v1.1.39-vscode
+2025-08-01T02:41:34.9318037Z  * [new tag]             v1.1.4-vscode            -> v1.1.4-vscode
+2025-08-01T02:41:34.9319508Z  * [new tag]             v1.1.40-vscode           -> v1.1.40-vscode
+2025-08-01T02:41:34.9321786Z  * [new tag]             v1.1.41-vscode           -> v1.1.41-vscode
+2025-08-01T02:41:34.9323010Z  * [new tag]             v1.1.42-vscode           -> v1.1.42-vscode
+2025-08-01T02:41:34.9324890Z  * [new tag]             v1.1.43-vscode           -> v1.1.43-vscode
+2025-08-01T02:41:34.9326287Z  * [new tag]             v1.1.44-vscode           -> v1.1.44-vscode
+2025-08-01T02:41:34.9328049Z  * [new tag]             v1.1.45-vscode           -> v1.1.45-vscode
+2025-08-01T02:41:34.9329649Z  * [new tag]             v1.1.46-vscode           -> v1.1.46-vscode
+2025-08-01T02:41:34.9331685Z  * [new tag]             v1.1.47-vscode           -> v1.1.47-vscode
+2025-08-01T02:41:34.9333051Z  * [new tag]             v1.1.48-vscode           -> v1.1.48-vscode
+2025-08-01T02:41:34.9334628Z  * [new tag]             v1.1.49-vscode           -> v1.1.49-vscode
+2025-08-01T02:41:34.9336466Z  * [new tag]             v1.1.5-vscode            -> v1.1.5-vscode
+2025-08-01T02:41:34.9338127Z  * [new tag]             v1.1.51-vscode           -> v1.1.51-vscode
+2025-08-01T02:41:34.9339580Z  * [new tag]             v1.1.52-vscode           -> v1.1.52-vscode
+2025-08-01T02:41:34.9341346Z  * [new tag]             v1.1.53-vscode           -> v1.1.53-vscode
+2025-08-01T02:41:34.9343519Z  * [new tag]             v1.1.54-vscode           -> v1.1.54-vscode
+2025-08-01T02:41:34.9344970Z  * [new tag]             v1.1.55-vscode           -> v1.1.55-vscode
+2025-08-01T02:41:34.9346885Z  * [new tag]             v1.1.56-vscode           -> v1.1.56-vscode
+2025-08-01T02:41:34.9348254Z  * [new tag]             v1.1.57-vscode           -> v1.1.57-vscode
+2025-08-01T02:41:34.9350249Z  * [new tag]             v1.1.58-vscode           -> v1.1.58-vscode
+2025-08-01T02:41:34.9351575Z  * [new tag]             v1.1.6-vscode            -> v1.1.6-vscode
+2025-08-01T02:41:34.9352953Z  * [new tag]             v1.1.60-vscode           -> v1.1.60-vscode
+2025-08-01T02:41:34.9354309Z  * [new tag]             v1.1.61-vscode           -> v1.1.61-vscode
+2025-08-01T02:41:34.9355723Z  * [new tag]             v1.1.62-vscode           -> v1.1.62-vscode
+2025-08-01T02:41:34.9357468Z  * [new tag]             v1.1.63-vscode           -> v1.1.63-vscode
+2025-08-01T02:41:34.9358708Z  * [new tag]             v1.1.64-vscode           -> v1.1.64-vscode
+2025-08-01T02:41:34.9360815Z  * [new tag]             v1.1.65-vscode           -> v1.1.65-vscode
+2025-08-01T02:41:34.9362009Z  * [new tag]             v1.1.66-vscode           -> v1.1.66-vscode
+2025-08-01T02:41:34.9363392Z  * [new tag]             v1.1.67-vscode           -> v1.1.67-vscode
+2025-08-01T02:41:34.9364753Z  * [new tag]             v1.1.69-vscode           -> v1.1.69-vscode
+2025-08-01T02:41:34.9366619Z  * [new tag]             v1.1.7-vscode            -> v1.1.7-vscode
+2025-08-01T02:41:34.9368059Z  * [new tag]             v1.1.70-vscode           -> v1.1.70-vscode
+2025-08-01T02:41:34.9370080Z  * [new tag]             v1.1.71-vscode           -> v1.1.71-vscode
+2025-08-01T02:41:34.9371234Z  * [new tag]             v1.1.72-vscode           -> v1.1.72-vscode
+2025-08-01T02:41:34.9373237Z  * [new tag]             v1.1.8-vscode            -> v1.1.8-vscode
+2025-08-01T02:41:34.9374569Z  * [new tag]             v1.1.9-vscode            -> v1.1.9-vscode
+2025-08-01T02:41:34.9378376Z  * [new ref]             cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:34.9480111Z ##[endgroup]
+2025-08-01T02:41:34.9480973Z ##[group]Determining the checkout info
+2025-08-01T02:41:34.9481929Z ##[endgroup]
+2025-08-01T02:41:34.9487691Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:34.9808869Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:34.9837605Z ##[group]Checking out the ref
+2025-08-01T02:41:34.9841932Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:36.0412765Z Updating files:  86% (2037/2354)
+2025-08-01T02:41:36.0448884Z Updating files:  87% (2048/2354)
+2025-08-01T02:41:36.0461954Z Updating files:  88% (2072/2354)
+2025-08-01T02:41:36.0475540Z Updating files:  89% (2096/2354)
+2025-08-01T02:41:36.0492863Z Updating files:  90% (2119/2354)
+2025-08-01T02:41:36.0506632Z Updating files:  91% (2143/2354)
+2025-08-01T02:41:36.0519857Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:36.0529832Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:36.0540939Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:36.0555636Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:36.0568226Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:36.0597905Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:36.0611283Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:36.0630343Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:36.0633050Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:36.0633891Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:36.0668786Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:36.0669413Z 
+2025-08-01T02:41:36.0669884Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:36.0670815Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:36.0671462Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:36.0671814Z 
+2025-08-01T02:41:36.0672052Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:36.0672593Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:36.0672900Z 
+2025-08-01T02:41:36.0673026Z   git switch -c <new-branch-name>
+2025-08-01T02:41:36.0673241Z 
+2025-08-01T02:41:36.0673354Z Or undo this operation with:
+2025-08-01T02:41:36.0673558Z 
+2025-08-01T02:41:36.0673713Z   git switch -
+2025-08-01T02:41:36.0673857Z 
+2025-08-01T02:41:36.0674120Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:36.0674510Z 
+2025-08-01T02:41:36.0674962Z HEAD is now at cd25af4c0 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:36.0771345Z ##[endgroup]
+2025-08-01T02:41:36.0812885Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:36.0835574Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:36.1182783Z Prepare all required actions
+2025-08-01T02:41:36.1183263Z Getting action download info
+2025-08-01T02:41:36.2695251Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:36.2695656Z Version: 4.4.0
+2025-08-01T02:41:36.2696023Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:36.2696531Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:36.2696866Z ##[endgroup]
+2025-08-01T02:41:36.3640484Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:36.3640822Z Version: 4.2.3
+2025-08-01T02:41:36.3641147Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:36.3641577Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:36.3641872Z ##[endgroup]
+2025-08-01T02:41:36.5037600Z ##[group]Run ./.github/actions/build-vscode-extension
+2025-08-01T02:41:36.5037906Z with:
+2025-08-01T02:41:36.5038130Z   platform: linux
+2025-08-01T02:41:36.5038313Z   arch: x64
+2025-08-01T02:41:36.5038488Z   npm_config_arch: x64
+2025-08-01T02:41:36.5038688Z   pre-release: false
+2025-08-01T02:41:36.5038929Z   commit-sha: cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:36.5039375Z env:
+2025-08-01T02:41:36.5040031Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:36.5040225Z ##[endgroup]
+2025-08-01T02:41:36.5167026Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:36.5167263Z with:
+2025-08-01T02:41:36.5167453Z   node-version-file: .nvmrc
+2025-08-01T02:41:36.5167676Z   always-auth: false
+2025-08-01T02:41:36.5167872Z   check-latest: false
+2025-08-01T02:41:36.5168196Z   token: ***
+2025-08-01T02:41:36.5168370Z env:
+2025-08-01T02:41:36.5168857Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:36.5169267Z ##[endgroup]
+2025-08-01T02:41:36.6829502Z Node version file is not JSON file
+2025-08-01T02:41:36.6830868Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:36.6844715Z Attempting to download 20.19.0...
+2025-08-01T02:41:37.0169586Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:37.4738687Z Extracting ...
+2025-08-01T02:41:37.4838011Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/a8210c4c-e350-4989-ab17-896016b415b8 -f /home/runner/work/_temp/cd717268-e288-466e-9e24-c9ff5a604cf0
+2025-08-01T02:41:38.4676902Z Adding to the cache ...
+2025-08-01T02:41:40.0840709Z ##[group]Environment details
+2025-08-01T02:41:40.3159878Z node: v20.19.0
+2025-08-01T02:41:40.3160200Z npm: 10.8.2
+2025-08-01T02:41:40.3160736Z yarn: 1.22.22
+2025-08-01T02:41:40.3161391Z ##[endgroup]
+2025-08-01T02:41:40.3325727Z ##[group]Run echo "target=linux-x64" >> $GITHUB_OUTPUT
+2025-08-01T02:41:40.3326162Z [36;1mecho "target=linux-x64" >> $GITHUB_OUTPUT[0m
+2025-08-01T02:41:40.3358519Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:40.3358856Z env:
+2025-08-01T02:41:40.3360195Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:40.3360429Z ##[endgroup]
+2025-08-01T02:41:40.7016153Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:40.7016381Z with:
+2025-08-01T02:41:40.7016544Z   path: ~/.npm
+2025-08-01T02:41:40.7016946Z   key: Linux-npm-cache-build-152f5aa098a590db62e11211068d4cdfedd299d829a640fd06d2b2a32bffff4a
+2025-08-01T02:41:40.7017413Z   enableCrossOsArchive: false
+2025-08-01T02:41:40.7017642Z   fail-on-cache-miss: false
+2025-08-01T02:41:40.7017862Z   lookup-only: false
+2025-08-01T02:41:40.7018048Z   save-always: false
+2025-08-01T02:41:40.7018228Z env:
+2025-08-01T02:41:40.7018798Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:40.7019005Z ##[endgroup]
+2025-08-01T02:41:40.9048727Z Cache not found for input keys: Linux-npm-cache-build-152f5aa098a590db62e11211068d4cdfedd299d829a640fd06d2b2a32bffff4a
+2025-08-01T02:41:40.9643750Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:40.9643982Z with:
+2025-08-01T02:41:40.9644173Z   path: extensions/vscode/node_modules
+2025-08-01T02:41:40.9644805Z   key: Linux-node-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:41:40.9645226Z   enableCrossOsArchive: false
+2025-08-01T02:41:40.9645459Z   fail-on-cache-miss: false
+2025-08-01T02:41:40.9645676Z   lookup-only: false
+2025-08-01T02:41:40.9645952Z   save-always: false
+2025-08-01T02:41:40.9646265Z env:
+2025-08-01T02:41:40.9647117Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:40.9647346Z ##[endgroup]
+2025-08-01T02:41:41.1693499Z Cache hit for: Linux-node-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:41:42.1267074Z Received 155463731 of 155463731 (100.0%), 164.6 MBs/sec
+2025-08-01T02:41:42.1269757Z Cache Size: ~148 MB (155463731 B)
+2025-08-01T02:41:42.1297457Z [command]/usr/bin/tar -xf /home/runner/work/_temp/4c25b1bf-cb24-466a-bf06-f3201a07a0ff/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:44.5752151Z Cache restored successfully
+2025-08-01T02:41:44.6137941Z Cache restored from key: Linux-node-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:41:44.6802512Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:44.6802814Z with:
+2025-08-01T02:41:44.6803084Z   path: core/node_modules
+2025-08-01T02:41:44.6803629Z   key: Linux-node-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:44.6804168Z   enableCrossOsArchive: false
+2025-08-01T02:41:44.6804508Z   fail-on-cache-miss: false
+2025-08-01T02:41:44.6804920Z   lookup-only: false
+2025-08-01T02:41:44.6805181Z   save-always: false
+2025-08-01T02:41:44.6805463Z env:
+2025-08-01T02:41:44.6806197Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:44.6806496Z ##[endgroup]
+2025-08-01T02:41:44.8902966Z Cache hit for: Linux-node-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:45.9709667Z Received 173939619 of 173939619 (100.0%), 162.3 MBs/sec
+2025-08-01T02:41:45.9710884Z Cache Size: ~166 MB (173939619 B)
+2025-08-01T02:41:45.9808234Z [command]/usr/bin/tar -xf /home/runner/work/_temp/8bca0998-9529-4d8e-a0d1-9197b57c5f27/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:49.0615673Z Cache restored successfully
+2025-08-01T02:41:49.1026407Z Cache restored from key: Linux-node-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:49.1665205Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:49.1665449Z with:
+2025-08-01T02:41:49.1665633Z   path: gui/node_modules
+2025-08-01T02:41:49.1666008Z   key: Linux-node-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:41:49.1666430Z   enableCrossOsArchive: false
+2025-08-01T02:41:49.1666684Z   fail-on-cache-miss: false
+2025-08-01T02:41:49.1667164Z   lookup-only: false
+2025-08-01T02:41:49.1667371Z   save-always: false
+2025-08-01T02:41:49.1667570Z env:
+2025-08-01T02:41:49.1668196Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:49.1668404Z ##[endgroup]
+2025-08-01T02:41:49.3848011Z Cache hit for: Linux-node-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:41:50.1331633Z Received 122542030 of 122542030 (100.0%), 164.6 MBs/sec
+2025-08-01T02:41:50.1333228Z Cache Size: ~117 MB (122542030 B)
+2025-08-01T02:41:50.1360901Z [command]/usr/bin/tar -xf /home/runner/work/_temp/00c9aa10-a463-4868-b596-2a929a424f33/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:52.5876033Z Cache restored successfully
+2025-08-01T02:41:52.6181657Z Cache restored from key: Linux-node-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:41:52.6927316Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:52.6927567Z with:
+2025-08-01T02:41:52.6927778Z   path: packages/*/node_modules
+
+2025-08-01T02:41:52.6928289Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:52.6928806Z   enableCrossOsArchive: false
+2025-08-01T02:41:52.6929260Z   fail-on-cache-miss: false
+2025-08-01T02:41:52.6929537Z   lookup-only: false
+2025-08-01T02:41:52.6929752Z   save-always: false
+2025-08-01T02:41:52.6929954Z env:
+2025-08-01T02:41:52.6930743Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:52.6930982Z ##[endgroup]
+2025-08-01T02:41:52.9083062Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:53.4081020Z Received 83741540 of 83741540 (100.0%), 178.7 MBs/sec
+2025-08-01T02:41:53.4081952Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:41:53.4109017Z [command]/usr/bin/tar -xf /home/runner/work/_temp/475c2057-7c2d-461c-a08e-2d910362be01/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:55.9503523Z Cache restored successfully
+2025-08-01T02:41:55.9744222Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:55.9845119Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:55.9845493Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:55.9874791Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:55.9875146Z env:
+2025-08-01T02:41:55.9875943Z   GITHUB_TOKEN: ***
+2025-08-01T02:41:55.9876182Z ##[endgroup]
+2025-08-01T02:41:56.0209927Z 🚀 Starting package builds...
+2025-08-01T02:41:56.0210363Z 
+2025-08-01T02:41:56.0216386Z Starting config-types (install): npm ci
+2025-08-01T02:41:56.7708363Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:56.7709376Z Starting config-types (build): npm run build
+2025-08-01T02:41:58.4041506Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:58.4042484Z Starting fetch (install): npm ci
+2025-08-01T02:41:58.4058019Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:58.4076242Z Starting llm-info (install): npm ci
+2025-08-01T02:41:59.6359995Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:59.6366814Z Starting llm-info (build): npm run build
+2025-08-01T02:42:01.0602220Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:42:01.0604436Z Starting fetch (build): npm run build
+2025-08-01T02:42:01.5948658Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:42:03.8757415Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:42:07.1121093Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:42:07.1121857Z Starting config-yaml (build): npm run build
+2025-08-01T02:42:11.1255388Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:42:11.1256312Z 🧹 Cleaning node_modules for openai-adapters
+2025-08-01T02:42:11.1262139Z 🧹 Cleaning node_modules for continue-sdk
+2025-08-01T02:42:11.8643660Z Starting continue-sdk (install): npm ci
+2025-08-01T02:42:11.8690149Z Starting openai-adapters (install): npm ci
+2025-08-01T02:42:19.7008804Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:42:19.7009863Z Starting openai-adapters (build): npm run build
+2025-08-01T02:42:22.8554946Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:42:22.8555774Z Starting continue-sdk (build): npm run build
+2025-08-01T02:42:23.0312724Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:42:25.3325276Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:42:25.3326216Z 🎉 All packages built successfully!
+2025-08-01T02:42:25.3470122Z ##[group]Run cd extensions/vscode
+2025-08-01T02:42:25.3470429Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:42:25.3470673Z [36;1mnpm ci[0m
+2025-08-01T02:42:25.3498989Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:42:25.3499650Z env:
+2025-08-01T02:42:25.3500222Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:25.3500452Z ##[endgroup]
+2025-08-01T02:42:27.4564507Z npm warn skipping integrity check for git dependency ssh://git@github.com/electron/node-gyp.git
+2025-08-01T02:42:29.6612685Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-01T02:42:29.9870746Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:29.9873033Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:29.9876972Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:29.9887923Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:29.9894804Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:29.9903704Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:30.6907175Z npm warn deprecated uuidv4@6.2.13: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+2025-08-01T02:42:31.2112968Z npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+2025-08-01T02:42:31.7752585Z npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+2025-08-01T02:42:31.8325311Z npm warn deprecated har-validator@5.1.5: this library is no longer supported
+2025-08-01T02:42:31.8580420Z npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:32.2245371Z npm warn deprecated gauge@4.0.4: This package is no longer supported.
+2025-08-01T02:42:32.5458978Z npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+2025-08-01T02:42:32.9025478Z npm warn deprecated @npmcli/move-file@2.0.1: This functionality has been moved to @npmcli/fs
+2025-08-01T02:42:32.9693079Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-08-01T02:42:32.9871920Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-08-01T02:42:33.7972179Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:42:33.8127878Z npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+2025-08-01T02:42:33.8627765Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:42:33.8629438Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:42:33.9150329Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:42:34.0051369Z npm warn deprecated uuid@3.4.0: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+2025-08-01T02:42:37.2245336Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-08-01T02:43:15.1942113Z 
+2025-08-01T02:43:15.1942792Z added 1242 packages, and audited 1248 packages in 50s
+2025-08-01T02:43:15.1943093Z 
+2025-08-01T02:43:15.1943258Z 262 packages are looking for funding
+2025-08-01T02:43:15.1943588Z   run `npm fund` for details
+2025-08-01T02:43:15.2128688Z 
+2025-08-01T02:43:15.2129646Z 7 vulnerabilities (1 low, 3 moderate, 1 high, 2 critical)
+2025-08-01T02:43:15.2130136Z 
+2025-08-01T02:43:15.2130540Z To address issues that do not require attention, run:
+2025-08-01T02:43:15.2131113Z   npm audit fix
+2025-08-01T02:43:15.2131351Z 
+2025-08-01T02:43:15.2131842Z To address all issues possible (including breaking changes), run:
+2025-08-01T02:43:15.2132518Z   npm audit fix --force
+2025-08-01T02:43:15.2132798Z 
+2025-08-01T02:43:15.2133155Z Some issues need review, and may require choosing
+2025-08-01T02:43:15.2133771Z a different dependency.
+2025-08-01T02:43:15.2134071Z 
+2025-08-01T02:43:15.2134283Z Run `npm audit` for details.
+2025-08-01T02:43:15.2565799Z ##[group]Run cd gui
+2025-08-01T02:43:15.2566234Z [36;1mcd gui[0m
+2025-08-01T02:43:15.2566591Z [36;1mnpm ci[0m
+2025-08-01T02:43:15.2614465Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:43:15.2615051Z env:
+2025-08-01T02:43:15.2616329Z   GITHUB_TOKEN: ***
+2025-08-01T02:43:15.2616708Z ##[endgroup]
+2025-08-01T02:43:19.0019455Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-01T02:43:19.1311930Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-08-01T02:43:19.1541731Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:43:19.3183430Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-08-01T02:43:19.3389597Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:43:21.5473830Z npm warn deprecated @types/dompurify@3.2.0: This is a stub types definition. dompurify provides its own type definitions, so you do not need this installed.
+2025-08-01T02:43:26.9228518Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-08-01T02:43:29.5443229Z 
+2025-08-01T02:43:29.5446021Z added 1122 packages, and audited 1126 packages in 14s
+2025-08-01T02:43:29.5446478Z 
+2025-08-01T02:43:29.5446768Z 370 packages are looking for funding
+2025-08-01T02:43:29.5447299Z   run `npm fund` for details
+2025-08-01T02:43:29.5714086Z 
+2025-08-01T02:43:29.5714826Z 17 vulnerabilities (1 low, 7 moderate, 5 high, 4 critical)
+2025-08-01T02:43:29.5715193Z 
+2025-08-01T02:43:29.5715478Z To address issues that do not require attention, run:
+2025-08-01T02:43:29.5715913Z   npm audit fix
+2025-08-01T02:43:29.5716084Z 
+2025-08-01T02:43:29.5716359Z To address all issues (including breaking changes), run:
+2025-08-01T02:43:29.5716792Z   npm audit fix --force
+2025-08-01T02:43:29.5716979Z 
+2025-08-01T02:43:29.5717136Z Run `npm audit` for details.
+2025-08-01T02:43:29.6138748Z ##[group]Run cd core
+2025-08-01T02:43:29.6139010Z [36;1mcd core[0m
+2025-08-01T02:43:29.6139470Z [36;1mnpm ci[0m
+2025-08-01T02:43:29.6139682Z [36;1mnpm i vectordb[0m
+2025-08-01T02:43:29.6183827Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:43:29.6184183Z env:
+2025-08-01T02:43:29.6184764Z   GITHUB_TOKEN: ***
+2025-08-01T02:43:29.6184995Z ##[endgroup]
+2025-08-01T02:43:34.9054091Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-01T02:43:34.9261389Z npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+2025-08-01T02:43:35.0324338Z npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+2025-08-01T02:43:35.1080781Z npm warn deprecated har-validator@5.1.5: this library is no longer supported
+2025-08-01T02:43:35.1218323Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-08-01T02:43:35.1608155Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:43:35.2996023Z npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+2025-08-01T02:43:35.3436464Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:43:35.3572041Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-08-01T02:43:36.1121773Z npm warn deprecated uuid@3.4.0: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+2025-08-01T02:43:36.1125856Z npm warn deprecated gauge@4.0.4: This package is no longer supported.
+2025-08-01T02:43:36.6223917Z npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+2025-08-01T02:43:37.1039957Z npm warn deprecated domexception@4.0.0: Use your platform's native DOMException instead
+2025-08-01T02:43:37.1682510Z npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+2025-08-01T02:43:37.3088717Z npm warn deprecated gauge@5.0.2: This package is no longer supported.
+2025-08-01T02:43:42.2029638Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-08-01T02:44:01.5679254Z 
+2025-08-01T02:44:01.5680958Z added 1528 packages, and audited 1535 packages in 32s
+2025-08-01T02:44:01.5684655Z 
+2025-08-01T02:44:01.5685431Z 239 packages are looking for funding
+2025-08-01T02:44:01.5686097Z   run `npm fund` for details
+2025-08-01T02:44:01.5754876Z 
+2025-08-01T02:44:01.5755335Z 7 vulnerabilities (1 low, 4 moderate, 2 critical)
+2025-08-01T02:44:01.5755727Z 
+2025-08-01T02:44:01.5756070Z To address issues that do not require attention, run:
+2025-08-01T02:44:01.5756410Z   npm audit fix
+2025-08-01T02:44:01.5756549Z 
+2025-08-01T02:44:01.5756842Z To address all issues possible (including breaking changes), run:
+2025-08-01T02:44:01.5757228Z   npm audit fix --force
+2025-08-01T02:44:01.5757381Z 
+2025-08-01T02:44:01.5757571Z Some issues need review, and may require choosing
+2025-08-01T02:44:01.5757891Z a different dependency.
+2025-08-01T02:44:01.5758039Z 
+2025-08-01T02:44:01.5758157Z Run `npm audit` for details.
+2025-08-01T02:44:05.3077568Z 
+2025-08-01T02:44:05.3078338Z added 1 package, and audited 1536 packages in 4s
+2025-08-01T02:44:05.3078800Z 
+2025-08-01T02:44:05.3079244Z 239 packages are looking for funding
+2025-08-01T02:44:05.3079769Z   run `npm fund` for details
+2025-08-01T02:44:05.3159409Z 
+2025-08-01T02:44:05.3160131Z 7 vulnerabilities (1 low, 4 moderate, 2 critical)
+2025-08-01T02:44:05.3161526Z 
+2025-08-01T02:44:05.3161931Z To address issues that do not require attention, run:
+2025-08-01T02:44:05.3162502Z   npm audit fix
+2025-08-01T02:44:05.3162717Z 
+2025-08-01T02:44:05.3163186Z To address all issues possible (including breaking changes), run:
+2025-08-01T02:44:05.3163877Z   npm audit fix --force
+2025-08-01T02:44:05.3164143Z 
+2025-08-01T02:44:05.3164478Z Some issues need review, and may require choosing
+2025-08-01T02:44:05.3165035Z a different dependency.
+2025-08-01T02:44:05.3165297Z 
+2025-08-01T02:44:05.3165491Z Run `npm audit` for details.
+2025-08-01T02:44:05.3389010Z ##[group]Run cd extensions/vscode
+2025-08-01T02:44:05.3389589Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:44:05.3389880Z [36;1mnpm run prepackage -- --target linux-x64[0m
+2025-08-01T02:44:05.3420872Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:44:05.3421405Z env:
+2025-08-01T02:44:05.3421985Z   GITHUB_TOKEN: ***
+2025-08-01T02:44:05.3422218Z ##[endgroup]
+2025-08-01T02:44:05.4513338Z 
+2025-08-01T02:44:05.4513847Z > continue@1.1.72 prepackage
+2025-08-01T02:44:05.4514363Z > node scripts/prepackage.js --target linux-x64
+2025-08-01T02:44:05.4514641Z 
+2025-08-01T02:44:05.5588180Z [info] Using target:  linux-x64
+2025-08-01T02:44:05.5593990Z [info] Packaging extension for target linux-x64 - started at 2025-08-01T02:44:05.559Z
+2025-08-01T02:44:05.5596090Z [timer] Starting npm installs at 2025-08-01T02:44:05.559Z
+2025-08-01T02:44:11.2686375Z [info] npm install in gui completed
+2025-08-01T02:44:11.4837257Z [info] npm install in extensions/vscode completed
+2025-08-01T02:44:17.1748795Z [info] Generated config.yaml schema
+2025-08-01T02:44:17.2260822Z [timer] npm installs completed in 11666ms
+2025-08-01T02:44:17.2261883Z [timer] Starting GUI build at 2025-08-01T02:44:17.226Z
+2025-08-01T02:45:00.0293919Z 
+2025-08-01T02:45:00.0295191Z fonts/KaTeX_AMS-Regular.woff2 referenced in fonts/KaTeX_AMS-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0296183Z 
+2025-08-01T02:45:00.0297425Z fonts/KaTeX_Caligraphic-Bold.woff2 referenced in fonts/KaTeX_Caligraphic-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0298465Z 
+2025-08-01T02:45:00.0300191Z fonts/KaTeX_Caligraphic-Regular.woff2 referenced in fonts/KaTeX_Caligraphic-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0301278Z 
+2025-08-01T02:45:00.0302034Z fonts/KaTeX_Fraktur-Bold.woff2 referenced in fonts/KaTeX_Fraktur-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0302621Z 
+2025-08-01T02:45:00.0303293Z fonts/KaTeX_Fraktur-Regular.woff2 referenced in fonts/KaTeX_Fraktur-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0303882Z 
+2025-08-01T02:45:00.0304483Z fonts/KaTeX_Main-Bold.woff2 referenced in fonts/KaTeX_Main-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0304997Z 
+2025-08-01T02:45:00.0305667Z fonts/KaTeX_Main-BoldItalic.woff2 referenced in fonts/KaTeX_Main-BoldItalic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0306256Z 
+2025-08-01T02:45:00.0306874Z fonts/KaTeX_Main-Italic.woff2 referenced in fonts/KaTeX_Main-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0307416Z 
+2025-08-01T02:45:00.0308042Z fonts/KaTeX_Main-Regular.woff2 referenced in fonts/KaTeX_Main-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0308675Z 
+2025-08-01T02:45:00.0310133Z fonts/KaTeX_Math-BoldItalic.woff2 referenced in fonts/KaTeX_Math-BoldItalic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0310737Z 
+2025-08-01T02:45:00.0311357Z fonts/KaTeX_Math-Italic.woff2 referenced in fonts/KaTeX_Math-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0311885Z 
+2025-08-01T02:45:00.0312539Z fonts/KaTeX_SansSerif-Bold.woff2 referenced in fonts/KaTeX_SansSerif-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0313079Z 
+2025-08-01T02:45:00.0314211Z fonts/KaTeX_SansSerif-Italic.woff2 referenced in fonts/KaTeX_SansSerif-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0315306Z 
+2025-08-01T02:45:00.0316594Z fonts/KaTeX_SansSerif-Regular.woff2 referenced in fonts/KaTeX_SansSerif-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0317640Z 
+2025-08-01T02:45:00.0318752Z fonts/KaTeX_Script-Regular.woff2 referenced in fonts/KaTeX_Script-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0320338Z 
+2025-08-01T02:45:00.0321584Z fonts/KaTeX_Size1-Regular.woff2 referenced in fonts/KaTeX_Size1-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0322574Z 
+2025-08-01T02:45:00.0323777Z fonts/KaTeX_Size2-Regular.woff2 referenced in fonts/KaTeX_Size2-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0324812Z 
+2025-08-01T02:45:00.0326012Z fonts/KaTeX_Size3-Regular.woff2 referenced in fonts/KaTeX_Size3-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0326979Z 
+2025-08-01T02:45:00.0328083Z fonts/KaTeX_Size4-Regular.woff2 referenced in fonts/KaTeX_Size4-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0329656Z 
+2025-08-01T02:45:00.0330980Z fonts/KaTeX_Typewriter-Regular.woff2 referenced in fonts/KaTeX_Typewriter-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0332117Z 
+2025-08-01T02:45:00.0333244Z fonts/KaTeX_AMS-Regular.woff referenced in fonts/KaTeX_AMS-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0334450Z 
+2025-08-01T02:45:00.0335710Z fonts/KaTeX_Caligraphic-Bold.woff referenced in fonts/KaTeX_Caligraphic-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0336796Z 
+2025-08-01T02:45:00.0338097Z fonts/KaTeX_Caligraphic-Regular.woff referenced in fonts/KaTeX_Caligraphic-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0339414Z 
+2025-08-01T02:45:00.0340600Z fonts/KaTeX_Fraktur-Bold.woff referenced in fonts/KaTeX_Fraktur-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0341625Z 
+2025-08-01T02:45:00.0342831Z fonts/KaTeX_Fraktur-Regular.woff referenced in fonts/KaTeX_Fraktur-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0343901Z 
+2025-08-01T02:45:00.0345031Z fonts/KaTeX_Main-Bold.woff referenced in fonts/KaTeX_Main-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0345976Z 
+2025-08-01T02:45:00.0347192Z fonts/KaTeX_Main-BoldItalic.woff referenced in fonts/KaTeX_Main-BoldItalic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0348252Z 
+2025-08-01T02:45:00.0349594Z fonts/KaTeX_Main-Italic.woff referenced in fonts/KaTeX_Main-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0350598Z 
+2025-08-01T02:45:00.0351753Z fonts/KaTeX_Main-Regular.woff referenced in fonts/KaTeX_Main-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0352780Z 
+2025-08-01T02:45:00.0354002Z fonts/KaTeX_Math-BoldItalic.woff referenced in fonts/KaTeX_Math-BoldItalic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0355075Z 
+2025-08-01T02:45:00.0356215Z fonts/KaTeX_Math-Italic.woff referenced in fonts/KaTeX_Math-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0357201Z 
+2025-08-01T02:45:00.0358415Z fonts/KaTeX_SansSerif-Bold.woff referenced in fonts/KaTeX_SansSerif-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0359639Z 
+2025-08-01T02:45:00.0360883Z fonts/KaTeX_SansSerif-Italic.woff referenced in fonts/KaTeX_SansSerif-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0361977Z 
+2025-08-01T02:45:00.0363503Z fonts/KaTeX_SansSerif-Regular.woff referenced in fonts/KaTeX_SansSerif-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0364568Z 
+2025-08-01T02:45:00.0365768Z fonts/KaTeX_Script-Regular.woff referenced in fonts/KaTeX_Script-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0366872Z 
+2025-08-01T02:45:00.0368021Z fonts/KaTeX_Size1-Regular.woff referenced in fonts/KaTeX_Size1-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0369012Z 
+2025-08-01T02:45:00.0370336Z fonts/KaTeX_Size2-Regular.woff referenced in fonts/KaTeX_Size2-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0371399Z 
+2025-08-01T02:45:00.0372580Z fonts/KaTeX_Size3-Regular.woff referenced in fonts/KaTeX_Size3-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0373600Z 
+2025-08-01T02:45:00.0374799Z fonts/KaTeX_Size4-Regular.woff referenced in fonts/KaTeX_Size4-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0375820Z 
+2025-08-01T02:45:00.0377371Z fonts/KaTeX_Typewriter-Regular.woff referenced in fonts/KaTeX_Typewriter-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0378504Z 
+2025-08-01T02:45:00.0379792Z fonts/KaTeX_AMS-Regular.ttf referenced in fonts/KaTeX_AMS-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0380765Z 
+2025-08-01T02:45:00.0381993Z fonts/KaTeX_Caligraphic-Bold.ttf referenced in fonts/KaTeX_Caligraphic-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0383035Z 
+2025-08-01T02:45:00.0384294Z fonts/KaTeX_Caligraphic-Regular.ttf referenced in fonts/KaTeX_Caligraphic-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0385352Z 
+2025-08-01T02:45:00.0386506Z fonts/KaTeX_Fraktur-Bold.ttf referenced in fonts/KaTeX_Fraktur-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0387476Z 
+2025-08-01T02:45:00.0388687Z fonts/KaTeX_Fraktur-Regular.ttf referenced in fonts/KaTeX_Fraktur-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0389853Z 
+2025-08-01T02:45:00.0390901Z fonts/KaTeX_Main-Bold.ttf referenced in fonts/KaTeX_Main-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0391828Z 
+2025-08-01T02:45:00.0393052Z fonts/KaTeX_Main-BoldItalic.ttf referenced in fonts/KaTeX_Main-BoldItalic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0394098Z 
+2025-08-01T02:45:00.0395220Z fonts/KaTeX_Main-Italic.ttf referenced in fonts/KaTeX_Main-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0396203Z 
+2025-08-01T02:45:00.0397336Z fonts/KaTeX_Main-Regular.ttf referenced in fonts/KaTeX_Main-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0398333Z 
+2025-08-01T02:45:00.0399739Z fonts/KaTeX_Math-BoldItalic.ttf referenced in fonts/KaTeX_Math-BoldItalic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0400789Z 
+2025-08-01T02:45:00.0401890Z fonts/KaTeX_Math-Italic.ttf referenced in fonts/KaTeX_Math-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0402854Z 
+2025-08-01T02:45:00.0404040Z fonts/KaTeX_SansSerif-Bold.ttf referenced in fonts/KaTeX_SansSerif-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0405076Z 
+2025-08-01T02:45:00.0406551Z fonts/KaTeX_SansSerif-Italic.ttf referenced in fonts/KaTeX_SansSerif-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0407612Z 
+2025-08-01T02:45:00.0408833Z fonts/KaTeX_SansSerif-Regular.ttf referenced in fonts/KaTeX_SansSerif-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0410049Z 
+2025-08-01T02:45:00.0411173Z fonts/KaTeX_Script-Regular.ttf referenced in fonts/KaTeX_Script-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0412139Z 
+2025-08-01T02:45:00.0413287Z fonts/KaTeX_Size1-Regular.ttf referenced in fonts/KaTeX_Size1-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0414333Z 
+2025-08-01T02:45:00.0415481Z fonts/KaTeX_Size2-Regular.ttf referenced in fonts/KaTeX_Size2-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0416510Z 
+2025-08-01T02:45:00.0417659Z fonts/KaTeX_Size3-Regular.ttf referenced in fonts/KaTeX_Size3-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0418662Z 
+2025-08-01T02:45:00.0420265Z fonts/KaTeX_Size4-Regular.ttf referenced in fonts/KaTeX_Size4-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0421303Z 
+2025-08-01T02:45:00.0422588Z fonts/KaTeX_Typewriter-Regular.ttf referenced in fonts/KaTeX_Typewriter-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:45:00.0426889Z [33m[plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/home/runner/work/continue/continue/packages/config-yaml/dist/markdown/markdownToRule.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+2025-08-01T02:45:00.0430910Z [sentry-vite-plugin] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+2025-08-01T02:45:00.0433775Z [sentry-vite-plugin] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+2025-08-01T02:45:00.0435379Z [33m
+2025-08-01T02:45:00.0436077Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2025-08-01T02:45:00.0436981Z - Using dynamic import() to code-split the application
+2025-08-01T02:45:00.0438518Z - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2025-08-01T02:45:00.0440426Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2025-08-01T02:45:00.0441363Z [timer] GUI build completed in 42803ms
+2025-08-01T02:45:00.0442155Z [timer] Starting JetBrains copy at 2025-08-01T02:45:00.030Z
+2025-08-01T02:45:00.1279542Z [timer] JetBrains copy completed in 97ms
+2025-08-01T02:45:00.1282825Z [info] Copied gui build to JetBrains extension
+2025-08-01T02:45:00.1284239Z [timer] Starting VSCode copy at 2025-08-01T02:45:00.128Z
+2025-08-01T02:45:00.2043477Z Copied gui build to VSCode extension
+2025-08-01T02:45:00.2044198Z [timer] VSCode copy completed in 76ms
+2025-08-01T02:45:00.2045399Z [timer] Starting onnxruntime copy at 2025-08-01T02:45:00.204Z
+2025-08-01T02:45:00.2828122Z [timer] onnxruntime copy completed in 78ms
+2025-08-01T02:45:00.2966249Z [info] Copied onnxruntime-node
+2025-08-01T02:45:00.3315155Z [info] Copied tree-sitter.wasm
+2025-08-01T02:45:00.3316061Z [info] Copied llamaTokenizerWorkerPool.mjs
+2025-08-01T02:45:00.3324665Z [info] Copied llamaTokenizer.mjs
+2025-08-01T02:45:00.3328018Z [info] Copied tiktokenWorkerPool.mjs
+2025-08-01T02:45:00.3329364Z [info] Copied start_ollama.sh
+2025-08-01T02:45:00.3416750Z [info] npm installing esbuild binary
+2025-08-01T02:45:00.3695908Z Copying esbuild@0.17.19 to @esbuild
+2025-08-01T02:45:01.8452668Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:45:01.8466719Z Contents of: esbuild@0.17.19 [ 'linux-x64' ]
+2025-08-01T02:45:03.8559017Z [info] Copying sqlite node binding from core
+2025-08-01T02:45:03.8872820Z [info] Copied workerpool
+2025-08-01T02:45:03.8968696Z [info] Copied @vscode/ripgrep
+2025-08-01T02:45:03.9050507Z [info] Copied esbuild
+2025-08-01T02:45:03.9058147Z [info] Copied @esbuild
+2025-08-01T02:45:03.9701762Z [info] Copied @lancedb
+2025-08-01T02:45:03.9724005Z [info] Copied esbuild, @esbuild, @lancedb, @vscode/ripgrep, workerpool
+2025-08-01T02:45:03.9739907Z All paths exist
+2025-08-01T02:45:03.9740612Z [timer] Prepackage completed in 58414ms - finished at 2025-08-01T02:45:03.973Z
+2025-08-01T02:45:03.9919267Z ##[group]Run cd extensions/vscode
+2025-08-01T02:45:03.9919777Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:45:03.9920196Z [36;1mnpm install -f esbuild[0m
+2025-08-01T02:45:03.9948364Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:45:03.9948708Z env:
+2025-08-01T02:45:03.9950181Z   GITHUB_TOKEN: ***
+2025-08-01T02:45:03.9950416Z ##[endgroup]
+2025-08-01T02:45:04.0908489Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:45:04.8731395Z npm warn idealTree Removing dependencies.esbuild in favor of devDependencies.esbuild
+2025-08-01T02:45:07.3885233Z 
+2025-08-01T02:45:07.3885917Z up to date, audited 1248 packages in 3s
+2025-08-01T02:45:07.3886311Z 
+2025-08-01T02:45:07.3886487Z 262 packages are looking for funding
+2025-08-01T02:45:07.3886799Z   run `npm fund` for details
+2025-08-01T02:45:07.3985860Z 
+2025-08-01T02:45:07.3986454Z 7 vulnerabilities (1 low, 3 moderate, 1 high, 2 critical)
+2025-08-01T02:45:07.3986804Z 
+2025-08-01T02:45:07.3987084Z To address issues that do not require attention, run:
+2025-08-01T02:45:07.3987540Z   npm audit fix
+2025-08-01T02:45:07.3987713Z 
+2025-08-01T02:45:07.3988080Z To address all issues possible (including breaking changes), run:
+2025-08-01T02:45:07.3988554Z   npm audit fix --force
+2025-08-01T02:45:07.3988744Z 
+2025-08-01T02:45:07.3988986Z Some issues need review, and may require choosing
+2025-08-01T02:45:07.3989599Z a different dependency.
+2025-08-01T02:45:07.3989782Z 
+2025-08-01T02:45:07.3989922Z Run `npm audit` for details.
+2025-08-01T02:45:07.4195633Z ##[group]Run cd extensions/vscode
+2025-08-01T02:45:07.4195952Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:45:07.4196233Z [36;1m# Get current version from package.json[0m
+2025-08-01T02:45:07.4196658Z [36;1mCURRENT_VERSION=$(node -p "require('./package.json').version")[0m
+2025-08-01T02:45:07.4197019Z [36;1m[0m
+2025-08-01T02:45:07.4197288Z [36;1m# Create new version with short commit SHA (first 7 chars)[0m
+2025-08-01T02:45:07.4197697Z [36;1mCOMMIT_SHORT="cd25af4c0bfbec2d2e2a3d90d421c60917abf53d"[0m
+2025-08-01T02:45:07.4198100Z [36;1mNEW_VERSION="${CURRENT_VERSION}-${COMMIT_SHORT:0:7}"[0m
+2025-08-01T02:45:07.4198426Z [36;1m[0m
+2025-08-01T02:45:07.4198764Z [36;1mecho "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"[0m
+2025-08-01T02:45:07.4199453Z [36;1m[0m
+2025-08-01T02:45:07.4199680Z [36;1m# Update version in package.json[0m
+2025-08-01T02:45:07.4200126Z [36;1msed -i.bak "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json[0m
+2025-08-01T02:45:07.4200552Z [36;1m[0m
+2025-08-01T02:45:07.4200752Z [36;1m# Remove backup file[0m
+2025-08-01T02:45:07.4201019Z [36;1mrm -f package.json.bak[0m
+2025-08-01T02:45:07.4201267Z [36;1m[0m
+2025-08-01T02:45:07.4201458Z [36;1m# Verify the change[0m
+2025-08-01T02:45:07.4201816Z [36;1mecho "✅ New version: $(node -p "require('./package.json').version")"[0m
+2025-08-01T02:45:07.4231158Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:45:07.4231507Z env:
+2025-08-01T02:45:07.4232096Z   GITHUB_TOKEN: ***
+2025-08-01T02:45:07.4232317Z ##[endgroup]
+2025-08-01T02:45:07.4554668Z 📝 Updating package.json version from 1.1.72 to 1.1.72-cd25af4
+2025-08-01T02:45:07.4852277Z ✅ New version: 1.1.72-cd25af4
+2025-08-01T02:45:07.4873476Z ##[group]Run cd extensions/vscode
+2025-08-01T02:45:07.4873777Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:45:07.4874026Z [36;1mnpm run package[0m
+2025-08-01T02:45:07.4902319Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:45:07.4902674Z env:
+2025-08-01T02:45:07.4903289Z   GITHUB_TOKEN: ***
+2025-08-01T02:45:07.4903513Z ##[endgroup]
+2025-08-01T02:45:07.6031142Z 
+2025-08-01T02:45:07.6031751Z > continue@1.1.72-cd25af4 prepackage
+2025-08-01T02:45:07.6032392Z > node scripts/prepackage.js
+2025-08-01T02:45:07.6032641Z 
+2025-08-01T02:45:07.7526333Z [info] Using target:  linux-x64
+2025-08-01T02:45:07.7532439Z [info] Packaging extension for target linux-x64 - started at 2025-08-01T02:45:07.752Z
+2025-08-01T02:45:07.7535012Z [timer] Starting npm installs at 2025-08-01T02:45:07.753Z
+2025-08-01T02:45:13.3738989Z [info] npm install in gui completed
+2025-08-01T02:45:13.5690713Z [info] npm install in extensions/vscode completed
+2025-08-01T02:45:19.2184306Z [info] Generated config.yaml schema
+2025-08-01T02:45:19.2711781Z [timer] npm installs completed in 11517ms
+2025-08-01T02:45:19.2712733Z [timer] Starting GUI build at 2025-08-01T02:45:19.271Z
+2025-08-01T02:46:01.5014619Z 
+2025-08-01T02:46:01.5016321Z fonts/KaTeX_AMS-Regular.woff2 referenced in fonts/KaTeX_AMS-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5017358Z 
+2025-08-01T02:46:01.5018144Z fonts/KaTeX_Caligraphic-Bold.woff2 referenced in fonts/KaTeX_Caligraphic-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5018760Z 
+2025-08-01T02:46:01.5019894Z fonts/KaTeX_Caligraphic-Regular.woff2 referenced in fonts/KaTeX_Caligraphic-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5020713Z 
+2025-08-01T02:46:01.5021334Z fonts/KaTeX_Fraktur-Bold.woff2 referenced in fonts/KaTeX_Fraktur-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5021884Z 
+2025-08-01T02:46:01.5022541Z fonts/KaTeX_Fraktur-Regular.woff2 referenced in fonts/KaTeX_Fraktur-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5023100Z 
+2025-08-01T02:46:01.5023677Z fonts/KaTeX_Main-Bold.woff2 referenced in fonts/KaTeX_Main-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5024178Z 
+2025-08-01T02:46:01.5024805Z fonts/KaTeX_Main-BoldItalic.woff2 referenced in fonts/KaTeX_Main-BoldItalic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5025355Z 
+2025-08-01T02:46:01.5025943Z fonts/KaTeX_Main-Italic.woff2 referenced in fonts/KaTeX_Main-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5026460Z 
+2025-08-01T02:46:01.5027064Z fonts/KaTeX_Main-Regular.woff2 referenced in fonts/KaTeX_Main-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5027592Z 
+2025-08-01T02:46:01.5028217Z fonts/KaTeX_Math-BoldItalic.woff2 referenced in fonts/KaTeX_Math-BoldItalic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5028760Z 
+2025-08-01T02:46:01.5029595Z fonts/KaTeX_Math-Italic.woff2 referenced in fonts/KaTeX_Math-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5030123Z 
+2025-08-01T02:46:01.5030739Z fonts/KaTeX_SansSerif-Bold.woff2 referenced in fonts/KaTeX_SansSerif-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5031275Z 
+2025-08-01T02:46:01.5031910Z fonts/KaTeX_SansSerif-Italic.woff2 referenced in fonts/KaTeX_SansSerif-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5032665Z 
+2025-08-01T02:46:01.5033327Z fonts/KaTeX_SansSerif-Regular.woff2 referenced in fonts/KaTeX_SansSerif-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5033899Z 
+2025-08-01T02:46:01.5034514Z fonts/KaTeX_Script-Regular.woff2 referenced in fonts/KaTeX_Script-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5035058Z 
+2025-08-01T02:46:01.5035665Z fonts/KaTeX_Size1-Regular.woff2 referenced in fonts/KaTeX_Size1-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5036207Z 
+2025-08-01T02:46:01.5036810Z fonts/KaTeX_Size2-Regular.woff2 referenced in fonts/KaTeX_Size2-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5037374Z 
+2025-08-01T02:46:01.5037978Z fonts/KaTeX_Size3-Regular.woff2 referenced in fonts/KaTeX_Size3-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5038516Z 
+2025-08-01T02:46:01.5039304Z fonts/KaTeX_Size4-Regular.woff2 referenced in fonts/KaTeX_Size4-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5039848Z 
+2025-08-01T02:46:01.5040648Z fonts/KaTeX_Typewriter-Regular.woff2 referenced in fonts/KaTeX_Typewriter-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5041245Z 
+2025-08-01T02:46:01.5041830Z fonts/KaTeX_AMS-Regular.woff referenced in fonts/KaTeX_AMS-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5042340Z 
+2025-08-01T02:46:01.5042969Z fonts/KaTeX_Caligraphic-Bold.woff referenced in fonts/KaTeX_Caligraphic-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5043522Z 
+2025-08-01T02:46:01.5044183Z fonts/KaTeX_Caligraphic-Regular.woff referenced in fonts/KaTeX_Caligraphic-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5044760Z 
+2025-08-01T02:46:01.5045339Z fonts/KaTeX_Fraktur-Bold.woff referenced in fonts/KaTeX_Fraktur-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5045851Z 
+2025-08-01T02:46:01.5046470Z fonts/KaTeX_Fraktur-Regular.woff referenced in fonts/KaTeX_Fraktur-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5047005Z 
+2025-08-01T02:46:01.5047555Z fonts/KaTeX_Main-Bold.woff referenced in fonts/KaTeX_Main-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5048043Z 
+2025-08-01T02:46:01.5048650Z fonts/KaTeX_Main-BoldItalic.woff referenced in fonts/KaTeX_Main-BoldItalic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5049496Z 
+2025-08-01T02:46:01.5050123Z fonts/KaTeX_Main-Italic.woff referenced in fonts/KaTeX_Main-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5050635Z 
+2025-08-01T02:46:01.5051224Z fonts/KaTeX_Main-Regular.woff referenced in fonts/KaTeX_Main-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5051741Z 
+2025-08-01T02:46:01.5052354Z fonts/KaTeX_Math-BoldItalic.woff referenced in fonts/KaTeX_Math-BoldItalic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5052899Z 
+2025-08-01T02:46:01.5053472Z fonts/KaTeX_Math-Italic.woff referenced in fonts/KaTeX_Math-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5053979Z 
+2025-08-01T02:46:01.5054576Z fonts/KaTeX_SansSerif-Bold.woff referenced in fonts/KaTeX_SansSerif-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5055253Z 
+2025-08-01T02:46:01.5055892Z fonts/KaTeX_SansSerif-Italic.woff referenced in fonts/KaTeX_SansSerif-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5056438Z 
+2025-08-01T02:46:01.5057080Z fonts/KaTeX_SansSerif-Regular.woff referenced in fonts/KaTeX_SansSerif-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5057639Z 
+2025-08-01T02:46:01.5058241Z fonts/KaTeX_Script-Regular.woff referenced in fonts/KaTeX_Script-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5058777Z 
+2025-08-01T02:46:01.5059682Z fonts/KaTeX_Size1-Regular.woff referenced in fonts/KaTeX_Size1-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5060222Z 
+2025-08-01T02:46:01.5060814Z fonts/KaTeX_Size2-Regular.woff referenced in fonts/KaTeX_Size2-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5061341Z 
+2025-08-01T02:46:01.5061928Z fonts/KaTeX_Size3-Regular.woff referenced in fonts/KaTeX_Size3-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5062574Z 
+2025-08-01T02:46:01.5063171Z fonts/KaTeX_Size4-Regular.woff referenced in fonts/KaTeX_Size4-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5063694Z 
+2025-08-01T02:46:01.5064339Z fonts/KaTeX_Typewriter-Regular.woff referenced in fonts/KaTeX_Typewriter-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5064907Z 
+2025-08-01T02:46:01.5065471Z fonts/KaTeX_AMS-Regular.ttf referenced in fonts/KaTeX_AMS-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5065975Z 
+2025-08-01T02:46:01.5066589Z fonts/KaTeX_Caligraphic-Bold.ttf referenced in fonts/KaTeX_Caligraphic-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5067127Z 
+2025-08-01T02:46:01.5067776Z fonts/KaTeX_Caligraphic-Regular.ttf referenced in fonts/KaTeX_Caligraphic-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5068351Z 
+2025-08-01T02:46:01.5068925Z fonts/KaTeX_Fraktur-Bold.ttf referenced in fonts/KaTeX_Fraktur-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5069754Z 
+2025-08-01T02:46:01.5070363Z fonts/KaTeX_Fraktur-Regular.ttf referenced in fonts/KaTeX_Fraktur-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5070897Z 
+2025-08-01T02:46:01.5071440Z fonts/KaTeX_Main-Bold.ttf referenced in fonts/KaTeX_Main-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5071920Z 
+2025-08-01T02:46:01.5072527Z fonts/KaTeX_Main-BoldItalic.ttf referenced in fonts/KaTeX_Main-BoldItalic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5073058Z 
+2025-08-01T02:46:01.5073617Z fonts/KaTeX_Main-Italic.ttf referenced in fonts/KaTeX_Main-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5074116Z 
+2025-08-01T02:46:01.5074692Z fonts/KaTeX_Main-Regular.ttf referenced in fonts/KaTeX_Main-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5075192Z 
+2025-08-01T02:46:01.5075795Z fonts/KaTeX_Math-BoldItalic.ttf referenced in fonts/KaTeX_Math-BoldItalic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5076327Z 
+2025-08-01T02:46:01.5076885Z fonts/KaTeX_Math-Italic.ttf referenced in fonts/KaTeX_Math-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5077517Z 
+2025-08-01T02:46:01.5078115Z fonts/KaTeX_SansSerif-Bold.ttf referenced in fonts/KaTeX_SansSerif-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5078635Z 
+2025-08-01T02:46:01.5079443Z fonts/KaTeX_SansSerif-Italic.ttf referenced in fonts/KaTeX_SansSerif-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5079993Z 
+2025-08-01T02:46:01.5080630Z fonts/KaTeX_SansSerif-Regular.ttf referenced in fonts/KaTeX_SansSerif-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5081176Z 
+2025-08-01T02:46:01.5081768Z fonts/KaTeX_Script-Regular.ttf referenced in fonts/KaTeX_Script-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5082294Z 
+2025-08-01T02:46:01.5082869Z fonts/KaTeX_Size1-Regular.ttf referenced in fonts/KaTeX_Size1-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5083390Z 
+2025-08-01T02:46:01.5083971Z fonts/KaTeX_Size2-Regular.ttf referenced in fonts/KaTeX_Size2-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5084603Z 
+2025-08-01T02:46:01.5085186Z fonts/KaTeX_Size3-Regular.ttf referenced in fonts/KaTeX_Size3-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5085703Z 
+2025-08-01T02:46:01.5086281Z fonts/KaTeX_Size4-Regular.ttf referenced in fonts/KaTeX_Size4-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5086786Z 
+2025-08-01T02:46:01.5087425Z fonts/KaTeX_Typewriter-Regular.ttf referenced in fonts/KaTeX_Typewriter-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:46:01.5089950Z [33m[plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/home/runner/work/continue/continue/packages/config-yaml/dist/markdown/markdownToRule.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+2025-08-01T02:46:01.5091943Z [sentry-vite-plugin] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+2025-08-01T02:46:01.5093483Z [sentry-vite-plugin] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+2025-08-01T02:46:01.5094284Z [33m
+2025-08-01T02:46:01.5094662Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2025-08-01T02:46:01.5095136Z - Using dynamic import() to code-split the application
+2025-08-01T02:46:01.5095914Z - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2025-08-01T02:46:01.5096774Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2025-08-01T02:46:01.5097246Z [timer] GUI build completed in 42230ms
+2025-08-01T02:46:01.5140225Z [timer] Starting JetBrains copy at 2025-08-01T02:46:01.513Z
+2025-08-01T02:46:01.6099402Z [timer] JetBrains copy completed in 96ms
+2025-08-01T02:46:01.6102580Z [info] Copied gui build to JetBrains extension
+2025-08-01T02:46:01.6105246Z [timer] Starting VSCode copy at 2025-08-01T02:46:01.610Z
+2025-08-01T02:46:01.6325894Z Copied gui build to VSCode extension
+2025-08-01T02:46:01.6326573Z [timer] VSCode copy completed in 22ms
+2025-08-01T02:46:01.6327401Z [timer] Starting onnxruntime copy at 2025-08-01T02:46:01.632Z
+2025-08-01T02:46:01.7448569Z [timer] onnxruntime copy completed in 112ms
+2025-08-01T02:46:01.7587354Z [info] Copied onnxruntime-node
+2025-08-01T02:46:01.7911708Z [info] Copied tree-sitter.wasm
+2025-08-01T02:46:01.7922860Z [info] Copied llamaTokenizerWorkerPool.mjs
+2025-08-01T02:46:01.7927289Z [info] Copied llamaTokenizer.mjs
+2025-08-01T02:46:01.7927918Z [info] Copied tiktokenWorkerPool.mjs
+2025-08-01T02:46:01.7928504Z [info] Copied start_ollama.sh
+2025-08-01T02:46:01.7974188Z [info] npm installing esbuild binary
+2025-08-01T02:46:01.8259464Z Copying esbuild@0.17.19 to @esbuild
+2025-08-01T02:46:02.7947522Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:46:02.7962203Z Contents of: esbuild@0.17.19 [ 'linux-x64' ]
+2025-08-01T02:46:04.8065306Z [info] Copying sqlite node binding from core
+2025-08-01T02:46:04.8375999Z [info] Copied workerpool
+2025-08-01T02:46:04.8478820Z [info] Copied @vscode/ripgrep
+2025-08-01T02:46:04.8556788Z [info] Copied @esbuild
+2025-08-01T02:46:04.8561882Z [info] Copied esbuild
+2025-08-01T02:46:04.9210127Z [info] Copied @lancedb
+2025-08-01T02:46:04.9231828Z [info] Copied esbuild, @esbuild, @lancedb, @vscode/ripgrep, workerpool
+2025-08-01T02:46:04.9246958Z All paths exist
+2025-08-01T02:46:04.9247801Z [timer] Prepackage completed in 57172ms - finished at 2025-08-01T02:46:04.924Z
+2025-08-01T02:46:04.9352618Z 
+2025-08-01T02:46:04.9353180Z > continue@1.1.72-cd25af4 package
+2025-08-01T02:46:04.9353865Z > node scripts/package.js
+2025-08-01T02:46:04.9357072Z 
+2025-08-01T02:46:19.5697204Z vsce package completed - extension created at extensions/vscode/build/continue-1.1.72-cd25af4.vsix
+2025-08-01T02:46:19.5820081Z ##[group]Run cd extensions/vscode
+2025-08-01T02:46:19.5820629Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:46:19.5821088Z [36;1mif [ "false" = "true" ]; then[0m
+2025-08-01T02:46:19.5821787Z [36;1m  npx vsce package --pre-release --no-dependencies --target linux-x64[0m
+2025-08-01T02:46:19.5822514Z [36;1melse[0m
+2025-08-01T02:46:19.5823028Z [36;1m  npx vsce package --no-dependencies --target linux-x64[0m
+2025-08-01T02:46:19.5823635Z [36;1mfi[0m
+2025-08-01T02:46:19.5862805Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:46:19.5863438Z env:
+2025-08-01T02:46:19.5864490Z   GITHUB_TOKEN: ***
+2025-08-01T02:46:19.5864883Z ##[endgroup]
+2025-08-01T02:46:20.2219028Z Executing prepublish script 'npm run vscode:prepublish'...
+2025-08-01T02:46:20.3270426Z 
+2025-08-01T02:46:20.3272131Z > continue@1.1.72-cd25af4 vscode:prepublish
+2025-08-01T02:46:20.3272934Z > npm run esbuild-base -- --minify
+2025-08-01T02:46:20.3273288Z 
+2025-08-01T02:46:20.4357463Z 
+2025-08-01T02:46:23.2524336Z > continue@1.1.72-cd25af4 esbuild-base
+2025-08-01T02:46:23.2524870Z > node scripts/esbuild.js --minify
+2025-08-01T02:46:23.2525111Z 
+2025-08-01T02:46:23.2525296Z VS Code Extension esbuild complete
+2025-08-01T02:46:23.4876108Z Files included in the VSIX:
+2025-08-01T02:46:23.4876870Z continue-linux-x64-1.1.72-cd25af4.vsix
+2025-08-01T02:46:23.4877798Z ├─ [Content_Types].xml 
+2025-08-01T02:46:23.4878337Z ├─ extension.vsixmanifest 
+2025-08-01T02:46:23.4878854Z └─ extension/
+2025-08-01T02:46:23.4879515Z    ├─ .continueignore [0.08 KB]
+2025-08-01T02:46:23.4879873Z    ├─ LICENSE.txt [0.54 KB]
+2025-08-01T02:46:23.4880206Z    ├─ README.md [3.82 KB]
+2025-08-01T02:46:23.4880590Z    ├─ config-yaml-schema.json [75.02 KB]
+2025-08-01T02:46:23.4881013Z    ├─ config_schema.json [130.95 KB]
+2025-08-01T02:46:23.4881415Z    ├─ continue_rc_schema.json [139.19 KB]
+2025-08-01T02:46:23.4881848Z    ├─ continue_tutorial.py [3.39 KB]
+2025-08-01T02:46:23.4882243Z    ├─ entitlements.plist [0.55 KB]
+2025-08-01T02:46:23.4882620Z    ├─ package.json [25.4 KB]
+2025-08-01T02:46:23.4882948Z    ├─ rules.md [0.77 KB]
+2025-08-01T02:46:23.4883264Z    ├─ settings.json [0.3 KB]
+2025-08-01T02:46:23.4883620Z    ├─ tsconfig.e2e.json [0.35 KB]
+2025-08-01T02:46:23.4883984Z    ├─ bin/ (4 files) [30.4 MB]
+2025-08-01T02:46:23.4884330Z    ├─ gui/ (149 files) [9.79 MB]
+2025-08-01T02:46:23.4884696Z    ├─ media/ (10 files) [21.84 MB]
+2025-08-01T02:46:23.4885064Z    ├─ models/ (8 files) [22.81 MB]
+2025-08-01T02:46:23.4885799Z    ├─ out/ (106 files) [176.17 MB]
+2025-08-01T02:46:23.4886170Z    ├─ tag-qry/ (16 files) [16.45 KB]
+2025-08-01T02:46:23.4886587Z    ├─ textmate-syntaxes/ (48 files) [1.44 MB]
+2025-08-01T02:46:23.4887014Z    ├─ tmp/ (12 files) [26.13 MB]
+2025-08-01T02:46:23.4887394Z    └─ tree-sitter/ (36 files) [23.27 KB]
+2025-08-01T02:46:23.4887622Z 
+2025-08-01T02:46:23.4887845Z => Run vsce ls --tree to see all included files.
+2025-08-01T02:46:23.4888057Z 
+2025-08-01T02:46:31.4433271Z Packaged: /home/runner/work/continue/continue/extensions/vscode/continue-linux-x64-1.1.72-cd25af4.vsix (403 files, 108.62 MB)
+2025-08-01T02:46:31.4732834Z ##[group]Run actions/upload-artifact@v4
+2025-08-01T02:46:31.4733139Z with:
+2025-08-01T02:46:31.4733354Z   name: vscode-extension-build-Linux
+2025-08-01T02:46:31.4733757Z   path: extensions/vscode/build
+2025-08-01T02:46:31.4734099Z   if-no-files-found: warn
+2025-08-01T02:46:31.4734334Z   compression-level: 6
+2025-08-01T02:46:31.4734556Z   overwrite: false
+2025-08-01T02:46:31.4734790Z   include-hidden-files: false
+2025-08-01T02:46:31.4735030Z ##[endgroup]
+2025-08-01T02:46:31.7027773Z With the provided path, there will be 2 files uploaded
+2025-08-01T02:46:31.7033184Z Artifact name is valid!
+2025-08-01T02:46:31.7034370Z Root directory input is valid!
+2025-08-01T02:46:31.7934737Z Beginning upload of artifact content to blob storage
+2025-08-01T02:46:32.3557290Z Uploaded bytes 8388608
+2025-08-01T02:46:32.6239752Z Uploaded bytes 16777216
+2025-08-01T02:46:32.8336410Z Uploaded bytes 25165824
+2025-08-01T02:46:33.0827940Z Uploaded bytes 33554432
+2025-08-01T02:46:33.2585776Z Uploaded bytes 41943040
+2025-08-01T02:46:33.5009435Z Uploaded bytes 50331648
+2025-08-01T02:46:33.7386462Z Uploaded bytes 58720256
+2025-08-01T02:46:33.9333333Z Uploaded bytes 67108864
+2025-08-01T02:46:34.2383230Z Uploaded bytes 75497472
+2025-08-01T02:46:34.4985780Z Uploaded bytes 83886080
+2025-08-01T02:46:34.6374609Z Uploaded bytes 92274688
+2025-08-01T02:46:34.9650681Z Uploaded bytes 100663296
+2025-08-01T02:46:35.1698058Z Uploaded bytes 109051904
+2025-08-01T02:46:35.3449290Z Uploaded bytes 113447284
+2025-08-01T02:46:35.3644023Z Finished uploading artifact content to blob storage!
+2025-08-01T02:46:35.3647421Z SHA256 digest of uploaded artifact zip is 15344b0c800c451c207239909147812a29929cc3d248d836e0b14688538b70c1
+2025-08-01T02:46:35.3649838Z Finalizing artifact upload
+2025-08-01T02:46:35.4550935Z Artifact vscode-extension-build-Linux.zip successfully finalized. Artifact ID 3663828495
+2025-08-01T02:46:35.4552841Z Artifact vscode-extension-build-Linux has been successfully uploaded! Final size is 113447284 bytes. Artifact ID is 3663828495
+2025-08-01T02:46:35.4560221Z Artifact download URL: https://github.com/continuedev/continue/actions/runs/16664898109/artifacts/3663828495
+2025-08-01T02:46:35.4772324Z Post job cleanup.
+2025-08-01T02:46:35.5411656Z Post job cleanup.
+2025-08-01T02:46:35.6664962Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:46:35.7314480Z Post job cleanup.
+2025-08-01T02:46:35.8590040Z Cache hit occurred on the primary key Linux-node-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a, not saving cache.
+2025-08-01T02:46:35.9191068Z Post job cleanup.
+2025-08-01T02:46:36.0463869Z Cache hit occurred on the primary key Linux-node-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:46:36.1069594Z Post job cleanup.
+2025-08-01T02:46:36.2338944Z Cache hit occurred on the primary key Linux-node-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:46:50.4008820Z Post job cleanup.
+2025-08-01T02:46:50.5401424Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/continue/continue --files-from manifest.txt --use-compress-program zstdmt
+2025-08-01T02:46:52.4605655Z Sent 29995731 of 432648915 (6.9%), 28.6 MBs/sec
+2025-08-01T02:46:53.1947327Z Sent 432648915 of 432648915 (100.0%), 238.0 MBs/sec
+2025-08-01T02:46:53.3195165Z Cache saved with key: Linux-npm-cache-build-152f5aa098a590db62e11211068d4cdfedd299d829a640fd06d2b2a32bffff4a
+2025-08-01T02:46:53.3320001Z Post job cleanup.
+2025-08-01T02:46:53.4967461Z Post job cleanup.
+2025-08-01T02:46:53.5893957Z [command]/usr/bin/git version
+2025-08-01T02:46:53.5937896Z git version 2.50.1
+2025-08-01T02:46:53.5978789Z Temporarily overriding HOME='/home/runner/work/_temp/5bdeb711-7d01-4430-8e52-c82f171fae26' before making global git config changes
+2025-08-01T02:46:53.5980580Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:46:53.5983879Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:46:53.6016482Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:46:53.6048169Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:46:53.6271292Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:46:53.6291577Z http.https://github.com/.extraheader
+2025-08-01T02:46:53.6303399Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:46:53.6333136Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:46:53.6657965Z Cleaning up orphan processes

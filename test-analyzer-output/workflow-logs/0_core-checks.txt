@@ -1,0 +1,1401 @@
+﻿2025-08-01T02:41:17.4155285Z Current runner version: '2.327.1'
+2025-08-01T02:41:17.4182528Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:17.4183389Z Hosted Compute Agent
+2025-08-01T02:41:17.4184471Z Version: 20250711.363
+2025-08-01T02:41:17.4185135Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:17.4185952Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:17.4186645Z ##[endgroup]
+2025-08-01T02:41:17.4187207Z ##[group]Operating System
+2025-08-01T02:41:17.4187910Z Ubuntu
+2025-08-01T02:41:17.4188426Z 24.04.2
+2025-08-01T02:41:17.4188916Z LTS
+2025-08-01T02:41:17.4189562Z ##[endgroup]
+2025-08-01T02:41:17.4190115Z ##[group]Runner Image
+2025-08-01T02:41:17.4190824Z Image: ubuntu-24.04
+2025-08-01T02:41:17.4191402Z Version: 20250728.1.0
+2025-08-01T02:41:17.4192459Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:17.4194454Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:17.4195600Z ##[endgroup]
+2025-08-01T02:41:17.4196852Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:17.4199281Z Contents: read
+2025-08-01T02:41:17.4199930Z Metadata: read
+2025-08-01T02:41:17.4200538Z Packages: read
+2025-08-01T02:41:17.4201252Z ##[endgroup]
+2025-08-01T02:41:17.4203415Z Secret source: Actions
+2025-08-01T02:41:17.4204813Z Prepare workflow directory
+2025-08-01T02:41:17.4548056Z Prepare all required actions
+2025-08-01T02:41:17.4588513Z Getting action download info
+2025-08-01T02:41:17.8217572Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:17.8218717Z Version: 4.2.2
+2025-08-01T02:41:17.8219955Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:17.8221228Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:17.8221980Z ##[endgroup]
+2025-08-01T02:41:17.9930592Z Complete job name: core-checks
+2025-08-01T02:41:18.0634627Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:18.0635755Z with:
+2025-08-01T02:41:18.0636250Z   repository: continuedev/continue
+2025-08-01T02:41:18.0637014Z   token: ***
+2025-08-01T02:41:18.0637449Z   ssh-strict: true
+2025-08-01T02:41:18.0637899Z   ssh-user: git
+2025-08-01T02:41:18.0638360Z   persist-credentials: true
+2025-08-01T02:41:18.0638860Z   clean: true
+2025-08-01T02:41:18.0639317Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:18.0639855Z   fetch-depth: 1
+2025-08-01T02:41:18.0640295Z   fetch-tags: false
+2025-08-01T02:41:18.0640749Z   show-progress: true
+2025-08-01T02:41:18.0641199Z   lfs: false
+2025-08-01T02:41:18.0641623Z   submodules: false
+2025-08-01T02:41:18.0642072Z   set-safe-directory: true
+2025-08-01T02:41:18.0642819Z ##[endgroup]
+2025-08-01T02:41:18.1774822Z Syncing repository: continuedev/continue
+2025-08-01T02:41:18.1776938Z ##[group]Getting Git version info
+2025-08-01T02:41:18.1777754Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:18.1778972Z [command]/usr/bin/git version
+2025-08-01T02:41:18.1821370Z git version 2.50.1
+2025-08-01T02:41:18.1848421Z ##[endgroup]
+2025-08-01T02:41:18.1863676Z Temporarily overriding HOME='/home/runner/work/_temp/a8a0d7a8-f18f-43a4-93eb-78ca6049e47e' before making global git config changes
+2025-08-01T02:41:18.1865422Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:18.1869194Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:18.1908124Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:18.1912338Z ##[group]Initializing the repository
+2025-08-01T02:41:18.1917731Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:18.1982726Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:18.1987685Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:18.1989443Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:18.1991090Z hint:
+2025-08-01T02:41:18.1991995Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:18.1993064Z hint:
+2025-08-01T02:41:18.1994328Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:18.1995964Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:18.1997211Z hint:
+2025-08-01T02:41:18.1997910Z hint: 	git branch -m <name>
+2025-08-01T02:41:18.1998757Z hint:
+2025-08-01T02:41:18.1999891Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:18.2001710Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:18.2004929Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:18.2038925Z ##[endgroup]
+2025-08-01T02:41:18.2040286Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:18.2044335Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:18.2076068Z ##[endgroup]
+2025-08-01T02:41:18.2077416Z ##[group]Setting up auth
+2025-08-01T02:41:18.2084255Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:18.2118100Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:18.2406713Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:18.2439083Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:18.2679811Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:18.2718012Z ##[endgroup]
+2025-08-01T02:41:18.2718892Z ##[group]Fetching the repository
+2025-08-01T02:41:18.2727238Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:22.2293330Z From https://github.com/continuedev/continue
+2025-08-01T02:41:22.2296218Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:22.2323402Z ##[endgroup]
+2025-08-01T02:41:22.2325805Z ##[group]Determining the checkout info
+2025-08-01T02:41:22.2328031Z ##[endgroup]
+2025-08-01T02:41:22.2329632Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:22.2374011Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:22.2406487Z ##[group]Checking out the ref
+2025-08-01T02:41:22.2409859Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:23.2490133Z Updating files:  87% (2052/2354)
+2025-08-01T02:41:23.2501104Z Updating files:  88% (2072/2354)
+2025-08-01T02:41:23.2512148Z Updating files:  89% (2096/2354)
+2025-08-01T02:41:23.2533641Z Updating files:  90% (2119/2354)
+2025-08-01T02:41:23.2546806Z Updating files:  91% (2143/2354)
+2025-08-01T02:41:23.2555487Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:23.2563596Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:23.2574462Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:23.2588016Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:23.2604058Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:23.2618714Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:23.2631107Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:23.2646285Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:23.2647069Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:23.2647557Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:23.2675084Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:23.2675748Z 
+2025-08-01T02:41:23.2676333Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:23.2677025Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:23.2678173Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:23.2678579Z 
+2025-08-01T02:41:23.2678903Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:23.2679494Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:23.2679883Z 
+2025-08-01T02:41:23.2680081Z   git switch -c <new-branch-name>
+2025-08-01T02:41:23.2680339Z 
+2025-08-01T02:41:23.2680489Z Or undo this operation with:
+2025-08-01T02:41:23.2680725Z 
+2025-08-01T02:41:23.2680857Z   git switch -
+2025-08-01T02:41:23.2681042Z 
+2025-08-01T02:41:23.2681369Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:23.2681818Z 
+2025-08-01T02:41:23.2682315Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:23.2745879Z ##[endgroup]
+2025-08-01T02:41:23.2786808Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:23.2810594Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:23.3074695Z Prepare all required actions
+2025-08-01T02:41:23.3075272Z Getting action download info
+2025-08-01T02:41:23.4938763Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:23.4939295Z Version: 4.4.0
+2025-08-01T02:41:23.4939758Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:23.4940370Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:23.4940795Z ##[endgroup]
+2025-08-01T02:41:23.5851041Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:23.5851481Z Version: 4.2.3
+2025-08-01T02:41:23.5851873Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:23.5852376Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:23.5852722Z ##[endgroup]
+2025-08-01T02:41:23.7548649Z ##[group]Run ./.github/actions/setup-packages
+2025-08-01T02:41:23.7548993Z ##[endgroup]
+2025-08-01T02:41:23.7688420Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:23.7688705Z with:
+2025-08-01T02:41:23.7688904Z   node-version-file: .nvmrc
+2025-08-01T02:41:23.7689135Z   always-auth: false
+2025-08-01T02:41:23.7689341Z   check-latest: false
+2025-08-01T02:41:23.7689699Z   token: ***
+2025-08-01T02:41:23.7689896Z ##[endgroup]
+2025-08-01T02:41:23.9444073Z Node version file is not JSON file
+2025-08-01T02:41:23.9445434Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:23.9458300Z Attempting to download 20.19.0...
+2025-08-01T02:41:24.5010930Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:25.0336906Z Extracting ...
+2025-08-01T02:41:25.0456391Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/9bba9c93-05af-4745-a209-73e1a19fabb1 -f /home/runner/work/_temp/b454361d-507e-47c8-84a8-11c8092895a6
+2025-08-01T02:41:26.0462987Z Adding to the cache ...
+2025-08-01T02:41:27.6992239Z ##[group]Environment details
+2025-08-01T02:41:28.1337052Z node: v20.19.0
+2025-08-01T02:41:28.1337704Z npm: 10.8.2
+2025-08-01T02:41:28.1338022Z yarn: 1.22.22
+2025-08-01T02:41:28.1338892Z ##[endgroup]
+2025-08-01T02:41:28.2196494Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:28.2196753Z with:
+2025-08-01T02:41:28.2196939Z   path: ~/.npm
+2025-08-01T02:41:28.2197384Z   key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:28.2197889Z   enableCrossOsArchive: false
+2025-08-01T02:41:28.2198131Z   fail-on-cache-miss: false
+2025-08-01T02:41:28.2198353Z   lookup-only: false
+2025-08-01T02:41:28.2198563Z   save-always: false
+2025-08-01T02:41:28.2198786Z ##[endgroup]
+2025-08-01T02:41:28.5206790Z Cache hit for: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:29.7144472Z Received 65348750 of 69543054 (94.0%), 62.3 MBs/sec
+2025-08-01T02:41:29.7693090Z Received 69543054 of 69543054 (100.0%), 62.8 MBs/sec
+2025-08-01T02:41:29.7694960Z Cache Size: ~66 MB (69543054 B)
+2025-08-01T02:41:29.7724643Z [command]/usr/bin/tar -xf /home/runner/work/_temp/56670968-788c-452e-97a3-8a7e33677a80/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:30.0572949Z Cache restored successfully
+2025-08-01T02:41:30.0786493Z Cache restored from key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:30.1550401Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:30.1550653Z with:
+2025-08-01T02:41:30.1550857Z   path: packages/*/node_modules
+
+2025-08-01T02:41:30.1551371Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:30.1551905Z   enableCrossOsArchive: false
+2025-08-01T02:41:30.1552174Z   fail-on-cache-miss: false
+2025-08-01T02:41:30.1552403Z   lookup-only: false
+2025-08-01T02:41:30.1552625Z   save-always: false
+2025-08-01T02:41:30.1552827Z ##[endgroup]
+2025-08-01T02:41:30.4183282Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:31.6171414Z Received 71303168 of 83741540 (85.1%), 68.1 MBs/sec
+2025-08-01T02:41:31.7625564Z Received 83741540 of 83741540 (100.0%), 69.7 MBs/sec
+2025-08-01T02:41:31.7626429Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:41:31.7659696Z [command]/usr/bin/tar -xf /home/runner/work/_temp/8275ffdb-2da9-4959-9664-042c5b141241/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:34.2118677Z Cache restored successfully
+2025-08-01T02:41:34.2377398Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:34.2491282Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:34.2491702Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:34.2524657Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:34.2525024Z ##[endgroup]
+2025-08-01T02:41:34.2836902Z 🚀 Starting package builds...
+2025-08-01T02:41:34.2837331Z 
+2025-08-01T02:41:34.2843213Z Starting config-types (install): npm ci
+2025-08-01T02:41:34.9244121Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:34.9245248Z Starting config-types (build): npm run build
+2025-08-01T02:41:36.6674308Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:36.6675000Z Starting fetch (install): npm ci
+2025-08-01T02:41:36.6689655Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:36.6706331Z Starting llm-info (install): npm ci
+2025-08-01T02:41:37.5620472Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:37.5646487Z Starting llm-info (build): npm run build
+2025-08-01T02:41:38.5876449Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:41:38.5882067Z Starting fetch (build): npm run build
+2025-08-01T02:41:39.6706021Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:41:41.5492315Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:41:43.1649582Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:41:43.1650572Z Starting config-yaml (build): npm run build
+2025-08-01T02:41:47.4418754Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:41:47.4419674Z 🧹 Cleaning node_modules for openai-adapters
+2025-08-01T02:41:47.4428115Z 🧹 Cleaning node_modules for continue-sdk
+2025-08-01T02:41:48.4348306Z Starting continue-sdk (install): npm ci
+2025-08-01T02:41:48.4400719Z Starting openai-adapters (install): npm ci
+2025-08-01T02:41:55.1438031Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:41:55.1438938Z Starting openai-adapters (build): npm run build
+2025-08-01T02:41:58.3105913Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:41:58.3107313Z Starting continue-sdk (build): npm run build
+2025-08-01T02:41:58.4747090Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:42:00.8349682Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:42:00.8350267Z 🎉 All packages built successfully!
+2025-08-01T02:42:00.8553214Z Prepare all required actions
+2025-08-01T02:42:00.8553584Z Getting action download info
+2025-08-01T02:42:01.0827953Z ##[group]Run ./.github/actions/setup-component
+2025-08-01T02:42:01.0828257Z with:
+2025-08-01T02:42:01.0828449Z   component: core
+2025-08-01T02:42:01.0828661Z   include-root: true
+2025-08-01T02:42:01.0828900Z   include-packages: true
+2025-08-01T02:42:01.0829138Z ##[endgroup]
+2025-08-01T02:42:01.0866012Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:42:01.0866277Z with:
+2025-08-01T02:42:01.0866483Z   node-version-file: .nvmrc
+2025-08-01T02:42:01.0866720Z   always-auth: false
+2025-08-01T02:42:01.0866936Z   check-latest: false
+2025-08-01T02:42:01.0867290Z   token: ***
+2025-08-01T02:42:01.0867492Z ##[endgroup]
+2025-08-01T02:42:01.2635515Z Node version file is not JSON file
+2025-08-01T02:42:01.2636837Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:42:01.2648370Z Found in cache @ /opt/hostedtoolcache/node/20.19.0/x64
+2025-08-01T02:42:01.2654440Z ##[group]Environment details
+2025-08-01T02:42:01.4166113Z node: v20.19.0
+2025-08-01T02:42:01.4166590Z npm: 10.8.2
+2025-08-01T02:42:01.4166950Z yarn: 1.22.22
+2025-08-01T02:42:01.4167671Z ##[endgroup]
+2025-08-01T02:42:01.4819308Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:01.4819567Z with:
+2025-08-01T02:42:01.4819752Z   path: ~/.npm
+2025-08-01T02:42:01.4820155Z   key: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:01.4820636Z   enableCrossOsArchive: false
+2025-08-01T02:42:01.4820896Z   fail-on-cache-miss: false
+2025-08-01T02:42:01.4821129Z   lookup-only: false
+2025-08-01T02:42:01.4821342Z   save-always: false
+2025-08-01T02:42:01.4821544Z ##[endgroup]
+2025-08-01T02:42:01.7605557Z Cache hit for: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:02.9472749Z Received 92274688 of 322896480 (28.6%), 88.0 MBs/sec
+2025-08-01T02:42:03.9473062Z Received 234881024 of 322896480 (72.7%), 112.1 MBs/sec
+2025-08-01T02:42:04.6603415Z Received 322896480 of 322896480 (100.0%), 113.6 MBs/sec
+2025-08-01T02:42:04.6604281Z Cache Size: ~308 MB (322896480 B)
+2025-08-01T02:42:04.6661190Z [command]/usr/bin/tar -xf /home/runner/work/_temp/931822f9-c194-4768-b54e-b7852427d8a5/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:05.4517652Z Cache restored successfully
+2025-08-01T02:42:05.5256059Z Cache restored from key: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:05.6060481Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:05.6060739Z with:
+2025-08-01T02:42:05.6060958Z   path: packages/*/node_modules
+
+2025-08-01T02:42:05.6061469Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:05.6062019Z   enableCrossOsArchive: false
+2025-08-01T02:42:05.6062278Z   fail-on-cache-miss: false
+2025-08-01T02:42:05.6062527Z   lookup-only: false
+2025-08-01T02:42:05.6062743Z   save-always: false
+2025-08-01T02:42:05.6062975Z ##[endgroup]
+2025-08-01T02:42:05.8674664Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:07.1473395Z Received 83741540 of 83741540 (100.0%), 77.2 MBs/sec
+2025-08-01T02:42:07.1474998Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:42:07.1507518Z [command]/usr/bin/tar -xf /home/runner/work/_temp/13de883e-de8c-4dcb-937e-0609c02a7f33/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:11.0308996Z Cache restored successfully
+2025-08-01T02:42:11.0570254Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:11.1254351Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:11.1254634Z with:
+2025-08-01T02:42:11.1255071Z   path: node_modules
+2025-08-01T02:42:11.1255548Z   key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:11.1256279Z   enableCrossOsArchive: false
+2025-08-01T02:42:11.1256566Z   fail-on-cache-miss: false
+2025-08-01T02:42:11.1256821Z   lookup-only: false
+2025-08-01T02:42:11.1257054Z   save-always: false
+2025-08-01T02:42:11.1257277Z ##[endgroup]
+2025-08-01T02:42:11.4025475Z Cache hit for: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:12.3288751Z Received 12019642 of 12019642 (100.0%), 16.9 MBs/sec
+2025-08-01T02:42:12.3289405Z Cache Size: ~11 MB (12019642 B)
+2025-08-01T02:42:12.3318615Z [command]/usr/bin/tar -xf /home/runner/work/_temp/25cce729-a69d-48cf-ac80-0e4ddb920ac8/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:12.9359201Z Cache restored successfully
+2025-08-01T02:42:12.9467603Z Cache restored from key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:13.0122197Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:13.0122466Z with:
+2025-08-01T02:42:13.0122704Z   path: core/node_modules
+2025-08-01T02:42:13.0123186Z   key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:13.0123702Z   enableCrossOsArchive: false
+2025-08-01T02:42:13.0124336Z   fail-on-cache-miss: false
+2025-08-01T02:42:13.0124605Z   lookup-only: false
+2025-08-01T02:42:13.0124840Z   save-always: false
+2025-08-01T02:42:13.0125064Z ##[endgroup]
+2025-08-01T02:42:13.2974510Z Cache hit for: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:14.4922204Z Received 83886080 of 155660310 (53.9%), 79.9 MBs/sec
+2025-08-01T02:42:15.0398670Z Received 155660310 of 155660310 (100.0%), 95.9 MBs/sec
+2025-08-01T02:42:15.0399718Z Cache Size: ~148 MB (155660310 B)
+2025-08-01T02:42:15.0499596Z [command]/usr/bin/tar -xf /home/runner/work/_temp/d7839f55-b932-4973-b3e3-a8cf6f0740e7/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:17.9778591Z Cache restored successfully
+2025-08-01T02:42:18.0215024Z Cache restored from key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:18.0367647Z ##[group]Run cd core
+2025-08-01T02:42:18.0367980Z [36;1mcd core[0m
+2025-08-01T02:42:18.0368219Z [36;1mnpx tsc --noEmit[0m
+2025-08-01T02:42:18.0368481Z [36;1mnpm run lint[0m
+2025-08-01T02:42:18.0397266Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:18.0397553Z env:
+2025-08-01T02:42:18.0398470Z   OPENAI_API_KEY: ***
+2025-08-01T02:42:18.0398715Z ##[endgroup]
+2025-08-01T02:42:29.2914186Z 
+2025-08-01T02:42:29.2914926Z > @continuedev/core@1.1.0 lint
+2025-08-01T02:42:29.2915398Z > eslint . --ext ts
+2025-08-01T02:42:29.2915577Z 
+2025-08-01T02:43:04.4494675Z 
+2025-08-01T02:43:04.4495946Z /home/runner/work/continue/continue/core/autocomplete/context/ImportDefinitionsService.ts
+2025-08-01T02:43:04.4527527Z ##[warning]  58:7  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4535173Z 
+2025-08-01T02:43:04.4535749Z /home/runner/work/continue/continue/core/autocomplete/filtering/BracketMatchingService.ts
+2025-08-01T02:43:04.4537067Z ##[warning]  97:9  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4537890Z 
+2025-08-01T02:43:04.4538201Z /home/runner/work/continue/continue/core/config/ConfigHandler.ts
+2025-08-01T02:43:04.4539107Z ##[warning]  139:7  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4540312Z ##[warning]  279:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4541073Z 
+2025-08-01T02:43:04.4541336Z /home/runner/work/continue/continue/core/config/load.ts
+2025-08-01T02:43:04.4542073Z ##[warning]  490:7  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4542860Z 
+2025-08-01T02:43:04.4543566Z /home/runner/work/continue/continue/core/config/migrateSharedConfig.ts
+2025-08-01T02:43:04.4544794Z ##[warning]  80:9  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4545587Z 
+2025-08-01T02:43:04.4545870Z /home/runner/work/continue/continue/core/config/validation.ts
+2025-08-01T02:43:04.4546638Z ##[warning]   15:3  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4547857Z ##[warning]   82:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4548988Z ##[warning]  107:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4549702Z 
+2025-08-01T02:43:04.4550055Z /home/runner/work/continue/continue/core/context/mcp/MCPManagerSingleton.ts
+2025-08-01T02:43:04.4551049Z ##[warning]  29:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4552312Z ##[warning]  76:7  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4553051Z 
+2025-08-01T02:43:04.4553522Z /home/runner/work/continue/continue/core/context/providers/GitLabMergeRequestContextProvider.ts
+2025-08-01T02:43:04.4554812Z ##[warning]  249:11  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4555577Z 
+2025-08-01T02:43:04.4556062Z /home/runner/work/continue/continue/core/context/retrieval/pipelines/NoRerankerRetrievalPipeline.ts
+2025-08-01T02:43:04.4557083Z ##[warning]  33:26  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4557878Z 
+2025-08-01T02:43:04.4558345Z /home/runner/work/continue/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
+2025-08-01T02:43:04.4559230Z ##[warning]  30:26  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4560002Z 
+2025-08-01T02:43:04.4560308Z /home/runner/work/continue/continue/core/edit/lazy/deterministic.ts
+2025-08-01T02:43:04.4561188Z ##[warning]  156:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4561932Z 
+2025-08-01T02:43:04.4562237Z /home/runner/work/continue/continue/core/indexing/LanceDbIndex.ts
+2025-08-01T02:43:04.4563064Z ##[warning]  340:16  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4564015Z 
+2025-08-01T02:43:04.4564395Z /home/runner/work/continue/continue/core/indexing/docs/crawlers/ChromiumCrawler.ts
+2025-08-01T02:43:04.4565644Z ##[warning]  88:9  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4566511Z 
+2025-08-01T02:43:04.4566816Z /home/runner/work/continue/continue/core/indexing/refreshIndex.ts
+2025-08-01T02:43:04.4567553Z ##[warning]  178:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4568713Z ##[warning]  204:9  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4569495Z 
+2025-08-01T02:43:04.4569721Z /home/runner/work/continue/continue/core/llm/index.ts
+2025-08-01T02:43:04.4570504Z ##[warning]  374:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4571261Z 
+2025-08-01T02:43:04.4571528Z /home/runner/work/continue/continue/core/llm/llms/WatsonX.ts
+2025-08-01T02:43:04.4572320Z ##[warning]  49:7  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4573067Z 
+2025-08-01T02:43:04.4573326Z /home/runner/work/continue/continue/core/llm/logFormatter.ts
+2025-08-01T02:43:04.4574306Z ##[warning]  144:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4575599Z ##[warning]  211:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4576323Z 
+2025-08-01T02:43:04.4576629Z /home/runner/work/continue/continue/core/llm/openaiTypeConverters.ts
+2025-08-01T02:43:04.4577363Z ##[warning]  65:16  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4578092Z 
+2025-08-01T02:43:04.4578437Z /home/runner/work/continue/continue/core/llm/rules/getSystemMessageWithRules.ts
+2025-08-01T02:43:04.4579305Z ##[warning]  237:7  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4580262Z 
+2025-08-01T02:43:04.4580542Z /home/runner/work/continue/continue/core/llm/templates/chat.ts
+2025-08-01T02:43:04.4581342Z ##[warning]  287:13  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4582069Z 
+2025-08-01T02:43:04.4582340Z /home/runner/work/continue/continue/core/nextEdit/diff/diff.ts
+2025-08-01T02:43:04.4583153Z ##[warning]  258:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4584125Z 
+2025-08-01T02:43:04.4584433Z /home/runner/work/continue/continue/core/util/GlobalContext.ts
+2025-08-01T02:43:04.4585274Z ##[warning]  56:5  warning  Unexpected negated condition  no-negated-condition
+2025-08-01T02:43:04.4586035Z 
+2025-08-01T02:43:04.4586460Z ✖ 28 problems (0 errors, 28 warnings)
+2025-08-01T02:43:04.4586673Z 
+2025-08-01T02:43:04.7120393Z ##[group]Run cd core
+2025-08-01T02:43:04.7120720Z [36;1mcd core[0m
+2025-08-01T02:43:04.7120946Z [36;1mnpm test[0m
+2025-08-01T02:43:04.7121177Z [36;1mnpm run vitest[0m
+2025-08-01T02:43:04.7149619Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:43:04.7149906Z env:
+2025-08-01T02:43:04.7150173Z   IGNORE_API_KEY_TESTS: false
+2025-08-01T02:43:04.7151150Z   OPENAI_API_KEY: ***
+2025-08-01T02:43:04.7151772Z   ANTHROPIC_API_KEY: ***
+2025-08-01T02:43:04.7152125Z   GEMINI_API_KEY: ***
+2025-08-01T02:43:04.7152423Z   MISTRAL_API_KEY: ***
+2025-08-01T02:43:04.7152739Z   AZURE_OPENAI_API_KEY: ***
+2025-08-01T02:43:04.7153331Z   AZURE_FOUNDRY_CODESTRAL_API_KEY: ***
+2025-08-01T02:43:04.7154165Z   AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ***
+2025-08-01T02:43:04.7154543Z   AZURE_OPENAI_GPT41_API_KEY: ***
+2025-08-01T02:43:04.7154817Z ##[endgroup]
+2025-08-01T02:43:04.8339771Z 
+2025-08-01T02:43:04.8340534Z > @continuedev/core@1.1.0 test
+2025-08-01T02:43:04.8341239Z > cross-env NODE_OPTIONS=--experimental-vm-modules jest
+2025-08-01T02:43:04.8341562Z 
+2025-08-01T02:43:06.4769851Z (node:2639) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+2025-08-01T02:43:06.4771213Z (Use `node --trace-warnings ...` to show where the warning was created)
+2025-08-01T02:43:06.4781734Z PASS util/sentry/SentryLogger.test.ts
+2025-08-01T02:43:11.8897055Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:43:11.8897854Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:43:11.8898576Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:43:11.8899075Z hint:
+2025-08-01T02:43:11.8899534Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:43:11.8899995Z hint:
+2025-08-01T02:43:11.8900527Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:43:11.8901239Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:43:11.8901803Z hint:
+2025-08-01T02:43:11.8902163Z hint: 	git branch -m <name>
+2025-08-01T02:43:11.8902557Z hint:
+2025-08-01T02:43:11.8903118Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:43:12.0808979Z Switched to a new branch 'main'
+2025-08-01T02:43:12.1502207Z PASS indexing/CodebaseIndexer.test.ts (5.668 s)
+2025-08-01T02:43:12.1585736Z   ● Console
+2025-08-01T02:43:12.1586020Z 
+2025-08-01T02:43:12.1586204Z     console.log
+2025-08-01T02:43:12.1586611Z       NODE_ENV test
+2025-08-01T02:43:12.1586872Z 
+2025-08-01T02:43:12.1587066Z       at util/logger.ts:3:9
+2025-08-01T02:43:12.1587364Z 
+2025-08-01T02:43:12.1587547Z     console.debug
+2025-08-01T02:43:12.1588202Z       Indexing failed with error:  Test indexing error undefined
+2025-08-01T02:43:12.1588658Z 
+2025-08-01T02:43:12.1589395Z       at TestCodebaseIndexer.sendIndexingErrorTelemetry (indexing/CodebaseIndexer.ts:665:13)
+2025-08-01T02:43:12.1590098Z 
+2025-08-01T02:43:12.1590280Z     console.debug
+2025-08-01T02:43:12.1590940Z       Indexing failed with error:  Test LLM error undefined
+2025-08-01T02:43:12.1591378Z 
+2025-08-01T02:43:12.1592048Z       at TestCodebaseIndexer.sendIndexingErrorTelemetry (indexing/CodebaseIndexer.ts:665:13)
+2025-08-01T02:43:12.1593153Z 
+2025-08-01T02:43:12.3379498Z PASS edit/searchAndReplace/findSearchMatch.test.ts
+2025-08-01T02:43:13.1188021Z PASS llm/llms/Bedrock.test.ts
+2025-08-01T02:43:24.3127534Z PASS llm/utils/retry.test.ts (11.192 s)
+2025-08-01T02:43:24.4667301Z PASS util/index.test.ts
+2025-08-01T02:43:24.5665041Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.5668157Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.5670026Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.7502404Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.7505633Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.7508461Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.9405645Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.9408250Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:24.9411133Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.4500980Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.4503688Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.4506585Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.5614256Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.5617547Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.5621544Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.6971679Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.6973292Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.6975411Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.8354080Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 spawn listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.8357049Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.8359151Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [ChildProcess]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:25.8360131Z PASS tools/implementations/runTerminalCommand.test.ts
+2025-08-01T02:43:26.2317719Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:26.2320437Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:43:26.3625359Z PASS llm/countTokens.test.ts
+2025-08-01T02:43:26.4997804Z PASS edit/lazy/unifiedDiffApply.test.ts
+2025-08-01T02:43:26.7284834Z PASS edit/lazy/streamLazyApply.test.ts
+2025-08-01T02:43:26.7332768Z   ● Console
+2025-08-01T02:43:26.7334636Z 
+2025-08-01T02:43:26.7334935Z     console.log
+2025-08-01T02:43:26.7336953Z       Streamed lines:  # Project Structure```markdown README.md# Project Structure```.├── src/│   └── main.js└── package.json``````
+2025-08-01T02:43:26.7337916Z 
+2025-08-01T02:43:26.7338234Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7338919Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7339194Z 
+2025-08-01T02:43:26.7339363Z     console.log
+2025-08-01T02:43:26.7340009Z       Streamed lines:  function calculateSum(a, b) {  return a + b;}function calculateProduct(a, b) {  return a * b;}
+2025-08-01T02:43:26.7340481Z 
+2025-08-01T02:43:26.7340693Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7341169Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7341693Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7342247Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7342782Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7343362Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7344046Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7344616Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7345202Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7345484Z 
+2025-08-01T02:43:26.7345650Z     console.log
+2025-08-01T02:43:26.7346231Z       Streamed lines:  def calculate_sum(a, b):    return a + bdef calculate_product(a, b):    return a * b
+2025-08-01T02:43:26.7346646Z 
+2025-08-01T02:43:26.7346846Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7347321Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7347849Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7348389Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7348893Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7349419Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7350153Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7351041Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7351954Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7352830Z 
+2025-08-01T02:43:26.7353049Z     console.log
+2025-08-01T02:43:26.7354362Z       Streamed lines:  function newFunction() {  return 'new';}// ... unchanged code ...function anotherFunction() {  return 'updated';}
+2025-08-01T02:43:26.7355226Z 
+2025-08-01T02:43:26.7355534Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7356226Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7357018Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7357839Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7358612Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7359459Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7360472Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7361363Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7362233Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7362668Z 
+2025-08-01T02:43:26.7362872Z     console.log
+2025-08-01T02:43:26.7364137Z       Streamed lines:  interface User {  id: number;  name: string;}function getUser(id: number): User {  return { id, name: 'Test User' };}
+2025-08-01T02:43:26.7364998Z 
+2025-08-01T02:43:26.7365272Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7365944Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7366740Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7367572Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7368369Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7369139Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7369850Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7370709Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7371564Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7371977Z 
+2025-08-01T02:43:26.7372176Z     console.log
+2025-08-01T02:43:26.7372627Z       Streamed lines:
+2025-08-01T02:43:26.7372910Z 
+2025-08-01T02:43:26.7373184Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7373569Z 
+2025-08-01T02:43:26.7373764Z     console.log
+2025-08-01T02:43:26.7374546Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7374986Z 
+2025-08-01T02:43:26.7375272Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7375950Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7376347Z 
+2025-08-01T02:43:26.7376541Z     console.log
+2025-08-01T02:43:26.7377148Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7377581Z 
+2025-08-01T02:43:26.7377872Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7378538Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7378926Z 
+2025-08-01T02:43:26.7379120Z     console.log
+2025-08-01T02:43:26.7379715Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7380159Z 
+2025-08-01T02:43:26.7380448Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7381119Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7381539Z 
+2025-08-01T02:43:26.7381740Z     console.log
+2025-08-01T02:43:26.7382347Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7382784Z 
+2025-08-01T02:43:26.7383062Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7383716Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7384684Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7385515Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7386300Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7387127Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7387853Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7388740Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7389902Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7390322Z 
+2025-08-01T02:43:26.7390522Z     console.log
+2025-08-01T02:43:26.7391113Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7391550Z 
+2025-08-01T02:43:26.7391840Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7392509Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7393304Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7394289Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7395070Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7395856Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7396768Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7397678Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7398545Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7398987Z 
+2025-08-01T02:43:26.7399202Z     console.log
+2025-08-01T02:43:26.7399801Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7400244Z 
+2025-08-01T02:43:26.7400534Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7401209Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7402006Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7402825Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7403600Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7404560Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7405268Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7406140Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7407040Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7407459Z 
+2025-08-01T02:43:26.7407663Z     console.log
+2025-08-01T02:43:26.7408258Z       Streamed lines:  function test() {  return true;}
+2025-08-01T02:43:26.7408690Z 
+2025-08-01T02:43:26.7408975Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7409635Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7410415Z           at stopAtLinesWithMarkdownSupport.next (<anonymous>)
+2025-08-01T02:43:26.7411225Z           at filterLeadingNewline.next (<anonymous>)
+2025-08-01T02:43:26.7411983Z           at removeTrailingWhitespace.next (<anonymous>)
+2025-08-01T02:43:26.7412758Z           at streamFillUnchangedCode.next (<anonymous>)
+2025-08-01T02:43:26.7413449Z           at streamDiff.next (<anonymous>)
+2025-08-01T02:43:26.7414544Z           at filterLeadingAndTrailingNewLineInsertion.next (<anonymous>)
+2025-08-01T02:43:26.7415428Z           at streamLazyApply.next (<anonymous>)
+2025-08-01T02:43:26.7415830Z 
+2025-08-01T02:43:26.7416027Z     console.log
+2025-08-01T02:43:26.7418136Z       Streamed lines:  # Debug Test FolderThe sole purpose of this folder is to open it when debugging.## File Structure```debug-test-folder/├── AdvancedPage.tsx├── Calculator.java├── Dockerfile└── test.ts```
+2025-08-01T02:43:26.7418920Z 
+2025-08-01T02:43:26.7419133Z       at streamLines (diff/util.ts:131:15)
+2025-08-01T02:43:26.7419592Z           at streamLines.next (<anonymous>)
+2025-08-01T02:43:26.7419855Z 
+2025-08-01T02:43:28.7938619Z PASS indexing/walkDir.test.ts
+2025-08-01T02:43:28.7944734Z   ● Console
+2025-08-01T02:43:28.7945014Z 
+2025-08-01T02:43:28.7945207Z     console.log
+2025-08-01T02:43:28.7945640Z       NODE_ENV test
+2025-08-01T02:43:28.7945880Z 
+2025-08-01T02:43:28.7946067Z       at util/logger.ts:3:9
+2025-08-01T02:43:28.7946358Z 
+2025-08-01T02:43:28.7946528Z     console.log
+2025-08-01T02:43:28.7946937Z       EMPTY DIR []
+2025-08-01T02:43:28.7947172Z 
+2025-08-01T02:43:28.7947567Z       at Object.<anonymous> (indexing/walkDir.test.ts:193:15)
+2025-08-01T02:43:28.7948012Z 
+2025-08-01T02:43:28.9914238Z PASS llm/toolSupport.test.ts
+2025-08-01T02:43:29.1444609Z PASS edit/searchAndReplace/parseSearchReplaceBlock.test.ts
+2025-08-01T02:43:29.2693544Z PASS util/ranges.test.ts
+2025-08-01T02:43:29.3954612Z PASS llm/logFormatter.test.ts
+2025-08-01T02:43:29.8841010Z PASS util/fetchFavicon.test.ts
+2025-08-01T02:43:29.8847981Z   ● Console
+2025-08-01T02:43:29.8848246Z 
+2025-08-01T02:43:29.8848425Z     console.debug
+2025-08-01T02:43:29.8849022Z       Failed to find favicon for https://example.com
+2025-08-01T02:43:29.8849455Z 
+2025-08-01T02:43:29.8849775Z       at findFaviconPath (util/fetchFavicon.ts:29:11)
+2025-08-01T02:43:29.8850236Z 
+2025-08-01T02:43:29.8850417Z     console.debug
+2025-08-01T02:43:29.8851151Z       Failed to fetch favicon for https://example.com: Error: Network error
+2025-08-01T02:43:29.8851670Z 
+2025-08-01T02:43:29.8852452Z       at findFaviconPath (util/fetchFavicon.ts:26:13)
+2025-08-01T02:43:29.8852890Z 
+2025-08-01T02:43:29.8853077Z     console.debug
+2025-08-01T02:43:29.8853678Z       Failed to find favicon for https://example.com
+2025-08-01T02:43:29.8854438Z 
+2025-08-01T02:43:29.8854747Z       at findFaviconPath (util/fetchFavicon.ts:29:11)
+2025-08-01T02:43:29.8855140Z 
+2025-08-01T02:43:29.8855309Z     console.debug
+2025-08-01T02:43:29.8856020Z       Failed to fetch favicon for https://example.com: Error: HTTP error! status: 404
+2025-08-01T02:43:29.8856567Z 
+2025-08-01T02:43:29.8856867Z       at findFaviconPath (util/fetchFavicon.ts:26:13)
+2025-08-01T02:43:29.8857254Z 
+2025-08-01T02:43:29.8857418Z     console.debug
+2025-08-01T02:43:29.8857941Z       Failed to find favicon for https://example.com
+2025-08-01T02:43:29.8858333Z 
+2025-08-01T02:43:29.8858624Z       at findFaviconPath (util/fetchFavicon.ts:29:11)
+2025-08-01T02:43:29.8859010Z 
+2025-08-01T02:43:29.8859176Z     console.debug
+2025-08-01T02:43:29.8859926Z       Failed to fetch favicon from https://example.com/favicon.ico: Error: Network error
+2025-08-01T02:43:29.8860522Z 
+2025-08-01T02:43:29.8860837Z       at getFaviconBase64 (util/fetchFavicon.ts:54:13)
+2025-08-01T02:43:29.8861252Z 
+2025-08-01T02:43:29.8861422Z     console.debug
+2025-08-01T02:43:29.8862261Z       Failed to fetch favicon from https://example.com/favicon.ico: Error: HTTP error! status: 404
+2025-08-01T02:43:29.8862923Z 
+2025-08-01T02:43:29.8863254Z       at getFaviconBase64 (util/fetchFavicon.ts:54:13)
+2025-08-01T02:43:29.8863662Z 
+2025-08-01T02:43:29.8864073Z     console.debug
+2025-08-01T02:43:29.8864641Z       Failed to find favicon for https://example.com
+2025-08-01T02:43:29.8865061Z 
+2025-08-01T02:43:29.8865370Z       at findFaviconPath (util/fetchFavicon.ts:29:11)
+2025-08-01T02:43:29.8865754Z 
+2025-08-01T02:43:29.9823777Z PASS tools/definitions/requestRule.test.ts
+2025-08-01T02:43:58.3133297Z PASS llm/llm.test.ts (26.293 s)
+2025-08-01T02:43:58.4967187Z PASS util/GlobalContext.test.ts
+2025-08-01T02:43:58.6239792Z PASS util/sentry/anonymization.test.ts
+2025-08-01T02:43:59.7184713Z PASS llm/index.test.ts
+2025-08-01T02:44:08.9204754Z PASS indexing/docs/crawlers/DocsCrawler.test.ts (9.198 s)
+2025-08-01T02:44:08.9215144Z   ● Console
+2025-08-01T02:44:08.9215366Z 
+2025-08-01T02:44:08.9215535Z     console.log
+2025-08-01T02:44:08.9215933Z       NODE_ENV test
+2025-08-01T02:44:08.9216103Z 
+2025-08-01T02:44:08.9216226Z       at util/logger.ts:3:9
+2025-08-01T02:44:08.9216528Z 
+2025-08-01T02:44:08.9216695Z     console.log
+2025-08-01T02:44:08.9217417Z       [CheerioCrawler] Starting crawl from: https://amplified.dev/ - Max Depth: 2
+2025-08-01T02:44:08.9217899Z 
+2025-08-01T02:44:08.9218196Z       at CheerioCrawler.crawl (indexing/docs/crawlers/CheerioCrawler.ts:29:13)
+2025-08-01T02:44:08.9218652Z           at crawl.next (<anonymous>)
+2025-08-01T02:44:08.9218976Z           at crawl.next (<anonymous>)
+2025-08-01T02:44:08.9219156Z 
+2025-08-01T02:44:08.9219251Z     console.log
+2025-08-01T02:44:08.9219486Z       Crawl completed
+2025-08-01T02:44:08.9219641Z 
+2025-08-01T02:44:08.9219933Z       at CheerioCrawler.crawl (indexing/docs/crawlers/CheerioCrawler.ts:85:13)
+2025-08-01T02:44:08.9220390Z           at crawl.next (<anonymous>)
+2025-08-01T02:44:08.9221130Z           at crawl.next (<anonymous>)
+2025-08-01T02:44:08.9221318Z 
+2025-08-01T02:44:09.0580174Z PASS util/uri.test.ts
+2025-08-01T02:44:09.2562518Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.2568863Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.2574535Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.2581416Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.2584291Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.2587003Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.4258418Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.4261469Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.4264560Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.4272629Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.4275532Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.4278146Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:09.6233235Z PASS indexing/chunk/chunk.test.ts
+2025-08-01T02:44:11.8238809Z PASS indexing/shouldIgnore.test.ts
+2025-08-01T02:44:11.8243006Z   ● Console
+2025-08-01T02:44:11.8243370Z 
+2025-08-01T02:44:11.8243793Z     console.log
+2025-08-01T02:44:11.8244917Z       NODE_ENV test
+2025-08-01T02:44:11.8245196Z 
+2025-08-01T02:44:11.8245378Z       at util/logger.ts:3:9
+2025-08-01T02:44:11.8245671Z 
+2025-08-01T02:44:12.0900302Z PASS util/history.test.ts
+2025-08-01T02:44:12.0905182Z   ● Console
+2025-08-01T02:44:12.0905429Z 
+2025-08-01T02:44:12.0905602Z     console.log
+2025-08-01T02:44:12.0906816Z       Error loading session: Error: Session file /home/runner/work/continue/continue/core/test/.continue-test/sessions/invalid.json does not exist
+2025-08-01T02:44:12.0907713Z 
+2025-08-01T02:44:12.0908035Z       at HistoryManager.load (util/history.ts:88:15)
+2025-08-01T02:44:12.0908418Z 
+2025-08-01T02:44:12.3645440Z PASS edit/lazy/deterministic.test.ts
+2025-08-01T02:44:12.7535091Z PASS tools/implementations/createRuleBlock.test.ts
+2025-08-01T02:44:13.0565162Z PASS util/extractMinimalStackTraceInfo.test.ts
+2025-08-01T02:44:13.1570175Z PASS edit/lazy/findInAst.test.ts
+2025-08-01T02:44:13.2689902Z PASS llm/utils/extractContentFromCodeBlocks.test.ts
+2025-08-01T02:44:13.3674042Z PASS util/messageContent.test.ts
+2025-08-01T02:44:13.4707026Z PASS util/merge.test.ts
+2025-08-01T02:44:13.5635044Z PASS indexing/utils.test.ts
+2025-08-01T02:44:13.6740522Z PASS util/incrementalParseJson.test.ts
+2025-08-01T02:44:20.1557771Z PASS util/chatDescriber.test.ts
+2025-08-01T02:44:20.1564494Z   ● Console
+2025-08-01T02:44:20.1564758Z 
+2025-08-01T02:44:20.1564928Z     console.log
+2025-08-01T02:44:20.1565332Z       NODE_ENV test
+2025-08-01T02:44:20.1565577Z 
+2025-08-01T02:44:20.1565758Z       at util/logger.ts:3:9
+2025-08-01T02:44:20.1566040Z 
+2025-08-01T02:44:20.1566204Z     console.log
+2025-08-01T02:44:20.1566641Z       Error: Intentional error
+2025-08-01T02:44:20.1567503Z           at MockLLM._streamChat (/home/runner/work/continue/continue/core/llm/llms/Mock.ts:57:21)
+2025-08-01T02:44:20.1568151Z           at _streamChat.next (<anonymous>)
+2025-08-01T02:44:20.1569062Z           at MockLLM.streamChat (/home/runner/work/continue/continue/core/llm/index.ts:1064:28)
+2025-08-01T02:44:20.1569618Z           at streamChat.next (<anonymous>)
+2025-08-01T02:44:20.1570158Z           at MockLLM.chat (/home/runner/work/continue/continue/core/llm/index.ts:921:22)
+2025-08-01T02:44:20.1570858Z           at Function.describe (/home/runner/work/continue/continue/core/util/chatDescriber.ts:34:39)
+2025-08-01T02:44:20.1571623Z           at Object.<anonymous> (/home/runner/work/continue/continue/core/util/chatDescriber.test.ts:65:23)
+2025-08-01T02:44:20.1572467Z           at Promise.then.completed (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/utils.js:298:28)
+2025-08-01T02:44:20.1573076Z           at new Promise (<anonymous>)
+2025-08-01T02:44:20.1573696Z           at callAsyncCircusFn (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/utils.js:231:10)
+2025-08-01T02:44:20.1574707Z           at _callCircusTest (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/run.js:316:40)
+2025-08-01T02:44:20.1575335Z           at runNextTicks (node:internal/process/task_queues:60:5)
+2025-08-01T02:44:20.1575776Z           at processImmediate (node:internal/timers:454:9)
+2025-08-01T02:44:20.1576369Z           at _runTest (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/run.js:252:3)
+2025-08-01T02:44:20.1577200Z           at _runTestsForDescribeBlock (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/run.js:126:9)
+2025-08-01T02:44:20.1578089Z           at _runTestsForDescribeBlock (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/run.js:121:9)
+2025-08-01T02:44:20.1578964Z           at _runTestsForDescribeBlock (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/run.js:121:9)
+2025-08-01T02:44:20.1579758Z           at run (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/run.js:71:3)
+2025-08-01T02:44:20.1580795Z           at runAndTransformResultsToJestFormat (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+2025-08-01T02:44:20.1581982Z           at jestAdapter (/home/runner/work/continue/continue/core/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+2025-08-01T02:44:20.1582932Z           at runTestInternal (/home/runner/work/continue/continue/core/node_modules/jest-runner/build/runTest.js:367:16)
+2025-08-01T02:44:20.1583738Z           at runTest (/home/runner/work/continue/continue/core/node_modules/jest-runner/build/runTest.js:444:34)
+2025-08-01T02:44:20.1584251Z 
+2025-08-01T02:44:20.1584409Z       at MockLLM._logEnd (llm/index.ts:385:17)
+2025-08-01T02:44:20.1584621Z 
+2025-08-01T02:44:20.4667261Z PASS util/processTerminalBackgroundStates.test.ts
+2025-08-01T02:44:23.0423629Z PASS edit/streamDiffLines.test.ts
+2025-08-01T02:44:23.1609471Z PASS util/LruCache.test.ts
+2025-08-01T02:44:23.8887418Z PASS llm/llms/test/supportsFim.test.ts
+2025-08-01T02:44:23.9944414Z PASS llm/utils/getSecureID.test.ts
+2025-08-01T02:44:24.1021768Z PASS llm/utils/extractPathsFromCodeBlocks.test.ts
+2025-08-01T02:44:24.8056599Z PASS llm/llms/OpenAI.test.ts
+2025-08-01T02:44:24.9055082Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:24.9056635Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:25.0084814Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 online listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:25.0088471Z (node:2639) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Worker]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+2025-08-01T02:44:25.3013559Z PASS llm/asyncEncoder.test.ts
+2025-08-01T02:44:26.0412759Z PASS util/lcs.test.ts
+2025-08-01T02:44:26.1952790Z PASS indexing/refreshIndex.test.ts
+2025-08-01T02:44:27.3220931Z PASS indexing/docs/DocsCache.test.ts
+2025-08-01T02:44:27.4295751Z PASS test/testEnv.test.ts
+2025-08-01T02:44:27.4311442Z 
+2025-08-01T02:44:27.4320063Z Test Suites: 8 skipped, 48 passed, 48 of 56 total
+2025-08-01T02:44:27.4320640Z Tests:       90 skipped, 676 passed, 766 total
+2025-08-01T02:44:27.4321008Z Snapshots:   0 total
+2025-08-01T02:44:27.4321282Z Time:        81.907 s
+2025-08-01T02:44:27.4321545Z Ran all test suites.
+2025-08-01T02:44:27.9262570Z 
+2025-08-01T02:44:27.9263213Z > @continuedev/core@1.1.0 vitest
+2025-08-01T02:44:27.9263769Z > vitest run
+2025-08-01T02:44:27.9264104Z 
+2025-08-01T02:44:28.2349964Z 
+2025-08-01T02:44:28.2353221Z [1m[46m RUN [49m[22m [36mv3.1.4 [39m[90m/home/runner/work/continue/continue/core[39m
+2025-08-01T02:44:28.2354175Z 
+2025-08-01T02:44:28.2983744Z (node:3556) [DEP0147] DeprecationWarning: In future versions of Node.js, fs.rmdir(path, { recursive: true }) will be removed. Use fs.rm(path, { recursive: true }) instead
+2025-08-01T02:44:28.2986526Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2025-08-01T02:44:28.6397523Z  [32m✓[39m autocomplete/filtering/streamTransforms/lineStream.vitest.ts [2m([22m[2m85 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 30[2mms[22m[39m
+2025-08-01T02:44:30.3635289Z  [32m✓[39m llm/llms/stubs/ContinueProxy.vitest.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+2025-08-01T02:44:30.6124705Z [90mstderr[2m | llm/rules/getSystemMessageWithRules.vitest.ts[2m > [22m[2mContent pattern matching[2m > [22m[2mshould handle invalid regex regex gracefully
+2025-08-01T02:44:30.6126199Z [22m[39mInvalid regex pattern: ([unclosed parenthesis SyntaxError: Invalid regular expression: /([unclosed parenthesis/: Unterminated character class
+2025-08-01T02:44:30.6126903Z     at new RegExp (<anonymous>)
+2025-08-01T02:44:30.6127701Z     at contentMatchesRegex [90m(/home/runner/work/continue/continue/core/[39mllm/rules/getSystemMessageWithRules.ts:70:26[90m)[39m
+2025-08-01T02:44:30.6128703Z     at [90m/home/runner/work/continue/continue/core/[39mllm/rules/getSystemMessageWithRules.ts:186:14
+2025-08-01T02:44:30.6129238Z     at Array.some (<anonymous>)
+2025-08-01T02:44:30.6130013Z     at checkGlobsAndRegex [90m(/home/runner/work/continue/continue/core/[39mllm/rules/getSystemMessageWithRules.ts:182:26[90m)[39m
+2025-08-01T02:44:30.6131125Z     at shouldApplyRule [90m(/home/runner/work/continue/continue/core/[39mllm/rules/getSystemMessageWithRules.ts:244:12[90m)[39m
+2025-08-01T02:44:30.6132120Z     at [90m/home/runner/work/continue/continue/core/[39mllm/rules/getSystemMessageWithRules.vitest.ts:446:7
+2025-08-01T02:44:30.6133071Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:103:11
+2025-08-01T02:44:30.6134222Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:26
+2025-08-01T02:44:30.6135709Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:879:20
+2025-08-01T02:44:30.6136190Z 
+2025-08-01T02:44:30.6139590Z  [32m✓[39m llm/rules/getSystemMessageWithRules.vitest.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+2025-08-01T02:44:30.8202512Z  [32m✓[39m autocomplete/filtering/streamTransforms/filterCodeBlock.vitest.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+2025-08-01T02:44:31.0417219Z  [32m✓[39m config/markdown/ruleCollocationApplication.vitest.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+2025-08-01T02:44:31.2496602Z  [32m✓[39m diff/myers.vitest.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+2025-08-01T02:44:32.6299651Z [90mstdout[2m | llm/llms/Anthropic.vitest.ts[2m > [22m[2mAnthropic[2m > [22m[2mError handling[2m > [22m[2mshould throw error when API key is missing
+2025-08-01T02:44:32.6301808Z [22m[39mError: Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.
+2025-08-01T02:44:32.6303053Z     at Anthropic._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Anthropic.ts:316:13[90m)[39m
+2025-08-01T02:44:32.6304180Z     at _streamChat.next (<anonymous>)
+2025-08-01T02:44:32.6305124Z     at Anthropic.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:32.6305838Z     at streamChat.next (<anonymous>)
+2025-08-01T02:44:32.6306743Z     at executeLlmMethod [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Anthropic.vitest.ts:86:22[90m)[39m
+2025-08-01T02:44:32.6307664Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:32.6308485Z     at runLlmTest [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Anthropic.vitest.ts:125:3[90m)[39m
+2025-08-01T02:44:32.6308922Z 
+2025-08-01T02:44:32.6327429Z  [32m✓[39m llm/llms/Anthropic.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 262[2mms[22m[39m
+2025-08-01T02:44:33.0745622Z  [32m✓[39m autocomplete/templating/__tests__/formatOpenedFilesContext.vitest.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+2025-08-01T02:44:34.7668608Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7669863Z [22m[39mrequest to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7670264Z 
+2025-08-01T02:44:34.7670395Z Code: ECONNREFUSED
+2025-08-01T02:44:34.7670673Z Error number: ECONNREFUSED
+2025-08-01T02:44:34.7670953Z Syscall: connect
+2025-08-01T02:44:34.7671191Z Type: system
+2025-08-01T02:44:34.7671330Z 
+2025-08-01T02:44:34.7671751Z FetchError: request to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7672636Z     at ClientRequest.<anonymous> (/home/runner/work/continue/continue/packages/fetch/dist/node-fetch-patch.js:91:20)
+2025-08-01T02:44:34.7673270Z     at ClientRequest.emit (node:events:524:28)
+2025-08-01T02:44:34.7673673Z     at emitErrorEvent (node:_http_client:101:11)
+2025-08-01T02:44:34.7674264Z     at Socket.socketErrorListener (node:_http_client:504:5)
+2025-08-01T02:44:34.7674665Z     at Socket.emit (node:events:524:28)
+2025-08-01T02:44:34.7675059Z     at emitErrorNT (node:internal/streams/destroy:169:8)
+2025-08-01T02:44:34.7675509Z     at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+2025-08-01T02:44:34.7676033Z     at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2025-08-01T02:44:34.7676356Z 
+2025-08-01T02:44:34.7716850Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7718242Z [22m[39mDocker Model Runner not detected. Attempting to enable it...
+2025-08-01T02:44:34.7721802Z 
+2025-08-01T02:44:34.7729975Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7731310Z [22m[39mrequest to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7732370Z 
+2025-08-01T02:44:34.7732641Z Code: ECONNREFUSED
+2025-08-01T02:44:34.7733126Z Error number: ECONNREFUSED
+2025-08-01T02:44:34.7733606Z Syscall: connect
+2025-08-01T02:44:34.7734205Z Type: system
+2025-08-01T02:44:34.7734451Z 
+2025-08-01T02:44:34.7735059Z FetchError: request to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7735900Z     at ClientRequest.<anonymous> (/home/runner/work/continue/continue/packages/fetch/dist/node-fetch-patch.js:91:20)
+2025-08-01T02:44:34.7736516Z     at ClientRequest.emit (node:events:524:28)
+2025-08-01T02:44:34.7736965Z     at emitErrorEvent (node:_http_client:101:11)
+2025-08-01T02:44:34.7737720Z     at Socket.socketErrorListener (node:_http_client:504:5)
+2025-08-01T02:44:34.7738381Z     at Socket.emit (node:events:524:28)
+2025-08-01T02:44:34.7739109Z     at emitErrorNT (node:internal/streams/destroy:169:8)
+2025-08-01T02:44:34.7739597Z     at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+2025-08-01T02:44:34.7740133Z     at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2025-08-01T02:44:34.7740659Z 
+2025-08-01T02:44:34.7765525Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7766914Z [22m[39mDocker Model Runner not detected. Attempting to enable it...
+2025-08-01T02:44:34.7771689Z 
+2025-08-01T02:44:34.7776448Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7778893Z [22m[39mrequest to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7779520Z 
+2025-08-01T02:44:34.7779724Z Code: ECONNREFUSED
+2025-08-01T02:44:34.7780197Z Error number: ECONNREFUSED
+2025-08-01T02:44:34.7780653Z Syscall: connect
+2025-08-01T02:44:34.7781047Z Type: system
+2025-08-01T02:44:34.7781270Z 
+2025-08-01T02:44:34.7781884Z FetchError: request to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7782968Z     at ClientRequest.<anonymous> (/home/runner/work/continue/continue/packages/fetch/dist/node-fetch-patch.js:91:20)
+2025-08-01T02:44:34.7784254Z     at ClientRequest.emit (node:events:524:28)
+2025-08-01T02:44:34.7784917Z     at emitErrorEvent (node:_http_client:101:11)
+2025-08-01T02:44:34.7785656Z     at Socket.socketErrorListener (node:_http_client:504:5)
+2025-08-01T02:44:34.7786347Z     at Socket.emit (node:events:524:28)
+2025-08-01T02:44:34.7787014Z     at emitErrorNT (node:internal/streams/destroy:169:8)
+2025-08-01T02:44:34.7787540Z     at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+2025-08-01T02:44:34.7788187Z     at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2025-08-01T02:44:34.7788742Z 
+2025-08-01T02:44:34.7813308Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7814740Z [22m[39mDocker Model Runner not detected. Attempting to enable it...
+2025-08-01T02:44:34.7815283Z 
+2025-08-01T02:44:34.7821163Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7822707Z [22m[39mrequest to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7824337Z 
+2025-08-01T02:44:34.7824688Z Code: ECONNREFUSED
+2025-08-01T02:44:34.7825266Z Error number: ECONNREFUSED
+2025-08-01T02:44:34.7825810Z Syscall: connect
+2025-08-01T02:44:34.7827725Z Type: system
+2025-08-01T02:44:34.7827956Z 
+2025-08-01T02:44:34.7828638Z FetchError: request to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7830009Z     at ClientRequest.<anonymous> (/home/runner/work/continue/continue/packages/fetch/dist/node-fetch-patch.js:91:20)
+2025-08-01T02:44:34.7831046Z     at ClientRequest.emit (node:events:524:28)
+2025-08-01T02:44:34.7831673Z     at emitErrorEvent (node:_http_client:101:11)
+2025-08-01T02:44:34.7832639Z     at Socket.socketErrorListener (node:_http_client:504:5)
+2025-08-01T02:44:34.7833578Z     at Socket.emit (node:events:524:28)
+2025-08-01T02:44:34.7834563Z     at emitErrorNT (node:internal/streams/destroy:169:8)
+2025-08-01T02:44:34.7848096Z     at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+2025-08-01T02:44:34.7849106Z     at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2025-08-01T02:44:34.7849506Z 
+2025-08-01T02:44:34.7862011Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7863069Z [22m[39mDocker Model Runner not detected. Attempting to enable it...
+2025-08-01T02:44:34.7863479Z 
+2025-08-01T02:44:34.7877589Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7879189Z [22m[39mrequest to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7881109Z 
+2025-08-01T02:44:34.7881344Z Code: ECONNREFUSED
+2025-08-01T02:44:34.7881808Z Error number: ECONNREFUSED
+2025-08-01T02:44:34.7882269Z Syscall: connect
+2025-08-01T02:44:34.7885653Z Type: system
+2025-08-01T02:44:34.7886256Z 
+2025-08-01T02:44:34.7887001Z FetchError: request to http://127.0.0.1:12434/ failed, reason: connect ECONNREFUSED 127.0.0.1:12434
+2025-08-01T02:44:34.7888108Z     at ClientRequest.<anonymous> (/home/runner/work/continue/continue/packages/fetch/dist/node-fetch-patch.js:91:20)
+2025-08-01T02:44:34.7888914Z     at ClientRequest.emit (node:events:524:28)
+2025-08-01T02:44:34.7889552Z     at emitErrorEvent (node:_http_client:101:11)
+2025-08-01T02:44:34.7890347Z     at Socket.socketErrorListener (node:_http_client:504:5)
+2025-08-01T02:44:34.7891075Z     at Socket.emit (node:events:524:28)
+2025-08-01T02:44:34.7891780Z     at emitErrorNT (node:internal/streams/destroy:169:8)
+2025-08-01T02:44:34.7892597Z     at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+2025-08-01T02:44:34.7893561Z     at processTicksAndRejections (node:internal/process/task_queues:82:21)
+2025-08-01T02:44:34.7894274Z 
+2025-08-01T02:44:34.7924957Z [90mstdout[2m | llm/llms/OpenAI-compatible.vitest.ts
+2025-08-01T02:44:34.7926723Z [22m[39mDocker Model Runner not detected. Attempting to enable it...
+2025-08-01T02:44:34.7928799Z 
+2025-08-01T02:44:34.8004131Z  [32m✓[39m llm/llms/OpenAI-compatible.vitest.ts [2m([22m[2m204 tests[22m[2m)[22m[33m 451[2mms[22m[39m
+2025-08-01T02:44:36.2184643Z  [32m✓[39m llm/llms/OpenAI.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 273[2mms[22m[39m
+2025-08-01T02:44:36.4361106Z  [32m✓[39m utils/markdownUtils.vitest.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+2025-08-01T02:44:36.6815491Z  [32m✓[39m diff/streamDiff.vitest.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+2025-08-01T02:44:38.0800599Z  [32m✓[39m context/mcp/MCPConnection.vitest.ts [2m([22m[2m14 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[33m 1093[2mms[22m[39m
+2025-08-01T02:44:38.0801879Z    [33m[2m✓[22m[39m MCPConnection[2m > [22mconnectClient[2m > [22mshould handle custom connection timeout [33m 1003[2mms[22m[39m
+2025-08-01T02:44:38.2810049Z  [32m✓[39m llm/autodetect.vitest.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+2025-08-01T02:44:38.4825086Z  [32m✓[39m config/usesFreeTrialApiKey.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+2025-08-01T02:44:38.6958647Z  [32m✓[39m tools/systemMessageTools/interceptSystemToolCalls.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+2025-08-01T02:44:38.9540236Z  [32m✓[39m nextEdit/templating/NextEditPromptEngine.vitest.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+2025-08-01T02:44:39.1525889Z  [32m✓[39m tools/systemMessageTools/parseSystemToolCall.vitest.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+2025-08-01T02:44:39.3675669Z  [32m✓[39m autocomplete/templating/__tests__/renderPrompt.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+2025-08-01T02:44:40.1425557Z [90mstdout[2m | config/yaml/LocalPlatformClient.vitest.ts[2m > [22m[2mLocalPlatformClient[2m > [22m[2mshould not be able to resolve FQSNs if they do not exist
+2025-08-01T02:44:40.1427170Z [22m[39mNODE_ENV test
+2025-08-01T02:44:40.1427484Z 
+2025-08-01T02:44:42.8335989Z [90mstdout[2m | config/yaml/LocalPlatformClient.vitest.ts[2m > [22m[2mLocalPlatformClient[2m > [22m[2mshould be able to resolve FQSNs if they exist
+2025-08-01T02:44:42.8337976Z [22m[39mNODE_ENV test
+2025-08-01T02:44:42.8338291Z 
+2025-08-01T02:44:43.1163741Z [90mstdout[2m | config/yaml/LocalPlatformClient.vitest.ts[2m > [22m[2mLocalPlatformClient[2m > [22m[2msearches for secrets in local .env files[2m > [22m[2mshould be able to get secrets from ~/.continue/.env files
+2025-08-01T02:44:43.1165617Z [22m[39mNODE_ENV test
+2025-08-01T02:44:43.1165847Z 
+2025-08-01T02:44:43.3828500Z [90mstdout[2m | config/yaml/LocalPlatformClient.vitest.ts[2m > [22m[2mLocalPlatformClient[2m > [22m[2mshould be able to get secrets from workspace .env files[2m > [22m[2mshould get secrets from <workspace>/.continue/.env and <workspace>/.env
+2025-08-01T02:44:43.3830046Z [22m[39mNODE_ENV test
+2025-08-01T02:44:43.3830380Z 
+2025-08-01T02:44:43.6303064Z [90mstdout[2m | config/yaml/LocalPlatformClient.vitest.ts[2m > [22m[2mLocalPlatformClient[2m > [22m[2mshould be able to get secrets from workspace .env files[2m > [22m[2mshould first get secrets from <workspace>/.continue/.env and then <workspace>/.env
+2025-08-01T02:44:43.6304872Z [22m[39mNODE_ENV test
+2025-08-01T02:44:43.6305175Z 
+2025-08-01T02:44:43.8423468Z  [32m✓[39m config/yaml/LocalPlatformClient.vitest.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 4119[2mms[22m[39m
+2025-08-01T02:44:43.8425492Z    [33m[2m✓[22m[39m LocalPlatformClient[2m > [22mshould not be able to resolve FQSNs if they do not exist [33m 3050[2mms[22m[39m
+2025-08-01T02:44:44.0579636Z  [32m✓[39m tools/parseArgs.vitest.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+2025-08-01T02:44:44.2511830Z  [32m✓[39m tools/systemMessageTools/buildToolsSystemMessage.vitest.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+2025-08-01T02:44:45.6901152Z  [32m✓[39m llm/llms/OpenAI-compatible-core.vitest.ts [2m([22m[2m78 tests[22m[2m)[22m[33m 320[2mms[22m[39m
+2025-08-01T02:44:45.9222316Z  [32m✓[39m llm/rules/ruleColocation.vitest.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+2025-08-01T02:44:46.6231724Z [90mstdout[2m | config/loadLocalAssistants.vitest.ts
+2025-08-01T02:44:46.6232291Z [22m[39mNODE_ENV test
+2025-08-01T02:44:46.6232474Z 
+2025-08-01T02:44:48.4343434Z  [32m✓[39m config/loadLocalAssistants.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+2025-08-01T02:44:48.6509522Z [90mstderr[2m | nextEdit/DocumentHistoryTracker.vitest.ts[2m > [22m[2mDocumentHistoryTracker[2m > [22m[2mpush[2m > [22m[2mshould add a document if it doesn't exist when pushing
+2025-08-01T02:44:48.6510827Z [22m[39mDocument /test/document.ts not found in AST tracker
+2025-08-01T02:44:48.6511152Z 
+2025-08-01T02:44:48.6575257Z  [32m✓[39m nextEdit/DocumentHistoryTracker.vitest.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+2025-08-01T02:44:49.1584022Z [90mstderr[2m | control-plane/mdm/mdm.vitest.ts[2m > [22m[2mvalidateLicenseKey returns false for malformed license key
+2025-08-01T02:44:49.1586084Z [22m[39mLicense validation error: SyntaxError: Unexpected token '�', "��~k�ږ'~�'�Ǿ��" is not valid JSON
+2025-08-01T02:44:49.1587076Z     at JSON.parse (<anonymous>)
+2025-08-01T02:44:49.1588327Z     at validateLicenseKey [90m(/home/runner/work/continue/continue/core/[39mcontrol-plane/mdm/mdm.ts:44:52[90m)[39m
+2025-08-01T02:44:49.1589464Z     at [90m/home/runner/work/continue/continue/core/[39mcontrol-plane/mdm/mdm.vitest.ts:64:18
+2025-08-01T02:44:49.1590387Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:103:11
+2025-08-01T02:44:49.1591359Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:26
+2025-08-01T02:44:49.1592303Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:879:20
+2025-08-01T02:44:49.1592871Z     at new Promise (<anonymous>)
+2025-08-01T02:44:49.1594459Z     at runWithTimeout [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:852:10[90m)[39m
+2025-08-01T02:44:49.1596537Z     at runTest [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1360:12[90m)[39m
+2025-08-01T02:44:49.1598118Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:49.1598485Z 
+2025-08-01T02:44:49.1599119Z [90mstderr[2m | control-plane/mdm/mdm.vitest.ts[2m > [22m[2mvalidateLicenseKey returns false for invalid JSON in license key
+2025-08-01T02:44:49.1600070Z [22m[39mLicense validation error: SyntaxError: Unexpected token 'h', "this is not"... is not valid JSON
+2025-08-01T02:44:49.1600853Z     at JSON.parse (<anonymous>)
+2025-08-01T02:44:49.1601570Z     at validateLicenseKey [90m(/home/runner/work/continue/continue/core/[39mcontrol-plane/mdm/mdm.ts:44:52[90m)[39m
+2025-08-01T02:44:49.1602439Z     at [90m/home/runner/work/continue/continue/core/[39mcontrol-plane/mdm/mdm.vitest.ts:78:18
+2025-08-01T02:44:49.1603314Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:103:11
+2025-08-01T02:44:49.1604487Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:26
+2025-08-01T02:44:49.1605424Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:879:20
+2025-08-01T02:44:49.1605990Z     at new Promise (<anonymous>)
+2025-08-01T02:44:49.1606788Z     at runWithTimeout [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:852:10[90m)[39m
+2025-08-01T02:44:49.1607901Z     at runTest [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1360:12[90m)[39m
+2025-08-01T02:44:49.1608789Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:49.1609130Z 
+2025-08-01T02:44:49.1669205Z [90mstderr[2m | control-plane/mdm/mdm.vitest.ts[2m > [22m[2mvalidateLicenseKey handles JSON parsing errors gracefully
+2025-08-01T02:44:49.1671290Z [22m[39mLicense validation error: TypeError: The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received undefined
+2025-08-01T02:44:49.1672229Z [90m    at Verify.update (node:internal/crypto/sig:75:11)[39m
+2025-08-01T02:44:49.1673037Z     at validateLicenseKey [90m(/home/runner/work/continue/continue/core/[39mcontrol-plane/mdm/mdm.ts:48:12[90m)[39m
+2025-08-01T02:44:49.1674059Z     at [90m/home/runner/work/continue/continue/core/[39mcontrol-plane/mdm/mdm.vitest.ts:140:18
+2025-08-01T02:44:49.1674979Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:103:11
+2025-08-01T02:44:49.1675916Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:26
+2025-08-01T02:44:49.1676860Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:879:20
+2025-08-01T02:44:49.1677429Z     at new Promise (<anonymous>)
+2025-08-01T02:44:49.1678246Z     at runWithTimeout [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:852:10[90m)[39m
+2025-08-01T02:44:49.1679366Z     at runTest [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1360:12[90m)[39m
+2025-08-01T02:44:49.1680290Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m {
+2025-08-01T02:44:49.1680837Z   code: [32m'ERR_INVALID_ARG_TYPE'[39m
+2025-08-01T02:44:49.1681136Z }
+2025-08-01T02:44:49.1681252Z 
+2025-08-01T02:44:49.1726344Z  [32m✓[39m control-plane/mdm/mdm.vitest.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+2025-08-01T02:44:49.4739137Z  [32m✓[39m context/mcp/MCPManagerSingleton.vitest.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+2025-08-01T02:44:49.7119082Z  [32m✓[39m autocomplete/generation/GeneratorReuseManager.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+2025-08-01T02:44:49.9100077Z  [32m✓[39m autocomplete/filtering/streamTransforms/charStream.vitest.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+2025-08-01T02:44:50.3044032Z  [32m✓[39m data/log.vitest.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+2025-08-01T02:44:50.5154044Z  [32m✓[39m llm/rules/nestedDirectoryRules.vitest.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+2025-08-01T02:44:50.7255919Z  [32m✓[39m llm/rules/alwaysApplyRules.vitest.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+2025-08-01T02:44:50.9358617Z  [32m✓[39m llm/rules/alwaysApply.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+2025-08-01T02:44:51.1371413Z  [32m✓[39m diff/util.vitest.ts [2m([22m[2m14 tests[22m[2m | [22m[33m10 skipped[39m[2m)[22m[32m 6[2mms[22m[39m
+2025-08-01T02:44:51.3258314Z  [32m✓[39m util/grepSearch.vitest.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+2025-08-01T02:44:51.6621020Z  [32m✓[39m config/workspace/workspaceBlocks.vitest.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+2025-08-01T02:44:51.8699311Z  [32m✓[39m config/markdown/loadCodebaseRules.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+2025-08-01T02:44:52.2188438Z  [32m✓[39m autocomplete/generation/ListenableGenerator.vitest.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 164[2mms[22m[39m
+2025-08-01T02:44:52.4237047Z  [32m✓[39m commands/util.vitest.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+2025-08-01T02:44:52.6303289Z  [32m✓[39m llm/rules/implicitGlobalRules.vitest.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+2025-08-01T02:44:52.8215078Z  [32m✓[39m nextEdit/templating/utils.vitest.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+2025-08-01T02:44:53.0163261Z  [32m✓[39m autocomplete/generation/utils.vitest.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+2025-08-01T02:44:53.2106766Z  [32m✓[39m nextEdit/diff/diff.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:44:53.4021384Z  [32m✓[39m tools/implementations/searchWeb.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+2025-08-01T02:44:53.6056747Z  [32m✓[39m nextEdit/templating/mercuryCoderNextEdit.vitest.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:44:53.8889409Z  [32m✓[39m tools/implementations/lsTool.vitest.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+2025-08-01T02:44:54.1699273Z  [32m✓[39m config/yaml/loadYaml.vitest.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+2025-08-01T02:44:55.2712687Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.2714165Z [22m[39mMock setup: {
+2025-08-01T02:44:55.2714819Z   constructLlmApi: [Function: constructLlmApi] {
+2025-08-01T02:44:55.2715665Z     getMockName: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2716430Z     mockName: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2717195Z     mockClear: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2717963Z     mockReset: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2718737Z     mockRestore: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2719619Z     getMockImplementation: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2720545Z     mockImplementation: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2721494Z     mockImplementationOnce: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2722518Z     withImplementation: [36m[Function: withImplementation][39m,
+2025-08-01T02:44:55.2723490Z     mockReturnThis: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2725097Z     mockReturnValue: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2726012Z     mockReturnValueOnce: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2726947Z     mockResolvedValue: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2727904Z     mockResolvedValueOnce: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2728901Z     mockRejectedValue: [36m[Function (anonymous)][39m,
+2025-08-01T02:44:55.2729899Z     mockRejectedValueOnce: [36m[Function (anonymous)][39m
+2025-08-01T02:44:55.2730567Z   },
+2025-08-01T02:44:55.2731275Z   [[32mSymbol(Symbol.toStringTag)[39m]: [32m'Module'[39m
+2025-08-01T02:44:55.2731867Z }
+2025-08-01T02:44:55.2732074Z 
+2025-08-01T02:44:55.2836187Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.2838611Z [22m[39mCannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.2839076Z 
+2025-08-01T02:44:55.2839268Z Code: undefined
+2025-08-01T02:44:55.2839710Z Error number: undefined
+2025-08-01T02:44:55.2840167Z Syscall: undefined
+2025-08-01T02:44:55.2840570Z Type: undefined
+2025-08-01T02:44:55.2840798Z 
+2025-08-01T02:44:55.2841251Z TypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.2842224Z     at customFetch (/home/runner/work/continue/continue/core/llm/index.ts:464:19)
+2025-08-01T02:44:55.2843264Z     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-08-01T02:44:55.2844761Z     at withExponentialBackoff (/home/runner/work/continue/continue/core/util/withExponentialBackoff.ts:14:22)
+2025-08-01T02:44:55.2846254Z     at Anthropic._streamChat (/home/runner/work/continue/continue/core/llm/llms/Anthropic.ts:329:22)
+2025-08-01T02:44:55.2847596Z     at Anthropic.streamChat (/home/runner/work/continue/continue/core/llm/index.ts:1064:28)
+2025-08-01T02:44:55.2848893Z     at dudLLMCall (/home/runner/work/continue/continue/core/llm/llm-pre-fetch.vitest.ts:19:5)
+2025-08-01T02:44:55.2850209Z     at /home/runner/work/continue/continue/core/llm/llm-pre-fetch.vitest.ts:72:5
+2025-08-01T02:44:55.2851487Z     at file:///home/runner/work/continue/continue/core/node_modules/@vitest/runner/dist/index.js:596:20
+2025-08-01T02:44:55.2852239Z 
+2025-08-01T02:44:55.2865956Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.2868495Z [22m[39mTypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.2869811Z     at customFetch [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:464:19[90m)[39m
+2025-08-01T02:44:55.2871311Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:55.2873789Z     at withExponentialBackoff [90m(/home/runner/work/continue/continue/core/[39mutil/withExponentialBackoff.ts:14:22[90m)[39m
+2025-08-01T02:44:55.2876675Z     at Anthropic._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Anthropic.ts:329:22[90m)[39m
+2025-08-01T02:44:55.2878450Z     at Anthropic.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:55.2880141Z     at dudLLMCall [90m(/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:19:5[90m)[39m
+2025-08-01T02:44:55.2881677Z     at [90m/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:72:5
+2025-08-01T02:44:55.2883355Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:20
+2025-08-01T02:44:55.2884422Z 
+2025-08-01T02:44:55.2885546Z [90mstderr[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.2887150Z [22m[39mExpected error TypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.2888610Z     at customFetch [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:464:19[90m)[39m
+2025-08-01T02:44:55.2890454Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:55.2892203Z     at withExponentialBackoff [90m(/home/runner/work/continue/continue/core/[39mutil/withExponentialBackoff.ts:14:22[90m)[39m
+2025-08-01T02:44:55.2894339Z     at Anthropic._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Anthropic.ts:329:22[90m)[39m
+2025-08-01T02:44:55.2896101Z     at Anthropic.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:55.2897815Z     at dudLLMCall [90m(/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:19:5[90m)[39m
+2025-08-01T02:44:55.2899627Z     at [90m/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:72:5
+2025-08-01T02:44:55.2901400Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:20
+2025-08-01T02:44:55.2902258Z 
+2025-08-01T02:44:55.5317538Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.5320017Z [22m[39mCannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5320500Z 
+2025-08-01T02:44:55.5320695Z Code: undefined
+2025-08-01T02:44:55.5321224Z Error number: undefined
+2025-08-01T02:44:55.5321675Z Syscall: undefined
+2025-08-01T02:44:55.5322064Z Type: undefined
+2025-08-01T02:44:55.5322280Z 
+2025-08-01T02:44:55.5322713Z TypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5323590Z     at customFetch (/home/runner/work/continue/continue/core/llm/index.ts:464:19)
+2025-08-01T02:44:55.5324762Z     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-08-01T02:44:55.5326039Z     at withExponentialBackoff (/home/runner/work/continue/continue/core/util/withExponentialBackoff.ts:14:22)
+2025-08-01T02:44:55.5327392Z     at Gemini.streamChatGemini (/home/runner/work/continue/continue/core/llm/llms/Gemini.ts:412:22)
+2025-08-01T02:44:55.5328621Z     at Gemini._streamChat (/home/runner/work/continue/continue/core/llm/llms/Gemini.ts:176:24)
+2025-08-01T02:44:55.5331564Z [90mstderr[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.5334054Z [22m[39mExpected error TypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5335360Z     at customFetch [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:464:19[90m)[39m
+2025-08-01T02:44:55.5336684Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:55.5338270Z     at withExponentialBackoff [90m(/home/runner/work/continue/continue/core/[39mutil/withExponentialBackoff.ts:14:22[90m)[39m
+2025-08-01T02:44:55.5339940Z     at Gemini.streamChatGemini [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Gemini.ts:412:22[90m)[39m
+2025-08-01T02:44:55.5341509Z     at Gemini._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Gemini.ts:176:24[90m)[39m
+2025-08-01T02:44:55.5342972Z     at Gemini.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:55.5345695Z     at dudLLMCall [90m(/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:19:5[90m)[39m
+2025-08-01T02:44:55.5347145Z     at [90m/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:86:5
+2025-08-01T02:44:55.5348618Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:20
+2025-08-01T02:44:55.5349368Z 
+2025-08-01T02:44:55.5349895Z     at Gemini.streamChat (/home/runner/work/continue/continue/core/llm/index.ts:1064:28)
+2025-08-01T02:44:55.5351062Z     at dudLLMCall (/home/runner/work/continue/continue/core/llm/llm-pre-fetch.vitest.ts:19:5)
+2025-08-01T02:44:55.5352140Z     at /home/runner/work/continue/continue/core/llm/llm-pre-fetch.vitest.ts:86:5
+2025-08-01T02:44:55.5353653Z     at file:///home/runner/work/continue/continue/core/node_modules/@vitest/runner/dist/index.js:596:20
+2025-08-01T02:44:55.5354498Z 
+2025-08-01T02:44:55.5355445Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.5356649Z [22m[39mTypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5357845Z     at customFetch [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:464:19[90m)[39m
+2025-08-01T02:44:55.5359133Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:55.5360900Z     at withExponentialBackoff [90m(/home/runner/work/continue/continue/core/[39mutil/withExponentialBackoff.ts:14:22[90m)[39m
+2025-08-01T02:44:55.5362573Z     at Gemini.streamChatGemini [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Gemini.ts:412:22[90m)[39m
+2025-08-01T02:44:55.5364300Z     at Gemini._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/Gemini.ts:176:24[90m)[39m
+2025-08-01T02:44:55.5365791Z     at Gemini.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:55.5367294Z     at dudLLMCall [90m(/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:19:5[90m)[39m
+2025-08-01T02:44:55.5368661Z     at [90m/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:86:5
+2025-08-01T02:44:55.5370067Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:20
+2025-08-01T02:44:55.5370825Z 
+2025-08-01T02:44:55.5388595Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.5390507Z [90mstderr[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.5391581Z [22m[39mExpected error TypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5392827Z     at customFetch [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:464:19[90m)[39m
+2025-08-01T02:44:55.5393773Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:55.5394987Z     at withExponentialBackoff [90m(/home/runner/work/continue/continue/core/[39mutil/withExponentialBackoff.ts:14:22[90m)[39m
+2025-08-01T02:44:55.5395975Z     at OpenAI._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/OpenAI.ts:343:22[90m)[39m
+2025-08-01T02:44:55.5396854Z     at OpenAI.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:55.5397879Z     at dudLLMCall [90m(/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:19:5[90m)[39m
+2025-08-01T02:44:55.5398706Z     at [90m/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:101:5
+2025-08-01T02:44:55.5399581Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:20
+2025-08-01T02:44:55.5400042Z 
+2025-08-01T02:44:55.5400537Z [22m[39mCannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5400891Z 
+2025-08-01T02:44:55.5400999Z Code: undefined
+2025-08-01T02:44:55.5401252Z Error number: undefined
+2025-08-01T02:44:55.5401509Z Syscall: undefined
+2025-08-01T02:44:55.5401745Z Type: undefined
+2025-08-01T02:44:55.5401880Z 
+2025-08-01T02:44:55.5402140Z TypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5402690Z     at customFetch (/home/runner/work/continue/continue/core/llm/index.ts:464:19)
+2025-08-01T02:44:55.5403279Z     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-08-01T02:44:55.5404182Z     at withExponentialBackoff (/home/runner/work/continue/continue/core/util/withExponentialBackoff.ts:14:22)
+2025-08-01T02:44:55.5405223Z     at OpenAI._streamChat (/home/runner/work/continue/continue/core/llm/llms/OpenAI.ts:343:22)
+2025-08-01T02:44:55.5405901Z     at OpenAI.streamChat (/home/runner/work/continue/continue/core/llm/index.ts:1064:28)
+2025-08-01T02:44:55.5406570Z     at dudLLMCall (/home/runner/work/continue/continue/core/llm/llm-pre-fetch.vitest.ts:19:5)
+2025-08-01T02:44:55.5407227Z     at /home/runner/work/continue/continue/core/llm/llm-pre-fetch.vitest.ts:101:5
+2025-08-01T02:44:55.5407921Z     at file:///home/runner/work/continue/continue/core/node_modules/@vitest/runner/dist/index.js:596:20
+2025-08-01T02:44:55.5408319Z 
+2025-08-01T02:44:55.5408877Z [90mstdout[2m | llm/llm-pre-fetch.vitest.ts[2m > [22m[2mLLM Pre-fetch[2m > [22m[2mInvalid tool call args are ignored
+2025-08-01T02:44:55.5409766Z [22m[39mTypeError: Cannot read properties of undefined (reading 'ok')
+2025-08-01T02:44:55.5410492Z     at customFetch [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:464:19[90m)[39m
+2025-08-01T02:44:55.5411788Z [90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+2025-08-01T02:44:55.5413111Z     at withExponentialBackoff [90m(/home/runner/work/continue/continue/core/[39mutil/withExponentialBackoff.ts:14:22[90m)[39m
+2025-08-01T02:44:55.5414317Z     at OpenAI._streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/llms/OpenAI.ts:343:22[90m)[39m
+2025-08-01T02:44:55.5415820Z     at OpenAI.streamChat [90m(/home/runner/work/continue/continue/core/[39mllm/index.ts:1064:28[90m)[39m
+2025-08-01T02:44:55.5417285Z     at dudLLMCall [90m(/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:19:5[90m)[39m
+2025-08-01T02:44:55.5418724Z     at [90m/home/runner/work/continue/continue/core/[39mllm/llm-pre-fetch.vitest.ts:101:5
+2025-08-01T02:44:55.5420280Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:20
+2025-08-01T02:44:55.5421083Z 
+2025-08-01T02:44:55.5421868Z  [32m✓[39m llm/llm-pre-fetch.vitest.ts [2m([22m[2m1 test[22m[2m)[22m[32m 273[2mms[22m[39m
+2025-08-01T02:44:55.7573388Z  [32m✓[39m autocomplete/util/processSingleLineCompletion.vitest.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+2025-08-01T02:44:55.9612551Z  [32m✓[39m tools/implementations/fetchUrlContent.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+2025-08-01T02:44:56.1478233Z  [32m✓[39m utils/streamMarkdownUtils.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:44:56.3428227Z  [32m✓[39m tools/implementations/viewDiff.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+2025-08-01T02:44:56.7390327Z [90mstderr[2m | autocomplete/snippets/gitDiffCache.vitest.ts[2m > [22m[2mGitDiffCache returns empty array on error
+2025-08-01T02:44:56.7391458Z [22m[39mError fetching git diff: Error: Git error
+2025-08-01T02:44:56.7392488Z     at [90m/home/runner/work/continue/continue/core/[39mautocomplete/snippets/gitDiffCache.vitest.ts:35:47
+2025-08-01T02:44:56.7394104Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:103:11
+2025-08-01T02:44:56.7395302Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:596:26
+2025-08-01T02:44:56.7396447Z     at [90mfile:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:879:20
+2025-08-01T02:44:56.7397167Z     at new Promise (<anonymous>)
+2025-08-01T02:44:56.7398160Z     at runWithTimeout [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:852:10[90m)[39m
+2025-08-01T02:44:56.7399571Z     at runTest [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1360:12[90m)[39m
+2025-08-01T02:44:56.7400908Z     at runSuite [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1507:8[90m)[39m
+2025-08-01T02:44:56.7402617Z     at runFiles [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1561:3[90m)[39m
+2025-08-01T02:44:56.7404076Z     at startTests [90m(file:///home/runner/work/continue/continue/core/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:1571:2[90m)[39m
+2025-08-01T02:44:56.7404713Z 
+2025-08-01T02:44:56.7416640Z  [32m✓[39m autocomplete/snippets/gitDiffCache.vitest.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 214[2mms[22m[39m
+2025-08-01T02:44:56.9277731Z  [32m✓[39m tools/systemMessageTools/detectToolCallStart.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+2025-08-01T02:44:57.1169785Z  [32m✓[39m context/retrieval/utils.vitest.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:44:57.3067952Z  [32m✓[39m config/shouldAutoEnableSystemMessageTools.vitest.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:44:57.5091074Z  [32m✓[39m llm/rules/fileProtocolMatching.vitest.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:44:59.6882673Z [90mstdout[2m | context/providers/_context-providers.vitest.ts
+2025-08-01T02:44:59.6883441Z [22m[39mNODE_ENV test
+2025-08-01T02:44:59.6883675Z 
+2025-08-01T02:44:59.9619426Z  [2m[90m↓[39m[22m context/providers/_context-providers.vitest.ts [2m([22m[2m8 tests[22m[2m | [22m[33m8 skipped[39m[2m)[22m
+2025-08-01T02:45:00.7102153Z [90mstdout[2m | config/ConfigHandler.vitest.ts
+2025-08-01T02:45:00.7102961Z [22m[39mNODE_ENV test
+2025-08-01T02:45:00.7103260Z 
+2025-08-01T02:45:02.4878206Z  [2m[90m↓[39m[22m config/ConfigHandler.vitest.ts [2m([22m[2m4 tests[22m[2m | [22m[33m4 skipped[39m[2m)[22m
+2025-08-01T02:45:02.6887558Z  [32m✓[39m autocomplete/util/completionTestUtils.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:45:02.8703694Z  [32m✓[39m tools/mcpToolName.vitest.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+2025-08-01T02:45:03.6145754Z [90mstdout[2m | autocomplete/context/root-path-context/test/RootPathContextService.vitest.ts
+2025-08-01T02:45:03.6146794Z [22m[39mNODE_ENV test
+2025-08-01T02:45:03.6147015Z 
+2025-08-01T02:45:06.1659032Z  [32m✓[39m autocomplete/context/root-path-context/test/RootPathContextService.vitest.ts [2m([22m[2m43 tests[22m[2m)[22m[33m 742[2mms[22m[39m
+2025-08-01T02:45:06.3689423Z  [32m✓[39m tools/systemMessageTools/systemToolUtils.vitest.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:45:06.6347005Z  [32m✓[39m config/util.vitest.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+2025-08-01T02:45:07.7967529Z [90mstdout[2m | autocomplete/filtering/test/filter.vitest.ts
+2025-08-01T02:45:07.7968446Z [22m[39mNODE_ENV test
+2025-08-01T02:45:07.7968745Z 
+2025-08-01T02:45:54.4258870Z  [32m✓[39m autocomplete/filtering/test/filter.vitest.ts [2m([22m[2m110 tests[22m[2m)[22m[33m 45145[2mms[22m[39m
+2025-08-01T02:45:54.4261625Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'should pass' [33m 449[2mms[22m[39m
+2025-08-01T02:45:54.4264886Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should preserve closing brackets when…' [33m 430[2mms[22m[39m
+2025-08-01T02:45:54.4267325Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should multiline-autocomplete CSS blo…' [33m 417[2mms[22m[39m
+2025-08-01T02:45:54.4270085Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete CSS rules inside a ne…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4272392Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a CSS rule when the p…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4275222Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle CSS autocomplete with a…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4277278Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete CSS pseudoclass' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4279093Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle CSS variable syntax' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4280524Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete CSS grid template col…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4282191Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete PHP function inside a…' [33m 440[2mms[22m[39m
+2025-08-01T02:45:54.4283586Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete PHP function with…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4285201Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle PHP completion in the m…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4287281Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete React return stat…' [33m 422[2mms[22m[39m
+2025-08-01T02:45:54.4289567Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete React state initi…' [33m 412[2mms[22m[39m
+2025-08-01T02:45:54.4291077Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete React component m…' [33m 421[2mms[22m[39m
+2025-08-01T02:45:54.4292821Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Python function d…' [33m 410[2mms[22m[39m
+2025-08-01T02:45:54.4294255Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete Python class method w…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4295486Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Python list compr…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4296704Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a simple Go funct…' [33m 411[2mms[22m[39m
+2025-08-01T02:45:54.4297926Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle autocomplete in the mid…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4299147Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a missing Go func…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4300345Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete SQL query with ne…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4301546Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete SQL script with e…' [33m 410[2mms[22m[39m
+2025-08-01T02:45:54.4302810Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete multi-line SQL qu…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4304318Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete HTML paragraph co…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4305893Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete HTML attributes w…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4307107Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete HTML nested tags' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4308317Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a class method in Ruby' [33m 412[2mms[22m[39m
+2025-08-01T02:45:54.4309643Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete Ruby if-else block' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4310825Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete Ruby array method' [33m 405[2mms[22m[39m
+2025-08-01T02:45:54.4312024Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Java within a str…' [33m 411[2mms[22m[39m
+2025-08-01T02:45:54.4313229Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a C++ class defin…' [33m 436[2mms[22m[39m
+2025-08-01T02:45:54.4314690Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a C++ method declarat…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4315901Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete C++ for loop synt…' [33m 452[2mms[22m[39m
+2025-08-01T02:45:54.4317116Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete JSON object insid…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4318323Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete within a CSV reco…' [33m 412[2mms[22m[39m
+2025-08-01T02:45:54.4319527Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete CSV record when start…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4320741Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete CSV structure adding …' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4321949Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a Rust function i…' [33m 420[2mms[22m[39m
+2025-08-01T02:45:54.4323149Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Rust struct defin…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4324580Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Haskell: Nested pattern matching with…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4325789Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Haskell: Complex function with where …' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4326985Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Haskell: List comprehension with comp…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4328190Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Dart class methods' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4329396Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle string interpolation in…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4330751Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete within a Dart fun…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4331956Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Clojure function …' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4333152Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete missing part of a…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4334675Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete inside a Clojure …' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4335894Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete R function defini…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4337103Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete R loop and print stat…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4338305Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete R data frame crea…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4339506Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete R if-else stateme…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4340708Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete R ggplot2 plot st…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4341903Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Scala class with …' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4343098Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle Scala case class with a…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4344507Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Scala function wi…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4345710Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete C function defini…' [33m 416[2mms[22m[39m
+2025-08-01T02:45:54.4346904Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle C struct with missing f…' [33m 410[2mms[22m[39m
+2025-08-01T02:45:54.4348097Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete C function with m…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4349288Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a simple Kotlin f…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4350478Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle autocomplete inside a K…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4351671Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete Kotlin if-else struct…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4352876Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Solidity function…' [33m 412[2mms[22m[39m
+2025-08-01T02:45:54.4354261Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Solidity event wi…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4355631Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle Solidity struct definit…' [33m 411[2mms[22m[39m
+2025-08-01T02:45:54.4356826Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete TypeScript interf…' [33m 417[2mms[22m[39m
+2025-08-01T02:45:54.4358032Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete TypeScript interf…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4359337Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a TypeScript arro…' [33m 427[2mms[22m[39m
+2025-08-01T02:45:54.4360541Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a C# class with a…' [33m 414[2mms[22m[39m
+2025-08-01T02:45:54.4361732Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete a C# interface me…' [33m 405[2mms[22m[39m
+2025-08-01T02:45:54.4362922Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete inside C# method …' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4364307Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a simple Julia functi…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4365518Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Julia for loop' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4366721Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a Julia struct defini…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4367927Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a Julia dictionary ac…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4369113Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete a Julia module declar…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4370299Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete F# let-binding with f…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4371494Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete incomplete F# type de…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4372687Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete F# pattern matching e…' [33m 405[2mms[22m[39m
+2025-08-01T02:45:54.4374088Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete F# list comprehension…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4375298Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete an F# recursive funct…' [33m 405[2mms[22m[39m
+2025-08-01T02:45:54.4376492Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete F# member method insi…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4377692Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should complete F# async workflow fun…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4378886Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete SCSS nested class…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4380228Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle SCSS mixin within a cla…' [33m 405[2mms[22m[39m
+2025-08-01T02:45:54.4381420Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete SCSS variable in …' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4382615Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Vue component met…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4384147Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Vue computed prop…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4385510Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Vue method using …' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4386739Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Svelte reactive s…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4387959Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should autocomplete Svelte component …' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4389165Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle autocomplete in Svelte …' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4390407Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return unmodified LLM output[2m > [22m'Should handle autocomplete in two sim…' [33m 417[2mms[22m[39m
+2025-08-01T02:45:54.4391599Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should handle python multi-line string' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4392915Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete Rust match arms' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4394291Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should complete a Markdown code block' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4395743Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete Java when inside …' [33m 411[2mms[22m[39m
+2025-08-01T02:45:54.4396956Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete a Markdown headin…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4398149Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete a Java method wit…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4399333Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should filter out consecutive, repeat…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4400509Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should enforce bracket matching in JS…' [33m 414[2mms[22m[39m
+2025-08-01T02:45:54.4401690Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should return nothing when output is …' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4402863Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should return partial result when out…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.4404248Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete React effect hook' [33m 411[2mms[22m[39m
+2025-08-01T02:45:54.4405623Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete simple return sta…' [33m 408[2mms[22m[39m
+2025-08-01T02:45:54.4406811Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should complete YAML list item and pr…' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4408006Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should complete YAML key-value pair i…' [33m 406[2mms[22m[39m
+2025-08-01T02:45:54.4409303Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should complete YAML block within an …' [33m 407[2mms[22m[39m
+2025-08-01T02:45:54.4410492Z    [33m[2m✓[22m[39m Autocomplete filtering tests[2m > [22mShould return modified LLM output[2m > [22m'Should autocomplete SQL query with su…' [33m 409[2mms[22m[39m
+2025-08-01T02:45:54.7416503Z  [32m✓[39m config/markdown/utils.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+2025-08-01T02:45:56.1032782Z  [32m✓[39m llm/llms/Fireworks.vitest.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 267[2mms[22m[39m
+2025-08-01T02:45:57.5029869Z  [32m✓[39m llm/llms/Groq.vitest.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 306[2mms[22m[39m
+2025-08-01T02:45:57.5260856Z 
+2025-08-01T02:45:57.5269663Z [2m Test Files [22m [1m[32m67 passed[39m[22m[2m | [22m[33m2 skipped[39m[90m (69)[39m
+2025-08-01T02:45:57.5273527Z [2m      Tests [22m [1m[32m1056 passed[39m[22m[2m | [22m[33m24 skipped[39m[2m | [22m[90m1 todo[39m[90m (1081)[39m
+2025-08-01T02:45:57.5274549Z [2m   Start at [22m 02:44:28
+2025-08-01T02:45:57.5280418Z [2m   Duration [22m 89.29s[2m (transform 2.12s, setup 1.41s, collect 22.32s, tests 54.32s, environment 12ms, prepare 4.01s)[22m
+2025-08-01T02:45:57.5280890Z 
+2025-08-01T02:45:57.5745145Z Post job cleanup.
+2025-08-01T02:45:57.6348439Z Post job cleanup.
+2025-08-01T02:45:57.7638280Z Cache hit occurred on the primary key Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:45:57.8250790Z Post job cleanup.
+2025-08-01T02:45:57.9531532Z Cache hit occurred on the primary key Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1, not saving cache.
+2025-08-01T02:45:58.0318181Z Post job cleanup.
+2025-08-01T02:45:58.1597856Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:45:58.2221146Z Post job cleanup.
+2025-08-01T02:45:58.3505670Z Cache hit occurred on the primary key Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:45:58.3594013Z Post job cleanup.
+2025-08-01T02:45:58.5282212Z Post job cleanup.
+2025-08-01T02:45:58.5986223Z Post job cleanup.
+2025-08-01T02:45:58.7291420Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:45:58.8016166Z Post job cleanup.
+2025-08-01T02:45:58.9369333Z Cache hit occurred on the primary key Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:45:58.9473072Z Post job cleanup.
+2025-08-01T02:45:59.1163129Z Post job cleanup.
+2025-08-01T02:45:59.2143123Z [command]/usr/bin/git version
+2025-08-01T02:45:59.2188549Z git version 2.50.1
+2025-08-01T02:45:59.2233499Z Temporarily overriding HOME='/home/runner/work/_temp/a2d7e284-4969-4702-8450-a74280bbf428' before making global git config changes
+2025-08-01T02:45:59.2235336Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:45:59.2240118Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:45:59.2277095Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:45:59.2312258Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:45:59.2551889Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:45:59.2574778Z http.https://github.com/.extraheader
+2025-08-01T02:45:59.2588711Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:45:59.2619689Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:45:59.2955935Z Cleaning up orphan processes

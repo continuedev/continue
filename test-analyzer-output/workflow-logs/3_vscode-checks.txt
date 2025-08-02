@@ -1,0 +1,774 @@
+﻿2025-08-01T02:41:19.5100103Z Current runner version: '2.327.1'
+2025-08-01T02:41:19.5133920Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:19.5135438Z Hosted Compute Agent
+2025-08-01T02:41:19.5136349Z Version: 20250711.363
+2025-08-01T02:41:19.5137363Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:19.5138782Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:19.5139817Z ##[endgroup]
+2025-08-01T02:41:19.5140727Z ##[group]Operating System
+2025-08-01T02:41:19.5141896Z Ubuntu
+2025-08-01T02:41:19.5142756Z 24.04.2
+2025-08-01T02:41:19.5143740Z LTS
+2025-08-01T02:41:19.5144818Z ##[endgroup]
+2025-08-01T02:41:19.5145710Z ##[group]Runner Image
+2025-08-01T02:41:19.5146560Z Image: ubuntu-24.04
+2025-08-01T02:41:19.5147576Z Version: 20250728.1.0
+2025-08-01T02:41:19.5149350Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:19.5152228Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:19.5154159Z ##[endgroup]
+2025-08-01T02:41:19.5156137Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:19.5158610Z Contents: read
+2025-08-01T02:41:19.5159454Z Metadata: read
+2025-08-01T02:41:19.5160543Z Packages: read
+2025-08-01T02:41:19.5161393Z ##[endgroup]
+2025-08-01T02:41:19.5164502Z Secret source: Actions
+2025-08-01T02:41:19.5165720Z Prepare workflow directory
+2025-08-01T02:41:19.5635348Z Prepare all required actions
+2025-08-01T02:41:19.5693539Z Getting action download info
+2025-08-01T02:41:19.8159337Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:19.8160390Z Version: 4.2.2
+2025-08-01T02:41:19.8161364Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:19.8162682Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:19.8163771Z ##[endgroup]
+2025-08-01T02:41:19.9917893Z Complete job name: vscode-checks
+2025-08-01T02:41:20.0586734Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:20.0587651Z with:
+2025-08-01T02:41:20.0588192Z   repository: continuedev/continue
+2025-08-01T02:41:20.0588823Z   token: ***
+2025-08-01T02:41:20.0589483Z   ssh-strict: true
+2025-08-01T02:41:20.0589955Z   ssh-user: git
+2025-08-01T02:41:20.0590350Z   persist-credentials: true
+2025-08-01T02:41:20.0590981Z   clean: true
+2025-08-01T02:41:20.0591383Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:20.0591855Z   fetch-depth: 1
+2025-08-01T02:41:20.0592246Z   fetch-tags: false
+2025-08-01T02:41:20.0592633Z   show-progress: true
+2025-08-01T02:41:20.0593043Z   lfs: false
+2025-08-01T02:41:20.0593578Z   submodules: false
+2025-08-01T02:41:20.0593986Z   set-safe-directory: true
+2025-08-01T02:41:20.0594683Z ##[endgroup]
+2025-08-01T02:41:20.1670440Z Syncing repository: continuedev/continue
+2025-08-01T02:41:20.1672111Z ##[group]Getting Git version info
+2025-08-01T02:41:20.1672801Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:20.1674042Z [command]/usr/bin/git version
+2025-08-01T02:41:20.1729275Z git version 2.50.1
+2025-08-01T02:41:20.1755888Z ##[endgroup]
+2025-08-01T02:41:20.1768479Z Temporarily overriding HOME='/home/runner/work/_temp/b175af48-5c2a-4e94-ae6d-505d1da2fceb' before making global git config changes
+2025-08-01T02:41:20.1769964Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:20.1774111Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:20.1808109Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:20.1811923Z ##[group]Initializing the repository
+2025-08-01T02:41:20.1816831Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:20.1916814Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:20.1918314Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:20.1919770Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:20.1920953Z hint:
+2025-08-01T02:41:20.1921976Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:20.1923013Z hint:
+2025-08-01T02:41:20.1924213Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:20.1925832Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:20.1927131Z hint:
+2025-08-01T02:41:20.1927784Z hint: 	git branch -m <name>
+2025-08-01T02:41:20.1928537Z hint:
+2025-08-01T02:41:20.1929524Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:20.1931268Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:20.1934321Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:20.1966458Z ##[endgroup]
+2025-08-01T02:41:20.1967638Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:20.1971254Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:20.1999428Z ##[endgroup]
+2025-08-01T02:41:20.2000659Z ##[group]Setting up auth
+2025-08-01T02:41:20.2006913Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:20.2036991Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:20.2340510Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:20.2370513Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:20.2589292Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:20.2623730Z ##[endgroup]
+2025-08-01T02:41:20.2624904Z ##[group]Fetching the repository
+2025-08-01T02:41:20.2632551Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:23.1059346Z From https://github.com/continuedev/continue
+2025-08-01T02:41:23.1061532Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:23.1088734Z ##[endgroup]
+2025-08-01T02:41:23.1090793Z ##[group]Determining the checkout info
+2025-08-01T02:41:23.1092837Z ##[endgroup]
+2025-08-01T02:41:23.1097272Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:23.1137429Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:23.1165639Z ##[group]Checking out the ref
+2025-08-01T02:41:23.1169174Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:24.1226075Z Updating files:  91% (2156/2354)
+2025-08-01T02:41:24.1234681Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:24.1243158Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:24.1253983Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:24.1268472Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:24.1283080Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:24.1298191Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:24.1310691Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:24.1325955Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:24.1326505Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:24.1327010Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:24.1355407Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:24.1355903Z 
+2025-08-01T02:41:24.1356318Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:24.1357259Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:24.1358219Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:24.1358740Z 
+2025-08-01T02:41:24.1359053Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:24.1360118Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:24.1360540Z 
+2025-08-01T02:41:24.1360782Z   git switch -c <new-branch-name>
+2025-08-01T02:41:24.1361101Z 
+2025-08-01T02:41:24.1361284Z Or undo this operation with:
+2025-08-01T02:41:24.1361581Z 
+2025-08-01T02:41:24.1361787Z   git switch -
+2025-08-01T02:41:24.1362004Z 
+2025-08-01T02:41:24.1362376Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:24.1362911Z 
+2025-08-01T02:41:24.1363775Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:24.1425216Z ##[endgroup]
+2025-08-01T02:41:24.1463443Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:24.1485843Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:24.1730942Z Prepare all required actions
+2025-08-01T02:41:24.1731428Z Getting action download info
+2025-08-01T02:41:24.3391283Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:24.3391768Z Version: 4.4.0
+2025-08-01T02:41:24.3392220Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:24.3392819Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:24.3393394Z ##[endgroup]
+2025-08-01T02:41:24.4268925Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:24.4269299Z Version: 4.2.3
+2025-08-01T02:41:24.4269651Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:24.4270119Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:24.4270442Z ##[endgroup]
+2025-08-01T02:41:24.6204538Z ##[group]Run ./.github/actions/setup-packages
+2025-08-01T02:41:24.6204846Z ##[endgroup]
+2025-08-01T02:41:24.6401093Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:24.6401341Z with:
+2025-08-01T02:41:24.6401531Z   node-version-file: .nvmrc
+2025-08-01T02:41:24.6401767Z   always-auth: false
+2025-08-01T02:41:24.6401947Z   check-latest: false
+2025-08-01T02:41:24.6402252Z   token: ***
+2025-08-01T02:41:24.6402428Z ##[endgroup]
+2025-08-01T02:41:24.8064727Z Node version file is not JSON file
+2025-08-01T02:41:24.8068080Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:24.8087125Z Attempting to download 20.19.0...
+2025-08-01T02:41:25.2279310Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:25.6171688Z Extracting ...
+2025-08-01T02:41:25.6271664Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/baca7282-41c9-4158-a9ba-b4439526e5af -f /home/runner/work/_temp/4dbc61f4-9c98-413c-9f3f-244e64c21ac7
+2025-08-01T02:41:26.6066731Z Adding to the cache ...
+2025-08-01T02:41:28.2250319Z ##[group]Environment details
+2025-08-01T02:41:28.4381042Z node: v20.19.0
+2025-08-01T02:41:28.4381559Z npm: 10.8.2
+2025-08-01T02:41:28.4383993Z yarn: 1.22.22
+2025-08-01T02:41:28.4385258Z ##[endgroup]
+2025-08-01T02:41:28.5200108Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:28.5200351Z with:
+2025-08-01T02:41:28.5200517Z   path: ~/.npm
+2025-08-01T02:41:28.5200916Z   key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:28.5201388Z   enableCrossOsArchive: false
+2025-08-01T02:41:28.5201616Z   fail-on-cache-miss: false
+2025-08-01T02:41:28.5201818Z   lookup-only: false
+2025-08-01T02:41:28.5202015Z   save-always: false
+2025-08-01T02:41:28.5202207Z ##[endgroup]
+2025-08-01T02:41:28.8047640Z Cache hit for: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:29.7430793Z Received 69543054 of 69543054 (100.0%), 82.4 MBs/sec
+2025-08-01T02:41:29.7431781Z Cache Size: ~66 MB (69543054 B)
+2025-08-01T02:41:29.7461457Z [command]/usr/bin/tar -xf /home/runner/work/_temp/496a975b-7c14-4b23-a273-1a58cd80b1ec/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:30.0070488Z Cache restored successfully
+2025-08-01T02:41:30.0279031Z Cache restored from key: Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:30.1012477Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:30.1012707Z with:
+2025-08-01T02:41:30.1012886Z   path: packages/*/node_modules
+
+2025-08-01T02:41:30.1013789Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:30.1014359Z   enableCrossOsArchive: false
+2025-08-01T02:41:30.1014602Z   fail-on-cache-miss: false
+2025-08-01T02:41:30.1014808Z   lookup-only: false
+2025-08-01T02:41:30.1014997Z   save-always: false
+2025-08-01T02:41:30.1015183Z ##[endgroup]
+2025-08-01T02:41:30.4071973Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:31.2516925Z Received 83741540 of 83741540 (100.0%), 112.8 MBs/sec
+2025-08-01T02:41:31.2518277Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:41:31.2547089Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ea69d0e4-e074-4ff3-a483-4e9085bcaf07/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:33.6537959Z Cache restored successfully
+2025-08-01T02:41:33.6781568Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:41:33.6896500Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:33.6896890Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:33.6929356Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:33.6929691Z ##[endgroup]
+2025-08-01T02:41:33.7229781Z 🚀 Starting package builds...
+2025-08-01T02:41:33.7230132Z 
+2025-08-01T02:41:33.7237058Z Starting config-types (install): npm ci
+2025-08-01T02:41:34.3450083Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:34.3450918Z Starting config-types (build): npm run build
+2025-08-01T02:41:36.0123850Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:36.0124521Z Starting fetch (install): npm ci
+2025-08-01T02:41:36.0140613Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:36.0159318Z Starting llm-info (install): npm ci
+2025-08-01T02:41:36.9090592Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:36.9099269Z Starting llm-info (build): npm run build
+2025-08-01T02:41:38.1188985Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:41:38.1189727Z Starting fetch (build): npm run build
+2025-08-01T02:41:38.9996753Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:41:40.8314322Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:41:42.2136321Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:41:42.2136836Z Starting config-yaml (build): npm run build
+2025-08-01T02:41:45.9705520Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:41:45.9707172Z 🧹 Cleaning node_modules for openai-adapters
+2025-08-01T02:41:45.9714573Z 🧹 Cleaning node_modules for continue-sdk
+2025-08-01T02:41:46.7819954Z Starting continue-sdk (install): npm ci
+2025-08-01T02:41:46.7853429Z Starting openai-adapters (install): npm ci
+2025-08-01T02:41:53.0571434Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:41:53.0572380Z Starting openai-adapters (build): npm run build
+2025-08-01T02:41:56.4584833Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:41:56.4644353Z Starting continue-sdk (build): npm run build
+2025-08-01T02:41:56.6276454Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:41:59.0733551Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:41:59.0734466Z 🎉 All packages built successfully!
+2025-08-01T02:41:59.0937339Z Prepare all required actions
+2025-08-01T02:41:59.0937695Z Getting action download info
+2025-08-01T02:41:59.2822000Z ##[group]Run ./.github/actions/setup-component
+2025-08-01T02:41:59.2822479Z with:
+2025-08-01T02:41:59.2822654Z   component: core
+2025-08-01T02:41:59.2822844Z   include-root: true
+2025-08-01T02:41:59.2823050Z   include-packages: true
+2025-08-01T02:41:59.2823469Z ##[endgroup]
+2025-08-01T02:41:59.2857149Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:59.2857392Z with:
+2025-08-01T02:41:59.2857573Z   node-version-file: .nvmrc
+2025-08-01T02:41:59.2857789Z   always-auth: false
+2025-08-01T02:41:59.2857985Z   check-latest: false
+2025-08-01T02:41:59.2858279Z   token: ***
+2025-08-01T02:41:59.2858451Z ##[endgroup]
+2025-08-01T02:41:59.4715186Z Node version file is not JSON file
+2025-08-01T02:41:59.4717116Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:59.4730405Z Found in cache @ /opt/hostedtoolcache/node/20.19.0/x64
+2025-08-01T02:41:59.4737853Z ##[group]Environment details
+2025-08-01T02:41:59.6615231Z node: v20.19.0
+2025-08-01T02:41:59.6615912Z npm: 10.8.2
+2025-08-01T02:41:59.6616484Z yarn: 1.22.22
+2025-08-01T02:41:59.6617175Z ##[endgroup]
+2025-08-01T02:41:59.7249090Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:59.7249317Z with:
+2025-08-01T02:41:59.7249489Z   path: ~/.npm
+2025-08-01T02:41:59.7249869Z   key: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:59.7250436Z   enableCrossOsArchive: false
+2025-08-01T02:41:59.7250677Z   fail-on-cache-miss: false
+2025-08-01T02:41:59.7250900Z   lookup-only: false
+2025-08-01T02:41:59.7251095Z   save-always: false
+2025-08-01T02:41:59.7251284Z ##[endgroup]
+2025-08-01T02:41:59.9623771Z Cache hit for: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:01.0762213Z Received 134217728 of 322896480 (41.6%), 127.7 MBs/sec
+2025-08-01T02:42:02.0741490Z Received 322896480 of 322896480 (100.0%), 154.0 MBs/sec
+2025-08-01T02:42:02.0743922Z Cache Size: ~308 MB (322896480 B)
+2025-08-01T02:42:02.0847227Z [command]/usr/bin/tar -xf /home/runner/work/_temp/d3fd9482-4690-4053-8c9c-45294746ecc0/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:02.8642970Z Cache restored successfully
+2025-08-01T02:42:02.9364896Z Cache restored from key: Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:03.0143533Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:03.0143790Z with:
+2025-08-01T02:42:03.0143993Z   path: packages/*/node_modules
+
+2025-08-01T02:42:03.0144481Z   key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:03.0144979Z   enableCrossOsArchive: false
+2025-08-01T02:42:03.0145221Z   fail-on-cache-miss: false
+2025-08-01T02:42:03.0145443Z   lookup-only: false
+2025-08-01T02:42:03.0145644Z   save-always: false
+2025-08-01T02:42:03.0145843Z ##[endgroup]
+2025-08-01T02:42:03.2769587Z Cache hit for: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:04.1312823Z Received 83741540 of 83741540 (100.0%), 107.9 MBs/sec
+2025-08-01T02:42:04.1314010Z Cache Size: ~80 MB (83741540 B)
+2025-08-01T02:42:04.1342877Z [command]/usr/bin/tar -xf /home/runner/work/_temp/166718b5-c5ea-4018-816b-fbd5ee46c1e4/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:08.0736343Z Cache restored successfully
+2025-08-01T02:42:08.0990993Z Cache restored from key: Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1
+2025-08-01T02:42:08.1673168Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:08.1673679Z with:
+2025-08-01T02:42:08.1673974Z   path: node_modules
+2025-08-01T02:42:08.1674514Z   key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:08.1675108Z   enableCrossOsArchive: false
+2025-08-01T02:42:08.1675363Z   fail-on-cache-miss: false
+2025-08-01T02:42:08.1675953Z   lookup-only: false
+2025-08-01T02:42:08.1676303Z   save-always: false
+2025-08-01T02:42:08.1676538Z ##[endgroup]
+2025-08-01T02:42:08.4180188Z Cache hit for: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:09.3387169Z Received 12019642 of 12019642 (100.0%), 14.8 MBs/sec
+2025-08-01T02:42:09.3388075Z Cache Size: ~11 MB (12019642 B)
+2025-08-01T02:42:09.3417131Z [command]/usr/bin/tar -xf /home/runner/work/_temp/1386395f-bf94-4b35-a96b-4caa5589653f/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:09.7986985Z Cache restored successfully
+2025-08-01T02:42:09.8095841Z Cache restored from key: Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1
+2025-08-01T02:42:09.8771216Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:09.8771466Z with:
+2025-08-01T02:42:09.8771661Z   path: core/node_modules
+2025-08-01T02:42:09.8772120Z   key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:09.8772592Z   enableCrossOsArchive: false
+2025-08-01T02:42:09.8772834Z   fail-on-cache-miss: false
+2025-08-01T02:42:09.8773079Z   lookup-only: false
+2025-08-01T02:42:09.8773613Z   save-always: false
+2025-08-01T02:42:09.8773824Z ##[endgroup]
+2025-08-01T02:42:10.1139910Z Cache hit for: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:11.2506409Z Received 134217728 of 155660310 (86.2%), 127.9 MBs/sec
+2025-08-01T02:42:11.3932026Z Received 155660310 of 155660310 (100.0%), 129.9 MBs/sec
+2025-08-01T02:42:11.3932815Z Cache Size: ~148 MB (155660310 B)
+2025-08-01T02:42:11.4025706Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ef8df10f-2eaf-4d9f-b545-dfe854295c23/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:14.5964448Z Cache restored successfully
+2025-08-01T02:42:14.6343943Z Cache restored from key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:42:14.6503172Z Prepare all required actions
+2025-08-01T02:42:14.6503795Z Getting action download info
+2025-08-01T02:42:14.8384342Z ##[group]Run ./.github/actions/setup-component
+2025-08-01T02:42:14.8384641Z with:
+2025-08-01T02:42:14.8384833Z   component: vscode
+2025-08-01T02:42:14.8385059Z   include-packages: false
+2025-08-01T02:42:14.8385297Z   include-root: false
+2025-08-01T02:42:14.8385502Z env:
+2025-08-01T02:42:14.8386066Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:14.8386281Z ##[endgroup]
+2025-08-01T02:42:14.8418968Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:42:14.8419224Z with:
+2025-08-01T02:42:14.8419429Z   node-version-file: .nvmrc
+2025-08-01T02:42:14.8419661Z   always-auth: false
+2025-08-01T02:42:14.8419881Z   check-latest: false
+2025-08-01T02:42:14.8420174Z   token: ***
+2025-08-01T02:42:14.8420377Z env:
+2025-08-01T02:42:14.8420847Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:14.8421065Z ##[endgroup]
+2025-08-01T02:42:15.0116655Z Node version file is not JSON file
+2025-08-01T02:42:15.0119163Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:42:15.0131033Z Found in cache @ /opt/hostedtoolcache/node/20.19.0/x64
+2025-08-01T02:42:15.0137498Z ##[group]Environment details
+2025-08-01T02:42:15.1901455Z node: v20.19.0
+2025-08-01T02:42:15.1901932Z npm: 10.8.2
+2025-08-01T02:42:15.1902314Z yarn: 1.22.22
+2025-08-01T02:42:15.1903092Z ##[endgroup]
+2025-08-01T02:42:15.2549608Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:15.2549917Z with:
+2025-08-01T02:42:15.2550114Z   path: ~/.npm
+2025-08-01T02:42:15.2550553Z   key: Linux-npm-cache-vscode-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:15.2551080Z   enableCrossOsArchive: false
+2025-08-01T02:42:15.2551349Z   fail-on-cache-miss: false
+2025-08-01T02:42:15.2551603Z   lookup-only: false
+2025-08-01T02:42:15.2551827Z   save-always: false
+2025-08-01T02:42:15.2552058Z env:
+2025-08-01T02:42:15.2552769Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:15.2553003Z ##[endgroup]
+2025-08-01T02:42:15.4901727Z Cache hit for: Linux-npm-cache-vscode-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:16.6077772Z Received 134217728 of 309146036 (43.4%), 127.9 MBs/sec
+2025-08-01T02:42:17.4665207Z Received 309146036 of 309146036 (100.0%), 158.5 MBs/sec
+2025-08-01T02:42:17.4667671Z Cache Size: ~295 MB (309146036 B)
+2025-08-01T02:42:17.4706789Z [command]/usr/bin/tar -xf /home/runner/work/_temp/0671d495-f2d2-4253-9ea7-c4483f3df541/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:18.5777941Z Cache restored successfully
+2025-08-01T02:42:18.6496886Z Cache restored from key: Linux-npm-cache-vscode-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:18.7178458Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:18.7178729Z with:
+2025-08-01T02:42:18.7178954Z   path: extensions/vscode/node_modules
+2025-08-01T02:42:18.7179466Z   key: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:18.7180007Z   enableCrossOsArchive: false
+2025-08-01T02:42:18.7180281Z   fail-on-cache-miss: false
+2025-08-01T02:42:18.7180534Z   lookup-only: false
+2025-08-01T02:42:18.7180778Z   save-always: false
+2025-08-01T02:42:18.7181003Z env:
+2025-08-01T02:42:18.7181889Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:18.7182131Z ##[endgroup]
+2025-08-01T02:42:18.9665358Z Cache hit for: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:20.1301630Z Received 134217728 of 151659422 (88.5%), 125.9 MBs/sec
+2025-08-01T02:42:20.3380744Z Received 151659422 of 151659422 (100.0%), 118.2 MBs/sec
+2025-08-01T02:42:20.3382130Z Cache Size: ~145 MB (151659422 B)
+2025-08-01T02:42:20.3410829Z [command]/usr/bin/tar -xf /home/runner/work/_temp/87d58dc8-388a-4937-9f98-e3cacc023bae/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:22.8349740Z Cache restored successfully
+2025-08-01T02:42:22.9220197Z Cache restored from key: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:22.9372737Z ##[group]Run cd extensions/vscode
+2025-08-01T02:42:22.9373506Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:42:22.9374023Z [36;1mnpm run write-build-timestamp[0m
+2025-08-01T02:42:22.9374533Z [36;1mnpx tsc --noEmit[0m
+2025-08-01T02:42:22.9374960Z [36;1mnpm run lint[0m
+2025-08-01T02:42:22.9406978Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:22.9407260Z ##[endgroup]
+2025-08-01T02:42:23.0567656Z 
+2025-08-01T02:42:23.0568175Z > continue@1.1.72 write-build-timestamp
+2025-08-01T02:42:23.0568908Z > node scripts/write-build-timestamp.js
+2025-08-01T02:42:23.0569296Z 
+2025-08-01T02:42:32.8232231Z 
+2025-08-01T02:42:32.8232809Z > continue@1.1.72 lint
+2025-08-01T02:42:32.8233678Z > eslint src --ext ts
+2025-08-01T02:42:32.8234030Z 
+2025-08-01T02:42:44.8470180Z 
+2025-08-01T02:42:44.8471352Z /home/runner/work/continue/continue/extensions/vscode/src/ContinueConsoleWebviewViewProvider.ts
+2025-08-01T02:42:44.8500169Z ##[warning]   40:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8509611Z ##[warning]  106:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8512105Z ##[warning]  119:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8514613Z ##[warning]  142:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8516484Z ##[warning]  160:5  warning  Unexpected negated condition                                                                                                                                        no-negated-condition
+2025-08-01T02:42:44.8517644Z 
+2025-08-01T02:42:44.8518077Z /home/runner/work/continue/continue/extensions/vscode/src/ContinueGUIWebviewViewProvider.ts
+2025-08-01T02:42:44.8519766Z ##[warning]   54:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8521714Z ##[warning]   83:5  warning  Unexpected negated condition                                                                                                                                        no-negated-condition
+2025-08-01T02:42:44.8524001Z ##[warning]  124:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8525177Z 
+2025-08-01T02:42:44.8525571Z /home/runner/work/continue/continue/extensions/vscode/src/VsCodeIde.ts
+2025-08-01T02:42:44.8526772Z ##[warning]   20:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8528519Z ##[warning]   35:1   warning  `./util/util` import should occur before import of `./util/vscode`                                                                                                  import/order
+2025-08-01T02:42:44.8530630Z ##[warning]  156:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8533198Z ##[warning]  320:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8534511Z 
+2025-08-01T02:42:44.8534884Z /home/runner/work/continue/continue/extensions/vscode/src/activation/JumpManager.ts
+2025-08-01T02:42:44.8536100Z ##[warning]   84:13  warning  Unexpected negated condition                                                                                                                                        no-negated-condition
+2025-08-01T02:42:44.8538202Z ##[warning]  186:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8540560Z ##[warning]  289:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8542870Z ##[warning]  315:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8544111Z 
+2025-08-01T02:42:44.8544512Z /home/runner/work/continue/continue/extensions/vscode/src/activation/JumpManager.vitest.ts
+2025-08-01T02:42:44.8545757Z ##[warning]    4:1  warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8547834Z ##[warning]  407:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8548988Z 
+2025-08-01T02:42:44.8549412Z /home/runner/work/continue/continue/extensions/vscode/src/activation/NextEditWindowManager.ts
+2025-08-01T02:42:44.8551121Z ##[warning]    2:1  warning  `core/control-plane/env` import should occur after import of `core/codeRenderer/CodeRenderer`                                                                       import/order
+2025-08-01T02:42:44.8552951Z ##[warning]    4:1  warning  There should be no empty line within import group                                                                                                                   import/order
+2025-08-01T02:42:44.8554921Z ##[warning]    4:1  warning  `vscode` import should occur after import of `core/nextEdit/NextEditProvider`                                                                                       import/order
+2025-08-01T02:42:44.8556675Z ##[warning]   11:1  warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8558765Z ##[warning]  206:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8560553Z ##[warning]  789:7  warning  Expected { after 'if' condition                                                                                                                                     curly
+2025-08-01T02:42:44.8561340Z 
+2025-08-01T02:42:44.8561708Z /home/runner/work/continue/continue/extensions/vscode/src/activation/languageClient.ts
+2025-08-01T02:42:44.8563472Z ##[warning]  23:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8564599Z 
+2025-08-01T02:42:44.8565127Z /home/runner/work/continue/continue/extensions/vscode/src/apply/ApplyManager.ts
+2025-08-01T02:42:44.8566316Z ##[warning]  4:1  warning  There should be no empty line within import group                                                   import/order
+2025-08-01T02:42:44.8567920Z ##[warning]  6:1  warning  `core` import should occur before import of `core/config/ConfigHandler`                             import/order
+2025-08-01T02:42:44.8569545Z ##[warning]  7:1  warning  `core/diff/myers` import should occur before import of `core/edit/lazy/applyCodeBlock`              import/order
+2025-08-01T02:42:44.8571188Z ##[warning]  8:1  warning  `core/diff/util` import should occur before import of `core/edit/lazy/applyCodeBlock`               import/order
+2025-08-01T02:42:44.8572774Z ##[warning]  9:1  warning  There should be at least one empty line between import groups                                       import/order
+2025-08-01T02:42:44.8574699Z ##[warning]  9:1  warning  `core/edit/applyAbortManager` import should occur before import of `core/edit/lazy/applyCodeBlock`  import/order
+2025-08-01T02:42:44.8575599Z 
+2025-08-01T02:42:44.8576058Z /home/runner/work/continue/continue/extensions/vscode/src/autocomplete/GhostTextAcceptanceTracker.ts
+2025-08-01T02:42:44.8576980Z ##[warning]  72:35  warning  Expected { after 'if' condition  curly
+2025-08-01T02:42:44.8577651Z 
+2025-08-01T02:42:44.8578152Z /home/runner/work/continue/continue/extensions/vscode/src/autocomplete/GhostTextAcceptanceTracker.vitest.ts
+2025-08-01T02:42:44.8579182Z ##[warning]  2:1  warning  There should be at least one empty line between import groups  import/order
+2025-08-01T02:42:44.8579946Z 
+2025-08-01T02:42:44.8580345Z /home/runner/work/continue/continue/extensions/vscode/src/autocomplete/completionProvider.ts
+2025-08-01T02:42:44.8581626Z ##[warning]    8:1   warning  `uri-js` import should occur after import of `core/nextEdit/types`                                                                                                  import/order
+2025-08-01T02:42:44.8583493Z ##[warning]    9:1   warning  `uuid` import should occur after import of `core/nextEdit/types`                                                                                                    import/order
+2025-08-01T02:42:44.8585483Z ##[warning]   10:1   warning  `vscode` import should occur after import of `core/nextEdit/types`                                                                                                  import/order
+2025-08-01T02:42:44.8587449Z ##[warning]   12:1   warning  `../util/errorHandling` import should occur after import of `../activation/NextEditWindowManager`                                                                   import/order
+2025-08-01T02:42:44.8589435Z ##[warning]   13:1   warning  `../VsCodeIde` import should occur after import of `../activation/NextEditWindowManager`                                                                            import/order
+2025-08-01T02:42:44.8591438Z ##[warning]   14:1   warning  `../webviewProtocol` import should occur after import of `../activation/NextEditWindowManager`                                                                      import/order
+2025-08-01T02:42:44.8593378Z ##[warning]   24:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8595118Z ##[warning]   26:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8597182Z ##[warning]   55:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8599607Z ##[warning]   57:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8601702Z ##[warning]  102:7   warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8603739Z ##[warning]  112:7   warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8605364Z ##[warning]  438:30  warning  Expected { after 'if' condition                                                                                                                                     curly
+2025-08-01T02:42:44.8606800Z ##[warning]  456:27  warning  Expected { after 'if' condition                                                                                                                                     curly
+2025-08-01T02:42:44.8608802Z ##[warning]  538:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8611124Z ##[warning]  575:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8612231Z 
+2025-08-01T02:42:44.8612619Z /home/runner/work/continue/continue/extensions/vscode/src/autocomplete/recentlyEdited.ts
+2025-08-01T02:42:44.8614340Z ##[warning]  37:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8615444Z 
+2025-08-01T02:42:44.8615746Z /home/runner/work/continue/continue/extensions/vscode/src/commands.ts
+2025-08-01T02:42:44.8617038Z ##[warning]    20:1   warning  `core/diff/myers` import should occur before import of `core/indexing/walkDir`                                                                                      import/order
+2025-08-01T02:42:44.8619325Z ##[warning]    21:1   warning  `core/nextEdit/constants` import should occur before import of `core/util/extractMinimalStackTraceInfo`                                                             import/order
+2025-08-01T02:42:44.8621568Z ##[warning]    25:1   warning  `core/nextEdit/diff/diff` import should occur before import of `core/util/extractMinimalStackTraceInfo`                                                             import/order
+2025-08-01T02:42:44.8623983Z ##[warning]    26:1   warning  `core/nextEdit/NextEditLoggingService` import should occur before import of `core/util/extractMinimalStackTraceInfo`                                                import/order
+2025-08-01T02:42:44.8625929Z ##[warning]    27:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8627989Z ##[warning]    27:1   warning  `core/nextEdit/NextEditProvider` import should occur before import of `core/util/extractMinimalStackTraceInfo`                                                      import/order
+2025-08-01T02:42:44.8630250Z ##[warning]    73:3   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8632550Z ##[warning]    83:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8635139Z ##[warning]    95:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8637504Z ##[warning]   214:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8639797Z ##[warning]   218:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8642111Z ##[warning]   230:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8644603Z ##[warning]   235:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8646939Z ##[warning]   245:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8649278Z ##[warning]   253:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8651596Z ##[warning]   303:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8654093Z ##[warning]   334:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8656633Z ##[warning]   347:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8658932Z ##[warning]   362:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8661214Z ##[warning]   378:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8663666Z ##[warning]   385:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8666017Z ##[warning]   389:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8668330Z ##[warning]   399:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8670745Z ##[warning]   406:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8673081Z ##[warning]   408:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8675559Z ##[warning]   413:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8677926Z ##[warning]   422:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8680281Z ##[warning]   423:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8682600Z ##[warning]   426:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8685119Z ##[warning]   429:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8687429Z ##[warning]   463:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8689740Z ##[warning]   490:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8692212Z ##[warning]   492:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8694678Z ##[warning]   505:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8696996Z ##[warning]   511:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8699273Z ##[warning]   512:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8701562Z ##[warning]   515:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8703980Z ##[warning]   525:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8706319Z ##[warning]   578:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8708748Z ##[warning]   589:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8711097Z ##[warning]   597:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8713510Z ##[warning]   686:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8715829Z ##[warning]   703:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8718154Z ##[warning]   705:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8720480Z ##[warning]   707:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8722751Z ##[warning]   715:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8725582Z ##[warning]   719:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8728045Z ##[warning]   735:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8730572Z ##[warning]  1053:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8731693Z 
+2025-08-01T02:42:44.8732012Z /home/runner/work/continue/continue/extensions/vscode/src/debug/debug.ts
+2025-08-01T02:42:44.8733895Z ##[warning]  16:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8736314Z ##[warning]  24:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8738603Z ##[warning]  50:17  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8739689Z 
+2025-08-01T02:42:44.8740069Z /home/runner/work/continue/continue/extensions/vscode/src/diff/processDiff.ts
+2025-08-01T02:42:44.8758119Z ##[warning]  2:1  warning  There should be at least one empty line between import groups  import/order
+2025-08-01T02:42:44.8760362Z ##[warning]  5:1  warning  There should be at least one empty line between import groups  import/order
+2025-08-01T02:42:44.8761205Z 
+2025-08-01T02:42:44.8761585Z /home/runner/work/continue/continue/extensions/vscode/src/diff/vertical/handler.ts
+2025-08-01T02:42:44.8763105Z ##[warning]  13:1  warning  `./manager` type import should occur before type import of `core`                                                                                                   import/order
+2025-08-01T02:42:44.8765950Z ##[warning]  73:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8768291Z ##[warning]  94:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8769390Z 
+2025-08-01T02:42:44.8769759Z /home/runner/work/continue/continue/extensions/vscode/src/diff/vertical/manager.ts
+2025-08-01T02:42:44.8771232Z ##[warning]   13:1  warning  `core/edit/applyAbortManager` import should occur before import of `core/edit/streamDiffLines`                                                                      import/order
+2025-08-01T02:42:44.8773476Z ##[warning]   14:1  warning  `core/edit/constants` import should occur before import of `core/edit/streamDiffLines`                                                                              import/order
+2025-08-01T02:42:44.8775383Z ##[warning]   15:1  warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8777167Z ##[warning]   15:1  warning  `core/util/messageContent` import should occur before import of `uri-js`                                                                                            import/order
+2025-08-01T02:42:44.8778919Z ##[warning]   16:1  warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8780938Z ##[warning]   16:1  warning  `../../extension/EditOutcomeTracker` import should occur before import of `../../quickEdit/EditDecorationManager`                                                   import/order
+2025-08-01T02:42:44.8783567Z ##[warning]   50:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8785963Z ##[warning]  138:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8788269Z ##[warning]  144:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8790561Z ##[warning]  202:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8792853Z ##[warning]  216:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8795350Z ##[warning]  256:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8797656Z ##[warning]  278:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8798901Z 
+2025-08-01T02:42:44.8799224Z /home/runner/work/continue/continue/extensions/vscode/src/extension.ts
+2025-08-01T02:42:44.8800343Z ##[warning]   8:1   warning  There should be no empty line within import group                                                                                                                   import/order
+2025-08-01T02:42:44.8802043Z ##[warning]  10:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8804499Z ##[warning]  10:1   warning  `core/util/sentry/SentryLogger` import should occur before import of `vscode`                                                                                       import/order
+2025-08-01T02:42:44.8806751Z ##[warning]  23:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8809090Z ##[warning]  32:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8811391Z ##[warning]  40:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8813996Z ##[warning]  43:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8815196Z 
+2025-08-01T02:42:44.8815593Z /home/runner/work/continue/continue/extensions/vscode/src/extension/VsCodeExtension.ts
+2025-08-01T02:42:44.8817226Z ##[warning]   45:1   warning  `core/autocomplete/util/ast` import should occur before import of `core/config/ConfigHandler`                                                                       import/order
+2025-08-01T02:42:44.8819581Z ##[warning]   46:1   warning  `core/nextEdit/DocumentHistoryTracker` import should occur before import of `core/protocol`                                                                         import/order
+2025-08-01T02:42:44.8821780Z ##[warning]   47:1   warning  `core/nextEdit/NextEditEditableRegionCalculator` import should occur before import of `core/protocol`                                                               import/order
+2025-08-01T02:42:44.8824062Z ##[warning]   51:1   warning  `core/nextEdit/NextEditProvider` import should occur before import of `core/protocol`                                                                               import/order
+2025-08-01T02:42:44.8826174Z ##[warning]   52:1   warning  `core/nextEdit/utils` import should occur before import of `core/protocol`                                                                                          import/order
+2025-08-01T02:42:44.8827986Z ##[warning]   53:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8829834Z ##[warning]   53:1   warning  `core/util/pathToUri` import should occur before import of `uuid`                                                                                                   import/order
+2025-08-01T02:42:44.8831835Z ##[warning]   54:1   warning  `../activation/JumpManager` import should occur before import of `../autocomplete/completionProvider`                                                               import/order
+2025-08-01T02:42:44.8834737Z ##[warning]   55:1   warning  `../activation/NextEditWindowManager` import should occur before import of `../autocomplete/completionProvider`                                                     import/order
+2025-08-01T02:42:44.8837056Z ##[warning]   58:1   warning  `../autocomplete/GhostTextAcceptanceTracker` import should occur before import of `../autocomplete/statusBar`                                                       import/order
+2025-08-01T02:42:44.8839075Z ##[warning]   59:1   warning  `../autocomplete/lsp` import should occur before import of `../autocomplete/statusBar`                                                                              import/order
+2025-08-01T02:42:44.8840845Z ##[warning]   60:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8842686Z ##[warning]   60:1   warning  `../util/editLoggingUtils` import should occur before import of `../util/FileSearch`                                                                                import/order
+2025-08-01T02:42:44.8844599Z ##[warning]   89:27  warning  Expected { after 'if' condition                                                                                                                                     curly
+2025-08-01T02:42:44.8846354Z ##[warning]  172:32  warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8848253Z ##[warning]  190:7   warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8850195Z ##[warning]  316:59  warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8852081Z ##[warning]  328:7   warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8854212Z ##[warning]  360:21  warning  Expected { after 'if' condition                                                                                                                                     curly
+2025-08-01T02:42:44.8856281Z ##[warning]  421:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8858337Z ##[warning]  493:20  warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8859262Z 
+2025-08-01T02:42:44.8859643Z /home/runner/work/continue/continue/extensions/vscode/src/extension/VsCodeMessenger.ts
+2025-08-01T02:42:44.8860853Z ##[warning]   32:1   warning  There should be at least one empty line between import groups                                                                                                       import/order
+2025-08-01T02:42:44.8862948Z ##[warning]   91:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8865622Z ##[warning]   95:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8868095Z ##[warning]  106:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8870448Z ##[warning]  109:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8872749Z ##[warning]  112:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8875473Z ##[warning]  115:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8877776Z ##[warning]  168:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8880093Z ##[warning]  172:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8882380Z ##[warning]  190:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8884852Z ##[warning]  356:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8887170Z ##[warning]  369:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8889645Z ##[warning]  382:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8890758Z 
+2025-08-01T02:42:44.8891312Z /home/runner/work/continue/continue/extensions/vscode/src/lang-server/codeLens/providers/QuickActionsCodeLensProvider.ts
+2025-08-01T02:42:44.8893412Z ##[warning]   23:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8895801Z ##[warning]   35:3   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8897629Z ##[warning]  139:42  warning  Unexpected negated condition                                                                                                                                        no-negated-condition
+2025-08-01T02:42:44.8898433Z 
+2025-08-01T02:42:44.8898853Z /home/runner/work/continue/continue/extensions/vscode/src/lang-server/promptFileCompletions.ts
+2025-08-01T02:42:44.8900495Z ##[warning]  267:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8901609Z 
+2025-08-01T02:42:44.8901999Z /home/runner/work/continue/continue/extensions/vscode/src/quickEdit/AddCurrentSelection.ts
+2025-08-01T02:42:44.8904130Z ##[warning]  33:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8906629Z ##[warning]  64:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8907753Z 
+2025-08-01T02:42:44.8908161Z /home/runner/work/continue/continue/extensions/vscode/src/quickEdit/EditDecorationManager.ts
+2025-08-01T02:42:44.8909797Z ##[warning]  20:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8910888Z 
+2025-08-01T02:42:44.8911279Z /home/runner/work/continue/continue/extensions/vscode/src/quickEdit/HistoryQuickPick.ts
+2025-08-01T02:42:44.8912904Z ##[warning]  25:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8914170Z 
+2025-08-01T02:42:44.8914561Z /home/runner/work/continue/continue/extensions/vscode/src/quickEdit/QuickEditQuickPick.ts
+2025-08-01T02:42:44.8915678Z ##[warning]  153:18  warning  Unexpected negated condition                                                                                                                                        no-negated-condition
+2025-08-01T02:42:44.8917725Z ##[warning]  164:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8920055Z ##[warning]  204:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8922554Z ##[warning]  207:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8925036Z ##[warning]  214:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8927343Z ##[warning]  358:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8929139Z ##[warning]  418:5   warning  Unexpected negated condition                                                                                                                                        no-negated-condition
+2025-08-01T02:42:44.8931153Z ##[warning]  531:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8932240Z 
+2025-08-01T02:42:44.8932571Z /home/runner/work/continue/continue/extensions/vscode/src/stubs/activation.ts
+2025-08-01T02:42:44.8934321Z ##[warning]  20:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8936805Z ##[warning]  26:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8937941Z 
+2025-08-01T02:42:44.8938290Z /home/runner/work/continue/continue/extensions/vscode/src/stubs/remoteConfig.ts
+2025-08-01T02:42:44.8939870Z ##[warning]   79:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8942173Z ##[warning]  103:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8944872Z ##[warning]  123:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8946049Z 
+2025-08-01T02:42:44.8946373Z /home/runner/work/continue/continue/extensions/vscode/src/suggestions.ts
+2025-08-01T02:42:44.8947922Z ##[warning]  241:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8949078Z 
+2025-08-01T02:42:44.8949445Z /home/runner/work/continue/continue/extensions/vscode/src/terminal/terminalEmulator.ts
+2025-08-01T02:42:44.8950633Z ##[warning]  109:26  warning  Promise returned in function argument where a void return was expected  @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8951512Z 
+2025-08-01T02:42:44.8951840Z /home/runner/work/continue/continue/extensions/vscode/src/util/FileSearch.ts
+2025-08-01T02:42:44.8953701Z ##[warning]  15:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8954901Z 
+2025-08-01T02:42:44.8955217Z /home/runner/work/continue/continue/extensions/vscode/src/util/addCode.ts
+2025-08-01T02:42:44.8956957Z ##[warning]   83:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8959300Z ##[warning]  100:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8961631Z ##[warning]  127:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8964092Z ##[warning]  158:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8965241Z 
+2025-08-01T02:42:44.8965553Z /home/runner/work/continue/continue/extensions/vscode/src/util/battery.ts
+2025-08-01T02:42:44.8966668Z ##[warning]  15:38  warning  Promise returned in function argument where a void return was expected  @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.8968494Z ##[warning]  28:55  warning  Expected '===' and instead saw '=='                                     eqeqeq
+2025-08-01T02:42:44.8969243Z 
+2025-08-01T02:42:44.8969599Z /home/runner/work/continue/continue/extensions/vscode/src/util/editLoggingUtils.ts
+2025-08-01T02:42:44.8970505Z ##[warning]   6:1   warning  There should be at least one empty line between import groups  import/order
+2025-08-01T02:42:44.8971772Z ##[warning]   7:1   warning  `fs` import should occur before import of `core`               import/order
+2025-08-01T02:42:44.8973370Z ##[warning]   8:1   warning  There should be at least one empty line between import groups  import/order
+2025-08-01T02:42:44.8974764Z ##[warning]   8:1   warning  `path` import should occur before import of `core`             import/order
+2025-08-01T02:42:44.8976051Z ##[warning]   9:1   warning  There should be at least one empty line between import groups  import/order
+2025-08-01T02:42:44.8977280Z ##[warning]  65:16  warning  Expected { after 'if' condition                                curly
+2025-08-01T02:42:44.8978475Z ##[warning]  66:42  warning  Expected { after 'if' condition                                curly
+2025-08-01T02:42:44.8979662Z ##[warning]  70:25  warning  Expected { after 'if' condition                                curly
+2025-08-01T02:42:44.8980828Z ##[warning]  71:69  warning  Expected { after 'if' condition                                curly
+2025-08-01T02:42:44.8981533Z 
+2025-08-01T02:42:44.8981879Z /home/runner/work/continue/continue/extensions/vscode/src/util/errorHandling.ts
+2025-08-01T02:42:44.8983600Z ##[warning]  39:3  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8985981Z ##[warning]  41:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8988297Z ##[warning]  43:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8990779Z ##[warning]  46:7  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8991947Z 
+2025-08-01T02:42:44.8992369Z /home/runner/work/continue/continue/extensions/vscode/src/util/ideUtils.ts
+2025-08-01T02:42:44.8994715Z ##[warning]   82:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.8998538Z ##[warning]  228:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9002532Z ##[warning]  237:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9006779Z ##[warning]  255:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9010451Z ##[warning]  269:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9013069Z ##[warning]  299:11  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9015737Z ##[warning]  384:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9016869Z 
+2025-08-01T02:42:44.9017377Z /home/runner/work/continue/continue/extensions/vscode/src/util/vscode.ts
+2025-08-01T02:42:44.9018972Z ##[warning]  79:5  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9021347Z ##[warning]  90:9  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9022452Z 
+2025-08-01T02:42:44.9022785Z /home/runner/work/continue/continue/extensions/vscode/src/webviewProtocol.ts
+2025-08-01T02:42:44.9024506Z ##[warning]   22:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9026862Z ##[warning]  128:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9029175Z ##[warning]  132:19  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9031488Z ##[warning]  134:19  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9033952Z ##[warning]  138:13  warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+2025-08-01T02:42:44.9036108Z ##[warning]  175:24  warning  Promise returned in function argument where a void return was expected                                                                                              @typescript-eslint/no-misused-promises
+2025-08-01T02:42:44.9037214Z 
+2025-08-01T02:42:44.9037617Z ✖ 219 problems (0 errors, 219 warnings)
+2025-08-01T02:42:44.9038087Z   0 errors and 69 warnings potentially fixable with the `--fix` option.
+2025-08-01T02:42:44.9038379Z 
+2025-08-01T02:42:44.9766525Z ##[group]Run cd extensions/vscode
+2025-08-01T02:42:44.9766887Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:42:44.9767158Z [36;1mnpm run vitest[0m
+2025-08-01T02:42:44.9794459Z shell: /usr/bin/bash -e {0}
+2025-08-01T02:42:44.9794740Z ##[endgroup]
+2025-08-01T02:42:45.0877888Z 
+2025-08-01T02:42:45.0878541Z > continue@1.1.72 vitest
+2025-08-01T02:42:45.0878949Z > vitest run
+2025-08-01T02:42:45.0879118Z 
+2025-08-01T02:42:45.4848000Z 
+2025-08-01T02:42:45.4851082Z [1m[46m RUN [49m[22m [36mv3.2.3 [39m[90m/home/runner/work/continue/continue/extensions/vscode[39m
+2025-08-01T02:42:45.4851873Z 
+2025-08-01T02:42:45.9099270Z [90mstdout[2m | src/activation/JumpManager.vitest.ts[2m > [22m[2mJumpManager[2m > [22m[2msuggestJump[2m > [22m[2mshould set jumpInProgress to true
+2025-08-01T02:42:45.9100616Z [22m[39mthis._jumpInProgress
+2025-08-01T02:42:45.9100941Z 
+2025-08-01T02:42:45.9102520Z [90mstdout[2m | src/activation/JumpManager.vitest.ts[2m > [22m[2mJumpManager[2m > [22m[2msuggestJump[2m > [22m[2mshould not suggest jump if completion content matches document content
+2025-08-01T02:42:45.9104322Z [22m[39mSkipping jump as content is identical at jump location
+2025-08-01T02:42:45.9104776Z 
+2025-08-01T02:42:45.9105656Z [90mstdout[2m | src/activation/JumpManager.vitest.ts[2m > [22m[2mJumpManager[2m > [22m[2msuggestJump[2m > [22m[2mshould render decoration for jump location outside visible range (below)
+2025-08-01T02:42:45.9106618Z [22m[39mthis._jumpInProgress
+2025-08-01T02:42:45.9106820Z 
+2025-08-01T02:42:45.9107667Z [90mstdout[2m | src/activation/JumpManager.vitest.ts[2m > [22m[2mJumpManager[2m > [22m[2msuggestJump[2m > [22m[2mshould render decoration for jump location outside visible range (above)
+2025-08-01T02:42:45.9108475Z [22m[39mthis._jumpInProgress
+2025-08-01T02:42:45.9108659Z 
+2025-08-01T02:42:45.9213080Z [90mstdout[2m | src/activation/JumpManager.vitest.ts[2m > [22m[2mJumpManager[2m > [22m[2mregisterKeyListeners[2m > [22m[2mshould register rejectJump command that deletes the chain
+2025-08-01T02:42:45.9218164Z [22m[39mdeleteChain from JumpManager.ts: rejectJump and decoration visible
+2025-08-01T02:42:45.9221101Z 
+2025-08-01T02:42:45.9222700Z [90mstdout[2m | src/activation/JumpManager.vitest.ts[2m > [22m[2mJumpManager[2m > [22m[2mregisterKeyListeners[2m > [22m[2mshould register rejectJump command that deletes the chain
+2025-08-01T02:42:45.9224441Z [22m[39mmockDeleteChain called: [33m1[39m
+2025-08-01T02:42:45.9224823Z 
+2025-08-01T02:42:45.9243071Z  [32m✓[39m src/activation/JumpManager.vitest.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+2025-08-01T02:42:45.9253635Z  [32m✓[39m src/autocomplete/GhostTextAcceptanceTracker.vitest.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+2025-08-01T02:42:46.1932807Z  [32m✓[39m src/util/util.vitest.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+2025-08-01T02:42:46.4300127Z [90mstdout[2m | src/stubs/WorkOsAuthProvider.vitest.ts[2m > [22m[2mshould remove session if token refresh fails with authentication error
+2025-08-01T02:42:46.4301978Z [22m[39mError refreshing session token: Error refreshing token: Invalid refresh token
+2025-08-01T02:42:46.4302622Z 
+2025-08-01T02:42:46.4319513Z [90mstdout[2m | src/stubs/WorkOsAuthProvider.vitest.ts[2m > [22m[2mshould remove session if token refresh returns Unauthorized error message
+2025-08-01T02:42:46.4321246Z [22m[39mError refreshing session token: Error refreshing token: Unauthorized
+2025-08-01T02:42:46.4321834Z 
+2025-08-01T02:42:46.4353187Z [90mstdout[2m | src/stubs/WorkOsAuthProvider.vitest.ts[2m > [22m[2mshould remove expired tokens when refresh fails with a 401 error
+2025-08-01T02:42:46.4355446Z [22m[39mError refreshing session token: 401
+2025-08-01T02:42:46.4355854Z 
+2025-08-01T02:42:46.4388318Z  [32m✓[39m src/stubs/WorkOsAuthProvider.vitest.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 549[2mms[22m[39m
+2025-08-01T02:42:46.4389516Z    [33m[2m✓[22m[39m should refresh tokens on initialization when sessions exist [33m 533[2mms[22m[39m
+2025-08-01T02:42:46.4521357Z 
+2025-08-01T02:42:46.4525385Z [2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+2025-08-01T02:42:46.4526478Z [2m      Tests [22m [1m[32m35 passed[39m[22m[90m (35)[39m
+2025-08-01T02:42:46.4527281Z [2m   Start at [22m 02:42:45
+2025-08-01T02:42:46.4529253Z [2m   Duration [22m 966ms[2m (transform 392ms, setup 0ms, collect 522ms, tests 599ms, environment 1ms, prepare 395ms)[22m
+2025-08-01T02:42:46.4529989Z 
+2025-08-01T02:42:46.5588633Z Post job cleanup.
+2025-08-01T02:42:46.6154780Z Post job cleanup.
+2025-08-01T02:42:46.7382222Z Cache hit occurred on the primary key Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:42:46.7987757Z Post job cleanup.
+2025-08-01T02:42:46.9218488Z Cache hit occurred on the primary key Linux-npm-cache-vscode-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:42:46.9297128Z Post job cleanup.
+2025-08-01T02:42:47.0913077Z Post job cleanup.
+2025-08-01T02:42:47.1465360Z Post job cleanup.
+2025-08-01T02:42:47.2713792Z Cache hit occurred on the primary key Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:42:47.3300223Z Post job cleanup.
+2025-08-01T02:42:47.4555365Z Cache hit occurred on the primary key Linux-root-node-modules-f08422439e17cbe0858c41204027b587127405248a75f8b54cd4ccc776188ad1, not saving cache.
+2025-08-01T02:42:47.5261252Z Post job cleanup.
+2025-08-01T02:42:47.6511835Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:47.7106136Z Post job cleanup.
+2025-08-01T02:42:47.8345257Z Cache hit occurred on the primary key Linux-npm-cache-core-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:42:47.8438462Z Post job cleanup.
+2025-08-01T02:42:48.0050323Z Post job cleanup.
+2025-08-01T02:42:48.0702367Z Post job cleanup.
+2025-08-01T02:42:48.1941838Z Cache hit occurred on the primary key Linux-packages-node-modules-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:48.2646867Z Post job cleanup.
+2025-08-01T02:42:48.3878620Z Cache hit occurred on the primary key Linux-npm-cache-packages-0d3ddab57a43275421f531b9a287368940e36c86d198be7ae2f5b7ef97cac9b1, not saving cache.
+2025-08-01T02:42:48.4019805Z Post job cleanup.
+2025-08-01T02:42:48.5679025Z Post job cleanup.
+2025-08-01T02:42:48.6620474Z [command]/usr/bin/git version
+2025-08-01T02:42:48.6661616Z git version 2.50.1
+2025-08-01T02:42:48.6703371Z Temporarily overriding HOME='/home/runner/work/_temp/bf21c1d5-385e-409b-8cd8-4930850a4fab' before making global git config changes
+2025-08-01T02:42:48.6704401Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:42:48.6708725Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:42:48.6740734Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:42:48.6771611Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:42:48.7001286Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:42:48.7022297Z http.https://github.com/.extraheader
+2025-08-01T02:42:48.7034642Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:42:48.7063029Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:42:48.7394450Z Cleaning up orphan processes

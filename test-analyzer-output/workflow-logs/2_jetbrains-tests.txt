@@ -1,0 +1,1313 @@
+﻿2025-08-01T02:41:17.0293880Z Current runner version: '2.327.1'
+2025-08-01T02:41:17.0318652Z ##[group]Runner Image Provisioner
+2025-08-01T02:41:17.0319519Z Hosted Compute Agent
+2025-08-01T02:41:17.0320100Z Version: 20250711.363
+2025-08-01T02:41:17.0320658Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:41:17.0321412Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:41:17.0322025Z ##[endgroup]
+2025-08-01T02:41:17.0322515Z ##[group]Operating System
+2025-08-01T02:41:17.0323121Z Ubuntu
+2025-08-01T02:41:17.0323563Z 24.04.2
+2025-08-01T02:41:17.0324011Z LTS
+2025-08-01T02:41:17.0324532Z ##[endgroup]
+2025-08-01T02:41:17.0325005Z ##[group]Runner Image
+2025-08-01T02:41:17.0325540Z Image: ubuntu-24.04
+2025-08-01T02:41:17.0326430Z Version: 20250728.1.0
+2025-08-01T02:41:17.0327501Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:41:17.0329107Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:41:17.0330044Z ##[endgroup]
+2025-08-01T02:41:17.0331169Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:41:17.0333025Z Contents: read
+2025-08-01T02:41:17.0333539Z Metadata: read
+2025-08-01T02:41:17.0334161Z Packages: read
+2025-08-01T02:41:17.0334658Z ##[endgroup]
+2025-08-01T02:41:17.0337103Z Secret source: Actions
+2025-08-01T02:41:17.0337917Z Prepare workflow directory
+2025-08-01T02:41:17.0659318Z Prepare all required actions
+2025-08-01T02:41:17.0697396Z Getting action download info
+2025-08-01T02:41:17.2933876Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:41:17.2935012Z Version: 4.2.2
+2025-08-01T02:41:17.2936342Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:41:17.2937548Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:41:17.2938367Z ##[endgroup]
+2025-08-01T02:41:17.4505595Z Complete job name: jetbrains-tests
+2025-08-01T02:41:17.5188264Z ##[group]Run actions/checkout@v4
+2025-08-01T02:41:17.5189099Z with:
+2025-08-01T02:41:17.5189536Z   repository: continuedev/continue
+2025-08-01T02:41:17.5190204Z   token: ***
+2025-08-01T02:41:17.5190592Z   ssh-strict: true
+2025-08-01T02:41:17.5190991Z   ssh-user: git
+2025-08-01T02:41:17.5191393Z   persist-credentials: true
+2025-08-01T02:41:17.5191846Z   clean: true
+2025-08-01T02:41:17.5192253Z   sparse-checkout-cone-mode: true
+2025-08-01T02:41:17.5192731Z   fetch-depth: 1
+2025-08-01T02:41:17.5193154Z   fetch-tags: false
+2025-08-01T02:41:17.5193553Z   show-progress: true
+2025-08-01T02:41:17.5193955Z   lfs: false
+2025-08-01T02:41:17.5194321Z   submodules: false
+2025-08-01T02:41:17.5194718Z   set-safe-directory: true
+2025-08-01T02:41:17.5195378Z ##[endgroup]
+2025-08-01T02:41:17.6280688Z Syncing repository: continuedev/continue
+2025-08-01T02:41:17.6282410Z ##[group]Getting Git version info
+2025-08-01T02:41:17.6283329Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:41:17.6284339Z [command]/usr/bin/git version
+2025-08-01T02:41:17.6330883Z git version 2.50.1
+2025-08-01T02:41:17.6356473Z ##[endgroup]
+2025-08-01T02:41:17.6371310Z Temporarily overriding HOME='/home/runner/work/_temp/e9d26ad9-8a12-4e0e-8752-66bfb58f93fa' before making global git config changes
+2025-08-01T02:41:17.6373653Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:41:17.6377684Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:41:17.6411217Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:41:17.6414972Z ##[group]Initializing the repository
+2025-08-01T02:41:17.6419631Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:41:17.6473397Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:41:17.6475139Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:41:17.6476454Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:41:17.6478048Z hint:
+2025-08-01T02:41:17.6478904Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:41:17.6480183Z hint:
+2025-08-01T02:41:17.6481307Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:41:17.6482928Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:41:17.6484131Z hint:
+2025-08-01T02:41:17.6484765Z hint: 	git branch -m <name>
+2025-08-01T02:41:17.6485498Z hint:
+2025-08-01T02:41:17.6486827Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:41:17.6488616Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:41:17.6491367Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:41:17.6522485Z ##[endgroup]
+2025-08-01T02:41:17.6523681Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:41:17.6527700Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:41:17.6557112Z ##[endgroup]
+2025-08-01T02:41:17.6558344Z ##[group]Setting up auth
+2025-08-01T02:41:17.6564621Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:41:17.6595236Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:41:17.6848057Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:41:17.6879657Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:41:17.7109778Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:41:17.7144683Z ##[endgroup]
+2025-08-01T02:41:17.7145451Z ##[group]Fetching the repository
+2025-08-01T02:41:17.7153255Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:41:21.7324682Z From https://github.com/continuedev/continue
+2025-08-01T02:41:21.7326856Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:41:21.7348874Z ##[endgroup]
+2025-08-01T02:41:21.7350788Z ##[group]Determining the checkout info
+2025-08-01T02:41:21.7352833Z ##[endgroup]
+2025-08-01T02:41:21.7356734Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:41:21.7395254Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:41:21.7423971Z ##[group]Checking out the ref
+2025-08-01T02:41:21.7427473Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:41:22.7478016Z Updating files:  88% (2093/2354)
+2025-08-01T02:41:22.7486850Z Updating files:  89% (2096/2354)
+2025-08-01T02:41:22.7507916Z Updating files:  90% (2119/2354)
+2025-08-01T02:41:22.7520587Z Updating files:  91% (2143/2354)
+2025-08-01T02:41:22.7529154Z Updating files:  92% (2166/2354)
+2025-08-01T02:41:22.7537667Z Updating files:  93% (2190/2354)
+2025-08-01T02:41:22.7548271Z Updating files:  94% (2213/2354)
+2025-08-01T02:41:22.7562189Z Updating files:  95% (2237/2354)
+2025-08-01T02:41:22.7576709Z Updating files:  96% (2260/2354)
+2025-08-01T02:41:22.7591177Z Updating files:  97% (2284/2354)
+2025-08-01T02:41:22.7603340Z Updating files:  98% (2307/2354)
+2025-08-01T02:41:22.7619288Z Updating files:  99% (2331/2354)
+2025-08-01T02:41:22.7619851Z Updating files: 100% (2354/2354)
+2025-08-01T02:41:22.7620369Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:41:22.7647440Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:41:22.7648123Z 
+2025-08-01T02:41:22.7648476Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:41:22.7649114Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:41:22.7649993Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:41:22.7650343Z 
+2025-08-01T02:41:22.7650628Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:41:22.7651191Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:41:22.7651510Z 
+2025-08-01T02:41:22.7651672Z   git switch -c <new-branch-name>
+2025-08-01T02:41:22.7651962Z 
+2025-08-01T02:41:22.7652105Z Or undo this operation with:
+2025-08-01T02:41:22.7652322Z 
+2025-08-01T02:41:22.7652439Z   git switch -
+2025-08-01T02:41:22.7652603Z 
+2025-08-01T02:41:22.7652881Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:41:22.7653245Z 
+2025-08-01T02:41:22.7653679Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:41:22.7711892Z ##[endgroup]
+2025-08-01T02:41:22.7750880Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:41:22.7772851Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:41:22.8126960Z Prepare all required actions
+2025-08-01T02:41:22.8127518Z Getting action download info
+2025-08-01T02:41:23.0593604Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:41:23.0594008Z Version: 4.4.0
+2025-08-01T02:41:23.0594365Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:41:23.0594851Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:41:23.0595174Z ##[endgroup]
+2025-08-01T02:41:23.3668552Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:41:23.3668888Z Version: 4.2.3
+2025-08-01T02:41:23.3669213Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:41:23.3669644Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:41:23.3669927Z ##[endgroup]
+2025-08-01T02:41:23.4666578Z ##[group]Download immutable action package 'actions/setup-java@v4.5.0'
+2025-08-01T02:41:23.4669371Z Version: 4.5.0
+2025-08-01T02:41:23.4669781Z Digest: sha256:4a8ea908b17a685a3ea82d0fe89889406a329d00165c1c69b8435f443bdfcdaf
+2025-08-01T02:41:23.4670219Z Source commit SHA: 8df1039502a15bceb9433410b1a100fbe190c53b
+2025-08-01T02:41:23.4670516Z ##[endgroup]
+2025-08-01T02:41:23.7709429Z Download action repository 'AnimMouse/setup-ffmpeg@v1' (SHA:27e66fd2fe1d643b73a7c5cb105f3b4116bfb8db)
+2025-08-01T02:41:23.9069912Z Download action repository 'gradle/actions@v3' (SHA:d9c87d481d55275bb5441eef3fe0e46805f9ef70)
+2025-08-01T02:41:24.4782049Z Download action repository 'jtalk/url-health-check-action@v3' (SHA:fc2fe2a9ca9c9734d992431b749b79350d771fbb)
+2025-08-01T02:41:24.6472881Z ##[group]Download immutable action package 'actions/upload-artifact@v4'
+2025-08-01T02:41:24.6473261Z Version: 4.6.2
+2025-08-01T02:41:24.6473587Z Digest: sha256:290722aa3281d5caf23d0acdc3dbeb3424786a1a01a9cc97e72f147225e37c38
+2025-08-01T02:41:24.6474015Z Source commit SHA: ea165f8d65b6e75b540449e92b4886f43607fa02
+2025-08-01T02:41:24.6474308Z ##[endgroup]
+2025-08-01T02:41:24.7872494Z Getting action download info
+2025-08-01T02:41:24.9233888Z Download action repository 'AnimMouse/tool-cache@v1' (SHA:5c73a08045bdef61c81a6c60d208cff7ab36f3aa)
+2025-08-01T02:41:25.2123082Z ##[group]Run ./.github/actions/run-jetbrains-tests
+2025-08-01T02:41:25.2123392Z with:
+2025-08-01T02:41:25.2123805Z   github-token: ***
+2025-08-01T02:41:25.2124278Z   ci-github-token: ***
+2025-08-01T02:41:25.2124516Z ##[endgroup]
+2025-08-01T02:41:25.2251206Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:41:25.2251460Z with:
+2025-08-01T02:41:25.2251641Z   node-version-file: .nvmrc
+2025-08-01T02:41:25.2251855Z   always-auth: false
+2025-08-01T02:41:25.2252045Z   check-latest: false
+2025-08-01T02:41:25.2252342Z   token: ***
+2025-08-01T02:41:25.2252519Z ##[endgroup]
+2025-08-01T02:41:25.3972080Z Node version file is not JSON file
+2025-08-01T02:41:25.3973830Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:41:25.4032073Z Attempting to download 20.19.0...
+2025-08-01T02:41:25.7133868Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:41:26.1155378Z Extracting ...
+2025-08-01T02:41:26.1257962Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/a5e9bbf2-dfcc-4c73-8345-b555ab2e6ad8 -f /home/runner/work/_temp/abc4d080-1392-4ce0-a3a1-8e7cfda5f677
+2025-08-01T02:41:27.1170986Z Adding to the cache ...
+2025-08-01T02:41:28.7476054Z ##[group]Environment details
+2025-08-01T02:41:29.6383044Z node: v20.19.0
+2025-08-01T02:41:29.6384064Z npm: 10.8.2
+2025-08-01T02:41:29.6384356Z yarn: 1.22.22
+2025-08-01T02:41:29.6385096Z ##[endgroup]
+2025-08-01T02:41:29.7098487Z ##[group]Run actions/cache@v4
+2025-08-01T02:41:29.7098713Z with:
+2025-08-01T02:41:29.7098880Z   path: core/node_modules
+2025-08-01T02:41:29.7099293Z   key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:29.7099732Z   enableCrossOsArchive: false
+2025-08-01T02:41:29.7100304Z   fail-on-cache-miss: false
+2025-08-01T02:41:29.7100566Z   lookup-only: false
+2025-08-01T02:41:29.7100743Z   save-always: false
+2025-08-01T02:41:29.7100923Z ##[endgroup]
+2025-08-01T02:41:29.9207169Z Cache hit for: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:30.9785813Z Received 151466006 of 155660310 (97.3%), 144.4 MBs/sec
+2025-08-01T02:41:31.0099961Z Received 155660310 of 155660310 (100.0%), 144.0 MBs/sec
+2025-08-01T02:41:31.0101408Z Cache Size: ~148 MB (155660310 B)
+2025-08-01T02:41:31.0132907Z [command]/usr/bin/tar -xf /home/runner/work/_temp/5e09e2ae-8308-4bfe-b4cd-0513abbbd9cc/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:41:33.7769391Z Cache restored successfully
+2025-08-01T02:41:33.8143464Z Cache restored from key: Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369
+2025-08-01T02:41:33.8261200Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:41:33.8261635Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:41:33.8261901Z [36;1mcd core[0m
+2025-08-01T02:41:33.8262082Z [36;1mnpm ci[0m
+2025-08-01T02:41:33.8295299Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:41:33.8295655Z ##[endgroup]
+2025-08-01T02:41:33.8596996Z 🚀 Starting package builds...
+2025-08-01T02:41:33.8597251Z 
+2025-08-01T02:41:33.8603297Z Starting config-types (install): npm ci
+2025-08-01T02:41:34.5822769Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:41:34.5823638Z Starting config-types (build): npm run build
+2025-08-01T02:41:36.2897812Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:41:36.2898275Z Starting fetch (install): npm ci
+2025-08-01T02:41:36.2912871Z Starting config-yaml (install): npm ci
+2025-08-01T02:41:36.2928395Z Starting llm-info (install): npm ci
+2025-08-01T02:41:37.3811824Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:41:37.3818414Z Starting llm-info (build): npm run build
+2025-08-01T02:41:38.8607571Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:41:38.8608419Z Starting fetch (build): npm run build
+2025-08-01T02:41:39.3213659Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:41:41.8488635Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:41:44.8335344Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:41:44.8336635Z Starting config-yaml (build): npm run build
+2025-08-01T02:41:48.8846853Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:41:48.8848450Z Starting openai-adapters (install): npm ci
+2025-08-01T02:41:48.8862656Z Starting continue-sdk (install): npm ci
+2025-08-01T02:41:56.9564006Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:41:56.9564785Z Starting openai-adapters (build): npm run build
+2025-08-01T02:42:00.1229899Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:42:00.1247479Z Starting continue-sdk (build): npm run build
+2025-08-01T02:42:00.2837001Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:42:02.5527783Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:42:02.5528698Z 🎉 All packages built successfully!
+2025-08-01T02:42:07.4107777Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-01T02:42:07.7571227Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:42:08.6056931Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:42:09.1767517Z npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+2025-08-01T02:42:09.7625759Z npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+2025-08-01T02:42:09.9011106Z npm warn deprecated har-validator@5.1.5: this library is no longer supported
+2025-08-01T02:42:10.3627975Z npm warn deprecated gauge@5.0.2: This package is no longer supported.
+2025-08-01T02:42:10.3741083Z npm warn deprecated domexception@4.0.0: Use your platform's native DOMException instead
+2025-08-01T02:42:10.7069980Z npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+2025-08-01T02:42:10.7800745Z npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+2025-08-01T02:42:11.6545128Z npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+2025-08-01T02:42:11.7212004Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-08-01T02:42:11.7215350Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-08-01T02:42:13.0905746Z npm warn deprecated uuid@3.4.0: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+2025-08-01T02:42:13.1405396Z npm warn deprecated gauge@4.0.4: This package is no longer supported.
+2025-08-01T02:42:16.7149681Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-08-01T02:42:40.2951787Z 
+2025-08-01T02:42:40.2952589Z added 1528 packages, and audited 1535 packages in 38s
+2025-08-01T02:42:40.2953026Z 
+2025-08-01T02:42:40.2953278Z 239 packages are looking for funding
+2025-08-01T02:42:40.2953770Z   run `npm fund` for details
+2025-08-01T02:42:40.3060460Z 
+2025-08-01T02:42:40.3061193Z 7 vulnerabilities (1 low, 4 moderate, 2 critical)
+2025-08-01T02:42:40.3061599Z 
+2025-08-01T02:42:40.3061964Z To address issues that do not require attention, run:
+2025-08-01T02:42:40.3062451Z   npm audit fix
+2025-08-01T02:42:40.3062632Z 
+2025-08-01T02:42:40.3063026Z To address all issues possible (including breaking changes), run:
+2025-08-01T02:42:40.3063397Z   npm audit fix --force
+2025-08-01T02:42:40.3063538Z 
+2025-08-01T02:42:40.3063710Z Some issues need review, and may require choosing
+2025-08-01T02:42:40.3064012Z a different dependency.
+2025-08-01T02:42:40.3064144Z 
+2025-08-01T02:42:40.3064250Z Run `npm audit` for details.
+2025-08-01T02:42:40.3515127Z ##[group]Run actions/setup-java@v4.5.0
+2025-08-01T02:42:40.3515381Z with:
+2025-08-01T02:42:40.3515545Z   distribution: zulu
+2025-08-01T02:42:40.3515738Z   java-version: 17
+2025-08-01T02:42:40.3516120Z   java-package: jdk
+2025-08-01T02:42:40.3516319Z   check-latest: false
+2025-08-01T02:42:40.3516505Z   server-id: github
+2025-08-01T02:42:40.3516698Z   server-username: GITHUB_ACTOR
+2025-08-01T02:42:40.3516930Z   server-password: GITHUB_TOKEN
+2025-08-01T02:42:40.3517153Z   overwrite-settings: true
+2025-08-01T02:42:40.3517356Z   job-status: success
+2025-08-01T02:42:40.3517657Z   token: ***
+2025-08-01T02:42:40.3517837Z ##[endgroup]
+2025-08-01T02:42:40.5393738Z ##[group]Installed distributions
+2025-08-01T02:42:40.5418601Z Trying to resolve the latest version from remote
+2025-08-01T02:42:40.6492631Z Resolved latest version as 17.0.16+8
+2025-08-01T02:42:40.6493234Z Trying to download...
+2025-08-01T02:42:40.6494328Z Downloading Java 17.0.16+8 (Zulu) from https://cdn.azul.com/zulu/bin/zulu17.60.17-ca-crac-jdk17.0.16-linux_x64.tar.gz ...
+2025-08-01T02:42:42.4261863Z Extracting Java archive...
+2025-08-01T02:42:42.4363986Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/e879f5e2-f353-4eba-8ca0-d969f6d1c10f -f /home/runner/work/_temp/4ca0c40c-74bb-41c1-be31-3ff6306d8e13
+2025-08-01T02:42:45.1222444Z Java 17.0.16+8 was downloaded
+2025-08-01T02:42:45.1222981Z Setting Java 17.0.16+8 as the default
+2025-08-01T02:42:45.1237254Z Creating toolchains.xml for JDK version 17 from zulu
+2025-08-01T02:42:45.1310634Z Writing to /home/runner/.m2/toolchains.xml
+2025-08-01T02:42:45.1311022Z 
+2025-08-01T02:42:45.1311260Z Java configuration:
+2025-08-01T02:42:45.1311956Z   Distribution: zulu
+2025-08-01T02:42:45.1312398Z   Version: 17.0.16+8
+2025-08-01T02:42:45.1312939Z   Path: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.1313360Z 
+2025-08-01T02:42:45.1313809Z ##[endgroup]
+2025-08-01T02:42:45.1320159Z Creating settings.xml with server-id: github
+2025-08-01T02:42:45.1330638Z Writing to /home/runner/.m2/settings.xml
+2025-08-01T02:42:45.1504073Z ##[group]Run AnimMouse/setup-ffmpeg@v1
+2025-08-01T02:42:45.1504330Z with:
+2025-08-01T02:42:45.1504689Z   token: ***
+2025-08-01T02:42:45.1504868Z   version: release
+2025-08-01T02:42:45.1505047Z env:
+2025-08-01T02:42:45.1505288Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.1505674Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.1506215Z ##[endgroup]
+2025-08-01T02:42:45.1527627Z ##[group]Run $GITHUB_ACTION_PATH/scripts/version/Unix-like.sh
+2025-08-01T02:42:45.1528258Z [36;1m$GITHUB_ACTION_PATH/scripts/version/Unix-like.sh[0m
+2025-08-01T02:42:45.1556386Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:42:45.1556917Z env:
+2025-08-01T02:42:45.1557253Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.1557729Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.1558193Z   version: release
+2025-08-01T02:42:45.1558463Z ##[endgroup]
+2025-08-01T02:42:45.4489607Z ##[group]Run $GITHUB_ACTION_PATH/scripts/release-id/Unix-like.sh
+2025-08-01T02:42:45.4490169Z [36;1m$GITHUB_ACTION_PATH/scripts/release-id/Unix-like.sh[0m
+2025-08-01T02:42:45.4518685Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:42:45.4519088Z env:
+2025-08-01T02:42:45.4519431Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.4519984Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:45.4520380Z   version: 7.1
+2025-08-01T02:42:45.4520858Z   GITHUB_TOKEN: ***
+2025-08-01T02:42:45.4521230Z ##[endgroup]
+2025-08-01T02:42:46.1530411Z ##[group]Run actions/cache/restore@v4
+2025-08-01T02:42:46.1530660Z with:
+2025-08-01T02:42:46.1530849Z   path: /opt/hostedtoolcache/FFmpeg
+2025-08-01T02:42:46.1531095Z   key: FFmpeg-7.1-236608420-Linux-X64
+2025-08-01T02:42:46.1531340Z   enableCrossOsArchive: false
+2025-08-01T02:42:46.1531566Z   fail-on-cache-miss: false
+2025-08-01T02:42:46.1531774Z   lookup-only: false
+2025-08-01T02:42:46.1531951Z env:
+2025-08-01T02:42:46.1532264Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:46.1532771Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:46.1533077Z ##[endgroup]
+2025-08-01T02:42:46.4509008Z Cache hit for: FFmpeg-7.1-236608420-Linux-X64
+2025-08-01T02:42:47.0618323Z Received 102293848 of 102293848 (100.0%), 177.4 MBs/sec
+2025-08-01T02:42:47.0619355Z Cache Size: ~98 MB (102293848 B)
+2025-08-01T02:42:47.0647047Z [command]/usr/bin/tar -xf /home/runner/work/_temp/5a65fc62-15b6-4d5a-a7fc-7e3b47d123b9/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:47.4880552Z Cache restored successfully
+2025-08-01T02:42:47.5154833Z Cache restored from key: FFmpeg-7.1-236608420-Linux-X64
+2025-08-01T02:42:47.5297482Z ##[group]Run AnimMouse/tool-cache@v1
+2025-08-01T02:42:47.5297733Z with:
+2025-08-01T02:42:47.5297906Z   folder_name: FFmpeg
+2025-08-01T02:42:47.5298098Z   cache_hit: true
+2025-08-01T02:42:47.5298270Z env:
+2025-08-01T02:42:47.5298507Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:47.5299208Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:47.5299530Z ##[endgroup]
+2025-08-01T02:42:47.5324788Z ##[group]Run $GITHUB_ACTION_PATH/scripts/add-to-path/Unix-like.sh
+2025-08-01T02:42:47.5325212Z [36;1m$GITHUB_ACTION_PATH/scripts/add-to-path/Unix-like.sh[0m
+2025-08-01T02:42:47.5353801Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:42:47.5354184Z env:
+2025-08-01T02:42:47.5354593Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:47.5354985Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:47.5355294Z   folder_name: FFmpeg
+2025-08-01T02:42:47.5355497Z ##[endgroup]
+2025-08-01T02:42:47.6809161Z ##[group]Adding FFmpeg tool cache folder to path
+2025-08-01T02:42:47.6810117Z ##[endgroup]
+2025-08-01T02:42:47.6930746Z ##[group]Run gradle/actions/setup-gradle@v3
+2025-08-01T02:42:47.6931012Z with:
+2025-08-01T02:42:47.6931197Z   cache-disabled: false
+2025-08-01T02:42:47.6931411Z   cache-read-only: true
+2025-08-01T02:42:47.6931618Z   cache-write-only: false
+2025-08-01T02:42:47.6931851Z   cache-overwrite-existing: false
+2025-08-01T02:42:47.6932142Z   gradle-home-cache-includes: caches
+notifications
+
+2025-08-01T02:42:47.6932454Z   gradle-home-cache-cleanup: false
+2025-08-01T02:42:47.6932705Z   add-job-summary: always
+2025-08-01T02:42:47.6932945Z   add-job-summary-as-pr-comment: never
+2025-08-01T02:42:47.6933224Z   dependency-graph: disabled
+2025-08-01T02:42:47.6933500Z   dependency-graph-continue-on-failure: true
+2025-08-01T02:42:47.6933783Z   build-scan-publish: false
+2025-08-01T02:42:47.6934018Z   validate-wrappers: false
+2025-08-01T02:42:47.6934243Z   generate-job-summary: true
+2025-08-01T02:42:47.6934488Z   gradle-home-cache-strict-match: false
+2025-08-01T02:42:47.6934756Z   workflow-job-context: null
+2025-08-01T02:42:47.6935094Z   github-token: ***
+2025-08-01T02:42:47.6935285Z env:
+2025-08-01T02:42:47.6935526Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:47.6936135Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:47.6936454Z ##[endgroup]
+2025-08-01T02:42:48.2757624Z Merged default JDK locations into /home/runner/.m2/toolchains.xml
+2025-08-01T02:42:48.2759745Z ##[group]Restore Gradle state from cache
+2025-08-01T02:42:48.4429767Z ##[warning]Failed to restore gradle-home-v1|Linux|jetbrains-tests[9f089130751f85de2fa573118b092c5f]-cd25af4c0bfbec2d2e2a3d90d421c60917abf53d: Error: Cache service responded with 400
+2025-08-01T02:42:48.4488479Z Gradle User Home cache not found. Will initialize empty.
+2025-08-01T02:42:48.4489311Z ##[endgroup]
+2025-08-01T02:42:48.5115073Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:48.5115320Z with:
+2025-08-01T02:42:48.5115492Z   path: ~/.npm
+2025-08-01T02:42:48.5116361Z   key: Linux-npm-cache-jetbrains-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:48.5116884Z   enableCrossOsArchive: false
+2025-08-01T02:42:48.5117123Z   fail-on-cache-miss: false
+2025-08-01T02:42:48.5117354Z   lookup-only: false
+2025-08-01T02:42:48.5117554Z   save-always: false
+2025-08-01T02:42:48.5117738Z env:
+2025-08-01T02:42:48.5117982Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:48.5118372Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:48.5118719Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:42:48.5119240Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:42:48.5119530Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:42:48.5119945Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:42:48.5120397Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:42:48.5120711Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:42:48.5120958Z ##[endgroup]
+2025-08-01T02:42:48.7149466Z Cache hit for: Linux-npm-cache-jetbrains-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:49.7727318Z Received 255852544 of 483862236 (52.9%), 242.8 MBs/sec
+2025-08-01T02:42:50.7367965Z Received 483862236 of 483862236 (100.0%), 234.4 MBs/sec
+2025-08-01T02:42:50.7370278Z Cache Size: ~461 MB (483862236 B)
+2025-08-01T02:42:50.7479957Z [command]/usr/bin/tar -xf /home/runner/work/_temp/068794ac-1113-4c5a-ad92-8d6d1ed5c4d6/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:52.1007296Z Cache restored successfully
+2025-08-01T02:42:52.2001434Z Cache restored from key: Linux-npm-cache-jetbrains-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:52.2638311Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:52.2638552Z with:
+2025-08-01T02:42:52.2638752Z   path: extensions/vscode/node_modules
+2025-08-01T02:42:52.2639234Z   key: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:52.2639717Z   enableCrossOsArchive: false
+2025-08-01T02:42:52.2639961Z   fail-on-cache-miss: false
+2025-08-01T02:42:52.2640196Z   lookup-only: false
+2025-08-01T02:42:52.2640401Z   save-always: false
+2025-08-01T02:42:52.2640590Z env:
+2025-08-01T02:42:52.2640829Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:52.2641219Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:52.2641573Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:42:52.2641874Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:42:52.2642185Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:42:52.2642598Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:42:52.2643054Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:42:52.2643370Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:42:52.2643619Z ##[endgroup]
+2025-08-01T02:42:52.4685522Z Cache hit for: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:53.2801460Z Received 151659422 of 151659422 (100.0%), 192.3 MBs/sec
+2025-08-01T02:42:53.2802271Z Cache Size: ~145 MB (151659422 B)
+2025-08-01T02:42:53.2831363Z [command]/usr/bin/tar -xf /home/runner/work/_temp/54a9aafa-3e22-4629-a95a-81f27e422988/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:56.3900668Z Cache restored successfully
+2025-08-01T02:42:56.4299781Z Cache restored from key: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:42:56.4965177Z ##[group]Run actions/cache@v4
+2025-08-01T02:42:56.4965569Z with:
+2025-08-01T02:42:56.4965773Z   path: gui/node_modules
+2025-08-01T02:42:56.4966487Z   key: Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:56.4966965Z   enableCrossOsArchive: false
+2025-08-01T02:42:56.4967220Z   fail-on-cache-miss: false
+2025-08-01T02:42:56.4967446Z   lookup-only: false
+2025-08-01T02:42:56.4967652Z   save-always: false
+2025-08-01T02:42:56.4967844Z env:
+2025-08-01T02:42:56.4968099Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:56.4968508Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:42:56.4968883Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:42:56.4969193Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:42:56.4969493Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:42:56.4970171Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:42:56.4970639Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:42:56.4970959Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:42:56.4971222Z ##[endgroup]
+2025-08-01T02:42:56.6988013Z Cache hit for: Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:42:57.4059837Z Received 122456594 of 122456594 (100.0%), 187.8 MBs/sec
+2025-08-01T02:42:57.4060914Z Cache Size: ~117 MB (122456594 B)
+2025-08-01T02:42:57.4089115Z [command]/usr/bin/tar -xf /home/runner/work/_temp/701e576a-ca82-4a53-b5d1-d02d71b4fe20/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:42:59.7487579Z Cache restored successfully
+2025-08-01T02:42:59.7864044Z Cache restored from key: Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a
+2025-08-01T02:43:08.2472594Z ##[group]Run actions/cache@v4
+2025-08-01T02:43:08.2473016Z with:
+2025-08-01T02:43:08.2473625Z   path: extensions/vscode/build
+2025-08-01T02:43:08.2474439Z   key: Linux-vscode-prepackage-258612e71cd16f1fd1e82cc02d22632877af732f63675267121b07031a9f4db6
+2025-08-01T02:43:08.2475295Z   enableCrossOsArchive: false
+2025-08-01T02:43:08.2475715Z   fail-on-cache-miss: false
+2025-08-01T02:43:08.2476358Z   lookup-only: false
+2025-08-01T02:43:08.2476714Z   save-always: false
+2025-08-01T02:43:08.2477040Z env:
+2025-08-01T02:43:08.2477454Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:43:08.2478135Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:43:08.2478749Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:43:08.2479270Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:43:08.2479765Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:43:08.2480499Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:43:08.2481335Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:43:08.2481895Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:43:08.2482333Z ##[endgroup]
+2025-08-01T02:43:08.4853340Z Cache not found for input keys: Linux-vscode-prepackage-258612e71cd16f1fd1e82cc02d22632877af732f63675267121b07031a9f4db6
+2025-08-01T02:43:08.4967953Z ##[group]Run cd extensions/vscode
+2025-08-01T02:43:08.4968439Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:43:08.4968854Z [36;1mif [ "true" != "true" ]; then[0m
+2025-08-01T02:43:08.4969289Z [36;1m  npm ci[0m
+2025-08-01T02:43:08.4969608Z [36;1mfi[0m
+2025-08-01T02:43:08.4969936Z [36;1mnpm run prepackage[0m
+2025-08-01T02:43:08.5003457Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:43:08.5003897Z env:
+2025-08-01T02:43:08.5004233Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:43:08.5004767Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:43:08.5005245Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:43:08.5005670Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:43:08.5006170Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:43:08.5006728Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:43:08.5007354Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:43:08.5007729Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:43:08.5008442Z   GITHUB_TOKEN: ***
+2025-08-01T02:43:08.5008669Z ##[endgroup]
+2025-08-01T02:43:08.6161943Z 
+2025-08-01T02:43:08.6162479Z > continue@1.1.72 prepackage
+2025-08-01T02:43:08.6163098Z > node scripts/prepackage.js
+2025-08-01T02:43:08.6163423Z 
+2025-08-01T02:43:08.7251435Z [info] Using target:  linux-x64
+2025-08-01T02:43:08.7257711Z [info] Packaging extension for target linux-x64 - started at 2025-08-01T02:43:08.725Z
+2025-08-01T02:43:08.7260299Z [timer] Starting npm installs at 2025-08-01T02:43:08.725Z
+2025-08-01T02:43:14.9630717Z [info] npm install in extensions/vscode completed
+2025-08-01T02:43:15.1122249Z [info] npm install in gui completed
+2025-08-01T02:43:20.3897949Z [info] Generated config.yaml schema
+2025-08-01T02:43:20.4418606Z [timer] npm installs completed in 11716ms
+2025-08-01T02:43:20.4419300Z [timer] Starting GUI build at 2025-08-01T02:43:20.441Z
+2025-08-01T02:44:02.8774912Z 
+2025-08-01T02:44:02.8776601Z fonts/KaTeX_AMS-Regular.woff2 referenced in fonts/KaTeX_AMS-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8777558Z 
+2025-08-01T02:44:02.8778693Z fonts/KaTeX_Caligraphic-Bold.woff2 referenced in fonts/KaTeX_Caligraphic-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8779676Z 
+2025-08-01T02:44:02.8780973Z fonts/KaTeX_Caligraphic-Regular.woff2 referenced in fonts/KaTeX_Caligraphic-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8782048Z 
+2025-08-01T02:44:02.8783577Z fonts/KaTeX_Fraktur-Bold.woff2 referenced in fonts/KaTeX_Fraktur-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8784559Z 
+2025-08-01T02:44:02.8785767Z fonts/KaTeX_Fraktur-Regular.woff2 referenced in fonts/KaTeX_Fraktur-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8787533Z 
+2025-08-01T02:44:02.8788658Z fonts/KaTeX_Main-Bold.woff2 referenced in fonts/KaTeX_Main-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8789569Z 
+2025-08-01T02:44:02.8790764Z fonts/KaTeX_Main-BoldItalic.woff2 referenced in fonts/KaTeX_Main-BoldItalic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8791809Z 
+2025-08-01T02:44:02.8792945Z fonts/KaTeX_Main-Italic.woff2 referenced in fonts/KaTeX_Main-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8793938Z 
+2025-08-01T02:44:02.8795051Z fonts/KaTeX_Main-Regular.woff2 referenced in fonts/KaTeX_Main-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8796199Z 
+2025-08-01T02:44:02.8796884Z fonts/KaTeX_Math-BoldItalic.woff2 referenced in fonts/KaTeX_Math-BoldItalic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8797459Z 
+2025-08-01T02:44:02.8798076Z fonts/KaTeX_Math-Italic.woff2 referenced in fonts/KaTeX_Math-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8798621Z 
+2025-08-01T02:44:02.8799234Z fonts/KaTeX_SansSerif-Bold.woff2 referenced in fonts/KaTeX_SansSerif-Bold.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8799779Z 
+2025-08-01T02:44:02.8800421Z fonts/KaTeX_SansSerif-Italic.woff2 referenced in fonts/KaTeX_SansSerif-Italic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8800995Z 
+2025-08-01T02:44:02.8802109Z fonts/KaTeX_SansSerif-Regular.woff2 referenced in fonts/KaTeX_SansSerif-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8802769Z 
+2025-08-01T02:44:02.8803416Z fonts/KaTeX_Script-Regular.woff2 referenced in fonts/KaTeX_Script-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8804081Z 
+2025-08-01T02:44:02.8804807Z fonts/KaTeX_Size1-Regular.woff2 referenced in fonts/KaTeX_Size1-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8805483Z 
+2025-08-01T02:44:02.8806410Z fonts/KaTeX_Size2-Regular.woff2 referenced in fonts/KaTeX_Size2-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8806981Z 
+2025-08-01T02:44:02.8808090Z fonts/KaTeX_Size3-Regular.woff2 referenced in fonts/KaTeX_Size3-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8808660Z 
+2025-08-01T02:44:02.8809284Z fonts/KaTeX_Size4-Regular.woff2 referenced in fonts/KaTeX_Size4-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8809825Z 
+2025-08-01T02:44:02.8810493Z fonts/KaTeX_Typewriter-Regular.woff2 referenced in fonts/KaTeX_Typewriter-Regular.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8811102Z 
+2025-08-01T02:44:02.8811688Z fonts/KaTeX_AMS-Regular.woff referenced in fonts/KaTeX_AMS-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8812206Z 
+2025-08-01T02:44:02.8812831Z fonts/KaTeX_Caligraphic-Bold.woff referenced in fonts/KaTeX_Caligraphic-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8813533Z 
+2025-08-01T02:44:02.8814213Z fonts/KaTeX_Caligraphic-Regular.woff referenced in fonts/KaTeX_Caligraphic-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8814795Z 
+2025-08-01T02:44:02.8815382Z fonts/KaTeX_Fraktur-Bold.woff referenced in fonts/KaTeX_Fraktur-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8816093Z 
+2025-08-01T02:44:02.8816723Z fonts/KaTeX_Fraktur-Regular.woff referenced in fonts/KaTeX_Fraktur-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8817265Z 
+2025-08-01T02:44:02.8818058Z fonts/KaTeX_Main-Bold.woff referenced in fonts/KaTeX_Main-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8818549Z 
+2025-08-01T02:44:02.8819379Z fonts/KaTeX_Main-BoldItalic.woff referenced in fonts/KaTeX_Main-BoldItalic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8819961Z 
+2025-08-01T02:44:02.8820602Z fonts/KaTeX_Main-Italic.woff referenced in fonts/KaTeX_Main-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8821117Z 
+2025-08-01T02:44:02.8821698Z fonts/KaTeX_Main-Regular.woff referenced in fonts/KaTeX_Main-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8822293Z 
+2025-08-01T02:44:02.8823408Z fonts/KaTeX_Math-BoldItalic.woff referenced in fonts/KaTeX_Math-BoldItalic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8824349Z 
+2025-08-01T02:44:02.8824960Z fonts/KaTeX_Math-Italic.woff referenced in fonts/KaTeX_Math-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8825476Z 
+2025-08-01T02:44:02.8826334Z fonts/KaTeX_SansSerif-Bold.woff referenced in fonts/KaTeX_SansSerif-Bold.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8826897Z 
+2025-08-01T02:44:02.8827533Z fonts/KaTeX_SansSerif-Italic.woff referenced in fonts/KaTeX_SansSerif-Italic.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8828089Z 
+2025-08-01T02:44:02.8828725Z fonts/KaTeX_SansSerif-Regular.woff referenced in fonts/KaTeX_SansSerif-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8829280Z 
+2025-08-01T02:44:02.8829873Z fonts/KaTeX_Script-Regular.woff referenced in fonts/KaTeX_Script-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8830403Z 
+2025-08-01T02:44:02.8830995Z fonts/KaTeX_Size1-Regular.woff referenced in fonts/KaTeX_Size1-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8831682Z 
+2025-08-01T02:44:02.8832270Z fonts/KaTeX_Size2-Regular.woff referenced in fonts/KaTeX_Size2-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8832792Z 
+2025-08-01T02:44:02.8833376Z fonts/KaTeX_Size3-Regular.woff referenced in fonts/KaTeX_Size3-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8833895Z 
+2025-08-01T02:44:02.8834469Z fonts/KaTeX_Size4-Regular.woff referenced in fonts/KaTeX_Size4-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8834986Z 
+2025-08-01T02:44:02.8835623Z fonts/KaTeX_Typewriter-Regular.woff referenced in fonts/KaTeX_Typewriter-Regular.woff didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8836433Z 
+2025-08-01T02:44:02.8837508Z fonts/KaTeX_AMS-Regular.ttf referenced in fonts/KaTeX_AMS-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8838201Z 
+2025-08-01T02:44:02.8839229Z fonts/KaTeX_Caligraphic-Bold.ttf referenced in fonts/KaTeX_Caligraphic-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8840295Z 
+2025-08-01T02:44:02.8841582Z fonts/KaTeX_Caligraphic-Regular.ttf referenced in fonts/KaTeX_Caligraphic-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8842670Z 
+2025-08-01T02:44:02.8843787Z fonts/KaTeX_Fraktur-Bold.ttf referenced in fonts/KaTeX_Fraktur-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8844737Z 
+2025-08-01T02:44:02.8846122Z fonts/KaTeX_Fraktur-Regular.ttf referenced in fonts/KaTeX_Fraktur-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8847191Z 
+2025-08-01T02:44:02.8848297Z fonts/KaTeX_Main-Bold.ttf referenced in fonts/KaTeX_Main-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8849245Z 
+2025-08-01T02:44:02.8850470Z fonts/KaTeX_Main-BoldItalic.ttf referenced in fonts/KaTeX_Main-BoldItalic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8851529Z 
+2025-08-01T02:44:02.8852681Z fonts/KaTeX_Main-Italic.ttf referenced in fonts/KaTeX_Main-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8853678Z 
+2025-08-01T02:44:02.8854848Z fonts/KaTeX_Main-Regular.ttf referenced in fonts/KaTeX_Main-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8856030Z 
+2025-08-01T02:44:02.8857241Z fonts/KaTeX_Math-BoldItalic.ttf referenced in fonts/KaTeX_Math-BoldItalic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8858270Z 
+2025-08-01T02:44:02.8859408Z fonts/KaTeX_Math-Italic.ttf referenced in fonts/KaTeX_Math-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8860343Z 
+2025-08-01T02:44:02.8861464Z fonts/KaTeX_SansSerif-Bold.ttf referenced in fonts/KaTeX_SansSerif-Bold.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8862468Z 
+2025-08-01T02:44:02.8863698Z fonts/KaTeX_SansSerif-Italic.ttf referenced in fonts/KaTeX_SansSerif-Italic.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8864729Z 
+2025-08-01T02:44:02.8866159Z fonts/KaTeX_SansSerif-Regular.ttf referenced in fonts/KaTeX_SansSerif-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8867256Z 
+2025-08-01T02:44:02.8868457Z fonts/KaTeX_Script-Regular.ttf referenced in fonts/KaTeX_Script-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8869752Z 
+2025-08-01T02:44:02.8870929Z fonts/KaTeX_Size1-Regular.ttf referenced in fonts/KaTeX_Size1-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8871939Z 
+2025-08-01T02:44:02.8873103Z fonts/KaTeX_Size2-Regular.ttf referenced in fonts/KaTeX_Size2-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8874096Z 
+2025-08-01T02:44:02.8875245Z fonts/KaTeX_Size3-Regular.ttf referenced in fonts/KaTeX_Size3-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8876421Z 
+2025-08-01T02:44:02.8877613Z fonts/KaTeX_Size4-Regular.ttf referenced in fonts/KaTeX_Size4-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8878608Z 
+2025-08-01T02:44:02.8881653Z fonts/KaTeX_Typewriter-Regular.ttf referenced in fonts/KaTeX_Typewriter-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+2025-08-01T02:44:02.8886132Z [33m[plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "/home/runner/work/continue/continue/packages/config-yaml/dist/markdown/markdownToRule.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+2025-08-01T02:44:02.8889837Z [sentry-vite-plugin] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+2025-08-01T02:44:02.8892845Z [sentry-vite-plugin] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+2025-08-01T02:44:02.8894450Z [33m
+2025-08-01T02:44:02.8895131Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2025-08-01T02:44:02.8896392Z - Using dynamic import() to code-split the application
+2025-08-01T02:44:02.8897984Z - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2025-08-01T02:44:02.8899715Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2025-08-01T02:44:02.8900613Z [timer] GUI build completed in 42436ms
+2025-08-01T02:44:02.8901387Z [timer] Starting JetBrains copy at 2025-08-01T02:44:02.879Z
+2025-08-01T02:44:02.9775603Z [timer] JetBrains copy completed in 98ms
+2025-08-01T02:44:02.9779384Z [info] Copied gui build to JetBrains extension
+2025-08-01T02:44:02.9780536Z [timer] Starting VSCode copy at 2025-08-01T02:44:02.977Z
+2025-08-01T02:44:03.0566783Z Copied gui build to VSCode extension
+2025-08-01T02:44:03.0567432Z [timer] VSCode copy completed in 79ms
+2025-08-01T02:44:03.0568903Z [timer] Starting onnxruntime copy at 2025-08-01T02:44:03.056Z
+2025-08-01T02:44:03.1340889Z [timer] onnxruntime copy completed in 77ms
+2025-08-01T02:44:03.1486503Z [info] Copied onnxruntime-node
+2025-08-01T02:44:03.1799793Z [info] Copied tree-sitter.wasm
+2025-08-01T02:44:03.1800466Z [info] Copied llamaTokenizerWorkerPool.mjs
+2025-08-01T02:44:03.1809520Z [info] Copied llamaTokenizer.mjs
+2025-08-01T02:44:03.1811859Z [info] Copied tiktokenWorkerPool.mjs
+2025-08-01T02:44:03.1813814Z [info] Copied start_ollama.sh
+2025-08-01T02:44:03.1901237Z [info] npm installing esbuild binary
+2025-08-01T02:44:03.2183540Z Copying esbuild@0.17.19 to @esbuild
+2025-08-01T02:44:04.5488604Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:44:04.5502775Z Contents of: esbuild@0.17.19 [ 'linux-x64' ]
+2025-08-01T02:44:06.5593465Z [info] Copying sqlite node binding from core
+2025-08-01T02:44:06.5918272Z [info] Copied workerpool
+2025-08-01T02:44:06.6013524Z [info] Copied @vscode/ripgrep
+2025-08-01T02:44:06.6106640Z [info] Copied esbuild
+2025-08-01T02:44:06.6119134Z [info] Copied @esbuild
+2025-08-01T02:44:06.6819641Z [info] Copied @lancedb
+2025-08-01T02:44:06.6842381Z [info] Copied esbuild, @esbuild, @lancedb, @vscode/ripgrep, workerpool
+2025-08-01T02:44:06.6858034Z All paths exist
+2025-08-01T02:44:06.6858851Z [timer] Prepackage completed in 57960ms - finished at 2025-08-01T02:44:06.685Z
+2025-08-01T02:44:06.7566798Z ##[group]Run actions/cache@v4
+2025-08-01T02:44:06.7567111Z with:
+2025-08-01T02:44:06.7567356Z   path: binary/node_modules
+2025-08-01T02:44:06.7567972Z   key: Linux-binary-node-modules-fb936d1f3861737e59ec1ab6bb6566bcfee0045ad5f1cb9acf36ced8c7dc4b01
+2025-08-01T02:44:06.7568632Z   enableCrossOsArchive: false
+2025-08-01T02:44:06.7568952Z   fail-on-cache-miss: false
+2025-08-01T02:44:06.7569245Z   lookup-only: false
+2025-08-01T02:44:06.7569490Z   save-always: false
+2025-08-01T02:44:06.7569696Z env:
+2025-08-01T02:44:06.7569949Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:44:06.7570365Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:44:06.7570740Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:44:06.7571270Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:44:06.7571575Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:44:06.7572001Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:44:06.7572488Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:44:06.7572813Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:44:06.7573072Z ##[endgroup]
+2025-08-01T02:44:07.0496723Z Cache hit for: Linux-binary-node-modules-fb936d1f3861737e59ec1ab6bb6566bcfee0045ad5f1cb9acf36ced8c7dc4b01
+2025-08-01T02:44:07.4881572Z Received 63007360 of 63007360 (100.0%), 158.1 MBs/sec
+2025-08-01T02:44:07.4882999Z Cache Size: ~60 MB (63007360 B)
+2025-08-01T02:44:07.4915058Z [command]/usr/bin/tar -xf /home/runner/work/_temp/6f1a4260-9744-452b-b679-b5bb04ca3cae/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:44:08.2825458Z Cache restored successfully
+2025-08-01T02:44:08.3039657Z Cache restored from key: Linux-binary-node-modules-fb936d1f3861737e59ec1ab6bb6566bcfee0045ad5f1cb9acf36ced8c7dc4b01
+2025-08-01T02:44:08.3142771Z ##[group]Run cd binary
+2025-08-01T02:44:08.3143028Z [36;1mcd binary[0m
+2025-08-01T02:44:08.3143244Z [36;1mnpm run build[0m
+2025-08-01T02:44:08.3171376Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:44:08.3171753Z env:
+2025-08-01T02:44:08.3172030Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:44:08.3172459Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:44:08.3172836Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:44:08.3173156Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:44:08.3173452Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:44:08.3174298Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:44:08.3174966Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:44:08.3175403Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:44:08.3175706Z ##[endgroup]
+2025-08-01T02:44:08.4289047Z 
+2025-08-01T02:44:08.4289576Z > binary@1.0.0 build
+2025-08-01T02:44:08.4290101Z > node build.js
+2025-08-01T02:44:08.4290358Z 
+2025-08-01T02:44:08.6245496Z [info] Downloading for darwin-x64...
+2025-08-01T02:44:08.6297754Z [info] Downloading for darwin-arm64...
+2025-08-01T02:44:08.6313097Z [info] Downloading for linux-x64...
+2025-08-01T02:44:08.6330560Z [info] Downloading for linux-arm64...
+2025-08-01T02:44:08.6359399Z [info] Downloading for win32-x64...
+2025-08-01T02:44:08.6636609Z Copying @lancedb/vectordb-darwin-x64 to @lancedb
+2025-08-01T02:44:08.6675463Z Copying @lancedb/vectordb-darwin-arm64 to @lancedb
+2025-08-01T02:44:08.6857997Z Copying @lancedb/vectordb-linux-arm64-gnu to @lancedb
+2025-08-01T02:44:08.6862901Z Copying @lancedb/vectordb-linux-x64-gnu to @lancedb
+2025-08-01T02:44:08.6980021Z Copying @lancedb/vectordb-win32-x64-msvc to @lancedb
+2025-08-01T02:44:11.1655181Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:44:11.1678256Z Contents of: @lancedb/vectordb-darwin-arm64 [ 'vectordb-darwin-arm64' ]
+2025-08-01T02:44:11.2964183Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:44:11.2968403Z Contents of: @lancedb/vectordb-linux-x64-gnu [ 'vectordb-linux-x64-gnu' ]
+2025-08-01T02:44:11.3900822Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:44:11.3924171Z Contents of: @lancedb/vectordb-linux-arm64-gnu [ 'vectordb-linux-arm64-gnu' ]
+2025-08-01T02:44:11.4425281Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:44:11.4440023Z Contents of: @lancedb/vectordb-darwin-x64 [ 'vectordb-darwin-x64' ]
+2025-08-01T02:44:11.4650810Z npm warn using --force Recommended protections disabled.
+2025-08-01T02:44:11.4665352Z Contents of: @lancedb/vectordb-win32-x64-msvc [ 'vectordb-win32-x64-msvc' ]
+2025-08-01T02:44:13.7891305Z [info] Copied all LanceDB
+2025-08-01T02:44:13.9153595Z [info] Copied tree-sitter.wasm
+2025-08-01T02:44:13.9155187Z [info] Copied llamaTokenizerWorkerPool.mjs
+2025-08-01T02:44:13.9163424Z [info] Copied llamaTokenizer.mjs
+2025-08-01T02:44:13.9165536Z [info] Copied tiktokenWorkerPool.mjs
+2025-08-01T02:44:13.9166320Z [info] Cleaning up artifacts from previous builds...
+2025-08-01T02:44:13.9168054Z [info] Building with esbuild...
+2025-08-01T02:44:17.0715300Z [info] Building binaries with pkg...
+2025-08-01T02:44:17.4767310Z [info] Building darwin-x64...
+2025-08-01T02:44:17.4979512Z [info] Building linux-arm64...
+2025-08-01T02:44:17.5140215Z [info] Building win32-x64...
+2025-08-01T02:44:17.5530801Z [info] Building darwin-arm64...
+2025-08-01T02:44:17.5883335Z [info] Building linux-x64...
+2025-08-01T02:44:47.8130825Z [info] Copying @lancedb files to bin
+2025-08-01T02:44:47.9313508Z [info] Downloading ripgrep from https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-apple-darwin.tar.gz
+2025-08-01T02:44:48.0153720Z [info] Downloading node-sqlite3
+2025-08-01T02:44:48.2196295Z [info] Extracting ripgrep to bin/darwin-x64
+2025-08-01T02:44:48.7283083Z [info] Copying @lancedb files to bin
+2025-08-01T02:44:48.8535230Z [info] Downloading ripgrep from https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-pc-windows-msvc.zip
+2025-08-01T02:44:48.9089491Z [info] Downloading node-sqlite3
+2025-08-01T02:44:49.2200695Z [info] Copying @lancedb files to bin
+2025-08-01T02:44:49.2226885Z [info] Extracting ripgrep to bin/win32-x64
+2025-08-01T02:44:49.3527755Z [info] Downloading ripgrep from https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-unknown-linux-musl.tar.gz
+2025-08-01T02:44:49.3621774Z [info] Copying @lancedb files to bin
+2025-08-01T02:44:49.3997657Z [info] Downloading node-sqlite3
+2025-08-01T02:44:49.4768608Z [info] Downloading ripgrep from https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-aarch64-unknown-linux-gnu.tar.gz
+2025-08-01T02:44:49.5367356Z [info] Downloading node-sqlite3
+2025-08-01T02:44:49.5497532Z [info] Extracting ripgrep to bin/linux-x64
+2025-08-01T02:44:49.6375743Z [info] Copying @lancedb files to bin
+2025-08-01T02:44:49.7227663Z [info] Extracting ripgrep to bin/linux-arm64
+2025-08-01T02:44:49.8313197Z [info] Downloading ripgrep from https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-aarch64-apple-darwin.tar.gz
+2025-08-01T02:44:49.8662003Z [info] Downloading node-sqlite3
+2025-08-01T02:44:50.0591602Z [info] Extracting ripgrep to bin/darwin-arm64
+2025-08-01T02:44:50.1052514Z [info] All binaries built
+2025-08-01T02:44:50.1058885Z All paths exist
+2025-08-01T02:44:50.1059285Z [info] Done!
+2025-08-01T02:44:50.1524834Z ##[group]Run cd extensions/intellij
+2025-08-01T02:44:50.1525171Z [36;1mcd extensions/intellij[0m
+2025-08-01T02:44:50.1525451Z [36;1mexport DISPLAY=:99.0[0m
+2025-08-01T02:44:50.1525746Z [36;1mXvfb -ac :99 -screen 0 1920x1080x24 &[0m
+2025-08-01T02:44:50.1526363Z [36;1msleep 10[0m
+2025-08-01T02:44:50.1526802Z [36;1mmkdir -p build/reports[0m
+2025-08-01T02:44:50.1527105Z [36;1m./gradlew runIdeForUiTests &[0m
+2025-08-01T02:44:50.1638765Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:44:50.1639129Z env:
+2025-08-01T02:44:50.1639431Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:44:50.1639881Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:44:50.1640281Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:44:50.1640629Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:44:50.1640946Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:44:50.1641412Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:44:50.1641942Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:44:50.1642323Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:44:50.1642631Z ##[endgroup]
+2025-08-01T02:44:51.7848367Z The XKEYBOARD keymap compiler (xkbcomp) reports:
+2025-08-01T02:44:51.7849366Z > Warning:          Could not resolve keysym XF86CameraAccessEnable
+2025-08-01T02:44:51.7850303Z > Warning:          Could not resolve keysym XF86CameraAccessDisable
+2025-08-01T02:44:51.7851187Z > Warning:          Could not resolve keysym XF86CameraAccessToggle
+2025-08-01T02:44:51.7852025Z > Warning:          Could not resolve keysym XF86NextElement
+2025-08-01T02:44:51.7852855Z > Warning:          Could not resolve keysym XF86PreviousElement
+2025-08-01T02:44:51.7853767Z > Warning:          Could not resolve keysym XF86AutopilotEngageToggle
+2025-08-01T02:44:51.7854495Z > Warning:          Could not resolve keysym XF86MarkWaypoint
+2025-08-01T02:44:51.7855011Z > Warning:          Could not resolve keysym XF86Sos
+2025-08-01T02:44:51.7855513Z > Warning:          Could not resolve keysym XF86NavChart
+2025-08-01T02:44:51.7856308Z > Warning:          Could not resolve keysym XF86FishingChart
+2025-08-01T02:44:51.7856870Z > Warning:          Could not resolve keysym XF86SingleRangeRadar
+2025-08-01T02:44:51.7857439Z > Warning:          Could not resolve keysym XF86DualRangeRadar
+2025-08-01T02:44:51.7858221Z > Warning:          Could not resolve keysym XF86RadarOverlay
+2025-08-01T02:44:51.7858867Z > Warning:          Could not resolve keysym XF86TraditionalSonar
+2025-08-01T02:44:51.7859434Z > Warning:          Could not resolve keysym XF86ClearvuSonar
+2025-08-01T02:44:51.7859967Z > Warning:          Could not resolve keysym XF86SidevuSonar
+2025-08-01T02:44:51.7860482Z > Warning:          Could not resolve keysym XF86NavInfo
+2025-08-01T02:44:51.7860980Z Errors from xkbcomp are not fatal to the X server
+2025-08-01T02:45:00.2489202Z Downloading https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
+2025-08-01T02:45:01.7427407Z .............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%..............100%
+2025-08-01T02:45:02.9268819Z 
+2025-08-01T02:45:02.9271131Z Welcome to Gradle 8.14.3!
+2025-08-01T02:45:02.9272576Z 
+2025-08-01T02:45:02.9272957Z Here are the highlights of this release:
+2025-08-01T02:45:02.9273771Z  - Java 24 support
+2025-08-01T02:45:02.9274466Z  - GraalVM Native Image toolchain selection
+2025-08-01T02:45:02.9275616Z  - Enhancements to test reporting
+2025-08-01T02:45:02.9277045Z  - Build Authoring improvements
+2025-08-01T02:45:02.9277413Z 
+2025-08-01T02:45:02.9285077Z For more details see https://docs.gradle.org/8.14.3/release-notes.html
+2025-08-01T02:45:02.9285796Z 
+2025-08-01T02:45:03.0268227Z Starting a Gradle Daemon (subsequent builds will be faster)
+2025-08-01T02:45:05.1789229Z ##[group]Run jtalk/url-health-check-action@v3
+2025-08-01T02:45:05.1789729Z with:
+2025-08-01T02:45:05.1790078Z   url: http://127.0.0.1:8082
+2025-08-01T02:45:05.1790501Z   max-attempts: 15
+2025-08-01T02:45:05.1806634Z   retry-delay: 30s
+2025-08-01T02:45:05.1815699Z   follow-redirect: false
+2025-08-01T02:45:05.1816426Z   retry-all: false
+2025-08-01T02:45:05.1816806Z env:
+2025-08-01T02:45:05.1817258Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:45:05.1818272Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:45:05.1818947Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:45:05.1819514Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:45:05.1820039Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:45:05.1820804Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:45:05.1821682Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:45:05.1822285Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:45:05.1822771Z ##[endgroup]
+2025-08-01T02:45:05.2447015Z Checking http://127.0.0.1:8082
+2025-08-01T02:45:05.2506886Z [command]/usr/bin/curl --fail -sv --retry 15 --retry-delay 30 --retry-connrefused http://127.0.0.1:8082
+2025-08-01T02:45:05.2627806Z *   Trying 127.0.0.1:8082...
+2025-08-01T02:45:05.2629048Z * connect to 127.0.0.1 port 8082 from 127.0.0.1 port 45138 failed: Connection refused
+2025-08-01T02:45:05.2632693Z * Failed to connect to 127.0.0.1 port 8082 after 0 ms: Couldn't connect to server
+2025-08-01T02:45:05.2633446Z * Closing connection
+2025-08-01T02:45:35.2952020Z * Hostname 127.0.0.1 was found in DNS cache
+2025-08-01T02:45:35.2952667Z *   Trying 127.0.0.1:8082...
+2025-08-01T02:45:35.2953493Z * connect to 127.0.0.1 port 8082 from 127.0.0.1 port 50720 failed: Connection refused
+2025-08-01T02:45:35.2954534Z * Failed to connect to 127.0.0.1 port 8082 after 0 ms: Couldn't connect to server
+2025-08-01T02:45:35.2955228Z * Closing connection
+2025-08-01T02:46:05.3041677Z * Hostname in DNS cache was stale, zapped
+2025-08-01T02:46:05.3043181Z *   Trying 127.0.0.1:8082...
+2025-08-01T02:46:05.3045809Z * connect to 127.0.0.1 port 8082 from 127.0.0.1 port 33054 failed: Connection refused
+2025-08-01T02:46:05.3047121Z * Failed to connect to 127.0.0.1 port 8082 after 0 ms: Couldn't connect to server
+2025-08-01T02:46:05.3047784Z * Closing connection
+2025-08-01T02:46:35.3331672Z * Hostname 127.0.0.1 was found in DNS cache
+2025-08-01T02:46:35.3333459Z *   Trying 127.0.0.1:8082...
+2025-08-01T02:46:35.3334260Z * connect to 127.0.0.1 port 8082 from 127.0.0.1 port 53696 failed: Connection refused
+2025-08-01T02:46:35.3335259Z * Failed to connect to 127.0.0.1 port 8082 after 0 ms: Couldn't connect to server
+2025-08-01T02:46:35.3336098Z * Closing connection
+2025-08-01T02:47:05.3631962Z * Hostname in DNS cache was stale, zapped
+2025-08-01T02:47:05.3633874Z *   Trying 127.0.0.1:8082...
+2025-08-01T02:47:05.3634758Z * connect to 127.0.0.1 port 8082 from 127.0.0.1 port 55006 failed: Connection refused
+2025-08-01T02:47:05.3636132Z * Failed to connect to 127.0.0.1 port 8082 after 0 ms: Couldn't connect to server
+2025-08-01T02:47:05.3636906Z * Closing connection
+2025-08-01T02:47:35.3738768Z * Hostname 127.0.0.1 was found in DNS cache
+2025-08-01T02:47:35.3744089Z *   Trying 127.0.0.1:8082...
+2025-08-01T02:47:35.3745556Z * Connected to 127.0.0.1 (127.0.0.1) port 8082
+2025-08-01T02:47:35.3746528Z > GET / HTTP/1.1
+2025-08-01T02:47:35.3747356Z > Host: 127.0.0.1:8082
+2025-08-01T02:47:35.3748227Z > User-Agent: curl/8.5.0
+2025-08-01T02:47:35.3748759Z > Accept: */*
+2025-08-01T02:47:35.3749453Z > 
+2025-08-01T02:47:35.5898863Z < HTTP/1.1 200 OK
+2025-08-01T02:47:35.5903618Z < Date: Fri, 01 Aug 2025 02:47:35 GMT
+2025-08-01T02:47:35.5904177Z < Server: Ktor/debug
+2025-08-01T02:47:35.5904623Z < Content-Length: 63423
+2025-08-01T02:47:35.5905170Z < Content-Type: text/html; charset=UTF-8
+2025-08-01T02:47:35.5905651Z < 
+2025-08-01T02:47:35.5906239Z { [63423 bytes data]
+2025-08-01T02:47:35.5906776Z * Connection #5 to host 127.0.0.1 left intact
+2025-08-01T02:47:35.5907963Z <link rel="stylesheet" type="text/css" href="styles.css"><script src="scripts.js"></script>
+2025-08-01T02:47:35.5908838Z <script src="xpathEditor.js"></script>
+2025-08-01T02:47:35.5909445Z <script src="updateButton.js"></script>
+2025-08-01T02:47:35.5910005Z <div id="updateButton"></div>
+2025-08-01T02:47:35.5910432Z <div>
+2025-08-01T02:47:35.5917043Z     <div accessiblename="Welcome to IntelliJ IDEA" accessiblename.key="label.welcome.to.0" class="FlatWelcomeFrame" classhierarchy="javax.swing.JFrame -> java.awt.Frame -> java.awt.Window -> java.awt.Container -> java.awt.Component -> java.lang.Object" customdecortitlebarheight="-1" enabled="true" hasfocus="false" iconified="1" icons="[BufferedImage@4d39c5a7: type = 2 DirectColorModel: rmask=ff0000 gmask=ff00 bmask=ff amask=ff000000 IntegerInterleavedRaster: width = 128 height = 128 #Bands = 4 xOff = 0 yOff = 0 dataOffset[0] 0, BufferedImage@79c63739: type = 2 DirectColorModel: rmask=ff0000 gmask=ff00 bmask=ff amask=ff000000 IntegerInterleavedRaster: width = 32 height = 32 #Bands = 4 xOff = 0 yOff = 0 dataOffset[0] 0]" inputcontextlock="java.lang.Object@1ec13808" istrayiconwindow="false" javaclass="com.intellij.openapi.wm.impl.welcomeScreen.FlatWelcomeFrame" text_cursor="2" title="Welcome to IntelliJ IDEA" title.key="label.welcome.to.0" visible="true">
+2025-08-01T02:47:35.5924968Z         <img height="17" onclick="show(560, 143, 800, 650)" src="img/show.png" width="17"> FlatWelcomeFrame. title: 'Welcome to IntelliJ IDEA'. title.key: 'label.welcome.to.0'. customdecortitlebarheight: '-1'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5927146Z         <xpathEditor class="hidden">
+2025-08-01T02:47:35.5928221Z             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5929134Z         </xpathEditor>
+2025-08-01T02:47:35.5930929Z         <div actionmap="javax.swing.ActionMap@11d8b45d" actionmap_created="8" class="JRootPane" classhierarchy="javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="javax.swing.JRootPane" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.5933584Z             <img height="17" onclick="show(560, 143, 800, 650)" src="img/show.png" width="17"> JRootPane. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5935174Z             <xpathEditor class="hidden">
+2025-08-01T02:47:35.5936583Z                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5937611Z             </xpathEditor>
+2025-08-01T02:47:35.5939446Z             <div actionmap_created="8" class="JLayeredPane" classhierarchy="javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="javax.swing.JLayeredPane" name="null.layeredPane" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.5942508Z                 <img height="17" onclick="show(560, 143, 800, 650)" src="img/show.png" width="17"> JLayeredPane. name: 'null.layeredPane'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5944066Z                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.5945202Z                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5946458Z                 </xpathEditor>
+2025-08-01T02:47:35.5948342Z                 <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.5951427Z                     <img height="17" onclick="show(560, 143, 800, 650)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5953160Z                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.5954304Z                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5955332Z                     </xpathEditor>
+2025-08-01T02:47:35.5958071Z                     <div actionmap_created="8" class="JBSlidingPanel" classhierarchy="com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.JBSlidingPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.5961101Z                         <img height="17" onclick="show(560, 143, 800, 650)" src="img/show.png" width="17"> JBSlidingPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5962689Z                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.5963856Z                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5964854Z                         </xpathEditor>
+2025-08-01T02:47:35.5968032Z                         <div actionmap_created="8" class="TabbedWelcomeScreen" classhierarchy="com.intellij.openapi.wm.impl.welcomeScreen.AbstractWelcomeScreen -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.openapi.wm.impl.welcomeScreen.TabbedWelcomeScreen" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.5971903Z                             <img height="17" onclick="show(560, 143, 800, 650)" src="img/show.png" width="17"> TabbedWelcomeScreen. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5973421Z                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.5974571Z                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5975576Z                             </xpathEditor>
+2025-08-01T02:47:35.5978906Z                             <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.5982057Z                                 <img height="17" onclick="show(560, 143, 215, 650)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5983463Z                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.5984587Z                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5985611Z                                 </xpathEditor>
+2025-08-01T02:47:35.5988544Z                                 <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" tooltiptext="IntelliJ IDEA 2022.3.3" visible="true">
+2025-08-01T02:47:35.5992019Z                                     <img height="17" onclick="show(560, 143, 215, 84)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.5993590Z                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.5995101Z                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.5996355Z                                     </xpathEditor>
+2025-08-01T02:47:35.5999550Z                                     <div actionmap_created="8" class="JLabel" classhierarchy="javax.swing.JComponent" defaulticon="com.intellij.openapi.util.IconLoader$ScaledResultIcon@7b1d6eba" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="javax.swing.JLabel" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6003469Z                                         <img height="17" onclick="show(576, 143, 28, 84)" src="img/show.png" width="17"> JLabel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6004910Z                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6006319Z                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6007404Z                                         </xpathEditor>
+2025-08-01T02:47:35.6007967Z                                     </div>
+2025-08-01T02:47:35.6010607Z                                     <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6013798Z                                         <img height="17" onclick="show(604, 143, 171, 84)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6015296Z                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6016705Z                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6017794Z                                         </xpathEditor>
+2025-08-01T02:47:35.6020279Z                                         <div actionmap_created="8" class="BorderLayoutPanel" classhierarchy="com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.util.ui.components.BorderLayoutPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6023462Z                                             <img height="17" onclick="show(614, 171, 151, 17)" src="img/show.png" width="17"> BorderLayoutPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6025150Z                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6026541Z                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6027637Z                                             </xpathEditor>
+2025-08-01T02:47:35.6030810Z                                             <div accessiblename="IntelliJ IDEA" actionmap_created="8" class="JLabel" classhierarchy="javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="javax.swing.JLabel" text="IntelliJ IDEA" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="IntelliJ IDEA" visible_text_keys="">
+2025-08-01T02:47:35.6034732Z                                                 <img height="17" onclick="show(614, 171, 135, 17)" src="img/show.png" width="17"> JLabel. text: 'IntelliJ IDEA'. visible_text: 'IntelliJ IDEA'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6036574Z                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6044344Z                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6045505Z                                                 </xpathEditor>
+2025-08-01T02:47:35.6046525Z                                             </div>
+2025-08-01T02:47:35.6052744Z                                             <div accessiblename="" actionmap_created="8" class="ActionLink" classhierarchy="com.intellij.ui.components.labels.LinkLabel -> javax.swing.JLabel -> javax.swing.JComponent" defaulticon="com.intellij.util.ui.EmptyIcon 16x16" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icon="com.intellij.util.ui.EmptyIcon 0x12" iconr="com.intellij.util.ui.JBRectangle[x=0,y=0,width=0,height=0]" icontextgap="4" javaclass="com.intellij.ui.components.labels.ActionLink" myaction="null (null)" myhoveringicon="copy.svg" myinactiveicon="com.intellij.util.ui.EmptyIcon 16x16" text="" textr="com.intellij.util.ui.JBRectangle[x=0,y=0,width=0,height=0]" tool_tip_text_key="ToolTipText" tooltiptext="Copy About" tooltiptext.key="welcome.screen.copy.about.action.text" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6059703Z                                                 <img height="17" onclick="show(749, 171, 16, 17)" src="img/show.png" width="17"> ActionLink. myaction: 'null (null)'. myhoveringicon: 'copy.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6061476Z                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6062719Z                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6063811Z                                                 </xpathEditor>
+2025-08-01T02:47:35.6064412Z                                             </div>
+2025-08-01T02:47:35.6064975Z                                         </div>
+2025-08-01T02:47:35.6068039Z                                         <div accessiblename="2022.3.3" actionmap_created="8" class="JLabel" classhierarchy="javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="javax.swing.JLabel" text="2022.3.3" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="2022.3.3" visible_text_keys="">
+2025-08-01T02:47:35.6071617Z                                             <img height="17" onclick="show(614, 188, 151, 14)" src="img/show.png" width="17"> JLabel. text: '2022.3.3'. visible_text: '2022.3.3'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6073218Z                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6074411Z                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6075479Z                                             </xpathEditor>
+2025-08-01T02:47:35.6076255Z                                         </div>
+2025-08-01T02:47:35.6076810Z                                     </div>
+2025-08-01T02:47:35.6077336Z                                 </div>
+2025-08-01T02:47:35.6082269Z                                 <div accessiblename="Welcome screen categories" accessiblename.key="welcome.screen.welcome.screen.categories.accessible.name" actionmap="javax.swing.ActionMap@78cca5f7" actionmap_created="8" class="Tree" classhierarchy="javax.swing.JTree -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.treeStructure.Tree" myemptytext="com.intellij.ui.treeStructure.Tree$1@160b0183" tool_tip_text_key="ToolTipText" visible="true" visible_text="Projects || Customize || 1 || Plugins || Learn" visible_text_keys="welcome.screen.projects.title || welcome.screen.customize.title || welcome.screen.plugins.title || welcome.screen.learnIde.title">
+2025-08-01T02:47:35.6087975Z                                     <img height="17" onclick="show(560, 227, 215, 528)" src="img/show.png" width="17"> Tree. visible_text: 'Projects || Customize || 1 || Plugins || Learn'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6089891Z                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6091059Z                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6092092Z                                     </xpathEditor>
+2025-08-01T02:47:35.6092639Z                                 </div>
+2025-08-01T02:47:35.6095019Z                                 <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6098522Z                                     <img height="17" onclick="show(560, 755, 215, 38)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6099969Z                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6101136Z                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6102180Z                                     </xpathEditor>
+2025-08-01T02:47:35.6104941Z                                     <div accessiblename="" actionmap_created="8" class="JActionLinkPanel" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.openapi.wm.impl.welcomeScreen.WelcomeScreenComponentFactory$JActionLinkPanel" myactionlink="gearHover.svg" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6108812Z                                         <img height="17" onclick="show(570, 760, 28, 28)" src="img/show.png" width="17"> JActionLinkPanel. myactionlink: 'gearHover.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6110458Z                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6111643Z                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6112672Z                                         </xpathEditor>
+2025-08-01T02:47:35.6118328Z                                         <div accessiblename="" actionmap_created="8" class="ActionLink" classhierarchy="com.intellij.ui.components.labels.LinkLabel -> javax.swing.JLabel -> javax.swing.JComponent" defaulticon="gearHover.svg" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icon="com.intellij.util.ui.EmptyIcon 0x12" iconr="com.intellij.util.ui.JBRectangle[x=0,y=0,width=0,height=0]" icontextgap="4" javaclass="com.intellij.ui.components.labels.ActionLink" myaction="null (null)" myinactiveicon="gearHover.svg" text="" textr="com.intellij.util.ui.JBRectangle[x=0,y=0,width=0,height=0]" tool_tip_text_key="ToolTipText" tooltiptext="Options Menu" tooltiptext.key="group.WelcomeScreen.Options.text" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6124543Z                                             <img height="17" onclick="show(576, 764, 16, 20)" src="img/show.png" width="17"> ActionLink. myaction: 'null (null)'. myinactiveicon: 'gearHover.svg'. defaulticon: 'gearHover.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6126665Z                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6128215Z                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6129355Z                                             </xpathEditor>
+2025-08-01T02:47:35.6129983Z                                         </div>
+2025-08-01T02:47:35.6130541Z                                     </div>
+2025-08-01T02:47:35.6131104Z                                 </div>
+2025-08-01T02:47:35.6131639Z                             </div>
+2025-08-01T02:47:35.6133990Z                             <div actionmap_created="8" class="CardLayoutPanel" classhierarchy="com.intellij.ui.CardLayoutPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.openapi.wm.impl.welcomeScreen.TabbedWelcomeScreen$1" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6137637Z                                 <img height="17" onclick="show(775, 143, 585, 650)" src="img/show.png" width="17"> CardLayoutPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6139207Z                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6140424Z                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6141443Z                                 </xpathEditor>
+2025-08-01T02:47:35.6143844Z                                 <div actionmap_created="8" class="BorderLayoutPanel" classhierarchy="com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.util.ui.components.BorderLayoutPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6147247Z                                     <img height="17" onclick="show(775, 143, 585, 650)" src="img/show.png" width="17"> BorderLayoutPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6148786Z                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6149973Z                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6151023Z                                     </xpathEditor>
+2025-08-01T02:47:35.6153394Z                                     <div actionmap_created="8" class="BorderLayoutPanel" classhierarchy="com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.util.ui.components.BorderLayoutPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6156707Z                                         <img height="17" onclick="show(775, 143, 585, 650)" src="img/show.png" width="17"> BorderLayoutPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6158214Z                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6159414Z                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6160491Z                                         </xpathEditor>
+2025-08-01T02:47:35.6162443Z                                         <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6165133Z                                             <img height="17" onclick="show(775, 143, 585, 492)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6166801Z                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6168293Z                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6169357Z                                             </xpathEditor>
+2025-08-01T02:47:35.6172395Z                                             <div actionmap_created="8" class="EmptyStateProjectsPanel" classhierarchy="com.intellij.util.ui.components.BorderLayoutPanel -> com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.openapi.wm.impl.welcomeScreen.EmptyStateProjectsPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6176386Z                                                 <img height="17" onclick="show(775, 143, 585, 492)" src="img/show.png" width="17"> EmptyStateProjectsPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6178160Z                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6179388Z                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6180460Z                                                 </xpathEditor>
+2025-08-01T02:47:35.6182931Z                                                 <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6186342Z                                                     <img height="17" onclick="show(775, 143, 585, 492)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6187914Z                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6189146Z                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6190223Z                                                     </xpathEditor>
+2025-08-01T02:47:35.6194235Z                                                     <div accessiblename="Welcome to IntelliJ IDEA" accessiblename.key="label.welcome.to.0" actionmap_created="8" class="JBLabel" classhierarchy="javax.swing.JLabel -> javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="com.intellij.ui.components.JBLabel" text="Welcome to IntelliJ IDEA" text.key="label.welcome.to.0" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="Welcome to IntelliJ IDEA" visible_text_keys="label.welcome.to.0">
+2025-08-01T02:47:35.6199519Z                                                         <img height="17" onclick="show(780, 251, 575, 49)" src="img/show.png" width="17"> JBLabel. text: 'Welcome to IntelliJ IDEA'. text.key: 'label.welcome.to.0'. visible_text: 'Welcome to IntelliJ IDEA'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6201532Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6202797Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6203928Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6204573Z                                                     </div>
+2025-08-01T02:47:35.6209302Z                                                     <div accessiblename="Create a new project to start from scratch." accessiblename.key="welcome.screen.empty.projects.create.comment" actionmap_created="8" class="JBLabel" classhierarchy="javax.swing.JLabel -> javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="com.intellij.ui.components.JBLabel" text="Create a new project to start from scratch." tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="Create a new project to start from scratch." visible_text_keys="welcome.screen.empty.projects.create.comment">
+2025-08-01T02:47:35.6214844Z                                                         <img height="17" onclick="show(780, 305, 575, 17)" src="img/show.png" width="17"> JBLabel. visible_text: 'Create a new project to start from scratch.'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6217032Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6218294Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6219400Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6220012Z                                                     </div>
+2025-08-01T02:47:35.6224675Z                                                     <div accessiblename="Open existing project from disk or version control." accessiblename.key="welcome.screen.empty.projects.open.comment" actionmap_created="8" class="JBLabel" classhierarchy="javax.swing.JLabel -> javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="com.intellij.ui.components.JBLabel" text="Open existing project from disk or version control." tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="Open existing project from disk or version control." visible_text_keys="welcome.screen.empty.projects.open.comment">
+2025-08-01T02:47:35.6230345Z                                                         <img height="17" onclick="show(780, 327, 575, 17)" src="img/show.png" width="17"> JBLabel. visible_text: 'Open existing project from disk or version control.'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6232151Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6233348Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6234431Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6235053Z                                                     </div>
+2025-08-01T02:47:35.6237215Z                                                     <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6239966Z                                                         <img height="17" onclick="show(780, 349, 575, 150)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6241426Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6242671Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6243788Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6250447Z                                                         <div actionmap_created="8" class="ActionToolbarImpl" classhierarchy="com.intellij.openapi.actionSystem.impl.ActionToolbarImpl -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.openapi.wm.impl.welcomeScreen.EmptyStateProjectsPanel$1" myactiongroup="null (null)" myreserveplaceautopopupicon="true" mysecondaryactions="null (null)" myshowseparatortitles="false" myvisibleactions="[New Project (Start the &quot;New Project&quot; Wizard that will guide you through the steps necessary for creating a new project.), Open or Import (Open file or project. You can also open a project or edit a file by drag and drop onto Welcome screen.), Get from Version Control... ()]" suppress_action_component_warning="ActionToolbarImpl.suppressCustomComponentWarning" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6257293Z                                                             <img height="17" onclick="show(887, 354, 360, 140)" src="img/show.png" width="17"> ActionToolbarImpl. myshowseparatortitles: 'false'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6258672Z                                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6259370Z                                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6259983Z                                                             </xpathEditor>
+2025-08-01T02:47:35.6261333Z                                                             <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6263054Z                                                                 <img height="17" onclick="show(887, 381, 120, 113)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6263871Z                                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6264536Z                                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6265130Z                                                                 </xpathEditor>
+2025-08-01T02:47:35.6266378Z                                                                 <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6267866Z                                                                     <img height="17" onclick="show(887, 393, 120, 60)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6268648Z                                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6269313Z                                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6269908Z                                                                     </xpathEditor>
+2025-08-01T02:47:35.6274228Z                                                                     <div accessiblename="New Project" accessiblename.key="action.WelcomeScreen.CreateNewProject.text" actionmap="javax.swing.ActionMap@9c798b6" actionmap_created="8" class="JButton" classhierarchy="javax.swing.AbstractButton -> javax.swing.JComponent" defaulticon="createNewProjectTab.svg" disabled_icon_changed_property="disabledIcon" disabled_selected_icon_changed_property="disabledSelectedIcon" enabled="true" hasfocus="true" hideactiontext="false" horizontal_text_position_changed_property="horizontalTextPosition" horizontaltextposition="11" icon_changed_property="icon" icontextgap="4" icontextgapset="true" javaclass="javax.swing.JButton" pressed_icon_changed_property="pressedIcon" rollover_icon_changed_property="rolloverIcon" rollover_selected_icon_changed_property="rolloverSelectedIcon" selected_icon_changed_property="selectedIcon" selectedicon="createNewProjectTabSelected.svg" text="" text_changed_property="text" tool_tip_text_key="ToolTipText" vertical_text_position_changed_property="verticalTextPosition" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6279482Z                                                                         <img height="17" onclick="show(917, 393, 60, 60)" src="img/show.png" width="17"> JButton. defaulticon: 'createNewProjectTab.svg'. selectedicon: 'createNewProjectTabSelected.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6280582Z                                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6281257Z                                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6281866Z                                                                         </xpathEditor>
+2025-08-01T02:47:35.6282225Z                                                                     </div>
+2025-08-01T02:47:35.6282575Z                                                                 </div>
+2025-08-01T02:47:35.6284918Z                                                                 <div accessiblename="New Project" accessiblename.key="action.WelcomeScreen.CreateNewProject.text" actionmap_created="8" class="JBLabel" classhierarchy="javax.swing.JLabel -> javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="com.intellij.ui.components.JBLabel" text="New Project" text.key="action.WelcomeScreen.CreateNewProject.text" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="New Project" visible_text_keys="action.WelcomeScreen.CreateNewProject.text">
+2025-08-01T02:47:35.6288026Z                                                                     <img height="17" onclick="show(908, 465, 78, 17)" src="img/show.png" width="17"> JBLabel. text: 'New Project'. text.key: 'action.WelcomeScreen.CreateNewProject.text'. visible_text: 'New Project'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6289143Z                                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6289808Z                                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6290399Z                                                                     </xpathEditor>
+2025-08-01T02:47:35.6290756Z                                                                 </div>
+2025-08-01T02:47:35.6291098Z                                                             </div>
+2025-08-01T02:47:35.6292425Z                                                             <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6294254Z                                                                 <img height="17" onclick="show(1007, 381, 120, 113)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6295069Z                                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6295724Z                                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6296459Z                                                                 </xpathEditor>
+2025-08-01T02:47:35.6297684Z                                                                 <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6299158Z                                                                     <img height="17" onclick="show(1007, 393, 120, 60)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6299942Z                                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6300598Z                                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6301694Z                                                                     </xpathEditor>
+2025-08-01T02:47:35.6306437Z                                                                     <div accessiblename="Open or Import" accessiblename.key="action.WelcomeScreen.OpenProject.text" actionmap="javax.swing.ActionMap@6e0400f5" actionmap_created="8" class="JButton" classhierarchy="javax.swing.AbstractButton -> javax.swing.JComponent" defaulticon="open.svg" disabled_icon_changed_property="disabledIcon" disabled_selected_icon_changed_property="disabledSelectedIcon" enabled="true" hasfocus="false" hideactiontext="false" horizontal_text_position_changed_property="horizontalTextPosition" horizontaltextposition="11" icon_changed_property="icon" icontextgap="4" icontextgapset="true" javaclass="javax.swing.JButton" pressed_icon_changed_property="pressedIcon" rollover_icon_changed_property="rolloverIcon" rollover_selected_icon_changed_property="rolloverSelectedIcon" selected_icon_changed_property="selectedIcon" selectedicon="openSelected.svg" text="" text_changed_property="text" tool_tip_text_key="ToolTipText" vertical_text_position_changed_property="verticalTextPosition" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6311192Z                                                                         <img height="17" onclick="show(1037, 393, 60, 60)" src="img/show.png" width="17"> JButton. defaulticon: 'open.svg'. selectedicon: 'openSelected.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6312213Z                                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6312890Z                                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6313503Z                                                                         </xpathEditor>
+2025-08-01T02:47:35.6313865Z                                                                     </div>
+2025-08-01T02:47:35.6314213Z                                                                 </div>
+2025-08-01T02:47:35.6316903Z                                                                 <div accessiblename="Open" accessiblename.key="action.Tabbed.WelcomeScreen.OpenProject.text" actionmap_created="8" class="JBLabel" classhierarchy="javax.swing.JLabel -> javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="com.intellij.ui.components.JBLabel" text="Open" text.key="action.Tabbed.WelcomeScreen.OpenProject.text" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="Open" visible_text_keys="action.Tabbed.WelcomeScreen.OpenProject.text">
+2025-08-01T02:47:35.6319816Z                                                                     <img height="17" onclick="show(1050, 465, 34, 17)" src="img/show.png" width="17"> JBLabel. text: 'Open'. text.key: 'action.Tabbed.WelcomeScreen.OpenProject.text'. visible_text: 'Open'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6321014Z                                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6321692Z                                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6322292Z                                                                     </xpathEditor>
+2025-08-01T02:47:35.6322646Z                                                                 </div>
+2025-08-01T02:47:35.6322990Z                                                             </div>
+2025-08-01T02:47:35.6324300Z                                                             <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6326384Z                                                                 <img height="17" onclick="show(1127, 381, 120, 113)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6327536Z                                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6328224Z                                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6328831Z                                                                 </xpathEditor>
+2025-08-01T02:47:35.6329933Z                                                                 <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6331414Z                                                                     <img height="17" onclick="show(1127, 393, 120, 60)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6332197Z                                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6332867Z                                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6333459Z                                                                     </xpathEditor>
+2025-08-01T02:47:35.6337828Z                                                                     <div accessiblename="Get from Version Control..." accessiblename.key="action.Vcs.VcsClone.text" actionmap="javax.swing.ActionMap@2e74ab2a" actionmap_created="8" class="JButton" classhierarchy="javax.swing.AbstractButton -> javax.swing.JComponent" defaulticon="fromVCSTab.svg" disabled_icon_changed_property="disabledIcon" disabled_selected_icon_changed_property="disabledSelectedIcon" enabled="true" hasfocus="false" hideactiontext="false" horizontal_text_position_changed_property="horizontalTextPosition" horizontaltextposition="11" icon_changed_property="icon" icontextgap="4" icontextgapset="true" javaclass="javax.swing.JButton" pressed_icon_changed_property="pressedIcon" rollover_icon_changed_property="rolloverIcon" rollover_selected_icon_changed_property="rolloverSelectedIcon" selected_icon_changed_property="selectedIcon" selectedicon="fromVCSTabSelected.svg" text="" text_changed_property="text" tool_tip_text_key="ToolTipText" vertical_text_position_changed_property="verticalTextPosition" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6342669Z                                                                         <img height="17" onclick="show(1157, 393, 60, 60)" src="img/show.png" width="17"> JButton. defaulticon: 'fromVCSTab.svg'. selectedicon: 'fromVCSTabSelected.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6343702Z                                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6344371Z                                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6344979Z                                                                         </xpathEditor>
+2025-08-01T02:47:35.6345345Z                                                                     </div>
+2025-08-01T02:47:35.6345694Z                                                                 </div>
+2025-08-01T02:47:35.6348083Z                                                                 <div accessiblename="Get from VCS" accessiblename.key="Vcs.VcsClone.Tabbed.Welcome.text" actionmap_created="8" class="JBLabel" classhierarchy="javax.swing.JLabel -> javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="com.intellij.ui.components.JBLabel" text="Get from VCS" text.key="Vcs.VcsClone.Tabbed.Welcome.text" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="Get from VCS" visible_text_keys="Vcs.VcsClone.Tabbed.Welcome.text">
+2025-08-01T02:47:35.6350811Z                                                                     <img height="17" onclick="show(1143, 465, 88, 17)" src="img/show.png" width="17"> JBLabel. text: 'Get from VCS'. text.key: 'Vcs.VcsClone.Tabbed.Welcome.text'. visible_text: 'Get from VCS'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6351927Z                                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6352597Z                                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6353199Z                                                                     </xpathEditor>
+2025-08-01T02:47:35.6353555Z                                                                 </div>
+2025-08-01T02:47:35.6353907Z                                                             </div>
+2025-08-01T02:47:35.6354242Z                                                         </div>
+2025-08-01T02:47:35.6354570Z                                                     </div>
+2025-08-01T02:47:35.6355770Z                                                     <div actionmap_created="8" class="Wrapper" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.Wrapper" tool_tip_text_key="ToolTipText" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6357570Z                                                         <img height="17" onclick="show(780, 504, 575, 15)" src="img/show.png" width="17"> Wrapper. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6358347Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6359001Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6359592Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6359929Z                                                     </div>
+2025-08-01T02:47:35.6360243Z                                                 </div>
+2025-08-01T02:47:35.6360673Z                                             </div>
+2025-08-01T02:47:35.6360988Z                                         </div>
+2025-08-01T02:47:35.6362274Z                                         <div actionmap_created="8" class="BorderLayoutPanel" classhierarchy="com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.util.ui.components.BorderLayoutPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6363961Z                                             <img height="17" onclick="show(775, 635, 585, 158)" src="img/show.png" width="17"> BorderLayoutPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6364750Z                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6365397Z                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6366089Z                                             </xpathEditor>
+2025-08-01T02:47:35.6367508Z                                             <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6369291Z                                                 <img height="17" onclick="show(775, 635, 585, 20)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6370070Z                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6370714Z                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6371305Z                                                 </xpathEditor>
+2025-08-01T02:47:35.6371631Z                                             </div>
+2025-08-01T02:47:35.6372900Z                                             <div actionmap_created="8" class="BorderLayoutPanel" classhierarchy="com.intellij.ui.components.JBPanel -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.util.ui.components.BorderLayoutPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6374579Z                                                 <img height="17" onclick="show(775, 655, 585, 138)" src="img/show.png" width="17"> BorderLayoutPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6375379Z                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6376306Z                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6376897Z                                                 </xpathEditor>
+2025-08-01T02:47:35.6378119Z                                                 <div actionmap_created="8" class="BackgroundRoundedPanel" classhierarchy="javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.BackgroundRoundedPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6379758Z                                                     <img height="17" onclick="show(791, 655, 553, 122)" src="img/show.png" width="17"> BackgroundRoundedPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6380698Z                                                     <xpathEditor class="hidden">
+2025-08-01T02:47:35.6381352Z                                                         <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6381930Z                                                     </xpathEditor>
+2025-08-01T02:47:35.6385617Z                                                     <div actionmap_created="8" class="JLabel" classhierarchy="javax.swing.JComponent" defaulticon="ImageDataByPathLoader(classLoader=PluginClassLoader(plugin=PluginDescriptor(name=Java IDE Customization, id=com.intellij.java.ide, moduleName=intellij.java.ide.customization/training, descriptorPath=intellij.java.ide.customization.training.xml, path=~/.gradle/caches/8.14.3/transforms/4696eaf3f0c55991e1a95a517a3c7a4d/transformed/ideaIC-2022.3.3/plugins/java-ide-customization, version=223.8836.41, package=com.intellij.ide.java.training, isBundled=true), packagePrefix=com.intellij.ide.java.training., instanceId=152, state=active), path=img/idea-onboarding-tour.png, original=null)" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="javax.swing.JLabel" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6389451Z                                                         <img height="17" onclick="show(807, 667, 166, 94)" src="img/show.png" width="17"> JLabel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6390211Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6390860Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6391448Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6391792Z                                                     </div>
+2025-08-01T02:47:35.6393085Z                                                     <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6394786Z                                                         <img height="17" onclick="show(993, 667, 335, 94)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6395577Z                                                         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6396319Z                                                             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6397023Z                                                         </xpathEditor>
+2025-08-01T02:47:35.6398337Z                                                         <div actionmap_created="8" class="NonOpaquePanel" classhierarchy="com.intellij.ui.components.panels.Wrapper -> javax.swing.JPanel -> javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.components.panels.NonOpaquePanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6400044Z                                                             <img height="17" onclick="show(993, 667, 335, 19)" src="img/show.png" width="17"> NonOpaquePanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6400829Z                                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6401587Z                                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6402178Z                                                             </xpathEditor>
+2025-08-01T02:47:35.6404253Z                                                             <div accessiblename="Take a quick onboarding tour" accessiblename.key="welcome.promo.header" actionmap_created="8" class="JLabel" classhierarchy="javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="javax.swing.JLabel" text="Take a quick onboarding tour" text.key="welcome.promo.header" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="Take a quick onboarding tour" visible_text_keys="welcome.promo.header">
+2025-08-01T02:47:35.6407057Z                                                                 <img height="17" onclick="show(993, 667, 253, 19)" src="img/show.png" width="17"> JLabel. text: 'Take a quick onboarding tour'. text.key: 'welcome.promo.header'. visible_text: 'Take a quick onboarding tour'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6408159Z                                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6408827Z                                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6409412Z                                                                 </xpathEditor>
+2025-08-01T02:47:35.6409765Z                                                             </div>
+2025-08-01T02:47:35.6410923Z                                                             <div actionmap_created="8" class="InplaceButton" classhierarchy="javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="com.intellij.ui.InplaceButton" myicon="close.svg" tool_tip_text_key="ToolTipText" visible="true" visible_text="" visible_text_keys="">
+2025-08-01T02:47:35.6412791Z                                                                 <img height="17" onclick="show(1312, 668, 16, 16)" src="img/show.png" width="17"> InplaceButton. myicon: 'close.svg'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6413653Z                                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6414311Z                                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6414942Z                                                                 </xpathEditor>
+2025-08-01T02:47:35.6415297Z                                                             </div>
+2025-08-01T02:47:35.6415630Z                                                         </div>
+2025-08-01T02:47:35.6418770Z                                                         <div accessiblename="New to IntelliJ IDEA? Get the most out of your IDE. Become acquainted with its tools and basic workflows." accessiblename.key="welcome.promo.description" actionmap_created="8" class="JLabel" classhierarchy="javax.swing.JComponent" disablediconset="false" enabled="true" hasfocus="false" horizontaltextposition="11" icontextgap="4" javaclass="javax.swing.JLabel" text="<html>New to IntelliJ IDEA? Get the most out of your IDE. Become acquainted with its tools and basic workflows.</html>" tool_tip_text_key="ToolTipText" verticaltextposition="0" visible="true" visible_text="New to IntelliJ IDEA? Get the most out of your IDE.  || Become acquainted with its tools and basic workflows." visible_text_keys="">
+2025-08-01T02:47:35.6422120Z                                                             <img height="17" onclick="show(993, 690, 335, 28)" src="img/show.png" width="17"> JLabel. visible_text: 'New to IntelliJ IDEA? Get the most out of your IDE.  || Become acquainted with its tools and basic workflows.'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6423256Z                                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6423911Z                                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6424507Z                                                             </xpathEditor>
+2025-08-01T02:47:35.6424850Z                                                         </div>
+2025-08-01T02:47:35.6425727Z                                                         <div actionmap_created="8" class="JPanel" classhierarchy="javax.swing.JComponent" enabled="true" hasfocus="false" javaclass="javax.swing.JPanel" tool_tip_text_key="ToolTipText" visible="true">
+2025-08-01T02:47:35.6427142Z                                                             <img height="17" onclick="show(993, 737, 92, 24)" src="img/show.png" width="17"> JPanel. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6427910Z                                                             <xpathEditor class="hidden">
+2025-08-01T02:47:35.6428558Z                                                                 <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6429141Z                                                             </xpathEditor>
+2025-08-01T02:47:35.6433552Z                                                             <div accessiblename="Start Tour" accessiblename.key="welcome.promo.start.tour" action="com.intellij.openapi.wm.BannerStartPagePromoter$getPromotion$2@7ec81044" actionmap="javax.swing.ActionMap@4ce0572" actionmap_created="8" class="JButton" classhierarchy="javax.swing.AbstractButton -> javax.swing.JComponent" disabled_icon_changed_property="disabledIcon" disabled_selected_icon_changed_property="disabledSelectedIcon" enabled="true" hasfocus="false" hideactiontext="false" horizontal_text_position_changed_property="horizontalTextPosition" horizontaltextposition="11" icon_changed_property="icon" icontextgap="4" icontextgapset="true" javaclass="javax.swing.JButton" pressed_icon_changed_property="pressedIcon" rollover_icon_changed_property="rolloverIcon" rollover_selected_icon_changed_property="rolloverSelectedIcon" selected_icon_changed_property="selectedIcon" text="Start Tour" text.key="welcome.promo.start.tour" text_changed_property="text" tool_tip_text_key="ToolTipText" vertical_text_position_changed_property="verticalTextPosition" verticaltextposition="0" visible="true" visible_text="Start Tour" visible_text_keys="welcome.promo.start.tour">
+2025-08-01T02:47:35.6438485Z                                                                 <img height="17" onclick="show(990, 734, 98, 30)" src="img/show.png" width="17"> JButton. text: 'Start Tour'. text.key: 'welcome.promo.start.tour'. visible_text: 'Start Tour'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6439620Z                                                                 <xpathEditor class="hidden">
+2025-08-01T02:47:35.6440279Z                                                                     <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6440874Z                                                                 </xpathEditor>
+2025-08-01T02:47:35.6441226Z                                                             </div>
+2025-08-01T02:47:35.6441566Z                                                         </div>
+2025-08-01T02:47:35.6441884Z                                                     </div>
+2025-08-01T02:47:35.6442311Z                                                 </div>
+2025-08-01T02:47:35.6442629Z                                             </div>
+2025-08-01T02:47:35.6442934Z                                         </div>
+2025-08-01T02:47:35.6443224Z                                     </div>
+2025-08-01T02:47:35.6443511Z                                 </div>
+2025-08-01T02:47:35.6443785Z                             </div>
+2025-08-01T02:47:35.6444053Z                         </div>
+2025-08-01T02:47:35.6444288Z                     </div>
+2025-08-01T02:47:35.6444515Z                 </div>
+2025-08-01T02:47:35.6444723Z             </div>
+2025-08-01T02:47:35.6444930Z         </div>
+2025-08-01T02:47:35.6445122Z     </div>
+2025-08-01T02:47:35.6448032Z     <div class="SharedOwnerFrame" classhierarchy="java.awt.Frame -> java.awt.Window -> java.awt.Container -> java.awt.Component -> java.lang.Object" customdecortitlebarheight="-1" enabled="true" hasfocus="false" iconified="1" icons="[BufferedImage@4d39c5a7: type = 2 DirectColorModel: rmask=ff0000 gmask=ff00 bmask=ff amask=ff000000 IntegerInterleavedRaster: width = 128 height = 128 #Bands = 4 xOff = 0 yOff = 0 dataOffset[0] 0, BufferedImage@79c63739: type = 2 DirectColorModel: rmask=ff0000 gmask=ff00 bmask=ff amask=ff000000 IntegerInterleavedRaster: width = 32 height = 32 #Bands = 4 xOff = 0 yOff = 0 dataOffset[0] 0]" inputcontextlock="java.lang.Object@34c670ea" istrayiconwindow="false" javaclass="javax.swing.SwingUtilities$SharedOwnerFrame" text_cursor="2" title="" visible="false">
+2025-08-01T02:47:35.6450979Z         SharedOwnerFrame. customdecortitlebarheight: '-1'. <img height="17" onclick="new XpathEditor(parentElement).generatePath()" src="img/locator.png" width="17">
+2025-08-01T02:47:35.6451726Z         <xpathEditor class="hidden">
+2025-08-01T02:47:35.6452442Z             <input oninput="new XpathEditor(parentElement.parentElement).checkXpath()" size="100" type="text"><label></label>
+2025-08-01T02:47:35.6452965Z         </xpathEditor>
+2025-08-01T02:47:35.6453191Z     </div>
+2025-08-01T02:47:35.6453379Z </div>
+2025-08-01T02:47:35.6453600Z Success
+2025-08-01T02:47:35.6473952Z ##[group]Run cd extensions/intellij
+2025-08-01T02:47:35.6474270Z [36;1mcd extensions/intellij[0m
+2025-08-01T02:47:35.6474536Z [36;1mexport DISPLAY=:99.0[0m
+2025-08-01T02:47:35.6474793Z [36;1m./gradlew test[0m
+2025-08-01T02:47:35.6502293Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:47:35.6502646Z env:
+2025-08-01T02:47:35.6502918Z   JAVA_HOME: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:47:35.6503345Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64
+2025-08-01T02:47:35.6503723Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2025-08-01T02:47:35.6504043Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2025-08-01T02:47:35.6504338Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2025-08-01T02:47:35.6504773Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2025-08-01T02:47:35.6505404Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2025-08-01T02:47:35.6505739Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2025-08-01T02:47:35.6506183Z ##[endgroup]
+2025-08-01T02:47:36.2996275Z Starting a Gradle Daemon, 1 busy Daemon could not be reused, use --status for details
+2025-08-01T02:47:38.4962743Z Calculating task graph as no cached configuration is available for tasks: test
+2025-08-01T02:47:59.9006859Z > Task :generateSentryBundleIdJava SKIPPED
+2025-08-01T02:47:59.9974011Z > Task :initializeIntellijPlatformPlugin
+2025-08-01T02:48:00.0023470Z > Task :collectExternalDependenciesForSentry UP-TO-DATE
+2025-08-01T02:48:00.0024776Z > Task :generateSentryDebugMetaPropertiesjava UP-TO-DATE
+2025-08-01T02:48:00.0025833Z > Task :patchPluginXml UP-TO-DATE
+2025-08-01T02:48:00.0026809Z > Task :generateManifest UP-TO-DATE
+2025-08-01T02:48:00.0982345Z > Task :compileKotlin UP-TO-DATE
+2025-08-01T02:48:00.0985599Z > Task :compileJava NO-SOURCE
+2025-08-01T02:48:00.0986620Z > Task :processTestResources
+2025-08-01T02:48:00.0993999Z > Task :koverFindJar
+2025-08-01T02:48:00.1008445Z > Task :processResources UP-TO-DATE
+2025-08-01T02:48:00.1020627Z > Task :classes UP-TO-DATE
+2025-08-01T02:48:00.1022781Z > Task :instrumentCode UP-TO-DATE
+2025-08-01T02:48:00.1023298Z > Task :jar UP-TO-DATE
+2025-08-01T02:48:00.1026871Z > Task :instrumentedJar UP-TO-DATE
+2025-08-01T02:48:00.1027484Z > Task :inspectClassesForKotlinIC UP-TO-DATE
+2025-08-01T02:48:00.1028079Z > Task :composedJar UP-TO-DATE
+2025-08-01T02:48:03.0959843Z > Task :prepareTestSandbox
+2025-08-01T02:48:03.0960687Z > Task :prepareTest
+2025-08-01T02:48:09.6976353Z 
+2025-08-01T02:48:09.6977958Z > Task :compileTestKotlin
+2025-08-01T02:48:09.6980217Z w: file:///home/runner/work/continue/continue/extensions/intellij/src/test/kotlin/com/github/continuedev/continueintellijextension/VerticalDiffBlock.kt:70:58 'getter for textAttributes: TextAttributes?' is deprecated. Deprecated in Java
+2025-08-01T02:48:09.7959012Z 
+2025-08-01T02:48:09.7962018Z > Task :compileTestJava NO-SOURCE
+2025-08-01T02:48:09.7964531Z > Task :testClasses
+2025-08-01T02:48:10.0960452Z > Task :instrumentTestCode
+2025-08-01T02:48:12.0958586Z 
+2025-08-01T02:48:12.0964355Z > Task :test
+2025-08-01T02:48:12.0965477Z CompileCommand: exclude com/intellij/openapi/vfs/impl/FilePartNodeRoot.trieDescend bool exclude = true
+2025-08-01T02:48:25.2986795Z 
+2025-08-01T02:48:25.2986855Z 
+2025-08-01T02:48:25.2989357Z (java:4507): dbind-WARNING **: 02:48:25.268: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+2025-08-01T02:48:45.9607101Z 
+2025-08-01T02:48:45.9627978Z [Incubating] Problems report is available at: file:///home/runner/work/continue/continue/extensions/intellij/build/reports/problems/problems-report.html
+2025-08-01T02:48:45.9629107Z 
+2025-08-01T02:48:45.9644696Z Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+2025-08-01T02:48:45.9645329Z 
+2025-08-01T02:48:45.9646674Z You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+2025-08-01T02:48:45.9647661Z 
+2025-08-01T02:48:45.9648995Z For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+2025-08-01T02:48:45.9649960Z 
+2025-08-01T02:48:45.9650166Z BUILD SUCCESSFUL in 1m 10s
+2025-08-01T02:48:45.9650868Z 18 actionable tasks: 7 executed, 11 up-to-date
+2025-08-01T02:48:45.9651588Z Configuration cache entry stored.
+2025-08-01T02:48:46.3028075Z Post job cleanup.
+2025-08-01T02:48:46.3796683Z Post job cleanup.
+2025-08-01T02:48:46.5233481Z Cache hit occurred on the primary key Linux-binary-node-modules-fb936d1f3861737e59ec1ab6bb6566bcfee0045ad5f1cb9acf36ced8c7dc4b01, not saving cache.
+2025-08-01T02:48:58.4945191Z Post job cleanup.
+2025-08-01T02:48:58.6338491Z [warning]Path Validation Error: Path(s) specified in the action for caching do(es) not exist, hence no cache is being saved.
+2025-08-01T02:48:58.6973775Z Post job cleanup.
+2025-08-01T02:48:58.8278709Z Cache hit occurred on the primary key Linux-gui-node-modules-b46aa585716295c515e3b31b5d487cb8b50a2b06a29440e0883bab22f30c322a, not saving cache.
+2025-08-01T02:48:58.8902286Z Post job cleanup.
+2025-08-01T02:48:59.0173500Z Cache hit occurred on the primary key Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:48:59.0820732Z Post job cleanup.
+2025-08-01T02:48:59.2104313Z Cache hit occurred on the primary key Linux-npm-cache-jetbrains-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:48:59.2232972Z Post job cleanup.
+2025-08-01T02:48:59.4708516Z In post-action step
+2025-08-01T02:48:59.4716075Z Cache is read-only: will not save state for use in subsequent builds.
+2025-08-01T02:48:59.4721134Z Generating Job Summary
+2025-08-01T02:48:59.4743115Z Completed post-action step
+2025-08-01T02:48:59.4874755Z Post job cleanup.
+2025-08-01T02:48:59.7281533Z Post job cleanup.
+2025-08-01T02:48:59.8557963Z Cache hit occurred on the primary key Linux-core-node-modules-512730a0c92363bd289773a284d2a3650b8cc4cf626a2497cf3fed5165aca369, not saving cache.
+2025-08-01T02:48:59.8673680Z Post job cleanup.
+2025-08-01T02:49:00.0447573Z Post job cleanup.
+2025-08-01T02:49:00.1465650Z [command]/usr/bin/git version
+2025-08-01T02:49:00.1508470Z git version 2.50.1
+2025-08-01T02:49:00.1551793Z Temporarily overriding HOME='/home/runner/work/_temp/b29a8efa-ebe1-4b6e-8294-4e4c75b38f9c' before making global git config changes
+2025-08-01T02:49:00.1552769Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:49:00.1558291Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:49:00.1597882Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:49:00.1630230Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:49:00.1884242Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:49:00.1907561Z http.https://github.com/.extraheader
+2025-08-01T02:49:00.1920432Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:49:00.1954038Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:49:00.2301967Z Cleaning up orphan processes
+2025-08-01T02:49:00.2691201Z Terminate orphan process: pid (3656) (Xvfb)
+2025-08-01T02:49:00.2710917Z Terminate orphan process: pid (3663) (java)
+2025-08-01T02:49:00.2745145Z Terminate orphan process: pid (3709) (java)
+2025-08-01T02:49:00.2786100Z Terminate orphan process: pid (3978) (java)
+2025-08-01T02:49:00.2876379Z Terminate orphan process: pid (4111) (fsnotifier)
+2025-08-01T02:49:00.2906943Z Terminate orphan process: pid (4223) (java)
+2025-08-01T02:49:00.2941016Z Terminate orphan process: pid (4441) (java)
+2025-08-01T02:49:00.2974868Z Terminate orphan process: pid (4608) (continue-binary)
