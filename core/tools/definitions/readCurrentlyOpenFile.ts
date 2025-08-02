@@ -20,6 +20,7 @@ export const readCurrentlyOpenFileTool: Tool = {
       properties: {},
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.ReadCurrentlyOpenFile,
     `To view the user's currently open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.

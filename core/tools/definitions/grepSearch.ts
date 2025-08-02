@@ -27,6 +27,7 @@ export const grepSearchTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.GrepSearch,
     `To perform a grep search within the project, call the ${BuiltInToolNames.GrepSearch} tool with the query pattern to match. For example:`,

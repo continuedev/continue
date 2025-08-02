@@ -26,6 +26,7 @@ export const globSearchTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.FileGlobSearch,
     `To return a list of files based on a glob search pattern, use the ${BuiltInToolNames.FileGlobSearch} tool`,

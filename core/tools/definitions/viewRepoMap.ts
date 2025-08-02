@@ -20,6 +20,7 @@ export const viewRepoMapTool: Tool = {
       properties: {},
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.ViewRepoMap,
     `To view the repository map, use the ${BuiltInToolNames.ViewRepoMap} tool. This will provide a visual representation of the project's structure and organization.`,

@@ -27,6 +27,7 @@ export const readFileTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.ReadFile,
     `To read a file with a known filepath, use the ${BuiltInToolNames.ReadFile} tool. For example, to read a file located at 'path/to/file.txt', you would respond with this:`,

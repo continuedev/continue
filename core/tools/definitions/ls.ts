@@ -31,6 +31,7 @@ export const lsTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.LSTool,
     `To list files and folders in a given directory, call the ${BuiltInToolNames.LSTool} tool with "dirPath" and "recursive". For example:`,
