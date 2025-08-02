@@ -86,15 +86,6 @@ void (async () => {
 
   process.chdir(path.join(continueDir, "gui"));
 
-  // if (isInGitHubAction) {
-  //   const guiBuildStart = Date.now();
-  //   console.log(`[timer] Starting GUI build at ${new Date().toISOString()}`);
-  //   execCmdSync("npm run build");
-  //   console.log(
-  //     `[timer] GUI build completed in ${Date.now() - guiBuildStart}ms`,
-  //   );
-  // }
-
   // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
     "..",
