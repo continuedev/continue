@@ -43,11 +43,30 @@ function processJsonOutput(response: string): string {
   }
 }
 
+/**
+ * Strips <think></think> tags and excess whitespace from response
+ * @param response - The raw response from the LLM
+ * @returns Cleaned response
+ */
+function stripThinkTags(response: string): string {
+  // Remove <think></think> tags and their content
+  let cleaned = response.replace(/<think>[\s\S]*?<\/think>/g, '');
+  
+  // Remove excess whitespace: multiple consecutive newlines become single newlines
+  cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
+  
+  // Trim leading and trailing whitespace
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+}
+
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
   rule?: string[]; // Array of rule specifications
   format?: "json"; // Output format for headless mode
+  silent?: boolean; // Strip <think></think> tags and excess whitespace
 }
 
 export async function initializeChatHistory(
@@ -89,7 +108,8 @@ async function processMessage(
   model: any,
   llmApi: any,
   isHeadless: boolean,
-  format?: "json"
+  format?: "json",
+  silent?: boolean
 ): Promise<void> {
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
@@ -113,9 +133,16 @@ async function processMessage(
 
     // In headless mode, only print the final response using safe stdout
     if (isHeadless && finalResponse && finalResponse.trim()) {
+      let processedResponse = finalResponse;
+      
+      // Strip think tags if --silent flag is enabled
+      if (silent) {
+        processedResponse = stripThinkTags(processedResponse);
+      }
+      
       // Process output based on format
       const outputResponse =
-        format === "json" ? processJsonOutput(finalResponse) : finalResponse;
+        format === "json" ? processJsonOutput(processedResponse) : processedResponse;
 
       safeStdout(outputResponse + "\n");
     }
@@ -187,7 +214,8 @@ async function runHeadlessMode(
       model,
       llmApi,
       true,
-      options.format
+      options.format,
+      options.silent
     );
   }
 }

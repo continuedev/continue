@@ -42,6 +42,10 @@ addCommonOptions(program)
     "--format <format>",
     "Output format for headless mode (json). Only works with -p/--print flag."
   )
+  .option(
+    "--silent",
+    "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag."
+  )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
@@ -56,6 +60,15 @@ addCommonOptions(program)
       );
       process.exit(1);
     }
+
+    // Validate --silent flag only works with -p/--print
+    if (options.silent && !options.print) {
+      console.error(
+        "Error: --silent flag can only be used with -p/--print flag"
+      );
+      process.exit(1);
+    }
+
 
     // Validate format value
     if (options.format && options.format !== "json") {
