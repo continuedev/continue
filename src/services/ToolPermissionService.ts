@@ -96,7 +96,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
 
     // Set mode from overrides or default
     if (runtimeOverrides?.mode) {
-      this.currentState.currentMode = runtimeOverrides.mode;
+      this.setState({ currentMode: runtimeOverrides.mode });
     }
 
     // Generate mode-specific policies first (highest priority)
