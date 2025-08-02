@@ -1,0 +1,229 @@
+---
+title: Model Capabilities
+description: Understanding and configuring model capabilities for tools and image support
+keywords: [capabilities, tools, function calling, image input, config]
+---
+
+Continue needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
+
+## What are Model Capabilities?
+
+Model capabilities tell Continue what features a model supports:
+
+- **`tool_use`** - Whether the model can use tools and functions (required for Agent mode)
+- **`image_input`** - Whether the model can process images
+
+Without proper capability configuration, you may encounter issues like:
+
+- Agent mode being unavailable
+- Tools not working at all
+- Image uploads being disabled
+
+## How Continue Detects Capabilities
+
+Continue uses a two-tier system for determining model capabilities:
+
+### 1. Automatic Detection (Default)
+
+Continue automatically detects capabilities based on your provider and model name. For example:
+
+- **OpenAI**: GPT-4 models have tool support, GPT-3.5 doesn't
+- **Anthropic**: Claude 3.5+ models support both tools and images
+- **Ollama**: Most models support tools, vision models support images
+- **Google**: All Gemini models support function calling
+
+This works well for popular models, but may not cover custom deployments or newer models.
+
+For implementation details, see:
+- [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
+- [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
+
+### 2. Manual Override
+
+You can explicitly set capabilities in your `config.yaml` to override autodetection:
+
+```yaml
+models:
+  - name: my-custom-gpt4
+    provider: openai
+    apiBase: https://my-deployment.com/v1
+    model: gpt-4-custom
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+## When to Override Capabilities
+
+Override autodetection when:
+
+1. **Using custom deployments** - Your API endpoint serves a model with different capabilities than the standard version
+2. **Using newer models** - Continue doesn't yet recognize a newly released model
+3. **Experiencing issues** - Autodetection isn't working correctly for your setup
+4. **Using proxy services** - Some proxy services modify model capabilities
+
+## Configuration Examples
+
+### Basic Override
+
+Force tool support for a model that Continue doesn't recognize:
+
+```yaml
+models:
+  - name: custom-model
+    provider: openai
+    model: my-fine-tuned-gpt4
+    capabilities:
+      - tool_use
+```
+
+<Info>
+  Note: The `tool_use` capability is for native tool/function calling support. The model must actually support tools for this to work. If your model doesn't support native tools, Continue will automatically use system message tools instead.
+</Info>
+
+### Disable Capabilities
+
+Explicitly set no capabilities (autodetection will still apply):
+
+```yaml
+models:
+  - name: limited-claude
+    provider: anthropic
+    model: claude-4.0-sonnet
+    capabilities: [] # Empty array doesn't disable autodetection
+```
+
+<Warning>
+  An empty capabilities array does not disable autodetection. Continue will still detect and use the model's actual capabilities. To truly limit a model's capabilities, you would need to use a model that doesn't support those features.
+</Warning>
+
+### Multiple Capabilities
+
+Enable both tools and image support:
+
+```yaml
+models:
+  - name: multimodal-gpt
+    provider: openai
+    model: gpt-4-vision-preview
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+## Common Scenarios
+
+Some providers and custom deployments may require explicit capability configuration:
+
+- **OpenRouter**: May not preserve the original model's capabilities
+- **Custom API endpoints**: May have different capabilities than standard models
+- **Local models**: May need explicit capabilities if using non-standard model names
+
+Example configuration:
+
+```yaml
+models:
+  - name: custom-deployment
+    provider: openai
+    apiBase: https://custom-api.company.com/v1
+    model: custom-gpt
+    capabilities:
+      - tool_use      # If supports function calling
+      - image_input   # If supports vision
+```
+
+## Troubleshooting
+
+For troubleshooting capability-related issues like Agent mode being unavailable or tools not working, see the [Troubleshooting guide](/troubleshooting#agent-mode-is-unavailable-or-tools-arent-working).
+
+## Best Practices
+
+1. **Start with autodetection** - Only override if you experience issues
+2. **Test after changes** - Verify tools and images work as expected
+3. **Keep Continue updated** - Newer versions improve autodetection
+
+Remember: Setting capabilities only supplements autodetection. Continue will still use its built-in knowledge about your model in addition to your specified capabilities.
+
+## Model Capability Support
+
+This matrix shows which models support tool use and image input capabilities. Continue auto-detects these capabilities, but you can override them if needed.
+
+### OpenAI
+
+| Model         | Tool Use | Image Input |
+| :------------ | -------- | ----------- |
+| o3            | ✅       | ❌          |
+| o3-mini       | ✅       | ❌          |
+| GPT-4o        | ✅       | ✅          |
+| GPT-4 Turbo   | ✅       | ✅          |
+| GPT-4         | ✅       | ❌          |
+| GPT-3.5 Turbo | ❌       | ❌          |
+
+### Anthropic
+
+| Model              | Tool Use | Image Input |
+| :----------------- | -------- | ----------- |
+| Claude 4 Sonnet    | ✅       | ✅          |
+| Claude 3.5 Sonnet  | ✅       | ✅          |
+| Claude 3.5 Haiku   | ✅       | ✅          |
+
+### Google
+
+| Model            | Tool Use | Image Input |
+| :--------------- | -------- | ----------- |
+| Gemini 2.5 Pro   | ✅       | ✅          |
+| Gemini 2.0 Flash | ✅       | ✅          |
+
+### Mistral
+
+| Model           | Tool Use | Image Input |
+| :-------------- | -------- | ----------- |
+| Devstral Medium | ✅       | ❌          |
+| Mistral         | ✅       | ❌          |
+
+### DeepSeek
+
+| Model             | Tool Use | Image Input |
+| :---------------- | -------- | ----------- |
+| DeepSeek V3       | ✅       | ❌          |
+| DeepSeek Coder V2 | ✅       | ❌          |
+| DeepSeek Chat     | ✅       | ❌          |
+
+### xAI
+
+| Model  | Tool Use | Image Input |
+| :----- | -------- | ----------- |
+| Grok 4 | ✅       | ✅          |
+
+### Moonshot AI
+
+| Model   | Tool Use | Image Input |
+| :------ | -------- | ----------- |
+| Kimi K2 | ✅       | ✅          |
+
+### Qwen
+
+| Model             | Tool Use | Image Input |
+| :---------------- | -------- | ----------- |
+| Qwen Coder 3 480B | ✅       | ❌          |
+
+### Ollama (Local Models)
+
+| Model          | Tool Use | Image Input |
+| :------------- | -------- | ----------- |
+| Qwen 3 Coder   | ✅       | ❌          |
+| Devstral Small | ✅       | ❌          |
+| Llama 3.1      | ✅       | ❌          |
+| Llama 3        | ✅       | ❌          |
+| Mistral        | ✅       | ❌          |
+| Codestral      | ✅       | ❌          |
+| Gemma 3 4B     | ✅       | ❌          |
+
+### Notes
+
+- **Tool Use**: Function calling for Agent mode (required for Agent mode)
+- **Image Input**: Processing screenshots and images
+
+---
+
+**Is your model missing or incorrect?** Help improve this documentation! You can edit this page on GitHub using the link below.
