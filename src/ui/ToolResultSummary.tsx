@@ -109,6 +109,12 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       return "Cancelled by user";
     }
 
+    // Check if it was an error
+    if (content.startsWith("Error")) {
+      const lines = content.split("\n");
+      return `Error: ${lines[0]}${lines.length > 1 ? "..." : ""}`;
+    }
+
     // Convert absolute paths to relative paths from workspace root
     const formatPath = (filePath: string) => {
       if (path.isAbsolute(filePath)) {
@@ -133,12 +139,10 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
       case "write_file":
         return content.includes("Successfully created file")
           ? "File created successfully"
-          : "File written successfully";
+          : "File updated successfully";
 
       case "edit_file":
-        return content.includes("Successfully created file")
-          ? "File created successfully"
-          : "File edited successfully";
+        return "File edited successfully";
 
       case "list_files":
         return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;
