@@ -140,6 +140,7 @@ void (async () => {
 
   // Then copy over the dist folder to the VSCode extension //
   const vscodeGuiPath = path.join("../extensions/vscode/gui");
+  rimrafSync(vscodeGuiPath);
   fs.mkdirSync(vscodeGuiPath, { recursive: true });
   const vscodeCopyStart = Date.now();
   console.log(`[timer] Starting VSCode copy at ${new Date().toISOString()}`);
