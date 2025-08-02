@@ -117,5 +117,5 @@ export interface ServiceWithDependencies {
  * Helper to check if a service has dependencies
  */
 export function hasDependencies(service: any): service is ServiceWithDependencies {
-  return typeof service.getDependencies === 'function';
+  return !!service && typeof service.getDependencies === 'function';
 }
