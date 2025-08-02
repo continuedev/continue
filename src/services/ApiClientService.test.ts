@@ -15,7 +15,7 @@ describe('ApiClientService', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     service = new ApiClientService();
   });
 

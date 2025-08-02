@@ -22,10 +22,17 @@ let mockEventEmitter: MockGlobEmitter;
 vi.mock("glob", () => {
   return {
     stream: vi.fn(() => {
+      // Return the stored mock event emitter if it exists
+      if (mockEventEmitter) {
+        return mockEventEmitter;
+      }
+      
+      // Otherwise create a new one
       const EventEmitter = require("events").EventEmitter;
-      const emitter = new EventEmitter();
+      const emitter = new EventEmitter() as MockGlobEmitter;
       emitter.pause = vi.fn().mockReturnValue(emitter);
       emitter.resume = vi.fn().mockReturnValue(emitter);
+      mockEventEmitter = emitter;
       return emitter;
     }),
   };
@@ -37,10 +44,8 @@ describe.skip("throttledGlob", () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
     
-    // Get the glob module and create a fresh mock event emitter
-    const globModule = await import("glob");
-    const streamFn = globModule.stream as any;
-    mockEventEmitter = streamFn();
+    // Reset the mock event emitter for each test
+    mockEventEmitter = null as any;
   });
 
   afterEach(() => {
@@ -54,6 +59,9 @@ describe.skip("throttledGlob", () => {
 
     // Start the throttledGlob operation
     const promise = throttledGlob(patterns, options);
+
+    // The mock event emitter is now created by the first call to glob.stream()
+    expect(mockEventEmitter).toBeTruthy();
 
     // Emit file events
     mockFiles.forEach((file) => {
@@ -78,6 +86,9 @@ describe.skip("throttledGlob", () => {
 
     // Start the throttledGlob operation
     const promise = throttledGlob(patterns, options, batchSize, delay);
+
+    // The mock event emitter is now created by the first call to glob.stream()
+    expect(mockEventEmitter).toBeTruthy();
 
     // Emit enough files to trigger throttling
     for (let i = 0; i < batchSize + 1; i++) {
@@ -111,6 +122,9 @@ describe.skip("throttledGlob", () => {
     // Start the throttledGlob operation
     const promise = throttledGlob(patterns, options);
 
+    // The mock event emitter is now created by the first call to glob.stream()
+    expect(mockEventEmitter).toBeTruthy();
+
     // Emit an error event
     mockEventEmitter.emit("error", error);
 
@@ -131,6 +145,9 @@ describe.skip("throttledGlob", () => {
       customBatchSize,
       customDelay
     );
+
+    // The mock event emitter is now created by the first call to glob.stream()
+    expect(mockEventEmitter).toBeTruthy();
 
     // Emit enough files to trigger throttling twice
     for (let i = 0; i < customBatchSize * 2; i++) {

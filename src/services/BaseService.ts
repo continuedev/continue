@@ -38,7 +38,9 @@ export abstract class BaseService<TState> extends EventEmitter {
       return state;
     } catch (error: any) {
       logger.error(`Failed to initialize ${this.serviceName}:`, error);
-      this.emit('error', error);
+      if (this.listenerCount('error') > 0) {
+        this.emit('error', error);
+      }
       throw error;
     }
   }
@@ -117,5 +119,5 @@ export interface ServiceWithDependencies {
  * Helper to check if a service has dependencies
  */
 export function hasDependencies(service: any): service is ServiceWithDependencies {
-  return typeof service.getDependencies === 'function';
+  return service != null && typeof service.getDependencies === 'function';
 }
