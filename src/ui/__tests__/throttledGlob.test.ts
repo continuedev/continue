@@ -1,40 +1,50 @@
 import {
-  jest,
+  vi,
   describe,
   beforeEach,
   afterEach,
   it,
   expect,
-} from "@jest/globals";
+} from "vitest";
 import { EventEmitter } from "events";
 import { throttledGlob } from "../FileSearchUI.js";
 
 // Define a custom interface for our mock
 interface MockGlobEmitter extends EventEmitter {
-  pause: jest.Mock;
-  resume: jest.Mock;
+  pause: ReturnType<typeof vi.fn>;
+  resume: ReturnType<typeof vi.fn>;
 }
 
-// Create a mock for the glob module with the required methods
-const mockEventEmitter = new EventEmitter() as MockGlobEmitter;
-mockEventEmitter.pause = jest.fn().mockReturnValue(mockEventEmitter);
-mockEventEmitter.resume = jest.fn().mockReturnValue(mockEventEmitter);
+// Create a variable to hold our mock event emitter
+let mockEventEmitter: MockGlobEmitter;
 
-// Setup the mock
-jest.mock("glob", () => ({
-  stream: jest.fn().mockReturnValue(mockEventEmitter),
-}));
+// Setup the mock - we need to do this before importing the module that uses glob
+vi.mock("glob", () => {
+  return {
+    stream: vi.fn(() => {
+      const EventEmitter = require("events").EventEmitter;
+      const emitter = new EventEmitter();
+      emitter.pause = vi.fn().mockReturnValue(emitter);
+      emitter.resume = vi.fn().mockReturnValue(emitter);
+      return emitter;
+    }),
+  };
+});
 
 describe.skip("throttledGlob", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Setup for each test
-    jest.useFakeTimers();
-    jest.clearAllMocks();
-    mockEventEmitter.removeAllListeners();
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+    
+    // Get the glob module and create a fresh mock event emitter
+    const globModule = await import("glob");
+    const streamFn = globModule.stream as any;
+    mockEventEmitter = streamFn();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("should return all matched files", async () => {
@@ -78,7 +88,7 @@ describe.skip("throttledGlob", () => {
     expect(mockEventEmitter.pause).toHaveBeenCalledTimes(1);
 
     // Fast-forward timers to trigger resume
-    jest.advanceTimersByTime(delay);
+    vi.advanceTimersByTime(delay);
 
     // Verify the stream was resumed
     expect(mockEventEmitter.resume).toHaveBeenCalledTimes(1);
@@ -131,11 +141,11 @@ describe.skip("throttledGlob", () => {
     expect(mockEventEmitter.pause).toHaveBeenCalledTimes(2);
 
     // Fast-forward timers for first resume
-    jest.advanceTimersByTime(customDelay);
+    vi.advanceTimersByTime(customDelay);
     expect(mockEventEmitter.resume).toHaveBeenCalledTimes(1);
 
     // Fast-forward timers for second resume
-    jest.advanceTimersByTime(customDelay);
+    vi.advanceTimersByTime(customDelay);
     expect(mockEventEmitter.resume).toHaveBeenCalledTimes(2);
 
     // Finish the stream

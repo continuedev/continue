@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from '@jest/globals';
+import { describe, expect, it, beforeEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import React from 'react';
 import ModeIndicator from './ModeIndicator.js';

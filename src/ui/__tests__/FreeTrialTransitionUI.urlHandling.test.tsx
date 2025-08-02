@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 // Test URL opening behavior without complex component rendering
 describe("FreeTrialTransitionUI - URL Opening Security", () => {
@@ -7,8 +7,8 @@ describe("FreeTrialTransitionUI - URL Opening Security", () => {
     // to prevent actual URLs from being opened during test runs
     
     // Import and check that open is mocked
-    const mockOpen = jest.fn();
-    jest.mock("open", () => mockOpen);
+    const mockOpen = vi.fn();
+    vi.mock("open", () => mockOpen);
     
     // Verify the mock is properly set up
     expect(mockOpen).toBeDefined();
@@ -42,7 +42,7 @@ describe("FreeTrialTransitionUI - URL Opening Security", () => {
     // Without proper mocking, tests could open arbitrary URLs in the user's browser
     // The mock ensures this doesn't happen during automated test runs
     
-    const openFunction = jest.fn();
+    const openFunction = vi.fn();
     
     // Simulate what would happen if URL opening was called
     openFunction("https://malicious-site.com");

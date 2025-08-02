@@ -1,15 +1,15 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { formatToolArgument } from "./formatters.js";
 import { formatToolCall } from "./index.js";
 
 describe("formatToolCall", () => {
   beforeEach(() => {
     // Mock process.cwd to return a consistent value
-    jest.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
+    vi.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should format tool name without arguments", () => {
@@ -66,11 +66,11 @@ describe("formatToolCall", () => {
 
 describe("formatToolArgument", () => {
   beforeEach(() => {
-    jest.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
+    vi.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should return empty string for null/undefined", () => {

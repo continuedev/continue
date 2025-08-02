@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ToolPermissionService } from './ToolPermissionService.js';
 import { PermissionMode } from '../permissions/types.js';
 

@@ -53,8 +53,10 @@ describe("ToolPermissionService unit tests", () => {
       const state = service.getState();
       const permissions = service.getPermissions();
 
-      expect(state.permissions).toBe(permissions);
-      expect(state.permissions.policies).toBe(permissions.policies);
+      // getState() returns a deep copy, getPermissions() returns the actual reference
+      expect(state.permissions).toEqual(permissions);
+      expect(state.permissions).not.toBe(permissions); // Different references
+      expect(permissions).toBe(service.getPermissions()); // Same reference on multiple calls
     });
   });
 

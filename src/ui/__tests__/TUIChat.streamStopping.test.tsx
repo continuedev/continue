@@ -1,20 +1,20 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { render } from "ink-testing-library";
 import React from "react";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Stream Stopping on Tool Rejection", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   it("verifies tool permission rejection flow", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { stdin } = render(
       <ToolPermissionSelector
@@ -29,12 +29,12 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Simulate user rejecting the tool call (press escape)
     stdin.write("\x1b"); // ESC key
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Verify that the tool was rejected
     expect(handleResponse).toHaveBeenCalledWith(
@@ -45,7 +45,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
   });
 
   it("verifies rejection with 'n' key triggers proper response", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { stdin } = render(
       <ToolPermissionSelector
@@ -59,12 +59,12 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Press 'n' to reject
     stdin.write("n");
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Verify rejection
     expect(handleResponse).toHaveBeenCalledWith(
@@ -78,7 +78,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     // This test validates the key behavior - when onResponse is called with approved=false,
     // it should lead to the streamChatResponse function stopping and returning early
     
-    const mockStreamingFunction = jest.fn().mockImplementation((approved) => {
+    const mockStreamingFunction = vi.fn().mockImplementation((approved) => {
       if (!approved) {
         // Simulate early return when tool is rejected
         return "Partial content before rejection";
@@ -103,7 +103,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     // Import the permission manager to test its behavior
     const { toolPermissionManager } = await import("../../permissions/permissionManager.js");
 
-    const mockResolve = jest.fn();
+    const mockResolve = vi.fn();
     
     // Simulate a pending request
     const requestId = "test-request-456";
@@ -134,7 +134,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     ];
 
     const mockCallbacks = {
-      onToolResult: jest.fn(),
+      onToolResult: vi.fn(),
     };
 
     // Simulate the rejection handling logic

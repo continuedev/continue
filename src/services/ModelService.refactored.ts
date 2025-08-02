@@ -8,7 +8,7 @@ import { BaseService, ServiceWithDependencies } from './BaseService.js';
 
 /**
  * Service for managing LLM and model state
- * Depends on auth config and assistant config
+ * Extends BaseService and implements ServiceWithDependencies
  */
 export class ModelService extends BaseService<ModelServiceState> implements ServiceWithDependencies {
   private availableModels: ModelConfig[] = [];

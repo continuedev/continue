@@ -6,6 +6,7 @@ import {
   ToolPermissions,
 } from "../permissions/types.js";
 import logger from "../util/logger.js";
+import { BaseService } from "./BaseService.js";
 
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
@@ -17,18 +18,20 @@ export interface ToolPermissionServiceState {
 /**
  * Service for managing tool permissions with a single source of truth
  */
-export class ToolPermissionService {
-  private state: ToolPermissionServiceState = {
-    permissions: { policies: [] },
-    currentMode: "normal",
-    modePolicyCount: 0,
-  };
+export class ToolPermissionService extends BaseService<ToolPermissionServiceState> {
+  constructor() {
+    super("ToolPermissionService", {
+      permissions: { policies: [] },
+      currentMode: "normal",
+      modePolicyCount: 0,
+    });
+  }
 
   /**
    * Generate mode-specific policies based on the current mode
    */
   private generateModePolicies(): ToolPermissionPolicy[] {
-    switch (this.state.currentMode) {
+    switch (this.currentState.currentMode) {
       case "plan":
         // Plan mode: Complete override - exclude all write operations, allow only reads
         return [
@@ -93,7 +96,7 @@ export class ToolPermissionService {
 
     // Set mode from overrides or default
     if (runtimeOverrides?.mode) {
-      this.state.currentMode = runtimeOverrides.mode;
+      this.currentState.currentMode = runtimeOverrides.mode;
     }
 
     // Generate mode-specific policies first (highest priority)
@@ -103,8 +106,8 @@ export class ToolPermissionService {
     // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
     if (
-      this.state.currentMode === "plan" ||
-      this.state.currentMode === "auto"
+      this.currentState.currentMode === "plan" ||
+      this.currentState.currentMode === "auto"
     ) {
       // Absolute override: ignore all user configuration
       allPolicies = modePolicies;
@@ -118,19 +121,19 @@ export class ToolPermissionService {
       allPolicies = [...modePolicies, ...compiledPolicies];
     }
 
-    this.state = {
+    this.setState({
       permissions: { policies: allPolicies },
-      currentMode: this.state.currentMode,
+      currentMode: this.currentState.currentMode,
       modePolicyCount: modePolicies.length,
-    };
+    });
 
-    return this.state;
+    return this.getState();
   }
 
   /**
    * Initialize the tool permission service with runtime overrides (async version)
    */
-  async initialize(runtimeOverrides?: {
+  async doInitialize(runtimeOverrides?: {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
@@ -144,28 +147,20 @@ export class ToolPermissionService {
   }
 
   /**
-   * Get the current permission state
-   */
-  getState(): ToolPermissionServiceState {
-    return this.state;
-  }
-
-  /**
    * Get the compiled permissions
    */
   getPermissions(): ToolPermissions {
-    return this.state.permissions;
+    return this.currentState.permissions;
   }
 
   /**
    * Update permissions (e.g., when config changes)
    */
   updatePermissions(newPolicies: ToolPermissionPolicy[]) {
-    this.state = {
+    this.setState({
       permissions: { policies: newPolicies },
-      currentMode: this.state.currentMode,
       modePolicyCount: 0, // Reset since we're replacing all policies
-    };
+    });
     logger.debug(
       `Updated tool permissions with ${newPolicies.length} policies`
     );
@@ -176,25 +171,27 @@ export class ToolPermissionService {
    */
   switchMode(newMode: PermissionMode): ToolPermissionServiceState {
     logger.debug(
-      `Switching from mode '${this.state.currentMode}' to '${newMode}'`
+      `Switching from mode '${this.currentState.currentMode}' to '${newMode}'`
     );
 
     // Store original policies when leaving normal mode for the first time
     if (
-      this.state.currentMode === "normal" &&
+      this.currentState.currentMode === "normal" &&
       newMode !== "normal" &&
-      !this.state.originalPolicies
+      !this.currentState.originalPolicies
     ) {
       // Deep copy the policies array to preserve the original state
-      this.state.originalPolicies = {
-        policies: [...this.state.permissions.policies],
-      };
+      this.setState({
+        originalPolicies: {
+          policies: [...this.currentState.permissions.policies],
+        },
+      });
       logger.debug(
-        `Stored ${this.state.permissions.policies.length} original policies`
+        `Stored ${this.currentState.permissions.policies.length} original policies`
       );
     }
 
-    this.state.currentMode = newMode;
+    this.currentState.currentMode = newMode;
 
     // Regenerate policies with the new mode
     const modePolicies = this.generateModePolicies();
@@ -207,21 +204,23 @@ export class ToolPermissionService {
       allPolicies = modePolicies;
     } else {
       // Normal mode: restore original policies if we have them
-      if (this.state.originalPolicies) {
+      if (this.currentState.originalPolicies) {
         // Restore the original user policies
         // When original policies were stored in normal mode, they had 0 mode policies
         // So we need to slice from the number of mode policies that were active when stored
         const originalModePolicyCount = 0; // Normal mode has no mode policies
         const originalNonModePolicies =
-          this.state.originalPolicies.policies.slice(originalModePolicyCount);
+          this.currentState.originalPolicies.policies.slice(
+            originalModePolicyCount
+          );
         allPolicies = [...modePolicies, ...originalNonModePolicies];
         logger.debug(
           `Restored ${originalNonModePolicies.length} original user policies`
         );
       } else {
         // Fallback to existing behavior if no original policies stored
-        const existingPolicies = this.state.permissions.policies;
-        const previousModePolicyCount = this.state.modePolicyCount || 0;
+        const existingPolicies = this.currentState.permissions.policies;
+        const previousModePolicyCount = this.currentState.modePolicyCount || 0;
         const nonModePolicies =
           existingPolicies.length > previousModePolicyCount
             ? existingPolicies.slice(previousModePolicyCount)
@@ -230,23 +229,22 @@ export class ToolPermissionService {
       }
     }
 
-    this.state = {
-      ...this.state,
+    this.setState({
       permissions: { policies: allPolicies },
       currentMode: newMode,
       modePolicyCount: modePolicies.length,
-    };
+    });
 
     logger.debug(
       `Mode switched to '${newMode}' with ${allPolicies.length} total policies`
     );
-    return this.state;
+    return this.getState();
   }
 
   /**
    * Get the current permission mode
    */
   getCurrentMode(): PermissionMode {
-    return this.state.currentMode;
+    return this.currentState.currentMode;
   }
 }

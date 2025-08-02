@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import { resolvePermissionPrecedence } from "./precedenceResolver.js";
 import { ToolPermissionPolicy } from "./types.js";

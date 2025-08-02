@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 /**
  * Mock the constructLlmApi function to return a mock LLM API
@@ -36,7 +36,7 @@ export function mockLLMResponse(response: string) {
     completion: async () => response,
   };
 
-  jest.doMock("@continuedev/openai-adapters", () => ({
+  vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
     BaseLlmApi: class {},
     LLMConfig: {}
@@ -80,7 +80,7 @@ export function mockLLMStreamResponse(chunks: string[]) {
     completion: async () => chunks.join(""),
   };
 
-  jest.doMock("@continuedev/openai-adapters", () => ({
+  vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
     BaseLlmApi: class {},
     LLMConfig: {}
@@ -111,7 +111,7 @@ export function mockLLMError(errorMessage: string) {
     },
   };
 
-  jest.doMock("@continuedev/openai-adapters", () => ({
+  vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
     BaseLlmApi: class {},
     LLMConfig: {}
@@ -124,5 +124,5 @@ export function mockLLMError(errorMessage: string) {
  * Clear all LLM mocks
  */
 export function clearLLMMocks() {
-  jest.dontMock("@continuedev/openai-adapters");
+  vi.unmock("@continuedev/openai-adapters");
 }

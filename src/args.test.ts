@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { parseArgs, processRule } from "./args.js";
 
 describe("parseArgs", () => {
@@ -245,7 +245,7 @@ describe("parseArgs", () => {
 describe("processRule (loadRuleFromHub integration)", () => {
   // Mock fetch for hub tests
   const originalFetch = global.fetch;
-  const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+  const mockFetch = vi.fn() as any;
   
   beforeAll(() => {
     global.fetch = mockFetch;

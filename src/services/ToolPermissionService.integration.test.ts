@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { DEFAULT_TOOL_POLICIES } from "../permissions/defaultPolicies.js";
 import { ToolPermissionService } from "./ToolPermissionService.js";
 
@@ -80,7 +80,9 @@ describe("ToolPermissionService E2E", () => {
     const state = service.getState();
     const permissions = service.getPermissions();
     
-    expect(state.permissions).toBe(permissions);
+    // getState() returns a deep copy, getPermissions() returns the actual reference
+    expect(state.permissions).toEqual(permissions);
+    expect(state.permissions).not.toBe(permissions); // Different references
     expect(state.permissions.policies[0]).toEqual({ tool: "test_tool", permission: "exclude" });
   });
 

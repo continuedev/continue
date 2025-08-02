@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 import type {
   ChatCompletionChunk,
@@ -116,7 +116,7 @@ describe("processStreamingResponse - content preservation", () => {
 
     // Create a mock LLM API that returns our predefined chunks
     mockLlmApi = {
-      chatCompletionStream: jest.fn().mockImplementation(async function* () {
+      chatCompletionStream: vi.fn().mockImplementation(async function* () {
         for (const chunk of chunks) {
           yield chunk;
         }
@@ -346,7 +346,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("preprocesses valid tool calls correctly", async () => {
@@ -361,8 +361,8 @@ describe.skip("preprocessStreamedToolCalls", () => {
     ];
 
     const callbacks = {
-      onToolStart: jest.fn(),
-      onToolError: jest.fn(),
+      onToolStart: vi.fn(),
+      onToolError: vi.fn(),
     };
 
     const { preprocessedCalls, errorChatEntries } =
@@ -383,7 +383,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
   it("handles tool preprocessing errors correctly", async () => {
     // Set the spy to throw an error
     const toolsModule = await import("./tools/index.js");
-    jest.spyOn(toolsModule, "validateToolCallArgsPresent").mockImplementationOnce(
+    vi.spyOn(toolsModule, "validateToolCallArgsPresent").mockImplementationOnce(
       () => {
         throw new Error("Missing required argument");
       }
@@ -400,8 +400,8 @@ describe.skip("preprocessStreamedToolCalls", () => {
     ];
 
     const callbacks = {
-      onToolStart: jest.fn(),
-      onToolError: jest.fn(),
+      onToolStart: vi.fn(),
+      onToolError: vi.fn(),
     };
 
     const { preprocessedCalls, errorChatEntries } =
@@ -447,20 +447,20 @@ describe.skip("preprocessStreamedToolCalls", () => {
 describe.skip("executeStreamedToolCalls", () => {
   beforeEach(() => {
     // Reset spies
-    jest.spyOn(toolPermissionManager, "requestPermission").mockReset();
-    jest.spyOn(toolPermissionManager, "on").mockReset();
-    jest.spyOn(toolPermissionManager, "off").mockReset();
+    vi.spyOn(toolPermissionManager, "requestPermission").mockReset();
+    vi.spyOn(toolPermissionManager, "on").mockReset();
+    vi.spyOn(toolPermissionManager, "off").mockReset();
   });
 
   it("executes tool calls with allowed permissions", async () => {
     // Setup spies instead of mocks
     const permissionsModule = await import("./permissions/index.js");
-    jest.spyOn(permissionsModule, "checkToolPermission").mockReturnValue({
+    vi.spyOn(permissionsModule, "checkToolPermission").mockReturnValue({
       permission: "allow",
     });
 
     const toolsModule = await import("./tools/index.js");
-    const mockedExecuteToolCall = jest
+    const mockedExecuteToolCall = vi
       .spyOn(toolsModule, "executeToolCall")
       .mockResolvedValue("Tool execution successful");
 
@@ -477,9 +477,9 @@ describe.skip("executeStreamedToolCalls", () => {
     ];
 
     const callbacks = {
-      onToolStart: jest.fn(),
-      onToolResult: jest.fn(),
-      onToolError: jest.fn(),
+      onToolStart: vi.fn(),
+      onToolResult: vi.fn(),
+      onToolError: vi.fn(),
     };
 
     const { chatHistoryEntries } = await executeStreamedToolCalls(
@@ -503,17 +503,17 @@ describe.skip("executeStreamedToolCalls", () => {
   it("handles permission denied correctly", async () => {
     // Setup permission to ask
     const permissionsModule = await import("./permissions/index.js");
-    jest.spyOn(permissionsModule, "checkToolPermission").mockReturnValue({
+    vi.spyOn(permissionsModule, "checkToolPermission").mockReturnValue({
       permission: "ask",
     });
 
     // Spy on permission request to be denied
-    jest.spyOn(toolPermissionManager, "requestPermission").mockResolvedValue({
+    vi.spyOn(toolPermissionManager, "requestPermission").mockResolvedValue({
       approved: false,
     });
 
     // Add event listener mock
-    jest.spyOn(toolPermissionManager, "on").mockImplementation(
+    vi.spyOn(toolPermissionManager, "on").mockImplementation(
       (event: any, callback: any) => {
         if (event === "permissionRequested") {
           // Immediately trigger the callback to simulate event
@@ -553,9 +553,9 @@ describe.skip("executeStreamedToolCalls", () => {
     ];
 
     const callbacks = {
-      onToolStart: jest.fn(),
-      onToolResult: jest.fn(),
-      onToolPermissionRequest: jest.fn(),
+      onToolStart: vi.fn(),
+      onToolResult: vi.fn(),
+      onToolPermissionRequest: vi.fn(),
     };
 
     const { chatHistoryEntries, hasRejection } = await executeStreamedToolCalls(
@@ -589,12 +589,12 @@ describe.skip("executeStreamedToolCalls", () => {
   it("handles tool execution errors", async () => {
     // Setup spies
     const permissionsModule = await import("./permissions/index.js");
-    jest.spyOn(permissionsModule, "checkToolPermission").mockReturnValue({
+    vi.spyOn(permissionsModule, "checkToolPermission").mockReturnValue({
       permission: "allow",
     });
 
     const toolsModule = await import("./tools/index.js");
-    jest.spyOn(toolsModule, "executeToolCall").mockRejectedValue(
+    vi.spyOn(toolsModule, "executeToolCall").mockRejectedValue(
       new Error("Execution failed")
     );
 
@@ -611,8 +611,8 @@ describe.skip("executeStreamedToolCalls", () => {
     ];
 
     const callbacks = {
-      onToolStart: jest.fn(),
-      onToolError: jest.fn(),
+      onToolStart: vi.fn(),
+      onToolError: vi.fn(),
     };
 
     const { chatHistoryEntries, hasRejection } = await executeStreamedToolCalls(

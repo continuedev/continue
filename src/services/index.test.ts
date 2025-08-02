@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 import { initializeServices } from './index.js';
 import { modeService } from './ModeService.js';
@@ -8,12 +8,12 @@ describe('initializeServices', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Create mock mode service
     mockModeService = {
-      initialize: jest.fn(),
-      getCurrentMode: jest.fn()
+      initialize: vi.fn(),
+      getCurrentMode: vi.fn()
     };
     
     // Set up modeService mock
@@ -22,7 +22,7 @@ describe('initializeServices', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('mode conversion', () => {

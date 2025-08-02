@@ -14,7 +14,7 @@ import { BaseService } from "./BaseService.js";
 
 /**
  * Service for managing authentication state and operations
- * Encapsulates all auth logic and provides reactive updates
+ * Now extends BaseService for common functionality
  */
 export class AuthService extends BaseService<AuthServiceState> {
   constructor() {

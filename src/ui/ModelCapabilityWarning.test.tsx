@@ -1,6 +1,6 @@
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import ModelCapabilityWarning from './ModelCapabilityWarning.js';
 
 describe('ModelCapabilityWarning', () => {

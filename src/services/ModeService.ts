@@ -1,19 +1,26 @@
-import { EventEmitter } from "events";
 import { PermissionMode } from "../permissions/types.js";
 import logger from "../util/logger.js";
 import { ToolPermissionService } from "./ToolPermissionService.js";
+import { BaseService } from "./BaseService.js";
+
+export interface ModeServiceState {
+  mode: PermissionMode;
+  toolPermissionService: ToolPermissionService;
+}
 
 /**
  * Global service for managing permission modes
  * Provides a singleton interface for mode switching
  */
-export class ModeService extends EventEmitter {
+export class ModeService extends BaseService<ModeServiceState> {
   private static instance: ModeService;
-  private toolPermissionService: ToolPermissionService;
 
   private constructor() {
-    super();
-    this.toolPermissionService = new ToolPermissionService();
+    const toolPermissionService = new ToolPermissionService();
+    super('ModeService', {
+      mode: "normal",
+      toolPermissionService
+    });
   }
 
   public static getInstance(): ModeService {
@@ -26,13 +33,13 @@ export class ModeService extends EventEmitter {
   /**
    * Initialize the mode service with command line arguments
    */
-  public initialize(args: {
+  async doInitialize(args: {
     readonly?: boolean;
     auto?: boolean;
     allow?: string[];
     ask?: string[];
     exclude?: string[];
-  }) {
+  }): Promise<ModeServiceState> {
     // Convert legacy flags to mode
     let mode: PermissionMode = "normal";
     if (args.readonly) {
@@ -41,7 +48,7 @@ export class ModeService extends EventEmitter {
       mode = "auto";  // Auto flag maps to auto mode
     }
 
-    this.toolPermissionService.initializeSync({
+    this.currentState.toolPermissionService.initializeSync({
       allow: args.allow,
       ask: args.ask,
       exclude: args.exclude,
@@ -49,14 +56,22 @@ export class ModeService extends EventEmitter {
     });
 
     logger.debug(`ModeService initialized with mode: ${mode}`);
+
+    return {
+      mode,
+      toolPermissionService: this.currentState.toolPermissionService
+    };
   }
 
   /**
    * Switch to a different mode
    */
   public switchMode(mode: PermissionMode): void {
-    const previousMode = this.toolPermissionService.getCurrentMode();
-    const newState = this.toolPermissionService.switchMode(mode);
+    const previousMode = this.currentState.mode;
+    const newState = this.currentState.toolPermissionService.switchMode(mode);
+    
+    this.setState({ mode });
+    
     logger.info(`Switched to ${mode} mode`);
     
     // Emit mode change event for immediate UI updates
@@ -69,14 +84,14 @@ export class ModeService extends EventEmitter {
    * Get the current mode
    */
   public getCurrentMode(): PermissionMode {
-    return this.toolPermissionService.getCurrentMode();
+    return this.currentState.mode;
   }
 
   /**
    * Get the tool permission service instance
    */
   public getToolPermissionService(): ToolPermissionService {
-    return this.toolPermissionService;
+    return this.currentState.toolPermissionService;
   }
 
   /**
@@ -88,6 +103,13 @@ export class ModeService extends EventEmitter {
       { mode: "plan", description: "Planning mode - only allow read-only tools for analysis" },
       { mode: "auto", description: "Automatically allow all tools without asking" }
     ];
+  }
+
+  /**
+   * Override isReady since this is a singleton with immediate availability
+   */
+  override isReady(): boolean {
+    return true;
   }
 }
 
