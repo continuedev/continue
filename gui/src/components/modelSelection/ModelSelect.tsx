@@ -135,7 +135,7 @@ function ModelSelect() {
         };
       }),
     );
-  }, [config]);
+  }, [allModels]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
