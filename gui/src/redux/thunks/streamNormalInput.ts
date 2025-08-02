@@ -3,7 +3,6 @@ import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -151,8 +150,20 @@ export const streamNormalInput = createAsyncThunk<
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
     if (useNativeTools && activeTools.length > 0) {
+      // For native tools, combine function description with systemMessageDescription
+      // since systemMessageDescription won't be included in the system message
+      const toolsWithEnhancedDescriptions = activeTools.map((tool) => ({
+        ...tool,
+        function: {
+          ...tool.function,
+          description: [tool.function.description, tool.systemMessageDescription]
+            .filter(Boolean)
+            .join('\n\n') || tool.function.description
+        }
+      }));
+      
       completionOptions = {
-        tools: activeTools,
+        tools: toolsWithEnhancedDescriptions,
       };
     }
 

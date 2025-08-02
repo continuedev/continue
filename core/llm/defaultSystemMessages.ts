@@ -60,8 +60,7 @@ ${EDIT_CODE_INSTRUCTIONS}
 export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in agent mode.
-
-  If you need to use multiple tools, you can call call multiple read only tools simultaneously.
+  Make parallel tool call unless the tool description specifically states it is not supported.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 </important_rules>`;
@@ -72,6 +71,7 @@ export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in plan mode, in which you help the user understand and construct a plan.
   Only use read-only tools. Do not use any tools that would write to non-temporary files.
+  Make parallel tool call unless the tool description specifically states it is not supported.
   If the user wants to make changes, offer that they can switch to Agent mode to give you access to write tools to make the suggested updates.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
