@@ -207,7 +207,7 @@ describe("exponentialBackoff utilities", () => {
 
       // Mock Math.random to return 0.5 (middle of jitter range)
       const originalRandom = Math.random;
-      Math.random = vi.fn(() => 0.5);
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
 
       // With jitter factor of 0.5 + 0.5 * 0.5 = 0.75
       expect(calculateDelay(0, options)).toBe(750); // 1000 * 0.75
