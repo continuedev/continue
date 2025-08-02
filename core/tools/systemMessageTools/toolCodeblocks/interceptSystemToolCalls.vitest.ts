@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { AssistantChatMessage, ChatMessage, PromptLog } from "../..";
-import { interceptSystemToolCalls } from "./interceptSystemToolCalls";
+import { SystemMessageToolCodeblocksFramework } from ".";
+import { AssistantChatMessage, ChatMessage, PromptLog } from "../../..";
+import { interceptSystemToolCalls } from "../interceptSystemToolCalls";
 
 describe("interceptSystemToolCalls", () => {
   let abortController: AbortController;
+  let framework = new SystemMessageToolCodeblocksFramework();
 
   beforeEach(() => {
     abortController = new AbortController();
@@ -27,6 +29,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     let result = await generator.next();
@@ -64,6 +67,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     const result = await generator.next();
@@ -91,6 +95,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     const result = await generator.next();
@@ -116,6 +121,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     // First chunk should be normal text
@@ -185,6 +191,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     // First chunk should be normal text
@@ -249,6 +256,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     let result;
@@ -271,6 +279,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     // Process the first part
@@ -300,6 +309,7 @@ describe("interceptSystemToolCalls", () => {
     const generator = interceptSystemToolCalls(
       createAsyncGenerator(messages),
       abortController,
+      framework,
     );
 
     // Skip to number arg end

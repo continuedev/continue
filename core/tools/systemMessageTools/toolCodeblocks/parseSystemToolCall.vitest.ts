@@ -1,32 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  ToolCallParseState,
-  getInitialTooLCallParseState,
-  handleToolCallBuffer,
-} from "./parseSystemToolCall";
-
-describe("getInitialTooLCallParseState", () => {
-  it("returns a properly initialized parse state", () => {
-    const state = getInitialTooLCallParseState();
-
-    expect(state).toEqual({
-      isOnArgBeginLine: false,
-      currentArgName: undefined,
-      currentArgLines: [],
-      currentLineIndex: 0,
-      processedArgNames: new Set(),
-      lineChunks: [],
-      done: false,
-      toolCallId: expect.any(String),
-    });
-  });
-});
+import { getInitialToolCallParseState, ToolCallParseState } from "../types";
+import { handleToolCallBuffer } from "./parseSystemToolCall";
 
 describe("handleToolCallBuffer", () => {
   let state: ToolCallParseState;
 
   beforeEach(() => {
-    state = getInitialTooLCallParseState();
+    state = getInitialToolCallParseState();
   });
 
   it("handles the ```tool\ntool_name the name", () => {
@@ -88,7 +68,7 @@ describe("handleToolCallBuffer", () => {
 
     const result = handleToolCallBuffer("BEGIN_ARG: test_arg", state);
     expect(result).toBeUndefined();
-    expect(state.isOnArgBeginLine).toBe(true);
+    expect(state.isWithinArgStart).toBe(true);
 
     const newLineResult = handleToolCallBuffer("\n", state);
 
@@ -101,7 +81,7 @@ describe("handleToolCallBuffer", () => {
       id: expect.any(String),
     });
     expect(state.currentArgName).toBe("test_arg");
-    expect(state.isOnArgBeginLine).toBe(false);
+    expect(state.isWithinArgStart).toBe(false);
   });
 
   it("handles case-insensitive begin arg", () => {
@@ -109,7 +89,7 @@ describe("handleToolCallBuffer", () => {
 
     const result = handleToolCallBuffer("begin_arg: test_arg", state);
     expect(result).toBeUndefined();
-    expect(state.isOnArgBeginLine).toBe(true);
+    expect(state.isWithinArgStart).toBe(true);
 
     const newLineResult = handleToolCallBuffer("\n", state);
 
@@ -135,13 +115,13 @@ describe("handleToolCallBuffer", () => {
     const newLineResult2 = handleToolCallBuffer("\n", state);
     expect(newLineResult2).toBeUndefined();
 
-    expect(state.currentArgLines).toEqual(["line 1\n", "line 2\n"]);
+    expect(state.currentArgChunks).toEqual(["line 1\n", "line 2\n"]);
   });
 
   it("ends an argument correctly with string value", () => {
     state.currentLineIndex = 3;
     state.currentArgName = "test_arg";
-    state.currentArgLines = ["string value"];
+    state.currentArgChunks = ["string value"];
 
     const result = handleToolCallBuffer("END_ARG", state);
     expect(result).toBeUndefined();
@@ -163,7 +143,7 @@ describe("handleToolCallBuffer", () => {
   it("handles case-insensitive end arg", () => {
     state.currentLineIndex = 3;
     state.currentArgName = "test_arg";
-    state.currentArgLines = ["string value"];
+    state.currentArgChunks = ["string value"];
 
     const result = handleToolCallBuffer("end_arg", state);
     expect(result).toBeUndefined();
@@ -183,7 +163,7 @@ describe("handleToolCallBuffer", () => {
   it("attempts to parse JSON values", () => {
     state.currentLineIndex = 3;
     state.currentArgName = "test_arg";
-    state.currentArgLines = ["123"];
+    state.currentArgChunks = ["123"];
 
     handleToolCallBuffer("END_ARG", state);
     const newLineResult = handleToolCallBuffer("\n", state);
@@ -201,7 +181,7 @@ describe("handleToolCallBuffer", () => {
   it("handles multiple arguments", () => {
     // Setup first arg
     state.currentLineIndex = 2;
-    state.isOnArgBeginLine = true;
+    state.isWithinArgStart = true;
     state.lineChunks[2] = ["BEGIN_ARG: first_arg"];
 
     handleToolCallBuffer("\n", state);
@@ -213,7 +193,7 @@ describe("handleToolCallBuffer", () => {
     expect(state.processedArgNames.has("first_arg")).toBe(true);
 
     // Setup second arg
-    state.isOnArgBeginLine = true;
+    state.isWithinArgStart = true;
     handleToolCallBuffer("BEGIN_ARG: second_arg", state);
     handleToolCallBuffer("\n", state);
     handleToolCallBuffer("value2", state);
@@ -270,7 +250,7 @@ describe("handleToolCallBuffer", () => {
   it("handles JSON array args", () => {
     state.currentLineIndex = 3;
     state.currentArgName = "test_arg";
-    state.currentArgLines = [
+    state.currentArgChunks = [
       "[\n",
       '"------- SEARCH\n',
       "  subtract(number) {\n",

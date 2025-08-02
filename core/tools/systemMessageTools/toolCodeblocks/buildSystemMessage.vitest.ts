@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { Tool } from "../..";
+import { Tool } from "../../..";
 import {
   TOOL_INSTRUCTIONS_TAG,
   addSystemMessageToolsToSystemMessage,
-  createSystemMessageExampleCall,
   generateToolsSystemMessage,
-} from "./buildToolsSystemMessage";
-import { closeTag } from "./systemToolUtils";
+} from "../buildToolsSystemMessage";
+
+import { SystemMessageToolCodeblocksFramework } from ".";
+import { closeTag } from "../systemToolUtils";
 
 const SHARED_TOOL_FIELDS = {
   displayTitle: "DUD",
@@ -15,9 +16,11 @@ const SHARED_TOOL_FIELDS = {
   type: "function" as const,
 };
 
+const framework = new SystemMessageToolCodeblocksFramework();
+
 describe("createSystemMessageExampleCall", () => {
   it("creates a system message example call with no args", () => {
-    const result = createSystemMessageExampleCall(
+    const result = framework.createSystemMessageExampleCall(
       "test_tool",
       "Use this tool to test things",
     );
@@ -28,7 +31,7 @@ describe("createSystemMessageExampleCall", () => {
   });
 
   it("creates a system message example call with args", () => {
-    const result = createSystemMessageExampleCall(
+    const result = framework.createSystemMessageExampleCall(
       "test_tool",
       "Use this tool to test things",
       [
@@ -49,7 +52,7 @@ describe("createSystemMessageExampleCall", () => {
 
   it("handles multiline arg values correctly", () => {
     const multilineValue = "value\nwith\nmultiple\nlines";
-    const result = createSystemMessageExampleCall(
+    const result = framework.createSystemMessageExampleCall(
       "test_tool",
       "Use this tool to test things",
       [["arg1", multilineValue]],
@@ -63,7 +66,7 @@ describe("createSystemMessageExampleCall", () => {
 
 describe("generateToolsSystemMessage", () => {
   it("returns empty string for empty tools array", () => {
-    const result = generateToolsSystemMessage([]);
+    const result = generateToolsSystemMessage([], framework);
     expect(result).toBe("");
   });
 
@@ -81,12 +84,14 @@ describe("generateToolsSystemMessage", () => {
             required: [],
           },
         },
-        systemMessageDescription: customDescription,
+        systemMessageDescription: {
+          prefix: customDescription,
+        },
         ...SHARED_TOOL_FIELDS,
       },
     ];
 
-    const result = generateToolsSystemMessage(tools);
+    const result = generateToolsSystemMessage(tools, framework);
 
     // Check structure rather than exact text
     expect(result).includes(TOOL_INSTRUCTIONS_TAG);
@@ -123,7 +128,7 @@ describe("generateToolsSystemMessage", () => {
       },
     ];
 
-    const result = generateToolsSystemMessage(tools);
+    const result = generateToolsSystemMessage(tools, framework);
 
     // Check for key elements without requiring exact wording
     expect(result).includes(`TOOL_NAME: ${toolName}`);
@@ -150,7 +155,9 @@ describe("generateToolsSystemMessage", () => {
             required: [],
           },
         },
-        systemMessageDescription: customMsg,
+        systemMessageDescription: {
+          prefix: customMsg,
+        },
         ...SHARED_TOOL_FIELDS,
       },
       {
@@ -172,7 +179,7 @@ describe("generateToolsSystemMessage", () => {
       },
     ];
 
-    const result = generateToolsSystemMessage(tools);
+    const result = generateToolsSystemMessage(tools, framework);
 
     // Check for both types of tools
     expect(result).includes(customMsg);
@@ -202,7 +209,7 @@ describe("generateToolsSystemMessage", () => {
       },
     ];
 
-    const result = generateToolsSystemMessage(tools);
+    const result = generateToolsSystemMessage(tools, framework);
 
     // Check for example sections without exact text
     expect(result).includes("```tool_definition");
@@ -221,7 +228,11 @@ describe("generateToolsSystemMessage", () => {
 describe("addSystemMessageToolsToSystemMessage", () => {
   it("returns original system message when no tools are provided", () => {
     const baseMessage = "This is the base system message";
-    const result = addSystemMessageToolsToSystemMessage(baseMessage, []);
+    const result = addSystemMessageToolsToSystemMessage(
+      framework,
+      baseMessage,
+      [],
+    );
     expect(result).toBe(baseMessage);
   });
 
@@ -243,7 +254,11 @@ describe("addSystemMessageToolsToSystemMessage", () => {
       },
     ];
 
-    const result = addSystemMessageToolsToSystemMessage(baseMessage, tools);
+    const result = addSystemMessageToolsToSystemMessage(
+      framework,
+      baseMessage,
+      tools,
+    );
 
     expect(result.startsWith(baseMessage)).toBe(true);
     expect(result).includes(TOOL_INSTRUCTIONS_TAG);

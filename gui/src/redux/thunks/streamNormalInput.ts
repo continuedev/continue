@@ -25,6 +25,7 @@ import { constructMessages } from "../util/constructMessages";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
+import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
@@ -147,6 +148,9 @@ export const streamNormalInput = createAsyncThunk<
     // Use the centralized selector to determine if system message tools should be used
     const useSystemTools = selectUseSystemMessageTools(state);
     const useNativeTools = !useSystemTools && supportsNativeTools;
+    const systemToolsFramework = useSystemTools
+      ? new SystemMessageToolCodeblocksFramework()
+      : undefined;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
@@ -171,8 +175,12 @@ export const streamNormalInput = createAsyncThunk<
       selectedChatModel,
     );
 
-    const systemMessage = useSystemTools
-      ? addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools)
+    const systemMessage = systemToolsFramework
+      ? addSystemMessageToolsToSystemMessage(
+          systemToolsFramework,
+          baseSystemMessage,
+          activeTools,
+        )
       : baseSystemMessage;
 
     const withoutMessageIds = state.session.history.map((item) => {
@@ -185,7 +193,7 @@ export const streamNormalInput = createAsyncThunk<
       systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
-      !useNativeTools,
+      systemToolsFramework,
     );
 
     // TODO parallel tool calls will cause issues with this
@@ -233,8 +241,8 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
-    if (!useNativeTools && activeTools.length > 0) {
-      gen = interceptSystemToolCalls(gen, streamAborter);
+    if (systemToolsFramework && activeTools.length > 0) {
+      gen = interceptSystemToolCalls(gen, streamAborter, systemToolsFramework);
     }
 
     let next = await gen.next();

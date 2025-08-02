@@ -1,6 +1,5 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;
@@ -92,16 +91,15 @@ export const searchAndReplaceInFileTool: Tool = {
       },
     },
   },
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.SearchAndReplaceInFile,
-    `To make targeted edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a "diffs" argument containing an array of SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
+  systemMessageDescription: {
+    prefix: `To make targeted edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a "diffs" argument containing an array of SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
 Each block should follow this format:
 ${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}
 
 ${SEARCH_AND_REPLACE_RULES}
 
   For example, you could respond with:`,
-    [
+    exampleArgs: [
       ["filepath", "path/to/file.ts"],
       [
         "diffs",
@@ -119,5 +117,5 @@ ${SEARCH_AND_REPLACE_RULES}
 ]`,
       ],
     ],
-  ),
+  },
 };
