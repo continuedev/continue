@@ -31,7 +31,7 @@ runs:
     - name: Install gui node_modules and build
       shell: bash
       run: |
-        cd ../../gui
+        cd gui
         npm ci
         npm run build
 

@@ -84,7 +84,7 @@ void (async () => {
     );
   }
 
-  // process.chdir(path.join(continueDir, "gui"));
+  process.chdir(path.join(continueDir, "gui"));
 
   // if (isInGitHubAction) {
   //   const guiBuildStart = Date.now();
