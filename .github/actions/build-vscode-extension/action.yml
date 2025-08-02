@@ -83,7 +83,7 @@ runs:
         npm ci
       env:
         # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install gui dependencies
       shell: bash
