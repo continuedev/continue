@@ -59,6 +59,30 @@ describe("AnthropicCachingStrategies", () => {
       const result = CACHING_STRATEGIES.systemOnly(body);
       expect(result).toEqual(body);
     });
+
+    it("should not add more than 5 cached messages", () => {
+      const body = {
+        system: [
+          { text: "system message 1" },
+          { text: "system message 2" },
+          { text: "system message 3" },
+          { text: "system message 4" },
+          { text: "system message 5" },
+        ],
+        messages: [{ content: "user message" }],
+      };
+
+      const result = CACHING_STRATEGIES.systemOnly(body);
+
+      expect(result.system).toEqual([
+        { text: "system message 1", cache_control: { type: "ephemeral" } },
+        { text: "system message 2", cache_control: { type: "ephemeral" } },
+        { text: "system message 3", cache_control: { type: "ephemeral" } },
+        { text: "system message 4", cache_control: { type: "ephemeral" } },
+        { text: "system message 5" },
+      ]);
+      expect(result.messages).toEqual(body.messages);
+    });
   });
 
   describe("systemAndToolsStrategy", () => {
@@ -118,6 +142,30 @@ describe("AnthropicCachingStrategies", () => {
 
       const result = CACHING_STRATEGIES.systemAndTools(body);
       expect(result).toEqual(body);
+    });
+
+    it("should add only 4 cache controls in total to both system and tools", () => {
+      const body = {
+        system: [
+          { text: "system message 1" },
+          { text: "system message 2" },
+          { text: "system message 3" },
+          { text: "system message 4" },
+        ],
+        tools: [{ name: "tool1" }, { name: "tool2" }],
+        messages: [{ content: "user message" }],
+      };
+
+      const result = CACHING_STRATEGIES.systemAndTools(body);
+
+      expect(result.system).toEqual([
+        { text: "system message 1", cache_control: { type: "ephemeral" } },
+        { text: "system message 2", cache_control: { type: "ephemeral" } },
+        { text: "system message 3", cache_control: { type: "ephemeral" } },
+        { text: "system message 4", cache_control: { type: "ephemeral" } },
+      ]);
+      expect(result.tools).toEqual(body.tools);
+      expect(result.messages).toEqual(body.messages);
     });
   });
 
@@ -201,6 +249,46 @@ describe("AnthropicCachingStrategies", () => {
           ],
         },
       ]);
+    });
+
+    it("should add maximum 4 cache control blocks", () => {
+      const body = {
+        system: [{ text: "system message 1" }, { text: "system message 2" }],
+        tools: [{ name: "tool" }],
+        messages: [
+          { content: "small content" },
+          { content: "a".repeat(2100) },
+          { content: "b".repeat(2100) },
+          {
+            content: [
+              { type: "text", text: "c".repeat(2100) },
+              { type: "image", data: "image" },
+            ],
+          },
+        ],
+      };
+
+      const result = CACHING_STRATEGIES.optimized(body);
+
+      expect(result.system).toEqual([
+        { text: "system message 1", cache_control: { type: "ephemeral" } },
+        { text: "system message 2", cache_control: { type: "ephemeral" } },
+      ]);
+      expect(result.tools).toEqual([
+        { name: "tool", cache_control: { type: "ephemeral" } },
+      ]);
+      expect(result.messages[0]).toEqual({ content: "small content" });
+      expect(result.messages[1]).toEqual({
+        content: [
+          {
+            type: "text",
+            text: "a".repeat(2100),
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      });
+      expect(result.messages[2].content).toEqual(body.messages[2].content);
+      expect(result.messages[3].content).toEqual(body.messages[3].content);
     });
 
     it("should handle complex message structure", () => {
