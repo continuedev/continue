@@ -6,16 +6,18 @@ on:
       - main
 
 jobs:
-  # Temporary test step to trigger CI failure analyzer
+  # Temporary test step to trigger CI failure analyzer - fails immediately
   test-failure:
     runs-on: ubuntu-latest
     steps:
       - name: Intentional test failure
         run: |
-          echo "This step will fail to test our CI failure analyzer"
+          echo "This step will fail immediately to test our CI failure analyzer"
           exit 1
 
+  # All other jobs depend on test-failure so they won't run when it fails
   prettier-check:
+    needs: test-failure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +39,7 @@ jobs:
         run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore --ignore-path .prettierignore
 
   core-checks:
+    needs: test-failure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -73,6 +76,7 @@ jobs:
           AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
 
   gui-checks:
+    needs: test-failure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -103,6 +107,7 @@ jobs:
           npm test
 
   binary-checks:
+    needs: test-failure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -125,6 +130,7 @@ jobs:
           npx tsc --noEmit
 
   vscode-checks:
+    needs: test-failure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -156,6 +162,7 @@ jobs:
           npm run vitest
 
   get-packages-matrix:
+    needs: test-failure
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.get-packages.outputs.packages }}
@@ -169,7 +176,7 @@ jobs:
           echo "Found packages: $packages"
 
   packages-checks:
-    needs: get-packages-matrix
+    needs: [test-failure, get-packages-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -197,6 +204,7 @@ jobs:
           VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
 
   vscode-get-test-file-matrix:
+    needs: test-failure
     runs-on: ubuntu-latest
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
@@ -258,6 +266,7 @@ jobs:
           echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
 
   vscode-package-extension-linux:
+    needs: test-failure
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -284,7 +293,7 @@ jobs:
 
   vscode-e2e-tests:
     name: ${{ matrix.test_file || 'unknown' }} (${{ matrix.command }})
-    needs: [vscode-get-test-file-matrix, vscode-package-extension-linux]
+    needs: [test-failure, vscode-get-test-file-matrix, vscode-package-extension-linux]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Tests requiring secrets need approval from maintainers
@@ -305,6 +314,7 @@ jobs:
           is_fork: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
 
   jetbrains-tests:
+    needs: test-failure
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
