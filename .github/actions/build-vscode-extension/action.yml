@@ -91,6 +91,12 @@ runs:
         cd gui
         npm ci
 
+    - name: Build GUI
+      shell: bash
+      run: |
+        cd gui
+        npm run build
+
     - name: Install core dependencies
       shell: bash
       run: |
