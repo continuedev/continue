@@ -5,7 +5,7 @@ on:
   workflow_run:
     workflows: ["PR Checks"]
     types: [completed]
-    branches: [main]
+    # Remove branches filter to trigger on any branch
 
 # Only run on pull requests where the workflow failed
 jobs:
