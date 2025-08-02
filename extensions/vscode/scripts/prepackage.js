@@ -55,7 +55,7 @@ console.log("[info] Using target: ", target);
 
 const exe = os === "win32" ? ".exe" : "";
 
-const isInGitHubAction = !!process.env.GITHUB_ACTIONS;
+// const isInGitHubAction = !!process.env.GITHUB_ACTIONS;
 
 const isArmTarget =
   target === "darwin-arm64" ||
@@ -84,16 +84,16 @@ void (async () => {
     );
   }
 
-  process.chdir(path.join(continueDir, "gui"));
+  // process.chdir(path.join(continueDir, "gui"));
 
-  if (isInGitHubAction) {
-    const guiBuildStart = Date.now();
-    console.log(`[timer] Starting GUI build at ${new Date().toISOString()}`);
-    execCmdSync("npm run build");
-    console.log(
-      `[timer] GUI build completed in ${Date.now() - guiBuildStart}ms`,
-    );
-  }
+  // if (isInGitHubAction) {
+  //   const guiBuildStart = Date.now();
+  //   console.log(`[timer] Starting GUI build at ${new Date().toISOString()}`);
+  //   execCmdSync("npm run build");
+  //   console.log(
+  //     `[timer] GUI build completed in ${Date.now() - guiBuildStart}ms`,
+  //   );
+  // }
 
   // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(

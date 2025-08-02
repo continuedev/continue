@@ -101,11 +101,11 @@ runs:
         npm ci
         npm i vectordb
 
-    # - name: Build GUI
-    #   shell: bash
-    #   run: |
-    #     cd gui
-    #     npm run build
+    - name: Build GUI
+      shell: bash
+      run: |
+        cd gui
+        npm run build
 
     - name: Prepackage the extension
       shell: bash

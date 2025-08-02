@@ -28,6 +28,13 @@ runs:
         cd core
         npm ci
 
+    - name: Install gui node_modules and build
+      shell: bash
+      run: |
+        cd ../../gui
+        npm ci
+        npm run build
+
     - name: Setup Java
       uses: actions/setup-java@v4.5.0
       with:
