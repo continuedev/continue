@@ -42,23 +42,23 @@ describe("Prompt file", () => {
       "terminal",
       "tree",
     ];
-    
+
     for (const provider of providers) {
       // Type the @ symbol to trigger completion
       await editor.typeText("@");
-      
+
       // Wait a moment for the completion to appear
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Type the first few characters
       await editor.typeText(provider.slice(0, 2));
-      
+
       // Wait for completion popup to update
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
       // Use Tab to accept completion instead of Enter
       await editor.typeText(Key.TAB);
-      
+
       const text = await editor.getText();
       expect(text).to.include("@" + provider);
       await editor.clearText();
