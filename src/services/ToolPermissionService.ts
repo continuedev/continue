@@ -150,7 +150,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    * Get the compiled permissions
    */
   getPermissions(): ToolPermissions {
-    return this.currentState.permissions;
+    return this.getState().permissions;
   }
 
   /**
