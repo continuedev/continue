@@ -35,9 +35,9 @@ After installing Ollama, download the models you want to use. Here are some popu
 
 ```
 # Popular models for development
-ollama pull llama2
-ollama pull codellama
 ollama pull mistral
+ollama pull qwen2.5-coder:1.5b-base
+ollama pull nomic-embed-text:latest
 ```
 
 ## Configuration
@@ -46,18 +46,31 @@ Configure Continue to work with your local Ollama instance:
 
 ### Continue Configuration
 
-```json
-{
-  "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2",
-      "apiBase": "http://localhost:11434"
-    }
-  ]
-}
+```yaml
+models:
+  - name: mistral
+    provider: ollama
+    apiBase: http://localhost:11434
+    model: mistral
+    roles:
+      - chat
+      - edit
+      - apply
+  - name: Qwen2.5-Coder 1.5B
+    provider: ollama
+    apiBase: http://localhost:11434
+    model: qwen2.5-coder:1.5b-base
+    roles:
+      - autocomplete
+  - name: Nomic Embed
+    provider: ollama
+    apiBase: http://localhost:11434
+    model: nomic-embed-text:latest
+    roles:
+      - embed
 ```
+
+You can update `apiBase` with the IP address of a remote machine serving Ollama. 
 
 ### Advanced Settings
 
