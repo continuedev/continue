@@ -80,8 +80,7 @@ jobs:
           arch: ${{ matrix.arch }}
           npm_config_arch: ${{ matrix.npm_config_arch }}
           pre-release: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v4
