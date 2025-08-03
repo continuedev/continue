@@ -11,7 +11,6 @@ import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { fontSize } from "../../util";
 import { AccountButton } from "./AccountButton";
 import { HelpCenterSection } from "./HelpCenterSection";
-import { IndexingSettingsSection } from "./IndexingSettingsSection";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import { UserSettingsForm } from "./UserSettingsForm";
 
@@ -33,12 +32,6 @@ function ConfigPage() {
       label: "Settings",
       component: <UserSettingsForm />,
       icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-    },
-    {
-      id: "indexing",
-      label: "Indexing",
-      component: <IndexingSettingsSection />,
-      icon: <CircleStackIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     },
     {
       id: "help",

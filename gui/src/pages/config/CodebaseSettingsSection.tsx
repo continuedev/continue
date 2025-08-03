@@ -1,7 +1,7 @@
 import { useAppSelector } from "../../redux/hooks";
 import IndexingProgress from "./IndexingProgress";
 
-export function IndexingSettingsSection() {
+export function CodebaseSettingsSection() {
   const config = useAppSelector((state) => state.config.config);
   return (
     <div className="py-5">
@@ -15,7 +15,7 @@ export function IndexingSettingsSection() {
         <div className="pb-2 pt-5">
           <p className="py-1 text-center font-semibold">Indexing is disabled</p>
           <p className="text-lightgray cursor-pointer text-center text-xs">
-            Open settings and toggle <code>Disable Indexing</code> to re-enable
+            Open settings and toggle <code>Enable Indexing</code> to re-enable
           </p>
         </div>
       ) : (

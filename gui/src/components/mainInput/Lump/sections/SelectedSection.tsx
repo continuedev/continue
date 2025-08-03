@@ -1,4 +1,5 @@
 import { useLump } from "../LumpContext";
+import { CodebaseSection } from "./CodebaseSection";
 import { ContextSection } from "./ContextSection";
 import DocsSection from "./docs/DocsSection";
 import { ErrorSection } from "./errors/ErrorSection";
@@ -21,6 +22,8 @@ export function SelectedSection() {
       return <RulesSection />;
     case "docs":
       return <DocsSection />;
+    case "codebase":
+      return <CodebaseSection />;
     case "prompts":
       return <PromptsSection />;
     case "context":
