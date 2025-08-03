@@ -266,3 +266,62 @@ export function applyCompletionToFile(
 
   return newLines.join("\n");
 }
+
+export interface DiffGroup {
+  startLine: number;
+  endLine: number;
+  lines: DiffLine[];
+  type?: string; // Optional classification of the group
+}
+
+export function groupDiffLines(
+  diffLines: DiffLine[],
+  maxGap: number = 3,
+): DiffGroup[] {
+  const groups: DiffGroup[] = [];
+  let currentGroup: DiffGroup | null = null;
+  let lineNumber = 0;
+
+  for (let i = 0; i < diffLines.length; i++) {
+    const line = diffLines[i];
+
+    // If it's a changed line and we don't have a current group, start one
+    if (line.type !== "same" && !currentGroup) {
+      currentGroup = {
+        startLine: lineNumber,
+        endLine: lineNumber,
+        lines: [line],
+      };
+    }
+    // If it's a changed line and we have a current group, add to it
+    else if (line.type !== "same" && currentGroup) {
+      currentGroup.lines.push(line);
+      currentGroup.endLine = lineNumber;
+    }
+    // If it's an unchanged line and we have a current group
+    else if (line.type === "same" && currentGroup) {
+      // Check if we've seen too many unchanged lines in a row
+      const unchangedCount = currentGroup.lines.filter(
+        (l) => l.type === "same",
+      ).length;
+
+      if (unchangedCount >= maxGap) {
+        // Finalize this group and start a new one
+        groups.push(currentGroup);
+        currentGroup = null;
+      } else {
+        // Add this unchanged line to the current group
+        currentGroup.lines.push(line);
+      }
+    }
+
+    lineNumber++;
+  }
+
+  // Don't forget the last group if there is one
+  if (currentGroup) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
+}
