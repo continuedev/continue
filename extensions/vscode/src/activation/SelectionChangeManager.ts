@@ -324,10 +324,14 @@ export class SelectionChangeManager {
     await NextEditProvider.getInstance().deleteChain();
 
     const nextEditableRegions =
-      (await getNextEditableRegion(EditableRegionStrategy.Static, {
-        cursorPosition: e.selections[0].anchor,
+      // (await getNextEditableRegion(EditableRegionStrategy.Static, {
+      //   cursorPosition: e.selections[0].anchor,
+      //   filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
+      //   ide: this.ide,
+      // })) ?? [];
+      (await getNextEditableRegion(EditableRegionStrategy.Sliding, {
         filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
-        ide: this.ide,
+        fileLines: e.textEditor.document.getText().split("\n"),
       })) ?? [];
 
     nextEditableRegions.forEach((region) => {
