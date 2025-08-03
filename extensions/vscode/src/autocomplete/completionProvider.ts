@@ -14,10 +14,6 @@ import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 import { myersDiff } from "core/diff/myers";
-import {
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-} from "core/nextEdit/constants";
 import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { PrefetchQueue } from "core/nextEdit/NextEditPrefetchQueue";
@@ -295,12 +291,12 @@ export class ContinueCompletionProvider
           outcome = this.prefetchQueue.dequeueProcessed()?.outcome;
 
           // Fill in the spot after dequeuing.
-          this.prefetchQueue.process({
-            ...ctx,
-            recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
-            recentlyEditedRanges:
-              await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-          });
+          // this.prefetchQueue.process({
+          //   ...ctx,
+          //   recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+          //   recentlyEditedRanges:
+          //     await this.recentlyEditedTracker.getRecentlyEditedRanges(),
+          // });
         }
       } else if (chainExists) {
         // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
@@ -314,12 +310,12 @@ export class ContinueCompletionProvider
           if (!nextItemInQueue) continue;
 
           // Fill in the spot after dequeuing.
-          this.prefetchQueue.process({
-            ...ctx,
-            recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
-            recentlyEditedRanges:
-              await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-          });
+          // this.prefetchQueue.process({
+          //   ...ctx,
+          //   recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+          //   recentlyEditedRanges:
+          //     await this.recentlyEditedTracker.getRecentlyEditedRanges(),
+          // });
 
           const nextLocation = nextItemInQueue.location;
           outcome = nextItemInQueue.outcome;
@@ -374,12 +370,12 @@ export class ContinueCompletionProvider
           outcome = await this.nextEditProvider.provideInlineCompletionItems(
             input,
             signal,
-            { withChain: false },
+            { withChain: false, fullFileDiff: true },
           );
 
           // Start prefetching next edits.
           // NOTE: this might be better off not awaited.
-          this.prefetchQueue.process(ctx);
+          // this.prefetchQueue.process(ctx);
 
           // If initial outcome is null, suggest a jump instead.
           // Calling this method again will call it with
@@ -510,14 +506,18 @@ export class ContinueCompletionProvider
       }
 
       // Get the contents of the old (current) editable region.
-      const editableRegionStartLine = Math.max(
-        currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-        0,
-      );
-      const editableRegionEndLine = Math.min(
-        currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-        editor.document.lineCount - 1,
-      );
+      // const editableRegionStartLine = Math.max(
+      //   currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      //   0,
+      // );
+      // const editableRegionEndLine = Math.min(
+      //   currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+      //   editor.document.lineCount - 1,
+      // );
+      const editableRegionStartLine = (outcome as NextEditOutcome)
+        .editableRegionStartLine;
+      const editableRegionEndLine = (outcome as NextEditOutcome)
+        .editableRegionEndLine;
       const oldEditRangeSlice = editor.document
         .getText()
         .split("\n")
