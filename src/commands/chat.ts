@@ -18,6 +18,7 @@ import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { processCommandFlags } from "../flags/flagProcessor.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**
@@ -164,24 +165,13 @@ async function runHeadlessMode(
   options: ChatOptions
 ): Promise<void> {
   // Initialize services for headless mode
-  // Convert legacy flags to mode
-  let mode: any = undefined;
-  if (options.readonly) {
-    mode = "plan";
-  } else if (options.auto) {
-    mode = "auto";
-  }
+  const { permissionOverrides } = processCommandFlags(options);
 
   await initializeServices({
     configPath: options.config,
     rules: options.rule,
     headless: true,
-    toolPermissionOverrides: {
-      allow: options.allow,
-      ask: options.ask,
-      exclude: options.exclude,
-      mode: mode,
-    },
+    toolPermissionOverrides: permissionOverrides,
   });
 
   // Get required services from the service container
@@ -255,21 +245,11 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       // Show ASCII art and version for TUI mode
       console.log(CONTINUE_ASCII_ART);
 
-      // Convert legacy flags to mode for TUI
-      let mode: any = undefined;
-      if (options.readonly) {
-        mode = "plan";
-      } else if (options.auto) {
-        mode = "auto";
-      }
+      // Process flags for TUI mode
+      const { permissionOverrides } = processCommandFlags(options);
 
       // Start TUI immediately - it will handle service loading
-      await startTUIChat(prompt, options.resume, options.config, options.rule, {
-        allow: options.allow,
-        ask: options.ask,
-        exclude: options.exclude,
-        mode: mode,
-      });
+      await startTUIChat(prompt, options.resume, options.config, options.rule, permissionOverrides);
       return;
     }
 
