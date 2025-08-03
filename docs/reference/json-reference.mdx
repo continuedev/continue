@@ -101,6 +101,8 @@ config.json
 
 Specifies options for tab autocompletion behavior.
 
+> **Note**: These options can also be configured in the YAML format under each model's `autocompleteOptions` property. See the [YAML Reference](/reference#models) for details.
+
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
@@ -468,16 +470,19 @@ Several experimental config parameters are available, as described below:
 - `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
 
 - `modelRoles`:
+
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
 
 - `quickActions`: Array of custom quick actions
+
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
   - `sendToChat`: If `true`, sends result to chat; else inserts in document. Default is `false`.
 
 - `contextMenuPrompts`:
+
   - `comment`: Prompt for commenting code.
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
@@ -529,15 +534,18 @@ Some deprecated `config.json` settings are no longer stored in config and have b
 - `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
 
 - `tabAutocompleteOptions`
+
   - `useCache`: This value will override during migration.
   - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
   - `multilineCompletions`: This value will override during migration.
 
 - `experimental`
+
   - `useChromiumForDocsCrawling`: This value will override during migration.
   - `readResponseTTS`: This value will override during migration.
 
 - `ui` - all will override during migration
+
   - `codeBlockToolbarPosition`
   - `fontSize`
   - `codeWrap`

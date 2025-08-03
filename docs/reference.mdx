@@ -251,6 +251,10 @@ models:
     model: codestral-latest
     roles:
       - autocomplete
+    autocompleteOptions:
+      debounceDelay: 500
+      maxPromptTokens: 1500
+      onlyMyCode: true
   - name: My Model - OpenAI-Compatible
     provider: openai
     apiBase: http://my-endpoint/v1
@@ -425,6 +429,17 @@ Destinations to which [development data](/customize/overview#development-data) w
 - `apiKey`: api key to be sent with request (Bearer header)
 
 - `requestOptions`: Options for event POST requests. Same format as [model requestOptions](#models).
+
+- `autocompleteOptions`: If the model includes role `autocomplete`, these settings apply for tab autocompletion:
+
+  - `disable`: If `true`, disables tab autocomplete for this model (default: `false`).
+  - `maxPromptTokens`: Maximum number of tokens for the autocomplete prompt.
+  - `debounceDelay`: Delay (in ms) before triggering autocomplete.
+  - `modelTimeout`: Timeout (in ms) for autocomplete requests.
+  - `maxSuffixPercentage`: Maximum percentage of prompt allocated for suffix context.
+  - `prefixPercentage`: Percentage of input allocated for prefix context.
+  - `template`: Template string for autocomplete prompts, using Mustache templating. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
+  - `onlyMyCode`: If `true`, only includes code within the repository for context.
 
   **Example:**
 

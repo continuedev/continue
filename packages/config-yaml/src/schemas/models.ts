@@ -118,7 +118,18 @@ export const autocompleteOptionsSchema = z.object({
   maxSuffixPercentage: z.number().optional(),
   prefixPercentage: z.number().optional(),
   template: z.string().optional(),
+  useCache: z.boolean().optional(),
   onlyMyCode: z.boolean().optional(),
+  useRecentlyEdited: z.boolean().optional(),
+  useRecentlyOpened: z.boolean().optional(),
+  disableInFiles: z.array(z.string()).optional(),
+  useImports: z.boolean().optional(),
+  // true = enabled, false = disabled, number = enabled with priority
+  experimental_includeClipboard: z.union([z.boolean(), z.number()]).optional(),
+  experimental_includeRecentlyVisitedRanges: z.union([z.boolean(), z.number()]).optional(),
+  experimental_includeRecentlyEditedRanges: z.union([z.boolean(), z.number()]).optional(),
+  experimental_includeDiff: z.union([z.boolean(), z.number()]).optional(),
+  experimental_enableStaticContextualization: z.boolean().optional(),
 });
 
 /** Prompt templates use Handlebars syntax */

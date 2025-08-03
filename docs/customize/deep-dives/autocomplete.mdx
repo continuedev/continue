@@ -84,7 +84,7 @@ Then, add the model to your configuration:
 
 Once the model has been downloaded, you should begin to see completions in VS Code.
 
-NOTE: Typically, thinking-type models are not recommended as they generate more slowly and are not suitable for scenarios that require speed. 
+NOTE: Typically, thinking-type models are not recommended as they generate more slowly and are not suitable for scenarios that require speed.
 
 However, if you use any thinking-switchable models, you can configure these models for autocomplete functions by turning off the thinking mode.
 
@@ -92,17 +92,10 @@ For example:
 
 <Tabs>
   <Tab title="YAML">
-  ```yaml title="config.yaml"
-  models:
-    - name: Qwen3 without Thinking for Autocomplete
-      provider: ollama
-      model: qwen3:4b   # qwen3 is a thinking-switchable model
-      roles:
-        - autocomplete
-      requestOptions:
-        extraBodyProperties:
-          think: false  # turning off the thinking
-  ```
+    ```yaml title="config.yaml" models: - name: Qwen3 without Thinking for
+    Autocomplete provider: ollama model: qwen3:4b # qwen3 is a
+    thinking-switchable model roles: - autocomplete requestOptions:
+    extraBodyProperties: think: false # turning off the thinking ```
   </Tab>
 </Tabs>
 
@@ -122,9 +115,32 @@ The following settings can be configured for autocompletion in the IDE extension
 - `Multiline Autocompletions`: Controls multiline completions for autocomplete. Can be set to `always`, `never`, or `auto`. Defaults to `auto`
 - `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., "\_/.md, \*/.txt"
 
-### `config.json` Configuration
+### Autocomplete Configuration
 
-The `config.json` configuration format (deprecated) offers further configuration options through `tabAutocompleteOptions`. See the [JSON Reference](/reference) for more details.
+Autocomplete options can be configured in two ways:
+
+#### YAML Configuration (Recommended)
+
+In the YAML configuration format, autocomplete options can be specified per model under the `autocompleteOptions` property:
+
+```yaml
+models:
+  - name: Codestral
+    provider: mistral
+    model: codestral-latest
+    roles:
+      - autocomplete
+    autocompleteOptions:
+      debounceDelay: 500
+      maxPromptTokens: 1500
+      onlyMyCode: true
+```
+
+See the [YAML Reference](/reference#models) for all available options.
+
+#### JSON Configuration (Deprecated)
+
+The `config.json` configuration format offers configuration through `tabAutocompleteOptions`. See the [JSON Reference](/reference/json-reference#tabautocomplete-options) for more details.
 
 ## FAQs
 

@@ -151,6 +151,12 @@ export const tabAutocompleteOptionsSchema = z.object({
   useRecentlyEdited: z.boolean(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),
+  // true = enabled, false = disabled, number = enabled with priority
+  experimental_includeClipboard: z.union([z.boolean(), z.number()]),
+  experimental_includeRecentlyVisitedRanges: z.union([z.boolean(), z.number()]),
+  experimental_includeRecentlyEditedRanges: z.union([z.boolean(), z.number()]),
+  experimental_includeDiff: z.union([z.boolean(), z.number()]),
+  experimental_enableStaticContextualization: z.boolean(),
 });
 export type TabAutocompleteOptions = z.infer<
   typeof tabAutocompleteOptionsSchema
