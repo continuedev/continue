@@ -1,7 +1,14 @@
 import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { ChatMessage, IDE, ILLM, Range, RangeInFile } from "../index.js";
+import {
+  ChatMessage,
+  IDE,
+  ILLM,
+  Position,
+  Range,
+  RangeInFile,
+} from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
@@ -18,6 +25,7 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { myersDiff } from "../diff/myers.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
@@ -26,7 +34,11 @@ import {
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
-import { calculateFinalCursorPosition } from "./diff/diff.js";
+import {
+  calculateFinalCursorPosition,
+  DiffGroup,
+  groupDiffLines,
+} from "./diff/diff.js";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { PrefetchQueue } from "./NextEditPrefetchQueue.js";
@@ -254,6 +266,7 @@ export class NextEditProvider {
     token: AbortSignal | undefined,
     opts?: {
       withChain: boolean;
+      fullFileDiff: boolean;
     },
   ): Promise<NextEditOutcome | undefined> {
     try {
@@ -303,15 +316,18 @@ export class NextEditProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      const editableRegionStartLine = Math.max(
-        helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-        0,
-      );
+      // const editableRegionStartLine = Math.max(
+      //   helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+      //   0,
+      // );
 
-      const editableRegionEndLine = Math.min(
-        helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-        helper.fileLines.length - 1,
-      );
+      // const editableRegionEndLine = Math.min(
+      //   helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+      //   helper.fileLines.length - 1,
+      // );
+
+      const editableRegionStartLine = 0;
+      const editableRegionEndLine = helper.fileLines.length - 1;
 
       // TODO: Toggle between the default endpoint and the finetuned endpoint.
       const prompts: Prompt[] = [];
@@ -385,12 +401,16 @@ export class NextEditProvider {
         .slice(editableRegionStartLine, editableRegionEndLine + 1)
         .join("\n");
 
-      const finalCursorPos = calculateFinalCursorPosition(
-        helper.pos,
-        editableRegionStartLine,
-        oldEditRangeSlice,
-        "",
-      );
+      // const finalCursorPos = calculateFinalCursorPosition(
+      //   helper.pos,
+      //   editableRegionStartLine,
+      //   oldEditRangeSlice,
+      //   "",
+      // );
+      const finalCursorPos: Position = {
+        line: editableRegionEndLine,
+        character: 0,
+      };
 
       if (this.endpointType === "default") {
         const msg: ChatMessage = await llm.chat(prompts, token);
@@ -447,64 +467,264 @@ export class NextEditProvider {
 
           // console.log("metadata:", msg.content, prompts[0]);
 
-          const currCursorPos = helper.pos;
+          if (opts?.fullFileDiff === false || !opts?.fullFileDiff) {
+            const currCursorPos = helper.pos;
 
-          const editableRegionStartLine = Math.max(
-            currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-            0,
-          );
+            const editableRegionStartLine = Math.max(
+              currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+              0,
+            );
 
-          const editableRegionEndLine = Math.min(
-            currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-            helper.fileLines.length - 1,
-          );
+            const editableRegionEndLine = Math.min(
+              currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+              helper.fileLines.length - 1,
+            );
 
-          const oldEditRangeSlice = helper.fileContents
-            .split("\n")
-            .slice(editableRegionStartLine, editableRegionEndLine + 1)
-            .join("\n");
+            const oldEditRangeSlice = helper.fileContents
+              .split("\n")
+              .slice(editableRegionStartLine, editableRegionEndLine + 1)
+              .join("\n");
 
-          const finalCursorPos = calculateFinalCursorPosition(
-            helper.pos,
-            editableRegionStartLine,
-            oldEditRangeSlice,
-            nextCompletion,
-          );
+            const finalCursorPos = calculateFinalCursorPosition(
+              helper.pos,
+              editableRegionStartLine,
+              oldEditRangeSlice,
+              nextCompletion,
+            );
 
-          const outcomeNext: NextEditOutcome = {
-            elapsed: Date.now() - startTime,
-            modelProvider: llm.underlyingProviderName,
-            modelName: llm.model + ":zetaDataset",
-            completionOptions: null,
-            completionId: helper.input.completionId,
-            gitRepo: await this.ide.getRepoName(helper.filepath),
-            uniqueId: await this.ide.getUniqueId(),
-            timestamp: Date.now(),
-            fileUri: helper.filepath,
-            workspaceDirUri:
-              helper.workspaceUris[0] ?? path.dirname(helper.filepath),
-            prompt: this.promptMetadata!.prompt.content,
-            userEdits: this.promptMetadata!.userEdits,
-            userExcerpts: this.promptMetadata!.userExcerpts,
-            originalEditableRange: oldEditRangeSlice,
-            completion: nextCompletion,
-            cursorPosition: helper.pos,
-            finalCursorPosition: finalCursorPos,
-            editableRegionStartLine,
-            editableRegionEndLine,
-            ...helper.options,
-          };
+            const outcomeNext: NextEditOutcome = {
+              elapsed: Date.now() - startTime,
+              modelProvider: llm.underlyingProviderName,
+              modelName: llm.model + ":zetaDataset",
+              completionOptions: null,
+              completionId: helper.input.completionId,
+              gitRepo: await this.ide.getRepoName(helper.filepath),
+              uniqueId: await this.ide.getUniqueId(),
+              timestamp: Date.now(),
+              fileUri: helper.filepath,
+              workspaceDirUri:
+                helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+              prompt: this.promptMetadata!.prompt.content,
+              userEdits: this.promptMetadata!.userEdits,
+              userExcerpts: this.promptMetadata!.userExcerpts,
+              originalEditableRange: oldEditRangeSlice,
+              completion: nextCompletion,
+              cursorPosition: helper.pos,
+              finalCursorPosition: finalCursorPos,
+              editableRegionStartLine,
+              editableRegionEndLine,
+              ...helper.options,
+            };
 
-          this.previousCompletions.push(outcomeNext);
+            this.previousCompletions.push(outcomeNext);
 
-          // When using the JetBrains extension, mark as displayed.
-          // This helps us not need to make additional network calls just to mark as displayed.
-          const ideType = (await this.ide.getIdeInfo()).ideType;
-          if (ideType === "jetbrains") {
-            this.markDisplayed(input.completionId, outcomeNext);
+            // When using the JetBrains extension, mark as displayed.
+            // This helps us not need to make additional network calls just to mark as displayed.
+            const ideType = (await this.ide.getIdeInfo()).ideType;
+            if (ideType === "jetbrains") {
+              this.markDisplayed(input.completionId, outcomeNext);
+            }
+
+            return outcomeNext;
+          } else {
+            // At this point, the model outputted an new file, basically.
+            // We run a myersDiff on the input file content and the model's output.
+            // Run the DiffLines through groupDiffLines and get a list of DiffGroup.
+            // Extract out the DiffGroup containing the current cursor position.
+            // Insert the remaining DiffGroups into Prefetch Queue's processedQueue.
+            // When pushing, make sure to build a ProcessedItem by building a RangeInFile and NextEditOutcome based on the DiffGroup's position and contents.
+            // Build a NextEditOutcome based on the extracted DiffGroup, and return it.
+
+            // At this point, the model outputted an new file, basically.
+            // We run a myersDiff on the input file content and the model's output.
+            const diffLines = myersDiff(helper.fileContents, nextCompletion);
+
+            // Run the DiffLines through groupDiffLines and get a list of DiffGroup.
+            const diffGroups = groupDiffLines(diffLines);
+
+            // Extract out the DiffGroup containing the current cursor position.
+            const currentLine = helper.pos.line;
+            let cursorLocalDiffGroup: DiffGroup | undefined;
+            const prefetchQueue = PrefetchQueue.getInstance();
+
+            // Find the diff group containing the cursor position and queue others for prefetch
+            console.log("diffGroups:");
+            console.log(diffGroups);
+            for (const group of diffGroups) {
+              if (
+                currentLine >= group.startLine &&
+                currentLine <= group.endLine
+              ) {
+                cursorLocalDiffGroup = group;
+              } else {
+                // Insert the remaining DiffGroups into Prefetch Queue's processedQueue.
+                const groupContent = group.lines
+                  .filter((l) => l.type !== "old")
+                  .map((l) => l.line)
+                  .join("\n");
+
+                // Create a range for this diff group
+                const rangeInFile: RangeInFile = {
+                  filepath: helper.filepath,
+                  range: {
+                    start: { line: group.startLine, character: 0 },
+                    end: {
+                      line: group.endLine,
+                      character:
+                        group.lines[group.lines.length - 1].line.length,
+                    },
+                  },
+                };
+
+                // Build outcome for this diff group
+                const groupOutcome: NextEditOutcome = {
+                  elapsed: Date.now() - startTime,
+                  modelProvider: llm.underlyingProviderName,
+                  modelName: llm.model + ":zetaDataset",
+                  completionOptions: null,
+                  completionId: uuidv4(), // Generate a new ID for this prefetched item
+                  gitRepo: await this.ide.getRepoName(helper.filepath),
+                  uniqueId: await this.ide.getUniqueId(),
+                  timestamp: Date.now(),
+                  fileUri: helper.filepath,
+                  workspaceDirUri:
+                    helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+                  prompt: this.promptMetadata!.prompt.content,
+                  userEdits: this.promptMetadata!.userEdits,
+                  userExcerpts: this.promptMetadata!.userExcerpts,
+                  originalEditableRange: group.lines
+                    .filter((l) => l.type !== "new")
+                    .map((l) => l.line)
+                    .join("\n"),
+                  completion: groupContent,
+                  cursorPosition: { line: group.startLine, character: 0 },
+                  finalCursorPosition: {
+                    line: group.endLine,
+                    character: group.lines[group.lines.length - 1].line.length,
+                  },
+                  editableRegionStartLine: group.startLine,
+                  editableRegionEndLine: group.endLine,
+                  ...helper.options,
+                };
+
+                // Add to prefetch queue
+                prefetchQueue.enqueueProcessed({
+                  location: rangeInFile,
+                  outcome: groupOutcome,
+                });
+              }
+            }
+
+            // If we found a diff group containing the cursor, create an outcome for it
+            if (cursorLocalDiffGroup) {
+              const currentGroupContent = cursorLocalDiffGroup.lines
+                .filter((l) => l.type !== "old")
+                .map((line) => line.line)
+                .join("\n");
+              const originalContent = cursorLocalDiffGroup.lines
+                .filter((l) => l.type !== "new")
+                .map((l) => l.line)
+                .join("\n");
+
+              const finalCursorPos = calculateFinalCursorPosition(
+                helper.pos,
+                cursorLocalDiffGroup.startLine,
+                originalContent,
+                currentGroupContent,
+              );
+
+              const outcomeNext: NextEditOutcome = {
+                elapsed: Date.now() - startTime,
+                modelProvider: llm.underlyingProviderName,
+                modelName: llm.model + ":zetaDataset",
+                completionOptions: null,
+                completionId: helper.input.completionId,
+                gitRepo: await this.ide.getRepoName(helper.filepath),
+                uniqueId: await this.ide.getUniqueId(),
+                timestamp: Date.now(),
+                fileUri: helper.filepath,
+                workspaceDirUri:
+                  helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+                prompt: this.promptMetadata!.prompt.content,
+                userEdits: this.promptMetadata!.userEdits,
+                userExcerpts: this.promptMetadata!.userExcerpts,
+                originalEditableRange: originalContent,
+                completion: currentGroupContent,
+                cursorPosition: helper.pos,
+                finalCursorPosition: finalCursorPos,
+                editableRegionStartLine: cursorLocalDiffGroup.startLine,
+                editableRegionEndLine: cursorLocalDiffGroup.endLine,
+                ...helper.options,
+              };
+
+              this.previousCompletions.push(outcomeNext);
+
+              // When using the JetBrains extension, mark as displayed.
+              const ideType = (await this.ide.getIdeInfo()).ideType;
+              if (ideType === "jetbrains") {
+                this.markDisplayed(input.completionId, outcomeNext);
+              }
+
+              return outcomeNext;
+            } else {
+              // If we couldn't find a diff group containing the cursor position,
+              // use the first diff group as a fallback
+              if (diffGroups.length > 0) {
+                const firstGroup = diffGroups[0];
+                const groupContent = firstGroup.lines
+                  .filter((l) => l.type !== "old")
+                  .map((line) => line.line)
+                  .join("\n");
+                const originalContent = firstGroup.lines
+                  .filter((l) => l.type !== "new")
+                  .map((l) => l.line)
+                  .join("\n");
+
+                const finalCursorPos = calculateFinalCursorPosition(
+                  { line: firstGroup.startLine, character: 0 },
+                  firstGroup.startLine,
+                  originalContent,
+                  groupContent,
+                );
+
+                const outcomeNext: NextEditOutcome = {
+                  elapsed: Date.now() - startTime,
+                  modelProvider: llm.underlyingProviderName,
+                  modelName: llm.model + ":zetaDataset",
+                  completionOptions: null,
+                  completionId: helper.input.completionId,
+                  gitRepo: await this.ide.getRepoName(helper.filepath),
+                  uniqueId: await this.ide.getUniqueId(),
+                  timestamp: Date.now(),
+                  fileUri: helper.filepath,
+                  workspaceDirUri:
+                    helper.workspaceUris[0] ?? path.dirname(helper.filepath),
+                  prompt: this.promptMetadata!.prompt.content,
+                  userEdits: this.promptMetadata!.userEdits,
+                  userExcerpts: this.promptMetadata!.userExcerpts,
+                  originalEditableRange: originalContent,
+                  completion: groupContent,
+                  cursorPosition: { line: firstGroup.startLine, character: 0 },
+                  finalCursorPosition: finalCursorPos,
+                  editableRegionStartLine: firstGroup.startLine,
+                  editableRegionEndLine: firstGroup.endLine,
+                  ...helper.options,
+                };
+
+                this.previousCompletions.push(outcomeNext);
+
+                // When using the JetBrains extension, mark as displayed.
+                const ideType = (await this.ide.getIdeInfo()).ideType;
+                if (ideType === "jetbrains") {
+                  this.markDisplayed(input.completionId, outcomeNext);
+                }
+
+                return outcomeNext;
+              }
+
+              return undefined;
+            }
           }
-
-          return outcomeNext;
         } else {
           return undefined;
         }
@@ -531,6 +751,7 @@ export class NextEditProvider {
     },
     nextEditLocation: RangeInFile,
     token: AbortSignal | undefined,
+    fullFileDiff: boolean,
   ) {
     try {
       const previousOutcome = this.getPreviousCompletion();
@@ -550,6 +771,7 @@ export class NextEditProvider {
 
       return await this.provideInlineCompletionItems(input, token, {
         withChain: true,
+        fullFileDiff,
       });
     } catch (e: any) {
       this.onError(e);
