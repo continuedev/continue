@@ -1,4 +1,5 @@
-import { parseArgs } from "../args.js";
+import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { MCPService } from "../mcp.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
@@ -31,7 +32,13 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
   fetchTool,
   writeChecklistTool,
   // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
-  ...(parseArgs().isHeadless ? [exitTool] : []),
+  ...(() => {
+    const serviceResult = getServiceSync<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS
+    );
+    const isHeadless = serviceResult.value?.isHeadless ?? false;
+    return isHeadless ? [exitTool] : [];
+  })(),
 ];
 
 export const BUILTIN_TOOLS: Tool[] = (() => {
@@ -88,7 +95,6 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
 }
 
 export async function getAvailableTools() {
-  const args = parseArgs();
 
   // Load MCP tools
   const mcpTools: Tool[] =

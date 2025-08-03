@@ -11,6 +11,7 @@ import { BaseService } from "./BaseService.js";
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
+  isHeadless: boolean;
   modePolicyCount?: number; // Track how many policies are from mode vs other sources
   originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
@@ -23,6 +24,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     super("ToolPermissionService", {
       permissions: { policies: [] },
       currentMode: "normal",
+      isHeadless: false,
       modePolicyCount: 0,
     });
   }
@@ -88,15 +90,22 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
+    isHeadless?: boolean;
   }): ToolPermissionServiceState {
     logger.debug("Synchronously initializing ToolPermissionService", {
       hasOverrides: !!runtimeOverrides,
       mode: runtimeOverrides?.mode,
+      isHeadless: runtimeOverrides?.isHeadless,
     });
 
     // Set mode from overrides or default
     if (runtimeOverrides?.mode) {
       this.setState({ currentMode: runtimeOverrides.mode });
+    }
+
+    // Set headless flag from overrides
+    if (runtimeOverrides?.isHeadless !== undefined) {
+      this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
     // Generate mode-specific policies first (highest priority)
@@ -124,6 +133,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     this.setState({
       permissions: { policies: allPolicies },
       currentMode: this.currentState.currentMode,
+      isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
     });
 
@@ -138,6 +148,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
+    isHeadless?: boolean;
   }): Promise<ToolPermissionServiceState> {
     // Ensure permissions.yaml exists before loading
     await ensurePermissionsYamlExists();
@@ -246,5 +257,12 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    */
   getCurrentMode(): PermissionMode {
     return this.currentState.currentMode;
+  }
+
+  /**
+   * Get the headless state
+   */
+  isHeadless(): boolean {
+    return this.currentState.isHeadless;
   }
 }

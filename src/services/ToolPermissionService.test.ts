@@ -26,6 +26,7 @@ describe("ToolPermissionService", () => {
       expect(state).toEqual({
         permissions: { policies: [] },
         currentMode: 'normal',
+        isHeadless: false,
         modePolicyCount: 0
       });
     });

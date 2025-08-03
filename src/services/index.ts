@@ -35,7 +35,8 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
     const initArgs: Parameters<typeof modeService.initialize>[0] = {
       allow: overrides.allow,
       ask: overrides.ask,
-      exclude: overrides.exclude
+      exclude: overrides.exclude,
+      isHeadless: options.headless
     };
     
     // Only set the boolean flag that corresponds to the mode

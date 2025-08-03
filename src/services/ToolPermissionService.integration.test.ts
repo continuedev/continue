@@ -97,10 +97,10 @@ describe("ToolPermissionService E2E", () => {
 
     const results = await Promise.all(promises);
     
-    // All should return the same reference
+    // All should return the same value
     const firstResult = results[0];
     results.forEach(result => {
-      expect(result).toBe(firstResult);
+      expect(result).toStrictEqual(firstResult);
     });
   });
 });

@@ -39,6 +39,7 @@ export class ModeService extends BaseService<ModeServiceState> {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
+    isHeadless?: boolean;
   }): Promise<ModeServiceState> {
     // Convert legacy flags to mode
     let mode: PermissionMode = "normal";
@@ -52,7 +53,8 @@ export class ModeService extends BaseService<ModeServiceState> {
       allow: args.allow,
       ask: args.ask,
       exclude: args.exclude,
-      mode
+      mode,
+      isHeadless: args.isHeadless
     });
 
     logger.debug(`ModeService initialized with mode: ${mode}`);

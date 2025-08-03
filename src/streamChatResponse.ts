@@ -8,7 +8,8 @@ import type {
   ChatCompletionTool,
   ChatCompletionToolMessageParam,
 } from "openai/resources.mjs";
-import { parseArgs } from "./args.js";
+import { getServiceSync, SERVICE_NAMES } from "./services/index.js";
+import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import { MCPService } from "./mcp.js";
 import {
   checkToolPermission,
@@ -37,7 +38,6 @@ import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
 dotenv.config();
 
 export function getAllTools() {
-  const args = parseArgs();
 
   // Get all available tool names
   const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
@@ -649,8 +649,10 @@ export async function streamChatResponse(
     hasCallbacks: !!callbacks,
   });
 
-  const args = parseArgs();
-  const isHeadless = args.isHeadless;
+  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS
+  );
+  const isHeadless = serviceResult.value?.isHeadless ?? false;
   const tools = getAllTools();
 
   logger.debug("Tools prepared", {
