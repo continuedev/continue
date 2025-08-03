@@ -26,6 +26,7 @@ import telemetryService from "../telemetry/telemetryService.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
+import { processCommandFlags } from "../flags/flagProcessor.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 import { getToolDisplayName } from "../tools/index.js";
 
@@ -63,19 +64,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const port = parseInt(options.port || "8000", 10);
 
   // Initialize services with tool permission overrides
-  // Convert legacy flags to mode
-  let mode: any = undefined;
-  if (options.readonly) {
-    mode = "plan";
-  }
+  const { permissionOverrides } = processCommandFlags(options);
 
   await initializeServices({
-    toolPermissionOverrides: {
-      allow: options.allow,
-      ask: options.ask,
-      exclude: options.exclude,
-      mode: mode,
-    },
+    toolPermissionOverrides: permissionOverrides,
     configPath: options.config,
     rules: options.rule,
     headless: true, // Skip onboarding in serve mode

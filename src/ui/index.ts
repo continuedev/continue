@@ -17,17 +17,20 @@ export async function startTUIChat(
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
-  }
+  },
+  skipOnboarding?: boolean
 ) {
-  // Initialize services in the background - TUI will show loading states
-  initializeServices({
-    configPath,
-    rules: additionalRules,
-    headless: false,
-    toolPermissionOverrides,
-  }).catch((error) => {
-    console.error("Failed to initialize services:", error);
-  });
+  // Initialize services only if not already done (skipOnboarding means already initialized)
+  if (!skipOnboarding) {
+    initializeServices({
+      configPath,
+      rules: additionalRules,
+      headless: false,
+      toolPermissionOverrides,
+    }).catch((error) => {
+      console.error("Failed to initialize services:", error);
+    });
+  }
 
   // Start the TUI immediately - it will handle loading states
   const { unmount } = render(

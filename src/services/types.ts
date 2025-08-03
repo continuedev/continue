@@ -83,10 +83,18 @@ export interface ServiceInitOptions {
   configPath?: string;
   rules?: string[];
   headless?: boolean;
+  skipOnboarding?: boolean; // Skip onboarding check even in TUI mode
   toolPermissionOverrides?: {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
   };
+}
+
+/**
+ * Service initialization result
+ */
+export interface ServiceInitResult {
+  wasOnboarded?: boolean;
 }
