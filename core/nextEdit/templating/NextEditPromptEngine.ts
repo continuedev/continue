@@ -40,7 +40,7 @@ export type NextEditModelName =
 
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "mercury-coder-nextedit": {
-    template: `${RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${CURRENT_FILE_CONTENT_CLOSE}\n\n${EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at [CURRENT FILE PATH].\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
+    template: `${RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${CURRENT_FILE_CONTENT_CLOSE}\n\n${EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at {{{currentFilePath}}}.\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
   },
   "model-1": {
     template:
@@ -125,6 +125,7 @@ export async function renderPrompt(
           helper.pos,
         ),
         editDiffHistory: editHistoryBlock(ctx.editDiffHistory),
+        currentFilePath: ctx.currentFilePath,
       };
 
       tv = mercuryCtx;
