@@ -112,7 +112,6 @@ function slidingJump(ctx: any): RangeInFile[] | null {
     }
   }
 
-  console.log("ranges:", ranges.length);
   return ranges;
 }
 
