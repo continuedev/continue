@@ -276,51 +276,78 @@ export interface DiffGroup {
 
 export function groupDiffLines(
   diffLines: DiffLine[],
-  maxGap: number = 3,
+  maxGroupSize: number = 5,
 ): DiffGroup[] {
   const groups: DiffGroup[] = [];
-  let currentGroup: DiffGroup | null = null;
-  let lineNumber = 0;
+
+  // First pass: find areas where changes occur
+  let changedAreaStart = -1;
 
   for (let i = 0; i < diffLines.length; i++) {
-    const line = diffLines[i];
-
-    // If it's a changed line and we don't have a current group, start one
-    if (line.type !== "same" && !currentGroup) {
-      currentGroup = {
-        startLine: lineNumber,
-        endLine: lineNumber,
-        lines: [line],
-      };
+    if (diffLines[i].type !== "same" && changedAreaStart === -1) {
+      changedAreaStart = i;
+    } else if (diffLines[i].type === "same" && changedAreaStart !== -1) {
+      // We've found the end of a changed area, process it
+      processChangedArea(changedAreaStart, i - 1);
+      changedAreaStart = -1;
     }
-    // If it's a changed line and we have a current group, add to it
-    else if (line.type !== "same" && currentGroup) {
-      currentGroup.lines.push(line);
-      currentGroup.endLine = lineNumber;
-    }
-    // If it's an unchanged line and we have a current group
-    else if (line.type === "same" && currentGroup) {
-      // Check if we've seen too many unchanged lines in a row
-      const unchangedCount = currentGroup.lines.filter(
-        (l) => l.type === "same",
-      ).length;
+  }
 
-      if (unchangedCount >= maxGap) {
-        // Finalize this group and start a new one
-        groups.push(currentGroup);
-        currentGroup = null;
-      } else {
-        // Add this unchanged line to the current group
-        currentGroup.lines.push(line);
+  // Handle the last changed area if it extends to the end
+  if (changedAreaStart !== -1) {
+    processChangedArea(changedAreaStart, diffLines.length - 1);
+  }
+
+  function processChangedArea(start: number, end: number) {
+    // Calculate result line numbers
+    let resultLineStart = 0;
+
+    // Count how many result lines appear before the start
+    for (let i = 0; i < start; i++) {
+      if (diffLines[i].type !== "old") {
+        resultLineStart++;
       }
     }
 
-    lineNumber++;
-  }
+    // Create a group from the change area
+    const changedLines = diffLines.slice(start, end + 1);
 
-  // Don't forget the last group if there is one
-  if (currentGroup) {
-    groups.push(currentGroup);
+    // Count how many additional lines we can include
+    const changedResultLineCount = changedLines.filter(
+      (l) => l.type !== "old",
+    ).length;
+    const additionalLinesNeeded = maxGroupSize - changedResultLineCount;
+
+    // Add additional context lines after the change
+    let additionalLines: DiffLine[] = [];
+    let additionalResultLineCount = 0;
+
+    for (
+      let i = end + 1;
+      i < diffLines.length && additionalResultLineCount < additionalLinesNeeded;
+      i++
+    ) {
+      additionalLines.push(diffLines[i]);
+      if (diffLines[i].type !== "old") {
+        additionalResultLineCount++;
+      }
+    }
+
+    // Calculate the ending result line number
+    let resultLineEnd = resultLineStart;
+    for (const line of [...changedLines, ...additionalLines]) {
+      if (line.type !== "old") {
+        resultLineEnd++;
+      }
+    }
+    resultLineEnd--; // Adjust because we incremented one too many times
+
+    // Create the group
+    groups.push({
+      startLine: resultLineStart,
+      endLine: resultLineEnd,
+      lines: [...changedLines, ...additionalLines],
+    });
   }
 
   return groups;
