@@ -17,7 +17,10 @@ import { ContextRetrievalService } from "../autocomplete/context/ContextRetrieva
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
-import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
+import {
+  getAllSnippetsWithoutRace,
+  SnippetPayload,
+} from "../autocomplete/snippets/index.js";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types.js";
 import { GetLspDefinitionsFunction } from "../autocomplete/types.js";
 import { getAst } from "../autocomplete/util/ast.js";
@@ -271,466 +274,563 @@ export class NextEditProvider {
   ): Promise<NextEditOutcome | undefined> {
     try {
       this.previousRequest = input;
-      // Create abort signal if not given
-      if (!token) {
-        const controller = this.loggingService.createAbortController(
-          input.completionId,
-        );
-        token = controller.signal;
-      }
-      const startTime = Date.now();
-      const options = await this._getAutocompleteOptions();
+      const {
+        token: abortToken,
+        startTime,
+        helper,
+      } = await this._initializeCompletionRequest(input, token);
+      if (!helper) return undefined;
 
-      // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
-        return undefined;
-      }
+      const { editableRegionStartLine, editableRegionEndLine, prompts } =
+        await this._generatePrompts(helper, opts);
 
-      const llm = await this._prepareLlm();
-      if (!llm) {
-        return undefined;
-      }
-
-      if (llm.promptTemplates?.autocomplete) {
-        options.template = llm.promptTemplates.autocomplete as string;
-      }
-
-      const helper = await HelperVars.create(
-        input,
-        options,
-        llm.model,
-        this.ide,
-      );
-
-      if (await shouldPrefilter(helper, this.ide)) {
-        return undefined;
-      }
-
-      const [snippetPayload, workspaceDirs] = await Promise.all([
-        getAllSnippetsWithoutRace({
+      if (this.endpointType === "default") {
+        return await this._handleDefaultEndpointCompletion(
           helper,
-          ide: this.ide,
-          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
-          contextRetrievalService: this.contextRetrievalService,
-        }),
-        this.ide.getWorkspaceDirs(),
-      ]);
-
-      const editableRegionStartLine = opts?.usingFullFileDiff
-        ? 0
-        : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
-
-      const editableRegionEndLine = opts?.usingFullFileDiff
-        ? helper.fileLines.length - 1
-        : Math.min(
-            helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-            helper.fileLines.length - 1,
-          );
-
-      // TODO: Toggle between the default endpoint and the finetuned endpoint.
-      const prompts: Prompt[] = [];
-
-      if (this.endpointType === "default") {
-        prompts.push(renderDefaultSystemPrompt());
-        prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
+          prompts,
+          abortToken,
+          startTime,
+          editableRegionEndLine,
+        );
       } else {
-        const historyDiff = createDiff({
-          beforeContent:
-            DocumentHistoryTracker.getInstance().getMostRecentDocumentHistory(
-              localPathOrUriToPath(helper.filepath),
-            ) ?? "",
-          afterContent: helper.fileContents,
-          filePath: helper.filepath,
-          diffType: DiffFormatType.Unified,
-          contextLines: 3,
-        });
-
-        const modelName = helper.modelName;
-        let ctx: any;
-
-        if (modelName.includes("mercury-coder-nextedit")) {
-          ctx = {
-            recentlyViewedCodeSnippets:
-              snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
-                filepath: snip.filepath,
-                content: snip.content,
-              })) ?? [],
-            currentFileContent: helper.fileContents,
-            editableRegionStartLine,
-            editableRegionEndLine,
-            editDiffHistory: this.diffContext,
-            currentFilePath: helper.filepath,
-          };
-        } else if (modelName.includes("model-1")) {
-          ctx = {
-            userEdits: historyDiff ?? this.diffContext,
-            languageShorthand: helper.lang.name,
-            userExcerpts: helper.fileContents,
-          };
-        } else {
-          ctx = {};
-        }
-
-        const promptMetadata = await renderPrompt(helper, ctx);
-
-        this.promptMetadata = promptMetadata;
-
-        prompts.push({
-          role: "system",
-          content:
-            "You are Mercury, created by Inception Labs. You are an AI Assistant and an expert at coding. Your role as an AI assistant is to help developers complete their code tasks by assisting in editing specific sections of code marked by the <|code_to_edit|> and <|/code_to_edit|> tags.\n\nYou have access to the following information to help you make informed suggestions:\n\n- recently_viewed_code_snippets: These are code snippets that the developer has recently looked at, which might provide context or examples relevant to the current task. They are listed from oldest to newest, with line numbers in the form #| to help you understand the edit diff history. It'\''s possible these are entirely irrelevant to the developer'\''s change.\n- current_file_content: The content of the file the developer is currently working on, providing the broader context of the code. Line numbers in the form #| are included to help you understand the edit diff history.\n- edit_diff_history: A record of changes made to the code, helping you understand the evolution of the code and the developer'\''s intentions. These changes are listed from oldest to latest. It'\''s possible a lot of old edit diff history is entirely irrelevant to the developer'\''s change.\n- cursor position marked as <|cursor|>: Indicates where the developer'\''s cursor is currently located, which can be crucial for understanding what part of the code they are focusing on.\n\nYour task is to predict and complete the changes the developer would have made next in the <|code_to_edit|> section. The developer may have stopped in the middle of typing. Your goal is to keep the developer on the path that you think they'\''re following. Some examples include further implementing a class, method, or variable, or improving the quality of the code. Make sure the developer doesn'\''t get distracted and ensure your suggestion is relevant. Consider what changes need to be made next, if any. If you think changes should be made, ask yourself if this is truly what needs to happen. If you are confident about it, then proceed with the changes.\n\n# Steps\n\n1. **Review Context**: Analyze the context from the resources provided, such as recently viewed snippets, edit history, surrounding code, and cursor location.\n2. **Evaluate Current Code**: Determine if the current code within the tags requires any corrections or enhancements.\n3. **Suggest Edits**: If changes are required, ensure they align with the developers patterns and improve code quality.\n4. **Maintain Consistency**: Ensure indentation and formatting follow the existing code style.\n\n# Output Format\n\n- Provide only the revised code within the tags. If no changes are necessary, simply return the original code from within the <|code_to_edit|> and <|/code_to_edit|> tags.\n- There are line numbers in the form #| in the code displayed to you above, but these are just for your reference. Please do not include the numbers of the form #| in your response.\n- Ensure that you do not output duplicate code that exists outside of these tags. The output should be the revised code that was between these tags including the <|code_to_edit|> and <|/code_to_edit|> tags.\n\n# Notes\n\n- Avoid undoing or reverting the developer'\''s last change unless there are obvious typos or errors.\n- Don'\''t include the line numbers of the form #| in your response.",
-        });
-
-        // prompts.push({
-        //   role: "system",
-        //   content: [
-        //     "Respect the user's changes and predict a next edit based on the user's changes.",
-        //     "Don't revert the user's edits. The user has made that edit intentionally.",
-        //     "Whenever you think that reverting the change is a good idea, stop and think one more time.",
-        //     "The user made this change -- what would be the logical next change that the user would make?",
-        //   ].join(" "),
-        // });
-
-        prompts.push(promptMetadata.prompt);
-      }
-
-      const oldEditRangeSlice = helper.fileContents
-        .split("\n")
-        .slice(editableRegionStartLine, editableRegionEndLine + 1)
-        .join("\n");
-
-      // const finalCursorPos = calculateFinalCursorPosition(
-      //   helper.pos,
-      //   editableRegionStartLine,
-      //   oldEditRangeSlice,
-      //   "",
-      // );
-      const finalCursorPos: Position = {
-        line: editableRegionEndLine,
-        character: 0,
-      };
-
-      if (this.endpointType === "default") {
-        const msg: ChatMessage = await llm.chat(prompts, token);
-
-        if (typeof msg.content === "string") {
-          const nextCompletion = JSON.parse(msg.content).newCode;
-          const outcomeNext: NextEditOutcome = {
-            elapsed: Date.now() - startTime,
-            modelProvider: llm.underlyingProviderName,
-            modelName: llm.model + ":zetaDataset",
-            completionOptions: null,
-            completionId: helper.input.completionId,
-            gitRepo: await this.ide.getRepoName(helper.filepath),
-            uniqueId: await this.ide.getUniqueId(),
-            timestamp: Date.now(),
-            fileUri: helper.filepath,
-            workspaceDirUri:
-              helper.workspaceUris[0] ?? path.dirname(helper.filepath),
-            prompt: prompts.join("\n"),
-            userEdits: "",
-            userExcerpts: "",
-            originalEditableRange: "",
-            completion: nextCompletion,
-            cursorPosition: helper.pos,
-            finalCursorPosition: finalCursorPos,
-            editableRegionStartLine: 0,
-            editableRegionEndLine: 0,
-            ...helper.options,
-          };
-
-          // When using the JetBrains extension, mark as displayed.
-          // This helps us not need to make additional network calls just to mark as displayed.
-          const ideType = (await this.ide.getIdeInfo()).ideType;
-          if (ideType === "jetbrains") {
-            this.markDisplayed(input.completionId, outcomeNext);
-          }
-
-          return outcomeNext;
-        } else {
-          return undefined;
-        }
-      } else {
-        const msg: ChatMessage = await llm.chat(prompts, token);
-
-        if (typeof msg.content === "string") {
-          // NOTE: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
-          const nextCompletion = msg.content.split(`${CODE_TO_EDIT_OPEN}\n`)[1]
-            ? replaceEscapedCharacters(
-                msg.content.split(`${CODE_TO_EDIT_OPEN}\n`)[1],
-              ).replace(/\n$/, "")
-            : "";
-
-          // console.log("outcome is null?", nextCompletion === null);
-
-          // console.log("metadata:", msg.content, prompts[0]);
-
-          if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
-            const currCursorPos = helper.pos;
-
-            const editableRegionStartLine = Math.max(
-              currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-              0,
-            );
-
-            const editableRegionEndLine = Math.min(
-              currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-              helper.fileLines.length - 1,
-            );
-
-            const oldEditRangeSlice = helper.fileContents
-              .split("\n")
-              .slice(editableRegionStartLine, editableRegionEndLine + 1)
-              .join("\n");
-
-            const finalCursorPos = calculateFinalCursorPosition(
-              helper.pos,
-              editableRegionStartLine,
-              oldEditRangeSlice,
-              nextCompletion,
-            );
-
-            const outcomeNext: NextEditOutcome = {
-              elapsed: Date.now() - startTime,
-              modelProvider: llm.underlyingProviderName,
-              modelName: llm.model + ":zetaDataset",
-              completionOptions: null,
-              completionId: helper.input.completionId,
-              gitRepo: await this.ide.getRepoName(helper.filepath),
-              uniqueId: await this.ide.getUniqueId(),
-              timestamp: Date.now(),
-              fileUri: helper.filepath,
-              workspaceDirUri:
-                helper.workspaceUris[0] ?? path.dirname(helper.filepath),
-              prompt: this.promptMetadata!.prompt.content,
-              userEdits: this.promptMetadata!.userEdits,
-              userExcerpts: this.promptMetadata!.userExcerpts,
-              originalEditableRange: oldEditRangeSlice,
-              completion: nextCompletion,
-              cursorPosition: helper.pos,
-              finalCursorPosition: finalCursorPos,
-              editableRegionStartLine,
-              editableRegionEndLine,
-              ...helper.options,
-            };
-
-            this.previousCompletions.push(outcomeNext);
-
-            // When using the JetBrains extension, mark as displayed.
-            // This helps us not need to make additional network calls just to mark as displayed.
-            const ideType = (await this.ide.getIdeInfo()).ideType;
-            if (ideType === "jetbrains") {
-              this.markDisplayed(input.completionId, outcomeNext);
-            }
-
-            return outcomeNext;
-          } else {
-            // At this point, the model outputted an new file, basically.
-            // We run a myersDiff on the input file content and the model's output.
-            // Run the DiffLines through groupDiffLines and get a list of DiffGroup.
-            // Extract out the DiffGroup containing the current cursor position.
-            // Insert the remaining DiffGroups into Prefetch Queue's processedQueue.
-            // When pushing, make sure to build a ProcessedItem by building a RangeInFile and NextEditOutcome based on the DiffGroup's position and contents.
-            // Build a NextEditOutcome based on the extracted DiffGroup, and return it.
-
-            // At this point, the model outputted an new file, basically.
-            // We run a myersDiff on the input file content and the model's output.
-            const diffLines = myersDiff(helper.fileContents, nextCompletion);
-
-            // Run the DiffLines through groupDiffLines and get a list of DiffGroup.
-            const diffGroups = groupDiffLines(diffLines);
-
-            // Extract out the DiffGroup containing the current cursor position.
-            const currentLine = helper.pos.line;
-            let cursorLocalDiffGroup: DiffGroup | undefined;
-            const prefetchQueue = PrefetchQueue.getInstance();
-
-            // Find the diff group containing the cursor position and queue others for prefetch
-            console.log("diffGroups:");
-            console.log(diffGroups);
-            for (const group of diffGroups) {
-              if (
-                currentLine >= group.startLine &&
-                currentLine <= group.endLine
-              ) {
-                cursorLocalDiffGroup = group;
-              } else {
-                // Insert the remaining DiffGroups into Prefetch Queue's processedQueue.
-                const groupContent = group.lines
-                  .filter((l) => l.type !== "old")
-                  .map((l) => l.line)
-                  .join("\n");
-
-                // Create a range for this diff group
-                const rangeInFile: RangeInFile = {
-                  filepath: helper.filepath,
-                  range: {
-                    start: { line: group.startLine, character: 0 },
-                    end: {
-                      line: group.endLine,
-                      character:
-                        group.lines[group.lines.length - 1].line.length,
-                    },
-                  },
-                };
-
-                // Build outcome for this diff group
-                const groupOutcome: NextEditOutcome = {
-                  elapsed: Date.now() - startTime,
-                  modelProvider: llm.underlyingProviderName,
-                  modelName: llm.model + ":zetaDataset",
-                  completionOptions: null,
-                  completionId: uuidv4(), // Generate a new ID for this prefetched item
-                  gitRepo: await this.ide.getRepoName(helper.filepath),
-                  uniqueId: await this.ide.getUniqueId(),
-                  timestamp: Date.now(),
-                  fileUri: helper.filepath,
-                  workspaceDirUri:
-                    helper.workspaceUris[0] ?? path.dirname(helper.filepath),
-                  prompt: this.promptMetadata!.prompt.content,
-                  userEdits: this.promptMetadata!.userEdits,
-                  userExcerpts: this.promptMetadata!.userExcerpts,
-                  originalEditableRange: group.lines
-                    .filter((l) => l.type !== "new")
-                    .map((l) => l.line)
-                    .join("\n"),
-                  completion: groupContent,
-                  cursorPosition: { line: group.startLine, character: 0 },
-                  finalCursorPosition: {
-                    line: group.endLine,
-                    character: group.lines[group.lines.length - 1].line.length,
-                  },
-                  editableRegionStartLine: group.startLine,
-                  editableRegionEndLine: group.endLine,
-                  ...helper.options,
-                };
-
-                // Add to prefetch queue
-                prefetchQueue.enqueueProcessed({
-                  location: rangeInFile,
-                  outcome: groupOutcome,
-                });
-              }
-            }
-
-            // If we found a diff group containing the cursor, create an outcome for it
-            if (cursorLocalDiffGroup) {
-              const currentGroupContent = cursorLocalDiffGroup.lines
-                .filter((l) => l.type !== "old")
-                .map((line) => line.line)
-                .join("\n");
-              const originalContent = cursorLocalDiffGroup.lines
-                .filter((l) => l.type !== "new")
-                .map((l) => l.line)
-                .join("\n");
-
-              const finalCursorPos = calculateFinalCursorPosition(
-                helper.pos,
-                cursorLocalDiffGroup.startLine,
-                originalContent,
-                currentGroupContent,
-              );
-
-              const outcomeNext: NextEditOutcome = {
-                elapsed: Date.now() - startTime,
-                modelProvider: llm.underlyingProviderName,
-                modelName: llm.model + ":zetaDataset",
-                completionOptions: null,
-                completionId: helper.input.completionId,
-                gitRepo: await this.ide.getRepoName(helper.filepath),
-                uniqueId: await this.ide.getUniqueId(),
-                timestamp: Date.now(),
-                fileUri: helper.filepath,
-                workspaceDirUri:
-                  helper.workspaceUris[0] ?? path.dirname(helper.filepath),
-                prompt: this.promptMetadata!.prompt.content,
-                userEdits: this.promptMetadata!.userEdits,
-                userExcerpts: this.promptMetadata!.userExcerpts,
-                originalEditableRange: originalContent,
-                completion: currentGroupContent,
-                cursorPosition: helper.pos,
-                finalCursorPosition: finalCursorPos,
-                editableRegionStartLine: cursorLocalDiffGroup.startLine,
-                editableRegionEndLine: cursorLocalDiffGroup.endLine,
-                ...helper.options,
-              };
-
-              this.previousCompletions.push(outcomeNext);
-
-              // When using the JetBrains extension, mark as displayed.
-              const ideType = (await this.ide.getIdeInfo()).ideType;
-              if (ideType === "jetbrains") {
-                this.markDisplayed(input.completionId, outcomeNext);
-              }
-
-              return outcomeNext;
-            } else {
-              // If we couldn't find a diff group containing the cursor position,
-              // use the first diff group as a fallback
-              if (diffGroups.length > 0) {
-                const firstGroup = diffGroups[0];
-                const groupContent = firstGroup.lines
-                  .filter((l) => l.type !== "old")
-                  .map((line) => line.line)
-                  .join("\n");
-                const originalContent = firstGroup.lines
-                  .filter((l) => l.type !== "new")
-                  .map((l) => l.line)
-                  .join("\n");
-
-                const finalCursorPos = calculateFinalCursorPosition(
-                  { line: firstGroup.startLine, character: 0 },
-                  firstGroup.startLine,
-                  originalContent,
-                  groupContent,
-                );
-
-                const outcomeNext: NextEditOutcome = {
-                  elapsed: Date.now() - startTime,
-                  modelProvider: llm.underlyingProviderName,
-                  modelName: llm.model + ":zetaDataset",
-                  completionOptions: null,
-                  completionId: helper.input.completionId,
-                  gitRepo: await this.ide.getRepoName(helper.filepath),
-                  uniqueId: await this.ide.getUniqueId(),
-                  timestamp: Date.now(),
-                  fileUri: helper.filepath,
-                  workspaceDirUri:
-                    helper.workspaceUris[0] ?? path.dirname(helper.filepath),
-                  prompt: this.promptMetadata!.prompt.content,
-                  userEdits: this.promptMetadata!.userEdits,
-                  userExcerpts: this.promptMetadata!.userExcerpts,
-                  originalEditableRange: originalContent,
-                  completion: groupContent,
-                  cursorPosition: { line: firstGroup.startLine, character: 0 },
-                  finalCursorPosition: finalCursorPos,
-                  editableRegionStartLine: firstGroup.startLine,
-                  editableRegionEndLine: firstGroup.endLine,
-                  ...helper.options,
-                };
-
-                this.previousCompletions.push(outcomeNext);
-
-                // When using the JetBrains extension, mark as displayed.
-                const ideType = (await this.ide.getIdeInfo()).ideType;
-                if (ideType === "jetbrains") {
-                  this.markDisplayed(input.completionId, outcomeNext);
-                }
-
-                return outcomeNext;
-              }
-
-              return undefined;
-            }
-          }
-        } else {
-          return undefined;
-        }
+        return await this._handleFineTunedEndpointCompletion(
+          helper,
+          prompts,
+          abortToken,
+          startTime,
+          editableRegionStartLine,
+          editableRegionEndLine,
+          opts,
+        );
       }
     } catch (e: any) {
       this.onError(e);
     } finally {
       this.loggingService.deleteAbortController(input.completionId);
+    }
+  }
+
+  private async _initializeCompletionRequest(
+    input: AutocompleteInput,
+    token: AbortSignal | undefined,
+  ): Promise<{
+    token: AbortSignal;
+    startTime: number;
+    helper: HelperVars | undefined;
+  }> {
+    // Create abort signal if not given.
+    if (!token) {
+      const controller = this.loggingService.createAbortController(
+        input.completionId,
+      );
+      token = controller.signal;
+    }
+    const startTime = Date.now();
+    const options = await this._getAutocompleteOptions();
+
+    // Debounce.
+    if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
+      return { token, startTime, helper: undefined };
+    }
+
+    const llm = await this._prepareLlm();
+    if (!llm) {
+      return { token, startTime, helper: undefined };
+    }
+
+    if (llm.promptTemplates?.autocomplete) {
+      options.template = llm.promptTemplates.autocomplete as string;
+    }
+
+    const helper = await HelperVars.create(input, options, llm.model, this.ide);
+
+    if (await shouldPrefilter(helper, this.ide)) {
+      return { token, startTime, helper: undefined };
+    }
+
+    return { token, startTime, helper };
+  }
+
+  private async _generatePrompts(
+    helper: HelperVars,
+    opts?: {
+      withChain: boolean;
+      usingFullFileDiff: boolean;
+    },
+  ): Promise<{
+    editableRegionStartLine: number;
+    editableRegionEndLine: number;
+    prompts: Prompt[];
+  }> {
+    const [snippetPayload, workspaceDirs] = await Promise.all([
+      getAllSnippetsWithoutRace({
+        helper,
+        ide: this.ide,
+        getDefinitionsFromLsp: this.getDefinitionsFromLsp,
+        contextRetrievalService: this.contextRetrievalService,
+      }),
+      this.ide.getWorkspaceDirs(),
+    ]);
+
+    const editableRegionStartLine = opts?.usingFullFileDiff
+      ? 0
+      : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
+
+    const editableRegionEndLine = opts?.usingFullFileDiff
+      ? helper.fileLines.length - 1
+      : Math.min(
+          helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+          helper.fileLines.length - 1,
+        );
+
+    const prompts: Prompt[] = [];
+
+    if (this.endpointType === "default") {
+      prompts.push(renderDefaultSystemPrompt());
+      prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
+    } else {
+      prompts.push(
+        ...(await this._generateFineTunedPrompts(
+          helper,
+          snippetPayload,
+          editableRegionStartLine,
+          editableRegionEndLine,
+        )),
+      );
+    }
+
+    return { editableRegionStartLine, editableRegionEndLine, prompts };
+  }
+
+  private async _generateFineTunedPrompts(
+    helper: HelperVars,
+    snippetPayload: SnippetPayload,
+    editableRegionStartLine: number,
+    editableRegionEndLine: number,
+  ): Promise<Prompt[]> {
+    const historyDiff = createDiff({
+      beforeContent:
+        DocumentHistoryTracker.getInstance().getMostRecentDocumentHistory(
+          localPathOrUriToPath(helper.filepath),
+        ) ?? "",
+      afterContent: helper.fileContents,
+      filePath: helper.filepath,
+      diffType: DiffFormatType.Unified,
+      contextLines: 3,
+    });
+
+    const modelName = helper.modelName;
+    let ctx: any;
+
+    if (modelName.includes("mercury-coder-nextedit")) {
+      ctx = {
+        recentlyViewedCodeSnippets:
+          snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
+            filepath: snip.filepath,
+            content: snip.content,
+          })) ?? [],
+        currentFileContent: helper.fileContents,
+        editableRegionStartLine,
+        editableRegionEndLine,
+        editDiffHistory: this.diffContext,
+        currentFilePath: helper.filepath,
+      };
+    } else if (modelName.includes("model-1")) {
+      ctx = {
+        userEdits: historyDiff ?? this.diffContext,
+        languageShorthand: helper.lang.name,
+        userExcerpts: helper.fileContents,
+      };
+    } else {
+      ctx = {};
+    }
+
+    const promptMetadata = await renderPrompt(helper, ctx);
+    this.promptMetadata = promptMetadata;
+
+    const systemPrompt: Prompt = {
+      role: "system",
+      content:
+        "You are Mercury, created by Inception Labs. You are an AI Assistant and an expert at coding. Your role as an AI assistant is to help developers complete their code tasks by assisting in editing specific sections of code marked by the <|code_to_edit|> and <|/code_to_edit|> tags.\n\nYou have access to the following information to help you make informed suggestions:\n\n- recently_viewed_code_snippets: These are code snippets that the developer has recently looked at, which might provide context or examples relevant to the current task. They are listed from oldest to newest, with line numbers in the form #| to help you understand the edit diff history. It'\''s possible these are entirely irrelevant to the developer'\''s change.\n- current_file_content: The content of the file the developer is currently working on, providing the broader context of the code. Line numbers in the form #| are included to help you understand the edit diff history.\n- edit_diff_history: A record of changes made to the code, helping you understand the evolution of the code and the developer'\''s intentions. These changes are listed from oldest to latest. It'\''s possible a lot of old edit diff history is entirely irrelevant to the developer'\''s change.\n- cursor position marked as <|cursor|>: Indicates where the developer'\''s cursor is currently located, which can be crucial for understanding what part of the code they are focusing on.\n\nYour task is to predict and complete the changes the developer would have made next in the <|code_to_edit|> section. The developer may have stopped in the middle of typing. Your goal is to keep the developer on the path that you think they'\''re following. Some examples include further implementing a class, method, or variable, or improving the quality of the code. Make sure the developer doesn'\''t get distracted and ensure your suggestion is relevant. Consider what changes need to be made next, if any. If you think changes should be made, ask yourself if this is truly what needs to happen. If you are confident about it, then proceed with the changes.\n\n# Steps\n\n1. **Review Context**: Analyze the context from the resources provided, such as recently viewed snippets, edit history, surrounding code, and cursor location.\n2. **Evaluate Current Code**: Determine if the current code within the tags requires any corrections or enhancements.\n3. **Suggest Edits**: If changes are required, ensure they align with the developers patterns and improve code quality.\n4. **Maintain Consistency**: Ensure indentation and formatting follow the existing code style.\n\n# Output Format\n\n- Provide only the revised code within the tags. If no changes are necessary, simply return the original code from within the <|code_to_edit|> and <|/code_to_edit|> tags.\n- There are line numbers in the form #| in the code displayed to you above, but these are just for your reference. Please do not include the numbers of the form #| in your response.\n- Ensure that you do not output duplicate code that exists outside of these tags. The output should be the revised code that was between these tags including the <|code_to_edit|> and <|/code_to_edit|> tags.\n\n# Notes\n\n- Avoid undoing or reverting the developer'\''s last change unless there are obvious typos or errors.\n- Don'\''t include the line numbers of the form #| in your response.",
+    };
+
+    return [systemPrompt, promptMetadata.prompt];
+  }
+
+  private async _handleDefaultEndpointCompletion(
+    helper: HelperVars,
+    prompts: Prompt[],
+    token: AbortSignal,
+    startTime: number,
+    editableRegionEndLine: number,
+  ): Promise<NextEditOutcome | undefined> {
+    const llm = await this._prepareLlm();
+    if (!llm) return undefined;
+
+    const msg: ChatMessage = await llm.chat(prompts, token);
+
+    if (typeof msg.content === "string") {
+      const nextCompletion = JSON.parse(msg.content).newCode;
+      const finalCursorPos: Position = {
+        line: editableRegionEndLine,
+        character: 0,
+      };
+
+      const outcomeNext = await this._createNextEditOutcome({
+        helper,
+        startTime,
+        llm,
+        promptContent: prompts.join("\n"),
+        completion: nextCompletion,
+        finalCursorPosition: finalCursorPos,
+        editableRegionStartLine: 0,
+        editableRegionEndLine: 0,
+        userEdits: "",
+        userExcerpts: "",
+        originalEditableRange: "",
+      });
+
+      // Mark as displayed for JetBrains extension
+      await this._markDisplayedIfJetBrains(
+        helper.input.completionId,
+        outcomeNext,
+      );
+
+      return outcomeNext;
+    }
+
+    return undefined;
+  }
+
+  private async _handleFineTunedEndpointCompletion(
+    helper: HelperVars,
+    prompts: Prompt[],
+    token: AbortSignal,
+    startTime: number,
+    editableRegionStartLine: number,
+    editableRegionEndLine: number,
+    opts?: {
+      withChain: boolean;
+      usingFullFileDiff: boolean;
+    },
+  ): Promise<NextEditOutcome | undefined> {
+    const llm = await this._prepareLlm();
+    if (!llm) return undefined;
+
+    const msg: ChatMessage = await llm.chat(prompts, token);
+
+    if (typeof msg.content !== "string") {
+      return undefined;
+    }
+
+    const nextCompletion = msg.content.split(`${CODE_TO_EDIT_OPEN}\n`)[1]
+      ? replaceEscapedCharacters(
+          msg.content.split(`${CODE_TO_EDIT_OPEN}\n`)[1],
+        ).replace(/\n$/, "")
+      : "";
+
+    if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
+      return await this._handlePartialFileDiff(
+        helper,
+        startTime,
+        llm,
+        nextCompletion,
+        editableRegionStartLine,
+        editableRegionEndLine,
+      );
+    } else {
+      return await this._handleFullFileDiff(
+        helper,
+        startTime,
+        llm,
+        nextCompletion,
+      );
+    }
+  }
+
+  private async _handlePartialFileDiff(
+    helper: HelperVars,
+    startTime: number,
+    llm: ILLM,
+    nextCompletion: string,
+    editableRegionStartLine: number,
+    editableRegionEndLine: number,
+  ): Promise<NextEditOutcome | undefined> {
+    const oldEditRangeSlice = helper.fileContents
+      .split("\n")
+      .slice(editableRegionStartLine, editableRegionEndLine + 1)
+      .join("\n");
+
+    const finalCursorPos = calculateFinalCursorPosition(
+      helper.pos,
+      editableRegionStartLine,
+      oldEditRangeSlice,
+      nextCompletion,
+    );
+
+    const outcomeNext = await this._createNextEditOutcome({
+      helper,
+      startTime,
+      llm,
+      promptContent: this.promptMetadata!.prompt.content,
+      completion: nextCompletion,
+      finalCursorPosition: finalCursorPos,
+      editableRegionStartLine,
+      editableRegionEndLine,
+      userEdits: this.promptMetadata!.userEdits,
+      userExcerpts: this.promptMetadata!.userExcerpts,
+      originalEditableRange: oldEditRangeSlice,
+    });
+
+    this.previousCompletions.push(outcomeNext);
+
+    // Mark as displayed for JetBrains extension
+    await this._markDisplayedIfJetBrains(
+      helper.input.completionId,
+      outcomeNext,
+    );
+
+    return outcomeNext;
+  }
+
+  private async _handleFullFileDiff(
+    helper: HelperVars,
+    startTime: number,
+    llm: ILLM,
+    nextCompletion: string,
+  ): Promise<NextEditOutcome | undefined> {
+    const diffLines = myersDiff(helper.fileContents, nextCompletion);
+    const diffGroups = groupDiffLines(diffLines);
+    const currentLine = helper.pos.line;
+    let cursorLocalDiffGroup: DiffGroup | undefined;
+    const prefetchQueue = PrefetchQueue.getInstance();
+
+    // Process diff groups and find the one containing the cursor
+    await this._processDiffGroups(
+      diffGroups,
+      currentLine,
+      helper,
+      startTime,
+      llm,
+      prefetchQueue,
+    );
+
+    // Handle the diff group containing the cursor if found
+    if (cursorLocalDiffGroup) {
+      return await this._createOutcomeFromDiffGroup(
+        cursorLocalDiffGroup,
+        helper,
+        startTime,
+        llm,
+        helper.input.completionId,
+        true,
+      );
+    } else if (diffGroups.length > 0) {
+      // Fallback to first diff group if cursor's group not found
+      return await this._createOutcomeFromDiffGroup(
+        diffGroups[0],
+        helper,
+        startTime,
+        llm,
+        helper.input.completionId,
+        false,
+      );
+    }
+
+    return undefined;
+  }
+
+  private async _processDiffGroups(
+    diffGroups: DiffGroup[],
+    currentLine: number,
+    helper: HelperVars,
+    startTime: number,
+    llm: ILLM,
+    prefetchQueue: PrefetchQueue,
+  ): Promise<DiffGroup | undefined> {
+    let cursorGroup: DiffGroup | undefined;
+
+    console.log("diffGroups:");
+    console.log(diffGroups);
+
+    for (const group of diffGroups) {
+      if (currentLine >= group.startLine && currentLine <= group.endLine) {
+        cursorGroup = group;
+      } else {
+        // Add non-cursor groups to prefetch queue
+        await this._addDiffGroupToPrefetchQueue(
+          group,
+          helper,
+          startTime,
+          llm,
+          prefetchQueue,
+        );
+      }
+    }
+
+    return cursorGroup;
+  }
+
+  private async _addDiffGroupToPrefetchQueue(
+    group: DiffGroup,
+    helper: HelperVars,
+    startTime: number,
+    llm: ILLM,
+    prefetchQueue: PrefetchQueue,
+  ): Promise<void> {
+    const groupContent = group.lines
+      .filter((l) => l.type !== "old")
+      .map((l) => l.line)
+      .join("\n");
+
+    // Create a range for this diff group
+    const rangeInFile: RangeInFile = {
+      filepath: helper.filepath,
+      range: {
+        start: { line: group.startLine, character: 0 },
+        end: {
+          line: group.endLine,
+          character: group.lines[group.lines.length - 1].line.length,
+        },
+      },
+    };
+
+    const originalContent = group.lines
+      .filter((l) => l.type !== "new")
+      .map((l) => l.line)
+      .join("\n");
+
+    // Build outcome for this diff group
+    const groupOutcome = await this._createNextEditOutcome({
+      helper,
+      startTime,
+      llm,
+      promptContent: this.promptMetadata!.prompt.content,
+      completion: groupContent,
+      finalCursorPosition: {
+        line: group.endLine,
+        character: group.lines[group.lines.length - 1].line.length,
+      },
+      editableRegionStartLine: group.startLine,
+      editableRegionEndLine: group.endLine,
+      userEdits: this.promptMetadata!.userEdits,
+      userExcerpts: this.promptMetadata!.userExcerpts,
+      originalEditableRange: originalContent,
+      cursorPosition: { line: group.startLine, character: 0 },
+      completionId: uuidv4(), // Generate a new ID for this prefetched item
+    });
+
+    // Add to prefetch queue
+    prefetchQueue.enqueueProcessed({
+      location: rangeInFile,
+      outcome: groupOutcome,
+    });
+  }
+
+  private async _createOutcomeFromDiffGroup(
+    diffGroup: DiffGroup,
+    helper: HelperVars,
+    startTime: number,
+    llm: ILLM,
+    completionId: string,
+    isCurrentCursorGroup: boolean,
+  ): Promise<NextEditOutcome> {
+    const groupContent = diffGroup.lines
+      .filter((l) => l.type !== "old")
+      .map((line) => line.line)
+      .join("\n");
+
+    const originalContent = diffGroup.lines
+      .filter((l) => l.type !== "new")
+      .map((l) => l.line)
+      .join("\n");
+
+    // Use the actual cursor position if this is the group containing the cursor
+    // Otherwise use the start of the diff group
+    const cursorPos = isCurrentCursorGroup
+      ? helper.pos
+      : { line: diffGroup.startLine, character: 0 };
+
+    const finalCursorPos = calculateFinalCursorPosition(
+      cursorPos,
+      diffGroup.startLine,
+      originalContent,
+      groupContent,
+    );
+
+    const outcomeNext = await this._createNextEditOutcome({
+      helper,
+      startTime,
+      llm,
+      promptContent: this.promptMetadata!.prompt.content,
+      completion: groupContent,
+      finalCursorPosition: finalCursorPos,
+      editableRegionStartLine: diffGroup.startLine,
+      editableRegionEndLine: diffGroup.endLine,
+      userEdits: this.promptMetadata!.userEdits,
+      userExcerpts: this.promptMetadata!.userExcerpts,
+      originalEditableRange: originalContent,
+      cursorPosition: cursorPos,
+      completionId,
+    });
+
+    this.previousCompletions.push(outcomeNext);
+
+    // Mark as displayed for JetBrains
+    await this._markDisplayedIfJetBrains(completionId, outcomeNext);
+
+    return outcomeNext;
+  }
+
+  private async _createNextEditOutcome(outcomeCtx: {
+    helper: HelperVars;
+    startTime: number;
+    llm: ILLM;
+    promptContent: string;
+    completion: string;
+    finalCursorPosition: Position;
+    editableRegionStartLine: number;
+    editableRegionEndLine: number;
+    userEdits: string;
+    userExcerpts: string;
+    originalEditableRange: string;
+    cursorPosition?: Position;
+    completionId?: string;
+  }): Promise<NextEditOutcome> {
+    return {
+      elapsed: Date.now() - outcomeCtx.startTime,
+      modelProvider: outcomeCtx.llm.underlyingProviderName,
+      modelName: outcomeCtx.llm.model + ":zetaDataset",
+      completionOptions: null,
+      completionId:
+        outcomeCtx.completionId || outcomeCtx.helper.input.completionId,
+      gitRepo: await this.ide.getRepoName(outcomeCtx.helper.filepath),
+      uniqueId: await this.ide.getUniqueId(),
+      timestamp: Date.now(),
+      fileUri: outcomeCtx.helper.filepath,
+      workspaceDirUri:
+        outcomeCtx.helper.workspaceUris[0] ??
+        path.dirname(outcomeCtx.helper.filepath),
+      prompt: outcomeCtx.promptContent,
+      userEdits: outcomeCtx.userEdits ?? "",
+      userExcerpts: outcomeCtx.userExcerpts ?? "",
+      originalEditableRange: outcomeCtx.originalEditableRange ?? "",
+      completion: outcomeCtx.completion,
+      cursorPosition: outcomeCtx.cursorPosition || outcomeCtx.helper.pos,
+      finalCursorPosition: outcomeCtx.finalCursorPosition,
+      editableRegionStartLine: outcomeCtx.editableRegionStartLine,
+      editableRegionEndLine: outcomeCtx.editableRegionEndLine,
+      ...outcomeCtx.helper.options,
+    };
+  }
+
+  private async _markDisplayedIfJetBrains(
+    completionId: string,
+    outcome: NextEditOutcome,
+  ): Promise<void> {
+    const ideType = (await this.ide.getIdeInfo()).ideType;
+    if (ideType === "jetbrains") {
+      this.markDisplayed(completionId, outcome);
     }
   }
 
