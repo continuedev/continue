@@ -93,4 +93,5 @@ export interface MercuryTemplateVars extends TemplateVars {
   recentlyViewedCodeSnippets: string;
   currentFileContent: string;
   editDiffHistory: string; // could be a singe large unified diff
+  currentFilePath: string;
 }
