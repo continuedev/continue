@@ -111,6 +111,7 @@ export class SelectionChangeManager {
   private static instance: SelectionChangeManager;
   private listeners: HandlerRegistration[] = [];
   private ide: VsCodeIde | null = null;
+  private usingFullFileDiff: boolean = true;
 
   // Event bus-related attributes.
   private eventQueue: vscode.TextEditorSelectionChangeEvent[] = [];
@@ -137,8 +138,9 @@ export class SelectionChangeManager {
     return SelectionChangeManager.instance;
   }
 
-  public initialize(ide: VsCodeIde): void {
+  public initialize(ide: VsCodeIde, usingFullFileDiff: boolean): void {
     this.ide = ide;
+    this.usingFullFileDiff = usingFullFileDiff;
 
     // After handling all other listeners, this will delete the chain.
     this.registerListener(
@@ -323,20 +325,22 @@ export class SelectionChangeManager {
     );
     await NextEditProvider.getInstance().deleteChain();
 
-    const nextEditableRegions =
-      // (await getNextEditableRegion(EditableRegionStrategy.Static, {
-      //   cursorPosition: e.selections[0].anchor,
+    if (!this.usingFullFileDiff) {
+      const nextEditableRegions =
+        (await getNextEditableRegion(EditableRegionStrategy.Static, {
+          cursorPosition: e.selections[0].anchor,
+          filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
+          ide: this.ide,
+        })) ?? [];
+      // (await getNextEditableRegion(EditableRegionStrategy.Sliding, {
       //   filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
-      //   ide: this.ide,
+      //   fileLines: e.textEditor.document.getText().split("\n"),
       // })) ?? [];
-      (await getNextEditableRegion(EditableRegionStrategy.Sliding, {
-        filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
-        fileLines: e.textEditor.document.getText().split("\n"),
-      })) ?? [];
 
-    nextEditableRegions.forEach((region) => {
-      PrefetchQueue.getInstance().enqueueUnprocessed(region);
-    });
+      nextEditableRegions.forEach((region) => {
+        PrefetchQueue.getInstance().enqueueUnprocessed(region);
+      });
+    }
 
     return true;
   }

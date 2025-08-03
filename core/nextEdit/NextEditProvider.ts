@@ -266,7 +266,7 @@ export class NextEditProvider {
     token: AbortSignal | undefined,
     opts?: {
       withChain: boolean;
-      fullFileDiff: boolean;
+      usingFullFileDiff: boolean;
     },
   ): Promise<NextEditOutcome | undefined> {
     try {
@@ -316,11 +316,11 @@ export class NextEditProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      const editableRegionStartLine = opts?.fullFileDiff
+      const editableRegionStartLine = opts?.usingFullFileDiff
         ? 0
         : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
 
-      const editableRegionEndLine = opts?.fullFileDiff
+      const editableRegionEndLine = opts?.usingFullFileDiff
         ? helper.fileLines.length - 1
         : Math.min(
             helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
@@ -465,7 +465,7 @@ export class NextEditProvider {
 
           // console.log("metadata:", msg.content, prompts[0]);
 
-          if (opts?.fullFileDiff === false || !opts?.fullFileDiff) {
+          if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
             const currCursorPos = helper.pos;
 
             const editableRegionStartLine = Math.max(
@@ -749,7 +749,7 @@ export class NextEditProvider {
     },
     nextEditLocation: RangeInFile,
     token: AbortSignal | undefined,
-    fullFileDiff: boolean,
+    usingFullFileDiff: boolean,
   ) {
     try {
       const previousOutcome = this.getPreviousCompletion();
@@ -769,7 +769,7 @@ export class NextEditProvider {
 
       return await this.provideInlineCompletionItems(input, token, {
         withChain: true,
-        fullFileDiff,
+        usingFullFileDiff,
       });
     } catch (e: any) {
       this.onError(e);

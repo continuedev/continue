@@ -70,6 +70,7 @@ export class ContinueCompletionProvider
   public recentlyEditedTracker: RecentlyEditedTracker;
 
   private isNextEditActive: boolean = false;
+  private usingFullFileDiff: boolean = true;
 
   public activateNextEdit() {
     this.isNextEditActive = true;
@@ -83,7 +84,9 @@ export class ContinueCompletionProvider
     private readonly configHandler: ConfigHandler,
     private readonly ide: VsCodeIde,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
+    usingFullFileDiff: boolean,
   ) {
+    this.usingFullFileDiff = usingFullFileDiff;
     this.recentlyEditedTracker = new RecentlyEditedTracker(ide.ideUtils);
 
     async function getAutocompleteModel() {
@@ -115,6 +118,7 @@ export class ContinueCompletionProvider
 
     this.jumpManager = JumpManager.getInstance();
     this.prefetchQueue = PrefetchQueue.getInstance();
+    this.prefetchQueue.initialize(this.usingFullFileDiff);
 
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
@@ -291,12 +295,14 @@ export class ContinueCompletionProvider
           outcome = this.prefetchQueue.dequeueProcessed()?.outcome;
 
           // Fill in the spot after dequeuing.
-          // this.prefetchQueue.process({
-          //   ...ctx,
-          //   recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
-          //   recentlyEditedRanges:
-          //     await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-          // });
+          if (!this.usingFullFileDiff) {
+            this.prefetchQueue.process({
+              ...ctx,
+              recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+              recentlyEditedRanges:
+                await this.recentlyEditedTracker.getRecentlyEditedRanges(),
+            });
+          }
         }
       } else if (chainExists) {
         // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
@@ -310,12 +316,14 @@ export class ContinueCompletionProvider
           if (!nextItemInQueue) continue;
 
           // Fill in the spot after dequeuing.
-          // this.prefetchQueue.process({
-          //   ...ctx,
-          //   recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
-          //   recentlyEditedRanges:
-          //     await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-          // });
+          if (!this.usingFullFileDiff) {
+            this.prefetchQueue.process({
+              ...ctx,
+              recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+              recentlyEditedRanges:
+                await this.recentlyEditedTracker.getRecentlyEditedRanges(),
+            });
+          }
 
           const nextLocation = nextItemInQueue.location;
           outcome = nextItemInQueue.outcome;
@@ -370,12 +378,14 @@ export class ContinueCompletionProvider
           outcome = await this.nextEditProvider.provideInlineCompletionItems(
             input,
             signal,
-            { withChain: false, fullFileDiff: true },
+            { withChain: false, usingFullFileDiff: this.usingFullFileDiff },
           );
 
           // Start prefetching next edits.
           // NOTE: this might be better off not awaited.
-          // this.prefetchQueue.process(ctx);
+          if (!this.usingFullFileDiff) {
+            this.prefetchQueue.process(ctx);
+          }
 
           // If initial outcome is null, suggest a jump instead.
           // Calling this method again will call it with

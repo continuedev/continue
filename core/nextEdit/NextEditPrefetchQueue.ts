@@ -15,6 +15,8 @@ export class PrefetchQueue {
   private prefetchLimit: number;
   private abortController: AbortController;
 
+  private usingFullFileDiff: boolean = true;
+
   private constructor(prefetchLimit: number = 3) {
     this.prefetchLimit = prefetchLimit;
     this.abortController = new AbortController();
@@ -26,6 +28,10 @@ export class PrefetchQueue {
     }
 
     return PrefetchQueue.instance;
+  }
+
+  initialize(usingFullFileDiff: boolean) {
+    this.usingFullFileDiff = usingFullFileDiff;
   }
 
   // Queue management methods
@@ -61,7 +67,7 @@ export class PrefetchQueue {
             ctx,
             location,
             this.abortController.signal,
-            true,
+            this.usingFullFileDiff,
           );
 
         if (!outcome) continue;

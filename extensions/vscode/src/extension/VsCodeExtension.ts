@@ -101,8 +101,9 @@ export class VsCodeExtension {
     this.extensionContext = context;
     this.windowId = uuidv4();
 
+    const usingFullFileDiff = true;
     const selectionManager = SelectionChangeManager.getInstance();
-    selectionManager.initialize(this.ide);
+    selectionManager.initialize(this.ide, usingFullFileDiff);
 
     selectionManager.registerListener(
       "typing",
@@ -254,6 +255,7 @@ export class VsCodeExtension {
       this.configHandler,
       this.ide,
       this.sidebar.webviewProtocol,
+      usingFullFileDiff,
     );
     context.subscriptions.push(
       vscode.languages.registerInlineCompletionItemProvider(
