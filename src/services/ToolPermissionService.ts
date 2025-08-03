@@ -92,11 +92,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     mode?: PermissionMode;
     isHeadless?: boolean;
   }): ToolPermissionServiceState {
-    logger.debug("Synchronously initializing ToolPermissionService", {
-      hasOverrides: !!runtimeOverrides,
-      mode: runtimeOverrides?.mode,
-      isHeadless: runtimeOverrides?.isHeadless,
-    });
+    logger.debug("Synchronously initializing ToolPermissionService");
 
     // Set mode from overrides or default
     if (runtimeOverrides?.mode) {

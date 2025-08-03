@@ -123,22 +123,22 @@ describe('BaseService', () => {
       expect(state1).not.toBe(state2); // Different object references
     });
 
-    test('should deep copy nested objects', async () => {
+    test('should return shallow copy of state', async () => {
       await service.initialize(42, 'test');
       service.updateState({ data: [{ id: 1 }, { id: 2 }] });
       
       const state = service.getState();
       const originalData = state.data;
       
-      // Modify the returned state
+      // Modify the returned state's nested object
       if (state.data) {
         state.data[0].id = 999;
       }
       
-      // Original state should remain unchanged
+      // With shallow copy, nested objects are shared
       const newState = service.getState();
-      expect(newState.data).toEqual([{ id: 1 }, { id: 2 }]);
-      expect(newState.data).not.toBe(originalData);
+      expect(newState.data).toEqual([{ id: 999 }, { id: 2 }]);
+      expect(newState.data).toBe(originalData); // Same reference for nested objects
     });
 
     test('should emit state change events', async () => {
@@ -251,7 +251,7 @@ describe('BaseService', () => {
     });
   });
 
-  describe('Deep Copy Functionality', () => {
+  describe('Shallow Copy Functionality', () => {
     let service: TestService;
 
     beforeEach(() => {
@@ -277,7 +277,7 @@ describe('BaseService', () => {
       
       const state = service.getState();
       expect(state.data?.[0]).toEqual(date);
-      expect(state.data?.[0]).not.toBe(date); // Different instance
+      expect(state.data?.[0]).toBe(date); // Same instance with shallow copy
       expect(state.data?.[0]).toBeInstanceOf(Date);
     });
 
@@ -296,13 +296,13 @@ describe('BaseService', () => {
       
       const state = service.getState();
       expect(state.data).toEqual(complexData);
-      expect(state.data).not.toBe(complexData);
+      expect(state.data).toBe(complexData); // Same reference with shallow copy
       
-      // Verify deep nesting is copied
+      // Verify nested objects are shared (not deep copied)
       if (state.data && typeof state.data === 'object' && 'nested' in state.data) {
         const data = state.data as any;
-        expect(data.nested.array).not.toBe(complexData.nested.array);
-        expect(data.nested.array[2]).not.toBe(complexData.nested.array[2]);
+        expect(data.nested.array).toBe(complexData.nested.array);
+        expect(data.nested.array[2]).toBe(complexData.nested.array[2]);
       }
     });
   });

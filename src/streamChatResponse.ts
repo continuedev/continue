@@ -20,7 +20,7 @@ import { toolPermissionManager } from "./permissions/permissionManager.js";
 import telemetryService from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import {
-  BUILTIN_TOOLS,
+  getAllBuiltinTools,
   executeToolCall,
   getAvailableTools,
   getToolDisplayName,
@@ -40,7 +40,8 @@ dotenv.config();
 export function getAllTools() {
 
   // Get all available tool names
-  const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
+  const allBuiltinTools = getAllBuiltinTools();
+  const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
   const mcpToolNames =
     MCPService.getInstance()
       ?.getTools()
@@ -52,7 +53,7 @@ export function getAllTools() {
   const allowedToolNamesSet = new Set(allowedToolNames);
 
   // Filter builtin tools
-  const allowedBuiltinTools = BUILTIN_TOOLS.filter((tool) =>
+  const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
     allowedToolNamesSet.has(tool.name)
   );
 
@@ -512,7 +513,8 @@ export async function executeStreamedToolCalls(
       } else if (permissionCheck.permission === "ask") {
         if (isHeadless) {
           // In headless mode, exit immediately with instructions
-          const tool = BUILTIN_TOOLS.find((t) => t.name === toolCall.name);
+          const allBuiltinTools = getAllBuiltinTools();
+          const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
           const toolName = tool?.displayName || toolCall.name;
           console.error(
             `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`

@@ -46,10 +46,10 @@ export abstract class BaseService<TState> extends EventEmitter {
   }
 
   /**
-   * Get current service state (immutable copy)
+   * Get current service state (shallow copy for immutability)
    */
   getState(): TState {
-    return this.deepCopy(this.currentState);
+    return { ...this.currentState };
   }
 
   /**
@@ -58,10 +58,10 @@ export abstract class BaseService<TState> extends EventEmitter {
   protected setState(newState: Partial<TState>): void {
     const previousState = this.currentState;
     this.currentState = { ...this.currentState, ...newState };
-    logger.debug(`${this.serviceName} state updated`, {
-      previous: previousState,
-      current: this.currentState,
-    });
+    // Only log state updates if not in production to avoid circular reference issues
+    if (process.env.NODE_ENV !== 'production') {
+      logger.debug(`${this.serviceName} state updated`);
+    }
     this.emit("stateChanged", this.currentState, previousState);
   }
 
@@ -88,24 +88,6 @@ export abstract class BaseService<TState> extends EventEmitter {
     logger.debug(`Cleaning up ${this.serviceName}`);
     this.removeAllListeners();
     this.isInitialized = false;
-  }
-
-  /**
-   * Deep copy helper for immutable state
-   */
-  private deepCopy<T>(obj: T): T {
-    if (obj === null || typeof obj !== "object") return obj;
-    if (obj instanceof Date) return new Date(obj.getTime()) as any;
-    if (Array.isArray(obj))
-      return obj.map((item) => this.deepCopy(item)) as any;
-
-    const cloned = {} as T;
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        cloned[key] = this.deepCopy(obj[key]);
-      }
-    }
-    return cloned;
   }
 }
 

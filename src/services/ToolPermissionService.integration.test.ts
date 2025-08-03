@@ -80,9 +80,9 @@ describe("ToolPermissionService E2E", () => {
     const state = service.getState();
     const permissions = service.getPermissions();
     
-    // getState() returns a deep copy, getPermissions() returns the actual reference
+    // getState() returns a shallow copy, so nested objects are the same reference
     expect(state.permissions).toEqual(permissions);
-    expect(state.permissions).not.toBe(permissions); // Different references
+    expect(state.permissions).toBe(permissions); // Same reference for nested objects
     expect(state.permissions.policies[0]).toEqual({ tool: "test_tool", permission: "exclude" });
   });
 

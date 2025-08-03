@@ -28,13 +28,45 @@ function getLogFilePath(): string {
   return path.join(logDir, 'cn.log');
 }
 
+// Simple replacer for JSON.stringify to handle common issues
+function createReplacer() {
+  const seen = new Set();
+  
+  return (key: string, value: any) => {
+    // Handle circular references
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular]';
+      }
+      seen.add(value);
+    }
+    
+    // Handle functions
+    if (typeof value === 'function') {
+      return '[Function]';
+    }
+    
+    // Handle undefined (which JSON.stringify skips by default)
+    if (value === undefined) {
+      return '[undefined]';
+    }
+    
+    return value;
+  };
+}
+
 // Custom format for log output
 const logFormat = printf(({ level, message, timestamp, stack, ...metadata }) => {
   let msg = `${timestamp} [${SESSION_ID}] [${level}]: ${message}`;
   
   // Add metadata if present
   if (Object.keys(metadata).length > 0) {
-    msg += ` ${JSON.stringify(metadata)}`;
+    try {
+      msg += ` ${JSON.stringify(metadata, createReplacer())}`;
+    } catch (err) {
+      // Fallback if stringify still fails somehow
+      msg += ` [Failed to stringify metadata: ${err}]`;
+    }
   }
   
   // Add stack trace for errors
