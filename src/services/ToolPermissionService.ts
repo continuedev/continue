@@ -37,26 +37,18 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       case "plan":
         // Plan mode: Complete override - exclude all write operations, allow only reads
         return [
-          // Exclude all write tools with absolute priority (using actual tool names)
-          { tool: "write_file", permission: "exclude" },
-          { tool: "edit_file", permission: "exclude" },
-          { tool: "write_checklist", permission: "allow" },
-          { tool: "search_and_replace_in_file", permission: "exclude" },
-          { tool: "run_terminal_command", permission: "exclude" },
-          // Also exclude capitalized versions in case they exist
+          // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
           { tool: "Bash", permission: "exclude" },
-          // Allow all read tools (using actual tool names)
-          { tool: "read_file", permission: "allow" },
-          { tool: "list_files", permission: "allow" },
-          { tool: "search_code", permission: "allow" },
-          { tool: "fetch", permission: "allow" },
-          { tool: "view_diff", permission: "allow" },
-          // Also allow capitalized versions in case they exist
+          // Allow all read tools
           { tool: "Read", permission: "allow" },
+          { tool: "List", permission: "allow" },
+          { tool: "Search", permission: "allow" },
+          { tool: "Fetch", permission: "allow" },
+          { tool: "Diff", permission: "allow" },
           { tool: "Checklist", permission: "allow" },
           { tool: "NotebookRead", permission: "allow" },
           { tool: "LS", permission: "allow" },

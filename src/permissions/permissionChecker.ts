@@ -24,8 +24,8 @@ export function matchesToolPattern(
   // Handle special Bash command patterns like "Bash(ls*)"
   const bashCommandMatch = pattern.match(/^Bash\((.+)\)$/);
   if (bashCommandMatch) {
-    // Check if this is a bash/terminal tool (either normalized name or display name)
-    const isBashTool = toolName === "run_terminal_command" || toolName === "Bash";
+    // Check if this is a bash/terminal tool
+    const isBashTool = toolName === "Bash";
     if (isBashTool && toolArguments?.command) {
       const commandPattern = bashCommandMatch[1];
       const command = toolArguments.command;

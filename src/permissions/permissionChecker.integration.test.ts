@@ -22,13 +22,13 @@ describe('Permission Integration Tests', () => {
       // Check that the service is in headless mode
       expect(state.isHeadless).toBe(true);
 
-      // Check permission for edit_file (the actual tool name)
+      // Check permission for Edit tool
       const result = checkToolPermission(
-        { name: 'edit_file', arguments: {} },
+        { name: 'Edit', arguments: {} },
         state.permissions
       );
 
-      // Should be allowed because --allow Edit normalizes to edit_file
+      // Should be allowed because --allow Edit is specified
       expect(result.permission).toBe('allow');
     });
 
@@ -41,23 +41,23 @@ describe('Permission Integration Tests', () => {
 
       const state = service.getState();
 
-      // Check Edit (edit_file)
+      // Check Edit
       const editResult = checkToolPermission(
-        { name: 'edit_file', arguments: {} },
+        { name: 'Edit', arguments: {} },
         state.permissions
       );
       expect(editResult.permission).toBe('allow');
 
-      // Check Write (write_file)
+      // Check Write
       const writeResult = checkToolPermission(
-        { name: 'write_file', arguments: {} },
+        { name: 'Write', arguments: {} },
         state.permissions
       );
       expect(writeResult.permission).toBe('allow');
 
-      // Check Bash (run_terminal_command)
+      // Check Bash
       const bashResult = checkToolPermission(
-        { name: 'run_terminal_command', arguments: {} },
+        { name: 'Bash', arguments: {} },
         state.permissions
       );
       expect(bashResult.permission).toBe('allow');
@@ -74,14 +74,14 @@ describe('Permission Integration Tests', () => {
 
       // Check that Read is allowed
       const readResult = checkToolPermission(
-        { name: 'read_file', arguments: {} },
+        { name: 'Read', arguments: {} },
         state.permissions
       );
       expect(readResult.permission).toBe('allow');
 
       // Check that Edit is excluded
       const editResult = checkToolPermission(
-        { name: 'edit_file', arguments: {} },
+        { name: 'Edit', arguments: {} },
         state.permissions
       );
       expect(editResult.permission).toBe('exclude');
@@ -99,7 +99,7 @@ describe('Permission Integration Tests', () => {
 
       // In plan mode with --allow Edit override
       const editResult = checkToolPermission(
-        { name: 'edit_file', arguments: {} },
+        { name: 'Edit', arguments: {} },
         state.permissions
       );
       

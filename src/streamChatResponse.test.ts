@@ -138,7 +138,7 @@ describe("processStreamingResponse - content preservation", () => {
   it("content after tool calls is preserved", async () => {
     chunks = [
       contentChunk(""),
-      toolCallChunk("call_123", "read_file", '{"filepath": "/README.md"}'),
+      toolCallChunk("call_123", "Read", '{"filepath": "/README.md"}'),
       contentChunk(""),
       contentChunk("I'll read the README file for you."),
     ];
@@ -180,7 +180,7 @@ describe("processStreamingResponse - content preservation", () => {
   it("handles the exact problematic sequence from the logs", async () => {
     chunks = [
       contentChunk(""),
-      toolCallChunk("toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A", "read_file", ""),
+      toolCallChunk("toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A", "Read", ""),
       toolCallChunk(
         "toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A",
         undefined,
@@ -225,7 +225,7 @@ describe("processStreamingResponse - content preservation", () => {
     expect(result.finalContent).toBe("I'll read the README file for you.");
 
     // Verify the tool call was assembled correctly
-    expect(result.toolCalls[0].name).toBe("read_file");
+    expect(result.toolCalls[0].name).toBe("Read");
     expect(result.toolCalls[0].argumentsStr).toBe(
       '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
     );
@@ -255,7 +255,7 @@ describe("processStreamingResponse - content preservation", () => {
       toolCallChunkWithIndex(
         0,
         "toolu_vrtx_01ULx6UjdJ7B7bjf5WPHTXGz",
-        "read_file",
+        "Read",
         ""
       ),
       // Subsequent chunks only have index, no ID
@@ -286,7 +286,7 @@ describe("processStreamingResponse - content preservation", () => {
     );
 
     // Tool call arguments are preserved using index mapping
-    expect(result.toolCalls[0].name).toBe("read_file");
+    expect(result.toolCalls[0].name).toBe("Read");
     expect(result.toolCalls[0].argumentsStr).toBe(
       '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
     );
@@ -300,7 +300,7 @@ describe("processStreamingResponse - content preservation", () => {
       toolCallChunkWithIndex(
         0,
         "toolu_vrtx_01ULx6UjdJ7B7bjf5WPHTXGz",
-        "read_file",
+        "Read",
         ""
       ),
       // Subsequent chunks fragment the JSON arguments
@@ -331,7 +331,7 @@ describe("processStreamingResponse - content preservation", () => {
     );
 
     // 2. Tool call arguments are assembled correctly
-    expect(result.toolCalls[0].name).toBe("read_file");
+    expect(result.toolCalls[0].name).toBe("Read");
     expect(result.toolCalls[0].argumentsStr).toBe(
       '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
     );
@@ -353,7 +353,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     const toolCalls: ToolCall[] = [
       {
         id: "call_123",
-        name: "read_file",
+        name: "Read",
         arguments: { filepath: "/path/to/file.txt" },
         argumentsStr: '{"filepath": "/path/to/file.txt"}',
         startNotified: false,
@@ -371,7 +371,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     // Should have one preprocessed call and no errors
     expect(preprocessedCalls).toHaveLength(1);
     expect(errorChatEntries).toHaveLength(0);
-    expect(preprocessedCalls[0].name).toBe("read_file");
+    expect(preprocessedCalls[0].name).toBe("Read");
     expect(preprocessedCalls[0].tool).toBeDefined();
     expect(preprocessedCalls[0].preprocessResult).toBeDefined();
 
@@ -392,7 +392,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     const toolCalls: ToolCall[] = [
       {
         id: "call_456",
-        name: "read_file",
+        name: "Read",
         arguments: {}, // Missing required filepath
         argumentsStr: "{}",
         startNotified: false,
@@ -413,10 +413,10 @@ describe.skip("preprocessStreamedToolCalls", () => {
     expect(errorChatEntries[0].content).toContain("Missing required argument");
 
     // Callbacks should be called for errors
-    expect(callbacks.onToolStart).toHaveBeenCalledWith("read_file", {});
+    expect(callbacks.onToolStart).toHaveBeenCalledWith("Read", {});
     expect(callbacks.onToolError).toHaveBeenCalledWith(
       expect.stringContaining("Missing required argument"),
-      "read_file"
+      "Read"
     );
   });
 
@@ -468,7 +468,7 @@ describe.skip("executeStreamedToolCalls", () => {
     const preprocessedCalls: PreprocessedToolCall[] = [
       {
         id: "call_123",
-        name: "read_file",
+        name: "Read",
         arguments: { filepath: "/test.txt" },
         argumentsStr: '{"filepath": "/test.txt"}',
         startNotified: false,
@@ -495,7 +495,7 @@ describe.skip("executeStreamedToolCalls", () => {
     });
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Tool execution successful",
-      "read_file"
+      "Read"
     );
     expect(mockedExecuteToolCall).toHaveBeenCalledWith(preprocessedCalls[0]);
   });
@@ -520,7 +520,7 @@ describe.skip("executeStreamedToolCalls", () => {
           callback({
             requestId: "req_123",
             toolCall: {
-              name: "write_file",
+              name: "Write",
               arguments: {
                 filepath: "/test.txt",
                 content: "data",
@@ -536,7 +536,7 @@ describe.skip("executeStreamedToolCalls", () => {
     const preprocessedCalls: PreprocessedToolCall[] = [
       {
         id: "call_456",
-        name: "write_file",
+        name: "Write",
         arguments: { filepath: "/test.txt", content: "data" },
         argumentsStr: '{"filepath": "/test.txt", "content": "data"}',
         startNotified: false,
@@ -544,7 +544,7 @@ describe.skip("executeStreamedToolCalls", () => {
       },
       {
         id: "call_457",
-        name: "write_file",
+        name: "Write",
         arguments: { filepath: "/test.txt", content: "data" },
         argumentsStr: '{"filepath": "/test.txt", "content": "data"}',
         startNotified: false,
@@ -570,16 +570,16 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(chatHistoryEntries[1].content).toBe(
       "Cancelled due to previous tool rejection"
     );
-    expect(callbacks.onToolStart).toHaveBeenCalledWith("write_file", {
+    expect(callbacks.onToolStart).toHaveBeenCalledWith("Write", {
       filepath: "/test.txt",
       content: "data",
     });
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Permission denied by user",
-      "write_file"
+      "Write"
     );
     expect(callbacks.onToolPermissionRequest).toHaveBeenCalledWith(
-      "write_file",
+      "Write",
       { filepath: "/test.txt", content: "data" },
       "req_123",
       undefined

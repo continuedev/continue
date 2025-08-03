@@ -3,8 +3,8 @@ import { getToolDisplayName, extractToolCalls } from "./index.js";
 describe("tools/index utilities", () => {
   describe("getToolDisplayName", () => {
     it("should return display name for known tool", () => {
-      // The actual implementation returns the first part of the displayName
-      const result = getToolDisplayName("read_file");
+      // The actual implementation returns the displayName when tool is found
+      const result = getToolDisplayName("Read");
       expect(result).toBe("Read");
     });
 
@@ -22,13 +22,13 @@ describe("tools/index utilities", () => {
   describe("extractToolCalls", () => {
     it("should extract single tool call", () => {
       const response = `Here's the result:
-<tool>{"name": "read_file", "arguments": {"filepath": "/path/to/file.txt"}}</tool>
+<tool>{"name": "Read", "arguments": {"filepath": "/path/to/file.txt"}}</tool>
 Done.`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "read_file",
+          name: "Read",
           arguments: { filepath: "/path/to/file.txt" },
         },
       ]);
@@ -36,31 +36,31 @@ Done.`;
 
     it("should extract multiple tool calls", () => {
       const response = `First call:
-<tool>{"name": "read_file", "arguments": {"filepath": "/file1.txt"}}</tool>
+<tool>{"name": "Read", "arguments": {"filepath": "/file1.txt"}}</tool>
 Second call:
-<tool>{"name": "write_file", "arguments": {"filepath": "/file2.txt", "content": "hello"}}</tool>
+<tool>{"name": "Write", "arguments": {"filepath": "/file2.txt", "content": "hello"}}</tool>
 Done.`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "read_file",
+          name: "Read",
           arguments: { filepath: "/file1.txt" },
         },
         {
-          name: "write_file",
+          name: "Write",
           arguments: { filepath: "/file2.txt", content: "hello" },
         },
       ]);
     });
 
     it("should handle tool calls with complex arguments", () => {
-      const response = `<tool>{"name": "search_code", "arguments": {"pattern": "function.*test", "path": "/src", "options": {"recursive": true, "ignoreCase": false}}}</tool>`;
+      const response = `<tool>{"name": "Search", "arguments": {"pattern": "function.*test", "path": "/src", "options": {"recursive": true, "ignoreCase": false}}}</tool>`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "search_code",
+          name: "Search",
           arguments: {
             pattern: "function.*test",
             path: "/src",
@@ -72,7 +72,7 @@ Done.`;
 
     it("should handle multiline tool calls", () => {
       const response = `<tool>{
-  "name": "write_file",
+  "name": "Write",
   "arguments": {
     "filepath": "/path/to/file.txt",
     "content": "Line 1\\nLine 2\\nLine 3"
@@ -82,7 +82,7 @@ Done.`;
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "write_file",
+          name: "Write",
           arguments: {
             filepath: "/path/to/file.txt",
             content: "Line 1\nLine 2\nLine 3",
@@ -111,20 +111,20 @@ Done.`;
       console.error = () => {};
 
       const response = `Good call:
-<tool>{"name": "read_file", "arguments": {"filepath": "/file.txt"}}</tool>
+<tool>{"name": "Read", "arguments": {"filepath": "/file.txt"}}</tool>
 Bad call:
 <tool>{"name": "invalid_json", "arguments": {malformed json}}</tool>
 Another good call:
-<tool>{"name": "write_file", "arguments": {"filepath": "/file2.txt", "content": "test"}}</tool>`;
+<tool>{"name": "Write", "arguments": {"filepath": "/file2.txt", "content": "test"}}</tool>`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "read_file",
+          name: "Read",
           arguments: { filepath: "/file.txt" },
         },
         {
-          name: "write_file",
+          name: "Write",
           arguments: { filepath: "/file2.txt", content: "test" },
         },
       ]);
@@ -137,26 +137,26 @@ Another good call:
       const response = `Missing name:
 <tool>{"arguments": {"filepath": "/file.txt"}}</tool>
 Missing arguments:
-<tool>{"name": "read_file"}</tool>
+<tool>{"name": "Read"}</tool>
 Valid call:
-<tool>{"name": "read_file", "arguments": {"filepath": "/file.txt"}}</tool>`;
+<tool>{"name": "Read", "arguments": {"filepath": "/file.txt"}}</tool>`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "read_file",
+          name: "Read",
           arguments: { filepath: "/file.txt" },
         },
       ]);
     });
 
     it("should handle tool calls with empty arguments", () => {
-      const response = `<tool>{"name": "list_files", "arguments": {}}</tool>`;
+      const response = `<tool>{"name": "List", "arguments": {}}</tool>`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "list_files",
+          name: "List",
           arguments: {},
         },
       ]);
@@ -170,12 +170,12 @@ Valid call:
     });
 
     it("should handle nested tool tags", () => {
-      const response = `<tool>{"name": "write_file", "arguments": {"filepath": "/file.txt", "content": "Some content with <tool> tags inside"}}</tool>`;
+      const response = `<tool>{"name": "Write", "arguments": {"filepath": "/file.txt", "content": "Some content with <tool> tags inside"}}</tool>`;
 
       const result = extractToolCalls(response);
       expect(result).toEqual([
         {
-          name: "write_file",
+          name: "Write",
           arguments: {
             filepath: "/file.txt",
             content: "Some content with <tool> tags inside",

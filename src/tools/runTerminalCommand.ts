@@ -7,7 +7,7 @@ import {
 import { Tool } from "./types.js";
 
 export const runTerminalCommandTool: Tool = {
-  name: "run_terminal_command",
+  name: "Bash",
   displayName: "Bash",
   description: "Executes a terminal command and returns the output",
   parameters: {

@@ -235,7 +235,7 @@ describe('ModeService', () => {
   describe('Integration with ToolPermissionService', () => {
     beforeEach(async () => {
       await modeService.initialize({
-        allow: ['read_file'],
+        allow: ['Read'],
         exclude: ['dangerous_tool']
       });
     });
