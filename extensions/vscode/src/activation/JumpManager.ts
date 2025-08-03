@@ -59,11 +59,13 @@ export class JumpManager {
     // identical to the completion content,
     // then we don't have to jump.
     if (completionContent !== undefined) {
+      console.log("completionContent is not null");
       const editor = vscode.window.activeTextEditor;
 
       if (editor) {
         try {
           const completionLines = completionContent.split("\n");
+          console.log("completionLines:", completionLines);
 
           // Get document content at jump location spanning multiple lines.
           const document = editor.document;
@@ -73,50 +75,39 @@ export class JumpManager {
             document.lineCount - 1,
           );
 
-          // Check if we have enough lines in the document to compare.
+          console.log(
+            "editor lines:",
+            document
+              .getText()
+              .split("\n")
+              .slice(startLine, endLine + 1),
+          );
+
+          // First check if we have enough lines in the document
           if (endLine - startLine + 1 < completionLines.length) {
             // Not enough lines in document, so content can't be identical.
             // Proceed to jump!
-          } else {
-            // Check the first line first for early exit.
-            const firstLineText = document.lineAt(startLine).text;
-            const firstLineSubstring = firstLineText.substring(
-              nextJumpLocation.character,
+            console.log(
+              "Not enough lines in document to match completion content",
             );
-            const firstCompletionLine = completionLines[0];
+          } else {
+            let contentMatches = true;
 
-            if (!firstLineSubstring.startsWith(firstCompletionLine)) {
-              // First line doesn't match, so proceed to jump.
-            } else {
-              // Check remaining lines if there are any.
-              if (completionLines.length > 1) {
-                let fullMatch = true;
-
-                // Process remaining lines.
-                for (let i = 1; i < completionLines.length; i++) {
-                  const documentLine = startLine + i;
-                  if (documentLine <= endLine) {
-                    const lineText = document.lineAt(documentLine).text;
-                    if (lineText !== completionLines[i]) {
-                      fullMatch = false;
-                      break;
-                    }
-                  }
-                }
-
-                if (fullMatch) {
-                  console.log(
-                    "Skipping jump as content is identical at jump location",
-                  );
-                  return false; // Exit early, don't suggest jump.
-                }
-              } else {
-                // Only one line and it matches.
-                console.log(
-                  "Skipping jump as content is identical at jump location",
-                );
-                return false; // Exit early, don't suggest jump.
+            // Check all lines for match.
+            for (let i = 0; i < completionLines.length && contentMatches; i++) {
+              const documentLine = startLine + i;
+              const lineText = document.lineAt(documentLine).text;
+              if (lineText !== completionLines[i]) {
+                contentMatches = false;
+                console.log(`Line ${i + 1} doesn't match`);
               }
+            }
+
+            if (contentMatches) {
+              console.log(
+                "Skipping jump as content is identical at jump location",
+              );
+              return false; // Exit early, don't suggest jump.
             }
           }
         } catch (error) {
@@ -261,6 +252,7 @@ export class JumpManager {
           await this.clearJumpDecoration();
 
           this._jumpAccepted = false;
+          vscode.commands.executeCommand("editor.action.inlineSuggest.trigger");
         }
       },
     );
