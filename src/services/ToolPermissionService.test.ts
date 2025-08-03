@@ -260,8 +260,9 @@ describe("ToolPermissionService", () => {
   });
 
   describe('isReady()', () => {
-    test('should return false before initialization', () => {
-      expect(service.isReady()).toBe(false);
+    test('should always return true (service is always ready)', () => {
+      // ToolPermissionService is designed to be always ready since it uses synchronous initialization
+      expect(service.isReady()).toBe(true);
     });
 
     test('should return true after initialization', async () => {

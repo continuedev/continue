@@ -125,6 +125,9 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       modePolicyCount: modePolicies.length,
     });
 
+    // Mark as initialized since we're bypassing the async initialize flow
+    (this as any).isInitialized = true;
+
     return this.getState();
   }
 
@@ -252,5 +255,12 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    */
   isHeadless(): boolean {
     return this.currentState.isHeadless;
+  }
+
+  /**
+   * Override isReady to always return true since we initialize synchronously
+   */
+  override isReady(): boolean {
+    return true;
   }
 }

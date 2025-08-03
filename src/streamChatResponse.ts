@@ -48,8 +48,21 @@ export function getAllTools() {
       .map((tool) => tool.name) ?? [];
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
-  // Filter out excluded tools based on permissions
-  const allowedToolNames = filterExcludedTools(allToolNames);
+  // Check if the ToolPermissionService is ready
+  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS
+  );
+  
+  let allowedToolNames: string[];
+  if (serviceResult.state === 'ready' && serviceResult.value) {
+    // Filter out excluded tools based on permissions
+    allowedToolNames = filterExcludedTools(allToolNames);
+  } else {
+    // Service not ready - return all tools but log a warning
+    logger.warn("ToolPermissionService not ready in getAllTools, returning all tools");
+    allowedToolNames = allToolNames;
+  }
+  
   const allowedToolNamesSet = new Set(allowedToolNames);
 
   // Filter builtin tools
