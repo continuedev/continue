@@ -337,6 +337,7 @@ export class ContinueCompletionProvider
 
           if (isJumpSuggested) {
             // Store completion to be rendered after a jump.
+            // TODO: setCompletionAfterJump must have a 1-1 correspondence to the jump location.
             this.jumpManager.setCompletionAfterJump({
               completionId: completionId,
               outcome,
@@ -378,17 +379,19 @@ export class ContinueCompletionProvider
 
           // Start prefetching next edits.
           // NOTE: this might be better off not awaited.
-          await this.prefetchQueue.process(ctx);
+          this.prefetchQueue.process(ctx);
 
           // If initial outcome is null, suggest a jump instead.
           // Calling this method again will call it with
           // chain active but jump not suggested yet.
-          return this.provideInlineCompletionItems(
-            document,
-            position,
-            context,
-            token,
-          );
+          if (!outcome || !outcome.completion) {
+            return this.provideInlineCompletionItems(
+              document,
+              position,
+              context,
+              token,
+            );
+          }
         } else {
           // Handle regular autocomplete request.
           outcome = await this.completionProvider.provideInlineCompletionItems(
