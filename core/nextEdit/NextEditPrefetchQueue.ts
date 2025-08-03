@@ -37,7 +37,7 @@ export class PrefetchQueue {
     return this.unprocessedQueue.shift();
   }
 
-  private enqueueProcessed(item: ProcessedItem): void {
+  enqueueProcessed(item: ProcessedItem): void {
     this.processedQueue.push(item);
   }
 
@@ -61,6 +61,7 @@ export class PrefetchQueue {
             ctx,
             location,
             this.abortController.signal,
+            true,
           );
 
         if (!outcome) continue;
