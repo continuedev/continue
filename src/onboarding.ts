@@ -111,12 +111,18 @@ export async function runNormalFlow(
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
   if (configPath) {
-    let result = await initialize(authConfig, configPath);
-    // Inject rules into the config if provided
-    if (rules && rules.length > 0) {
-      result.config = await injectRulesIntoConfig(result.config, rules);
+    try {
+      let result = await initialize(authConfig, configPath);
+      // Inject rules into the config if provided
+      if (rules && rules.length > 0) {
+        result.config = await injectRulesIntoConfig(result.config, rules);
+      }
+      return { ...result, wasOnboarded: false };
+    } catch (error) {
+      // If user explicitly provided --config flag, fail loudly instead of falling back
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to load config from "${configPath}": ${errorMessage}`);
     }
-    return { ...result, wasOnboarded: false };
   }
 
   // Step 2: If user is logged in, look for first assistant in selected org
