@@ -316,18 +316,16 @@ export class NextEditProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      // const editableRegionStartLine = Math.max(
-      //   helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-      //   0,
-      // );
+      const editableRegionStartLine = opts?.fullFileDiff
+        ? 0
+        : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
 
-      // const editableRegionEndLine = Math.min(
-      //   helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-      //   helper.fileLines.length - 1,
-      // );
-
-      const editableRegionStartLine = 0;
-      const editableRegionEndLine = helper.fileLines.length - 1;
+      const editableRegionEndLine = opts?.fullFileDiff
+        ? helper.fileLines.length - 1
+        : Math.min(
+            helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+            helper.fileLines.length - 1,
+          );
 
       // TODO: Toggle between the default endpoint and the finetuned endpoint.
       const prompts: Prompt[] = [];
