@@ -69,7 +69,9 @@ export const searchContinueDocsImpl: ToolImpl = async (args, extras) => {
   const query = getStringArg(args, "query");
 
   try {
-    const config = await fetchSearchConfiguration(extras.fetch as typeof fetch || fetch);
+    const config = await fetchSearchConfiguration(
+      (extras.fetch as typeof fetch) || fetch,
+    );
     const results = await searchDocs(query, config);
 
     const contextItems: ContextItem[] = [];
