@@ -112,6 +112,14 @@ export class ModeService extends BaseService<ModeServiceState> {
   }
 
   /**
+   * Override cleanup to properly clean up nested ToolPermissionService
+   */
+  override async cleanup(): Promise<void> {
+    await this.currentState.toolPermissionService.cleanup();
+    await super.cleanup();
+  }
+
+  /**
    * Override isReady since this is a singleton with immediate availability
    */
   override isReady(): boolean {
