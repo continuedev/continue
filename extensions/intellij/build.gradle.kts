@@ -34,12 +34,13 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create(platformType, platformVersion)
+        create("IC", "2024.1")
         plugins(listOf("org.jetbrains.plugins.terminal:223.8214.6"))
         testFramework(TestFrameworkType.Platform)
     }
     implementation("com.posthog.java:posthog:1.2.0")
 
+    testImplementation("junit:junit:4.13.2")
     testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
     testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
     testImplementation("io.mockk:mockk:1.14.2")
@@ -54,13 +55,13 @@ kotlin { jvmToolchain(17) }
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = pluginSinceBuild
+            sinceBuild = "241"
         }
     }
     pluginVerification {
         ides {
             ide("IC", "2025.1.4")
-            ide("IC", "2022.3.3")
+            ide("IC", "2024.1")
         }
     }
 }
