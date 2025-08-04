@@ -20,7 +20,11 @@ Without proper capability configuration, you may encounter issues like:
 - Image uploads being disabled
 
 ## How Continue Detects Capabilities
+You can explicitly set the capabilities you want the model to use. This disables autodetection for any other capabilities. 
 
+<Note>
+ You cannot configure a model to use no capabilities.
+ </Note>
 Continue uses a two-tier system for determining model capabilities:
 
 ### 1. Automatic Detection (Default)
