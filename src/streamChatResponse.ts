@@ -56,11 +56,12 @@ export function getAllTools() {
   let allowedToolNames: string[];
   if (serviceResult.state === 'ready' && serviceResult.value) {
     // Filter out excluded tools based on permissions
-    allowedToolNames = filterExcludedTools(allToolNames);
+    allowedToolNames = filterExcludedTools(allToolNames, serviceResult.value.permissions);
   } else {
-    // Service not ready - return all tools but log a warning
-    logger.warn("ToolPermissionService not ready in getAllTools, returning all tools");
-    allowedToolNames = allToolNames;
+    // Service not ready - this is a critical error since tools should only be
+    // requested after services are properly initialized
+    logger.error("ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue");
+    throw new Error("ToolPermissionService not initialized. Services must be initialized before requesting tools.");
   }
   
   const allowedToolNamesSet = new Set(allowedToolNames);
