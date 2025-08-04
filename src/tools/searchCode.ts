@@ -9,7 +9,7 @@ const execPromise = util.promisify(child_process.exec);
 const DEFAULT_MAX_RESULTS = 100;
 
 export const searchCodeTool: Tool = {
-  name: "search_code",
+  name: "Search",
   displayName: "Search",
   description: "Search the codebase using ripgrep (rg) for a specific pattern",
   parameters: {

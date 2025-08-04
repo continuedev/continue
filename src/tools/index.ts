@@ -1,4 +1,5 @@
-import { parseArgs } from "../args.js";
+import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { MCPService } from "../mcp.js";
 import telemetryService from "../telemetry/telemetryService.js";
 import logger from "../util/logger.js";
@@ -21,7 +22,8 @@ import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolCall, ToolParameters };
 
-const ALL_BUILTIN_TOOLS: Tool[] = [
+// Base tools that are always available
+const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   searchAndReplaceInFileTool,
@@ -30,19 +32,40 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
-  // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
-  ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
 
-export const BUILTIN_TOOLS: Tool[] = (() => {
-  // Note: Tool filtering is now handled by the permission system
-  // This just returns all available tools, and the filtering happens
-  // at tool call time based on the current mode
-  return ALL_BUILTIN_TOOLS;
-})();
+// Export BUILTIN_TOOLS as the base set of tools
+// Dynamic tools (like exit tool in headless mode) are added separately
+export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
+
+// Get dynamic tools based on current state
+function getDynamicTools(): Tool[] {
+  const dynamicTools: Tool[] = [];
+  
+  // Add headless-specific tools if in headless mode
+  try {
+    const serviceResult = getServiceSync<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS
+    );
+    const isHeadless = serviceResult.value?.isHeadless ?? false;
+    if (isHeadless) {
+      dynamicTools.push(exitTool);
+    }
+  } catch (error) {
+    // Service not ready yet, no dynamic tools
+  }
+  
+  return dynamicTools;
+}
+
+// Get all builtin tools including dynamic ones
+export function getAllBuiltinTools(): Tool[] {
+  return [...BUILTIN_TOOLS, ...getDynamicTools()];
+}
 
 export function getToolDisplayName(toolName: string): string {
-  const tool = BUILTIN_TOOLS.find((t) => t.name === toolName);
+  const allTools = getAllBuiltinTools();
+  const tool = allTools.find((t) => t.name === toolName);
   return tool?.displayName || toolName;
 }
 
@@ -88,7 +111,6 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
 }
 
 export async function getAvailableTools() {
-  const args = parseArgs();
 
   // Load MCP tools
   const mcpTools: Tool[] =
@@ -107,7 +129,7 @@ export async function getAvailableTools() {
         },
       })) || [];
 
-  const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
+  const allTools: Tool[] = [...getAllBuiltinTools(), ...mcpTools];
   return allTools;
 }
 

@@ -80,7 +80,7 @@ describe('Service Circular Dependencies', () => {
     const circularDeps = detectCircularDependencies(serviceDependencies);
     
     if (circularDeps.length > 0) {
-      fail(`Circular dependency detected: ${circularDeps.join(' -> ')}`);
+      throw new Error(`Circular dependency detected: ${circularDeps.join(' -> ')}`);
     }
 
     // Also verify that all services can be theoretically loaded without circular issues

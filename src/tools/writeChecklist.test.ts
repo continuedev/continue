@@ -12,7 +12,7 @@ describe("writeChecklistTool", () => {
   });
 
   it("should have correct tool properties", () => {
-    expect(writeChecklistTool.name).toBe("write_checklist");
+    expect(writeChecklistTool.name).toBe("Checklist");
     expect(writeChecklistTool.displayName).toBe("Checklist");
     expect(writeChecklistTool.readonly).toBe(false);
     expect(writeChecklistTool.isBuiltIn).toBe(true);

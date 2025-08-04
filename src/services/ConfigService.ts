@@ -13,59 +13,56 @@ import {
   ConfigServiceState,
   SERVICE_NAMES,
 } from "./types.js";
+import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 
 /**
  * Service for managing configuration state and operations
  * Handles loading configs from files or assistant slugs
  */
-export class ConfigService {
-  private currentState: ConfigServiceState = {
-    config: null,
-    configPath: undefined,
-  };
+export class ConfigService extends BaseService<ConfigServiceState> implements ServiceWithDependencies {
+  constructor() {
+    super('ConfigService', {
+      config: null,
+      configPath: undefined,
+    });
+  }
+
+  /**
+   * Declare dependencies on other services
+   */
+  getDependencies(): string[] {
+    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT];
+  }
 
   /**
    * Initialize the config service
    */
-  async initialize(
+  async doInitialize(
     authConfig: AuthConfig,
     configPath: string | undefined,
     organizationId: string | null,
     apiClient: DefaultApiInterface,
     rules?: string[]
   ): Promise<ConfigServiceState> {
-    try {
-      // Use the new streamlined config loader
-      const { loadConfiguration } = await import("../configLoader.js");
-      const result = await loadConfiguration(authConfig, configPath, apiClient);
-      
-      let config = result.config;
+    // Use the new streamlined config loader
+    const { loadConfiguration } = await import("../configLoader.js");
+    const result = await loadConfiguration(authConfig, configPath, apiClient);
+    
+    let config = result.config;
 
-      // Inject rules if provided
-      if (rules && rules.length > 0) {
-        config = await this.injectRulesIntoConfig(config, rules);
-      }
-
-      this.currentState = {
-        config,
-        configPath,
-      };
-
-      // Config URI persistence is now handled by the streamlined loader
-
-      logger.debug("ConfigService initialized successfully");
-      return this.currentState;
-    } catch (error: any) {
-      logger.error("Failed to initialize ConfigService:", error);
-      throw error;
+    // Inject rules if provided
+    if (rules && rules.length > 0) {
+      config = await this.injectRulesIntoConfig(config, rules);
     }
-  }
 
-  /**
-   * Get current config state
-   */
-  getState(): ConfigServiceState {
-    return { ...this.currentState };
+    // Config URI persistence is now handled by the streamlined loader
+
+    logger.debug("ConfigService initialized successfully");
+    
+    return {
+      config,
+      configPath,
+    };
   }
 
   /**
@@ -95,10 +92,10 @@ export class ConfigService {
         config = await this.injectRulesIntoConfig(config, rules);
       }
 
-      this.currentState = {
+      this.setState({
         config,
         configPath: newConfigPath,
-      };
+      });
 
       // Config URI persistence is now handled by the streamlined loader
 
@@ -106,9 +103,10 @@ export class ConfigService {
         newConfigPath,
       });
 
-      return this.currentState;
+      return this.getState();
     } catch (error: any) {
       logger.error("Failed to switch configuration:", error);
+      this.emit('error', error);
       throw error;
     }
   }
@@ -214,15 +212,15 @@ export class ConfigService {
       );
 
       // Update internal state
-      this.currentState = {
+      this.setState({
         config: result.config,
         configPath: newConfigPath,
-      };
+      });
 
       // Config URI persistence is now handled by the streamlined loader
 
       // Update the CONFIG service in the container
-      serviceContainer.set(SERVICE_NAMES.CONFIG, this.currentState);
+      serviceContainer.set(SERVICE_NAMES.CONFIG, this.getState());
 
       // Manually reload dependent services (MODEL, MCP) to pick up the new config
       await serviceContainer.reload(SERVICE_NAMES.MODEL);
@@ -234,6 +232,7 @@ export class ConfigService {
       });
     } catch (error: any) {
       logger.error("Failed to update configuration path:", error);
+      this.emit('error', error);
       throw error;
     }
   }

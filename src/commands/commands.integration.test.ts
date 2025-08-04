@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { AssistantConfig } from '@continuedev/sdk';
 import { getAllSlashCommands } from './commands.js';
 

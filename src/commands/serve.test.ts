@@ -4,8 +4,8 @@ import {
   describe,
   expect,
   it,
-  jest,
-} from "@jest/globals";
+  vi,
+} from "vitest";
 import type { Server } from "http";
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
 
@@ -20,66 +20,66 @@ describe("serve command", () => {
 
     // Mock process.exit to prevent actual exit during tests
     originalProcessExit = process.exit;
-    process.exit = jest.fn() as any;
+    process.exit = vi.fn() as any;
 
     // Mock console.log to prevent output during tests
-    jest.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
 
     // Mock all required modules at test level with correct relative paths
-    jest.mock("fs", () => ({
-      ...(jest.requireActual("fs") as any),
-      existsSync: jest.fn(() => false),
+    vi.mock("fs", () => ({
+      ...(vi.importActual("fs") as any),
+      existsSync: vi.fn(() => false),
     }));
 
-    jest.mock("../auth/workos.js", () => ({
-      loadAuthConfig: jest.fn(() => null),
-      ensureOrganization: jest.fn(),
-      getOrganizationId: jest.fn(),
-      isAuthenticated: jest.fn(() => false),
+    vi.mock("../auth/workos.js", () => ({
+      loadAuthConfig: vi.fn(() => null),
+      ensureOrganization: vi.fn(),
+      getOrganizationId: vi.fn(),
+      isAuthenticated: vi.fn(() => false),
     }));
 
-    jest.mock("../onboarding.js", () => ({
-      runNormalFlow: jest.fn(() =>
+    vi.mock("../onboarding.js", () => ({
+      runNormalFlow: vi.fn(() =>
         Promise.resolve({
           config: { models: [] },
-          llmApi: { chat: jest.fn() },
+          llmApi: { chat: vi.fn() },
           model: { name: "test-model" },
         })
       ),
-      runOnboardingFlow: jest.fn(() =>
+      runOnboardingFlow: vi.fn(() =>
         Promise.resolve({
           config: { models: [] },
-          llmApi: { chat: jest.fn() },
+          llmApi: { chat: vi.fn() },
           model: { name: "test-model" },
         })
       ),
     }));
 
-    jest.mock("../session.js", () => ({
-      saveSession: jest.fn(),
+    vi.mock("../session.js", () => ({
+      saveSession: vi.fn(),
     }));
 
-    jest.mock("../systemMessage.js", () => ({
-      constructSystemMessage: jest.fn(() => Promise.resolve("System message")),
+    vi.mock("../systemMessage.js", () => ({
+      constructSystemMessage: vi.fn(() => Promise.resolve("System message")),
     }));
 
-    jest.mock("../telemetry/telemetryService.js", () => ({
+    vi.mock("../telemetry/telemetryService.js", () => ({
       default: {
-        recordSessionStart: jest.fn(),
-        startActiveTime: jest.fn(),
-        stopActiveTime: jest.fn(),
-        updateOrganization: jest.fn(),
+        recordSessionStart: vi.fn(),
+        startActiveTime: vi.fn(),
+        stopActiveTime: vi.fn(),
+        updateOrganization: vi.fn(),
       },
     }));
 
-    jest.mock("../util/logger.js", () => ({
+    vi.mock("../util/logger.js", () => ({
       default: {
-        error: jest.fn(),
-        debug: jest.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
       },
     }));
 
-    jest.mock("chalk", () => ({
+    vi.mock("chalk", () => ({
       default: {
         green: (str: string) => str,
         dim: (str: string) => str,
@@ -96,7 +96,7 @@ describe("serve command", () => {
     process.exit = originalProcessExit;
 
     // Restore console.log
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
 
     // Clean up server if it's still running
     if (serverRef) {
@@ -106,7 +106,7 @@ describe("serve command", () => {
       serverRef = null;
     }
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it.skip("should have /exit endpoint that returns success response", async () => {

@@ -10,27 +10,28 @@ import {
 } from "../auth/workos.js";
 import logger from "../util/logger.js";
 import { AuthServiceState } from "./types.js";
+import { BaseService } from "./BaseService.js";
 
 /**
  * Service for managing authentication state and operations
  * Encapsulates all auth logic and provides reactive updates
  */
-export class AuthService {
-  private currentState: AuthServiceState = {
-    authConfig: null,
-    isAuthenticated: false,
-  };
+export class AuthService extends BaseService<AuthServiceState> {
+  constructor() {
+    super('AuthService', {
+      authConfig: null,
+      isAuthenticated: false,
+    });
+  }
 
   /**
    * Initialize the auth service by loading current config
    */
-  async initialize(): Promise<AuthServiceState> {
-    logger.debug("Initializing AuthService");
-
+  async doInitialize(): Promise<AuthServiceState> {
     const authConfig = loadAuthConfig();
     const authenticated = isAuthenticated();
 
-    this.currentState = {
+    const state: AuthServiceState = {
       authConfig,
       isAuthenticated: authenticated,
       organizationId: authConfig?.organizationId || undefined,
@@ -39,17 +40,10 @@ export class AuthService {
     logger.debug("AuthService initialized", {
       authenticated,
       hasConfig: !!authConfig,
-      orgId: this.currentState.organizationId,
+      orgId: state.organizationId,
     });
 
-    return this.currentState;
-  }
-
-  /**
-   * Get current auth state
-   */
-  getState(): AuthServiceState {
-    return { ...this.currentState };
+    return state;
   }
 
   /**
@@ -61,19 +55,20 @@ export class AuthService {
     try {
       const newAuthConfig = await doLogin();
 
-      this.currentState = {
+      this.setState({
         authConfig: newAuthConfig,
         isAuthenticated: true,
         organizationId: newAuthConfig?.organizationId || undefined,
-      };
+      });
 
       logger.debug("Login successful", {
         orgId: this.currentState.organizationId,
       });
 
-      return this.currentState;
+      return this.getState();
     } catch (error: any) {
       logger.error("Login failed:", error);
+      this.emit('error', error);
       throw error;
     }
   }
@@ -86,14 +81,14 @@ export class AuthService {
 
     doLogout();
 
-    this.currentState = {
+    this.setState({
       authConfig: null,
       isAuthenticated: false,
       organizationId: undefined,
-    };
+    });
 
     logger.debug("Logout complete");
-    return this.currentState;
+    return this.getState();
   }
 
   /**
@@ -116,17 +111,17 @@ export class AuthService {
       isHeadless
     );
 
-    this.currentState = {
+    this.setState({
       authConfig: updatedConfig,
       isAuthenticated: true,
       organizationId: updatedConfig?.organizationId || undefined,
-    };
+    });
 
     logger.debug("Organization ensured", {
       orgId: this.currentState.organizationId,
     });
 
-    return this.currentState;
+    return this.getState();
   }
 
   /**
@@ -159,17 +154,17 @@ export class AuthService {
 
     saveAuthConfig(updatedConfig);
 
-    this.currentState = {
+    this.setState({
       authConfig: updatedConfig,
       isAuthenticated: true,
       organizationId: organizationId || undefined,
-    };
+    });
 
     logger.debug("Organization switched", {
       newOrgId: this.currentState.organizationId,
     });
 
-    return this.currentState;
+    return this.getState();
   }
 
   /**
@@ -186,6 +181,7 @@ export class AuthService {
       return await listUserOrganizations();
     } catch (error: any) {
       logger.error("Failed to list organizations:", error);
+      this.emit('error', error);
       return null;
     }
   }
@@ -203,6 +199,6 @@ export class AuthService {
    */
   async refresh(): Promise<AuthServiceState> {
     logger.debug("Refreshing auth state from disk");
-    return this.initialize();
+    return this.reload();
   }
 }

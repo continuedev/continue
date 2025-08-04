@@ -1,5 +1,5 @@
 import type { AssistantUnrolled } from "@continuedev/config-yaml";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 // Minimal mock for LLM API (just enough to prevent errors)
 export class MockLlmApi {
@@ -78,8 +78,8 @@ export const mockAssistant: AssistantUnrolled = {
 } as any;
 
 // Mock glob function with files that actually exist in the repository
-jest.mock("glob", () => ({
-  glob: jest
+vi.mock("glob", () => ({
+  glob: vi
     .fn<any>()
     .mockResolvedValue([
       ".env.example",

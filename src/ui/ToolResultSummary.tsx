@@ -27,8 +27,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   const chars = content.length;
   const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
 
-  // Handle write_checklist specially with styled display
-  if (toolName === "write_checklist") {
+  // Handle Checklist specially with styled display
+  if (toolName === "Checklist") {
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
@@ -40,9 +40,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     );
   }
 
-  // Handle write_file with diff specially
+  // Handle Write/Edit with diff specially
   if (
-    (toolName === "write_file" || toolName === "edit_file") &&
+    (toolName === "Write" || toolName === "Edit") &&
     content.includes("Diff:\n")
   ) {
     const diffSection = content.split("Diff:\n")[1];
@@ -52,7 +52,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
           <Box>
             <Text color="gray">⎿ </Text>
             <Text color="green">
-              {toolName === "edit_file"
+              {toolName === "Edit"
                 ? " File edited successfully"
                 : " File written successfully"}
             </Text>
@@ -64,7 +64,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   }
 
   // Handle terminal command output specially
-  if (toolName === "run_terminal_command") {
+  if (toolName === "Bash") {
     const isStderr = content.startsWith("Stderr:");
     const actualOutput = isStderr ? content.slice(7).trim() : content;
     const outputLines = actualOutput.split("\n");
@@ -127,7 +127,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
 
     // Handle specific tool output formatting
     switch (toolName) {
-      case "read_file":
+      case "Read":
         // Try to extract file path from content if it contains line numbers
         if (content.includes("→")) {
           const pathMatch = content.match(/^(.+?):/);
@@ -136,21 +136,21 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
         }
         return `${displayName} tool output (${lines} lines)`;
 
-      case "write_file":
+      case "Write":
         return content.includes("Successfully created file")
           ? "File created successfully"
           : "File updated successfully";
 
-      case "edit_file":
+      case "Edit":
         return "File edited successfully";
 
-      case "list_files":
+      case "List":
         return `Listed ${lines} ${lines === 1 ? "item" : "items"}`;
 
-      case "search_code":
+      case "Search":
         return `Found ${lines} ${lines === 1 ? "match" : "matches"}`;
 
-      case "view_diff":
+      case "Diff":
         return `Diff output (${lines} lines)`;
 
       default:

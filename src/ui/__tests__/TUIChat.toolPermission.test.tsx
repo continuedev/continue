@@ -1,19 +1,19 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { render } from "ink-testing-library";
 import React from "react";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
   it("shows ToolPermissionSelector with correct content", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { lastFrame } = render(
       <ToolPermissionSelector
@@ -28,7 +28,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     const frame = lastFrame();
 
@@ -44,7 +44,7 @@ describe("TUIChat - Tool Permission Tests", () => {
   });
 
   it("handles keyboard shortcuts for permission approval and rejection", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { stdin } = render(
       <ToolPermissionSelector
@@ -58,12 +58,12 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Test Tab key for approval
     stdin.write("\t");
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-123",
@@ -73,7 +73,7 @@ describe("TUIChat - Tool Permission Tests", () => {
   });
 
   it("handles escape key for rejection", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { stdin } = render(
       <ToolPermissionSelector
@@ -86,12 +86,12 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Test escape key for rejection
     stdin.write("\x1b"); // ESC key
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-456",
@@ -101,7 +101,7 @@ describe("TUIChat - Tool Permission Tests", () => {
   });
 
   it("handles 'n' key for rejection", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { stdin } = render(
       <ToolPermissionSelector
@@ -114,12 +114,12 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Test 'n' key for rejection
     stdin.write("n");
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-789",
@@ -129,7 +129,7 @@ describe("TUIChat - Tool Permission Tests", () => {
   });
 
   it("handles arrow key navigation in permission selector", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { lastFrame, stdin } = render(
       <ToolPermissionSelector
@@ -142,7 +142,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Initial state should show "> Continue" selected
     let frame = lastFrame();
@@ -150,7 +150,7 @@ describe("TUIChat - Tool Permission Tests", () => {
 
     // Test that pressing Enter on default selection triggers approval
     stdin.write("\r");
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-123",
@@ -160,7 +160,7 @@ describe("TUIChat - Tool Permission Tests", () => {
   });
 
   it("handles shift+tab key for policy creation", async () => {
-    const handleResponse = jest.fn();
+    const handleResponse = vi.fn();
 
     const { stdin } = render(
       <ToolPermissionSelector
@@ -173,13 +173,13 @@ describe("TUIChat - Tool Permission Tests", () => {
       />
     );
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     // Test shift+tab key for approval with policy creation
     // In terminal, shift+tab is typically represented as "\x1b[Z"
     stdin.write("\x1b[Z");
 
-    await jest.advanceTimersByTimeAsync(50);
+    await vi.advanceTimersByTimeAsync(50);
 
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-policy",
@@ -218,7 +218,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       <MemoizedMessage message={message} index={0} />
     );
 
-    await jest.advanceTimersByTimeAsync(100);
+    await vi.advanceTimersByTimeAsync(100);
 
     const messageOutput = messageFrame();
 
