@@ -1,0 +1,233 @@
+name: 'CI Failure Analyzer'
+description: 'Analyzes failed GitHub Actions workflow runs and generates AI-powered failure summaries'
+inputs:
+  workflow_run_id:
+    description: 'ID of the workflow run to analyze'
+    required: true
+  github_token:
+    description: 'GitHub token for API access'
+    required: true
+  assistant_config:
+    description: 'Continue CLI assistant configuration to use'
+    required: false
+    default: 'nate/default-assistant'
+  pr_number:
+    description: 'Pull request number for commenting (optional)'
+    required: false
+  dry_run:
+    description: 'Enable dry-run mode (skip PR commenting)'
+    required: false
+    default: 'false'
+  continue_api_key:
+    description: 'Continue API key for CLI access'
+    required: true
+
+outputs:
+  failure_summary:
+    description: 'Generated failure summary'
+    value: ${{ steps.generate-summary.outputs.summary }}
+  comment_posted:
+    description: 'Whether a PR comment was posted'
+    value: ${{ steps.post-comment.outputs.posted }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Continue CLI
+      shell: bash
+      run: npm install -g @continuedev/cli
+
+    - name: Get workflow run details and conclusion
+      id: get-workflow-details
+      uses: octokit/request-action@v2.1.0
+      with:
+        route: GET /repos/${{ github.repository }}/actions/runs/${{ inputs.workflow_run_id }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
+    - name: Check if workflow failed
+      id: check-failure
+      shell: bash
+      run: |
+        conclusion="${{ fromJson(steps.get-workflow-details.outputs.data).conclusion }}"
+        echo "Workflow run ID: ${{ inputs.workflow_run_id }}"
+        echo "Workflow conclusion: $conclusion"
+        
+        # For testing purposes, we'll analyze even if conclusion is null or in_progress
+        # In production, this would typically only run when conclusion is "failure"
+        if [ "$conclusion" = "failure" ] || [ "$conclusion" = "null" ] || [ -z "$conclusion" ]; then
+          echo "Proceeding with analysis (conclusion: $conclusion)"
+          echo "should_analyze=true" >> $GITHUB_OUTPUT
+        else
+          echo "Workflow conclusion is $conclusion. Skipping analysis."
+          echo "should_analyze=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Get workflow run jobs
+      id: get-jobs
+      if: steps.check-failure.outputs.should_analyze == 'true'
+      uses: octokit/request-action@v2.1.0
+      with:
+        route: GET /repos/${{ github.repository }}/actions/runs/${{ inputs.workflow_run_id }}/jobs
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
+    - name: Download workflow logs
+      id: download-logs
+      if: steps.check-failure.outputs.should_analyze == 'true'
+      shell: bash
+      run: |
+        # Download workflow logs archive
+        curl -L \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ inputs.github_token }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ inputs.workflow_run_id }}/logs \
+          -o workflow-logs.zip
+        
+        # Extract logs
+        unzip -q workflow-logs.zip -d workflow-logs/
+        
+        echo "Logs downloaded and extracted to workflow-logs/"
+        ls -la workflow-logs/ || true
+
+    - name: Organize logs by failed jobs
+      id: organize-logs
+      if: steps.check-failure.outputs.should_analyze == 'true'
+      shell: bash
+      run: |
+        echo "Organizing workflow logs by failed jobs..."
+        
+        # Create organized logs with job context  
+        echo "# GitHub Actions Workflow Failure Analysis" > organized_logs.txt
+        echo "## Failed Jobs and Their Logs" >> organized_logs.txt
+        echo "" >> organized_logs.txt
+        
+        # Get failed jobs and add their logs
+        echo '${{ steps.get-jobs.outputs.data }}' | jq -r '.jobs[] | select(.conclusion == "failure") | .name' | while read -r job_name; do
+          echo "### 🔴 Job: $job_name" >> organized_logs.txt
+          echo "" >> organized_logs.txt
+          
+          # Find log file (simple pattern match)
+          log_file=$(find workflow-logs/ -name "*${job_name}*" -type f | head -1)
+          
+          if [ -n "$log_file" ]; then
+            echo "\`\`\`" >> organized_logs.txt
+            cat "$log_file" >> organized_logs.txt
+            echo "\`\`\`" >> organized_logs.txt
+          else
+            echo "*No log file found for job: $job_name*" >> organized_logs.txt
+          fi
+          echo "" >> organized_logs.txt
+          echo "---" >> organized_logs.txt
+          echo "" >> organized_logs.txt
+        done
+        
+        echo "Organized logs ready: $(wc -l < organized_logs.txt) lines"
+        echo "logs_organized=true" >> $GITHUB_OUTPUT
+
+    - name: Generate failure summary with Continue CLI
+      id: generate-summary
+      if: steps.check-failure.outputs.should_analyze == 'true'
+      shell: bash
+      run: |
+        # Get failed job information
+        failed_jobs=$(echo '${{ steps.get-jobs.outputs.data }}' | jq -r '.jobs[] | select(.conclusion == "failure") | .name' | tr '\n' ', ' | sed 's/,$//')
+        
+        # Build comprehensive prompt for Continue CLI with organized logs
+        cat > analysis_prompt.txt << 'PROMPT_EOF'
+        You are analyzing a failed GitHub Actions workflow run. Below you'll find the complete logs organized by failed jobs, making it easy to see which steps failed in which jobs.
+        
+        **Summary of Failed Jobs:** FAILED_JOBS_PLACEHOLDER
+        
+        Below are the detailed logs for each failed job with clear job/step context:
+        
+        PROMPT_EOF
+        
+        # Replace placeholder with actual failed jobs
+        sed -i "s/FAILED_JOBS_PLACEHOLDER/$failed_jobs/" analysis_prompt.txt
+        
+        # Add the organized logs with job context
+        cat organized_logs.txt >> analysis_prompt.txt
+        
+        cat >> analysis_prompt.txt << 'REQUEST_EOF'
+        
+        ## Analysis Request
+        
+        Analyze the workflow failures above and provide a **concise** summary with:
+        
+        1. **Root Cause**: What failed and why (1-2 sentences max per failure)
+        2. **Fix**: Specific actionable step to resolve each failure (1 sentence)
+        
+        Keep the response short and focused. Include file/line references when available.
+        Skip verbose explanations - just the essential facts and fixes.
+        REQUEST_EOF
+        
+        echo "Running Continue CLI analysis on complete logs..."
+        cat analysis_prompt.txt | cn --config "${{ inputs.assistant_config }}" -p > failure_analysis.md
+        
+        # Prepare summary for output (escape for GitHub Actions)
+        summary_content=$(cat failure_analysis.md)
+        echo "summary<<EOF" >> $GITHUB_OUTPUT
+        echo "$summary_content" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "Analysis complete. Generated failure_analysis.md"
+      env:
+        CONTINUE_API_KEY: ${{ inputs.continue_api_key }}
+
+    - name: Post PR comment
+      id: post-comment
+      if: steps.check-failure.outputs.should_analyze == 'true' && inputs.pr_number != '' && inputs.dry_run != 'true'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const fs = require('fs');
+          
+          try {
+            let analysisContent = '';
+            
+            if (fs.existsSync('failure_analysis.md') && fs.statSync('failure_analysis.md').size > 0) {
+              analysisContent = fs.readFileSync('failure_analysis.md', 'utf8');
+            } else {
+              analysisContent = '⚠️ CI failure analysis completed but no summary was generated.';
+            }
+            
+            const comment = `## 🤖 CI Failure Analysis
+            
+            ${analysisContent}
+            
+            ---
+            *Analysis generated by Continue CLI - [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ inputs.workflow_run_id }})*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: ${{ inputs.pr_number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+            
+            console.log(`Successfully posted analysis comment on PR #${{ inputs.pr_number }}`);
+            core.setOutput('posted', 'true');
+          } catch (error) {
+            console.log('Failed to post comment:', error.message);
+            core.setOutput('posted', 'false');
+          }
+
+
+    - name: Upload analysis artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-failure-analysis-${{ inputs.workflow_run_id }}
+        path: |
+          failure_analysis.md
+          analysis_prompt.txt
+          organized_logs.txt
+        retention-days: 30

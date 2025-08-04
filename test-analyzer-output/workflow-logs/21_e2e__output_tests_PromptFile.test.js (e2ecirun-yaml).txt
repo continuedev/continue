@@ -1,0 +1,470 @@
+﻿2025-08-01T02:46:58.0292788Z Current runner version: '2.327.1'
+2025-08-01T02:46:58.0317426Z ##[group]Runner Image Provisioner
+2025-08-01T02:46:58.0318515Z Hosted Compute Agent
+2025-08-01T02:46:58.0319523Z Version: 20250711.363
+2025-08-01T02:46:58.0320477Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-08-01T02:46:58.0321474Z Build Date: 2025-07-11T20:04:25Z
+2025-08-01T02:46:58.0322631Z ##[endgroup]
+2025-08-01T02:46:58.0323537Z ##[group]Operating System
+2025-08-01T02:46:58.0324468Z Ubuntu
+2025-08-01T02:46:58.0325335Z 24.04.2
+2025-08-01T02:46:58.0326123Z LTS
+2025-08-01T02:46:58.0326904Z ##[endgroup]
+2025-08-01T02:46:58.0327651Z ##[group]Runner Image
+2025-08-01T02:46:58.0328553Z Image: ubuntu-24.04
+2025-08-01T02:46:58.0329387Z Version: 20250728.1.0
+2025-08-01T02:46:58.0330678Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250728.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-08-01T02:46:58.0333069Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250728.1
+2025-08-01T02:46:58.0334473Z ##[endgroup]
+2025-08-01T02:46:58.0336077Z ##[group]GITHUB_TOKEN Permissions
+2025-08-01T02:46:58.0338265Z Contents: read
+2025-08-01T02:46:58.0339121Z Metadata: read
+2025-08-01T02:46:58.0339956Z Packages: read
+2025-08-01T02:46:58.0340746Z ##[endgroup]
+2025-08-01T02:46:58.0343297Z Secret source: Actions
+2025-08-01T02:46:58.0344458Z Prepare workflow directory
+2025-08-01T02:46:58.0663771Z Prepare all required actions
+2025-08-01T02:46:58.0700541Z Getting action download info
+2025-08-01T02:46:58.3317600Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-08-01T02:46:58.3318944Z Version: 4.2.2
+2025-08-01T02:46:58.3320358Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-08-01T02:46:58.3322075Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-08-01T02:46:58.3323162Z ##[endgroup]
+2025-08-01T02:46:58.4949609Z Complete job name: e2e/_output/tests/PromptFile.test.js (e2e:ci:run-yaml)
+2025-08-01T02:46:58.5638670Z ##[group]Run actions/checkout@v4
+2025-08-01T02:46:58.5639732Z with:
+2025-08-01T02:46:58.5640337Z   repository: continuedev/continue
+2025-08-01T02:46:58.5641276Z   token: ***
+2025-08-01T02:46:58.5642168Z   ssh-strict: true
+2025-08-01T02:46:58.5642858Z   ssh-user: git
+2025-08-01T02:46:58.5643558Z   persist-credentials: true
+2025-08-01T02:46:58.5644299Z   clean: true
+2025-08-01T02:46:58.5644978Z   sparse-checkout-cone-mode: true
+2025-08-01T02:46:58.5645658Z   fetch-depth: 1
+2025-08-01T02:46:58.5646239Z   fetch-tags: false
+2025-08-01T02:46:58.5646836Z   show-progress: true
+2025-08-01T02:46:58.5647440Z   lfs: false
+2025-08-01T02:46:58.5648019Z   submodules: false
+2025-08-01T02:46:58.5648622Z   set-safe-directory: true
+2025-08-01T02:46:58.5649506Z ##[endgroup]
+2025-08-01T02:46:58.6749165Z Syncing repository: continuedev/continue
+2025-08-01T02:46:58.6751324Z ##[group]Getting Git version info
+2025-08-01T02:46:58.6752892Z Working directory is '/home/runner/work/continue/continue'
+2025-08-01T02:46:58.6755260Z [command]/usr/bin/git version
+2025-08-01T02:46:58.6802059Z git version 2.50.1
+2025-08-01T02:46:58.6828414Z ##[endgroup]
+2025-08-01T02:46:58.6840959Z Temporarily overriding HOME='/home/runner/work/_temp/259139cd-dc2b-444a-84c7-4f64bacce92b' before making global git config changes
+2025-08-01T02:46:58.6845870Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:46:58.6847256Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:46:58.6878020Z Deleting the contents of '/home/runner/work/continue/continue'
+2025-08-01T02:46:58.6881390Z ##[group]Initializing the repository
+2025-08-01T02:46:58.6885319Z [command]/usr/bin/git init /home/runner/work/continue/continue
+2025-08-01T02:46:58.6956965Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-08-01T02:46:58.6959800Z hint: is subject to change. To configure the initial branch name to use in all
+2025-08-01T02:46:58.6962094Z hint: of your new repositories, which will suppress this warning, call:
+2025-08-01T02:46:58.6964212Z hint:
+2025-08-01T02:46:58.6965514Z hint: 	git config --global init.defaultBranch <name>
+2025-08-01T02:46:58.6967121Z hint:
+2025-08-01T02:46:58.6968543Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-08-01T02:46:58.6970512Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-08-01T02:46:58.6972435Z hint:
+2025-08-01T02:46:58.6973517Z hint: 	git branch -m <name>
+2025-08-01T02:46:58.6974735Z hint:
+2025-08-01T02:46:58.6976175Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-08-01T02:46:58.6978254Z Initialized empty Git repository in /home/runner/work/continue/continue/.git/
+2025-08-01T02:46:58.6981281Z [command]/usr/bin/git remote add origin https://github.com/continuedev/continue
+2025-08-01T02:46:58.7007446Z ##[endgroup]
+2025-08-01T02:46:58.7008483Z ##[group]Disabling automatic garbage collection
+2025-08-01T02:46:58.7011293Z [command]/usr/bin/git config --local gc.auto 0
+2025-08-01T02:46:58.7039740Z ##[endgroup]
+2025-08-01T02:46:58.7041186Z ##[group]Setting up auth
+2025-08-01T02:46:58.7045732Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:46:58.7074297Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:46:58.7326953Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:46:58.7355171Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:46:58.7578084Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-08-01T02:46:58.7611311Z ##[endgroup]
+2025-08-01T02:46:58.7613218Z ##[group]Fetching the repository
+2025-08-01T02:46:58.7619534Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd25af4c0bfbec2d2e2a3d90d421c60917abf53d:refs/remotes/pull/6881/merge
+2025-08-01T02:47:02.5688005Z From https://github.com/continuedev/continue
+2025-08-01T02:47:02.5691016Z  * [new ref]         cd25af4c0bfbec2d2e2a3d90d421c60917abf53d -> pull/6881/merge
+2025-08-01T02:47:02.5713532Z ##[endgroup]
+2025-08-01T02:47:02.5715970Z ##[group]Determining the checkout info
+2025-08-01T02:47:02.5717831Z ##[endgroup]
+2025-08-01T02:47:02.5719369Z [command]/usr/bin/git sparse-checkout disable
+2025-08-01T02:47:02.5755769Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-08-01T02:47:02.5783579Z ##[group]Checking out the ref
+2025-08-01T02:47:02.5785935Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/6881/merge
+2025-08-01T02:47:03.5841476Z Updating files:  95% (2241/2354)
+2025-08-01T02:47:03.5856138Z Updating files:  96% (2260/2354)
+2025-08-01T02:47:03.5870674Z Updating files:  97% (2284/2354)
+2025-08-01T02:47:03.5883522Z Updating files:  98% (2307/2354)
+2025-08-01T02:47:03.5898602Z Updating files:  99% (2331/2354)
+2025-08-01T02:47:03.5899384Z Updating files: 100% (2354/2354)
+2025-08-01T02:47:03.5900103Z Updating files: 100% (2354/2354), done.
+2025-08-01T02:47:03.5928236Z Note: switching to 'refs/remotes/pull/6881/merge'.
+2025-08-01T02:47:03.5928860Z 
+2025-08-01T02:47:03.5929360Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-08-01T02:47:03.5930479Z changes and commit them, and you can discard any commits you make in this
+2025-08-01T02:47:03.5931564Z state without impacting any branches by switching back to a branch.
+2025-08-01T02:47:03.5932389Z 
+2025-08-01T02:47:03.5932834Z If you want to create a new branch to retain commits you create, you may
+2025-08-01T02:47:03.5933894Z do so (now or later) by using -c with the switch command. Example:
+2025-08-01T02:47:03.5934489Z 
+2025-08-01T02:47:03.5934790Z   git switch -c <new-branch-name>
+2025-08-01T02:47:03.5935505Z 
+2025-08-01T02:47:03.5935852Z Or undo this operation with:
+2025-08-01T02:47:03.5936281Z 
+2025-08-01T02:47:03.5936559Z   git switch -
+2025-08-01T02:47:03.5936871Z 
+2025-08-01T02:47:03.5937341Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-08-01T02:47:03.5937946Z 
+2025-08-01T02:47:03.5938683Z HEAD is now at cd25af4 Merge 6ea2d5206d7f970081a2a8a7aeced2689e6a90ed into d5e60aaeb30b477784cd026b9d3253dce5161720
+2025-08-01T02:47:03.5999232Z ##[endgroup]
+2025-08-01T02:47:03.6037555Z [command]/usr/bin/git log -1 --format=%H
+2025-08-01T02:47:03.6058693Z cd25af4c0bfbec2d2e2a3d90d421c60917abf53d
+2025-08-01T02:47:03.6475062Z Prepare all required actions
+2025-08-01T02:47:03.6475685Z Getting action download info
+2025-08-01T02:47:03.8393635Z ##[group]Download immutable action package 'actions/setup-node@v4'
+2025-08-01T02:47:03.8394423Z Version: 4.4.0
+2025-08-01T02:47:03.8395150Z Digest: sha256:9427cefe82346e992fb5b949e3569b39d537ae41aa3086483b14eceebfc16bc1
+2025-08-01T02:47:03.8396110Z Source commit SHA: 49933ea5288caeca8642d1e84afbd3f7d6820020
+2025-08-01T02:47:03.8396792Z ##[endgroup]
+2025-08-01T02:47:03.9345908Z ##[group]Download immutable action package 'actions/cache@v4'
+2025-08-01T02:47:03.9346343Z Version: 4.2.3
+2025-08-01T02:47:03.9346760Z Digest: sha256:c8a3bb963e1f1826d8fcc8d1354f0dd29d8ac1db1d4f6f20247055ae11b81ed9
+2025-08-01T02:47:03.9347301Z Source commit SHA: 5a3ec84eff668545956fd18022155c47e93e2684
+2025-08-01T02:47:03.9347691Z ##[endgroup]
+2025-08-01T02:47:04.0358824Z ##[group]Download immutable action package 'actions/download-artifact@v4'
+2025-08-01T02:47:04.0359302Z Version: 4.3.0
+2025-08-01T02:47:04.0359773Z Digest: sha256:552a5b9ad918f62ec0c2e8f42f3c694d4ebd1b4036b18c39b14168fcdfc0e4f2
+2025-08-01T02:47:04.0360311Z Source commit SHA: d3f86a106a0bac45b974a628896c90dbdf5c8093
+2025-08-01T02:47:04.0360712Z ##[endgroup]
+2025-08-01T02:47:04.2080055Z ##[group]Download immutable action package 'actions/upload-artifact@v4'
+2025-08-01T02:47:04.2080553Z Version: 4.6.2
+2025-08-01T02:47:04.2080976Z Digest: sha256:290722aa3281d5caf23d0acdc3dbeb3424786a1a01a9cc97e72f147225e37c38
+2025-08-01T02:47:04.2081523Z Source commit SHA: ea165f8d65b6e75b540449e92b4886f43607fa02
+2025-08-01T02:47:04.2082164Z ##[endgroup]
+2025-08-01T02:47:04.3621164Z ##[group]Run ./.github/actions/run-vscode-e2e-test
+2025-08-01T02:47:04.3621565Z with:
+2025-08-01T02:47:04.3622049Z   test_file: e2e/_output/tests/PromptFile.test.js
+2025-08-01T02:47:04.3622428Z   command: e2e:ci:run-yaml
+2025-08-01T02:47:04.3629638Z   ssh_key: ***
+2025-08-01T02:47:04.3629971Z   ssh_host: ***
+2025-08-01T02:47:04.3630238Z   is_fork: false
+2025-08-01T02:47:04.3630517Z ##[endgroup]
+2025-08-01T02:47:04.3755318Z ##[group]Run actions/setup-node@v4
+2025-08-01T02:47:04.3755796Z with:
+2025-08-01T02:47:04.3756139Z   node-version-file: .nvmrc
+2025-08-01T02:47:04.3756515Z   always-auth: false
+2025-08-01T02:47:04.3756865Z   check-latest: false
+2025-08-01T02:47:04.3757327Z   token: ***
+2025-08-01T02:47:04.3757690Z ##[endgroup]
+2025-08-01T02:47:04.5421543Z Node version file is not JSON file
+2025-08-01T02:47:04.5436919Z Resolved .nvmrc as 20.19.0
+2025-08-01T02:47:04.5439214Z Attempting to download 20.19.0...
+2025-08-01T02:47:04.8242894Z Acquiring 20.19.0 - x64 from https://github.com/actions/node-versions/releases/download/20.19.0-13838090974/node-20.19.0-linux-x64.tar.gz
+2025-08-01T02:47:05.1828678Z Extracting ...
+2025-08-01T02:47:05.1936692Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/580bdbf1-3f3d-430c-9169-18d7bdea260e -f /home/runner/work/_temp/4cedad7d-f0ae-4067-bef5-60d16a55326b
+2025-08-01T02:47:06.2082829Z Adding to the cache ...
+2025-08-01T02:47:08.0582109Z ##[group]Environment details
+2025-08-01T02:47:08.2714629Z node: v20.19.0
+2025-08-01T02:47:08.2715101Z npm: 10.8.2
+2025-08-01T02:47:08.2715361Z yarn: 1.22.22
+2025-08-01T02:47:08.2716641Z ##[endgroup]
+2025-08-01T02:47:08.3427662Z ##[group]Run actions/cache@v4
+2025-08-01T02:47:08.3427967Z with:
+2025-08-01T02:47:08.3428397Z   path: extensions/vscode/node_modules
+2025-08-01T02:47:08.3428977Z   key: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:47:08.3429551Z   enableCrossOsArchive: false
+2025-08-01T02:47:08.3429860Z   fail-on-cache-miss: false
+2025-08-01T02:47:08.3430144Z   lookup-only: false
+2025-08-01T02:47:08.3430409Z   save-always: false
+2025-08-01T02:47:08.3430666Z ##[endgroup]
+2025-08-01T02:47:08.5422706Z Cache hit for: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:47:09.2710285Z Received 151659422 of 151659422 (100.0%), 210.5 MBs/sec
+2025-08-01T02:47:09.2712060Z Cache Size: ~145 MB (151659422 B)
+2025-08-01T02:47:09.2739122Z [command]/usr/bin/tar -xf /home/runner/work/_temp/1e1574ff-95f4-4995-a419-c0a55e28717e/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:47:11.6766402Z Cache restored successfully
+2025-08-01T02:47:11.7124765Z Cache restored from key: Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:47:11.7266138Z ##[group]Run actions/cache@v4
+2025-08-01T02:47:11.7266439Z with:
+2025-08-01T02:47:11.7266737Z   path: extensions/vscode/e2e/.test-extensions
+2025-08-01T02:47:11.7267089Z   key: CONSTANT
+2025-08-01T02:47:11.7267362Z   enableCrossOsArchive: false
+2025-08-01T02:47:11.7267667Z   fail-on-cache-miss: false
+2025-08-01T02:47:11.7267949Z   lookup-only: false
+2025-08-01T02:47:11.7268218Z   save-always: false
+2025-08-01T02:47:11.7268481Z ##[endgroup]
+2025-08-01T02:47:11.9153401Z Cache hit for: CONSTANT
+2025-08-01T02:47:12.0709586Z Received 4781726 of 4781726 (100.0%), 38.6 MBs/sec
+2025-08-01T02:47:12.0710507Z Cache Size: ~5 MB (4781726 B)
+2025-08-01T02:47:12.0736295Z [command]/usr/bin/tar -xf /home/runner/work/_temp/719251ea-8c99-471b-a4a5-4e94786d6b7f/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:47:12.1125400Z Cache restored successfully
+2025-08-01T02:47:12.1213116Z Cache restored from key: CONSTANT
+2025-08-01T02:47:12.1886787Z ##[group]Run actions/cache@v4
+2025-08-01T02:47:12.1887101Z with:
+2025-08-01T02:47:12.1887367Z   path: extensions/vscode/e2e/storage
+2025-08-01T02:47:12.1887937Z   key: Linux-vscode-storage-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:47:12.1888493Z   enableCrossOsArchive: false
+2025-08-01T02:47:12.1888812Z   fail-on-cache-miss: false
+2025-08-01T02:47:12.1889110Z   lookup-only: false
+2025-08-01T02:47:12.1889391Z   save-always: false
+2025-08-01T02:47:12.1889664Z ##[endgroup]
+2025-08-01T02:47:12.3969360Z Cache hit for: Linux-vscode-storage-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:47:13.4495234Z Received 243269632 of 310204092 (78.4%), 231.8 MBs/sec
+2025-08-01T02:47:13.7767913Z Received 310204092 of 310204092 (100.0%), 222.8 MBs/sec
+2025-08-01T02:47:13.7771113Z Cache Size: ~296 MB (310204092 B)
+2025-08-01T02:47:13.7814938Z [command]/usr/bin/tar -xf /home/runner/work/_temp/6436a40a-9a9f-496b-bd27-d62fa28ae64f/cache.tzst -P -C /home/runner/work/continue/continue --use-compress-program unzstd
+2025-08-01T02:47:14.9237241Z Cache restored successfully
+2025-08-01T02:47:15.0073799Z Cache restored from key: Linux-vscode-storage-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104
+2025-08-01T02:47:15.0229742Z ##[group]Run actions/download-artifact@v4
+2025-08-01T02:47:15.0230107Z with:
+2025-08-01T02:47:15.0230395Z   name: vscode-extension-build-Linux
+2025-08-01T02:47:15.0230761Z   path: extensions/vscode/build
+2025-08-01T02:47:15.0231087Z   merge-multiple: false
+2025-08-01T02:47:15.0231420Z   repository: continuedev/continue
+2025-08-01T02:47:15.0231885Z   run-id: 16664898109
+2025-08-01T02:47:15.0232165Z ##[endgroup]
+2025-08-01T02:47:15.2306047Z Downloading single artifact
+2025-08-01T02:47:15.3147736Z Preparing to download the following artifacts:
+2025-08-01T02:47:15.3149569Z - vscode-extension-build-Linux (ID: 3663828495, Size: 113447284, Expected Digest: sha256:15344b0c800c451c207239909147812a29929cc3d248d836e0b14688538b70c1)
+2025-08-01T02:47:15.3727672Z Redirecting to blob download url: https://productionresultssa12.blob.core.windows.net/actions-results/5875398d-a5fc-4c9e-8603-6c0b3dbaf94c/workflow-job-run-d6c2cb60-9d6b-50c2-912a-2549a8431599/artifacts/f00e2fd8ea3cc9035d23889832764b2c72ce4a10c2869268e9311f76ffacf93b.zip
+2025-08-01T02:47:15.3730509Z Starting download of artifact to: /home/runner/work/continue/continue/extensions/vscode/build
+2025-08-01T02:47:15.4162182Z (node:2176) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2025-08-01T02:47:15.4164051Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2025-08-01T02:47:16.7140193Z SHA256 digest of downloaded artifact is 15344b0c800c451c207239909147812a29929cc3d248d836e0b14688538b70c1
+2025-08-01T02:47:16.7141840Z Artifact download completed successfully.
+2025-08-01T02:47:16.7142695Z Total of 1 artifact(s) downloaded
+2025-08-01T02:47:16.7147416Z Download artifact has finished successfully
+2025-08-01T02:47:16.7289993Z ##[group]Run node ./scripts/build-packages.js
+2025-08-01T02:47:16.7290769Z [36;1mnode ./scripts/build-packages.js[0m
+2025-08-01T02:47:16.7291406Z [36;1mif [ "true" != "true" ]; then[0m
+2025-08-01T02:47:16.7292169Z [36;1m  cd core[0m
+2025-08-01T02:47:16.7292632Z [36;1m  npm ci[0m
+2025-08-01T02:47:16.7293117Z [36;1m  cd ../extensions/vscode[0m
+2025-08-01T02:47:16.7293701Z [36;1m  npm run e2e:ci:download[0m
+2025-08-01T02:47:16.7294238Z [36;1melse[0m
+2025-08-01T02:47:16.7294697Z [36;1m  cd core[0m
+2025-08-01T02:47:16.7295156Z [36;1m  npm ci[0m
+2025-08-01T02:47:16.7295595Z [36;1mfi[0m
+2025-08-01T02:47:16.7337927Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:47:16.7338641Z ##[endgroup]
+2025-08-01T02:47:16.7646261Z 🚀 Starting package builds...
+2025-08-01T02:47:16.7646695Z 
+2025-08-01T02:47:16.7653596Z Starting config-types (install): npm ci
+2025-08-01T02:47:17.4846132Z ✅ config-types (install): npm ci completed successfully
+2025-08-01T02:47:17.4846752Z Starting config-types (build): npm run build
+2025-08-01T02:47:19.1262522Z ✅ config-types (build): npm run build completed successfully
+2025-08-01T02:47:19.1263100Z Starting fetch (install): npm ci
+2025-08-01T02:47:19.1279020Z Starting config-yaml (install): npm ci
+2025-08-01T02:47:19.1294985Z Starting llm-info (install): npm ci
+2025-08-01T02:47:20.2284014Z ✅ llm-info (install): npm ci completed successfully
+2025-08-01T02:47:20.2297286Z Starting llm-info (build): npm run build
+2025-08-01T02:47:21.8968617Z ✅ fetch (install): npm ci completed successfully
+2025-08-01T02:47:21.8969720Z Starting fetch (build): npm run build
+2025-08-01T02:47:22.2031839Z ✅ llm-info (build): npm run build completed successfully
+2025-08-01T02:47:24.4454474Z ✅ fetch (build): npm run build completed successfully
+2025-08-01T02:47:27.2214218Z ✅ config-yaml (install): npm ci completed successfully
+2025-08-01T02:47:27.2215166Z Starting config-yaml (build): npm run build
+2025-08-01T02:47:31.3552924Z ✅ config-yaml (build): npm run build completed successfully
+2025-08-01T02:47:31.3554543Z Starting openai-adapters (install): npm ci
+2025-08-01T02:47:31.3568838Z Starting continue-sdk (install): npm ci
+2025-08-01T02:47:39.1186141Z ✅ openai-adapters (install): npm ci completed successfully
+2025-08-01T02:47:39.1187113Z Starting openai-adapters (build): npm run build
+2025-08-01T02:47:42.4799539Z ✅ continue-sdk (install): npm ci completed successfully
+2025-08-01T02:47:42.4800479Z Starting continue-sdk (build): npm run build
+2025-08-01T02:47:42.6642788Z ✅ continue-sdk (build): npm run build completed successfully
+2025-08-01T02:47:44.5882533Z ✅ openai-adapters (build): npm run build completed successfully
+2025-08-01T02:47:44.5883570Z 🎉 All packages built successfully!
+2025-08-01T02:47:48.3203221Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-08-01T02:47:48.6182106Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-08-01T02:47:50.2357623Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-08-01T02:47:50.5912874Z npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+2025-08-01T02:47:50.7598449Z npm warn deprecated har-validator@5.1.5: this library is no longer supported
+2025-08-01T02:47:51.2247488Z npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+2025-08-01T02:47:51.2312954Z npm warn deprecated domexception@4.0.0: Use your platform's native DOMException instead
+2025-08-01T02:47:51.2939858Z npm warn deprecated gauge@5.0.2: This package is no longer supported.
+2025-08-01T02:47:51.5960677Z npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+2025-08-01T02:47:51.6219569Z npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+2025-08-01T02:47:52.6441072Z npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+2025-08-01T02:47:52.6489472Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-08-01T02:47:52.6496540Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-08-01T02:47:53.9260185Z npm warn deprecated uuid@3.4.0: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+2025-08-01T02:47:53.9820269Z npm warn deprecated gauge@4.0.4: This package is no longer supported.
+2025-08-01T02:47:57.3671257Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-08-01T02:48:13.5834076Z 
+2025-08-01T02:48:13.5835028Z added 1528 packages, and audited 1535 packages in 29s
+2025-08-01T02:48:13.5835577Z 
+2025-08-01T02:48:13.5835904Z 239 packages are looking for funding
+2025-08-01T02:48:13.5836536Z   run `npm fund` for details
+2025-08-01T02:48:13.5929170Z 
+2025-08-01T02:48:13.5929985Z 7 vulnerabilities (1 low, 4 moderate, 2 critical)
+2025-08-01T02:48:13.5930800Z 
+2025-08-01T02:48:13.5931814Z To address issues that do not require attention, run:
+2025-08-01T02:48:13.5932875Z   npm audit fix
+2025-08-01T02:48:13.5939052Z 
+2025-08-01T02:48:13.5940138Z To address all issues possible (including breaking changes), run:
+2025-08-01T02:48:13.5940962Z   npm audit fix --force
+2025-08-01T02:48:13.5941283Z 
+2025-08-01T02:48:13.5941829Z Some issues need review, and may require choosing
+2025-08-01T02:48:13.5942526Z a different dependency.
+2025-08-01T02:48:13.5942815Z 
+2025-08-01T02:48:13.5943061Z Run `npm audit` for details.
+2025-08-01T02:48:13.6438588Z ##[group]Run chmod +x extensions/vscode/e2e/storage/VSCode-linux-x64/code
+2025-08-01T02:48:13.6439318Z [36;1mchmod +x extensions/vscode/e2e/storage/VSCode-linux-x64/code[0m
+2025-08-01T02:48:13.6439928Z [36;1mchmod +x extensions/vscode/e2e/storage/chromedriver-linux64/chromedriver[0m
+2025-08-01T02:48:13.6475494Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:13.6475931Z ##[endgroup]
+2025-08-01T02:48:13.6594314Z ##[group]Run mkdir -p ~/.ssh
+2025-08-01T02:48:13.6594656Z [36;1mmkdir -p ~/.ssh[0m
+2025-08-01T02:48:13.6594983Z [36;1mecho "$SSH_KEY" > ~/.ssh/id_rsa[0m
+2025-08-01T02:48:13.6595332Z [36;1mchmod 600 ~/.ssh/id_rsa[0m
+2025-08-01T02:48:13.6595727Z [36;1mssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts[0m
+2025-08-01T02:48:13.6596409Z [36;1mecho -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config[0m
+2025-08-01T02:48:13.6621997Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:13.6622435Z env:
+2025-08-01T02:48:13.6629817Z   SSH_KEY: ***
+2025-08-01T02:48:13.6630160Z   SSH_HOST: ***
+2025-08-01T02:48:13.6630429Z ##[endgroup]
+2025-08-01T02:48:13.9111026Z # ***:22 SSH-2.0-OpenSSH_8.7
+2025-08-01T02:48:13.9154689Z # ***:22 SSH-2.0-OpenSSH_8.7
+2025-08-01T02:48:13.9295700Z # ***:22 SSH-2.0-OpenSSH_8.7
+2025-08-01T02:48:13.9828568Z # ***:22 SSH-2.0-OpenSSH_8.7
+2025-08-01T02:48:13.9893832Z # ***:22 SSH-2.0-OpenSSH_8.7
+2025-08-01T02:48:13.9960999Z ##[group]Run Xvfb :99 &
+2025-08-01T02:48:13.9961317Z [36;1mXvfb :99 &[0m
+2025-08-01T02:48:13.9961758Z [36;1mexport DISPLAY=:99[0m
+2025-08-01T02:48:13.9988122Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:13.9988726Z ##[endgroup]
+2025-08-01T02:48:14.0577847Z The XKEYBOARD keymap compiler (xkbcomp) reports:
+2025-08-01T02:48:14.0578898Z > Warning:          Could not resolve keysym XF86CameraAccessEnable
+2025-08-01T02:48:14.0579927Z > Warning:          Could not resolve keysym XF86CameraAccessDisable
+2025-08-01T02:48:14.0580923Z > Warning:          Could not resolve keysym XF86CameraAccessToggle
+2025-08-01T02:48:14.0582106Z > Warning:          Could not resolve keysym XF86NextElement
+2025-08-01T02:48:14.0583085Z > Warning:          Could not resolve keysym XF86PreviousElement
+2025-08-01T02:48:14.0584093Z > Warning:          Could not resolve keysym XF86AutopilotEngageToggle
+2025-08-01T02:48:14.0585044Z > Warning:          Could not resolve keysym XF86MarkWaypoint
+2025-08-01T02:48:14.0585895Z > Warning:          Could not resolve keysym XF86Sos
+2025-08-01T02:48:14.0586727Z > Warning:          Could not resolve keysym XF86NavChart
+2025-08-01T02:48:14.0587673Z > Warning:          Could not resolve keysym XF86FishingChart
+2025-08-01T02:48:14.0588662Z > Warning:          Could not resolve keysym XF86SingleRangeRadar
+2025-08-01T02:48:14.0589632Z > Warning:          Could not resolve keysym XF86DualRangeRadar
+2025-08-01T02:48:14.0590576Z > Warning:          Could not resolve keysym XF86RadarOverlay
+2025-08-01T02:48:14.0591517Z > Warning:          Could not resolve keysym XF86TraditionalSonar
+2025-08-01T02:48:14.0592640Z > Warning:          Could not resolve keysym XF86ClearvuSonar
+2025-08-01T02:48:14.0593225Z > Warning:          Could not resolve keysym XF86SidevuSonar
+2025-08-01T02:48:14.0593768Z > Warning:          Could not resolve keysym XF86NavInfo
+2025-08-01T02:48:14.0594661Z Errors from xkbcomp are not fatal to the X server
+2025-08-01T02:48:19.0070308Z ##[group]Run cd extensions/vscode
+2025-08-01T02:48:19.0070692Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:48:19.0071238Z [36;1mIGNORE_SSH_TESTS="false" TEST_FILE="e2e/_output/tests/PromptFile.test.js" npm run e2e:ci:run-yaml[0m
+2025-08-01T02:48:19.0098922Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:19.0099349Z env:
+2025-08-01T02:48:19.0099608Z   DISPLAY: :99
+2025-08-01T02:48:19.0099881Z ##[endgroup]
+2025-08-01T02:48:19.1200464Z 
+2025-08-01T02:48:19.1201020Z > continue@1.1.72 e2e:ci:run-yaml
+2025-08-01T02:48:19.1202388Z > npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue-yaml npm run e2e:test
+2025-08-01T02:48:19.1203083Z 
+2025-08-01T02:48:19.2305383Z 
+2025-08-01T02:48:19.2305890Z > continue@1.1.72 e2e:compile
+2025-08-01T02:48:19.2306371Z > tsc -p ./tsconfig.e2e.json
+2025-08-01T02:48:19.2306600Z 
+2025-08-01T02:48:21.3143986Z 
+2025-08-01T02:48:21.3144773Z > continue@1.1.72 e2e:copy-vsix
+2025-08-01T02:48:21.3145584Z > chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh
+2025-08-01T02:48:21.3145942Z 
+2025-08-01T02:48:21.3207835Z Current directory: /home/runner/work/continue/continue/extensions/vscode
+2025-08-01T02:48:21.5078769Z 
+2025-08-01T02:48:21.5079390Z > continue@1.1.72 e2e:install-vsix
+2025-08-01T02:48:21.5080316Z > extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage
+2025-08-01T02:48:21.5080813Z 
+2025-08-01T02:48:22.0718631Z Processing VSIX file: e2e/vsix/continue.vsix
+2025-08-01T02:48:22.0723047Z File is not a valid URL. Checking existence: e2e/vsix/continue.vsix
+2025-08-01T02:48:22.6519479Z Installing extensions...
+2025-08-01T02:48:25.2624153Z Extension 'continue.vsix' was successfully installed.
+2025-08-01T02:48:25.4146353Z 
+2025-08-01T02:48:25.4147040Z > continue@1.1.72 e2e:install-extensions
+2025-08-01T02:48:25.4151124Z > extest install-from-marketplace ms-vscode-remote.remote-ssh --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-containers --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-wsl --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage
+2025-08-01T02:48:25.4154012Z 
+2025-08-01T02:48:26.4484465Z Installing extensions...
+2025-08-01T02:48:26.7261488Z Updating the extension 'ms-vscode-remote.remote-ssh' to the version 0.120.0
+2025-08-01T02:48:26.7262425Z Installing extension 'ms-vscode-remote.remote-ssh'...
+2025-08-01T02:48:26.9154631Z Extension 'ms-vscode-remote.remote-ssh' v0.115.1 was successfully installed.
+2025-08-01T02:48:27.9696461Z Installing extensions...
+2025-08-01T02:48:28.3125991Z Updating the extension 'ms-vscode-remote.remote-containers' to the version 0.422.1
+2025-08-01T02:48:28.3127349Z Installing extension 'ms-vscode-remote.remote-containers'...
+2025-08-01T02:48:28.5366044Z Extension 'ms-vscode-remote.remote-containers' v0.401.0 was successfully installed.
+2025-08-01T02:48:29.5931170Z Installing extensions...
+2025-08-01T02:48:29.7820116Z Updating the extension 'ms-vscode-remote.remote-wsl' to the version 0.99.0
+2025-08-01T02:48:29.7821222Z Installing extension 'ms-vscode-remote.remote-wsl'...
+2025-08-01T02:48:30.0640209Z Extension 'ms-vscode-remote.remote-wsl' v0.88.5 was successfully installed.
+2025-08-01T02:48:30.2109567Z 
+2025-08-01T02:48:30.2110152Z > continue@1.1.72 e2e:test
+2025-08-01T02:48:30.2111276Z > NODE_ENV=e2e extest run-tests ${TEST_FILE:-'./e2e/_output/tests/*.test.js'} --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage
+2025-08-01T02:48:30.2112192Z 
+2025-08-01T02:48:30.9651196Z 
+2025-08-01T02:48:30.9653249Z 
+2025-08-01T02:48:30.9773861Z Detected user defined code settings
+2025-08-01T02:48:30.9787123Z Writing code settings to /home/runner/work/continue/continue/extensions/vscode/e2e/storage/settings/User/settings.json
+2025-08-01T02:48:30.9796930Z Launching browser...
+2025-08-01T02:48:36.8710740Z Browser ready in 5905 ms
+2025-08-01T02:48:36.8711573Z Launching tests...
+2025-08-01T02:48:36.8716533Z   Prompt file
+2025-08-01T02:48:53.6895522Z     ✔ Should display intellisense for default context providers and preamble (5067ms)
+2025-08-01T02:48:55.1382106Z 
+2025-08-01T02:48:55.3278040Z Shutting down the browser
+2025-08-01T02:48:55.4983236Z 
+2025-08-01T02:48:55.4984823Z   1 passing (25s)
+2025-08-01T02:48:55.4985264Z 
+2025-08-01T02:48:55.5252249Z ##[group]Run cd extensions/vscode
+2025-08-01T02:48:55.5252636Z [36;1mcd extensions/vscode[0m
+2025-08-01T02:48:55.5252993Z [36;1mrm -rf e2e/.test-extensions/continue*[0m
+2025-08-01T02:48:55.5280917Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:55.5281346Z ##[endgroup]
+2025-08-01T02:48:55.6029432Z ##[group]Run FILENAME="e2e/_output/tests/PromptFile.test.js"
+2025-08-01T02:48:55.6029961Z [36;1mFILENAME="e2e/_output/tests/PromptFile.test.js"[0m
+2025-08-01T02:48:55.6030538Z [36;1mSANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion[0m
+2025-08-01T02:48:55.6031158Z [36;1mecho "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT[0m
+2025-08-01T02:48:55.6058026Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:55.6058478Z ##[endgroup]
+2025-08-01T02:48:55.6132940Z ##[group]Run echo "Searching for e2e.log file..."
+2025-08-01T02:48:55.6133379Z [36;1mecho "Searching for e2e.log file..."[0m
+2025-08-01T02:48:55.6133802Z [36;1mfind $GITHUB_WORKSPACE -name "e2e.log" -type f[0m
+2025-08-01T02:48:55.6158922Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2025-08-01T02:48:55.6159534Z ##[endgroup]
+2025-08-01T02:48:55.6203939Z Searching for e2e.log file...
+2025-08-01T02:48:56.0845922Z ##[group]Run actions/upload-artifact@v4
+2025-08-01T02:48:56.0846554Z with:
+2025-08-01T02:48:56.0847196Z   name: e2e-logs-e2e-_output-tests-PromptFile.test.js-yaml
+2025-08-01T02:48:56.0847998Z   path: extensions/vscode/e2e.log
+2025-08-01T02:48:56.0848619Z   if-no-files-found: warn
+2025-08-01T02:48:56.0849165Z   compression-level: 6
+2025-08-01T02:48:56.0849754Z   overwrite: false
+2025-08-01T02:48:56.0850330Z   include-hidden-files: false
+2025-08-01T02:48:56.0850956Z ##[endgroup]
+2025-08-01T02:48:56.2962484Z ##[warning]No files were found with the provided path: extensions/vscode/e2e.log. No artifacts will be uploaded.
+2025-08-01T02:48:56.3139714Z Post job cleanup.
+2025-08-01T02:48:56.3690876Z Post job cleanup.
+2025-08-01T02:48:56.4926006Z Cache hit occurred on the primary key Linux-vscode-storage-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:48:56.5021941Z Post job cleanup.
+2025-08-01T02:48:56.6256111Z Cache hit occurred on the primary key CONSTANT, not saving cache.
+2025-08-01T02:48:56.6847682Z Post job cleanup.
+2025-08-01T02:48:56.8086474Z Cache hit occurred on the primary key Linux-vscode-node-modules-53e217cf3939b86344b89f9f70d76c8dbbae80d7722c0287584924eed5748104, not saving cache.
+2025-08-01T02:48:56.8174927Z Post job cleanup.
+2025-08-01T02:48:56.9833213Z Post job cleanup.
+2025-08-01T02:48:57.0764228Z [command]/usr/bin/git version
+2025-08-01T02:48:57.0812152Z git version 2.50.1
+2025-08-01T02:48:57.0856428Z Temporarily overriding HOME='/home/runner/work/_temp/094eb800-2b61-47c1-9fad-7d07d9a46f54' before making global git config changes
+2025-08-01T02:48:57.0858140Z Adding repository directory to the temporary git global config as a safe directory
+2025-08-01T02:48:57.0863052Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/continue/continue
+2025-08-01T02:48:57.0898389Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-08-01T02:48:57.0932727Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-08-01T02:48:57.1179575Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-08-01T02:48:57.1201517Z http.https://github.com/.extraheader
+2025-08-01T02:48:57.1217428Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-08-01T02:48:57.1252474Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-08-01T02:48:57.1570715Z Cleaning up orphan processes
+2025-08-01T02:48:57.1890819Z Terminate orphan process: pid (2717) (Xvfb)
+2025-08-01T02:48:57.1941076Z Terminate orphan process: pid (3598) (xsel)
