@@ -31,6 +31,8 @@ function DocsIndexingStatus({
     (store) => store.indexing.indexing.statuses[docConfig.startUrl],
   );
 
+  const isComplete = status?.status === "complete";
+
   const reIndex = () =>
     ideMessenger.post("indexing/reindex", {
       type: "docs",
@@ -76,6 +78,10 @@ function DocsIndexingStatus({
     }
     return Math.min(100, Math.max(0, status.progress * 100)).toFixed(0);
   }, [status?.progress]);
+
+  const showPagesList = () => {
+    // TODO
+  };
 
   if (hasDeleted) return null;
 
@@ -147,6 +153,26 @@ function DocsIndexingStatus({
           </div>
         </div>
       </div>
+
+      {status && (
+        <div
+          className={`flex flex-row items-center justify-between gap-2 text-sm`}
+        >
+          <p
+            style={{
+              fontSize: fontSize(-4),
+            }}
+            className={`m-0 line-clamp-1 p-0 text-left text-gray-400 ${isComplete ? "cursor-pointer hover:underline" : ""}`}
+            onClick={() => {
+              if (isComplete) {
+                showPagesList();
+              }
+            }}
+          >
+            {isComplete ? "25 pages indexed (5.3 MB)" : status.description}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
