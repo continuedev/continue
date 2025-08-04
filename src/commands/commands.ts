@@ -23,11 +23,6 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "exit",
-    description: "Exit the chat",
-    category: "system",
-  },
-  {
     name: "login",
     description: "Authenticate with your account",
     category: "system",
@@ -43,11 +38,6 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "org",
-    description: "Switch organization",
-    category: "system",
-  },
-  {
     name: "model",
     description: "Switch between available chat models",
     category: "system",
@@ -55,6 +45,16 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   {
     name: "config",
     description: "Switch configuration",
+    category: "system",
+  },
+  {
+    name: "org",
+    description: "Switch organization",
+    category: "system",
+  },
+  {
+    name: "exit",
+    description: "Exit the chat",
     category: "system",
   },
 ];
