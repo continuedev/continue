@@ -44,7 +44,9 @@ For implementation details, see:
 
 ### 2. Manual Override
 
-You can explicitly set capabilities in your `config.yaml` to override autodetection:
+You can configure the model to only use the capabilities you specify in your `config.yaml`, rather than granting it access to everything it supports.
+
+Explicitly defining the capabilities means that autodetection won’t add anything else.
 
 ```yaml
 models:
