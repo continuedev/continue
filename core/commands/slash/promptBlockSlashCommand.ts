@@ -9,5 +9,6 @@ export function convertPromptBlockToSlashCommand(
     description: prompt.description ?? "",
     prompt: prompt.prompt,
     source: "yaml-prompt-block",
+    promptFile: prompt.sourceFile, // Align with the sourceFile property
   };
 }

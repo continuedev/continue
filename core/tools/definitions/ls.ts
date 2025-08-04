@@ -1,6 +1,7 @@
 import { Tool } from "../..";
 
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const lsTool: Tool = {
   type: "function",
@@ -16,12 +17,11 @@ export const lsTool: Tool = {
     description: "List files and folders in a given directory",
     parameters: {
       type: "object",
-      required: ["dirPath", "recursive"],
       properties: {
         dirPath: {
           type: "string",
           description:
-            "The directory path relative to the root of the project. Always use forward slash paths like '/'. rather than e.g. '.'",
+            "The directory path relative to the root of the project. Use forward slash paths like '/'. rather than e.g. '.'",
         },
         recursive: {
           type: "boolean",
@@ -31,4 +31,12 @@ export const lsTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.LSTool,
+    `To list files and folders in a given directory, call the ${BuiltInToolNames.LSTool} tool with "dirPath" and "recursive". For example:`,
+    [
+      ["dirPath", "path/to/dir"],
+      ["recursive", "false"],
+    ],
+  ),
 };

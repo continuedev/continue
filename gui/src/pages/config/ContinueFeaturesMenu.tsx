@@ -1,12 +1,12 @@
 import ToggleSwitch from "../../components/gui/Switch";
 interface ContinueFeaturesMenuProps {
-  optInNextEditFeature: boolean;
-  handleOptInNextEditToggle: (value: boolean) => void;
+  enableStaticContextualization: boolean;
+  handleEnableStaticContextualizationToggle: (value: boolean) => void;
 }
 
 export function ContinueFeaturesMenu({
-  optInNextEditFeature,
-  handleOptInNextEditToggle,
+  enableStaticContextualization,
+  handleEnableStaticContextualizationToggle,
 }: ContinueFeaturesMenuProps) {
   return (
     <div className="flex w-full flex-col gap-y-4">
@@ -15,9 +15,13 @@ export function ContinueFeaturesMenu({
       </div>
       <div className="flex w-full flex-col gap-y-4">
         <ToggleSwitch
-          isToggled={optInNextEditFeature}
-          onToggle={() => handleOptInNextEditToggle(!optInNextEditFeature)}
-          text="Enable Next Edit Over Autocomplete"
+          isToggled={enableStaticContextualization}
+          onToggle={() =>
+            handleEnableStaticContextualizationToggle(
+              !enableStaticContextualization,
+            )
+          }
+          text="Use Static Contextualization"
         />
       </div>
     </div>

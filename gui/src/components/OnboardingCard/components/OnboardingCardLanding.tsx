@@ -31,6 +31,9 @@ export function OnboardingCardLanding({
         // A new assistant is created when the account is created
         // We want to switch to this immediately
         void dispatch(selectFirstHubProfile());
+
+        ideMessenger.post("showTutorial", undefined);
+        ideMessenger.post("showToast", ["info", "🎉 Welcome to Continue!"]);
       }
     });
   }

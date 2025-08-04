@@ -1,30 +1,33 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
+import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
   setActive,
   setAppliedRulesAtIndex,
+  setContextPercentage,
   setInactive,
+  setInlineErrorMessage,
+  setIsPruned,
   setToolGenerated,
-  setWarningMessage,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
-import {
-  constructMessages,
-  getBaseSystemMessage,
-} from "../util/constructMessages";
+import { constructMessages } from "../util/constructMessages";
 
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
+import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
+import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -139,11 +142,15 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const allActiveTools = selectActiveTools(state);
     const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
-    const toolsSupported = modelSupportsTools(selectedChatModel);
+    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
+
+    // Use the centralized selector to determine if system message tools should be used
+    const useSystemTools = selectUseSystemMessageTools(state);
+    const useNativeTools = !useSystemTools && supportsNativeTools;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
-    if (toolsSupported && activeTools.length > 0) {
+    if (useNativeTools && activeTools.length > 0) {
       completionOptions = {
         tools: activeTools,
       };
@@ -153,7 +160,8 @@ export const streamNormalInput = createAsyncThunk<
       completionOptions = {
         ...completionOptions,
         reasoning: true,
-        reasoningBudgetTokens: completionOptions.reasoningBudgetTokens ?? 2048,
+        reasoningBudgetTokens:
+          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
       };
     }
 
@@ -163,15 +171,21 @@ export const streamNormalInput = createAsyncThunk<
       selectedChatModel,
     );
 
+    const systemMessage = useSystemTools
+      ? addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools)
+      : baseSystemMessage;
+
     const withoutMessageIds = state.session.history.map((item) => {
       const { id, ...messageWithoutId } = item.message;
       return { ...item, message: messageWithoutId };
     });
+
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
-      baseSystemMessage,
+      systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
+      !useNativeTools,
     );
 
     // TODO parallel tool calls will cause issues with this
@@ -184,45 +198,32 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     dispatch(setActive());
-    // Remove the warning message before each compileChat call
-    dispatch(setWarningMessage(undefined));
+    dispatch(setInlineErrorMessage(undefined));
+
     const precompiledRes = await extra.ideMessenger.request("llm/compileChat", {
       messages,
       options: completionOptions,
     });
 
     if (precompiledRes.status === "error") {
-      throw new Error(precompiledRes.error);
-    }
-
-    const { compiledChatMessages, pruningStatus } = precompiledRes.content;
-
-    switch (pruningStatus) {
-      case "pruned":
-        dispatch(
-          setWarningMessage({
-            message: `Chat history exceeds model's context length (${state.config.config.selectedModelByRole.chat?.contextLength} tokens). Old messages will not be included.`,
-            level: "warning",
-            category: "exceeded-context-length",
-          }),
-        );
-        break;
-      case "deleted-last-input":
-        dispatch(
-          setWarningMessage({
-            message:
-              "The provided context items are too large. Please trim the context item to fit the model's context length or increase the model's context length by editing the configuration.",
-            level: "fatal",
-            category: "deleted-last-input",
-          }),
-        );
+      if (precompiledRes.error.includes("Not enough context")) {
+        dispatch(setInlineErrorMessage("out-of-context"));
         dispatch(setInactive());
         return;
+      } else {
+        throw new Error(precompiledRes.error);
+      }
     }
+
+    const { compiledChatMessages, didPrune, contextPercentage } =
+      precompiledRes.content;
+
+    dispatch(setIsPruned(didPrune));
+    dispatch(setContextPercentage(contextPercentage));
 
     // Send request and stream response
     const streamAborter = state.session.streamAborter;
-    const gen = extra.ideMessenger.llmStreamChat(
+    let gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
@@ -232,6 +233,9 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
+    if (!useNativeTools && activeTools.length > 0) {
+      gen = interceptSystemToolCalls(gen, streamAborter);
+    }
 
     let next = await gen.next();
     while (!next.done) {
@@ -264,6 +268,7 @@ export const streamNormalInput = createAsyncThunk<
               rules: appliedRules.map((rule) => ({
                 id: getRuleId(rule),
                 rule: rule.rule,
+                slug: rule.slug,
               })),
             }),
           },
@@ -272,7 +277,32 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-    dispatch(setInactive());
+
+    // Check if we have any tool calls that were just generated
+    const newState = getState();
+    const toolSettings = newState.ui.toolSettings;
+    const allToolCallStates = selectCurrentToolCalls(newState);
+    const generatingToolCalls = allToolCallStates.filter(
+      (toolCallState) => toolCallState.status === "generating",
+    );
+
+    // Check if ALL generating tool calls are auto-approved
+    const allAutoApproved =
+      generatingToolCalls.length > 0 &&
+      generatingToolCalls.every(
+        (toolCallState) =>
+          toolSettings[toolCallState.toolCall.function.name] ===
+          "allowedWithoutPermission",
+      );
+
+    // Only set inactive if:
+    // 1. There are no tool calls, OR
+    // 2. There are tool calls but they require manual approval
+    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
+    if (generatingToolCalls.length === 0 || !allAutoApproved) {
+      dispatch(setInactive());
+    }
+
     await handleToolCallExecution(dispatch, getState);
   },
 );

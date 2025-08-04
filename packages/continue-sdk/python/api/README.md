@@ -84,16 +84,18 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = openapi_client.DefaultApi(api_client)
+    owner_slug = 'owner_slug_example' # str | Slug of the user or organization that owns the assistant
+    package_slug = 'package_slug_example' # str | Slug of the assistant package
     always_use_proxy = 'always_use_proxy_example' # str | Whether to always use the Continue-managed proxy for model requests (optional)
     organization_id = 'organization_id_example' # str | ID of the organization to scope assistants to. If not provided, personal assistants are returned. (optional)
 
     try:
-        # List assistants for IDE
-        api_response = api_instance.list_assistants(always_use_proxy=always_use_proxy, organization_id=organization_id)
-        print("The response of DefaultApi->list_assistants:\n")
+        # Get a specific assistant by slug
+        api_response = api_instance.get_assistant(owner_slug, package_slug, always_use_proxy=always_use_proxy, organization_id=organization_id)
+        print("The response of DefaultApi->get_assistant:\n")
         pprint(api_response)
     except ApiException as e:
-        print("Exception when calling DefaultApi->list_assistants: %s\n" % e)
+        print("Exception when calling DefaultApi->get_assistant: %s\n" % e)
 
 ```
 
@@ -101,16 +103,34 @@ with openapi_client.ApiClient(configuration) as api_client:
 
 All URIs are relative to *https://api.continue.dev*
 
-| Class        | Method                                                    | HTTP request                 | Description             |
-| ------------ | --------------------------------------------------------- | ---------------------------- | ----------------------- |
-| _DefaultApi_ | [**list_assistants**](docs/DefaultApi.md#list_assistants) | **GET** /ide/list-assistants | List assistants for IDE |
+| Class        | Method                                                                                  | HTTP request                                         | Description                                       |
+| ------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
+| _DefaultApi_ | [**get_assistant**](docs/DefaultApi.md#get_assistant)                                   | **GET** /ide/get-assistant/{ownerSlug}/{packageSlug} | Get a specific assistant by slug                  |
+| _DefaultApi_ | [**get_free_trial_status**](docs/DefaultApi.md#get_free_trial_status)                   | **GET** /ide/free-trial-status                       | Get free trial status for user                    |
+| _DefaultApi_ | [**get_models_add_on_checkout_url**](docs/DefaultApi.md#get_models_add_on_checkout_url) | **GET** /ide/get-models-add-on-checkout-url          | Get Stripe checkout URL for models add-on         |
+| _DefaultApi_ | [**get_policy**](docs/DefaultApi.md#get_policy)                                         | **GET** /ide/policy                                  | Get organization policy                           |
+| _DefaultApi_ | [**list_assistant_full_slugs**](docs/DefaultApi.md#list_assistant_full_slugs)           | **GET** /ide/list-assistant-full-slugs               | List assistant full slugs (currently returns 429) |
+| _DefaultApi_ | [**list_assistants**](docs/DefaultApi.md#list_assistants)                               | **GET** /ide/list-assistants                         | List assistants for IDE                           |
+| _DefaultApi_ | [**list_organizations**](docs/DefaultApi.md#list_organizations)                         | **GET** /ide/list-organizations                      | List organizations for user                       |
+| _DefaultApi_ | [**sync_secrets**](docs/DefaultApi.md#sync_secrets)                                     | **POST** /ide/sync-secrets                           | Synchronize secrets for user                      |
 
 ## Documentation For Models
 
+- [GetAssistant200Response](docs/GetAssistant200Response.md)
+- [GetAssistant403Response](docs/GetAssistant403Response.md)
+- [GetAssistant404Response](docs/GetAssistant404Response.md)
+- [GetFreeTrialStatus200Response](docs/GetFreeTrialStatus200Response.md)
+- [GetModelsAddOnCheckoutUrl200Response](docs/GetModelsAddOnCheckoutUrl200Response.md)
+- [GetModelsAddOnCheckoutUrl500Response](docs/GetModelsAddOnCheckoutUrl500Response.md)
+- [GetPolicy200Response](docs/GetPolicy200Response.md)
+- [ListAssistantFullSlugs429Response](docs/ListAssistantFullSlugs429Response.md)
 - [ListAssistants200ResponseInner](docs/ListAssistants200ResponseInner.md)
 - [ListAssistants200ResponseInnerConfigResult](docs/ListAssistants200ResponseInnerConfigResult.md)
 - [ListAssistants401Response](docs/ListAssistants401Response.md)
 - [ListAssistants404Response](docs/ListAssistants404Response.md)
+- [ListOrganizations200Response](docs/ListOrganizations200Response.md)
+- [ListOrganizations200ResponseOrganizationsInner](docs/ListOrganizations200ResponseOrganizationsInner.md)
+- [SyncSecretsRequest](docs/SyncSecretsRequest.md)
 
 <a id="documentation-for-authorization"></a>
 

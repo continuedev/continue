@@ -22,7 +22,13 @@
   },
   "overrides": [
     {
-      "files": ["**/*.vitest.ts"],
+      "files": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.vitest.ts"
+      ],
       "rules": {
         "max-lines-per-function": "off"
       }

@@ -5,7 +5,6 @@ import {
   CompiledMessagesResult,
   MessageContent,
   MessagePart,
-  PruningStatus,
   Tool,
 } from "../index.js";
 import { autodetectTemplateType } from "./autodetect.js";
@@ -18,6 +17,7 @@ import {
 
 import { renderChatMessage } from "../util/messageContent.js";
 import { AsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
+import { DEFAULT_PRUNING_LENGTH } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -355,7 +355,7 @@ function pruneStringFromTop(
 
 const MAX_TOKEN_SAFETY_BUFFER = 1000;
 const TOKEN_SAFETY_PROPORTION = 0.02;
-function getTokenCountingBufferSafety(contextLength: number) {
+export function getTokenCountingBufferSafety(contextLength: number) {
   return Math.min(
     MAX_TOKEN_SAFETY_BUFFER,
     contextLength * TOKEN_SAFETY_PROPORTION,
@@ -363,9 +363,6 @@ function getTokenCountingBufferSafety(contextLength: number) {
 }
 
 const MIN_RESPONSE_TOKENS = 1000;
-function getMinResponseTokens(maxTokens: number) {
-  return Math.min(MIN_RESPONSE_TOKENS, maxTokens);
-}
 
 function pruneRawPromptFromTop(
   modelName: string,
@@ -413,18 +410,20 @@ function pruneRawPromptFromTop(
 function compileChatMessages({
   modelName,
   msgs,
-  contextLength,
+  knownContextLength,
   maxTokens,
   supportsImages,
   tools,
 }: {
   modelName: string;
   msgs: ChatMessage[];
-  contextLength: number;
+  knownContextLength: number | undefined;
   maxTokens: number;
   supportsImages: boolean;
   tools?: Tool[];
 }): CompiledMessagesResult {
+  let didPrune = false;
+
   let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
 
   // If images not supported, convert MessagePart[] to string
@@ -446,21 +445,14 @@ function compileChatMessages({
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
-  while (msgsCopy.length > 1) {
-    if (isUserOrToolMsg(msgsCopy.at(-1))) {
-      break;
-    }
-    msgsCopy.pop();
+  // Extract the tool sequence from the end of the message array
+  const toolSequence = extractToolSequence(msgsCopy);
+
+  // Count tokens for all messages in the tool sequence
+  let lastMessagesTokens = 0;
+  for (const msg of toolSequence) {
+    lastMessagesTokens += countChatMessageTokens(modelName, msg);
   }
-
-  // // Extract the tool sequence from the end of the message array
-  // const toolSequence = extractToolSequence(msgsCopy);
-
-  // // Count tokens for all messages in the tool sequence
-  // let lastMessagesTokens = 0;
-  // for (const msg of toolSequence) {
-  //   lastMessagesTokens += countChatMessageTokens(modelName, msg);
-  // }
 
   // System message
   let systemMsgTokens = 0;
@@ -474,8 +466,9 @@ function compileChatMessages({
     toolTokens = countToolsTokens(tools, modelName);
   }
 
+  const contextLength = knownContextLength ?? DEFAULT_PRUNING_LENGTH;
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const minOutputTokens = getMinResponseTokens(maxTokens);
+  const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, maxTokens);
 
   let inputTokensAvailable = contextLength;
 
@@ -486,19 +479,19 @@ function compileChatMessages({
   // Non-negotiable messages
   inputTokensAvailable -= toolTokens;
   inputTokensAvailable -= systemMsgTokens;
-  // inputTokensAvailable -= lastMessagesTokens;
+  inputTokensAvailable -= lastMessagesTokens;
 
   // Make sure there's enough context for the non-excludable items
-  if (inputTokensAvailable < 0) {
+  if (knownContextLength !== undefined && inputTokensAvailable < 0) {
     throw new Error(
       `Not enough context available to include the system message, last user message, and tools.
-      There must be at least ${minOutputTokens} tokens remaining for output.
-      Request had the following token counts:
-      - contextLength: ${contextLength}
-      - counting safety buffer: ${countingSafetyBuffer}
-      - tools: ~${toolTokens}
-      - system message: ~${systemMsgTokens}
-      - max output tokens: ${maxTokens}`,
+        There must be at least ${minOutputTokens} tokens remaining for output.
+        Request had the following token counts:
+        - contextLength: ${knownContextLength}
+        - counting safety buffer: ${countingSafetyBuffer}
+        - tools: ~${toolTokens}
+        - system message: ~${systemMsgTokens}
+        - max output tokens: ${maxTokens}`,
     );
   }
 
@@ -513,12 +506,10 @@ function compileChatMessages({
     };
   });
 
-  let pruningStatus: PruningStatus = "not-pruned";
-
   while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
     const message = historyWithTokens.shift()!;
     currentTotal -= message.tokens;
-    pruningStatus = "pruned";
+    didPrune = true;
 
     // At this point make sure no latent tool response without corresponding call
     while (historyWithTokens[0]?.role === "tool") {
@@ -527,21 +518,34 @@ function compileChatMessages({
     }
   }
 
-  if (historyWithTokens.length === 0) {
-    pruningStatus = "deleted-last-input";
-  }
-
   // Now reassemble
   const reassembled: ChatMessage[] = [];
   if (systemMsg) {
     reassembled.push(systemMsg);
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
+  reassembled.push(...toolSequence);
 
-  return { compiledChatMessages: reassembled, pruningStatus };
+  const inputTokens =
+    currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;
+  const availableTokens =
+    contextLength - countingSafetyBuffer - minOutputTokens;
+  const contextPercentage = inputTokens / availableTokens;
+  return {
+    compiledChatMessages: reassembled,
+    didPrune,
+    contextPercentage,
+  };
+}
+
+async function cleanupAsyncEncoders(): Promise<void> {
+  try {
+    await llamaAsyncEncoder.close();
+  } catch (e) {}
 }
 
 export {
+  cleanupAsyncEncoders,
   compileChatMessages,
   countTokens,
   countTokensAsync,
