@@ -1,7 +1,7 @@
 {
   "name": "@continuedev/cli",
   "version": "0.0.0-dev",
-  "description": "",
+  "description": "Continue CLI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
