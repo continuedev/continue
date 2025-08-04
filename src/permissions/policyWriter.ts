@@ -12,8 +12,8 @@ import logger from "../util/logger.js";
 export function generatePolicyRule(toolName: string, toolArgs: any): string {
   const normalizedName = normalizeToolName(toolName);
   
-  // For Bash tool (run_terminal_command), create command-specific policies
-  if (normalizedName === "run_terminal_command" && toolArgs?.command) {
+  // For Bash tool, create command-specific policies
+  if (normalizedName === "Bash" && toolArgs?.command) {
     const command = toolArgs.command.trim();
     // Extract the first command (before pipes, &&, ||, etc.)
     const firstCommand = command.split(/[;&|]|&&|\|\|/)[0]?.trim();

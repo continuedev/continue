@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "vitest";
 import { PermissionMode } from "../permissions/types.js";
 import { ToolPermissionService } from "./ToolPermissionService.js";
 
@@ -24,14 +24,13 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
         //   console.log(`${index + 1}. tool: "${policy.tool}", permission: "${policy.permission}"`);
         // });
 
-        const writeFilePolicy = policies.find((p) => p.tool === "write_file");
         const writePolicy = policies.find((p) => p.tool === "Write");
         const wildcardPolicy = policies.find((p) => p.tool === "*");
 
         if (mode === "plan") {
-          // Plan mode should explicitly exclude write_file
-          expect(writeFilePolicy?.permission).toBe("exclude");
-          console.log(`✓ write_file tool correctly excluded in plan mode`);
+          // Plan mode should explicitly exclude Write
+          expect(writePolicy?.permission).toBe("exclude");
+          console.log(`✓ Write tool correctly excluded in plan mode`);
         } else if (mode === "auto") {
           // Auto mode should allow everything
           expect(wildcardPolicy?.permission).toBe("allow");
@@ -39,8 +38,8 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
         } else {
           // Normal mode behavior depends on user config
           console.log(
-            `Normal mode - write_file policy: ${
-              writeFilePolicy?.permission || "none"
+            `Normal mode - Write policy: ${
+              writePolicy?.permission || "none"
             }`
           );
         }
@@ -49,9 +48,9 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
       it(`should check tool resolution order in ${mode} mode`, () => {
         const policies = service.getPermissions().policies;
 
-        // Find all policies that could affect write_file tool
+        // Find all policies that could affect Write tool
         const writeRelevantPolicies = policies.filter(
-          (p) => p.tool === "write_file" || p.tool === "Write" || p.tool === "*"
+          (p) => p.tool === "Write" || p.tool === "*"
         );
 
         console.log(
@@ -66,8 +65,8 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
         });
 
         if (mode === "plan") {
-          // Should have write_file exclude policy BEFORE any wildcard
-          const writeIndex = policies.findIndex((p) => p.tool === "write_file");
+          // Should have Write exclude policy BEFORE any wildcard
+          const writeIndex = policies.findIndex((p) => p.tool === "Write");
           const wildcardIndex = policies.findIndex((p) => p.tool === "*");
 
           expect(writeIndex).toBeGreaterThanOrEqual(0);
@@ -110,7 +109,7 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
       );
     });
 
-    const writeFilePolicy = policies.find((p) => p.tool === "write_file");
-    expect(writeFilePolicy?.permission).toBe("exclude");
+    const writePolicy = policies.find((p) => p.tool === "Write");
+    expect(writePolicy?.permission).toBe("exclude");
   });
 });

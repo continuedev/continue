@@ -5,7 +5,7 @@ import { formatToolArgument } from "./formatters.js";
 
 // List files in a directory
 export const listFilesTool: Tool = {
-  name: "list_files",
+  name: "List",
   displayName: "List",
   description: "List files in a directory",
   parameters: {

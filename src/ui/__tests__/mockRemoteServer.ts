@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import express from "express";
 import { Server } from "http";
 import { DisplayMessage } from "../types.js";

@@ -6,7 +6,7 @@ import { Tool } from "./types.js";
 const execPromise = util.promisify(child_process.exec);
 
 export const viewDiffTool: Tool = {
-  name: "view_diff",
+  name: "Diff",
   displayName: "Diff",
   description: "View all uncommitted changes in the git repository",
   parameters: {

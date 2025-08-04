@@ -3,7 +3,7 @@ import { Tool } from "./types.js";
 import { formatToolArgument } from "./formatters.js";
 
 export const readFileTool: Tool = {
-  name: "read_file",
+  name: "Read",
   displayName: "Read",
   description: "Read the contents of a file at the specified path",
   parameters: {

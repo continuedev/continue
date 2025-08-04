@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { ExponentialBackoffOptions } from "./exponentialBackoff.js";
 
 // Since the functions are not exported, we need to recreate them for testing
@@ -207,7 +207,7 @@ describe("exponentialBackoff utilities", () => {
 
       // Mock Math.random to return 0.5 (middle of jitter range)
       const originalRandom = Math.random;
-      Math.random = jest.fn(() => 0.5);
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
 
       // With jitter factor of 0.5 + 0.5 * 0.5 = 0.75
       expect(calculateDelay(0, options)).toBe(750); // 1000 * 0.75
@@ -222,7 +222,7 @@ describe("exponentialBackoff utilities", () => {
 
       // Mock Math.random to return 0 (minimum jitter)
       const originalRandom = Math.random;
-      Math.random = jest.fn(() => 0);
+      Math.random = vi.fn(() => 0);
 
       // With jitter factor of 0.5 + 0.5 * 0 = 0.5
       expect(calculateDelay(0, options)).toBe(500); // 1000 * 0.5
@@ -237,7 +237,7 @@ describe("exponentialBackoff utilities", () => {
 
       // Mock Math.random to return 1 (maximum jitter)
       const originalRandom = Math.random;
-      Math.random = jest.fn(() => 1);
+      Math.random = vi.fn(() => 1);
 
       // With jitter factor of 0.5 + 0.5 * 1 = 1.0
       expect(calculateDelay(0, options)).toBe(1000); // 1000 * 1.0
@@ -252,7 +252,7 @@ describe("exponentialBackoff utilities", () => {
 
       // Mock Math.random to return 0.5
       const originalRandom = Math.random;
-      Math.random = jest.fn(() => 0.5);
+      Math.random = vi.fn(() => 0.5);
 
       // calculateDelay(2, options) would be 4000, but capped at 3000
       // Then jitter applied: 3000 * 0.75 = 2250

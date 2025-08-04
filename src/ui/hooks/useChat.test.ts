@@ -4,8 +4,8 @@ import {
   describe,
   expect,
   it,
-  jest,
-} from "@jest/globals";
+  vi,
+} from "vitest";
 import { createMinimalTestContext } from "../../test-helpers/ui-test-context.js";
 
 describe("useChat", () => {
@@ -13,14 +13,14 @@ describe("useChat", () => {
 
   beforeEach(() => {
     context = createMinimalTestContext();
-    jest.clearAllTimers();
-    jest.useFakeTimers();
+    vi.clearAllTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     context.cleanup();
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   it("should initialize hook properly", () => {

@@ -1,41 +1,41 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { formatToolArgument } from "./formatters.js";
 import { formatToolCall } from "./index.js";
 
 describe("formatToolCall", () => {
   beforeEach(() => {
     // Mock process.cwd to return a consistent value
-    jest.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
+    vi.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should format tool name without arguments", () => {
-    expect(formatToolCall("write_file")).toBe("Write");
-    expect(formatToolCall("read_file", {})).toBe("Read");
+    expect(formatToolCall("Write")).toBe("Write");
+    expect(formatToolCall("Read", {})).toBe("Read");
     expect(formatToolCall("non_existent_tool", null)).toBe("non_existent_tool");
   });
 
   it("should format tool name with relative path argument", () => {
-    expect(formatToolCall("write_file", { filepath: "README.md" })).toBe(
+    expect(formatToolCall("Write", { filepath: "README.md" })).toBe(
       "Write(README.md)"
     );
-    expect(formatToolCall("read_file", { filepath: "src/index.ts" })).toBe(
+    expect(formatToolCall("Read", { filepath: "src/index.ts" })).toBe(
       "Read(src/index.ts)"
     );
   });
 
   it("should convert absolute paths to relative paths", () => {
     expect(
-      formatToolCall("write_file", {
+      formatToolCall("Write", {
         filepath: "/Users/test/project/README.md",
       })
     ).toBe("Write(README.md)");
 
     expect(
-      formatToolCall("read_file", {
+      formatToolCall("Read", {
         filepath: "/Users/test/project/src/components/App.tsx",
       })
     ).toBe("Read(src/components/App.tsx)");
@@ -43,20 +43,20 @@ describe("formatToolCall", () => {
 
   it("should handle absolute paths outside the project", () => {
     expect(
-      formatToolCall("write_file", { filepath: "/Users/other/file.txt" })
+      formatToolCall("Write", { filepath: "/Users/other/file.txt" })
     ).toBe("Write(../../other/file.txt)");
   });
 
   it("should handle non-path arguments", () => {
-    expect(formatToolCall("search_code", { pattern: "TODO" })).toBe(
+    expect(formatToolCall("Search", { pattern: "TODO" })).toBe(
       "Search(TODO)"
     );
-    expect(formatToolCall("search_code", { pattern: 123 })).toBe("Search(123)");
+    expect(formatToolCall("Search", { pattern: 123 })).toBe("Search(123)");
   });
 
   it("should use first argument when multiple are provided", () => {
     expect(
-      formatToolCall("write_file", {
+      formatToolCall("Write", {
         filepath: "test.txt",
         content: "Hello world",
       })
@@ -66,11 +66,11 @@ describe("formatToolCall", () => {
 
 describe("formatToolArgument", () => {
   beforeEach(() => {
-    jest.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
+    vi.spyOn(process, "cwd").mockReturnValue("/Users/test/project");
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should return empty string for null/undefined", () => {

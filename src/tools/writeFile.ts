@@ -25,7 +25,7 @@ export function generateDiff(
 }
 
 export const writeFileTool: Tool = {
-  name: "write_file",
+  name: "Write",
   displayName: "Write",
   description: "Write content to a file at the specified path",
   parameters: {

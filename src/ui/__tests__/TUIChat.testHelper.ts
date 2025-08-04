@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { render } from "ink-testing-library";
 import React from "react";
 import TUIChat from "../TUIChat.js";
@@ -56,12 +56,8 @@ export function runTest(
         const { useServices, useService } = await import(
           "../../hooks/useService.js"
         );
-        const mockUseServices = useServices as jest.MockedFunction<
-          typeof useServices
-        >;
-        const mockUseService = useService as jest.MockedFunction<
-          typeof useService
-        >;
+        const mockUseServices = useServices as any;
+        const mockUseService = useService as any;
 
         if (testMode === "remote") {
           // Set up remote mode - use different mocks
@@ -76,7 +72,7 @@ export function runTest(
             value: null,
             state: "idle",
             error: null,
-            reload: jest.fn(() => Promise.resolve()),
+            reload: vi.fn(() => Promise.resolve()),
           });
 
           const server = new MockRemoteServer();
@@ -148,7 +144,7 @@ export function runTest(
             })(),
             state: "ready" as const,
             error: null,
-            reload: jest.fn(() => Promise.resolve()),
+            reload: vi.fn(() => Promise.resolve()),
           } as any));
 
           let renderResult: RenderResult | null = null;
@@ -193,18 +189,14 @@ export function runTestSuite(
     describe(`${suiteName} [${mode.toUpperCase()} MODE]`, () => {
       // Store original functions to restore later
       const originalRunTest = global.runTest;
-      const originalDescribe = global.describe as any;
+      const originalDescribe = (global as any).describe;
 
       beforeAll(async () => {
         const { useServices, useService } = await import(
           "../../hooks/useService.js"
         );
-        const mockUseServices = useServices as jest.MockedFunction<
-          typeof useServices
-        >;
-        const mockUseService = useService as jest.MockedFunction<
-          typeof useService
-        >;
+        const mockUseServices = useServices as any;
+        const mockUseService = useService as any;
 
         // Override runTest to only run in the current mode
         global.runTest = (
@@ -229,7 +221,7 @@ export function runTestSuite(
                   value: null,
                   state: "idle",
                   error: null,
-                  reload: jest.fn(() => Promise.resolve()),
+                  reload: vi.fn(() => Promise.resolve()),
                 });
 
                 const server = new MockRemoteServer();
@@ -304,7 +296,7 @@ export function runTestSuite(
                   })(),
                   state: "ready" as const,
                   error: null,
-                  reload: jest.fn(() => Promise.resolve()),
+                  reload: vi.fn(() => Promise.resolve()),
                 } as any));
 
                 let renderResult: RenderResult | null = null;
@@ -329,7 +321,7 @@ export function runTestSuite(
         };
 
         // Override describe to prevent nested mode descriptions
-        global.describe = ((name: string, fn: () => void) => {
+        (global as any).describe = ((name: string, fn: () => void) => {
           // Just run the function directly, don't create another describe block
           fn();
         }) as any;
@@ -337,7 +329,7 @@ export function runTestSuite(
 
       afterAll(() => {
         global.runTest = originalRunTest;
-        global.describe = originalDescribe;
+        (global as any).describe = originalDescribe;
       });
 
       suiteFn();
