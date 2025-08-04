@@ -21,6 +21,10 @@ export class ModeService extends BaseService<ModeServiceState> {
       mode: "normal",
       toolPermissionService
     });
+    
+    // Increase max listeners since ModeService is a singleton that can have
+    // multiple subscribers (UI components, tests, etc.)
+    this.setMaxListeners(100);
   }
 
   public static getInstance(): ModeService {
