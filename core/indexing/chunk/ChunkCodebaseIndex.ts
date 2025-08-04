@@ -77,14 +77,23 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Add tag
     for (const item of results.addTag) {
-      await db.run(
-        `
-        INSERT INTO chunk_tags (chunkId, tag)
-        SELECT id, ? FROM chunks
-        WHERE cacheKey = ?
-      `,
-        [tagString, item.cacheKey],
-      );
+      try {
+        await db.run(
+          `
+          INSERT INTO chunk_tags (chunkId, tag)
+          SELECT id, ? FROM chunks
+          WHERE cacheKey = ?
+        `,
+          [tagString, item.cacheKey],
+        );
+      } catch (e: any) {
+        if (!e.message.includes("UNIQUE constraint")) {
+          // Throw any errors other than duplicate tag
+          // Possible the changes were already added by another instance of the extension
+          // For example vscode running side by side with intellij
+          throw e;
+        }
+      }
       await markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
       yield {

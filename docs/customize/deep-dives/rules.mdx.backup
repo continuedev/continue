@@ -1,10 +1,10 @@
 ---
 title: "Rules"
-description: Rules are used to provide instructions to the model for Chat, Edit, and Agent requests.
+description: Rules are used to provide instructions to the model for Agent, Chat, and Edit requests.
 keywords: [rules, .continuerules, system, prompt, message]
 ---
 
-Rules provide instructions to the model for [Chat](../../features/chat/quick-start), [Edit](../../features/edit/quick-start), and [Agent](../../features/agent/quick-start) requests.
+Rules provide instructions to the model for [Agent](../../features/agent/quick-start), [Chat](../../features/chat/quick-start), and [Edit](../../features/edit/quick-start) requests.
 
 <Info> Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
 </Info>
@@ -84,7 +84,7 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
   # Continue Docs Standards
 
-  - Follow Docusaurus documentation standards
+  - Follow Mintlify documentation standards
   - Include YAML frontmatter with title, description, and keywords
   - Use consistent heading hierarchy starting with h2 (##)
   - Include relevant Admonition components for tips, warnings, and info
@@ -107,7 +107,7 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
       globs: docs/**/*.{md,mdx}
       alwaysApply: false
       rule: >
-        - Follow Docusaurus documentation standards
+        - Follow Mintlify documentation standards
         - Include YAML frontmatter with title, description, and keywords
         - Use consistent heading hierarchy starting with h2 (##)
         - Include relevant Admonition components for tips, warnings, and info
@@ -166,7 +166,7 @@ Whenever you are writing React code, make sure to
 
 ### Chat System Message
 
-Continue includes a simple default system message for [Chat](../../features/chat/quick-start) and [Agent](../../features/agent/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Continue includes a simple default system message for [Agent](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 
