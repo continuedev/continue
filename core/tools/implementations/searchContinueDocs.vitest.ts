@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ToolExtras } from "../..";
 
 // Mock TrieveSDK using Vitest's better ES module mocking
