@@ -179,7 +179,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       return `Successfully edited ${args.filepath}`;
     } catch (error) {
       throw new Error(
-        `Failed to edit ${args.filepath}:\n ${
+        `Error: failed to edit ${args.filepath}:\n ${
           error instanceof Error ? error.message : String(error)
         }`
       );
