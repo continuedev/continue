@@ -1,5 +1,9 @@
 import { Position, Range } from "../..";
-import { CODE_TO_EDIT_CLOSE, CODE_TO_EDIT_OPEN, CURSOR } from "../constants";
+import {
+  MERCURY_CODE_TO_EDIT_CLOSE,
+  MERCURY_CODE_TO_EDIT_OPEN,
+  MERCURY_CURSOR,
+} from "../constants";
 import { insertCursorToken } from "./utils";
 
 export function recentlyViewedCodeSnippetsBlock(
@@ -28,17 +32,17 @@ export function currentFileContentBlock(
   const insertedCursorLines = insertCursorToken(
     currentFileContentLines,
     cursorPosition,
-    CURSOR,
+    MERCURY_CURSOR,
   );
 
   const instrumentedLines = [
     ...insertedCursorLines.slice(0, editableRegionStartLine),
-    CODE_TO_EDIT_OPEN,
+    MERCURY_CODE_TO_EDIT_OPEN,
     ...insertedCursorLines.slice(
       editableRegionStartLine,
       editableRegionEndLine + 1,
     ),
-    CODE_TO_EDIT_CLOSE,
+    MERCURY_CODE_TO_EDIT_CLOSE,
     ...insertedCursorLines.slice(editableRegionEndLine + 1),
   ];
 

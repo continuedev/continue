@@ -4,14 +4,14 @@ import { SnippetPayload } from "../../autocomplete/snippets";
 import { AutocompleteSnippetType } from "../../autocomplete/snippets/types";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
 import {
-  CURRENT_FILE_CONTENT_CLOSE,
-  CURRENT_FILE_CONTENT_OPEN,
-  CURSOR,
-  EDIT_DIFF_HISTORY_CLOSE,
-  EDIT_DIFF_HISTORY_OPEN,
-  RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
-  RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
-  USER_CURSOR_IS_HERE_TOKEN,
+  MERCURY_CURRENT_FILE_CONTENT_CLOSE,
+  MERCURY_CURRENT_FILE_CONTENT_OPEN,
+  MERCURY_CURSOR,
+  MERCURY_EDIT_DIFF_HISTORY_CLOSE,
+  MERCURY_EDIT_DIFF_HISTORY_OPEN,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
+  MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 import {
   NextEditModelName,
@@ -75,15 +75,15 @@ describe("NextEditPromptEngine", () => {
       expect(result.prompt.role).toBe("user");
 
       const content = result.prompt.content;
-      expect(content).toContain(RECENTLY_VIEWED_CODE_SNIPPETS_OPEN);
-      expect(content).toContain(RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE);
-      expect(content).toContain(CURRENT_FILE_CONTENT_OPEN);
-      expect(content).toContain(CURRENT_FILE_CONTENT_CLOSE);
-      expect(content).toContain(EDIT_DIFF_HISTORY_OPEN);
-      expect(content).toContain(EDIT_DIFF_HISTORY_CLOSE);
+      expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN);
+      expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE);
+      expect(content).toContain(MERCURY_CURRENT_FILE_CONTENT_OPEN);
+      expect(content).toContain(MERCURY_CURRENT_FILE_CONTENT_CLOSE);
+      expect(content).toContain(MERCURY_EDIT_DIFF_HISTORY_OPEN);
+      expect(content).toContain(MERCURY_EDIT_DIFF_HISTORY_CLOSE);
 
       expect(result.userEdits).toBe(ctx.editDiffHistory);
-      expect(result.userExcerpts).toContain(CURSOR);
+      expect(result.userExcerpts).toContain(MERCURY_CURSOR);
     });
 
     it("should render model-1 prompt correctly", async () => {
@@ -96,7 +96,7 @@ describe("NextEditPromptEngine", () => {
       expect(result.prompt.content).toContain("```ts");
 
       expect(result.userEdits).toBe(ctx.userEdits);
-      expect(result.userExcerpts).toContain(USER_CURSOR_IS_HERE_TOKEN);
+      expect(result.userExcerpts).toContain(MODEL_1_USER_CURSOR_IS_HERE_TOKEN);
     });
 
     it("should handle 'this field is not used' model name", async () => {
@@ -229,7 +229,7 @@ describe("NextEditPromptEngine", () => {
       };
 
       return renderPrompt(mercuryHelper, ctx).then((result) => {
-        expect(result.userExcerpts).toContain(CURSOR);
+        expect(result.userExcerpts).toContain(MERCURY_CURSOR);
       });
     });
   });

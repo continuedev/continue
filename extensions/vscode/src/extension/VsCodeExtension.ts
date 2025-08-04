@@ -367,12 +367,6 @@ export class VsCodeExtension {
         selectionManager.documentChanged();
       }
 
-      // if (event.contentChanges.length > 0) {
-      //   this.isTypingSession = true;
-      //   this.lastDocumentChangeTime = Date.now();
-      //   this.resetTypingSession();
-      // }
-
       const editInfo = await handleTextDocumentChange(
         event,
         this.configHandler,
