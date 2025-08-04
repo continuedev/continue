@@ -19,8 +19,8 @@ interface SearchResult {
   link: string;
 }
 
-async function fetchSearchConfiguration(): Promise<SearchConfig> {
-  const response = await fetch(`${SERVER_URL}/api/mcp/config/${SUBDOMAIN}`);
+async function fetchSearchConfiguration(fetchFn = fetch): Promise<SearchConfig> {
+  const response = await fetchFn(`${SERVER_URL}/api/mcp/config/${SUBDOMAIN}`);
 
   if (!response.ok) {
     throw new Error(
@@ -67,7 +67,7 @@ export const searchContinueDocsImpl: ToolImpl = async (args, extras) => {
   const query = getStringArg(args, "query");
 
   try {
-    const config = await fetchSearchConfiguration();
+    const config = await fetchSearchConfiguration(extras.fetch || fetch);
     const results = await searchDocs(query, config);
 
     const contextItems: ContextItem[] = [];
