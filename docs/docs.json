@@ -706,10 +706,6 @@
       "destination": "/customize/model-providers/more/flowise"
     },
     {
-      "source": "/advanced/model-providers/more/llamastack",
-      "destination": "/customize/model-providers/llamastack"
-    },
-    {
       "source": "/reference/Model Providers/huggingfaceinferenceapi",
       "destination": "/customize/model-providers/more/huggingfaceinferenceapi"
     },
@@ -740,6 +736,14 @@
     {
       "source": "/advanced/model-providers/more/llamacpp",
       "destination": "/customize/model-providers/more/llamacpp"
+    },
+    {
+      "source": "/reference/Model Providers/llamastack",
+      "destination": "/customize/model-providers/more/llamastack"
+    },
+    {
+      "source": "/advanced/model-providers/more/llamastack",
+      "destination": "/customize/model-providers/more/llamastack"
     },
     {
       "source": "/reference/Model Providers/llamafile",
