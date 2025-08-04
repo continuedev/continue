@@ -39,6 +39,7 @@ Continue automatically detects capabilities based on your provider and model nam
 This works well for popular models, but may not cover custom deployments or newer models.
 
 For implementation details, see:
+
 - [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
 - [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
 
@@ -84,7 +85,10 @@ models:
 ```
 
 <Info>
-  Note: The `tool_use` capability is for native tool/function calling support. The model must actually support tools for this to work. If your model doesn't support native tools, Continue will automatically use system message tools instead.
+  The `tool_use` capability is for native tool/function calling support. The
+  model must actually support tools for this to work. If your model doesn't
+  support native tools, Continue will automatically use system message tools
+  instead.
 </Info>
 
 ### Disable Capabilities
@@ -100,7 +104,10 @@ models:
 ```
 
 <Warning>
-  An empty capabilities array does not disable autodetection. Continue will still detect and use the model's actual capabilities. To truly limit a model's capabilities, you would need to use a model that doesn't support those features.
+  An empty capabilities array does not disable autodetection. Continue will
+  still detect and use the model's actual capabilities. To truly limit a model's
+  capabilities, you would need to use a model that doesn't support those
+  features.
 </Warning>
 
 ### Multiple Capabilities
@@ -134,8 +141,8 @@ models:
     apiBase: https://custom-api.company.com/v1
     model: custom-gpt
     capabilities:
-      - tool_use      # If supports function calling
-      - image_input   # If supports vision
+      - tool_use # If supports function calling
+      - image_input # If supports vision
 ```
 
 ## Troubleshooting
@@ -167,11 +174,11 @@ This matrix shows which models support tool use and image input capabilities. Co
 
 ### Anthropic
 
-| Model              | Tool Use | Image Input |
-| :----------------- | -------- | ----------- |
-| Claude 4 Sonnet    | ✅       | ✅          |
-| Claude 3.5 Sonnet  | ✅       | ✅          |
-| Claude 3.5 Haiku   | ✅       | ✅          |
+| Model             | Tool Use | Image Input |
+| :---------------- | -------- | ----------- |
+| Claude 4 Sonnet   | ✅       | ✅          |
+| Claude 3.5 Sonnet | ✅       | ✅          |
+| Claude 3.5 Haiku  | ✅       | ✅          |
 
 ### Google
 
