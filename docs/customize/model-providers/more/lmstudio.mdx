@@ -63,20 +63,23 @@ To configure a remote instance of LM Studio, add the `"apiBase"` property to you
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Nomic Embed Text
+    - name: Llama3.1 8B Instruct
       provider: lmstudio
-      model: nomic-ai/nomic-embed-text-v1.5-GGUF
-      roles:
-        - embed
+      model: meta-llama-3.1-8b-instruct
+      apiBase: http://<MY ENDPOINT>/v1
   ```
   </Tab>
   <Tab title="JSON">
   ```json title="config.json"
   {
-    "embeddingsProvider": {
+      "models": [
+        {
+          "title": "Llama3.1 8B Instruct",
       "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+          "model": "meta-llama-3.1-8b-instruct",
+          "apiBase": "http://<MY ENDPOINT>/v1"
     }
+      ]
   }
   ```
   </Tab>
