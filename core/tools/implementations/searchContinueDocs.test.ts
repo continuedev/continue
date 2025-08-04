@@ -1,12 +1,12 @@
-import { searchContinueDocsImpl } from "./searchContinueDocs";
 import { ToolExtras } from "../..";
+import { searchContinueDocsImpl } from "./searchContinueDocs";
 
 // Mock TrieveSDK
 const mockAutocomplete = jest.fn();
-jest.mock('trieve-ts-sdk', () => ({
+jest.mock("trieve-ts-sdk", () => ({
   TrieveSDK: jest.fn().mockImplementation(() => ({
-    autocomplete: mockAutocomplete
-  }))
+    autocomplete: mockAutocomplete,
+  })),
 }));
 
 // Mock fetch for config
@@ -56,10 +56,16 @@ it("searchContinueDocs should return search results for valid query", async () =
 
   expect(result).toHaveLength(1);
   expect(result[0].name).toBe("Search Result 1: Getting Started");
-  expect(result[0].description).toBe("Documentation page from Continue docs: Getting Started");
+  expect(result[0].description).toBe(
+    "Documentation page from Continue docs: Getting Started",
+  );
   expect(result[0].content).toContain("Title: Getting Started");
-  expect(result[0].content).toContain("This is the getting started guide content");
-  expect(result[0].content).toContain("https://docs.continue.dev/getting-started");
+  expect(result[0].content).toContain(
+    "This is the getting started guide content",
+  );
+  expect(result[0].content).toContain(
+    "https://docs.continue.dev/getting-started",
+  );
 });
 
 it("searchContinueDocs should return error when config fetch fails", async () => {
