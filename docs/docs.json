@@ -125,6 +125,7 @@
                       "customize/model-providers/more/together",
                       "customize/model-providers/more/lmstudio",
                       "customize/model-providers/more/llamacpp",
+                      "customize/model-providers/more/llamastack",
                       "customize/model-providers/more/openrouter",
                       "customize/model-providers/more/huggingfaceinferenceapi",
                       "customize/model-providers/more/cohere",
