@@ -19,6 +19,8 @@ import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
 import logger from "../util/logger.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
+import { compactChatHistory, findCompactionIndex, getHistoryForLLM } from "../compaction.js";
+import { handleSlashCommands } from "../slashCommands.js";
 
 /**
  * Processes and validates JSON output for headless mode
@@ -109,8 +111,47 @@ async function processMessage(
   llmApi: any,
   isHeadless: boolean,
   format?: "json",
-  silent?: boolean
-): Promise<void> {
+  silent?: boolean,
+  compactionIndex?: number | null
+): Promise<{ compactionIndex?: number | null } | void> {
+  // Check for slash commands in headless mode
+  if (userInput.trim() === "/compact") {
+    if (!isHeadless) {
+      console.info(chalk.yellow("Compacting chat history..."));
+    }
+    
+    try {
+      const result = await compactChatHistory(chatHistory, model, llmApi);
+      
+      // Replace chat history with compacted version
+      chatHistory.length = 0;
+      chatHistory.push(...result.compactedHistory);
+      
+      // Save the compacted session
+      saveSession(chatHistory);
+      
+      if (!isHeadless) {
+        console.info(chalk.green("Chat history compacted successfully."));
+      } else {
+        safeStdout(JSON.stringify({ 
+          status: "success", 
+          message: "Chat history compacted",
+          historyLength: chatHistory.length 
+        }) + "\n");
+      }
+      
+      return { compactionIndex: result.compactionIndex };
+    } catch (error) {
+      const errorMsg = `Compaction error: ${formatError(error)}`;
+      if (!isHeadless) {
+        console.error(chalk.red(errorMsg));
+      } else {
+        safeStdout(JSON.stringify({ status: "error", message: errorMsg }) + "\n");
+      }
+      return;
+    }
+  }
+  
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
 
@@ -124,12 +165,33 @@ async function processMessage(
 
   try {
     const abortController = new AbortController();
-    const finalResponse = await streamChatResponse(
-      chatHistory,
-      model,
-      llmApi,
-      abortController
-    );
+    
+    // Handle compaction properly - streamChatResponse modifies the array in place
+    let finalResponse;
+    if (compactionIndex !== null && compactionIndex !== undefined) {
+      // When using compaction, we need to send a subset but capture the full history
+      const historyForLLM = getHistoryForLLM(chatHistory, compactionIndex);
+      const originalLength = historyForLLM.length;
+      
+      finalResponse = await streamChatResponse(
+        historyForLLM,
+        model,
+        llmApi,
+        abortController
+      );
+      
+      // Append any new messages (assistant/tool) that were added by streamChatResponse
+      const newMessages = historyForLLM.slice(originalLength);
+      chatHistory.push(...newMessages);
+    } else {
+      // No compaction - just pass the full history directly
+      finalResponse = await streamChatResponse(
+        chatHistory,
+        model,
+        llmApi,
+        abortController
+      );
+    }
 
     // In headless mode, only print the final response using safe stdout
     if (isHeadless && finalResponse && finalResponse.trim()) {
@@ -192,6 +254,12 @@ async function runHeadlessMode(
 
   // Initialize chat history
   const chatHistory = await initializeChatHistory(options);
+  
+  // Track compaction index if resuming with compacted history
+  let compactionIndex: number | null = null;
+  if (options.resume) {
+    compactionIndex = findCompactionIndex(chatHistory);
+  }
 
   let isFirstMessage = true;
   while (true) {
@@ -208,15 +276,21 @@ async function runHeadlessMode(
 
     isFirstMessage = false;
 
-    await processMessage(
+    const result = await processMessage(
       userInput,
       chatHistory,
       model,
       llmApi,
       true,
       options.format,
-      options.silent
+      options.silent,
+      compactionIndex
     );
+    
+    // Update compaction index if compaction occurred
+    if (result && result.compactionIndex !== undefined) {
+      compactionIndex = result.compactionIndex;
+    }
   }
 }
 
