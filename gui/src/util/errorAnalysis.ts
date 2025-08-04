@@ -1,3 +1,4 @@
+import { ContinueError } from "@continuedev/errors";
 import { providers } from "../pages/AddNewModel/configs/providers";
 
 export interface ErrorAnalysis {
@@ -7,6 +8,7 @@ export interface ErrorAnalysis {
   modelTitle: string;
   providerName: string;
   apiKeyUrl?: string;
+  requestId?: string;
 }
 
 function parseErrorMessage(fullErrMsg: string): string {
@@ -37,11 +39,6 @@ export function analyzeError(
   error: unknown,
   selectedModel: any,
 ): ErrorAnalysis {
-  const errorMessage = (error as any)?.message;
-  const parsedError = parseErrorMessage(
-    typeof errorMessage === "string" ? errorMessage : "",
-  );
-
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
   let providerName = "the model provider";
@@ -64,34 +61,56 @@ export function analyzeError(
     }
   }
 
+  // Initialize with defaults
   let message: undefined | string = undefined;
   let statusCode: undefined | number = undefined;
+  let requestId: undefined | string = undefined;
+  let parsedError: string = "";
 
-  // Attempt to get error message and status code from error
-  if (
-    error &&
-    (error instanceof Error || typeof error === "object") &&
-    "message" in error &&
-    typeof error["message"] === "string"
-  ) {
-    message = error["message"];
-    const parts = message?.split(" ") ?? [];
+  // Handle ContinueError instances (new structured errors)
+  if (ContinueError.isContinueError(error)) {
+    message = error.message;
+    statusCode = error.statusCode;
+    requestId = error.requestId;
+    parsedError = parseErrorMessage(error.getUserMessage());
+    
+    // If we don't have a parsed error, use the original message
+    if (!parsedError) {
+      parsedError = error.message;
+    }
+  } else {
+    // Handle legacy errors (strings, Error objects, etc.)
+    const errorMessage = (error as any)?.message;
+    parsedError = parseErrorMessage(
+      typeof errorMessage === "string" ? errorMessage : "",
+    );
 
-    // Handle single word case (like "404")
-    if (parts.length === 1) {
-      const trimmed = parts[0].trim();
-      if (trimmed !== "") {
-        const code = Number(trimmed);
-        if (!Number.isNaN(code)) {
-          statusCode = code;
+    // Attempt to get error message and status code from legacy error
+    if (
+      error &&
+      (error instanceof Error || typeof error === "object") &&
+      "message" in error &&
+      typeof error["message"] === "string"
+    ) {
+      message = error["message"];
+      const parts = message?.split(" ") ?? [];
+
+      // Handle single word case (like "404")
+      if (parts.length === 1) {
+        const trimmed = parts[0].trim();
+        if (trimmed !== "") {
+          const code = Number(trimmed);
+          if (!Number.isNaN(code)) {
+            statusCode = code;
+          }
         }
-      }
-    } else if (parts.length > 1) {
-      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-      if (status) {
-        const code = Number(status);
-        if (!Number.isNaN(code)) {
-          statusCode = code;
+      } else if (parts.length > 1) {
+        const status = parts[0] === "HTTP" ? parts[1] : parts[0];
+        if (status) {
+          const code = Number(status);
+          if (!Number.isNaN(code)) {
+            statusCode = code;
+          }
         }
       }
     }
@@ -104,5 +123,6 @@ export function analyzeError(
     modelTitle,
     providerName,
     apiKeyUrl,
+    requestId,
   };
 }
