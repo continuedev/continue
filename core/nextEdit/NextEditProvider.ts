@@ -29,6 +29,7 @@ import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { myersDiff } from "../diff/myers.js";
+import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
@@ -373,16 +374,30 @@ export class NextEditProvider {
       this.ide.getWorkspaceDirs(),
     ]);
 
-    const editableRegionStartLine = opts?.usingFullFileDiff
-      ? 0
-      : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
+    const { editableRegionStartLine, editableRegionEndLine } =
+      opts?.usingFullFileDiff
+        ? this._calculateOptimalEditableRegion(helper, "tokenizer")
+        : {
+            editableRegionStartLine: Math.max(
+              helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+              0,
+            ),
+            editableRegionEndLine: Math.min(
+              helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+              helper.fileLines.length - 1,
+            ),
+          };
 
-    const editableRegionEndLine = opts?.usingFullFileDiff
-      ? helper.fileLines.length - 1
-      : Math.min(
-          helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-          helper.fileLines.length - 1,
-        );
+    // const editableRegionStartLine = opts?.usingFullFileDiff
+    //   ? 0
+    //   : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
+
+    // const editableRegionEndLine = opts?.usingFullFileDiff
+    //   ? helper.fileLines.length - 1
+    //   : Math.min(
+    //       helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+    //       helper.fileLines.length - 1,
+    //     );
 
     const prompts: Prompt[] = [];
 
@@ -401,6 +416,97 @@ export class NextEditProvider {
     }
 
     return { editableRegionStartLine, editableRegionEndLine, prompts };
+  }
+
+  private _calculateOptimalEditableRegion(
+    helper: HelperVars,
+    heuristic: "fourChars" | "tokenizer" = "tokenizer",
+  ): {
+    editableRegionStartLine: number;
+    editableRegionEndLine: number;
+  } {
+    const cursorLine = helper.pos.line;
+    const fileLines = helper.fileLines;
+    const MAX_TOKENS = 500;
+
+    // Initialize with cursor line.
+    let editableRegionStartLine = cursorLine;
+    let editableRegionEndLine = cursorLine;
+
+    // Get initial content and token count.
+    let currentContent = fileLines[cursorLine];
+    let totalTokens =
+      heuristic === "tokenizer"
+        ? countTokens(currentContent, helper.modelName)
+        : Math.ceil(currentContent.length / 4);
+
+    // Expand outward alternating between adding lines above and below.
+    let addingAbove = true;
+
+    while (totalTokens < MAX_TOKENS) {
+      let addedLine = false;
+
+      if (addingAbove) {
+        // Try to add a line above.
+        if (editableRegionStartLine > 0) {
+          editableRegionStartLine--;
+          const lineContent = fileLines[editableRegionStartLine];
+          const lineTokens =
+            heuristic === "tokenizer"
+              ? countTokens(lineContent, helper.modelName)
+              : Math.ceil(lineContent.length / 4);
+
+          totalTokens += lineTokens;
+          addedLine = true;
+        }
+      } else {
+        // Try to add a line below.
+        if (editableRegionEndLine < fileLines.length - 1) {
+          editableRegionEndLine++;
+          const lineContent = fileLines[editableRegionEndLine];
+          const lineTokens =
+            heuristic === "tokenizer"
+              ? countTokens(lineContent, helper.modelName)
+              : Math.ceil(lineContent.length / 4);
+
+          totalTokens += lineTokens;
+          addedLine = true;
+        }
+      }
+
+      // If we can't add in the current direction, try the other.
+      if (!addedLine) {
+        // If we're already at both file boundaries, we're done.
+        if (
+          editableRegionStartLine === 0 &&
+          editableRegionEndLine === fileLines.length - 1
+        ) {
+          break;
+        }
+
+        // If we couldn't add in one direction, force the next attempt in the other direction.
+        addingAbove = !addingAbove;
+        continue;
+      }
+
+      // If we exceeded the token limit, revert the last addition.
+      if (totalTokens > MAX_TOKENS) {
+        if (addingAbove) {
+          editableRegionStartLine++;
+        } else {
+          editableRegionEndLine--;
+        }
+        break;
+      }
+
+      // Alternate between adding above and below for balanced context.
+      addingAbove = !addingAbove;
+    }
+
+    return {
+      editableRegionStartLine,
+      editableRegionEndLine,
+    };
   }
 
   private async _generateFineTunedPrompts(
