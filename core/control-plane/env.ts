@@ -5,7 +5,7 @@ import {
   getStagingEnvironmentDotFilePath,
 } from "../util/paths";
 import { AuthType, ControlPlaneEnv } from "./AuthTypes";
-import { getMdmKeys } from "./mdm";
+import { getLicenseKeyData } from "./mdm/mdm";
 
 export const EXTENSION_NAME = "continue";
 
@@ -59,9 +59,9 @@ export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
 ): ControlPlaneEnv {
   // MDM override
-  const mdmKeys = getMdmKeys();
-  if (mdmKeys) {
-    const { apiUrl } = mdmKeys;
+  const licenseKeyData = getLicenseKeyData();
+  if (licenseKeyData?.unsignedData?.apiUrl) {
+    const { apiUrl } = licenseKeyData.unsignedData;
     return {
       AUTH_TYPE: AuthType.OnPrem,
       DEFAULT_CONTROL_PLANE_PROXY_URL: apiUrl,

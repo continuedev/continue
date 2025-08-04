@@ -36,11 +36,28 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
+import { VsCodeIdeUtils } from "../util/ideUtils";
 import { VsCodeIde } from "../VsCodeIde";
 
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { getAst } from "core/autocomplete/util/ast";
+import { DocumentHistoryTracker } from "core/nextEdit/DocumentHistoryTracker";
+import {
+  EditableRegionStrategy,
+  getNextEditableRegion,
+} from "core/nextEdit/NextEditEditableRegionCalculator";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { isModelCapableOfNextEdit } from "core/nextEdit/utils";
+import { localPathOrUriToPath } from "core/util/pathToUri";
+import { JumpManager } from "../activation/JumpManager";
+import setupNextEditWindowManager, {
+  NextEditWindowManager,
+} from "../activation/NextEditWindowManager";
+import { GhostTextAcceptanceTracker } from "../autocomplete/GhostTextAcceptanceTracker";
+import { getDefinitionsFromLsp } from "../autocomplete/lsp";
+import { handleTextDocumentChange } from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -49,6 +66,7 @@ export class VsCodeExtension {
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
+  private ideUtils: VsCodeIdeUtils;
   private consoleView: ContinueConsoleWebviewViewProvider;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
@@ -60,11 +78,24 @@ export class VsCodeExtension {
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
+  private completionProvider: ContinueCompletionProvider;
+  // Track whether the user is currently typing
+  private isTypingSession = false;
+  private typingTimer: NodeJS.Timeout | null = null;
+  private lastDocumentChangeTime = 0;
+
+  // Reset typing session after a delay
+  resetTypingSession = () => {
+    if (this.typingTimer) clearTimeout(this.typingTimer);
+    this.typingTimer = setTimeout(() => {
+      this.isTypingSession = false;
+    }, 2000); // Typing session considered over after 2 seconds of inactivity
+  };
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
-    this.workOsAuthProvider.refreshSessions();
+    void this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
 
     this.editDecorationManager = new EditDecorationManager(context);
@@ -76,6 +107,7 @@ export class VsCodeExtension {
       },
     );
     this.ide = new VsCodeIde(this.webviewProtocolPromise, context);
+    this.ideUtils = new VsCodeIdeUtils();
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -91,7 +123,6 @@ export class VsCodeExtension {
       resolveConfigHandler = resolve;
     });
     this.sidebar = new ContinueGUIWebviewViewProvider(
-      configHandlerPromise,
       this.windowId,
       this.extensionContext,
     );
@@ -121,25 +152,30 @@ export class VsCodeExtension {
       configHandlerPromise,
       this.workOsAuthProvider,
       this.editDecorationManager,
+      context,
+      this,
     );
 
     this.core = new Core(inProcessMessenger, this.ide);
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
-    this.configHandler.loadConfig();
+    void this.configHandler.loadConfig();
 
     this.verticalDiffManager = new VerticalDiffManager(
       this.sidebar.webviewProtocol,
       this.editDecorationManager,
+      this.ide,
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
 
-    setupRemoteConfigSync(
-      this.configHandler.reloadConfig.bind(this.configHandler),
+    void setupRemoteConfigSync(() =>
+      this.configHandler.reloadConfig.bind(this.configHandler)(
+        "Remote config sync",
+      ),
     );
 
-    this.configHandler.loadConfig().then(({ config }) => {
+    void this.configHandler.loadConfig().then(({ config }) => {
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.verticalDiffManager.fileUriToCodeLens,
@@ -152,6 +188,27 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
+        const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
+        if (
+          autocompleteModel &&
+          isModelCapableOfNextEdit(autocompleteModel.model)
+        ) {
+          // Set up next edit window manager only for Continue team members
+          await setupNextEditWindowManager(context);
+          this.activateNextEdit();
+          await NextEditWindowManager.freeTabAndEsc();
+
+          JumpManager.getInstance();
+          GhostTextAcceptanceTracker.getInstance();
+        } else {
+          NextEditWindowManager.clearInstance();
+          this.deactivateNextEdit();
+          await NextEditWindowManager.freeTabAndEsc();
+
+          JumpManager.clearInstance();
+          GhostTextAcceptanceTracker.clearInstance();
+        }
+
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
@@ -175,14 +232,15 @@ export class VsCodeExtension {
     setupStatusBar(
       enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
     );
+    this.completionProvider = new ContinueCompletionProvider(
+      this.configHandler,
+      this.ide,
+      this.sidebar.webviewProtocol,
+    );
     context.subscriptions.push(
       vscode.languages.registerInlineCompletionItemProvider(
         [{ pattern: "**" }],
-        new ContinueCompletionProvider(
-          this.configHandler,
-          this.ide,
-          this.sidebar.webviewProtocol,
-        ),
+        this.completionProvider,
       ),
     );
 
@@ -193,6 +251,7 @@ export class VsCodeExtension {
       let orgId = queryParams.get("org_id");
 
       this.core.invoke("config/refreshProfiles", {
+        reason: "VS Code deep link",
         selectOrgId: orgId === "null" ? undefined : (orgId ?? undefined),
         selectProfileId:
           profileId === "null" ? undefined : (profileId ?? undefined),
@@ -244,7 +303,6 @@ export class VsCodeExtension {
       this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
-      this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
       this.core,
@@ -260,7 +318,9 @@ export class VsCodeExtension {
       if (stats.size === 0) {
         return;
       }
-      await this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig(
+        "Global JSON config updated - fs file watch",
+      );
     });
 
     fs.watchFile(
@@ -270,7 +330,9 @@ export class VsCodeExtension {
         if (stats.size === 0) {
           return;
         }
-        await this.configHandler.reloadConfig();
+        await this.configHandler.reloadConfig(
+          "Global YAML config updated - fs file watch",
+        );
       },
     );
 
@@ -278,7 +340,25 @@ export class VsCodeExtension {
       if (stats.size === 0) {
         return;
       }
-      this.configHandler.reloadConfig();
+      void this.configHandler.reloadConfig("config.ts updated - fs file watch");
+    });
+
+    vscode.workspace.onDidChangeTextDocument(async (event) => {
+      if (event.contentChanges.length > 0) {
+        this.isTypingSession = true;
+        this.lastDocumentChangeTime = Date.now();
+        this.resetTypingSession();
+      }
+
+      const editInfo = await handleTextDocumentChange(
+        event,
+        this.configHandler,
+        this.ide,
+        this.completionProvider,
+        getDefinitionsFromLsp,
+      );
+
+      if (editInfo) this.core.invoke("files/smallEdit", editInfo);
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
@@ -305,11 +385,23 @@ export class VsCodeExtension {
       });
     });
 
+    vscode.workspace.onDidOpenTextDocument(async (event) => {
+      console.log("onDidOpenTextDocument");
+      const ast = await getAst(event.fileName, event.getText());
+      if (ast) {
+        DocumentHistoryTracker.getInstance().addDocument(
+          localPathOrUriToPath(event.fileName),
+          event.getText(),
+          ast,
+        );
+      }
+    });
+
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       if (e.provider.id === env.AUTH_TYPE) {
-        vscode.commands.executeCommand(
+        void vscode.commands.executeCommand(
           "setContext",
           "continue.isSignedInToControlPlane",
           true,
@@ -320,20 +412,85 @@ export class VsCodeExtension {
           sessionInfo,
         });
       } else {
-        vscode.commands.executeCommand(
+        void vscode.commands.executeCommand(
           "setContext",
           "continue.isSignedInToControlPlane",
           false,
         );
 
         if (e.provider.id === "github") {
-          this.configHandler.reloadConfig();
+          this.configHandler.reloadConfig("Github sign-in status changed");
         }
       }
     });
 
+    // Listen for editor changes to clean up decorations when editor closes.
+    vscode.window.onDidChangeVisibleTextEditors(async () => {
+      // If our active editor is no longer visible, clear decorations.
+      console.log("deleteChain called from onDidChangeVisibleTextEditors");
+      await NextEditProvider.getInstance().deleteChain();
+    });
+
+    // Listen for selection changes to hide tooltip when cursor moves.
+    vscode.window.onDidChangeTextEditorSelection(async (e) => {
+      // Don't delete the chain of edits if:
+
+      // 1. A next edit window was just accepted.
+      if (
+        NextEditWindowManager.isInstantiated() &&
+        NextEditWindowManager.getInstance().hasAccepted()
+      ) {
+        return;
+      }
+
+      // 2. A jump is in progress.
+      if (
+        JumpManager.getInstance().isJumpInProgress() ||
+        JumpManager.getInstance().wasJumpJustAccepted()
+      ) {
+        return;
+      }
+
+      // 3. A ghost text was just accepted.
+      // Check if this selection change matches our expected ghost text acceptance.
+      const wasGhostTextAccepted =
+        GhostTextAcceptanceTracker.getInstance().checkGhostTextWasAccepted(
+          e.textEditor.document,
+          e.selections[0].active,
+        );
+
+      if (wasGhostTextAccepted) {
+        // Ghost text was accepted - don't delete the chain.
+        return;
+      }
+
+      // 4. The selection change is part of a typing session
+      // Check if this selection change is close enough to a document change to be considered typing.
+      const timeSinceLastDocChange = Date.now() - this.lastDocumentChangeTime;
+      const ARBITRARY_TYPING_DELAY = 500;
+      if (
+        this.isTypingSession &&
+        timeSinceLastDocChange < ARBITRARY_TYPING_DELAY
+      ) {
+        // This selection change is likely due to typing, don't delete the chain.
+        return;
+      }
+
+      // Otherwise, delete the chain (for rejection or unrelated movement).
+      console.log("deleteChain called from onDidChangeTextEditorSelection");
+      await NextEditProvider.getInstance().deleteChain();
+
+      NextEditProvider.getInstance().loadNextEditableRegionsInTheCurrentChain(
+        (await getNextEditableRegion(EditableRegionStrategy.Static, {
+          cursorPosition: e.selections[0].anchor,
+          filepath: localPathOrUriToPath(e.textEditor.document.uri.toString()),
+          ide: this.ide,
+        })) ?? [],
+      );
+    });
+
     // Refresh index when branch is changed
-    this.ide.getWorkspaceDirs().then((dirs) =>
+    void this.ide.getWorkspaceDirs().then((dirs) =>
       dirs.forEach(async (dir) => {
         const repo = await this.ide.getRepo(dir);
         if (repo) {
@@ -383,8 +540,14 @@ export class VsCodeExtension {
     context.subscriptions.push(linkProvider);
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
-      void this.core.invoke("didChangeActiveTextEditor", { filepath });
+      void this.core.invoke("files/opened", { uris: [filepath] });
     });
+
+    // initializes openedFileLruCache with files that are already open when the extension is activated
+    let initialOpenedFilePaths = this.ideUtils
+      .getOpenFiles()
+      .map((uri) => uri.toString());
+    this.core.invoke("files/opened", { uris: initialOpenedFilePaths });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
@@ -401,5 +564,13 @@ export class VsCodeExtension {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);
+  }
+
+  public activateNextEdit() {
+    this.completionProvider.activateNextEdit();
+  }
+
+  public deactivateNextEdit() {
+    this.completionProvider.deactivateNextEdit();
   }
 }

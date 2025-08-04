@@ -168,7 +168,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
         }}
       >
         <div
-          className="flex items-center gap-1 text-[11px] hover:underline"
+          className={`flex items-center gap-1 text-[11px] ${!!props.onTitleClick ? "hover:underline" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             if (props.onTitleClick) {

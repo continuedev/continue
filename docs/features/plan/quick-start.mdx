@@ -1,0 +1,60 @@
+---
+title: "Quick Start"
+---
+
+## How to use it
+
+Plan mode provides a safe environment for understanding and constructing plans without making changes. It equips the Chat model with read-only tools, allowing you to explore, analyze, and plan modifications before executing them.
+
+### Use Plan
+
+You can switch to `Plan` in the mode selector below the chat input box.
+
+![How to select plan mode](/images/mode-select-plan.png)
+
+<Info>
+  If Plan is disabled with a `Not Supported` message, the selected model or
+  provider doesn't support tools. See [Model Setup](/features/plan/model-setup) 
+  for more information.
+</Info>
+
+### Chat with Plan
+
+Plan mode lives within the same interface as [Chat](/features/chat/how-it-works) and [Agent](/features/agent/how-it-works), so the same [input](/features/chat/quick-start#1-start-a-conversation) is used to send messages and you can still use the same manual methods of providing context, such as [`@` context providers](/features/chat/quick-start#3-use--for-additional-context) or adding [highlighted code from the editor](/features/chat/quick-start#2-include-code-context).
+
+#### What makes Plan different
+
+Unlike Agent mode, Plan mode:
+- Only uses read-only tools (file reading, searching, analysis)
+- Cannot modify, create, or delete files
+- Focuses on understanding and planning rather than execution
+- Provides a safe environment for exploration
+
+### Common use cases
+
+Plan mode is ideal for:
+- **Code exploration**: Understanding how a codebase works
+- **Planning refactors**: Analyzing impact before making changes
+- **Debugging**: Investigating issues without modifying code
+- **Architecture review**: Understanding system design and dependencies
+- **Pre-implementation planning**: Thinking through changes before executing
+
+### Example workflow
+
+1. **Start in Plan mode** to explore and understand the task
+2. **Develop a plan** with the model's help
+3. **Switch to Agent mode** when ready to implement changes
+
+For example, you might say:
+
+> Help me understand how the authentication system works and plan improvements to add OAuth support
+
+Plan mode will analyze the existing code, understand the current implementation, and help you create a detailed plan—all without making any changes.
+
+## Switching to execution
+
+When you're ready to implement your plan, simply switch to Agent mode using the mode selector or keyboard shortcut (`Cmd/Ctrl + .`). The conversation context carries over, so Agent mode can immediately start implementing the plan you developed.
+
+<Tip>
+  Use the keyboard shortcut `Cmd/Ctrl + .` to quickly cycle between Agent, Chat, and Plan modes.
+</Tip>

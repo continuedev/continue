@@ -9,6 +9,7 @@ import {
   TextMessagePart,
   ToolCallDelta,
 } from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import {
@@ -199,6 +200,7 @@ class Gemini extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
     isV1API: boolean,
+    includeToolIds: boolean,
   ): GeminiChatRequestBody {
     const toolCallIdToNameMap = new Map<string, string>();
     messages.forEach((msg) => {
@@ -230,7 +232,7 @@ class Gemini extends BaseLLM {
               parts: [
                 {
                   functionResponse: {
-                    id: msg.toolCallId,
+                    id: includeToolIds ? msg.toolCallId : undefined,
                     name: functionName || "unknown",
                     response: {
                       output: msg.content, // "output" key is opinionated - not all functions will output objects
@@ -250,11 +252,11 @@ class Gemini extends BaseLLM {
             };
             if (msg.toolCalls) {
               msg.toolCalls.forEach((toolCall) => {
-                if (toolCall.function?.name && toolCall.function?.arguments) {
+                if (toolCall.function?.name) {
                   assistantMsg.parts.push({
                     functionCall: {
                       name: toolCall.function.name,
-                      args: JSON.parse(toolCall.function.arguments),
+                      args: safeParseToolCallArgs(toolCall),
                     },
                   });
                 }
@@ -342,13 +344,13 @@ class Gemini extends BaseLLM {
           throw new Error(data.error.message);
         }
 
-        // Check for existence of each level before accessing the final 'text' property
-        const content = data?.candidates?.[0]?.content;
-        if (content) {
+        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
+        const contentParts = data?.candidates?.[0]?.content?.parts;
+        if (contentParts) {
           const textParts: MessagePart[] = [];
           const toolCalls: ToolCallDelta[] = [];
 
-          for (const part of content.parts) {
+          for (const part of contentParts) {
             if ("text" in part) {
               textParts.push({ type: "text", text: part.text });
             } else if ("functionCall" in part) {
@@ -405,7 +407,7 @@ class Gemini extends BaseLLM {
     const isV1API = !!this.apiBase?.includes("/v1/");
 
     // Convert chat messages to contents
-    const body = this.prepareBody(messages, options, isV1API);
+    const body = this.prepareBody(messages, options, isV1API, true);
 
     const response = await this.fetch(apiURL, {
       method: "POST",

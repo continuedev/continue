@@ -10,7 +10,7 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IdeSettings, ModelDescription } from "../index.js";
+import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
@@ -36,10 +36,9 @@ export const TRIAL_PROXY_URL =
 
 export class ControlPlaneClient {
   constructor(
-    private readonly sessionInfoPromise: Promise<
-      ControlPlaneSessionInfo | undefined
-    >,
+    readonly sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
     private readonly ideSettingsPromise: Promise<IdeSettings>,
+    private readonly ideInfoPromise: Promise<IdeInfo>,
   ) {}
 
   async resolveFQSNs(
@@ -57,7 +56,7 @@ export class ControlPlaneClient {
       }));
     }
 
-    const resp = await this.request("ide/sync-secrets", {
+    const resp = await this.requestAndHandleError("ide/sync-secrets", {
       method: "POST",
       body: JSON.stringify({ fqsns, orgScopeId }),
     });
@@ -86,13 +85,28 @@ export class ControlPlaneClient {
 
     const env = await getControlPlaneEnv(this.ideSettingsPromise);
     const url = new URL(path, env.CONTROL_PLANE_URL).toString();
+    const ideInfo = await this.ideInfoPromise;
+
     const resp = await fetch(url, {
       ...init,
       headers: {
         ...init.headers,
         Authorization: `Bearer ${accessToken}`,
+        ...{
+          "x-extension-version": ideInfo.extensionVersion,
+          "x-is-prerelease": String(ideInfo.isPrerelease),
+        },
       },
     });
+
+    return resp;
+  }
+
+  private async requestAndHandleError(
+    path: string,
+    init: RequestInit,
+  ): Promise<Response> {
+    const resp = await this.request(path, init);
 
     if (!resp.ok) {
       throw new Error(
@@ -121,7 +135,7 @@ export class ControlPlaneClient {
         ? `ide/list-assistants?organizationId=${organizationId}`
         : "ide/list-assistants";
 
-      const resp = await this.request(url, {
+      const resp = await this.requestAndHandleError(url, {
         method: "GET",
       });
       return (await resp.json()) as any;
@@ -135,15 +149,48 @@ export class ControlPlaneClient {
       return [];
     }
 
-    try {
+    // We try again here because when users sign up with an email domain that is
+    // captured by an org, we need to wait for the user account creation webhook to
+    // take effect. Otherwise the organization(s) won't show up.
+    // This error manifests as a 404 (user not found)
+    let retries = 0;
+    const maxRetries = 10;
+    const maxWaitTime = 20000; // 20 seconds in milliseconds
+
+    while (retries < maxRetries) {
       const resp = await this.request("ide/list-organizations", {
         method: "GET",
       });
+
+      if (resp.status === 404) {
+        retries++;
+        if (retries >= maxRetries) {
+          console.warn(
+            `Failed to list organizations after ${maxRetries} retries: user not found`,
+          );
+          return [];
+        }
+        const waitTime = Math.min(
+          Math.pow(2, retries) * 100,
+          maxWaitTime / maxRetries,
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        continue;
+      } else if (!resp.ok) {
+        console.warn(
+          `Failed to list organizations (${resp.status}): ${await resp.text()}`,
+        );
+        return [];
+      }
       const { organizations } = (await resp.json()) as any;
       return organizations;
-    } catch (e) {
-      return [];
     }
+
+    // This should never be reached due to the while condition, but adding for safety
+    console.warn(
+      `Failed to list organizations after ${maxRetries} retries: maximum attempts exceeded`,
+    );
+    return [];
   }
 
   public async listAssistantFullSlugs(
@@ -158,7 +205,7 @@ export class ControlPlaneClient {
       : "ide/list-assistant-full-slugs";
 
     try {
-      const resp = await this.request(url, {
+      const resp = await this.requestAndHandleError(url, {
         method: "GET",
       });
       const { fullSlugs } = (await resp.json()) as any;
@@ -174,10 +221,44 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request("ide/free-trial-status", {
+      const resp = await this.requestAndHandleError("ide/free-trial-status", {
         method: "GET",
       });
       return (await resp.json()) as FreeTrialStatus;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * JetBrains does not support deep links, so we only check for `vsCodeUriScheme`
+   * @param vsCodeUriScheme
+   * @returns
+   */
+  public async getModelsAddOnCheckoutUrl(
+    vsCodeUriScheme?: string,
+  ): Promise<{ url: string } | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        // LocalProfileLoader ID
+        profile_id: "local",
+      });
+
+      if (vsCodeUriScheme) {
+        params.set("vscode_uri_scheme", vsCodeUriScheme);
+      }
+
+      const resp = await this.requestAndHandleError(
+        `ide/get-models-add-on-checkout-url?${params.toString()}`,
+        {
+          method: "GET",
+        },
+      );
+      return (await resp.json()) as { url: string };
     } catch (e) {
       return null;
     }

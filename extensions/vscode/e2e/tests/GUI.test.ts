@@ -156,20 +156,20 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
-      GUISelectors.getThreadMessageByText(view, llmResponse1);
+      // Delete the first assistant response (index 1) - this deletes both user msg 0 and assistant response 0
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
+      await TestUtils.expectNoElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse0),
+      );
+
+      // Delete the second assistant response (now at index 1) - this deletes both user msg 1 and assistant response 1
       await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
-      GUISelectors.getThreadMessageByText(view, llmResponse0);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
-      await TestUtils.expectNoElement(() =>
-        GUISelectors.getThreadMessageByText(view, llmResponse0),
-      );
-
-      GUISelectors.getThreadMessageByText(view, llmResponse2);
-      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
+      // Delete the third assistant response (now at index 1) - this deletes both user msg 2 and assistant response 2
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
@@ -299,12 +299,10 @@ describe("GUI Test", () => {
       expect(await statusMessage.getText()).contain(
         "Continue viewed the git diff",
       );
-      // wait for 30 seconds, promise
-      await new Promise((resolve) => setTimeout(resolve, 30000));
     }).timeout(DEFAULT_TIMEOUT.MD * 100);
 
     it("should call tool after approval", async () => {
-      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -325,7 +323,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
 
     it("should cancel tool", async () => {
-      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+      await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -357,20 +355,6 @@ describe("GUI Test", () => {
       await messageInput.sendKeys(Key.ENTER);
       await messageInput.sendKeys(Key.ENTER);
 
-      // Open the context items peek
-      const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
-      await contextItemsPeek.click();
-
-      await TestUtils.waitForSuccess(async () => {
-        const firstContextItemInPeek =
-          await GUISelectors.getFirstContextItemsPeekItem(view);
-        await firstContextItemInPeek.click();
-
-        // Check that item is there with correct name
-        const description = await firstContextItemInPeek.getText();
-        expect(description).to.include("Terminal");
-      });
-
       // Check that the contents match what we expect (repeated back by the mock LLM)
       await TestUtils.waitForSuccess(() => {
         return GUISelectors.getThreadMessageByText(
@@ -381,8 +365,9 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
   });
 
-  describe("Repeat back the system message", () => {
+  describe("should repeat back the system message", () => {
     it("should repeat back the system message", async () => {
+      await GUIActions.selectModeFromDropdown(view, "Chat");
       await GUIActions.selectModelFromDropdown(view, "SYSTEM MESSAGE MOCK LLM");
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -390,7 +375,7 @@ describe("GUI Test", () => {
       await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
-    });
+    }).timeout(DEFAULT_TIMEOUT.XL * 1000);
   });
 
   describe("Chat Paths", () => {

@@ -1,27 +1,35 @@
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 import { sortCommandsByBookmarkStatus } from "../utils";
 
 describe("sortCommandsByBookmarkStatus", () => {
-  const mockCommands: SlashCommandDescription[] = [
+  const mockCommands: SlashCommandDescWithSource[] = [
     {
       name: "command1",
       description: "First command",
       prompt: "This is command 1",
+      source: "built-in",
+      isLegacy: false,
     },
     {
       name: "command2",
       description: "Second command",
       prompt: "This is command 2",
+      source: "built-in",
+      isLegacy: false,
     },
     {
       name: "command3",
       description: "Third command",
       prompt: "This is command 3",
+      source: "built-in",
+      isLegacy: false,
     },
     {
       name: "command4",
       description: "Fourth command",
       prompt: "This is command 4",
+      source: "built-in",
+      isLegacy: false,
     },
   ];
 

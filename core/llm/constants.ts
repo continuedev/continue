@@ -1,6 +1,7 @@
 const DEFAULT_MAX_TOKENS = 4096;
-const DEFAULT_CONTEXT_LENGTH = 8192;
+const DEFAULT_CONTEXT_LENGTH = 32_768;
 const DEFAULT_TEMPERATURE = 0.5;
+const DEFAULT_PRUNING_LENGTH = 128000;
 
 const DEFAULT_ARGS = {
   maxTokens: DEFAULT_MAX_TOKENS,
@@ -15,6 +16,7 @@ const DEFAULT_MAX_BATCH_SIZE = 64;
 export enum LLMConfigurationStatuses {
   VALID = "valid",
   MISSING_API_KEY = "missing-api-key",
+  MISSING_ENV_SECRET = "missing-env-secret",
 }
 
 export {
@@ -23,5 +25,6 @@ export {
   DEFAULT_MAX_BATCH_SIZE,
   DEFAULT_MAX_CHUNK_SIZE,
   DEFAULT_MAX_TOKENS,
+  DEFAULT_PRUNING_LENGTH,
   PROXY_URL,
 };

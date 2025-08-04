@@ -7,4 +7,14 @@ export const chatInteractionEventAllSchema = baseDevDataAllSchema.extend({
   prompt: z.string(),
   completion: z.string(),
   sessionId: z.string(),
+  tools: z.array(z.string()).optional(),
+  rules: z
+    .array(
+      z.object({
+        id: z.string(),
+        rule: z.string(),
+        slug: z.string().optional(),
+      }),
+    )
+    .optional(),
 });

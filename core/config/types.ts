@@ -682,8 +682,6 @@ declare global {
   
     getWorkspaceDirs(): Promise<string[]>;
   
-    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-  
     fileExists(filepath: string): Promise<boolean>;
   
     writeFile(path: string, contents: string): Promise<void>;
@@ -719,7 +717,7 @@ declare global {
   
     getPinnedFiles(): Promise<string[]>;
   
-    getSearchResults(query: string): Promise<string>;
+    getSearchResults(query: string, maxResults?: number): Promise<string>;
   
     subprocess(command: string, cwd?: string): Promise<[string, string]>;
   
@@ -745,6 +743,10 @@ declare global {
   
     // LSP
     gotoDefinition(location: Location): Promise<RangeInFile[]>;
+    gotoTypeDefinition(location: Location): Promise<RangeInFile[]>;
+    getSignatureHelp(location: Location): Promise<SignatureHelp | null>;
+    getReferences(location: Location): Promise<RangeInFile[]>;
+    getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
   
     // Callbacks
     onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
@@ -1004,6 +1006,8 @@ declare global {
     type: "stdio";
     command: string;
     args: string[];
+    env?: Record<string, string>;
+    cwd?: string;
   }
   
   interface WebSocketOptions {
@@ -1055,6 +1059,7 @@ declare global {
     numDiffs?: number;
     filepath?: string;
     fileContent?: string;
+    originalFileContent?: string;
   }
   
   export interface RangeInFileWithContents {
@@ -1120,7 +1125,6 @@ declare global {
      * This is needed to crawl a large number of documentation sites that are dynamically rendered.
      */
     useChromiumForDocsCrawling?: boolean;
-    useTools?: boolean;
     modelContextProtocolServers?: MCPOptions[];
   }
   

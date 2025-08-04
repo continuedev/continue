@@ -1,5 +1,11 @@
 import { streamSse } from "@continuedev/fetch";
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  Usage,
+} from "../../index.js";
+import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
@@ -7,7 +13,6 @@ class Anthropic extends BaseLLM {
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-3-5-sonnet-latest",
-    contextLength: 200_000,
     completionOptions: {
       model: "claude-3-5-sonnet-latest",
       maxTokens: 8192,
@@ -66,7 +71,7 @@ class Anthropic extends BaseLLM {
           type: "tool_use",
           id: toolCall.id,
           name: toolCall.function?.name,
-          input: JSON.parse(toolCall.function?.arguments || "{}"),
+          input: safeParseToolCallArgs(toolCall),
         })),
       };
     } else if (message.role === "thinking" && !message.redactedThinking) {
@@ -167,52 +172,10 @@ class Anthropic extends BaseLLM {
     }
   }
 
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
+  async *handleResponse(
+    response: any,
+    stream: boolean | undefined,
   ): AsyncGenerator<ChatMessage> {
-    if (!this.apiKey || this.apiKey === "") {
-      throw new Error(
-        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
-      );
-    }
-
-    const systemMessage = stripImages(
-      messages.filter((m) => m.role === "system")[0]?.content ?? "",
-    );
-    const shouldCacheSystemMessage = !!(
-      this.cacheBehavior?.cacheSystemMessage && systemMessage
-    );
-
-    const msgs = this.convertMessages(messages);
-    const response = await this.fetch(new URL("messages", this.apiBase), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
-      },
-      body: JSON.stringify({
-        ...this.convertArgs(options),
-        messages: msgs,
-        system: shouldCacheSystemMessage
-          ? [
-              {
-                type: "text",
-                text: systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
-          : systemMessage,
-      }),
-      signal,
-    });
-
     if (response.status === 499) {
       return; // Aborted by user
     }
@@ -232,17 +195,51 @@ class Anthropic extends BaseLLM {
       );
     }
 
-    if (options.stream === false) {
+    if (stream === false) {
       const data = await response.json();
-      yield { role: "assistant", content: data.content[0].text };
+      const cost = data.usage
+        ? {
+            inputTokens: data.usage.input_tokens,
+            outputTokens: data.usage.output_tokens,
+            totalTokens: data.usage.input_tokens + data.usage.output_tokens,
+          }
+        : {};
+      yield {
+        role: "assistant",
+        content: data.content[0].text,
+        ...(Object.keys(cost).length > 0 ? { cost } : {}),
+      };
       return;
     }
 
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
+    let usage: Usage = {
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 0,
+        cacheWriteTokens: 0,
+      },
+    };
+
     for await (const value of streamSse(response)) {
       // https://docs.anthropic.com/en/api/messages-streaming#event-types
       switch (value.type) {
+        case "message_start":
+          // Capture initial usage information
+          usage.promptTokens = value.message.usage.input_tokens;
+          usage.promptTokensDetails!.cachedTokens =
+            value.message.usage.cache_read_input_tokens;
+          usage.promptTokensDetails!.cacheWriteTokens =
+            value.message.usage.cache_creation_input_tokens;
+          break;
+        case "message_delta":
+          // Update usage information during streaming
+          if (value.usage) {
+            usage.completionTokens = value.usage.output_tokens;
+          }
+          break;
         case "content_block_start":
           if (value.content_block.type === "tool_use") {
             lastToolUseId = value.content_block.id;
@@ -250,7 +247,6 @@ class Anthropic extends BaseLLM {
           }
           // handle redacted thinking
           if (value.content_block.type === "redacted_thinking") {
-            console.log("redacted thinking", value.content_block.data);
             yield {
               role: "thinking",
               content: "",
@@ -303,6 +299,61 @@ class Anthropic extends BaseLLM {
           break;
       }
     }
+
+    yield {
+      role: "assistant",
+      content: "",
+      usage,
+    };
+  }
+
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    if (!this.apiKey || this.apiKey === "") {
+      throw new Error(
+        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+      );
+    }
+
+    const systemMessage = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    );
+
+    const msgs = this.convertMessages(messages);
+    const response = await this.fetch(new URL("messages", this.apiBase), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "anthropic-version": "2023-06-01",
+        "x-api-key": this.apiKey as string,
+        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
+          : {}),
+      },
+      body: JSON.stringify({
+        ...this.convertArgs(options),
+        messages: msgs,
+        system: shouldCacheSystemMessage
+          ? [
+              {
+                type: "text",
+                text: systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
+          : systemMessage,
+      }),
+      signal,
+    });
+
+    yield* this.handleResponse(response, options.stream);
   }
 }
 

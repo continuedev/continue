@@ -1,22 +1,24 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
-import { ChatMessage, MessageContent, MessagePart, Tool } from "../index.js";
-
-import { renderChatMessage } from "../util/messageContent.js";
 import {
-  AsyncEncoder,
-  GPTAsyncEncoder,
-  LlamaAsyncEncoder,
-} from "./asyncEncoder.js";
+  ChatMessage,
+  CompiledMessagesResult,
+  MessageContent,
+  MessagePart,
+  Tool,
+} from "../index.js";
 import { autodetectTemplateType } from "./autodetect.js";
-import llamaTokenizer from "./llamaTokenizer.js";
 import {
   addSpaceToAnyEmptyMessages,
   chatMessageIsEmpty,
-  flattenMessages,
   isUserOrToolMsg,
   messageHasToolCallId,
 } from "./messages.js";
+
+import { renderChatMessage } from "../util/messageContent.js";
+import { AsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
+import { DEFAULT_PRUNING_LENGTH } from "./constants.js";
+import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -47,7 +49,6 @@ class NonWorkerAsyncEncoder implements AsyncEncoder {
 }
 
 let gptEncoding: Encoding | null = null;
-const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
 const llamaAsyncEncoder = new LlamaAsyncEncoder();
 
@@ -60,7 +61,10 @@ function asyncEncoderForModel(modelName: string): AsyncEncoder {
 
   const modelType = autodetectTemplateType(modelName);
   if (!modelType || modelType === "none") {
-    return gptAsyncEncoder;
+    // Right now there is a problem packaging js-tiktoken in workers. Until then falling back
+    // Cannot find package 'js-tiktoken' imported from /Users/nate/gh/continuedev/continue/extensions/vscode/out/tiktokenWorkerPool.mjs
+    // return gptAsyncEncoder;
+    return llamaAsyncEncoder;
   }
   return llamaAsyncEncoder;
 }
@@ -210,6 +214,59 @@ function countChatMessageTokens(
   return tokens;
 }
 
+/**
+ * Extracts and validates the tool call sequence from the end of a message array.
+ * Tool sequences consist of: [assistant_with_tool_calls, tool_response_1, tool_response_2, ...]
+ * or just a single user message.
+ *
+ * @param messages - Array of chat messages (will be modified by popping messages)
+ * @returns Array of messages that form the tool sequence
+ */
+function extractToolSequence(messages: ChatMessage[]): ChatMessage[] {
+  const lastMsg = messages.pop();
+  if (!lastMsg || !isUserOrToolMsg(lastMsg)) {
+    throw new Error("Error parsing chat history: no user/tool message found");
+  }
+
+  const toolSequence: ChatMessage[] = [];
+
+  if (lastMsg.role === "tool") {
+    toolSequence.push(lastMsg);
+
+    // Collect all consecutive tool messages from the end
+    while (
+      messages.length > 0 &&
+      messages[messages.length - 1].role === "tool"
+    ) {
+      toolSequence.unshift(messages.pop()!);
+    }
+
+    // Get the assistant message with tool calls
+    const assistantMsg = messages.pop();
+    if (assistantMsg) {
+      toolSequence.unshift(assistantMsg);
+
+      // Validate that all tool messages have matching tool call IDs
+      for (const toolMsg of toolSequence.slice(1)) {
+        // Skip assistant message
+        if (
+          toolMsg.role === "tool" &&
+          !messageHasToolCallId(assistantMsg, toolMsg.toolCallId)
+        ) {
+          throw new Error(
+            `Error parsing chat history: no tool call found to match tool output for id "${toolMsg.toolCallId}"`,
+          );
+        }
+      }
+    }
+  } else {
+    // Single user message
+    toolSequence.push(lastMsg);
+  }
+
+  return toolSequence;
+}
+
 function pruneLinesFromTop(
   prompt: string,
   maxTokens: number,
@@ -298,7 +355,7 @@ function pruneStringFromTop(
 
 const MAX_TOKEN_SAFETY_BUFFER = 1000;
 const TOKEN_SAFETY_PROPORTION = 0.02;
-function getTokenCountingBufferSafety(contextLength: number) {
+export function getTokenCountingBufferSafety(contextLength: number) {
   return Math.min(
     MAX_TOKEN_SAFETY_BUFFER,
     contextLength * TOKEN_SAFETY_PROPORTION,
@@ -306,9 +363,6 @@ function getTokenCountingBufferSafety(contextLength: number) {
 }
 
 const MIN_RESPONSE_TOKENS = 1000;
-function getMinResponseTokens(maxTokens: number) {
-  return Math.min(MIN_RESPONSE_TOKENS, maxTokens);
-}
 
 function pruneRawPromptFromTop(
   modelName: string,
@@ -323,28 +377,53 @@ function pruneRawPromptFromTop(
   return pruneStringFromTop(modelName, maxTokens, prompt);
 }
 
-/*
-  Goal: reconcile chat messages with available context length
-  Guidelines:
-    - Always keep last user message, system message, and tools
-    - Never allow tool output without the corresponding tool call 
-    - Remove older messages first
-*/
+/**
+ * Reconciles chat messages with available context length by intelligently pruning older messages
+ * while preserving critical conversation elements.
+ *
+ * Core Guidelines:
+ * - Always preserve the last user/tool message sequence (including any associated assistant message with tool calls)
+ * - Always preserve the system message and tools
+ * - Never allow orphaned tool responses without their corresponding tool calls
+ * - Remove older messages first when pruning is necessary
+ * - Maintain conversation coherence by flattening adjacent similar messages
+ *
+ * Process:
+ * 1. Handle image content conversion for models that don't support images
+ * 2. Extract and preserve system message
+ * 3. Filter out empty messages and trailing non-user/tool messages
+ * 4. Extract the complete tool sequence from the end (user message or assistant + tool responses)
+ * 5. Calculate token requirements for non-negotiable elements (system, tools, last sequence)
+ * 6. Prune older messages until within available token budget
+ * 7. Reassemble with proper ordering and flatten adjacent similar messages
+ *
+ * @param params - Configuration object containing:
+ *   - modelName: LLM model name for token counting
+ *   - msgs: Array of chat messages to process
+ *   - contextLength: Maximum context length supported by the model
+ *   - maxTokens: Maximum tokens to reserve for the response
+ *   - supportsImages: Whether the model supports image content
+ *   - tools: Optional array of available tools
+ * @returns Processed array of chat messages that fit within context constraints
+ * @throws Error if non-negotiable elements exceed available context
+ */
 function compileChatMessages({
   modelName,
   msgs,
-  contextLength,
+  knownContextLength,
   maxTokens,
   supportsImages,
   tools,
 }: {
   modelName: string;
   msgs: ChatMessage[];
-  contextLength: number;
+  knownContextLength: number | undefined;
   maxTokens: number;
   supportsImages: boolean;
   tools?: Tool[];
-}): ChatMessage[] {
+}): CompiledMessagesResult {
+  let didPrune = false;
+
   let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
 
   // If images not supported, convert MessagePart[] to string
@@ -366,31 +445,13 @@ function compileChatMessages({
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
-  while (msgsCopy.length > 1) {
-    if (isUserOrToolMsg(msgsCopy.at(-1))) {
-      break;
-    }
-    msgsCopy.pop();
-  }
+  // Extract the tool sequence from the end of the message array
+  const toolSequence = extractToolSequence(msgsCopy);
 
-  const lastUserOrToolMsg = msgsCopy.pop();
-  if (!lastUserOrToolMsg || !isUserOrToolMsg(lastUserOrToolMsg)) {
-    throw new Error("Error parsing chat history: no user/tool message found"); // should never happen
-  }
-
-  let lastToolCallsMsg: ChatMessage | undefined = undefined;
-  if (lastUserOrToolMsg.role === "tool") {
-    lastToolCallsMsg = msgsCopy.pop();
-    if (!messageHasToolCallId(lastToolCallsMsg, lastUserOrToolMsg.toolCallId)) {
-      throw new Error(
-        `Error parsing chat history: no tool call found to match tool output for id "${lastUserOrToolMsg.toolCallId}"`,
-      );
-    }
-  }
-
-  let lastMessagesTokens = countChatMessageTokens(modelName, lastUserOrToolMsg);
-  if (lastToolCallsMsg) {
-    lastMessagesTokens += countChatMessageTokens(modelName, lastToolCallsMsg);
+  // Count tokens for all messages in the tool sequence
+  let lastMessagesTokens = 0;
+  for (const msg of toolSequence) {
+    lastMessagesTokens += countChatMessageTokens(modelName, msg);
   }
 
   // System message
@@ -405,8 +466,9 @@ function compileChatMessages({
     toolTokens = countToolsTokens(tools, modelName);
   }
 
+  const contextLength = knownContextLength ?? DEFAULT_PRUNING_LENGTH;
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const minOutputTokens = getMinResponseTokens(maxTokens);
+  const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, maxTokens);
 
   let inputTokensAvailable = contextLength;
 
@@ -420,17 +482,16 @@ function compileChatMessages({
   inputTokensAvailable -= lastMessagesTokens;
 
   // Make sure there's enough context for the non-excludable items
-  if (inputTokensAvailable < 0) {
+  if (knownContextLength !== undefined && inputTokensAvailable < 0) {
     throw new Error(
       `Not enough context available to include the system message, last user message, and tools.
-      There must be at least ${minOutputTokens} tokens remaining for output.
-      Request had the following token counts:
-      - contextLength: ${contextLength}
-      - counting safety buffer: ${countingSafetyBuffer}
-      - tools: ~${toolTokens}
-      - system message: ~${systemMsgTokens}
-      - last user or tool + tool call message tokens: ~${lastMessagesTokens}
-      - max output tokens: ${maxTokens}`,
+        There must be at least ${minOutputTokens} tokens remaining for output.
+        Request had the following token counts:
+        - contextLength: ${knownContextLength}
+        - counting safety buffer: ${countingSafetyBuffer}
+        - tools: ~${toolTokens}
+        - system message: ~${systemMsgTokens}
+        - max output tokens: ${maxTokens}`,
     );
   }
 
@@ -448,6 +509,7 @@ function compileChatMessages({
   while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
     const message = historyWithTokens.shift()!;
     currentTotal -= message.tokens;
+    didPrune = true;
 
     // At this point make sure no latent tool response without corresponding call
     while (historyWithTokens[0]?.role === "tool") {
@@ -462,20 +524,32 @@ function compileChatMessages({
     reassembled.push(systemMsg);
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
-  if (lastToolCallsMsg) {
-    reassembled.push(lastToolCallsMsg);
-  }
-  reassembled.push(lastUserOrToolMsg);
+  reassembled.push(...toolSequence);
 
-  // Flatten the messages (combines adjacent similar messages)
-  const flattenedHistory = flattenMessages(reassembled);
-  return flattenedHistory;
+  const inputTokens =
+    currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;
+  const availableTokens =
+    contextLength - countingSafetyBuffer - minOutputTokens;
+  const contextPercentage = inputTokens / availableTokens;
+  return {
+    compiledChatMessages: reassembled,
+    didPrune,
+    contextPercentage,
+  };
+}
+
+async function cleanupAsyncEncoders(): Promise<void> {
+  try {
+    await llamaAsyncEncoder.close();
+  } catch (e) {}
 }
 
 export {
+  cleanupAsyncEncoders,
   compileChatMessages,
   countTokens,
   countTokensAsync,
+  extractToolSequence,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,

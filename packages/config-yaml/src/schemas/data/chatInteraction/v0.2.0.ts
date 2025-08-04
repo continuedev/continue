@@ -16,6 +16,8 @@ export const chatInteractionEventSchema_0_2_0 =
     modelTitle: true,
     modelProvider: true,
     sessionId: true,
+    tools: true,
+    rules: true,
   });
 
 export const chatInteractionEventSchema_0_2_0_noCode =

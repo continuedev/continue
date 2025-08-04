@@ -1,4 +1,4 @@
-import { SlashCommandDescription } from "core";
+import { SlashCommandDescWithSource } from "core";
 import { useState } from "react";
 import { useBookmarkedSlashCommands } from "../../hooks/useBookmarkedSlashCommands";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -23,8 +23,12 @@ export function ConversationStarterCards() {
     isCommandBookmarked(command.name),
   );
 
-  function onClick(command: SlashCommandDescription) {
-    mainEditor?.commands.insertPrompt(command);
+  function onClick(command: SlashCommandDescWithSource) {
+    mainEditor?.commands.insertPrompt({
+      description: command.description,
+      title: command.name,
+      content: command.prompt,
+    });
   }
 
   if (bookmarkedSlashCommands.length === 0) {

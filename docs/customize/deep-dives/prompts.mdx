@@ -1,0 +1,61 @@
+---
+title: Prompts
+---
+
+Prompts are reusable instructions that can be referenced at any time during chat. They are especially useful as context for repetitive and/or complex tasks.
+
+<Info>
+  Prompts were previously defined in a `.prompt` file format, but for
+  consistency we now recommend using the same Markdown format as
+  [rules](./rules.mdx) and adding `alwaysApply: false` to the frontmatter so
+  that they are manually triggered.
+</Info>
+
+### Quick Start
+
+Below is a quick example of setting up a prompt file:
+
+1. Create a folder called `.continue/rules` at the top level of your workspace
+2. Add a file called `review-prompt.md` to this folder.
+3. Write the following contents to `review-prompt.md` and save.
+
+```md title="review-prompt.md"
+---
+name: Redux best practices review
+alwaysApply: false
+---
+
+Review the currently open file for adherence to Redux best practices, as explained in their style guide at https://redux.js.org/style-guide/.
+```
+
+Now to use this prompt, you can open Chat, type <kbd>/</kbd>, select the prompt, and type out any additional instructions you'd like to add.
+
+## Further Examples
+
+Below are more examples to get you started. You can also visit the Hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&blockType=prompts).
+
+### Security review
+
+```md title="security-review.md"
+---
+name: Security best practices review
+alwaysApply: false
+---
+
+Review the changes in the current git diff for these security best practices:
+
+- Does the architecture follow security-by-design principles?
+- Are there potential security vulnerabilities in the system design?
+- Is sensitive data handled appropriately throughout the lifecycle?
+```
+
+### Pull in commonly used files for tasks
+
+```md title="typeorm-entity-generator.md"
+---
+name: Generate a new TypeORM entity
+alwaysApply: false
+---
+
+Referencing `src/db/dataSource.ts` and `src/db/entity/SampleEntity.ts`, generate a new TypeORM entity based on the following requirements:
+```

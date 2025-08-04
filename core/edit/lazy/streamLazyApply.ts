@@ -2,11 +2,11 @@ import {
   filterLeadingAndTrailingNewLineInsertion,
   filterLeadingNewline,
   removeTrailingWhitespace,
-  stopAtLines,
 } from "../../autocomplete/filtering/streamTransforms/lineStream.js";
 import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
 import { DiffLine, ILLM } from "../../index.js";
+import { stopAtLinesWithMarkdownSupport } from "../../utils/streamMarkdownUtils.js";
 
 import { lazyApplyPromptForModel, UNCHANGED_CODE } from "./prompts.js";
 import { BUFFER_LINES_BELOW, getReplacementWithLlm } from "./replace.js";
@@ -16,6 +16,7 @@ export async function* streamLazyApply(
   filename: string,
   newCode: string,
   llm: ILLM,
+  abortController: AbortController,
 ): AsyncGenerator<DiffLine> {
   const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
   if (!promptFactory) {
@@ -23,10 +24,7 @@ export async function* streamLazyApply(
   }
 
   const promptMessages = promptFactory(oldCode, filename, newCode);
-  const lazyCompletion = llm.streamChat(
-    promptMessages,
-    new AbortController().signal,
-  );
+  const lazyCompletion = llm.streamChat(promptMessages, abortController.signal);
 
   // Do find and replace over the lazy edit response
   async function* replacementFunction(
@@ -39,15 +37,19 @@ export async function* streamLazyApply(
       linesBefore,
       linesAfter,
       llm,
+      abortController,
     )) {
       yield line;
     }
   }
 
   let lazyCompletionLines = streamLines(lazyCompletion, true);
-  // Process line output
-  // lazyCompletionLines = filterEnglishLinesAtStart(lazyCompletionLines);
-  lazyCompletionLines = stopAtLines(lazyCompletionLines, () => {}, ["```"]);
+
+  lazyCompletionLines = stopAtLinesWithMarkdownSupport(
+    lazyCompletionLines,
+    filename,
+  );
+
   lazyCompletionLines = filterLeadingNewline(lazyCompletionLines);
   lazyCompletionLines = removeTrailingWhitespace(lazyCompletionLines);
 
@@ -93,7 +95,6 @@ async function* streamFillUnchangedCode(
           newLines.push(replacementLine);
           replacement += replacementLine + "\n";
         }
-
         // Yield the buffered lines
         for (const bufferedLine of buffer) {
           yield bufferedLine;

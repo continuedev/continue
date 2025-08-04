@@ -1,8 +1,5 @@
 import { ILLM } from "../..";
-import {
-  filterLeadingNewline,
-  stopAtLines,
-} from "../../autocomplete/filtering/streamTransforms/lineStream";
+import { filterLeadingNewline } from "../../autocomplete/filtering/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
 import { dedent } from "../../util";
 
@@ -59,6 +56,7 @@ export async function* getReplacementWithLlm(
   linesBefore: string[],
   linesAfter: string[],
   llm: ILLM,
+  abortController: AbortController,
 ): AsyncGenerator<string> {
   const userPrompt = dedent`
     ORIGINAL CODE:
@@ -88,12 +86,19 @@ export async function* getReplacementWithLlm(
       { role: "user", content: userPrompt },
       { role: "assistant", content: assistantPrompt },
     ],
-    new AbortController().signal,
+    abortController.signal,
+    {
+      raw: true,
+      prediction: undefined,
+      reasoning: false,
+    },
   );
 
   let lines = streamLines(completion);
   lines = filterLeadingNewline(lines);
-  lines = stopAtLines(lines, () => {}, ["```"]);
+  // We want to retrive everything from the llm
+  // then let the filterCodeBlocks function clean up for any trailing text.
+  // if we stop here early, we run the risk of loosing inner markdown content.
 
   for await (const line of lines) {
     yield line;

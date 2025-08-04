@@ -8,6 +8,7 @@ import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
 } from "core/config/sharedConfig";
+import { HubSessionInfo } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useState } from "react";
 import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
@@ -15,10 +16,12 @@ import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
 import { ToolTip } from "../../components/gui/Tooltip";
 import { useFontSize } from "../../components/ui/font";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
 import { setLocalStorage } from "../../util/localStorage";
+import { ContinueFeaturesMenu } from "./ContinueFeaturesMenu";
 
 export function UserSettingsForm() {
   /////// User settings section //////
@@ -26,6 +29,7 @@ export function UserSettingsForm() {
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
   const [showExperimental, setShowExperimental] = useState(false);
+  const { session } = useAuth();
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -63,6 +67,10 @@ export function UserSettingsForm() {
     });
   };
 
+  const handleEnableStaticContextualizationToggle = (value: boolean) => {
+    handleUpdate({ enableStaticContextualization: value });
+  };
+
   useEffect(() => {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
@@ -78,6 +86,14 @@ export function UserSettingsForm() {
   const disableSessionTitles = config.disableSessionTitles ?? false;
   const useCurrentFileAsContext =
     config.experimental?.useCurrentFileAsContext ?? false;
+  const enableExperimentalTools =
+    config.experimental?.enableExperimentalTools ?? false;
+  const onlyUseSystemMessageTools =
+    config.experimental?.onlyUseSystemMessageTools ?? false;
+  const codebaseToolCallingOnly =
+    config.experimental?.codebaseToolCallingOnly ?? false;
+  const enableStaticContextualization =
+    config.experimental?.enableStaticContextualization ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -106,10 +122,16 @@ export function UserSettingsForm() {
 
   const [hubEnabled, setHubEnabled] = useState(false);
   useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
-      setHubEnabled(continueTestEnvironment === "production");
-    });
+    void ideMessenger.ide
+      .getIdeSettings()
+      .then(({ continueTestEnvironment }) => {
+        setHubEnabled(continueTestEnvironment === "production");
+      });
   }, [ideMessenger]);
+
+  const hasContinueEmail = (session as HubSessionInfo)?.account?.id.includes(
+    "@continue.dev",
+  );
 
   return (
     <div className="flex flex-col">
@@ -352,7 +374,9 @@ export function UserSettingsForm() {
             </div>
             <div
               className={`duration-400 overflow-hidden transition-all ease-in-out ${
-                showExperimental ? "max-h-40" : "max-h-0"
+                showExperimental
+                  ? "max-h-96" /* Increased from max-h-40 to max-h-96 to accommodate ContinueFeaturesMenu */
+                  : "max-h-0"
               }`}
             >
               <div className="flex flex-col gap-x-1 gap-y-4 pl-6">
@@ -386,6 +410,47 @@ export function UserSettingsForm() {
                   }
                   text="Add Current File by Default"
                 />
+
+                <ToggleSwitch
+                  isToggled={enableExperimentalTools}
+                  onToggle={() =>
+                    handleUpdate({
+                      enableExperimentalTools: !enableExperimentalTools,
+                    })
+                  }
+                  text="Enable experimental tools"
+                />
+
+                <ToggleSwitch
+                  isToggled={onlyUseSystemMessageTools}
+                  onToggle={() =>
+                    handleUpdate({
+                      onlyUseSystemMessageTools: !onlyUseSystemMessageTools,
+                    })
+                  }
+                  text="Only use system message tools"
+                />
+
+                <ToggleSwitch
+                  isToggled={codebaseToolCallingOnly}
+                  onToggle={() =>
+                    handleUpdate({
+                      codebaseToolCallingOnly: !codebaseToolCallingOnly,
+                    })
+                  }
+                  text="@Codebase: use tool calling only"
+                />
+
+                {hasContinueEmail && (
+                  <ContinueFeaturesMenu
+                    enableStaticContextualization={
+                      enableStaticContextualization
+                    }
+                    handleEnableStaticContextualizationToggle={
+                      handleEnableStaticContextualizationToggle
+                    }
+                  />
+                )}
               </div>
             </div>
           </div>

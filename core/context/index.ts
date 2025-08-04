@@ -31,4 +31,8 @@ export abstract class BaseContextProvider implements IContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     return [];
   }
+
+  get deprecationMessage(): string | null {
+    return null;
+  }
 }

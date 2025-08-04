@@ -89,10 +89,6 @@ export class ReverseMessageIde {
       return this.ide.getUniqueId();
     });
 
-    this.on("getWorkspaceConfigs", () => {
-      return this.ide.getWorkspaceConfigs();
-    });
-
     this.on("getIdeSettings", () => {
       return this.ide.getIdeSettings();
     });
@@ -159,11 +155,11 @@ export class ReverseMessageIde {
     });
 
     this.on("getSearchResults", (data) => {
-      return this.ide.getSearchResults(data.query);
+      return this.ide.getSearchResults(data.query, data.maxResults);
     });
 
     this.on("getFileResults", (data) => {
-      return this.ide.getFileResults(data.pattern);
+      return this.ide.getFileResults(data.pattern, data.maxResults);
     });
 
     this.on("getProblems", (data) => {

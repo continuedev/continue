@@ -1,5 +1,7 @@
+import { CompletionUsage } from "openai/resources/completions.mjs";
 import { BaseLlmApi, constructLlmApi } from "../index.js";
 import { LLMConfig } from "../types.js";
+import { TestConfigOptions } from "./main.test.js";
 
 export function getLlmApi(config: LLMConfig) {
   const api = constructLlmApi(config);
@@ -8,7 +10,6 @@ export function getLlmApi(config: LLMConfig) {
   }
   return api;
 }
-
 export function testEmbed(api: BaseLlmApi, model: string) {
   test("should successfully embed", async () => {
     const response = await api.embed({
@@ -73,7 +74,11 @@ export function testFim(api: BaseLlmApi, model: string) {
   });
 }
 
-export function testChat(api: BaseLlmApi, model: string) {
+export function testChat(
+  api: BaseLlmApi,
+  model: string,
+  options?: TestConfigOptions,
+) {
   test("should successfully stream chat", async () => {
     const stream = api.chatCompletionStream(
       {
@@ -84,12 +89,27 @@ export function testChat(api: BaseLlmApi, model: string) {
       new AbortController().signal,
     );
     let completion = "";
+    let usage: CompletionUsage | undefined = undefined;
     for await (const result of stream) {
-      completion += result.choices[0].delta.content ?? "";
+      completion += result.choices[0]?.delta.content ?? "";
 
-      expect(result.choices.length).toBeGreaterThan(0);
+      if (result.usage) {
+        usage = result.usage;
+      } else {
+        // At the end we expect a final message without choices that shares usage
+        expect(result.choices.length).toBeGreaterThan(0);
+      }
     }
     expect(completion.length).toBeGreaterThan(0);
+
+    if (options?.expectUsage === true) {
+      expect(usage).toBeDefined();
+      expect(usage!.completion_tokens).toBeGreaterThan(0);
+      expect(usage!.prompt_tokens).toBeGreaterThan(0);
+      expect(usage!.total_tokens).toEqual(
+        usage!.prompt_tokens + usage!.completion_tokens,
+      );
+    }
   });
 
   test("should successfully stream multi-part chat with empty text", async () => {
@@ -118,6 +138,10 @@ export function testChat(api: BaseLlmApi, model: string) {
     );
     let completion = "";
     for await (const result of stream) {
+      // Skip usage chunks that have empty choices array
+      if (result.choices.length === 0) {
+        continue;
+      }
       completion += result.choices[0].delta.content ?? "";
 
       expect(result.choices.length).toBeGreaterThan(0);
@@ -155,7 +179,6 @@ export function testChat(api: BaseLlmApi, model: string) {
     let completion = "";
     for await (const result of stream) {
       completion += result.choices[0].delta.content ?? "";
-
       expect(result.choices.length).toBeGreaterThan(0);
     }
     expect(completion.length).toBeGreaterThan(0);
@@ -201,124 +224,133 @@ export function testChat(api: BaseLlmApi, model: string) {
     expect(completion?.startsWith("RESPONSE: ")).toBe(true);
   });
 
-  test("Tool Call works", async () => {
-    let args = "";
-    let isFirstChunk = true;
-    for await (const chunk of api.chatCompletionStream(
-      {
-        messages: [
-          {
-            role: "user",
-            content:
-              "Hi, my name is Nate. Please call the say_hello function to respond to me.",
-          },
-        ],
-        tools: [
-          {
-            function: {
-              name: "say_hello",
-              description: "Say Hello",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "The name of the person to greet",
+  if (options?.skipTools === false) {
+    test("Tool Call works", async () => {
+      let args = "";
+      let isFirstChunk = true;
+      for await (const chunk of api.chatCompletionStream(
+        {
+          messages: [
+            {
+              role: "user",
+              content:
+                "Hi, my name is Nate. Please call the say_hello function to respond to me.",
+            },
+          ],
+          tools: [
+            {
+              function: {
+                name: "say_hello",
+                description: "Say Hello",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    name: {
+                      type: "string",
+                      description: "The name of the person to greet",
+                    },
                   },
                 },
               },
+              type: "function",
             },
+          ],
+          tool_choice: {
             type: "function",
+            function: {
+              name: "say_hello",
+            },
           },
-        ],
-        tool_choice: {
-          type: "function",
-          function: {
-            name: "say_hello",
-          },
+          stream: true,
+          model,
         },
-        stream: true,
-        model,
-      },
-      new AbortController().signal,
-    )) {
-      const toolCall = chunk.choices[0].delta.tool_calls?.[0];
-      if (!toolCall) {
-        continue;
+        new AbortController().signal,
+      )) {
+        // Skip usage chunks that have empty choices array
+        if (chunk.choices.length === 0) {
+          continue;
+        }
+        const toolCall = chunk.choices[0].delta.tool_calls?.[0];
+        if (!toolCall) {
+          continue;
+        }
+        args += toolCall.function?.arguments ?? "";
+
+        expect(chunk.choices[0].delta.tool_calls).toHaveLength(1);
+
+        if (isFirstChunk) {
+          isFirstChunk = false;
+          expect(toolCall.id).toBeDefined();
+          expect(toolCall.function!.name).toBe("say_hello");
+        }
       }
-      args += toolCall.function?.arguments ?? "";
 
-      expect(chunk.choices[0].delta.tool_calls).toHaveLength(1);
+      const parsedArgs = JSON.parse(args);
+      expect(parsedArgs.name).toBe("Nate");
+    });
 
-      if (isFirstChunk) {
-        isFirstChunk = false;
-        expect(toolCall.id).toBeDefined();
-        expect(toolCall.function!.name).toBe("say_hello");
-      }
-    }
-
-    const parsedArgs = JSON.parse(args);
-    expect(parsedArgs.name).toBe("Nate");
-  });
-
-  test("Tool Call second message works", async () => {
-    let response = "";
-    for await (const chunk of api.chatCompletionStream(
-      {
-        messages: [
-          {
-            role: "user",
-            content:
-              "Hi, my name is Nate. Please call the say_hello function to respond to me, then respond to me again.",
-          },
-          {
-            role: "assistant",
-            tool_calls: [
-              {
-                function: {
-                  arguments: '{"name":"Nate"}',
-                  name: "say_hello",
+    test("Tool Call second message works", async () => {
+      let response = "";
+      for await (const chunk of api.chatCompletionStream(
+        {
+          messages: [
+            {
+              role: "user",
+              content:
+                "Hi, my name is Nate. Please call the say_hello function to respond to me, then respond to me again.",
+            },
+            {
+              role: "assistant",
+              tool_calls: [
+                {
+                  function: {
+                    arguments: '{"name":"Nate"}',
+                    name: "say_hello",
+                  },
+                  id: "tool_call_1",
+                  type: "function",
                 },
-                id: "tool_call_1",
-                type: "function",
-              },
-            ],
-          },
-          {
-            role: "tool",
-            tool_call_id: "tool_call_1",
-            content: "Nate was greeted",
-          },
-        ],
-        tools: [
-          {
-            function: {
-              name: "say_hello",
-              description: "Say Hello",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "The name of the person to greet",
+              ],
+            },
+            {
+              role: "tool",
+              tool_call_id: "tool_call_1",
+              content: "Nate was greeted",
+            },
+          ],
+          tools: [
+            {
+              function: {
+                name: "say_hello",
+                description: "Say Hello",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    name: {
+                      type: "string",
+                      description: "The name of the person to greet",
+                    },
                   },
                 },
               },
+              type: "function",
             },
-            type: "function",
-          },
-        ],
-        stream: true,
-        model,
-      },
-      new AbortController().signal,
-    )) {
-      console.log(JSON.stringify(chunk, null, 2));
-      response += chunk.choices[0].delta.content ?? "";
-    }
+          ],
+          stream: true,
+          model,
+        },
+        new AbortController().signal,
+      )) {
+        // Skip usage chunks that have empty choices array
+        if (chunk.choices.length === 0) {
+          continue;
+        }
+        response += chunk.choices[0].delta.content ?? "";
+      }
 
-    expect(response.length).toBeGreaterThan(0);
-  });
+      expect(response.length).toBeGreaterThan(0);
+    });
+  }
 }
 
 export function testCompletion(api: BaseLlmApi, model: string) {

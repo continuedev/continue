@@ -1,4 +1,5 @@
 const fs = require("fs");
+
 const { writeBuildTimestamp } = require("./utils");
 
 const esbuild = require("esbuild");
@@ -49,7 +50,7 @@ const esbuildConfig = {
   ],
 };
 
-(async () => {
+void (async () => {
   // Create .buildTimestamp.js before starting the first build
   writeBuildTimestamp();
   // Bundles the extension into one file

@@ -6,12 +6,32 @@ import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
-import { getExtensionVersion } from "../util/util";
+import { getExtensionVersion, isUnsupportedPlatform } from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  const platformCheck = isUnsupportedPlatform();
+  if (platformCheck.isUnsupported) {
+    // const platformTarget = `${getPlatform()}-${getArchitecture()}`;
+    const platformTarget = "windows-arm64";
+
+    void vscode.window.showInformationMessage(
+      `Continue detected that you are using ${platformTarget}. Due to native dependencies, Continue may not be able to start`,
+    );
+
+    void Telemetry.capture(
+      "unsupported_platform_activation_attempt",
+      {
+        platform: platformTarget,
+        extensionVersion: getExtensionVersion(),
+        reason: platformCheck.reason,
+      },
+      true,
+    );
+  }
+
   // Add necessary files
   getTsConfigPath();
   getContinueRcPath();
@@ -24,8 +44,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
-    context.globalState.update("hasBeenInstalled", true);
-    Telemetry.capture(
+    void context.globalState.update("hasBeenInstalled", true);
+    void Telemetry.capture(
       "install",
       {
         extensionVersion: getExtensionVersion(),
@@ -38,21 +58,15 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   const yamlMatcher = ".continue/**/*.yaml";
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
 
-  const existingSchemas = yamlConfig.get("schemas") || {};
-  const newSchemas = Object.entries(existingSchemas).filter(
-    ([_, value]) => Array.isArray(value) && value.includes(yamlMatcher), // remove old ones
-  );
-
   const newPath = path.join(
     context.extension.extensionUri.fsPath,
     "config-yaml-schema.json",
   );
-  newSchemas.push([newPath, [yamlMatcher]]);
 
   try {
     await yamlConfig.update(
       "schemas",
-      Object.fromEntries(newSchemas),
+      { [newPath]: [yamlMatcher] },
       vscode.ConfigurationTarget.Global,
     );
   } catch (error) {

@@ -2,7 +2,7 @@ import { FromIdeProtocol } from "..";
 import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
-  ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -13,6 +13,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../..";
@@ -40,9 +41,29 @@ export class MessageIde implements IDE {
   fileExists(fileUri: string): Promise<boolean> {
     return this.request("fileExists", { filepath: fileUri });
   }
+
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return this.request("gotoDefinition", { location });
   }
+
+  async gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    return this.request("gotoTypeDefinition", { location });
+  }
+
+  async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    return this.request("getSignatureHelp", { location });
+  }
+
+  async getReferences(location: Location): Promise<RangeInFile[]> {
+    return this.request("getReferences", { location });
+  }
+
+  async getDocumentSymbols(
+    textDocumentIdentifier: string,
+  ): Promise<DocumentSymbol[]> {
+    return this.request("getDocumentSymbols", { textDocumentIdentifier });
+  }
+
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
   }
@@ -50,12 +71,14 @@ export class MessageIde implements IDE {
   getIdeSettings(): Promise<IdeSettings> {
     return this.request("getIdeSettings", undefined);
   }
+
   getFileStats(files: string[]): Promise<FileStatsMap> {
     return this.request("getFileStats", { files });
   }
   getGitRootPath(dir: string): Promise<string | undefined> {
     return this.request("getGitRootPath", { dir });
   }
+
   listDir(dir: string): Promise<[string, FileType][]> {
     return this.request("listDir", { dir });
   }
@@ -102,12 +125,12 @@ export class MessageIde implements IDE {
     return this.request("isTelemetryEnabled", undefined);
   }
 
-  getUniqueId(): Promise<string> {
-    return this.request("getUniqueId", undefined);
+  isWorkspaceRemote(): Promise<boolean> {
+    return this.request("isWorkspaceRemote", undefined);
   }
 
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return this.request("getWorkspaceConfigs", undefined);
+  getUniqueId(): Promise<string> {
+    return this.request("getUniqueId", undefined);
   }
 
   async getDiff(includeUnstaged: boolean) {
@@ -164,6 +187,7 @@ export class MessageIde implements IDE {
   async saveFile(fileUri: string): Promise<void> {
     await this.request("saveFile", { filepath: fileUri });
   }
+
   async readFile(fileUri: string): Promise<string> {
     return await this.request("readFile", { filepath: fileUri });
   }
@@ -180,8 +204,8 @@ export class MessageIde implements IDE {
     return this.request("getPinnedFiles", undefined);
   }
 
-  getSearchResults(query: string): Promise<string> {
-    return this.request("getSearchResults", { query });
+  getSearchResults(query: string, maxResults?: number): Promise<string> {
+    return this.request("getSearchResults", { query, maxResults });
   }
 
   getFileResults(pattern: string): Promise<string[]> {

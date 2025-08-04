@@ -1,24 +1,25 @@
 import { useAppDispatch } from "../../../../redux/hooks";
-import { cancelStream } from "../../../../redux/thunks";
+import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
-import { Container, StopButton } from "./components";
 import { GeneratingIndicator } from "./GeneratingIndicator";
 
 export function StreamingToolbar() {
-  const dispatch = useAppDispatch();
   const jetbrains = isJetBrains();
+  const dispatch = useAppDispatch();
 
   return (
-    <Container>
+    <div className="flex w-full items-center justify-between">
       <GeneratingIndicator />
-      <StopButton
-        className="text-description"
-        onClick={() => {
-          void dispatch(cancelStream());
-        }}
+      <div
+        onClick={() => void dispatch(cancelStream())}
+        className="text-2xs cursor-pointer px-1.5 py-0.5 hover:brightness-125"
       >
-        {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
-      </StopButton>
-    </Container>
+        <span className="text-description">Stop</span>
+        {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
+        <span className="text-description-muted ml-1 opacity-75">
+          {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()}⌫
+        </span>
+      </div>
+    </div>
   );
 }

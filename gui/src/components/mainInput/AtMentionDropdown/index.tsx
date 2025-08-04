@@ -25,6 +25,7 @@ import {
   vscQuickInputBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppSelector } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import FileIcon from "../../FileIcon";
@@ -159,6 +160,9 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
+  const isInAgentMode = useAppSelector(
+    (store) => store.session.mode === "agent",
+  );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -187,6 +191,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
         query,
         fullInput: "",
         selectedCode,
+        isInAgentMode,
       },
     );
 
@@ -291,6 +296,26 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
           props.onClose(); // Escape the mention list after creating a new prompt file
         },
         description: "Create a new .prompt file",
+      });
+    } else if (subMenuTitle === "Mention rules files") {
+      items.push({
+        title: "Add new rule",
+        type: "action",
+        action: () => {
+          void ideMessenger.request("config/addLocalWorkspaceBlock", {
+            blockType: "rules",
+          });
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          if (start !== -1) {
+            props.editor.view.dispatch(
+              tr.delete(start, tr.selection.from).scrollIntoView(),
+            );
+          }
+          props.onClose(); // Escape the mention list after creating a new rule
+        },
+        description: "Creates a rule file",
       });
     }
     setLoadingSubmenuItem(items.find((item) => item.id === "loading"));

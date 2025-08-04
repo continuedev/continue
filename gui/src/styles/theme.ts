@@ -140,6 +140,10 @@ export const THEME_COLORS = {
     vars: ["--vscode-textLink-foreground"],
     default: "#5c9ce6", // medium blue
   },
+  textCodeBlockBackground: {
+    vars: ["--vscode-textCodeBlock-background"],
+    default: "#1e1e1e", // same as editor-background
+  },
   accent: {
     vars: ["--vscode-tab-activeBorderTop", "--vscode-focusBorder"],
     default: "#4d8bf0", // bright blue

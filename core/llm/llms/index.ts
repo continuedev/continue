@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import {
   BaseCompletionOptions,
   IdeSettings,
@@ -6,10 +7,8 @@ import {
   JSONModelDescription,
   LLMOptions,
 } from "../..";
-import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
-import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
+import { renderTemplatedString } from "../../util/handlebars/renderTemplatedString";
 import { BaseLLM } from "../index";
-
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
 import Azure from "./Azure";
@@ -33,6 +32,7 @@ import Inception from "./Inception";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
+import LlamaStack from "./LlamaStack";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
 import MockLLM from "./Mock";
@@ -62,7 +62,6 @@ import Vllm from "./Vllm";
 import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
-
 export const LLMClasses = [
   Anthropic,
   Cohere,
@@ -116,11 +115,13 @@ export const LLMClasses = [
   Relace,
   Inception,
   Voyage,
+  LlamaStack,
 ];
 
 export async function llmFromDescription(
   desc: JSONModelDescription,
   readFile: (filepath: string) => Promise<string>,
+  getUriFromPath: (path: string) => Promise<string | undefined>,
   uniqueId: string,
   ideSettings: IdeSettings,
   llmLogger: ILLMLogger,
@@ -139,12 +140,15 @@ export async function llmFromDescription(
 
   let baseChatSystemMessage: string | undefined = undefined;
   if (desc.systemMessage !== undefined) {
-    baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
-    baseChatSystemMessage += "\n\n";
-    baseChatSystemMessage += await renderTemplatedString(
+    // baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
+    // baseChatSystemMessage += "\n\n";
+    baseChatSystemMessage = await renderTemplatedString(
+      Handlebars,
       desc.systemMessage,
-      readFile,
       {},
+      [],
+      readFile,
+      getUriFromPath,
     );
   }
 
@@ -158,6 +162,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     baseChatSystemMessage,
+    basePlanSystemMessage: baseChatSystemMessage,
     baseAgentSystemMessage: baseChatSystemMessage,
     logger: llmLogger,
     uniqueId,

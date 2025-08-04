@@ -184,7 +184,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
             let value = parts[2];
             switch (key) {
               case "num_ctx":
-                this.contextLength =
+                this._contextLength =
                   options.contextLength ?? Number.parseInt(value);
                 break;
               case "stop":
@@ -405,7 +405,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
           parameters: tool.function.parameters,
         },
       }));
-      chatOptions.stream = false; // Cannot set stream = true for tools calls
     }
     const headers: Record<string, string> = {
       "Content-Type": "application/json",

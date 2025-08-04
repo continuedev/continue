@@ -1,5 +1,6 @@
 import { Chunk } from "../../..";
 import { RETRIEVAL_PARAMS } from "../../../util/parameters";
+import { Telemetry } from "../../../util/posthog";
 import { findUriInDirs } from "../../../util/uri";
 import { requestFilesFromRepoMap } from "../repoMapRequest";
 import { deduplicateChunks } from "../util";
@@ -20,7 +21,8 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     try {
       ftsChunks = await this.retrieveFts(args, nRetrieve);
     } catch (error) {
-      console.error("Error retrieving FTS chunks:", error);
+      await Telemetry.captureError("reranker_fts_retrieval", error);
+      // console.error("Error retrieving FTS chunks:", error);
     }
 
     let embeddingsChunks: Chunk[] = [];
@@ -29,6 +31,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
         ? await this.retrieveEmbeddings(input, nRetrieve)
         : [];
     } catch (error) {
+      await Telemetry.captureError("reranker_embeddings_retrieval", error);
       console.error("Error retrieving embeddings chunks:", error);
     }
 
@@ -37,6 +40,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       recentlyEditedFilesChunks =
         await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
     } catch (error) {
+      await Telemetry.captureError("reranker_recently_edited_retrieval", error);
       console.error("Error retrieving recently edited files chunks:", error);
     }
 
@@ -50,15 +54,26 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
         filterDirectory,
       );
     } catch (error) {
+      await Telemetry.captureError("reranker_repo_map_retrieval", error);
       console.error("Error retrieving repo map chunks:", error);
     }
 
-    retrievalResults.push(
-      ...recentlyEditedFilesChunks,
-      ...ftsChunks,
-      ...embeddingsChunks,
-      ...repoMapChunks,
-    );
+    if (config.experimental?.codebaseToolCallingOnly) {
+      let toolBasedChunks: Chunk[] = [];
+      try {
+        toolBasedChunks = await this.retrieveWithTools(input);
+      } catch (error) {
+        console.error("Error retrieving tool based chunks:", error);
+      }
+      retrievalResults.push(...toolBasedChunks);
+    } else {
+      retrievalResults.push(
+        ...recentlyEditedFilesChunks,
+        ...ftsChunks,
+        ...embeddingsChunks,
+        ...repoMapChunks,
+      );
+    }
 
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
@@ -102,15 +117,12 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
 
       results.sort(
-        (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
+        (a, b) => scores[chunkIndexMap.get(b)!] - scores[chunkIndexMap.get(a)!],
       );
       results = results.slice(-this.options.nFinal);
       return results;
     } catch (e) {
-      void this.options.ide.showToast(
-        "warning",
-        `Failed to rerank retrieval results\n${e}`,
-      );
+      console.warn(`Failed to rerank retrieval results\n${e}`);
       return chunks.slice(-this.options.nFinal);
     }
   }

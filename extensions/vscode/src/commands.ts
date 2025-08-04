@@ -4,26 +4,29 @@ import * as fs from "node:fs";
 import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
-import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { startLocalOllama } from "core/util/ollamaHelper";
-import {
-  getConfigJsonPath,
-  getConfigYamlPath,
-  getDevDataFilePath,
-} from "core/util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
+import { myersDiff } from "core/diff/myers";
+import {
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "core/nextEdit/constants";
+import { checkFim } from "core/nextEdit/diff/diff";
+import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
+import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { CompletionDataForAfterJump } from "./activation/JumpManager";
+import { NextEditWindowManager } from "./activation/NextEditWindowManager";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -35,6 +38,7 @@ import {
 } from "./autocomplete/statusBar";
 import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
+import { processDiff } from "./diff/processDiff";
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
@@ -93,56 +97,6 @@ function hideGUI() {
   }
 }
 
-async function processDiff(
-  action: "accept" | "reject",
-  sidebar: ContinueGUIWebviewViewProvider,
-  ide: VsCodeIde,
-  core: Core,
-  verticalDiffManager: VerticalDiffManager,
-  newFileUri?: string,
-  streamId?: string,
-  toolCallId?: string,
-) {
-  captureCommandTelemetry(`${action}Diff`);
-
-  const currentFile = await ide.getCurrentFile();
-
-  let newOrCurrentUri = newFileUri;
-  if (!newOrCurrentUri) {
-    newOrCurrentUri = currentFile?.path;
-  }
-  if (!newOrCurrentUri) {
-    console.warn(
-      `No file provided or current file open while attempting to resolve diff`,
-    );
-    return;
-  }
-
-  await ide.openFile(newOrCurrentUri);
-
-  // Clear vertical diffs depending on action
-  verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
-  if (action === "reject") {
-    core.invoke("cancelApply", undefined);
-  }
-
-  if (streamId) {
-    const fileContent = await ide.readFile(newOrCurrentUri);
-
-    await sidebar.webviewProtocol.request("updateApplyState", {
-      fileContent,
-      filepath: newOrCurrentUri,
-      streamId,
-      status: "closed",
-      numDiffs: 0,
-      toolCallId,
-    });
-  }
-
-  // Save the file
-  await ide.saveFile(newOrCurrentUri);
-}
-
 function waitForSidebarReady(
   sidebar: ContinueGUIWebviewViewProvider,
   timeout: number,
@@ -173,7 +127,6 @@ const getCommandsMap: (
   consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
-  continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
@@ -185,7 +138,6 @@ const getCommandsMap: (
   consoleView,
   configHandler,
   verticalDiffManager,
-  continueServerClientPromise,
   battery,
   quickEdit,
   core,
@@ -200,14 +152,12 @@ const getCommandsMap: (
    *
    * @param  promptName - The key for the prompt in the context menu configuration.
    * @param  fallbackPrompt - The prompt to use if the configured prompt is not available.
-   * @param  [onlyOneInsertion] - Optional. If true, only one insertion will be made.
    * @param  [range] - Optional. The range to edit if provided.
    * @returns
    */
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
     fallbackPrompt: string,
-    onlyOneInsertion?: boolean,
     range?: vscode.Range,
   ) {
     const { config } = await configHandler.loadConfig();
@@ -228,15 +178,15 @@ const getCommandsMap: (
       input:
         config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       llm,
-      onlyOneInsertion,
       range,
       rulesToInclude: config.rules,
     });
   }
 
   return {
-    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
-      processDiff(
+    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
+      captureCommandTelemetry("acceptDiff");
+      void processDiff(
         "accept",
         sidebar,
         ide,
@@ -244,10 +194,12 @@ const getCommandsMap: (
         verticalDiffManager,
         newFileUri,
         streamId,
-      ),
+      );
+    },
 
-    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) =>
-      processDiff(
+    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
+      captureCommandTelemetry("rejectDiff");
+      void processDiff(
         "reject",
         sidebar,
         ide,
@@ -255,7 +207,8 @@ const getCommandsMap: (
         verticalDiffManager,
         newFileUri,
         streamId,
-      ),
+      );
+    },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
@@ -297,7 +250,7 @@ const getCommandsMap: (
     ) => {
       captureCommandTelemetry("customQuickActionStreamInlineEdit");
 
-      streamInlineEdit("docstring", prompt, false, range);
+      streamInlineEdit("docstring", prompt, range);
     },
     "continue.codebaseForceReIndex": async () => {
       core.invoke("index/forceReIndex", undefined);
@@ -398,6 +351,11 @@ const getCommandsMap: (
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
+    "continue.generateRule": async () => {
+      captureCommandTelemetry("generateRule");
+      focusGUI();
+      void sidebar.webviewProtocol?.request("generateRule", undefined);
+    },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
@@ -409,10 +367,9 @@ const getCommandsMap: (
     "continue.writeDocstringForCode": async () => {
       captureCommandTelemetry("writeDocstringForCode");
 
-      streamInlineEdit(
+      void streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
-        true,
       );
     },
     "continue.fixCode": async () => {
@@ -597,6 +554,18 @@ const getCommandsMap: (
     ) => {
       completionProvider.accept(completionId);
     },
+    "continue.logNextEditOutcomeAccept": (
+      completionId: string,
+      nextEditLoggingService: NextEditLoggingService,
+    ) => {
+      nextEditLoggingService.accept(completionId);
+    },
+    "continue.logNextEditOutcomeReject": (
+      completionId: string,
+      nextEditLoggingService: NextEditLoggingService,
+    ) => {
+      nextEditLoggingService.reject(completionId);
+    },
     "continue.toggleTabAutocompleteEnabled": () => {
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
@@ -633,6 +602,18 @@ const getCommandsMap: (
         }
       }
     },
+    "continue.forceAutocomplete": async () => {
+      captureCommandTelemetry("forceAutocomplete");
+
+      // 1. Explicitly hide any existing suggestion. This clears VS Code's cache for the current position.
+      await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+
+      // 2. Now trigger a new one. VS Code has no cached suggestion, so it's forced to call our provider.
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
+    },
+
     "continue.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
@@ -687,9 +668,6 @@ const getCommandsMap: (
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
         {
-          label: "$(feedback) Give feedback",
-        },
-        {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
         },
@@ -721,8 +699,6 @@ const getCommandsMap: (
               title: selectedOption,
             });
           }
-        } else if (selectedOption === "$(feedback) Give feedback") {
-          vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
@@ -734,23 +710,6 @@ const getCommandsMap: (
         quickPick.dispose();
       });
       quickPick.show();
-    },
-    "continue.giveAutocompleteFeedback": async () => {
-      const feedback = await vscode.window.showInputBox({
-        ignoreFocusOut: true,
-        prompt:
-          "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
-      });
-      if (feedback) {
-        const client = await continueServerClientPromise;
-        const completionsPath = getDevDataFilePath(
-          "autocomplete",
-          LOCAL_DEV_DATA_VERSION,
-        );
-
-        const lastLines = await readLastLines.read(completionsPath, 2);
-        client.sendFeedback(feedback, lastLines);
-      }
     },
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
@@ -794,18 +753,185 @@ const getCommandsMap: (
         false,
       );
 
-      vscode.window
+      void vscode.window
         .showInformationMessage(
           "Your config.json has been converted to the new config.yaml format. If you need to switch back to config.json, you can delete or rename config.yaml.",
           "Read the docs",
         )
-        .then((selection) => {
+        .then(async (selection) => {
           if (selection === "Read the docs") {
-            vscode.env.openExternal(
+            await vscode.env.openExternal(
               vscode.Uri.parse("https://docs.continue.dev/yaml-migration"),
             );
           }
         });
+    },
+    "continue.enterEnterpriseLicenseKey": async () => {
+      captureCommandTelemetry("enterEnterpriseLicenseKey");
+
+      const licenseKey = await vscode.window.showInputBox({
+        prompt: "Enter your enterprise license key",
+        password: true,
+        ignoreFocusOut: true,
+        placeHolder: "License key",
+      });
+
+      if (!licenseKey) {
+        return;
+      }
+
+      try {
+        const isValid = core.invoke("mdm/setLicenseKey", {
+          licenseKey,
+        });
+
+        if (isValid) {
+          void vscode.window.showInformationMessage(
+            "Enterprise license key successfully validated and saved. Reloading window.",
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        } else {
+          void vscode.window.showErrorMessage(
+            "Invalid license key. Please check your license key and try again.",
+          );
+        }
+      } catch (error) {
+        void vscode.window.showErrorMessage(
+          `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    },
+    "continue.forceNextEdit": async () => {
+      captureCommandTelemetry("forceNextEdit");
+
+      // This is basically the same logic as forceAutocomplete.
+      // I'm writing a new command KV pair here in case we diverge in features.
+
+      await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
+
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
+    },
+    "continue.showNextEditAfterJump": async (
+      data: CompletionDataForAfterJump,
+    ) => {
+      // NOTE: This could use some cleanup or abstraction.
+      // The logic is largely similar to that of completionProvider.ts
+      // but we don't have access to the class.
+
+      const { completionId, outcome, currentPosition } = data;
+
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        console.log("No active editor when trying to show next edit");
+        return;
+      }
+
+      const documentContent = editor.document.getText();
+
+      // Calculate the editable region boundaries around the current cursor position/
+      const editableRegionStartLine = Math.max(
+        currentPosition.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+        0,
+      );
+      const editableRegionEndLine = Math.min(
+        currentPosition.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+        editor.document.lineCount - 1,
+      );
+
+      // Get the current text in the editable region.
+      const oldEditRangeSlice = documentContent
+        .split("\n")
+        .slice(editableRegionStartLine, editableRegionEndLine + 1)
+        .join("\n");
+
+      // Get the suggested new text from the completion outcome.
+      const newEditRangeSlice = outcome.completion;
+
+      // Skip showing edit if the suggestion is empty.
+      if (newEditRangeSlice === "") {
+        const loggingService = NextEditLoggingService.getInstance();
+        loggingService.cancelRejectionTimeout(completionId);
+        return;
+      }
+
+      // Skip showing edit if the suggestion is identical to current text.
+      if (oldEditRangeSlice === newEditRangeSlice) {
+        const loggingService = NextEditLoggingService.getInstance();
+        loggingService.cancelRejectionTimeout(completionId);
+        return;
+      }
+
+      // Create a cursor position relative to the edit range slice
+      const relativeCursorPos = {
+        line: currentPosition.line - editableRegionStartLine,
+        character: currentPosition.character,
+      };
+      const { isFim, fimText } = checkFim(
+        oldEditRangeSlice,
+        newEditRangeSlice,
+        relativeCursorPos,
+      );
+
+      if (isFim) {
+        if (!fimText) {
+          console.log("deleteChain from commands.ts: !fimText");
+          await NextEditProvider.getInstance().deleteChain();
+        }
+        // For FIM edits, create an inline completion item.
+        const nextEditCompletionItem = new vscode.InlineCompletionItem(
+          fimText,
+          new vscode.Range(
+            new vscode.Position(
+              currentPosition.line,
+              currentPosition.character,
+            ),
+            new vscode.Position(
+              currentPosition.line,
+              currentPosition.character,
+            ),
+          ),
+          {
+            title: "Log Next Edit Outcome",
+            command: "continue.logNextEditOutcomeAccept",
+            arguments: [completionId, NextEditLoggingService.getInstance()],
+          },
+        );
+
+        // Show the ghost text using VS Code's inline completion API.
+        // We need to trigger this manually since we're not in the completion provider.
+        await vscode.commands.executeCommand(
+          "editor.action.inlineSuggest.trigger",
+          {
+            completions: [nextEditCompletionItem],
+            position: currentPosition,
+          },
+        );
+      } else {
+        // For more complex edits, we display a diff inside a window.
+        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+        if (diffLines.length === 0) {
+          console.log("deleteChain from commands.ts: diffLines.length === 0");
+          await NextEditProvider.getInstance().deleteChain();
+        }
+
+        if (NextEditWindowManager.isInstantiated()) {
+          const windowManager = NextEditWindowManager.getInstance();
+          windowManager.updateCurrentCompletionId(completionId);
+
+          await windowManager.showNextEditWindow(
+            editor,
+            currentPosition,
+            editableRegionStartLine,
+            editableRegionEndLine,
+            oldEditRangeSlice,
+            newEditRangeSlice,
+            diffLines,
+          );
+        }
+      }
     },
   };
 };
@@ -895,7 +1021,6 @@ export function registerAllCommands(
   consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
-  continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
@@ -909,7 +1034,6 @@ export function registerAllCommands(
       consoleView,
       configHandler,
       verticalDiffManager,
-      continueServerClientPromise,
       battery,
       quickEdit,
       core,

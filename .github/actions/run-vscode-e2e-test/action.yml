@@ -1,0 +1,134 @@
+name: 'Run VS Code E2E Test'
+description: 'Run a single VS Code E2E test with all required setup'
+inputs:
+  test_file:
+    description: 'E2E test file to run'
+    required: true
+  command:
+    description: 'Command to run (e2e:ci:run or e2e:ci:run-yaml)'
+    required: true
+  ssh_key:
+    description: 'SSH private key for testing'
+    required: false
+  ssh_host:
+    description: 'SSH host for testing' 
+    required: false
+  is_fork:
+    description: 'Whether this is a fork (affects SSH tests)'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - uses: actions/cache@v4
+      id: vscode-node-modules-cache
+      with:
+        path: extensions/vscode/node_modules
+        key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+    # We don't want to cache the Continue extension, so it is deleted at the end of the job
+    - uses: actions/cache@v4
+      id: test-extensions-cache
+      with:
+        path: extensions/vscode/e2e/.test-extensions
+        key: CONSTANT
+
+    - uses: actions/cache@v4
+      id: storage-cache
+      with:
+        path: extensions/vscode/e2e/storage
+        key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: vscode-extension-build-Linux
+        path: extensions/vscode/build
+
+    - name: Build packages and download e2e dependencies
+      shell: bash
+      run: |
+        node ./scripts/build-packages.js
+        if [ "${{ steps.storage-cache.outputs.cache-hit }}" != "true" ]; then
+          cd core
+          npm ci
+          cd ../extensions/vscode
+          npm run e2e:ci:download
+        else
+          cd core
+          npm ci
+        fi
+
+    - name: Fix VSCode binary permissions
+      shell: bash
+      run: |
+        chmod +x extensions/vscode/e2e/storage/VSCode-linux-x64/code
+        chmod +x extensions/vscode/e2e/storage/chromedriver-linux64/chromedriver
+
+    - name: Set up SSH
+      if: ${{ inputs.ssh_key != '' && inputs.ssh_host != '' && inputs.is_fork == 'false' }}
+      shell: bash
+      env:
+        SSH_KEY: ${{ inputs.ssh_key }}
+        SSH_HOST: ${{ inputs.ssh_host }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+        echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+
+    - name: Set up Xvfb
+      shell: bash
+      run: |
+        Xvfb :99 &
+        export DISPLAY=:99
+
+    - name: Run e2e tests
+      shell: bash
+      run: |
+        cd extensions/vscode
+        IGNORE_SSH_TESTS="${{ inputs.is_fork }}" TEST_FILE="${{ inputs.test_file }}" npm run ${{ inputs.command }}
+      env:
+        DISPLAY: :99
+
+    - name: Delete continue from test extensions
+      shell: bash
+      run: |
+        cd extensions/vscode
+        rm -rf e2e/.test-extensions/continue*
+
+    - name: Sanitize test file name
+      id: sanitize_filename
+      if: always()
+      shell: bash
+      run: |
+        FILENAME="${{ inputs.test_file }}"
+        SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
+        echo "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT
+
+    - name: Upload e2e test screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-failure-screenshots-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ inputs.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+        path: extensions/vscode/e2e/storage/screenshots
+
+    - name: Find e2e log file
+      if: always()
+      shell: bash
+      run: |
+        echo "Searching for e2e.log file..."
+        find $GITHUB_WORKSPACE -name "e2e.log" -type f
+
+    - name: Upload e2e logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ inputs.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+        path: extensions/vscode/e2e.log

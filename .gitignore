@@ -67,8 +67,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
+# docusaurus
 docs/_build/
+docs/.docusaurus
 
 # PyBuilder
 target/
@@ -146,6 +147,7 @@ Icon?
 
 *.notes.md
 notes.md
+*.notes.md
 
 manual-testing-sandbox/.idea/**
 manual-testing-sandbox/.continue/**

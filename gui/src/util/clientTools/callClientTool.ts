@@ -1,14 +1,14 @@
-import { ContextItem, ToolCall } from "core";
+import { ContextItem, ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
+import { searchReplaceToolImpl } from "./searchReplaceImpl";
 
 export interface ClientToolExtras {
   getState: () => RootState;
   dispatch: AppThunkDispatch;
   ideMessenger: IIdeMessenger;
-  streamId?: string;
 }
 
 export interface ClientToolOutput {
@@ -27,15 +27,18 @@ export type ClientToolImpl = (
 ) => Promise<ClientToolOutput>;
 
 export async function callClientTool(
-  toolCall: ToolCall,
+  toolCallState: ToolCallState,
   extras: ClientToolExtras,
 ): Promise<ClientToolResult> {
-  const args = JSON.parse(toolCall.function.arguments || "{}");
+  const { toolCall, parsedArgs } = toolCallState;
   try {
     let output: ClientToolOutput;
     switch (toolCall.function.name) {
       case BuiltInToolNames.EditExistingFile:
-        output = await editToolImpl(args, toolCall.id, extras);
+        output = await editToolImpl(parsedArgs, toolCall.id, extras);
+        break;
+      case BuiltInToolNames.SearchAndReplaceInFile:
+        output = await searchReplaceToolImpl(parsedArgs, toolCall.id, extras);
         break;
       default:
         throw new Error(`Invalid client tool name ${toolCall.function.name}`);

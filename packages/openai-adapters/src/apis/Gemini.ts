@@ -3,6 +3,7 @@ import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
+  ChatCompletionContentPartImage,
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
@@ -28,6 +29,7 @@ import {
   GeminiChatContentPart,
   GeminiToolFunctionDeclaration,
 } from "../util/gemini-types.js";
+import { safeParseArgs } from "../util/parseArgs.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -74,13 +76,20 @@ export class GeminiApi implements BaseLlmApi {
         return {
           inlineData: {
             mimeType: "image/jpeg",
-            data: part.image_url?.url.split(",")[1],
+            data: (part as ChatCompletionContentPartImage).image_url?.url.split(
+              ",",
+            )[1],
           },
         };
     }
   }
 
-  private _convertBody(oaiBody: ChatCompletionCreateParams, url: string) {
+  public _convertBody(
+    oaiBody: ChatCompletionCreateParams,
+    url: string,
+    includeToolCallIds: boolean,
+    overrideIsV1?: boolean,
+  ) {
     const generationConfig: any = {};
 
     if (oaiBody.top_p) {
@@ -97,7 +106,7 @@ export class GeminiApi implements BaseLlmApi {
       generationConfig.stopSequences = stop.filter((x) => x.trim() !== "");
     }
 
-    const isV1API = url.includes("/v1/");
+    const isV1API = overrideIsV1 ?? url.includes("/v1/");
 
     const toolCallIdToNameMap = new Map<string, string>();
     oaiBody.messages.forEach((msg) => {
@@ -123,9 +132,12 @@ export class GeminiApi implements BaseLlmApi {
             role: "model" as const,
             parts: msg.tool_calls.map((toolCall) => ({
               functionCall: {
-                id: toolCall.id,
+                id: includeToolCallIds ? toolCall.id : undefined,
                 name: toolCall.function.name,
-                args: JSON.parse(toolCall.function.arguments || "{}"),
+                args: safeParseArgs(
+                  toolCall.function.arguments,
+                  `Call: ${toolCall.function.name} ${toolCall.id}`,
+                ),
               },
             })),
           };
@@ -138,7 +150,7 @@ export class GeminiApi implements BaseLlmApi {
             parts: [
               {
                 functionResponse: {
-                  id: msg.tool_call_id,
+                  id: includeToolCallIds ? msg.tool_call_id : undefined,
                   name: functionName ?? "unknown",
                   response: {
                     content:
@@ -243,23 +255,9 @@ export class GeminiApi implements BaseLlmApi {
     };
   }
 
-  async *chatCompletionStream(
-    body: ChatCompletionCreateParamsStreaming,
-    signal: AbortSignal,
-  ): AsyncGenerator<ChatCompletionChunk> {
-    const apiURL = new URL(
-      `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
-      this.apiBase,
-    ).toString();
-    const convertedBody = this._convertBody(body, apiURL);
-    const resp = await customFetch(this.config.requestOptions)(apiURL, {
-      method: "POST",
-      body: JSON.stringify(convertedBody),
-      signal,
-    });
-
+  async *handleStreamResponse(response: any, model: string) {
     let buffer = "";
-    for await (const chunk of streamResponse(resp as any)) {
+    for await (const chunk of streamResponse(response as any)) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);
@@ -287,17 +285,18 @@ export class GeminiApi implements BaseLlmApi {
           throw new Error(data.error.message);
         }
 
-        const content = data?.candidates?.[0]?.content;
-        if (content) {
-          for (const part of content.parts) {
+        // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
+        const contentParts = data?.candidates?.[0]?.content?.parts;
+        if (contentParts) {
+          for (const part of contentParts) {
             if ("text" in part) {
               yield chatChunk({
                 content: part.text,
-                model: body.model,
+                model,
               });
             } else if ("functionCall" in part) {
               yield chatChunkFromDelta({
-                model: body.model,
+                model,
                 delta: {
                   tool_calls: [
                     {
@@ -324,6 +323,23 @@ export class GeminiApi implements BaseLlmApi {
         buffer = "";
       }
     }
+  }
+
+  async *chatCompletionStream(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const apiURL = new URL(
+      `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
+      this.apiBase,
+    ).toString();
+    const convertedBody = this._convertBody(body, apiURL, true);
+    const resp = await customFetch(this.config.requestOptions)(apiURL, {
+      method: "POST",
+      body: JSON.stringify(convertedBody),
+      signal,
+    });
+    yield* this.handleStreamResponse(resp, body.model);
   }
   completionNonStream(
     body: CompletionCreateParamsNonStreaming,

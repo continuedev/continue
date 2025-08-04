@@ -1,24 +1,21 @@
 import { ToolImpl } from ".";
-import { parseMarkdownRule } from "../../config/markdown/parseMarkdownRule";
+import { getStringArg } from "../parseArgs";
 
 export const requestRuleImpl: ToolImpl = async (args, extras) => {
+  const name = getStringArg(args, "name");
+
   // Find the rule by name in the config
-  const rule = extras.config.rules.find((r) => r.name === args.name);
+  const rule = extras.config.rules.find((r) => r.name === name);
 
   if (!rule || !rule.ruleFile) {
-    throw new Error(
-      `Rule with name "${args.name}" not found or has no file path`,
-    );
+    throw new Error(`Rule with name "${name}" not found or has no file path`);
   }
-
-  const fileContent = await extras.ide.readFile(rule.ruleFile);
-  const { markdown, frontmatter } = parseMarkdownRule(fileContent);
 
   return [
     {
-      name: frontmatter.name ?? "",
-      description: frontmatter.description ?? "",
-      content: markdown,
+      name: rule.name ?? "",
+      description: rule.description ?? "",
+      content: rule.rule,
       uri: {
         type: "file",
         value: rule.ruleFile,

@@ -1,6 +1,5 @@
 import type {
-  ContinueRcJson,
-  DiffLine,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -11,6 +10,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
 } from "../";
@@ -29,21 +29,12 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   openFile: [{ path: string }, void];
   openUrl: [string, void];
   runCommand: [{ command: string; options?: TerminalOptions }, void];
-  getSearchResults: [{ query: string }, string];
-  getFileResults: [{ pattern: string }, string[]];
+  getSearchResults: [{ query: string; maxResults?: number }, string];
+  getFileResults: [{ pattern: string; maxResults?: number }, string[]];
   subprocess: [{ command: string; cwd?: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
-  diffLine: [
-    {
-      diffLine: DiffLine;
-      filepath: string;
-      startLine: number;
-      endLine: number;
-    },
-    void,
-  ];
   getProblems: [{ filepath: string }, Problem[]];
   getOpenFiles: [undefined, string[]];
   getCurrentFile: [
@@ -61,7 +52,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
   getDiff: [{ includeUnstaged: boolean }, string[]];
-  getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   getDebugLocals: [{ threadIndex: number }, string];
   getTopLevelCallStackSources: [
@@ -70,6 +60,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
+  isWorkspaceRemote: [undefined, boolean];
   getUniqueId: [undefined, string];
   getTags: [string, IndexTag[]];
   readSecrets: [{ keys: string[] }, Record<string, string>];
@@ -91,6 +82,10 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
+  gotoTypeDefinition: [{ location: Location }, RangeInFile[]];
+  getSignatureHelp: [{ location: Location }, SignatureHelp | null];
+  getReferences: [{ location: Location }, RangeInFile[]];
+  getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
 
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },

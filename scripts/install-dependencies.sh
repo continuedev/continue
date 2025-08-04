@@ -30,11 +30,8 @@ fi
 echo "Installing root-level dependencies..."
 npm install
 
-echo "Building config-yaml..."
-pushd packages/config-yaml
-npm install
-npm run build
-popd
+echo "Building packages (fetch, openai-adapters, config-yaml)..."
+node ./scripts/build-packages.js
 
 echo "Installing Core extension dependencies..."
 pushd core
@@ -57,7 +54,7 @@ pushd extensions/vscode
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
 npm link @continuedev/core
-npm run prepackage
+# npm run prepackage # not required since npm run package has prescript of prepackage
 npm run package
 popd
 

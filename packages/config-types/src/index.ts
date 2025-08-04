@@ -205,11 +205,12 @@ export type DevData = z.infer<typeof devDataSchema>;
 
 export const siteIndexingConfigSchema = z.object({
   startUrl: z.string(),
-  // rootUrl: z.string(),
+  rootUrl: z.string().optional(),
   title: z.string(),
-  maxDepth: z.string().optional(),
+  maxDepth: z.number().optional(),
   faviconUrl: z.string().optional(),
   useLocalCrawling: z.boolean().optional(),
+  sourceFile: z.string().optional(),
 });
 
 export const controlPlaneConfigSchema = z.object({

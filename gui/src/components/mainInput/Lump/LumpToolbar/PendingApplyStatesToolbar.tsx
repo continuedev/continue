@@ -28,9 +28,9 @@ export function PendingApplyStatesToolbar({
       {Object.entries(applyStatesByFilepath).map(([filepath, states]) => (
         <div key={filepath} className="flex justify-between gap-3">
           {filepath && (
-            <span className="bg-badge flex items-center gap-1 rounded px-0.5">
+            <span className="bg-badge flex min-w-0 max-w-[75%] items-center gap-1 truncate rounded pr-1 text-xs">
               <FileIcon filename={filepath} height="18px" width="18px" />
-              {getUriPathBasename(filepath)}
+              <span className="truncate">{getUriPathBasename(filepath)}</span>
             </span>
           )}
           <AcceptRejectDiffButtons

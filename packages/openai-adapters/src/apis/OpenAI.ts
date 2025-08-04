@@ -28,12 +28,12 @@ export class OpenAIApi implements BaseLlmApi {
   constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
     this.apiBase = config.apiBase ?? this.apiBase;
     this.openai = new OpenAI({
-      apiKey: config.apiKey,
+      // Necessary because `new OpenAI()` will throw an error if there is no API Key
+      apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
     });
   }
-
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
     // o-series models - only apply for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
@@ -58,6 +58,37 @@ export class OpenAIApi implements BaseLlmApi {
     return body;
   }
 
+  modifyCompletionBody<
+    T extends
+      | CompletionCreateParamsNonStreaming
+      | CompletionCreateParamsStreaming,
+  >(body: T): T {
+    return body;
+  }
+
+  modifyEmbedBody<T extends OpenAI.Embeddings.EmbeddingCreateParams>(
+    body: T,
+  ): T {
+    return body;
+  }
+
+  modifyFimBody<T extends FimCreateParamsStreaming>(body: T): T {
+    return body;
+  }
+
+  modifyRerankBody<T extends RerankCreateParams>(body: T): T {
+    return body;
+  }
+
+  protected getHeaders(): Record<string, string> {
+    return {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "x-api-key": this.config.apiKey ?? "",
+      Authorization: `Bearer ${this.config.apiKey}`,
+    };
+  }
+
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
@@ -70,6 +101,7 @@ export class OpenAIApi implements BaseLlmApi {
     );
     return response;
   }
+
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
@@ -88,14 +120,20 @@ export class OpenAIApi implements BaseLlmApi {
     body: CompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<Completion> {
-    const response = await this.openai.completions.create(body, { signal });
+    const response = await this.openai.completions.create(
+      this.modifyCompletionBody(body),
+      { signal },
+    );
     return response;
   }
   async *completionStream(
     body: CompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<Completion, any, unknown> {
-    const response = await this.openai.completions.create(body, { signal });
+    const response = await this.openai.completions.create(
+      this.modifyCompletionBody(body),
+      { signal },
+    );
     for await (const result of response) {
       yield result;
     }
@@ -105,27 +143,23 @@ export class OpenAIApi implements BaseLlmApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const endpoint = new URL("fim/completions", this.apiBase);
+    const modifiedBody = this.modifyFimBody(body);
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
-        model: body.model,
-        prompt: body.prompt,
-        suffix: body.suffix,
-        max_tokens: body.max_tokens,
-        max_completion_tokens: (body as any).max_completion_tokens,
-        temperature: body.temperature,
-        top_p: body.top_p,
-        frequency_penalty: body.frequency_penalty,
-        presence_penalty: body.presence_penalty,
-        stop: body.stop,
+        model: modifiedBody.model,
+        prompt: modifiedBody.prompt,
+        suffix: modifiedBody.suffix,
+        max_tokens: modifiedBody.max_tokens,
+        max_completion_tokens: (modifiedBody as any).max_completion_tokens,
+        temperature: modifiedBody.temperature,
+        top_p: modifiedBody.top_p,
+        frequency_penalty: modifiedBody.frequency_penalty,
+        presence_penalty: modifiedBody.presence_penalty,
+        stop: modifiedBody.stop,
         stream: true,
       }),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "x-api-key": this.config.apiKey ?? "",
-        Authorization: `Bearer ${this.config.apiKey}`,
-      },
+      headers: this.getHeaders(),
       signal,
     });
     for await (const chunk of streamSse(resp as any)) {
@@ -138,21 +172,19 @@ export class OpenAIApi implements BaseLlmApi {
   async embed(
     body: OpenAI.Embeddings.EmbeddingCreateParams,
   ): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
-    const response = await this.openai.embeddings.create(body);
+    const response = await this.openai.embeddings.create(
+      this.modifyEmbedBody(body),
+    );
     return response;
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     const endpoint = new URL("rerank", this.apiBase);
+    const modifiedBody = this.modifyRerankBody(body);
     const response = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "x-api-key": this.config.apiKey ?? "",
-        Authorization: `Bearer ${this.config.apiKey}`,
-      },
+      body: JSON.stringify(modifiedBody),
+      headers: this.getHeaders(),
     });
     const data = await response.json();
     return data as any;

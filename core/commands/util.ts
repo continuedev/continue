@@ -16,7 +16,7 @@ export function rifWithContentsToContextItem(
   return {
     content: rif.contents,
     name: `${basename} ${rangeStr}`,
-    description: `${relativePathOrBasename} ${rangeStr}`, // This is passed to the LLM - do not pass full URI
+    description: `${relativePathOrBasename} ${rangeStr}`,
     id: {
       providerTitle: "code",
       itemId: uuidv4(),

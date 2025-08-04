@@ -1,121 +1,118 @@
-import styled from "styled-components";
-import { vscForeground } from "../..";
-import { hasPassedFTL } from "../../../util/freeTrial";
+import { KeyIcon } from "@heroicons/react/24/outline";
+import { OnboardingModes } from "core/protocol/core";
+import ContinueSignet from "../../svg/ContinueSignet";
+import OllamaLogo from "../../svg/OllamaLogo";
 
 interface OnboardingCardTabsProps {
-  activeTab: TabTitle;
-  onTabClick: (tabName: TabTitle) => void;
+  activeTab: OnboardingModes;
+  onTabClick: (tabName: OnboardingModes) => void;
+  showFreeTrialExceededAlert?: boolean;
 }
 
-export type TabTitle = "Quickstart" | "Best" | "Local" | "ExistingUserHubIntro";
+const renderTabButton = (
+  tabTitle: OnboardingModes,
+  index: number,
+  activeTab: OnboardingModes,
+  onTabClick: (tabName: OnboardingModes) => void,
+) => {
+  const baseButtonClass = `text-foreground -mb-px cursor-pointer rounded-t-sm border-none bg-transparent py-2 font-medium hover:brightness-125 focus:outline-none ${index === 0 ? "pl-1.5 pr-3" : "px-3"} ${activeTab === tabTitle ? "brightness-125" : "brightness-75"}`;
 
-export const TabTitles: { [k in TabTitle]: { md: string; default: string } } = {
-  Quickstart: {
-    md: "Quickstart",
-    default: "Quickstart",
-  },
-  Best: {
-    md: "Best",
-    default: "Best experience",
-  },
-  Local: {
-    md: "Local",
-    default: "Local with Ollama",
-  },
-  ExistingUserHubIntro: {
-    md: "Try out hub.continue.dev",
-    default: "Try out hub.continue.dev",
-  },
+  if (tabTitle === OnboardingModes.API_KEY) {
+    return (
+      <button
+        className={baseButtonClass}
+        key={tabTitle}
+        onClick={() => onTabClick(tabTitle as OnboardingModes)}
+        data-testid={`onboarding-tab-${tabTitle}`}
+      >
+        <KeyIcon className="-mb-0.5 mr-2 h-4 w-4" />
+        {tabTitle}
+      </button>
+    );
+  }
+
+  if (tabTitle === OnboardingModes.LOCAL) {
+    return (
+      <button
+        className={baseButtonClass}
+        key={tabTitle}
+        onClick={() => onTabClick(tabTitle as OnboardingModes)}
+        data-testid={`onboarding-tab-${tabTitle}`}
+      >
+        <OllamaLogo width={18} height={18} className="-mb-0.5 mr-2" />
+        {tabTitle}
+      </button>
+    );
+  }
+
+  if (tabTitle === OnboardingModes.MODELS_ADD_ON) {
+    return (
+      <button
+        className={`${baseButtonClass} -ml-1.5`}
+        key={tabTitle}
+        onClick={() => onTabClick(tabTitle as OnboardingModes)}
+        data-testid={`onboarding-tab-${tabTitle}`}
+      >
+        <ContinueSignet width={32} height={32} className="-mb-2.5" />
+        Upgrade
+      </button>
+    );
+  }
+
+  return null;
 };
 
-const StyledSelect = styled.select`
-  width: 100%;
-  padding: 0.5rem;
-  background-color: transparent;
-  color: ${vscForeground};
-  border: none;
-  border-bottom: 1px solid ${vscForeground};
-  border-radius: 0;
-  font-size: 1rem;
-  cursor: pointer;
-  display: block;
-
-  &:focus {
-    outline: none;
-  }
-`;
-
-const TabButton = styled.button<{ isActive: boolean }>`
-  margin-bottom: -1px;
-  focus: outline-none;
-  background: transparent;
-  cursor: pointer;
-  color: ${vscForeground};
-  border: none;
-
-  ${({ isActive }) =>
-    isActive &&
-    `
-    border-style: solid;
-    border-width: 0 0 2.5px 0;
-    border-color: ${vscForeground};
-    font-weight: bold;
-  `}
-`;
-
-const TabList = styled.div`
-  border-style: solid;
-  border-width: 0 0 0.5px 0;
-  border-color: ${vscForeground};
-`;
-
+/**
+ * Tab navigation component for onboarding modes with responsive design
+ */
 export function OnboardingCardTabs({
   activeTab,
   onTabClick,
+  showFreeTrialExceededAlert,
 }: OnboardingCardTabsProps) {
+  /**
+   * When users initially install, we only render these tabs after they've
+   * declined the free trial, so we show the upgrade tab last since they've
+   * indicated they want don't want to use the Hub.
+   *
+   * If `showFreeTrialExceededAlert` is true, they've used the Hub, so show
+   * upgrade first.
+   */
+  const tabs = showFreeTrialExceededAlert
+    ? [
+        OnboardingModes.MODELS_ADD_ON,
+        OnboardingModes.API_KEY,
+        OnboardingModes.LOCAL,
+      ]
+    : [
+        OnboardingModes.API_KEY,
+        OnboardingModes.LOCAL,
+        OnboardingModes.MODELS_ADD_ON,
+      ];
   return (
     <div>
-      <div className="xs:block hidden">
-        <TabList>
-          {Object.entries(TabTitles).map(([tabType, titles]) => {
-            if (hasPassedFTL() && tabType === "Quickstart") {
-              return undefined;
-            }
-
-            return (
-              <TabButton
-                className="xs:py-2 xs:px-3 rounded-t-sm px-6 py-2 hover:brightness-125 sm:px-5"
-                key={tabType}
-                isActive={activeTab === tabType}
-                onClick={() => onTabClick(tabType as TabTitle)}
-                data-testid={`onboarding-tab-${tabType}`}
-              >
-                <p className="m-0 hidden font-medium md:block">
-                  {titles.default}
-                </p>
-                <p className="m-0 block font-medium md:hidden">{titles.md}</p>
-              </TabButton>
-            );
-          })}
-        </TabList>
+      <div className="hidden sm:block">
+        <div className="border-foreground border-x-0 border-b border-t-0 border-solid">
+          {tabs.map((tabTitle, index) =>
+            renderTabButton(tabTitle, index, activeTab, onTabClick),
+          )}
+        </div>
       </div>
-      <div className="xs:hidden block">
-        <StyledSelect
-          value={activeTab}
-          onChange={(e) => onTabClick(e.target.value as TabTitle)}
-        >
-          {Object.entries(TabTitles).map(([tabType, titles]) => {
-            if (hasPassedFTL() && tabType === "Quickstart") {
-              return null;
-            }
 
+      <div className="block sm:hidden">
+        <select
+          className="text-foreground border-border mt-4 w-full cursor-pointer rounded-none border-x-0 border-b border-t-0 bg-transparent p-2 text-base focus:outline-none"
+          value={activeTab}
+          onChange={(e) => onTabClick(e.target.value as OnboardingModes)}
+        >
+          {tabs.map((tabTitle) => {
             return (
-              <option key={tabType} value={tabType}>
-                {titles.md}
+              <option key={tabTitle} value={tabTitle}>
+                {tabTitle}
               </option>
             );
           })}
-        </StyledSelect>
+        </select>
       </div>
     </div>
   );

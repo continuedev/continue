@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const grepSearchTool: Tool = {
   type: "function",
@@ -12,7 +13,8 @@ export const grepSearchTool: Tool = {
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.GrepSearch,
-    description: "Perform a search over the repository using ripgrep.",
+    description:
+      "Perform a search over the repository using ripgrep. Output may be truncated, so use targeted queries",
     parameters: {
       type: "object",
       required: ["query"],
@@ -25,4 +27,9 @@ export const grepSearchTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.GrepSearch,
+    `To perform a grep search within the project, call the ${BuiltInToolNames.GrepSearch} tool with the query pattern to match. For example:`,
+    [["query", ".*main_services.*"]],
+  ),
 };

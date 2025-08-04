@@ -1,11 +1,10 @@
-import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { ToolCallState } from "core";
-import { Fragment } from "react";
-import { useDispatch } from "react-redux";
-import styled from "styled-components";
+import { useMemo } from "react";
+import Ansi from "../../../components/ansiTerminal/Ansi";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
-import { moveTerminalProcessToBackground } from "../../../redux/thunks/moveTerminalProcessToBackground";
 import { useAppDispatch } from "../../../redux/hooks";
+import { moveTerminalProcessToBackground } from "../../../redux/thunks/moveTerminalProcessToBackground";
+import { TerminalCollapsibleContainer } from "./TerminalCollapsibleContainer";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
@@ -13,49 +12,34 @@ interface RunTerminalCommandToolCallProps {
   toolCallId: string | undefined;
 }
 
-const CommandStatus = styled.div`
-  font-size: 12px;
-  color: #666;
-  margin-top: 8px;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-bottom: 8px;
-  display: flex;
-  align-items: center;
-`;
-
-const StatusIcon = styled.span<{
+interface StatusIconProps {
   status: "running" | "completed" | "failed" | "background";
-}>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
-  background-color: ${(props) =>
-    props.status === "running"
-      ? "#4caf50"
-      : props.status === "completed"
-        ? "#4caf50"
-        : props.status === "background"
-          ? "#2196f3"
-          : "#f44336"};
-  ${(props) =>
-    props.status === "running" ? "animation: pulse 1.5s infinite;" : ""}
-`;
+}
 
-// Removed unused styled components
+function StatusIcon({ status }: StatusIconProps) {
+  const getStatusColor = () => {
+    switch (status) {
+      case "running":
+        return "bg-success";
+      case "completed":
+        return "bg-success";
+      case "background":
+        return "bg-accent";
+      case "failed":
+        return "bg-error";
+      default:
+        return "bg-success";
+    }
+  };
 
-const BackgroundLink = styled.a`
-  font-size: 12px;
-  color: #0077cc;
-  margin-left: 12px;
-  cursor: pointer;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
+  return (
+    <span
+      className={`mr-2 h-2 w-2 rounded-full ${getStatusColor()} ${
+        status === "running" ? "animate-pulse" : ""
+      }`}
+    />
+  );
+}
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const dispatch = useAppDispatch();
@@ -70,6 +54,42 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const isRunning = props.toolCallState.status === "calling";
   const hasOutput = terminalContent.length > 0;
 
+  const displayLines = 15;
+
+  // Process terminal content for line limiting
+  const processedTerminalContent = useMemo(() => {
+    if (!terminalContent)
+      return {
+        fullContent: "",
+        limitedContent: "",
+        totalLines: 0,
+        isLimited: false,
+        hiddenLinesCount: 0,
+      };
+
+    const lines = terminalContent.split("\n");
+    const totalLines = lines.length;
+
+    if (totalLines > displayLines) {
+      const lastTwentyLines = lines.slice(-displayLines);
+      return {
+        fullContent: terminalContent,
+        limitedContent: lastTwentyLines.join("\n"),
+        totalLines,
+        isLimited: true,
+        hiddenLinesCount: totalLines - displayLines,
+      };
+    }
+
+    return {
+      fullContent: terminalContent,
+      limitedContent: terminalContent,
+      totalLines,
+      isLimited: false,
+      hiddenLinesCount: 0,
+    };
+  }, [terminalContent]);
+
   // Determine status type
   let statusType: "running" | "completed" | "failed" | "background" =
     "completed";
@@ -82,23 +102,45 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   }
 
   return (
-    <Fragment>
+    <div className="mb-4">
+      {/* Command */}
       <StyledMarkdownPreview
         isRenderingInStepContainer
-        source={`\`\`\`bash .sh\n$ ${props.command ?? ""}${
-          hasOutput || isRunning
-            ? `\n${terminalContent || "Waiting for output..."}`
-            : ""
-        }\n\`\`\``}
+        source={`\`\`\`bash .sh\n$ ${props.command ?? ""}\n\`\`\``}
       />
 
+      {/* Terminal output with ANSI support */}
+      {isRunning && !hasOutput && (
+        <div className="mt-2 px-4 py-2">Waiting for output...</div>
+      )}
+      {hasOutput && (
+        <TerminalCollapsibleContainer
+          collapsible={processedTerminalContent.isLimited}
+          hiddenLinesCount={processedTerminalContent.hiddenLinesCount}
+          className="mt-2"
+          collapsedContent={
+            <div className="mt-2">
+              <Ansi>{processedTerminalContent.limitedContent}</Ansi>
+            </div>
+          }
+          expandedContent={
+            <div className="mt-2">
+              <Ansi>{processedTerminalContent.fullContent}</Ansi>
+            </div>
+          }
+        />
+      )}
+
+      {/* Status information */}
       {(statusMessage || isRunning) && (
-        <CommandStatus>
+        <div className="text-description mt-2 flex items-center px-2 text-xs">
           <StatusIcon status={statusType} />
           {isRunning ? "Running" : statusMessage}
           {isRunning && props.toolCallId && (
-            <BackgroundLink
-              onClick={() => {
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
                 // Dispatch the action to move the command to the background
                 dispatch(
                   moveTerminalProcessToBackground({
@@ -106,12 +148,13 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
                   }),
                 );
               }}
+              className="text-link ml-3 cursor-pointer text-xs no-underline hover:underline"
             >
               Move to background
-            </BackgroundLink>
+            </a>
           )}
-        </CommandStatus>
+        </div>
       )}
-    </Fragment>
+    </div>
   );
 }

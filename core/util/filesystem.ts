@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 
 import { fileURLToPath } from "node:url";
 import {
-  ContinueRcJson,
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -13,6 +13,7 @@ import {
   Problem,
   Range,
   RangeInFile,
+  SignatureHelp,
   TerminalOptions,
   Thread,
   ToastType,
@@ -34,6 +35,7 @@ class FileSystemIde implements IDE {
   ): Promise<void> {
     return Promise.resolve();
   }
+
   fileExists(fileUri: string): Promise<boolean> {
     const filepath = fileURLToPath(fileUri);
     return Promise.resolve(fs.existsSync(filepath));
@@ -42,8 +44,29 @@ class FileSystemIde implements IDE {
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return Promise.resolve([]);
   }
+
+  gotoTypeDefinition(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
+  getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
+    return Promise.resolve(null);
+  }
+
+  getReferences(location: Location): Promise<RangeInFile[]> {
+    return Promise.resolve([]);
+  }
+
+  getDocumentSymbols(fileUri: string): Promise<DocumentSymbol[]> {
+    return Promise.resolve([]);
+  }
+
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     return;
+  }
+
+  isWorkspaceRemote(): Promise<boolean> {
+    return Promise.resolve(false);
   }
 
   async getIdeSettings(): Promise<IdeSettings> {
@@ -55,6 +78,7 @@ class FileSystemIde implements IDE {
       pauseCodebaseIndexOnStart: false,
     };
   }
+
   async getFileStats(fileUris: string[]): Promise<FileStatsMap> {
     const result: FileStatsMap = {};
     for (const uri of fileUris) {
@@ -71,9 +95,11 @@ class FileSystemIde implements IDE {
     }
     return result;
   }
+
   getGitRootPath(dir: string): Promise<string | undefined> {
     return Promise.resolve(dir);
   }
+
   async listDir(dir: string): Promise<[string, FileType][]> {
     const filepath = fileURLToPath(dir);
     const all: [string, FileType][] = fs
@@ -111,6 +137,7 @@ class FileSystemIde implements IDE {
       version: "0.1",
       remoteName: "na",
       extensionVersion: "na",
+      isPrerelease: false,
     });
   }
 
@@ -124,10 +151,6 @@ class FileSystemIde implements IDE {
 
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
-  }
-
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return Promise.resolve([]);
   }
 
   getDiff(includeUnstaged: boolean): Promise<string[]> {
@@ -229,11 +252,14 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  async getSearchResults(query: string): Promise<string> {
+  async getSearchResults(query: string, maxResults?: number): Promise<string> {
     return "";
   }
 
-  async getFileResults(pattern: string): Promise<string[]> {
+  async getFileResults(
+    pattern: string,
+    maxResults?: number,
+  ): Promise<string[]> {
     return [];
   }
 

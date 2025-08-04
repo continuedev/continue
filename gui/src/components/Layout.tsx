@@ -1,31 +1,34 @@
-import { useContext, useEffect } from "react";
+import { OnboardingModes } from "core/protocol/core";
+import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { CustomScrollbarDiv, defaultBorderRadius } from ".";
+import { CustomScrollbarDiv } from ".";
 import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
-import { setShowDialog } from "../redux/slices/uiSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
-import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
-import Footer from "./Footer";
+import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
-import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import {
+  isNewUserOnboarding,
+  OnboardingCard,
+  useOnboardingCard,
+} from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
-  border-radius: ${defaultBorderRadius};
   position: relative;
   overflow-x: hidden;
 `;
@@ -38,6 +41,7 @@ const GridDiv = styled.div`
 `;
 
 const Layout = () => {
+  const [showStagingIndicator, setShowStagingIndicator] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -49,6 +53,17 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+
+  useEffect(() => {
+    (async () => {
+      const response = await ideMessenger.request(
+        "controlPlane/getEnvironment",
+        undefined,
+      );
+      response.status === "success" &&
+        setShowStagingIndicator(response.content.AUTH_TYPE.includes("staging"));
+    })();
+  }, []);
 
   useWebviewListener(
     "newSession",
@@ -129,17 +144,33 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "openOnboardingCard",
+    "setupLocalConfig",
     async () => {
-      onboardingCard.open("Best");
+      onboardingCard.open(OnboardingModes.LOCAL);
     },
     [],
   );
 
   useWebviewListener(
-    "setupLocalConfig",
+    "freeTrialExceeded",
     async () => {
-      onboardingCard.open("Local");
+      dispatch(setShowDialog(true));
+      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
+      dispatch(
+        setDialogMessage(
+          <div className="flex-1">
+            <OnboardingCard isDialog showFreeTrialExceededAlert />
+          </div>,
+        ),
+      );
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "setupApiKey",
+    async () => {
+      onboardingCard.open(OnboardingModes.API_KEY);
     },
     [],
   );
@@ -174,12 +205,20 @@ const Layout = () => {
     [],
   );
 
+  useWebviewListener(
+    "generateRule",
+    async () => {
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<GenerateRuleDialog />));
+    },
+    [],
+  );
+
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
-          // Copy to clipboard
           setTimeout(() => {
             void navigator.clipboard.writeText(selection);
           }, 100);
@@ -199,7 +238,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      onboardingCard.open("Quickstart");
+      onboardingCard.open();
     }
   }, [location]);
 
@@ -207,6 +246,15 @@ const Layout = () => {
     <LocalStorageProvider>
       <AuthProvider>
         <LayoutTopDiv>
+          {showStagingIndicator && (
+            <span
+              title="Staging environment"
+              className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
+              style={{
+                backgroundColor: "var(--vscode-list-warningForeground)",
+              }}
+            />
+          )}
           <LumpProvider>
             <OSRContextMenu />
             <div
@@ -228,11 +276,9 @@ const Layout = () => {
                 message={dialogMessage}
               />
 
-              <GridDiv className="">
+              <GridDiv>
                 <PostHogPageView />
                 <Outlet />
-                <FatalErrorIndicator />
-                <Footer />
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />

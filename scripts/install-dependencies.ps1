@@ -76,11 +76,8 @@ if (($null -eq $node)) {
 Write-Host "`nInstalling root-level dependencies..." -ForegroundColor White
 npm install
 
-Write-Host "`nBuilding config-yaml..." -ForegroundColor White
-Push-Location packages/config-yaml
-npm install
-npm run build
-Pop-Location
+Write-Host "`nBuilding packages (fetch, openai-adapters, config-yaml)..." -ForegroundColor White
+node ./scripts/build-packages.js
 
 Write-Host "`nInstalling Core extension dependencies..." -ForegroundColor White
 Push-Location core

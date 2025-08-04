@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const globSearchTool: Tool = {
   type: "function",
@@ -12,7 +13,8 @@ export const globSearchTool: Tool = {
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.FileGlobSearch,
-    description: "Search for files in the project",
+    description:
+      "Search for files recursively in the project using glob patterns. Supports ** for recursive directory search. Output may be truncated; use targeted patterns",
     parameters: {
       type: "object",
       required: ["pattern"],
@@ -24,4 +26,9 @@ export const globSearchTool: Tool = {
       },
     },
   },
+  systemMessageDescription: createSystemMessageExampleCall(
+    BuiltInToolNames.FileGlobSearch,
+    `To return a list of files based on a glob search pattern, use the ${BuiltInToolNames.FileGlobSearch} tool`,
+    [["pattern", "*.py"]],
+  ),
 };

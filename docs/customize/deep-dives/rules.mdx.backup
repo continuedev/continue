@@ -1,0 +1,181 @@
+---
+title: "Rules"
+description: Rules are used to provide instructions to the model for Agent, Chat, and Edit requests.
+keywords: [rules, .continuerules, system, prompt, message]
+---
+
+Rules provide instructions to the model for [Agent](../../features/agent/quick-start), [Chat](../../features/chat/quick-start), and [Edit](../../features/edit/quick-start) requests.
+
+<Info> Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
+</Info>
+
+## How it works
+
+You can view the current rules by clicking the pen icon above the main toolbar:
+
+![rules input toolbar section](/images/notch-rules.png)
+
+To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#chat-system-message)).
+
+## Quick Start
+
+Below is a quick example of setting up a new rule file:
+
+1. Create a folder called `.continue/rules` at the top level of your workspace
+2. Add a file called `pirates-rule.md` to this folder.
+3. Write the following contents to `pirates-rule.md` and save.
+
+```md title=".continue/rules/pirates-rule.md"
+---
+name: Pirate rule
+---
+
+- Talk like a pirate.
+```
+
+Now test your rules by asking a question about a file in chat.
+
+![pirate rule test](/images/pirate-rule-test.png)
+
+## Creating `rules` blocks
+
+Rules can be added locally using the "Add Rules" button while viewing the Local Assistant's rules.
+
+![add local rules button](/images/add-local-rules.png)
+
+<Info>
+Automatically create local rule blocks: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
+
+For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
+</Info>
+
+Rules can also be added to an Assistant on the Continue Hub.
+
+Explore available rules [here](https://hub.continue.dev), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
+
+### Syntax
+
+<Info>
+
+Rules were originally defined in YAML format (demonstrated below), but we introduced Markdown for easier editing. While both are still supported, we recommend Markdown.
+
+</Info>
+
+Rules blocks can be simple text, written in YAML configuration files, or as Markdown (`.md`) files. They can have the following properties:
+
+- `name` (**required** for YAML): A display name/title for the rule
+- `globs` (optional): When files are provided as context that match this glob pattern, the rule will be included. This can be either a single pattern (e.g., `"**/*.{ts,tsx}"`) or an array of patterns (e.g., `["src/**/*.ts", "tests/**/*.ts"]`).
+- `regex` (optional): When files are provided as context and their content matches this regex pattern, the rule will be included. This can be either a single pattern (e.g., `"^import .* from '.*';$"`) or an array of patterns (e.g., `["^import .* from '.*';$", "^export .* from '.*';$"]`).
+- `description` (optional): A description for the rule. Agents may read this description when `alwaysApply` is false to determine whether the rule should be pulled into context.
+- `alwaysApply`: Determines whether the rule is always included. Behavior is described below:
+  - `true`: Always included, regardless of file context
+  - `false`: Included if globs exist AND match file context, or the agent decides to pull the rule into context based on it's description
+  - `undefined` (default behavior): Included if no globs exist OR globs exist and match
+
+<Tabs>
+  <Tab title="Markdown">
+  ```md title="doc-standards.md"
+  ---
+  name: Documentation Standards
+  globs: docs/**/*.{md,mdx}
+  alwaysApply: false
+  description: Standards for writing and maintaining Continue Docs
+  ---
+
+  # Continue Docs Standards
+
+  - Follow Mintlify documentation standards
+  - Include YAML frontmatter with title, description, and keywords
+  - Use consistent heading hierarchy starting with h2 (##)
+  - Include relevant Admonition components for tips, warnings, and info
+  - Use descriptive alt text for images
+  - Include cross-references to related documentation
+  - Reference other docs with relative paths
+  - Keep paragraphs concise and scannable
+  - Use code blocks with appropriate language tags
+  ```
+  </Tab>
+  <Tab title="YAML">
+
+  ```yaml title="doc-standards.yaml"
+  name: Documentation Standards
+  version: 1.0.0
+  schema: v1
+
+  rules:
+    - name: Documentation Standards
+      globs: docs/**/*.{md,mdx}
+      alwaysApply: false
+      rule: >
+        - Follow Mintlify documentation standards
+        - Include YAML frontmatter with title, description, and keywords
+        - Use consistent heading hierarchy starting with h2 (##)
+        - Include relevant Admonition components for tips, warnings, and info
+        - Use descriptive alt text for images
+        - Include cross-references to related documentation
+        - Reference other docs with relative paths
+        - Keep paragraphs concise and scannable
+        - Use code blocks with appropriate language tags
+  ```
+  </Tab>
+
+  </Tabs>
+
+### `.continue/rules` folder
+
+You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
+
+```md title=".continue/rules/new-rule.md"
+---
+name: New rule
+---
+
+Always give concise responses
+```
+
+This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.md`.
+
+### Examples
+
+If you want concise answers:
+
+```md title=".continue/rules/concise-rule.md"
+---
+name: Always give concise answers
+---
+
+Please provide concise answers. Don't explain obvious concepts.
+You can assume that I am knowledgable about most programming topics.
+```
+
+If you want to ensure certain practices are followed, for example in React:
+
+```md title=".continue/rules/functional-rule.md"
+---
+name: Always use functional components
+---
+
+Whenever you are writing React code, make sure to
+
+- use functional components instead of class components
+- use hooks for state management
+- define an interface for your component props
+- use Tailwind CSS for styling
+- modularize components into smaller, reusable pieces
+```
+
+### Chat System Message
+
+Continue includes a simple default system message for [Agent](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+
+This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
+
+Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
+
+### `.continuerules`
+
+<Warning>
+`.continuerules` will be deprecated in a future release. Please use the `.continue/rules` folder instead.
+</Warning>
+
+You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.

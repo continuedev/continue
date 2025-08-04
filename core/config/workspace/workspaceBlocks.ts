@@ -1,11 +1,29 @@
-import { BlockType, ConfigYaml } from "@continuedev/config-yaml";
+import {
+  BlockType,
+  ConfigYaml,
+  createRuleMarkdown,
+  RULE_FILE_EXTENSION,
+} from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
 import { joinPathsToUri } from "../../util/uri";
 
+const BLOCK_TYPE_CONFIG: Record<
+  BlockType,
+  { singular: string; filename: string }
+> = {
+  context: { singular: "context", filename: "context" },
+  models: { singular: "model", filename: "model" },
+  rules: { singular: "rule", filename: "rule" },
+  docs: { singular: "doc", filename: "doc" },
+  prompts: { singular: "prompt", filename: "prompt" },
+  mcpServers: { singular: "MCP server", filename: "mcp-server" },
+  data: { singular: "data", filename: "data" },
+};
+
 function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
   const configYaml: ConfigYaml = {
-    name: `New ${blockType.slice(0, -1)}`,
+    name: `New ${BLOCK_TYPE_CONFIG[blockType]?.singular}`,
     version: "0.0.1",
     schema: "v1",
   };
@@ -64,6 +82,43 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
   return configYaml;
 }
 
+function getFileExtension(blockType: BlockType): string {
+  return blockType === "rules" ? RULE_FILE_EXTENSION : "yaml";
+}
+
+export function getFileContent(blockType: BlockType): string {
+  if (blockType === "rules") {
+    return createRuleMarkdown("New Rule", "Your rule content", {
+      description: "A description of your rule",
+    });
+  } else {
+    return YAML.stringify(getContentsForNewBlock(blockType));
+  }
+}
+
+export async function findAvailableFilename(
+  baseDirUri: string,
+  blockType: BlockType,
+  fileExists: (uri: string) => Promise<boolean>,
+  extension?: string,
+): Promise<string> {
+  const baseFilename = `new-${BLOCK_TYPE_CONFIG[blockType]?.filename}`;
+  const fileExtension = extension ?? getFileExtension(blockType);
+  let counter = 0;
+  let fileUri: string;
+
+  do {
+    const suffix = counter === 0 ? "" : `-${counter}`;
+    fileUri = joinPathsToUri(
+      baseDirUri,
+      `${baseFilename}${suffix}.${fileExtension}`,
+    );
+    counter++;
+  } while (await fileExists(fileUri));
+
+  return fileUri;
+}
+
 export async function createNewWorkspaceBlockFile(
   ide: IDE,
   blockType: BlockType,
@@ -77,21 +132,14 @@ export async function createNewWorkspaceBlockFile(
 
   const baseDirUri = joinPathsToUri(workspaceDirs[0], `.continue/${blockType}`);
 
-  // Find the first available filename
-  let counter = 0;
-  let fileUri: string;
-  do {
-    const suffix = counter === 0 ? "" : `-${counter}`;
-    fileUri = joinPathsToUri(
-      baseDirUri,
-      `new-${blockType.slice(0, -1)}${suffix}.yaml`,
-    );
-    counter++;
-  } while (await ide.fileExists(fileUri));
-
-  await ide.writeFile(
-    fileUri,
-    YAML.stringify(getContentsForNewBlock(blockType)),
+  const fileUri = await findAvailableFilename(
+    baseDirUri,
+    blockType,
+    ide.fileExists.bind(ide),
   );
+
+  const fileContent = getFileContent(blockType);
+
+  await ide.writeFile(fileUri, fileContent);
   await ide.openFile(fileUri);
 }

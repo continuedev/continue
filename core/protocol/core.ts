@@ -5,13 +5,18 @@ import {
   ModelRole,
 } from "@continuedev/config-yaml";
 
-import { AutocompleteInput } from "../autocomplete/util/types";
+import {
+  AutocompleteInput,
+  RecentlyEditedRange,
+} from "../autocomplete/util/types";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  CompiledMessagesResult,
+  CompleteOnboardingPayload,
   ContextItem,
   ContextItemWithId,
   ContextSubmenuItem,
@@ -21,22 +26,34 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MessageOption,
   ModelDescription,
   PromptLog,
   RangeInFile,
+  RangeInFileWithNextEditInfo,
   SerializedContinueConfig,
   Session,
   SessionMetadata,
   SiteIndexingConfig,
-  SlashCommandDescription,
+  SlashCommandDescWithSource,
   StreamDiffLinesPayload,
   ToolCall,
 } from "../";
+import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
+import { GetLspDefinitionsFunction } from "../autocomplete/types";
+import { ConfigHandler } from "../config/ConfigHandler";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
+import {
+  ControlPlaneEnv,
+  ControlPlaneSessionInfo,
+} from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
 
-export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
+export enum OnboardingModes {
+  API_KEY = "API Key",
+  LOCAL = "Local",
+  MODELS_ADD_ON = "Models Add-On",
+}
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -77,18 +94,21 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/refreshProfiles": [
     (
       | undefined
       | {
+          reason?: string;
           selectOrgId?: string;
           selectProfileId?: string;
         }
     ),
     void,
   ];
-  "config/openProfile": [{ profileId: string | undefined }, void];
+  "config/openProfile": [
+    { profileId: string | undefined; element?: { sourceFile?: string } },
+    void,
+  ];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
@@ -104,6 +124,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      isInAgentMode: boolean;
     },
     ContextItemWithId[],
   ];
@@ -113,6 +134,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "mcp/getPrompt": [
+    {
+      serverName: string;
+      promptName: string;
+      args?: Record<string, string>;
+    },
+    {
+      prompt: string;
+      description: string | undefined;
+    },
+  ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
@@ -121,6 +153,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
+  "nextEdit/predict": [AutocompleteInput, string[]];
+  "nextEdit/reject": [{ completionId: string }, void];
+  "nextEdit/accept": [{ completionId: string }, void];
   "llm/complete": [
     {
       prompt: string;
@@ -135,8 +170,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      messageOptions?: MessageOption;
       legacySlashCommandData?: {
-        command: SlashCommandDescription;
+        command: SlashCommandDescWithSource;
         input: string;
         contextItems: ContextItemWithId[];
         historyIndex: number;
@@ -146,9 +182,20 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [StreamDiffLinesPayload, AsyncGenerator<DiffLine>];
+  "llm/compileChat": [
+    { messages: ChatMessage[]; options: LLMFullCompletionOptions },
+    CompiledMessagesResult,
+  ];
   "chatDescriber/describe": [
     {
       text: string;
+    },
+    string | undefined,
+  ];
+  "conversation/compact": [
+    {
+      index: number;
+      sessionId: string;
     },
     string | undefined,
   ];
@@ -169,12 +216,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "index/indexingProgressBarInitialized": [undefined, void];
-  completeOnboarding: [
-    {
-      mode: OnboardingModes;
-    },
-    void,
-  ];
+  "onboarding/complete": [CompleteOnboardingPayload, void];
 
   // File changes
   "files/changed": [{ uris?: string[] }, void];
@@ -182,6 +224,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "files/created": [{ uris?: string[] }, void];
   "files/deleted": [{ uris?: string[] }, void];
   "files/closed": [{ uris?: string[] }, void];
+  "files/smallEdit": [
+    {
+      actions: RangeInFileWithNextEditInfo[];
+      configHandler: ConfigHandler;
+      getDefsFromLspFunction: GetLspDefinitionsFunction;
+      recentlyEditedRanges: RecentlyEditedRange[];
+      recentlyVisitedRanges: AutocompleteCodeSnippet[];
+    },
+    void,
+  ];
 
   // Docs etc. Indexing. TODO move codebase to this
   "indexing/reindex": [{ type: string; id: string }, void];
@@ -198,8 +250,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { contextItems: ContextItem[]; errorMessage?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
+  "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
   "controlPlane/getFreeTrialStatus": [undefined, FreeTrialStatus | null];
+  "controlPlane/getModelsAddOnUpgradeUrl": [
+    { vsCodeUriScheme?: string },
+    { url: string } | null,
+  ];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
@@ -207,4 +264,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+  "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 };

@@ -103,42 +103,12 @@
         "clear": true
       },
       "options": {
+        "env": {
+          "SKIP_INSTALLS": "true"
+        },
         "cwd": "${workspaceFolder}/extensions/vscode"
       }
     },
-    //
-    // Compile and bundle tests
-    {
-      "label": "vscode-extension:tests:build",
-      "dependsOn": [
-        // Build the extension
-        "vscode-extension:build",
-        // To detect compile errors - this type checks both the extension and the tests
-        "tsc:watch",
-        "vscode-extension:tests:esbuild"
-      ]
-    },
-    {
-      "label": "vscode-extension:tests:esbuild",
-      "type": "npm",
-      "script": "build-test",
-      "path": "extensions/vscode",
-      "problemMatcher": [
-        {
-          "pattern": [
-            {
-              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
-              "file": 1,
-              "line": 2,
-              "column": 3,
-              "severity": 4,
-              "message": 5
-            }
-          ]
-        }
-      ]
-    },
-    //
     // Install or update all dependencies for all projects in the monrepo
     {
       "label": "install-all-dependencies",
@@ -251,6 +221,34 @@
         "refresh-dependencies:gui",
         "refresh-dependencies:vscode"
       ],
+      "type": "shell",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Continue packages",
+      "type": "shell",
+      "command": "node ./scripts/build-packages.js",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "__DUMMY_PATTERN_THAT_NEVER_MATCHES__",
+          "file": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "."
+        }
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "vscode-extension:build-with-packages",
+      // "dependsOn": ["vscode-extension:build"],
+      "dependsOn": ["Build Continue packages", "vscode-extension:build"],
       "type": "shell",
       "problemMatcher": []
     }

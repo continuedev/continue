@@ -161,4 +161,21 @@ export class MCPManagerSingleton {
       client: connection.client,
     }));
   }
+
+  async getPrompt(
+    serverName: string,
+    promptName: string,
+    args: Record<string, string> = {},
+  ) {
+    const connection = this.connections.get(serverName);
+    if (!connection) {
+      throw new Error(
+        `Error getting prompt: MCP Connection ${serverName} not found`,
+      );
+    }
+    return await connection.client.getPrompt({
+      name: promptName,
+      arguments: args,
+    });
+  }
 }
