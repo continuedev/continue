@@ -1560,6 +1560,11 @@ export interface ExperimentalConfig {
    * gather context for the model where necessary.
    */
   enableStaticContextualization?: boolean;
+
+  /**
+   * If enabled, task lists will be available.
+   */
+  enableTaskLists?: boolean;
 }
 
 export interface AnalyticsConfig {

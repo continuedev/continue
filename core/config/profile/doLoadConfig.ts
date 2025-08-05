@@ -29,6 +29,7 @@ import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
+import { taskListTool } from "../../tools/definitions/taskListTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
 import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
@@ -260,6 +261,12 @@ export default async function doLoadConfig(options: {
         newConfig.experimental?.enableExperimentalTools ?? false,
     }),
   );
+
+  if (!newConfig.experimental?.enableTaskLists) {
+    newConfig.tools = newConfig.tools.filter(
+      (tool) => tool.function.name !== taskListTool.function.name,
+    );
+  }
 
   // Detect duplicate tool names
   const counts: Record<string, number> = {};

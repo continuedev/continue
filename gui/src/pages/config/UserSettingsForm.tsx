@@ -94,6 +94,7 @@ export function UserSettingsForm() {
     config.experimental?.codebaseToolCallingOnly ?? false;
   const enableStaticContextualization =
     config.experimental?.enableStaticContextualization ?? false;
+  const enableTaskLists = config.experimental?.enableTaskLists ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
   const disableIndexing = config.disableIndexing ?? false;
@@ -451,6 +452,16 @@ export function UserSettingsForm() {
                     }
                   />
                 )}
+
+                <ToggleSwitch
+                  isToggled={enableTaskLists}
+                  onToggle={() =>
+                    handleUpdate({
+                      enableTaskLists: !enableTaskLists,
+                    })
+                  }
+                  text="Enable Task Lists"
+                />
               </div>
             </div>
           </div>
