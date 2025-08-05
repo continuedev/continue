@@ -1,11 +1,14 @@
-import { createTwoFilesPatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import telemetryService from "../telemetry/telemetryService.js";
+
+import { createTwoFilesPatch } from "diff";
+
+import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
+
 import { Tool, ToolCallPreview } from "./types.js";
 
 export function generateDiff(
@@ -25,7 +28,7 @@ export function generateDiff(
 }
 
 export const writeFileTool: Tool = {
-  name: "write_file",
+  name: "Write",
   displayName: "Write",
   description: "Write content to a file at the specified path",
   parameters: {
@@ -72,7 +75,7 @@ export const writeFileTool: Tool = {
           ],
         };
       }
-    } catch (e) {
+    } catch {
       // do nothing
     }
     const lines: string[] = args.content.split("\n");

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { ToolPermissionService } from './ToolPermissionService.js';
-import { PermissionMode } from '../permissions/types.js';
 
 describe('ToolPermissionService - Mode Functionality', () => {
   let service: ToolPermissionService;
@@ -63,8 +63,8 @@ describe('ToolPermissionService - Mode Functionality', () => {
       
       // Plan mode should have write exclusions and read allowances
       const planPolicies = planState.permissions.policies;
-      expect(planPolicies.some(p => p.tool === 'write_file' && p.permission === 'exclude')).toBe(true);
-      expect(planPolicies.some(p => p.tool === 'read_file' && p.permission === 'allow')).toBe(true);
+      expect(planPolicies.some(p => p.tool === 'Write' && p.permission === 'exclude')).toBe(true);
+      expect(planPolicies.some(p => p.tool === 'Read' && p.permission === 'allow')).toBe(true);
     });
   });
 
@@ -90,7 +90,7 @@ describe('ToolPermissionService - Mode Functionality', () => {
       const planPolicies = service.getPermissions().policies;
       
       expect(planPolicies).not.toEqual(normalPolicies);
-      expect(planPolicies.some(p => p.tool === 'write_file' && p.permission === 'exclude')).toBe(true);
+      expect(planPolicies.some(p => p.tool === 'Write' && p.permission === 'exclude')).toBe(true);
     });
 
     it('should use absolute override for plan mode (ignore non-mode policies)', () => {
@@ -107,9 +107,9 @@ describe('ToolPermissionService - Mode Functionality', () => {
       const newPolicies = service.getPermissions().policies;
       
       // Plan mode should use ONLY mode policies (absolute override)
-      // Should contain write_file exclude policy for plan mode
-      const writeFilePolicy = newPolicies.find(p => p.tool === 'write_file');
-      expect(writeFilePolicy?.permission).toBe('exclude');
+      // Should contain Write exclude policy for plan mode
+      const writePolicy = newPolicies.find(p => p.tool === 'Write');
+      expect(writePolicy?.permission).toBe('exclude');
       
       // Should not contain any user-defined policies from the initial setup
       const userAllowPolicy = newPolicies.find(p => p.tool === 'allowedTool');

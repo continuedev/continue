@@ -8,7 +8,7 @@ import type {
   ChatCompletionTool,
   ChatCompletionToolMessageParam,
 } from "openai/resources.mjs";
-import { parseArgs } from "./args.js";
+
 import { MCPService } from "./mcp.js";
 import {
   checkToolPermission,
@@ -16,43 +16,58 @@ import {
   ToolCallRequest,
 } from "./permissions/index.js";
 import { toolPermissionManager } from "./permissions/permissionManager.js";
-import telemetryService from "./telemetry/telemetryService.js";
+import { getServiceSync, SERVICE_NAMES } from "./services/index.js";
+import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
+import { telemetryService } from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import {
-  BUILTIN_TOOLS,
+  getAllBuiltinTools,
   executeToolCall,
   getAvailableTools,
-  getToolDisplayName,
   Tool,
   ToolCall,
   validateToolCallArgsPresent,
 } from "./tools/index.js";
+import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
 import {
   chatCompletionStreamWithBackoff,
   withExponentialBackoff,
 } from "./util/exponentialBackoff.js";
-import logger from "./util/logger.js";
-import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
+import { logger } from "./util/logger.js";
 
 dotenv.config();
 
 export function getAllTools() {
-  const args = parseArgs();
 
   // Get all available tool names
-  const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
+  const allBuiltinTools = getAllBuiltinTools();
+  const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
   const mcpToolNames =
     MCPService.getInstance()
       ?.getTools()
       .map((tool) => tool.name) ?? [];
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
-  // Filter out excluded tools based on permissions
-  const allowedToolNames = filterExcludedTools(allToolNames);
+  // Check if the ToolPermissionService is ready
+  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS
+  );
+  
+  let allowedToolNames: string[];
+  if (serviceResult.state === 'ready' && serviceResult.value) {
+    // Filter out excluded tools based on permissions
+    allowedToolNames = filterExcludedTools(allToolNames, serviceResult.value.permissions);
+  } else {
+    // Service not ready - this is a critical error since tools should only be
+    // requested after services are properly initialized
+    logger.error("ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue");
+    throw new Error("ToolPermissionService not initialized. Services must be initialized before requesting tools.");
+  }
+  
   const allowedToolNamesSet = new Set(allowedToolNames);
 
   // Filter builtin tools
-  const allowedBuiltinTools = BUILTIN_TOOLS.filter((tool) =>
+  const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
     allowedToolNamesSet.has(tool.name)
   );
 
@@ -285,7 +300,7 @@ export async function processStreamingResponse(
 
               // Don't notify onToolStart here anymore - wait until after permission check
               toolCall.startNotified = true;
-            } catch (e) {
+            } catch {
               // JSON not complete yet, continue
             }
           }
@@ -512,7 +527,8 @@ export async function executeStreamedToolCalls(
       } else if (permissionCheck.permission === "ask") {
         if (isHeadless) {
           // In headless mode, exit immediately with instructions
-          const tool = BUILTIN_TOOLS.find((t) => t.name === toolCall.name);
+          const allBuiltinTools = getAllBuiltinTools();
+          const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
           const toolName = tool?.displayName || toolCall.name;
           console.error(
             `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`
@@ -649,8 +665,10 @@ export async function streamChatResponse(
     hasCallbacks: !!callbacks,
   });
 
-  const args = parseArgs();
-  const isHeadless = args.isHeadless;
+  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS
+  );
+  const isHeadless = serviceResult.value?.isHeadless ?? false;
   const tools = getAllTools();
 
   logger.debug("Tools prepared", {

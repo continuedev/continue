@@ -1,4 +1,5 @@
-import { describe, expect, it, beforeEach } from '@jest/globals';
+import { describe, expect, it, beforeEach } from 'vitest';
+
 import { modeService } from '../services/ModeService.js';
 
 describe('UserInput Keyboard Shortcuts', () => {

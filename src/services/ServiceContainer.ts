@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
-import logger from '../util/logger.js';
-import { ServiceResult, ServiceState, ServiceEvents } from './types.js';
+
+import { logger } from '../util/logger.js';
+
+import { ServiceResult, ServiceState } from './types.js';
 
 /**
  * Central service container that manages service lifecycle and dependencies
@@ -28,12 +30,15 @@ export class ServiceContainer extends EventEmitter {
     this.factories.set(serviceName, factory);
     this.dependencies.set(serviceName, deps);
     
-    // Initialize with idle state
-    this.services.set(serviceName, {
-      value: null,
-      state: 'idle',
-      error: null
-    });
+    // Only initialize with idle state if the service doesn't already exist
+    // This prevents overwriting services that were registered with registerValue
+    if (!this.services.has(serviceName)) {
+      this.services.set(serviceName, {
+        value: null,
+        state: 'idle',
+        error: null
+      });
+    }
 
     logger.debug(`Registered service: ${serviceName}`, { dependencies: deps });
   }
@@ -57,7 +62,11 @@ export class ServiceContainer extends EventEmitter {
     // Emit ready event
     this.emit(`${serviceName}:ready`, value);
 
-    logger.debug(`Registered service with immediate value: ${serviceName}`);
+    logger.debug(`Registered service with immediate value: ${serviceName}`, {
+      state: 'ready',
+      hasValue: value !== null,
+      serviceMapSize: this.services.size
+    });
   }
 
   /**
@@ -228,6 +237,29 @@ export class ServiceContainer extends EventEmitter {
   isLoading(serviceName: string): boolean {
     const result = this.services.get(serviceName);
     return result?.state === 'loading';
+  }
+
+  /**
+   * Initialize all registered services
+   * This eagerly loads all services rather than waiting for them to be requested
+   */
+  async initializeAll(): Promise<void> {
+    logger.debug('Initializing all registered services');
+    
+    // Get all registered service names
+    const serviceNames = Array.from(this.factories.keys());
+    
+    // Load all services in parallel (dependencies will be handled by load())
+    await Promise.all(
+      serviceNames.map(name => 
+        this.load(name).catch(error => {
+          logger.error(`Failed to initialize service ${name}:`, error);
+          // Don't throw - let individual services fail without breaking others
+        })
+      )
+    );
+    
+    logger.debug('All services initialization complete', this.getServiceStates());
   }
 
   /**

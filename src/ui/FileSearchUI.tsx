@@ -1,6 +1,7 @@
-import { Box, Text } from "ink";
-import React, { useEffect, useState, useRef } from "react";
 import { glob, GlobOptionsWithFileTypesFalse } from "glob";
+import { Box, Text } from "ink";
+import React, { useEffect, useState } from "react";
+
 import { isGitRepo } from "../util/git.js";
 
 interface FileSearchUIProps {
@@ -192,7 +193,6 @@ const filterFiles = (filterText: string): FileItem[] => {
 const FileSearchUI: React.FC<FileSearchUIProps> = ({
   filter,
   selectedIndex,
-  onSelect,
   onFilesUpdated,
 }) => {
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -257,7 +257,7 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
   );
 };
 
-export default FileSearchUI;
+export { FileSearchUI };
 
 export async function throttledGlob(
   patterns: string[],

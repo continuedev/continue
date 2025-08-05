@@ -1,7 +1,8 @@
 import { useState } from "react";
+
+import { updateModelName } from "../../auth/workos.js";
 import { services, serviceContainer, SERVICE_NAMES } from "../../services/index.js";
 import { ModelServiceState } from "../../services/types.js";
-import { updateModelName } from "../../auth/workos.js";
 
 interface ModelOption {
   id: string;

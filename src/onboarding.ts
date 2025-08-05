@@ -1,16 +1,19 @@
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 import * as readlineSync from "readline-sync";
+
 import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { MCPService } from "./mcp.js";
 import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
+import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
@@ -33,12 +36,10 @@ export async function checkHasAcceptableModel(
 
     const content = fs.readFileSync(configPath, "utf8");
     return content.includes("claude");
-  } catch (error) {
+  } catch {
     return false;
   }
 }
-
-import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 export async function createOrUpdateConfig(apiKey: string): Promise<void> {
   const configDir = path.dirname(CONFIG_PATH);
@@ -112,7 +113,7 @@ export async function runNormalFlow(
   // Step 1: Check if --config flag is provided
   if (configPath) {
     try {
-      let result = await initialize(authConfig, configPath);
+      const result = await initialize(authConfig, configPath);
       // Inject rules into the config if provided
       if (rules && rules.length > 0) {
         result.config = await injectRulesIntoConfig(result.config, rules);
@@ -128,25 +129,27 @@ export async function runNormalFlow(
   // Step 2: If user is logged in, look for first assistant in selected org
   if (isAuthenticated()) {
     try {
-      let result = await initialize(authConfig, undefined);
+      const result = await initialize(authConfig, undefined);
       // Inject rules into the config if provided
       if (rules && rules.length > 0) {
         result.config = await injectRulesIntoConfig(result.config, rules);
       }
       return { ...result, wasOnboarded: false };
-    } catch (error) {}
+    } catch {
+      // Silently ignore errors when loading default assistant
+    }
   }
 
   // Step 3: Look for local ~/.continue/config.yaml
   if (fs.existsSync(CONFIG_PATH)) {
     try {
-      let result = await initialize(authConfig, CONFIG_PATH);
+      const result = await initialize(authConfig, CONFIG_PATH);
       // Inject rules into the config if provided
       if (rules && rules.length > 0) {
         result.config = await injectRulesIntoConfig(result.config, rules);
       }
       return { ...result, wasOnboarded: false };
-    } catch (error) {
+    } catch {
       console.log(chalk.yellow("⚠ Invalid config file found"));
     }
   }
@@ -156,7 +159,7 @@ export async function runNormalFlow(
     console.log(chalk.blue("✓ Using ANTHROPIC_API_KEY from environment"));
     await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
     console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
-    let result = await initialize(authConfig, CONFIG_PATH);
+    const result = await initialize(authConfig, CONFIG_PATH);
     // Inject rules into the config if provided
     if (rules && rules.length > 0) {
       result.config = await injectRulesIntoConfig(result.config, rules);
@@ -199,7 +202,7 @@ async function injectRulesIntoConfig(
     return config;
   }
 
-  let processedRules: string[] = [];
+  const processedRules: string[] = [];
   for (const ruleSpec of rules) {
     try {
       const processedRule = await processRule(ruleSpec);

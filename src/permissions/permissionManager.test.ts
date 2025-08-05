@@ -15,8 +15,14 @@ describe("ToolPermissionManager", () => {
 
   describe("Request Management", () => {
     it("should generate unique request IDs", async () => {
-      const toolCall1: ToolCallRequest = { name: "readFile", arguments: { path: "/test1.txt" } };
-      const toolCall2: ToolCallRequest = { name: "readFile", arguments: { path: "/test2.txt" } };
+      const toolCall1: ToolCallRequest = {
+        name: "readFile",
+        arguments: { path: "/test1.txt" },
+      };
+      const toolCall2: ToolCallRequest = {
+        name: "readFile",
+        arguments: { path: "/test2.txt" },
+      };
 
       // Start requests but don't await them
       const promise1 = manager.requestPermission(toolCall1);
@@ -33,13 +39,16 @@ describe("ToolPermissionManager", () => {
     });
 
     it("should store pending request details correctly", async () => {
-      const toolCall: ToolCallRequest = { name: "writeFile", arguments: { path: "/test.txt", content: "data" } };
-      
+      const toolCall: ToolCallRequest = {
+        name: "writeFile",
+        arguments: { path: "/test.txt", content: "data" },
+      };
+
       const promise = manager.requestPermission(toolCall);
       const pendingIds = manager.getPendingRequestIds();
-      
+
       expect(pendingIds).toHaveLength(1);
-      
+
       const requestDetails = manager.getPendingRequest(pendingIds[0]);
       expect(requestDetails).toBeDefined();
       expect(requestDetails?.toolCall).toEqual(toolCall);
@@ -50,17 +59,20 @@ describe("ToolPermissionManager", () => {
     });
 
     it("should remove request after approval", async () => {
-      const toolCall: ToolCallRequest = { name: "readFile", arguments: { path: "/test.txt" } };
-      
+      const toolCall: ToolCallRequest = {
+        name: "readFile",
+        arguments: { path: "/test.txt" },
+      };
+
       const promise = manager.requestPermission(toolCall);
       const pendingIds = manager.getPendingRequestIds();
       const requestId = pendingIds[0];
-      
+
       expect(manager.getPendingRequest(requestId)).toBeDefined();
-      
+
       const approved = manager.approveRequest(requestId);
       expect(approved).toBe(true);
-      
+
       const result = await promise;
       expect(result.approved).toBe(true);
       expect(manager.getPendingRequest(requestId)).toBeUndefined();
@@ -68,15 +80,18 @@ describe("ToolPermissionManager", () => {
     });
 
     it("should remove request after rejection", async () => {
-      const toolCall: ToolCallRequest = { name: "runTerminalCommand", arguments: { command: "rm -rf /" } };
-      
+      const toolCall: ToolCallRequest = {
+        name: "runTerminalCommand",
+        arguments: { command: "rm -rf /" },
+      };
+
       const promise = manager.requestPermission(toolCall);
       const pendingIds = manager.getPendingRequestIds();
       const requestId = pendingIds[0];
-      
+
       const rejected = manager.rejectRequest(requestId);
       expect(rejected).toBe(true);
-      
+
       const result = await promise;
       expect(result.approved).toBe(false);
       expect(manager.getPendingRequest(requestId)).toBeUndefined();
@@ -93,13 +108,16 @@ describe("ToolPermissionManager", () => {
     });
 
     it("should support remember option for approval", async () => {
-      const toolCall: ToolCallRequest = { name: "writeFile", arguments: { path: "/test.txt" } };
-      
+      const toolCall: ToolCallRequest = {
+        name: "writeFile",
+        arguments: { path: "/test.txt" },
+      };
+
       const promise = manager.requestPermission(toolCall);
       const requestId = manager.getPendingRequestIds()[0];
-      
+
       manager.approveRequest(requestId, true); // Remember = true
-      
+
       const result = await promise;
       expect(result.approved).toBe(true);
       expect(result.remember).toBe(true);
@@ -107,54 +125,71 @@ describe("ToolPermissionManager", () => {
   });
 
   describe("Event Emission", () => {
-    it("should emit permissionRequested event", (done) => {
-      const toolCall: ToolCallRequest = { name: "readFile", arguments: { path: "/test.txt" } };
-      
-      manager.on("permissionRequested", (event) => {
-        expect(event.requestId).toBeDefined();
-        expect(event.toolCall).toEqual(toolCall);
-        done();
+    it("should emit permissionRequested event", () => {
+      const toolCall: ToolCallRequest = {
+        name: "readFile",
+        arguments: { path: "/test.txt" },
+      };
+
+      return new Promise<void>((resolve) => {
+        manager.on("permissionRequested", (event) => {
+          expect(event.requestId).toBeDefined();
+          expect(event.toolCall).toEqual(toolCall);
+          resolve();
+        });
+
+        manager.requestPermission(toolCall);
       });
-      
-      manager.requestPermission(toolCall);
     });
 
-    it("should emit permissionResponse event on approval", (done) => {
-      const toolCall: ToolCallRequest = { name: "readFile", arguments: { path: "/test.txt" } };
-      
-      manager.on("permissionResponse", (event) => {
-        expect(event.approved).toBe(true);
-        expect(event.requestId).toBeDefined();
-        done();
+    it("should emit permissionResponse event on approval", () => {
+      const toolCall: ToolCallRequest = {
+        name: "readFile",
+        arguments: { path: "/test.txt" },
+      };
+
+      return new Promise<void>((resolve) => {
+        manager.on("permissionResponse", (event) => {
+          expect(event.approved).toBe(true);
+          expect(event.requestId).toBeDefined();
+          resolve();
+        });
+
+        const promise = manager.requestPermission(toolCall);
+        const requestId = manager.getPendingRequestIds()[0];
+        manager.approveRequest(requestId);
       });
-      
-      const promise = manager.requestPermission(toolCall);
-      const requestId = manager.getPendingRequestIds()[0];
-      manager.approveRequest(requestId);
     });
 
-    it("should emit permissionResponse event on rejection", (done) => {
-      const toolCall: ToolCallRequest = { name: "readFile", arguments: { path: "/test.txt" } };
-      
-      manager.on("permissionResponse", (event) => {
-        expect(event.approved).toBe(false);
-        expect(event.requestId).toBeDefined();
-        done();
+    it("should emit permissionResponse event on rejection", () => {
+      const toolCall: ToolCallRequest = {
+        name: "readFile",
+        arguments: { path: "/test.txt" },
+      };
+
+      return new Promise<void>((resolve) => {
+        manager.on("permissionResponse", (event) => {
+          expect(event.approved).toBe(false);
+          expect(event.requestId).toBeDefined();
+          resolve();
+        });
+
+        const promise = manager.requestPermission(toolCall);
+        const requestId = manager.getPendingRequestIds()[0];
+        manager.rejectRequest(requestId);
       });
-      
-      const promise = manager.requestPermission(toolCall);
-      const requestId = manager.getPendingRequestIds()[0];
-      manager.rejectRequest(requestId);
     });
 
-    it("should emit permissionResponse even for non-existent requests", (done) => {
-      manager.on("permissionResponse", (event) => {
-        expect(event.approved).toBe(true);
-        expect(event.requestId).toBe("fake-id");
-        done();
+    it("should emit permissionResponse even for non-existent requests", () => {
+      return new Promise<void>((resolve) => {
+        manager.on("permissionResponse", (event) => {
+          expect(event.approved).toBe(true);
+          expect(event.requestId).toBe("fake-id");
+          resolve();
+        });
+
+        manager.approveRequest("fake-id");
       });
-      
-      manager.approveRequest("fake-id");
     });
   });
 
@@ -162,13 +197,18 @@ describe("ToolPermissionManager", () => {
     it("should handle multiple concurrent requests", async () => {
       const toolCalls = [
         { name: "readFile", arguments: { path: "/file1.txt" } },
-        { name: "writeFile", arguments: { path: "/file2.txt", content: "data1" } },
+        {
+          name: "writeFile",
+          arguments: { path: "/file2.txt", content: "data1" },
+        },
         { name: "runTerminalCommand", arguments: { command: "ls" } },
       ];
 
       // Start all requests
-      const promises = toolCalls.map(toolCall => manager.requestPermission(toolCall));
-      
+      const promises = toolCalls.map((toolCall) =>
+        manager.requestPermission(toolCall)
+      );
+
       // Get all pending request IDs
       const pendingIds = manager.getPendingRequestIds();
       expect(pendingIds).toHaveLength(3);
@@ -180,11 +220,11 @@ describe("ToolPermissionManager", () => {
 
       // Wait for all to complete
       const results = await Promise.all(promises);
-      
+
       expect(results[0].approved).toBe(true);
       expect(results[1].approved).toBe(false);
       expect(results[2].approved).toBe(true);
-      
+
       // All requests should be cleared
       expect(manager.getPendingRequestIds()).toHaveLength(0);
     });
@@ -193,13 +233,13 @@ describe("ToolPermissionManager", () => {
   describe("Edge Cases", () => {
     it("should handle empty tool call arguments", async () => {
       const toolCall: ToolCallRequest = { name: "exit", arguments: {} };
-      
+
       const promise = manager.requestPermission(toolCall);
       const requestId = manager.getPendingRequestIds()[0];
-      
+
       manager.approveRequest(requestId);
       const result = await promise;
-      
+
       expect(result.approved).toBe(true);
     });
 
@@ -209,15 +249,17 @@ describe("ToolPermissionManager", () => {
         arguments: {
           config: { host: "localhost", port: 3000 },
           options: ["verbose", "debug"],
-          metadata: { created: new Date(), version: "1.0.0" }
-        }
+          metadata: { created: new Date(), version: "1.0.0" },
+        },
       };
-      
+
       const promise = manager.requestPermission(toolCall);
-      const requestDetails = manager.getPendingRequest(manager.getPendingRequestIds()[0]);
-      
+      const requestDetails = manager.getPendingRequest(
+        manager.getPendingRequestIds()[0]
+      );
+
       expect(requestDetails?.toolCall.arguments).toEqual(toolCall.arguments);
-      
+
       manager.approveRequest(manager.getPendingRequestIds()[0]);
       await promise;
     });

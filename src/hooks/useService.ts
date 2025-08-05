@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { useServiceContainer } from '../services/ServiceContainerContext.js';
 import { ServiceResult } from '../services/types.js';
 
@@ -104,25 +105,20 @@ export function useServices<T extends Record<string, any>>(
       const newServices: Partial<T> = {};
       let hasLoading = false;
       let hasError: Error | null = null;
-      let allReady = true;
 
       for (const serviceName of serviceNames) {
         const result = container.getSync(serviceName as string);
         
         if (result.state === 'loading') {
           hasLoading = true;
-          allReady = false;
         } else if (result.state === 'error') {
           hasError = result.error;
-          allReady = false;
         } else if (result.state === 'idle') {
-          allReady = false;
           // Auto-load idle services
           container.load(serviceName as string).catch(() => {});
         } else if (result.state === 'ready' && result.value !== null) {
           newServices[serviceName] = result.value as T[keyof T];
         } else {
-          allReady = false;
         }
       }
 

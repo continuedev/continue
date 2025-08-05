@@ -1,8 +1,11 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+
 import * as yaml from "yaml";
-import logger from "../util/logger.js";
+
+import { logger } from "../util/logger.js";
+
 import { normalizeToolName } from "./toolNameMapping.js";
 import { PermissionPolicy, ToolPermissionPolicy } from "./types.js";
 
@@ -70,9 +73,9 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
 /**
  * Parses a pattern string into a ToolPermissionPolicy
  * Supports formats like:
- * - "Write" -> { tool: "write_file", permission }
- * - "Write(pattern)" -> { tool: "write_file", permission, argumentMatches: { file_path: "pattern" } }
- * - "Bash(npm install)" -> { tool: "run_terminal_command", permission, argumentMatches: { command: "npm install" } }
+ * - "Write" -> { tool: "Write", permission }
+ * - "Write(pattern)" -> { tool: "Write", permission, argumentMatches: { file_path: "pattern" } }
+ * - "Bash(npm install)" -> { tool: "Bash", permission, argumentMatches: { command: "npm install" } }
  */
 export function parseToolPattern(
   pattern: string,
@@ -96,14 +99,14 @@ export function parseToolPattern(
     if (trimmedArgs) {
       // Map tool names to their primary argument parameter
       const toolArgMappings: Record<string, string> = {
-        write_file: "file_path",
-        edit_file: "file_path",
-        read_file: "file_path",
-        list_files: "path",
-        search_code: "query",
-        run_terminal_command: "command",
-        fetch: "url",
-        view_diff: "file_path",
+        Write: "file_path",
+        Edit: "file_path",
+        Read: "file_path",
+        List: "path",
+        Search: "query",
+        Bash: "command",
+        Fetch: "url",
+        Diff: "file_path",
       };
 
       const argKey = toolArgMappings[normalizedName] || "pattern";

@@ -1,20 +1,22 @@
 import { render } from "ink-testing-library";
 import React from "react";
-import { jest } from "@jest/globals";
-import FreeTrialTransitionUI from "../FreeTrialTransitionUI.js";
+import { vi } from "vitest";
+
+import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 
 // Mock the 'open' module to prevent actual URL opening during tests
-const mockOpen = jest.fn();
-jest.mock("open", () => mockOpen);
+vi.mock("open", () => ({
+  default: vi.fn()
+}));
 
 describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
-  const mockOnComplete = jest.fn();
-  const mockOnSwitchToLocalConfig = jest.fn();
-  const mockOnFullReload = jest.fn();
-  const mockOnShowConfigSelector = jest.fn();
+  const mockOnComplete = vi.fn();
+  const mockOnSwitchToLocalConfig = vi.fn();
+  const mockOnFullReload = vi.fn();
+  const mockOnShowConfigSelector = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("Initial Choice Screen Rendering", () => {
@@ -198,11 +200,12 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
   });
 
   describe("URL Opening Security", () => {
-    it("should use mocked open function to prevent actual URL opening", () => {
+    it("should use mocked open function to prevent actual URL opening", async () => {
       // This test verifies that we properly mock the 'open' module
       // to prevent actual URLs from being opened during test runs
-      expect(mockOpen).toBeDefined();
-      expect(typeof mockOpen).toBe("function");
+      const openModule = await import("open");
+      expect(openModule.default).toBeDefined();
+      expect(typeof openModule.default).toBe("function");
     });
   });
 });
