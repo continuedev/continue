@@ -313,7 +313,15 @@ function isFilePath(configPath: string): boolean {
   return (
     configPath.startsWith(".") ||
     configPath.startsWith("/") ||
-    configPath.startsWith("~")
+    configPath.startsWith("~") ||
+    // Windows absolute paths (C:\, D:\, etc.)
+    /^[A-Za-z]:[/\\]/.test(configPath) ||
+    // UNC paths (\\server\share)
+    configPath.startsWith("\\\\") ||
+    // Contains file extension
+    configPath.includes(".yaml") ||
+    configPath.includes(".yml") ||
+    configPath.includes(".json")
   );
 }
 
