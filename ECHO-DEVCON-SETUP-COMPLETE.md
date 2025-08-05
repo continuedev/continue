@@ -89,11 +89,11 @@ The extension is configured with:
    ```
 
 2. **Open VS Code**:
-   The Continue extension is now installed and configured to work with your EchoMCP backend.
+   The Echo DevCon extension is now installed and configured to work with your EchoMCP backend.
 
 3. **Access the Extension**:
 
-   - Look for the Continue icon in the VS Code sidebar
+   - Look for the Echo DevCon icon in the VS Code sidebar
    - Open the Continue chat panel
    - Start chatting with your local AI model through the MCP server
 

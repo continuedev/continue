@@ -1,59 +1,59 @@
 {
-  "name": "continue",
-  "icon": "media/icon.png",
-  "author": "Continue Dev, Inc",
+  "name": "echo-devcon-plugin",
+  "icon": "../../echo-devcon-brand-kit/plugin-assets/echo_plugin_icon.svg",
+  "author": "Alsania & Echo DevCon Team",
   "version": "1.1.72",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue"
+    "url": "https://github.com/SigmaSauer07/echo-dev"
   },
   "extensionKind": [
     "ui",
     "workspace"
   ],
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues",
-    "email": "nate@continue.dev"
+    "url": "https://github.com/SigmaSauer07/echo-dev/issues",
+    "email": "support@alsania.com"
   },
-  "homepage": "https://continue.dev",
+  "homepage": "https://alsania.com/echo-devcon",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code assistant",
+  "displayName": "Echo DevCon Plugin - Alsania AI Code Assistant",
   "pricing": "Free",
-  "description": "The leading open-source AI code assistant",
-  "publisher": "Continue",
+  "description": "Echo DevCon: Alsania's AI-powered code assistant for developers. Full Echo branding.",
+  "publisher": "Alsania",
   "engines": {
     "vscode": "^1.70.0",
     "node": ">=20.19.0"
   },
   "engine-strict": true,
   "galleryBanner": {
-    "color": "#1E1E1E",
+    "color": "#0A2472",
     "theme": "dark"
   },
   "categories": [
     "AI",
-    "Chat",
+    "Echo DevCon",
     "Programming Languages",
     "Education",
     "Machine Learning",
     "Snippets"
   ],
   "keywords": [
-    "chatgpt",
-    "cline",
-    "roo",
-    "github",
-    "copilot",
-    "claude",
-    "mistral",
-    "codestral",
-    "ai"
+    "echo",
+    "alsania",
+    "devcon",
+    "ai",
+    "code assistant",
+    "neon",
+    "orbitron",
+    "sidebar",
+    "branding"
   ],
   "activationEvents": [
     "onUri",
     "onStartupFinished",
-    "onView:continueGUIView"
+    "onView:echoDevConGUIView"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -61,7 +61,7 @@
       {
         "filenames": [
           "config.json",
-          ".continuerc.json"
+          ".echorc.json"
         ],
         "id": "jsonc"
       },
@@ -84,59 +84,59 @@
       }
     ],
     "configuration": {
-      "title": "Continue",
+      "title": "Echo DevCon Plugin",
       "properties": {
-        "continue.telemetryEnabled": {
+        "echoDevCon.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
+          "markdownDescription": "Echo DevCon collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more at [alsania.com/echo-devcon › Telemetry](https://alsania.com/echo-devcon/telemetry)."
         },
-        "continue.showInlineTip": {
+        "echoDevCon.showInlineTip": {
           "type": "boolean",
           "default": true,
-          "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
+          "description": "Show inline suggestion to use the Echo DevCon keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
-        "continue.disableQuickFix": {
+        "echo.disableQuickFix": {
           "type": "boolean",
           "default": false,
           "description": "Disable the quick fix feature."
         },
-        "continue.enableQuickActions": {
+        "echo.enableQuickActions": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/customize/deep-dives/vscode-actions#quick-actions)"
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [alsania.com/echo-devcon › Walkthrough: Quick Actions (experimental)](https://alsania.com/echo-devcon/customize/deep-dives/vscode-actions#quick-actions)"
         },
-        "continue.enableTabAutocomplete": {
+        "echo.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
+          "markdownDescription": "Enable Echo's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [alsania.com/echo-devcon › Walkthrough: Tab Autocomplete (beta)](https://alsania.com/echo-devcon/features/tab-autocomplete)"
         },
-        "continue.pauseTabAutocompleteOnBattery": {
+        "echo.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+          "markdownDescription": "Pause Echo's tab autocomplete feature when your battery is low."
         },
-        "continue.pauseCodebaseIndexOnStart": {
+        "echo.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's codebase index on start."
+          "markdownDescription": "Pause Echo's codebase index on start."
         },
-        "continue.enableConsole": {
+        "echo.enableConsole": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
         },
-        "continue.remoteConfigServerUrl": {
+        "echo.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
         },
-        "continue.userToken": {
+        "echo.userToken": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
         },
-        "continue.remoteConfigSyncPeriod": {
+        "echo.remoteConfigSyncPeriod": {
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
@@ -145,16 +145,16 @@
     },
     "commands": [
       {
-        "command": "continue.applyCodeFromChat",
-        "category": "Continue",
+        "command": "echoDevCon.applyCodeFromChat",
+        "category": "Echo DevCon",
         "title": "Apply code from chat",
-        "group": "Continue"
+        "group": "Echo DevCon"
       },
       {
-        "command": "continue.acceptDiff",
-        "category": "Continue",
+        "command": "echoDevCon.acceptDiff",
+        "category": "Echo DevCon",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "Echo DevCon"
       },
       {
         "command": "continue.rejectDiff",
@@ -369,7 +369,7 @@
     ],
     "keybindings": [
       {
-        "command": "continue.focusContinueInput",
+        "command": "echoDevCon.focusInput",
         "mac": "cmd+l",
         "key": "ctrl+l"
       },
@@ -614,37 +614,37 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "continue",
-          "title": "Continue",
-          "icon": "media/sidebar-icon.png"
+          "id": "echoDevCon",
+          "title": "Echo DevCon",
+          "icon": "../../echo-devcon-brand-kit/plugin-assets/sidebar-icon.svg"
         }
       ],
       "panel": [
         {
-          "id": "continueConsole",
-          "title": "Continue Console",
+          "id": "echoDevConConsole",
+          "title": "Echo DevCon Console",
           "icon": "$(window)"
         }
       ]
     },
     "views": {
-      "continue": [
+      "echoDevCon": [
         {
           "type": "webview",
-          "id": "continue.continueGUIView",
-          "name": "Continue",
-          "icon": "media/sidebar-icon.png",
+          "id": "echoDevCon.mainView",
+          "name": "Echo DevCon",
+          "icon": "../../echo-devcon-brand-kit/plugin-assets/sidebar-icon.svg",
           "visibility": "visible"
         }
       ],
-      "continueConsole": [
+      "echoDevConConsole": [
         {
           "type": "webview",
-          "id": "continue.continueConsoleView",
-          "name": "Continue Console",
+          "id": "echoDevCon.consoleView",
+          "name": "Echo DevCon Console",
           "icon": "$(window)",
           "visibility": "visible",
-          "when": "config.continue.enableConsole"
+          "when": "config.echoDevCon.enableConsole"
         }
       ]
     },

@@ -1321,7 +1321,7 @@ export interface MCPServerStatus extends MCPOptions {
   sourceFile?: string;
 }
 
-export interface ContinueUIConfig {
+export interface EchoDevConUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
   displayRawMarkdown?: boolean;
