@@ -1,6 +1,7 @@
-import { logger } from "../util/logger.js";
 import { loadAuthConfig } from "../auth/workos.js";
 import { initializeWithOnboarding } from "../onboarding.js";
+import { logger } from "../util/logger.js";
+
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";

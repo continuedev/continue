@@ -1,4 +1,4 @@
-import { validateFlags, handleValidationErrors, ValidationOptions } from './flagValidator.js';
+import { validateFlags, handleValidationErrors } from './flagValidator.js';
 
 describe('validateFlags', () => {
   describe('format flag validation', () => {

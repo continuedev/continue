@@ -8,6 +8,7 @@ import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 
 import { getAssistantSlug } from "../auth/workos.js";
+import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
   getService,
@@ -30,7 +31,7 @@ import { getToolDisplayName } from "../tools/index.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
-import { processCommandFlags } from "../flags/flagProcessor.js";
+
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 const execAsync = promisify(exec);

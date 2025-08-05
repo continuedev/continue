@@ -4,12 +4,12 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
-import { loadAuthConfig } from "../auth/workos.js";
 import {
   compactChatHistory,
   findCompactionIndex,
   getHistoryForLLM,
 } from "../compaction.js";
+import { processCommandFlags } from "../flags/flagProcessor.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 // initializeWithOnboarding is now handled internally by initializeServices
@@ -30,7 +30,7 @@ import {
   countChatHistoryTokens,
   shouldAutoCompact,
 } from "../util/tokenizer.js";
-import { processCommandFlags } from "../flags/flagProcessor.js";
+
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**
