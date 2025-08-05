@@ -34,11 +34,11 @@ This is the only configuration necessary, but you can view the full list of opti
 
 ### 4. Commit and push
 
-Add the [YAML for your assistants and blocks](/reference) to the appropriate directories:
+Add the [YAML for your assistants and blocks](/reference) to the appropriate directories. The name of the file will be the slug of the assistant/block.
 
 - `assistants/public` for public assistants
 - `assistants/private` for private (visible only within your organization) assistants
 - `blocks/public` for public blocks
 - `blocks/private` for private blocks
 
-Then, commit and push your changes. Once the GitHub Action has completed running, you should be able to view the assistants within your organization on hub.continue.dev.
+Then, commit and push your changes. Once the GitHub Action has completed running, you should be able to view the assistants within your organization on hub.continue.dev. For subsequent changes, make sure to increment the `version` property of your updated YAML file(s).

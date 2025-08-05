@@ -338,22 +338,17 @@ export class Core {
       );
     });
 
-    on("config/reload", async (msg) => {
-      // User force reloading will retrigger colocated rules
-      const codebaseRulesCache = CodebaseRulesCache.getInstance();
-      await codebaseRulesCache.refresh(this.ide);
-      void this.configHandler.reloadConfig(
-        "Force reloaded (config/reload message)",
-      );
-    });
-
     on("config/ideSettingsUpdate", async (msg) => {
       await this.configHandler.updateIdeSettings(msg.data);
     });
 
     on("config/refreshProfiles", async (msg) => {
-      const { selectOrgId, selectProfileId } = msg.data ?? {};
-      await this.configHandler.refreshAll();
+      // User force reloading will retrigger colocated rules
+      const codebaseRulesCache = CodebaseRulesCache.getInstance();
+      await codebaseRulesCache.refresh(this.ide);
+
+      const { selectOrgId, selectProfileId, reason } = msg.data ?? {};
+      await this.configHandler.refreshAll(reason);
       if (selectOrgId) {
         await this.configHandler.setSelectedOrgId(selectOrgId, selectProfileId);
       } else if (selectProfileId) {
@@ -725,7 +720,7 @@ export class Core {
           }
         }
         if (localAssistantCreated) {
-          await this.configHandler.refreshAll();
+          await this.configHandler.refreshAll("Local assistant file created");
         }
       }
     });

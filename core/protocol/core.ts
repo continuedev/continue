@@ -95,11 +95,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, void];
   "config/refreshProfiles": [
     (
       | undefined
       | {
+          reason?: string;
           selectOrgId?: string;
           selectProfileId?: string;
         }

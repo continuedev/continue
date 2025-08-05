@@ -16,14 +16,16 @@ export function OnboardingModelsAddOnTab() {
   const isJetbrains = getLocalStorage("ide") === "jetbrains";
 
   // Polling effect for JetBrains
+  // This is because jetbrains doesn't support deeplinking the same way as VS Code
   useEffect(() => {
     if (!isPolling || !isJetbrains) return;
 
     const interval = setInterval(() => {
       ideMessenger.post("config/refreshProfiles", {
+        reason: "Jetbrains onboarding polling",
         selectProfileId: "local",
       });
-    }, 5000);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [isPolling, isJetbrains, ideMessenger]);
