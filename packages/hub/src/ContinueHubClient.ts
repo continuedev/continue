@@ -80,10 +80,7 @@ export class ContinueHubClient implements IContinueHubClient {
     const alwaysUseProxy = options.alwaysUseProxy ?? false;
 
     try {
-      const urlObj = new URL(
-        organizationId ? "ide/list-assistants" : "ide/list-assistants",
-        this.apiBase,
-      );
+      const urlObj = new URL("ide/list-assistants", this.apiBase);
       if (organizationId) {
         urlObj.searchParams.set("organizationId", organizationId);
       }

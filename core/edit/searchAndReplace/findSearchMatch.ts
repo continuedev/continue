@@ -43,20 +43,48 @@ function exactMatch(
 
 /**
  * Trimmed content matching strategy
+ * Finds content where the search content (when trimmed) matches content in the file,
+ * and returns the span that includes the file content's whitespace
  */
 function trimmedMatch(
   fileContent: string,
   searchContent: string,
 ): BasicMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
-  const trimmedIndex = fileContent.indexOf(trimmedSearchContent);
-  if (trimmedIndex !== -1) {
-    return {
-      startIndex: trimmedIndex,
-      endIndex: trimmedIndex + trimmedSearchContent.length,
-    };
+
+  // Don't apply if search content has no leading/trailing whitespace to trim
+  if (trimmedSearchContent === searchContent) {
+    return null;
   }
-  return null;
+
+  // Don't match if trimmed content is empty
+  if (trimmedSearchContent === "") {
+    return null;
+  }
+
+  // Look for the trimmed content in the file
+  const trimmedContentIndex = fileContent.indexOf(trimmedSearchContent);
+  if (trimmedContentIndex === -1) {
+    return null;
+  }
+
+  // Find the boundaries that include surrounding whitespace (but not newlines)
+  // Look backwards for horizontal whitespace (spaces and tabs)
+  let startIndex = trimmedContentIndex;
+  while (startIndex > 0 && /[ \t]/.test(fileContent[startIndex - 1])) {
+    startIndex--;
+  }
+
+  // Look forwards for horizontal whitespace (spaces and tabs)
+  let endIndex = trimmedContentIndex + trimmedSearchContent.length;
+  while (endIndex < fileContent.length && /[ \t]/.test(fileContent[endIndex])) {
+    endIndex++;
+  }
+
+  return {
+    startIndex,
+    endIndex,
+  };
 }
 
 /**
@@ -298,10 +326,24 @@ export function findSearchMatch(
   fileContent: string,
   searchContent: string,
 ): SearchMatchResult | null {
-  const trimmedSearchContent = searchContent.trim();
+  // Handle truly empty search content
+  if (searchContent === "") {
+    return { startIndex: 0, endIndex: 0, strategyName: "emptySearch" };
+  }
 
+  // Handle whitespace-only search content that trims to empty
+  const trimmedSearchContent = searchContent.trim();
   if (trimmedSearchContent === "") {
-    // Empty search content matches the beginning of the file
+    // Check if the whitespace-only search content has an exact match first
+    const exactIndex = fileContent.indexOf(searchContent);
+    if (exactIndex !== -1) {
+      return {
+        startIndex: exactIndex,
+        endIndex: exactIndex + searchContent.length,
+        strategyName: "exactMatch",
+      };
+    }
+    // If no exact match for whitespace-only content, treat as empty search
     return { startIndex: 0, endIndex: 0, strategyName: "emptySearch" };
   }
 

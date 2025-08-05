@@ -10,6 +10,11 @@ extensions/vscode/.vscode-test
 extensions/vscode/bin
 extensions/vscode/build
 extensions/vscode/out
+extensions/vscode/gui
+extensions/vscode/e2e/.test-extensions
+extensions/vscode/e2e/test-continue
+extensions/vscode/models
+extensions/intellij/src/main/resources
 gui/dist
 **/.continueignore
 CHANGELOG.md
@@ -19,7 +24,4 @@ CHANGELOG.md
 core/vendor
 coverage
 e2e
-extensions/vscode/gui
-extensions/vscode/models
-extensions/intellij/src/main/resources
 packages/continue-sdk

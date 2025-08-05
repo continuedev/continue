@@ -9,6 +9,22 @@ import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
+const errorMessages = {
+  invalid_request_error:
+    "There was an issue with the format or content of your request.",
+  authentication_error: "There's an issue with your API key.",
+  permission_error:
+    "Your API key does not have permission to use the specified resource.",
+  not_found_error: "The requested resource was not found.",
+  request_too_large:
+    "Request exceeds the maximum allowed number of bytes (32 MB limit).",
+  rate_limit_error: "Your account has hit a rate limit.",
+  api_error:
+    "An unexpected error has occurred internal to Anthropic's systems.",
+  overloaded_error:
+    "Anthropic's API is temporarily overloaded. Please check their status page: https://status.anthropic.com/#past-incidents",
+};
+
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
@@ -172,52 +188,10 @@ class Anthropic extends BaseLLM {
     }
   }
 
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
+  async *handleResponse(
+    response: any,
+    stream: boolean | undefined,
   ): AsyncGenerator<ChatMessage> {
-    if (!this.apiKey || this.apiKey === "") {
-      throw new Error(
-        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
-      );
-    }
-
-    const systemMessage = stripImages(
-      messages.filter((m) => m.role === "system")[0]?.content ?? "",
-    );
-    const shouldCacheSystemMessage = !!(
-      this.cacheBehavior?.cacheSystemMessage && systemMessage
-    );
-
-    const msgs = this.convertMessages(messages);
-    const response = await this.fetch(new URL("messages", this.apiBase), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
-      },
-      body: JSON.stringify({
-        ...this.convertArgs(options),
-        messages: msgs,
-        system: shouldCacheSystemMessage
-          ? [
-              {
-                type: "text",
-                text: systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
-          : systemMessage,
-      }),
-      signal,
-    });
-
     if (response.status === 499) {
       return; // Aborted by user
     }
@@ -225,9 +199,9 @@ class Anthropic extends BaseLLM {
     if (!response.ok) {
       const json = await response.json();
       if (json.type === "error") {
-        if (json.error?.type === "overloaded_error") {
+        if (json.error?.type in errorMessages) {
           throw new Error(
-            "The Anthropic API is currently overloaded. Please check their status page: https://status.anthropic.com/#past-incidents",
+            errorMessages[json.error.type as keyof typeof errorMessages],
           );
         }
         throw new Error(json.message);
@@ -237,7 +211,7 @@ class Anthropic extends BaseLLM {
       );
     }
 
-    if (options.stream === false) {
+    if (stream === false) {
       const data = await response.json();
       const cost = data.usage
         ? {
@@ -347,6 +321,55 @@ class Anthropic extends BaseLLM {
       content: "",
       usage,
     };
+  }
+
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    if (!this.apiKey || this.apiKey === "") {
+      throw new Error(
+        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+      );
+    }
+
+    const systemMessage = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    );
+
+    const msgs = this.convertMessages(messages);
+    const response = await this.fetch(new URL("messages", this.apiBase), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "anthropic-version": "2023-06-01",
+        "x-api-key": this.apiKey as string,
+        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
+          : {}),
+      },
+      body: JSON.stringify({
+        ...this.convertArgs(options),
+        messages: msgs,
+        system: shouldCacheSystemMessage
+          ? [
+              {
+                type: "text",
+                text: systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
+          : systemMessage,
+      }),
+      signal,
+    });
+
+    yield* this.handleResponse(response, options.stream);
   }
 }
 

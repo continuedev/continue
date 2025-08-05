@@ -14,6 +14,7 @@ import * as URI from "uri-js";
 import * as vscode from "vscode";
 
 import type {
+  DocumentSymbol,
   IDE,
   Range,
   RangeInFile,
@@ -432,5 +433,92 @@ export async function executeSignatureHelpProvider(
   } catch (e) {
     console.warn(`Error executing ${input.name}:`, e);
     return null;
+  }
+}
+
+type SymbolProviderName = "vscode.executeDocumentSymbolProvider";
+
+interface SymbolInput {
+  uri: vscode.Uri;
+  name: SymbolProviderName;
+}
+
+function symbolInputKey(input: SymbolInput) {
+  return `${input.name}${input.uri.toString()}`;
+}
+
+const MAX_SYMBOL_CACHE_SIZE = 100;
+const symbolCache = new Map<string, DocumentSymbol[]>();
+
+export async function executeSymbolProvider(
+  input: SymbolInput,
+): Promise<DocumentSymbol[]> {
+  const cacheKey = symbolInputKey(input);
+  const cached = symbolCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const symbols = (await vscode.commands.executeCommand(
+      input.name,
+      input.uri,
+      // )) as vscode.DocumentSymbol[] | vscode.SymbolInformation[];
+    )) as vscode.DocumentSymbol[];
+
+    const results: DocumentSymbol[] = [];
+
+    // Handle both possible return types from the symbol provider
+    if (symbols.length > 0) {
+      // if ("location" in symbols[0]) {
+      //   // SymbolInformation type
+      //   results.push(
+      //     ...symbols.map((s: vscode.SymbolInformation) => ({
+      //       filepath: s.location.uri.toString(),
+      //       range: s.location.range,
+      //     })),
+      //   );
+      // } else {
+      // DocumentSymbol type - collect symbols recursively
+      function collectSymbols(
+        symbols: vscode.DocumentSymbol[],
+        uri: vscode.Uri,
+      ): DocumentSymbol[] {
+        const result: DocumentSymbol[] = [];
+        for (const symbol of symbols) {
+          result.push({
+            name: symbol.name,
+            range: symbol.range,
+            selectionRange: symbol.selectionRange,
+            kind: symbol.kind,
+          });
+
+          if (symbol.children && symbol.children.length > 0) {
+            result.push(...collectSymbols(symbol.children, uri));
+          }
+        }
+        return result;
+      }
+
+      results.push(
+        ...collectSymbols(symbols as vscode.DocumentSymbol[], input.uri),
+      );
+      // }
+    }
+
+    // Add to cache
+    if (symbolCache.size >= MAX_SYMBOL_CACHE_SIZE) {
+      // Remove the oldest item from the cache
+      const oldestKey = symbolCache.keys().next().value;
+      if (oldestKey) {
+        symbolCache.delete(oldestKey);
+      }
+    }
+    symbolCache.set(cacheKey, results);
+
+    return results;
+  } catch (e) {
+    console.warn(`Error executing ${input.name}:`, e);
+    return [];
   }
 }

@@ -3,15 +3,13 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/react/24/solid";
-import { ReactNode } from "react";
-import { vscBackground } from "..";
+} from "@heroicons/react/16/solid";
+import { cn } from "../../util/cn";
 
 type AlertTypes = "info" | "success" | "warning" | "error";
 type AlertSize = "sm" | "lg";
 
-export interface AlertProps {
-  children?: ReactNode;
+export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   type?: AlertTypes;
   size?: AlertSize;
 }
@@ -19,55 +17,72 @@ export interface AlertProps {
 type AlertConfig = {
   [key in AlertTypes]: {
     Icon: any;
+    iconColor: string;
+    background: string;
+    border: string;
+    text: string;
   };
 };
 
 const ALERT_CONFIGS: AlertConfig = {
   info: {
     Icon: InformationCircleIcon,
+    background: "bg-background",
+    border: "border-foreground",
+    iconColor: "text-foreground",
+    text: "text-foreground",
   },
   success: {
     Icon: CheckCircleIcon,
+    background: "bg-green-600/20",
+    border: "border-success",
+    iconColor: "text-success",
+    text: "text-foreground",
   },
   warning: {
     Icon: ExclamationTriangleIcon,
+    background: "bg-yellow-600/20",
+    border: "border-warning",
+    iconColor: "text-warning",
+    text: "text-foreground",
   },
   error: {
     Icon: ExclamationCircleIcon,
+    background: "bg-red-600/20",
+    border: "border-error",
+    iconColor: "text-error",
+    text: "text-foreground",
   },
 };
 
 const alertSizes = {
-  sm: "px-2 py-1.5 rounded border-l-2",
-  lg: "px-4 py-3 rounded-lg border-l-4",
+  sm: "px-3 py-1.5 rounded-md border",
+  lg: "px-4 py-3 rounded-md border",
 };
 
 const iconSizes = {
-  sm: "h-3 w-3",
-  lg: "h-5 w-5",
+  sm: "h-4 w-4 mt-1",
+  lg: "h-5 w-5 mt-0.5",
 };
 
 const spacingSizes = {
-  sm: "ml-1.5",
+  sm: "ml-2",
   lg: "ml-3",
 };
 
-function Alert({ children, type = "info", size = "lg" }: AlertProps) {
-  const { Icon } = ALERT_CONFIGS[type];
+function Alert({ type = "info", size = "lg", ...props }: AlertProps) {
+  const { Icon, background, border, text, iconColor } = ALERT_CONFIGS[type];
 
   return (
     <div
-      className={`bg-editor-foreground opacity-70 shadow-none ${alertSizes[size]}`}
+      className={cn(
+        `flex flex-row items-start ${background} border-[0.5px] border-solid ${border} shadow-sm ${alertSizes[size]}`,
+        props.className,
+      )}
     >
-      <div className="flex items-center">
-        <Icon
-          className={`flex-shrink-0 ${iconSizes[size]}`}
-          style={{ color: vscBackground }}
-        />
-
-        <div className={spacingSizes[size]} style={{ color: vscBackground }}>
-          {children}
-        </div>
+      <Icon className={`flex-shrink-0 ${iconColor} ${iconSizes[size]}`} />
+      <div className="flex flex-1 flex-col">
+        <div className={`${spacingSizes[size]} ${text}`}>{props.children}</div>
       </div>
     </div>
   );

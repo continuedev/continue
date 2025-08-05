@@ -11,7 +11,6 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { AddModelForm } from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { EMPTY_CONFIG } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import {
@@ -94,6 +93,7 @@ function ModelSelect() {
 
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const config = useAppSelector((state) => state.config.config);
+  const isConfigLoading = useAppSelector((state) => state.config.loading);
   const ideMessenger = useContext(IdeMessengerContext);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
@@ -135,7 +135,7 @@ function ModelSelect() {
         };
       }),
     );
-  }, [config]);
+  }, [allModels]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -192,7 +192,6 @@ function ModelSelect() {
     );
   }
 
-  const isConfigLoading = config === EMPTY_CONFIG;
   const hasNoModels = allModels?.length === 0;
 
   return (
