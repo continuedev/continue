@@ -1,8 +1,9 @@
+import { logger } from "../util/logger.js";
+
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import { loadPermissionsYaml, yamlConfigToPolicies } from "./permissionsYamlLoader.js";
 import { normalizeToolName } from "./toolNameMapping.js";
 import { ToolPermissionPolicy } from "./types.js";
-import logger from "../util/logger.js";
 
 export interface PermissionSources {
   /** Command line flags - highest precedence */

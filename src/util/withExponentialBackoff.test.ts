@@ -1,5 +1,7 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
+
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
+
 import { withExponentialBackoff } from "./exponentialBackoff.js";
 
 describe("withExponentialBackoff", () => {
@@ -9,7 +11,7 @@ describe("withExponentialBackoff", () => {
   beforeEach(() => {
     context = createMinimalTestContext();
     abortController = new AbortController();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -18,7 +20,7 @@ describe("withExponentialBackoff", () => {
 
   it("should successfully yield all values from generator", async () => {
     const mockData = ["chunk1", "chunk2", "chunk3"];
-    const generatorFactory = jest.fn(async () => {
+    const generatorFactory = vi.fn(async () => {
       return (async function* () {
         for (const chunk of mockData) {
           yield chunk;
@@ -42,7 +44,7 @@ describe("withExponentialBackoff", () => {
 
   it("should retry on retryable errors during generator creation", async () => {
     let callCount = 0;
-    const generatorFactory = jest.fn(async () => {
+    const generatorFactory = vi.fn(async () => {
       callCount++;
       if (callCount === 1) {
         const error = new Error("Connection reset");
@@ -73,7 +75,7 @@ describe("withExponentialBackoff", () => {
   });
 
   it("should not retry on non-retryable errors", async () => {
-    const generatorFactory = jest.fn(async () => {
+    const generatorFactory = vi.fn(async () => {
       const error = new Error("Bad request");
       (error as any).status = 400;
       throw error;
@@ -94,7 +96,7 @@ describe("withExponentialBackoff", () => {
   });
 
   it("should handle abort signal", async () => {
-    const generatorFactory = jest.fn(async () => {
+    const generatorFactory = vi.fn(async () => {
       return (async function* () {
         yield "should-not-yield";
       })();

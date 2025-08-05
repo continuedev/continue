@@ -1,9 +1,10 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
+
 import { createTestServiceContainer } from '../testServiceContainer.js';
 
 describe('TestServiceContainer', () => {
   afterEach(() => {
-    jest.clearAllTimers();
+    vi.clearAllTimers();
   });
   it('should create a container with extended methods', () => {
     const container = createTestServiceContainer();

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
@@ -10,7 +11,7 @@ import { serve } from "./commands/serve.js";
 import sentryService from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
-import logger from "./util/logger.js";
+import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
 
@@ -47,11 +48,16 @@ addCommonOptions(program)
     "--format <format>",
     "Output format for headless mode (json). Only works with -p/--print flag."
   )
+  .option(
+    "--silent",
+    "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag."
+  )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
+    logger.configureHeadlessMode(isHeadless);
 
     // Validate --format flag only works with -p/--print
     if (options.format && !options.print) {
@@ -60,6 +66,15 @@ addCommonOptions(program)
       );
       process.exit(1);
     }
+
+    // Validate --silent flag only works with -p/--print
+    if (options.silent && !options.print) {
+      console.error(
+        "Error: --silent flag can only be used with -p/--print flag"
+      );
+      process.exit(1);
+    }
+
 
     // Validate format value
     if (options.format && options.format !== "json") {

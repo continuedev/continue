@@ -1,3 +1,6 @@
+import chalk from 'chalk';
+import { vi } from 'vitest';
+
 import { 
   configureLogger, 
   isLoggingEnabled, 
@@ -7,26 +10,24 @@ import {
   warn, 
   loggers 
 } from './logging.js';
-import { jest } from '@jest/globals';
-import chalk from 'chalk';
 
 describe('logging utilities', () => {
-  let consoleInfoSpy: jest.SpiedFunction<typeof console.info>;
-  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
-  let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
+  let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Reset logger state
     configureLogger({ headless: false });
     
     // Mock console methods
-    consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('configureLogger', () => {

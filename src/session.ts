@@ -1,9 +1,11 @@
 import { execSync } from "child_process";
 import fs from "fs";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import os from "os";
 import path from "path";
-import logger from "./util/logger.js";
+
+import { ChatCompletionMessageParam } from "openai/resources.mjs";
+
+import { logger } from "./util/logger.js";
 
 /**
  * Get the terminal process ID by walking up the process tree
@@ -54,12 +56,12 @@ function getTerminalProcessId(): string | null {
         const nextPid = parseInt(ppid);
         if (isNaN(nextPid) || nextPid <= 1) break;
         currentPid = nextPid;
-      } catch (innerError) {
+      } catch {
         // Continue to next iteration if this process lookup fails
         break;
       }
     }
-  } catch (error) {
+  } catch {
     // Silently fail - this is a fallback mechanism
   }
 
@@ -93,7 +95,7 @@ function getTtyPath(): string | null {
         return ttyPath.replace("/dev/", "");
       }
     }
-  } catch (error) {
+  } catch {
     // Silently fail - this is a fallback mechanism
   }
 

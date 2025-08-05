@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+
 import { services } from "../services/index.js";
-import Selector, { SelectorOption } from "./Selector.js";
+
+import { Selector, SelectorOption } from "./Selector.js";
 
 interface ModelOption extends SelectorOption {
   index: number;
@@ -70,4 +72,4 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   );
 };
 
-export default ModelSelector;
+export { ModelSelector };

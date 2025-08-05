@@ -1,5 +1,6 @@
 import { render } from "ink-testing-library";
 import React from "react";
+
 import { ColoredDiff } from "./ColoredDiff.js";
 
 describe("ColoredDiff", () => {
@@ -139,8 +140,9 @@ ${lines}
     expect(frame).toContain("text\"");
 
     // Verify we have both old and new text content
-    expect(frame).toContain("old text");
-    expect(frame).toContain("new text");
+    // Word-level diff splits these into separate words
+    expect(frame).toContain("old");
+    expect(frame).toContain("new");
 
     // Verify we don't have corrupted or missing content
     const lineMatches = frame?.match(/return "/g) || [];
@@ -162,9 +164,11 @@ ${lines}
     expect(frame).toContain("const z = 3");
     
     // Both old and new versions should be shown
-    expect(frame).toContain("hello world");
-    expect(frame).toContain("hello universe");
-    expect(frame).toContain("const y = \"hello");
+    // Word-level diff splits these into separate words
+    expect(frame).toContain("hello");
+    expect(frame).toContain("world");
+    expect(frame).toContain("universe");
+    expect(frame).toContain("const y = \"");
     
     // Should have proper line prefixes
     expect(frame).toContain("- ");
@@ -185,10 +189,14 @@ ${lines}
 
     // Check that all unique content appears
     expect(frame).toContain("function calculate()");
-    expect(frame).toContain("const result =");
-    expect(frame).toContain("oldFunction(a, b)");
-    expect(frame).toContain("newFunction(a, b, c)");
-    expect(frame).toContain("return result.");
+    expect(frame).toContain("const result");
+    // Word-level diff splits function calls into parts
+    expect(frame).toContain("oldFunction");
+    expect(frame).toContain("newFunction");
+    expect(frame).toContain("(a, b)");
+    expect(frame).toContain("(a, b, c)");
+    expect(frame).toContain("return");
+    expect(frame).toContain("result");
     expect(frame).toContain("value");
     expect(frame).toContain("data");
 

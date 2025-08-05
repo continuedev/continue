@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 describe('useConfigSelector', () => {
   test('hook updated to use reactive service pattern', () => {

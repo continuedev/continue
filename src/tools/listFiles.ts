@@ -1,10 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
+
+import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
 
 // List files in a directory
 export const listFilesTool: Tool = {
-  name: "list_files",
+  name: "List",
   displayName: "List",
   description: "List files in a directory",
   parameters: {
@@ -15,6 +17,20 @@ export const listFilesTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
+  preprocess: async (args) => {
+    return {
+      args,
+      preview: [
+        {
+          type: "text",
+          content: args.dirpath
+            ? `Will list files in: ${formatToolArgument(args.dirpath)}`
+            : "Will list files in current directory",
+        },
+      ],
+    };
+  },
   run: async (args: { dirpath: string }): Promise<string> => {
     try {
       if (!fs.existsSync(args.dirpath)) {

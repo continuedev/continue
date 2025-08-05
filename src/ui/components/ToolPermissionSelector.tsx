@@ -1,7 +1,10 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
-import { formatToolCall } from "../../tools/formatters.js";
-import { DetailedToolPreview, ToolPreview } from "./ToolPreview.js";
+
+import { formatToolCall } from "../../tools/index.js";
+import { ToolCallPreview } from "../../tools/types.js";
+
+import { ToolPreview } from "./ToolPreview.js";
 
 interface PermissionOption {
   id: string;
@@ -15,6 +18,7 @@ interface ToolPermissionSelectorProps {
   toolName: string;
   toolArgs: any;
   requestId: string;
+  toolCallPreview?: ToolCallPreview[];
   onResponse: (
     requestId: string,
     approved: boolean,
@@ -38,6 +42,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   toolName,
   toolArgs,
   requestId,
+  toolCallPreview,
   onResponse,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -102,11 +107,12 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 
       {/* Show preview of what the tool will do */}
       <Box marginTop={1}>
-        <ToolPreview toolName={toolName} toolArgs={toolArgs} />
+        <ToolPreview
+          toolName={toolName}
+          toolArgs={toolArgs}
+          toolCallPreview={toolCallPreview}
+        />
       </Box>
-
-      {/* Show detailed preview if available */}
-      <DetailedToolPreview toolName={toolName} toolArgs={toolArgs} />
 
       <Box marginTop={1} flexDirection="column">
         <Text color="dim">Would you like to continue?</Text>

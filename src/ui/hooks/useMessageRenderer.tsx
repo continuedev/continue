@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+
 import { MemoizedMessage } from "../components/MemoizedMessage.js";
 import { DisplayMessage } from "../types.js";
 

@@ -6,22 +6,26 @@ import { ToolPermissionPolicy } from "./types.js";
  */
 export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
   // Read-only tools are generally safe to allow
-  { tool: "read_file", permission: "allow" },
-  { tool: "list_files", permission: "allow" },
-  { tool: "search_code", permission: "allow" },
-  { tool: "fetch", permission: "allow" },
+  { tool: "Read", permission: "allow" },
+  { tool: "List", permission: "allow" },
+  { tool: "Search", permission: "allow" },
+  { tool: "Fetch", permission: "allow" },
 
   // Write operations should require confirmation
-  { tool: "write_file", permission: "ask" },
+  { tool: "Write", permission: "ask" },
+  { tool: "Edit", permission: "ask" },
+
+  // Write to a checklist
+  { tool: "Checklist", permission: "allow" },
 
   // Terminal commands should require confirmation by default
-  { tool: "run_terminal_command", permission: "ask" },
+  { tool: "Bash", permission: "ask" },
 
   // Exit tool is generally safe (headless mode only)
-  { tool: "exit", permission: "allow" },
+  { tool: "Exit", permission: "allow" },
 
   // View diff is read-only
-  { tool: "view_diff", permission: "allow" },
+  { tool: "Diff", permission: "allow" },
 
   // Default fallback - ask for any unmatched tools
   { tool: "*", permission: "ask" },

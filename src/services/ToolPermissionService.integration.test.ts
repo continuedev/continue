@@ -1,5 +1,5 @@
-import { jest } from "@jest/globals";
 import { DEFAULT_TOOL_POLICIES } from "../permissions/defaultPolicies.js";
+
 import { ToolPermissionService } from "./ToolPermissionService.js";
 
 describe("ToolPermissionService E2E", () => {
@@ -80,7 +80,9 @@ describe("ToolPermissionService E2E", () => {
     const state = service.getState();
     const permissions = service.getPermissions();
     
-    expect(state.permissions).toBe(permissions);
+    // getState() returns a shallow copy, so nested objects are the same reference
+    expect(state.permissions).toEqual(permissions);
+    expect(state.permissions).toBe(permissions); // Same reference for nested objects
     expect(state.permissions.policies[0]).toEqual({ tool: "test_tool", permission: "exclude" });
   });
 
@@ -95,10 +97,10 @@ describe("ToolPermissionService E2E", () => {
 
     const results = await Promise.all(promises);
     
-    // All should return the same reference
+    // All should return the same value
     const firstResult = results[0];
     results.forEach(result => {
-      expect(result).toBe(firstResult);
+      expect(result).toStrictEqual(firstResult);
     });
   });
 });

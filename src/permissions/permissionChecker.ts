@@ -1,6 +1,7 @@
 import { getServiceSync } from "../services/index.js";
-import { SERVICE_NAMES } from "../services/types.js";
 import type { ToolPermissionServiceState } from "../services/types.js";
+import { SERVICE_NAMES } from "../services/types.js";
+
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import {
   PermissionCheckResult,
@@ -14,8 +15,8 @@ import {
  * Also handles special Bash command patterns like "Bash(ls*)"
  */
 export function matchesToolPattern(
-  toolName: string, 
-  pattern: string, 
+  toolName: string,
+  pattern: string,
   toolArguments?: Record<string, any>
 ): boolean {
   if (pattern === "*") return true;
@@ -24,12 +25,12 @@ export function matchesToolPattern(
   // Handle special Bash command patterns like "Bash(ls*)"
   const bashCommandMatch = pattern.match(/^Bash\((.+)\)$/);
   if (bashCommandMatch) {
-    // Check if this is a bash/terminal tool (either normalized name or display name)
-    const isBashTool = toolName === "run_terminal_command" || toolName === "Bash";
+    // Check if this is a bash/terminal tool
+    const isBashTool = toolName === "Bash";
     if (isBashTool && toolArguments?.command) {
       const commandPattern = bashCommandMatch[1];
       const command = toolArguments.command;
-      
+
       // Handle command patterns with wildcards
       if (commandPattern.includes("*") || commandPattern.includes("?")) {
         // Escape all regex metacharacters except * and ?
@@ -39,7 +40,7 @@ export function matchesToolPattern(
         const regex = new RegExp(`^${regexPattern}$`);
         return regex.test(command);
       }
-      
+
       // Exact command match
       return command === commandPattern;
     }
@@ -75,16 +76,19 @@ export function matchesArguments(
     if (pattern === "*") continue; // Wildcard matches anything
 
     // Handle glob patterns with wildcards (only for string patterns)
-    if (typeof pattern === "string" && (pattern.includes("*") || pattern.includes("?"))) {
+    if (
+      typeof pattern === "string" &&
+      (pattern.includes("*") || pattern.includes("?"))
+    ) {
       // Convert argValue to string for pattern matching
       const stringValue = String(argValue ?? "");
-      
+
       // Escape all regex metacharacters except * and ?
       const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
       // Convert * and ? to their regex equivalents
       const regexPattern = escaped.replace(/\*/g, ".*").replace(/\?/g, ".");
       const regex = new RegExp(`^${regexPattern}$`);
-      
+
       if (!regex.test(stringValue)) {
         return false;
       }
@@ -109,18 +113,19 @@ export function checkToolPermission(
 ): PermissionCheckResult {
   // Get permissions from service if not provided
   let policies = permissions?.policies;
-  
+
   if (!policies) {
     const serviceResult = getServiceSync<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS
     );
-    
+
     // Only use defaults if service is not ready, not registered, or has no value
     // This allows critical runtime errors to propagate properly
-    if (serviceResult.state !== 'ready' || !serviceResult.value) {
+    if (serviceResult.state !== "ready" || !serviceResult.value) {
       policies = DEFAULT_TOOL_POLICIES;
     } else {
-      policies = serviceResult.value.permissions.policies || DEFAULT_TOOL_POLICIES;
+      policies =
+        serviceResult.value.permissions.policies || DEFAULT_TOOL_POLICIES;
     }
   }
 

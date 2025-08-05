@@ -1,15 +1,27 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { ModelService } from './ModelService.js';
 import { AssistantUnrolled, ModelConfig } from '@continuedev/config-yaml';
+import * as openaiAdapters from '@continuedev/openai-adapters';
+import { describe, expect, beforeEach, vi, test } from 'vitest';
+
+// Mock dependencies before imports
+vi.mock('@continuedev/openai-adapters');
+vi.mock('../config.js');
+vi.mock('../auth/workos.js');
+
 import { AuthConfig } from '../auth/workos.js';
+import * as workos from '../auth/workos.js';
+import * as config from '../config.js';
+
+import { ModelService } from './ModelService.js';
 
 describe('ModelService', () => {
-  let modelService: ModelService;
+  let service: ModelService;
   let mockAssistant: AssistantUnrolled;
   let mockAuthConfig: AuthConfig;
+  const mockLlmApi = { complete: vi.fn(), stream: vi.fn() };
 
   beforeEach(() => {
-    modelService = new ModelService();
+    vi.clearAllMocks();
+    service = new ModelService();
     
     mockAssistant = {
       name: 'test-assistant',
@@ -49,11 +61,155 @@ describe('ModelService', () => {
     };
   });
 
-  describe('getAvailableChatModels', () => {
-    it('should return only models with chat role', async () => {
-      await modelService.initialize(mockAssistant, mockAuthConfig);
+  describe('State Management', () => {
+    test('should initialize with default model', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      vi.mocked(workos.getModelName).mockReturnValue(null);
+
+      const state = await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(state).toEqual({
+        llmApi: mockLlmApi,
+        model: mockAssistant.models![0]
+      });
+    });
+
+    test('should initialize with persisted model if valid', async () => {
+      vi.mocked(workos.getModelName).mockReturnValue('Claude 3');
+      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const state = await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(state.model?.name).toBe('Claude 3');
+      expect(state.llmApi).toStrictEqual(mockLlmApi);
+    });
+
+    test('should fall back to default if persisted model not found', async () => {
+      vi.mocked(workos.getModelName).mockReturnValue('Non-existent Model');
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+
+      const state = await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(state.model).toBe(mockAssistant.models![0]);
+    });
+
+    test('should throw error when no chat models available', async () => {
+      mockAssistant.models = [
+        {
+          provider: 'openai',
+          model: 'text-embedding-ada-002',
+          name: 'Ada Embeddings',
+          roles: ['embed'],
+        } as ModelConfig,
+      ];
       
-      const models = modelService.getAvailableChatModels();
+      vi.mocked(config.getLlmApi).mockImplementation(() => {
+        throw new Error('No models with the chat role found in the configured assistant');
+      });
+      
+      await expect(service.initialize(mockAssistant, mockAuthConfig))
+        .rejects.toThrow('No models with the chat role found in the configured assistant');
+    });
+  });
+
+  describe('update()', () => {
+    test('should update model with new assistant config', async () => {
+      // Initialize first
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      // Update with new assistant
+      const newAssistant = {
+        ...mockAssistant,
+        models: [
+          {
+            provider: 'openai',
+            model: 'gpt-4-turbo',
+            name: 'GPT-4 Turbo',
+            apiKey: 'new-key',
+            roles: ['chat'],
+          } as ModelConfig,
+        ],
+      };
+      const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
+      vi.mocked(config.getLlmApi).mockReturnValue([newLlmApi as any, newAssistant.models![0] as ModelConfig]);
+
+      const state = await service.update(newAssistant, mockAuthConfig);
+
+      expect(state).toEqual({
+        llmApi: newLlmApi,
+        model: newAssistant.models![0]
+      });
+    });
+  });
+
+  describe('switchModel()', () => {
+    test('should switch to a different model by index', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+      
+      const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
+      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(newLlmApi as any);
+      
+      const state = await service.switchModel(1);
+      
+      expect(state).toEqual({
+        llmApi: newLlmApi,
+        model: mockAssistant.models![1]
+      });
+      expect(service.getState()).toEqual(state);
+    });
+
+    test('should throw error for invalid model index', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+      
+      await expect(service.switchModel(5)).rejects.toThrow('Invalid model index: 5. Available models: 0-1');
+      await expect(service.switchModel(-1)).rejects.toThrow('Invalid model index: -1. Available models: 0-1');
+    });
+
+    test('should throw error when service not initialized', async () => {
+      await expect(service.switchModel(0)).rejects.toThrow('ModelService not initialized');
+    });
+
+    test('should handle continue-proxy provider specially', async () => {
+      const proxyModel = {
+        provider: 'continue-proxy',
+        name: 'Proxy Model',
+        apiBase: 'https://proxy.continue.dev',
+        apiKeyLocation: 'env.PROXY_KEY',
+        roles: ['chat'],
+      } as ModelConfig;
+      
+      mockAssistant.models = [proxyModel];
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, proxyModel]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      vi.mocked(workos.getAccessToken).mockReturnValue('proxy-token');
+      vi.mocked(workos.getOrganizationId).mockReturnValue('org-123');
+      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(mockLlmApi as any);
+
+      await service.switchModel(0);
+
+      expect(vi.mocked(openaiAdapters.constructLlmApi)).toHaveBeenCalledWith({
+        provider: 'continue-proxy',
+        apiBase: 'https://proxy.continue.dev',
+        apiKey: 'proxy-token',
+        env: {
+          apiKeyLocation: 'env.PROXY_KEY',
+          orgScopeId: 'org-123',
+          proxyUrl: undefined,
+        },
+      });
+    });
+  });
+
+  describe('getAvailableChatModels()', () => {
+    test('should return only models with chat role', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+      
+      const models = service.getAvailableChatModels();
       
       expect(models).toHaveLength(2);
       expect(models[0]).toEqual({
@@ -67,59 +223,121 @@ describe('ModelService', () => {
         index: 1,
       });
     });
+  });
 
-    it('should throw error when no chat models available during initialization', async () => {
-      mockAssistant.models = [
-        {
-          provider: 'openai',
-          model: 'text-embedding-ada-002',
-          name: 'Ada Embeddings',
-          roles: ['embed'],
-        } as ModelConfig,
-      ];
+  describe('getCurrentModelIndex()', () => {
+    test('should return correct index of current model', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
       
-      await expect(modelService.initialize(mockAssistant, mockAuthConfig))
-        .rejects.toThrow('No models with the chat role found in the configured assistant');
+      expect(service.getCurrentModelIndex()).toBe(0);
+      
+      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(mockLlmApi as any);
+      await service.switchModel(1);
+      expect(service.getCurrentModelIndex()).toBe(1);
+    });
+
+    test('should return -1 when no model is set', () => {
+      expect(service.getCurrentModelIndex()).toBe(-1);
     });
   });
 
-  describe('switchModel', () => {
-    it('should switch to a different model by index', async () => {
-      await modelService.initialize(mockAssistant, mockAuthConfig);
-      
-      const initialModel = modelService.getModelInfo();
-      expect(initialModel?.name).toBe('GPT-4');
-      
-      await modelService.switchModel(1);
-      
-      const newModel = modelService.getModelInfo();
-      expect(newModel?.name).toBe('Claude 3');
+  describe('getModelIndexByName()', () => {
+    test('should find model by name', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(service.getModelIndexByName('GPT-4')).toBe(0);
+      expect(service.getModelIndexByName('Claude 3')).toBe(1);
+      expect(service.getModelIndexByName('Non-existent')).toBe(-1);
     });
 
-    it('should throw error for invalid model index', async () => {
-      await modelService.initialize(mockAssistant, mockAuthConfig);
-      
-      await expect(modelService.switchModel(5)).rejects.toThrow('Invalid model index: 5');
-      await expect(modelService.switchModel(-1)).rejects.toThrow('Invalid model index: -1');
-    });
+    test('should find model by name and provider', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
 
-    it('should throw error when service not initialized', async () => {
-      await expect(modelService.switchModel(0)).rejects.toThrow('ModelService not initialized');
+      expect(service.getModelIndexByName('GPT-4', 'openai')).toBe(0);
+      expect(service.getModelIndexByName('GPT-4', 'anthropic')).toBe(-1);
     });
   });
 
-  describe('getCurrentModelIndex', () => {
-    it('should return correct index of current model', async () => {
-      await modelService.initialize(mockAssistant, mockAuthConfig);
-      
-      expect(modelService.getCurrentModelIndex()).toBe(0);
-      
-      await modelService.switchModel(1);
-      expect(modelService.getCurrentModelIndex()).toBe(1);
+  describe('getModelInfo()', () => {
+    test('should return current model info', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(service.getModelInfo()).toEqual({
+        provider: 'openai',
+        name: 'GPT-4'
+      });
     });
 
-    it('should return -1 when no model is set', () => {
-      expect(modelService.getCurrentModelIndex()).toBe(-1);
+    test('should return null when no model set', () => {
+      expect(service.getModelInfo()).toBeNull();
+    });
+  });
+
+  describe('isReady()', () => {
+    test('should return false when not initialized', () => {
+      expect(service.isReady()).toBe(false);
+    });
+
+    test('should return true when initialized with model and llmApi', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(service.isReady()).toBe(true);
+    });
+
+    test('should return false if llmApi is null', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([null as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      expect(service.isReady()).toBe(false);
+    });
+  });
+
+  describe('getDependencies()', () => {
+    test('should declare auth and config dependencies', () => {
+      expect(service.getDependencies()).toEqual(['auth', 'config']);
+    });
+  });
+
+  describe('Event Emission', () => {
+    test('should emit stateChanged on model switch', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      const listener = vi.fn();
+      service.on('stateChanged', listener);
+
+      const newLlmApi = { complete: vi.fn(), stream: vi.fn() };
+      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(newLlmApi as any);
+      await service.switchModel(1);
+
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({ 
+          model: mockAssistant.models![1],
+          llmApi: newLlmApi 
+        }),
+        expect.objectContaining({ 
+          model: mockAssistant.models![0],
+          llmApi: mockLlmApi 
+        })
+      );
+    });
+
+    test('should emit error on switch failure', async () => {
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, mockAssistant.models![0] as ModelConfig]);
+      await service.initialize(mockAssistant, mockAuthConfig);
+
+      const errorListener = vi.fn();
+      service.on('error', errorListener);
+
+      vi.mocked(openaiAdapters.constructLlmApi).mockReturnValue(null as any);
+      
+      await expect(service.switchModel(1)).rejects.toThrow('Failed to initialize LLM');
+      expect(errorListener).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 });

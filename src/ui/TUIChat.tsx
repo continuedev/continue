@@ -1,6 +1,9 @@
-import { Box, Text, useApp, useStdout } from "ink";
+import { Box, Text } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
+
 import { useServices } from "../hooks/useService.js";
+import type { PermissionMode } from "../permissions/types.js";
+import { modeService } from "../services/ModeService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -8,25 +11,27 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
+import { getGitRemoteUrl, isGitRepo } from "../util/git.js";
+
+import { ModeIndicator } from "./components/ModeIndicator.js";
 import { ToolPermissionSelector } from "./components/ToolPermissionSelector.js";
-import ConfigSelector from "./ConfigSelector.js";
+import { ConfigSelector } from "./ConfigSelector.js";
 import { startFileIndexing } from "./FileSearchUI.js";
-import FreeTrialStatus from "./FreeTrialStatus.js";
-import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
+import { FreeTrialStatus } from "./FreeTrialStatus.js";
+import { FreeTrialTransitionUI } from "./FreeTrialTransitionUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
-import IntroMessage from "./IntroMessage.js";
-import LoadingAnimation from "./LoadingAnimation.js";
-import ModelSelector from "./ModelSelector.js";
-import OrganizationSelector from "./OrganizationSelector.js";
-import Timer from "./Timer.js";
-import UpdateNotification from "./UpdateNotification.js";
-import UserInput from "./UserInput.js";
-import { getGitRemoteUrl, getRepoUrl, isGitRepo } from "../util/git.js";
-import useTerminalSize from "./hooks/useTerminalSize.js";
+import { IntroMessage } from "./IntroMessage.js";
+import { LoadingAnimation } from "./LoadingAnimation.js";
+import { ModelSelector } from "./ModelSelector.js";
+import { OrganizationSelector } from "./OrganizationSelector.js";
+import { Timer } from "./Timer.js";
+import { UpdateNotification } from "./UpdateNotification.js";
+import { UserInput } from "./UserInput.js";
+
 
 interface TUIChatProps {
   // Remote mode props
@@ -74,8 +79,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Get all services reactively - only in normal mode
   const {
     services,
-    loading: servicesLoading,
-    error: servicesError,
     allReady: allServicesReady,
   } = useServices<{
     auth: AuthServiceState;
@@ -90,7 +93,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     text: string;
     resolve: (value: string) => void;
   } | null>(null);
-  const [loginToken, setLoginToken] = useState("");
 
   // State for free trial transition
   const [isShowingFreeTrialTransition, setIsShowingFreeTrialTransition] =
@@ -98,6 +100,23 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   // State for intro message display
   const [showIntroMessage, setShowIntroMessage] = useState(false);
+
+  // State for current mode (for hiding cwd in plan/auto modes)
+  const [currentMode, setCurrentMode] = useState<PermissionMode>(
+    modeService.getCurrentMode()
+  );
+
+  // Listen for mode changes to update UI
+  useEffect(() => {
+    const handleModeChange = (newMode: PermissionMode) => {
+      setCurrentMode(newMode);
+    };
+
+    modeService.on('modeChanged', handleModeChange);
+    return () => {
+      modeService.off('modeChanged', handleModeChange);
+    };
+  }, []);
 
   // Start file indexing as soon as the component mounts
   useEffect(() => {
@@ -140,7 +159,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Handle login token submission
   const handleLoginTokenSubmit = (token: string) => {
     if (loginPrompt) {
-      setLoginToken("");
       loginPrompt.resolve(token);
       setLoginPrompt(null);
     }
@@ -161,7 +179,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isWaitingForResponse,
     responseStartTime,
     inputMode,
-    attachedFiles,
     activePermissionRequest,
     handleUserMessage,
     handleInterrupt,
@@ -194,7 +211,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     showOrganizationSelector,
   } = useOrganizationSelector({
     configPath,
-    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {},
+    onAssistantChange: () => {},
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
@@ -239,6 +256,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const handleFreeTrialFullReload = () => {
     setIsShowingFreeTrialTransition(false);
     handleReload();
+  };
+
+  const handleFreeTrialShowConfigSelector = () => {
+    setIsShowingFreeTrialTransition(false);
+    showConfigSelectorUI();
   };
 
   // Determine if input should be disabled
@@ -349,6 +371,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             onComplete={handleFreeTrialTransitionComplete}
             onSwitchToLocalConfig={handleFreeTrialSwitchToLocal}
             onFullReload={handleFreeTrialFullReload}
+            onShowConfigSelector={handleFreeTrialShowConfigSelector}
           />
         )}
 
@@ -361,6 +384,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 toolName={activePermissionRequest.toolName}
                 toolArgs={activePermissionRequest.toolArgs}
                 requestId={activePermissionRequest.requestId}
+                toolCallPreview={activePermissionRequest.toolCallPreview}
                 onResponse={handleToolPermissionResponse}
               />
             ) : (
@@ -384,10 +408,17 @@ const TUIChat: React.FC<TUIChatProps> = ({
           justifyContent="space-between"
           alignItems="center"
         >
-          <Box>
-            <Text color="dim" wrap="truncate-start">
-              {repoURlText}
-            </Text>
+          <Box flexDirection="row" alignItems="center">
+            {/* Only show cwd in normal mode to save space in plan/auto modes */}
+            {currentMode === 'normal' && (
+              <>
+                <Text color="dim" wrap="truncate-start">
+                  {repoURlText}
+                </Text>
+                <Text> </Text>
+              </>
+            )}
+            <ModeIndicator />
           </Box>
           <Box>
             {!isRemoteMode && services.model?.model && (
@@ -407,4 +438,4 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 };
 
-export default TUIChat;
+export { TUIChat };

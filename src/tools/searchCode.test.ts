@@ -1,4 +1,3 @@
-import { searchCodeTool } from "./searchCode.js";
 
 // Since we want to test just the interface and not the internals,
 // let's create a simplified version of the run function to test the truncation logic

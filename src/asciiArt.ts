@@ -1,4 +1,5 @@
 import chalk from "chalk";
+
 import { getVersion } from "./version.js";
 
 const b = chalk.bold.magenta;

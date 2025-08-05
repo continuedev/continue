@@ -1,4 +1,5 @@
 import TurndownService from "turndown";
+
 import { Tool } from "./types.js";
 
 const turndownService = new TurndownService({
@@ -30,7 +31,7 @@ turndownService.addRule("pre", {
 });
 
 export const fetchTool: Tool = {
-  name: "fetch",
+  name: "Fetch",
   displayName: "Fetch",
   description: "Fetches content from a URL and converts it to markdown format",
   parameters: {
@@ -46,6 +47,18 @@ export const fetchTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
+  preprocess: async (args) => {
+    return {
+      preview: [
+        {
+          type: "text",
+          content: `Will fetch: ${args.url}`,
+        },
+      ],
+      args,
+    };
+  },
   run: async (args: { url: string; timeout?: number }): Promise<string> => {
     const { url, timeout = 10000 } = args;
 

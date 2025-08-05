@@ -1,6 +1,6 @@
 import fs from 'fs';
-import path from 'path';
 import os from 'os';
+import path from 'path';
 
 const HISTORY_FILE = path.join(os.homedir(), '.continue', 'input_history.json');
 const MAX_HISTORY_SIZE = 1000;
@@ -84,7 +84,7 @@ export class InputHistory {
     return this.history[this.currentIndex]?.text || null;
   }
 
-  navigateDown(currentInput: string): string | null {
+  navigateDown(): string | null {
     if (this.currentIndex === -1) return null;
 
     if (this.currentIndex > 0) {
