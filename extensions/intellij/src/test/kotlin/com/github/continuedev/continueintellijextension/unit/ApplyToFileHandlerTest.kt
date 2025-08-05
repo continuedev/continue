@@ -12,13 +12,12 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import io.mockk.*
+import junit.framework.TestCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
 @ExperimentalCoroutinesApi
-class ApplyToFileHandlerTest {
+class ApplyToFileHandlerTest : TestCase() {
     // Mock all dependencies
     private val mockProject = mockk<Project>(relaxed = true)
     private val mockContinuePluginService = mockk<ContinuePluginService>(relaxed = true)
@@ -39,8 +38,7 @@ class ApplyToFileHandlerTest {
         "tool-call-123"
     )
 
-    @BeforeEach
-    fun setUp() {
+    override fun setUp() {
         // Common setup
         every { mockEditorUtils.editor } returns mockEditor
         every { mockContinuePluginService.coreMessenger } returns mockCoreMessenger
@@ -56,8 +54,7 @@ class ApplyToFileHandlerTest {
         )
     }
 
-    @Test
-    fun `should insert text directly when document is empty`() = runTest {
+    fun `test should insert text directly when document is empty`() = runTest {
         // Given
         every { mockEditorUtils.isDocumentEmpty() } returns true
 

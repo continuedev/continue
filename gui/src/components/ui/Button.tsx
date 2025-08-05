@@ -11,7 +11,7 @@ type ButtonProps = React.ComponentProps<"button"> & {
 
 const buttonVariants = {
   primary:
-    "border-none text-foreground bg-primary hover:enabled:brightness-125",
+    "border-none text-primary-foreground bg-primary hover:enabled:brightness-125",
   secondary:
     "border-none text-foreground bg-border hover:enabled:brightness-125",
   outline:

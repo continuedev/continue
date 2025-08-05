@@ -6,6 +6,7 @@ import { Tool } from "core";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
+import { Tooltip } from "react-tooltip";
 import { useAppSelector } from "../../../../../redux/hooks";
 import {
   addTool,
@@ -55,6 +56,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
   if (!policy) {
     return null;
   }
+  const disabledTooltipId = `disabled-note-${props.tool.function.name}`;
 
   return (
     <div
@@ -118,6 +120,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         <div
           className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:text-list-active-foreground cursor-pointer hover:brightness-125"}`}
           data-testid={`tool-policy-item-${props.tool.function.name}`}
+          data-tooltip-id={disabled ? disabledTooltipId : undefined}
           onClick={
             disabled
               ? undefined
@@ -152,6 +155,13 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
             </>
           )}
         </div>
+        <Tooltip id={disabledTooltipId}>
+          {mode === "chat"
+            ? "Tool disabled in chat mode"
+            : !props.isGroupEnabled
+              ? "Group is turned off"
+              : "Tool disabled in plan mode"}
+        </Tooltip>
       </div>
       <div
         className={`flex flex-col overflow-hidden ${isExpanded ? "h-min" : "h-0 opacity-0"} gap-x-1 gap-y-2 pl-2 transition-all`}

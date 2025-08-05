@@ -43,6 +43,7 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
@@ -447,6 +448,7 @@ export function Chat() {
               )}
             </div>
           </div>
+          <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
           {history.length === 0 && (
             <EmptyChatBody showOnboardingCard={onboardingCard.show} />

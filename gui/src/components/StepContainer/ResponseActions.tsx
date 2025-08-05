@@ -5,7 +5,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { renderChatMessage } from "core/util/messageContent";
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -41,7 +41,7 @@ export default function ResponseActions({
   );
   const isPruned = useAppSelector((state) => state.session.isPruned);
   const ruleGenerationSupported = useMemo(() => {
-    return selectedModel && modelSupportsTools(selectedModel);
+    return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
 
   const percent = Math.round((contextPercentage ?? 0) * 100);

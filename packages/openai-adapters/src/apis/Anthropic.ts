@@ -191,18 +191,19 @@ export class AnthropicApi implements BaseLlmApi {
     }
 
     const completion = (await response.json()) as any;
+
+    const usage: Record<string, number> | undefined = completion.usage;
     return {
       id: completion.id,
       object: "chat.completion",
       model: body.model,
       created: Date.now(),
       usage: {
-        total_tokens:
-          completion.usage.input_tokens + completion.usage.output_tokens,
-        completion_tokens: completion.usage.output_tokens,
-        prompt_tokens: completion.usage.input_tokens,
+        total_tokens: (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
+        completion_tokens: usage?.output_tokens ?? 0,
+        prompt_tokens: usage?.input_tokens ?? 0,
         prompt_tokens_details: {
-          cached_tokens: completion.usage.cache_read_input_tokens || 0,
+          cached_tokens: usage?.cache_read_input_tokens ?? 0,
         },
       },
       choices: [
@@ -240,13 +241,13 @@ export class AnthropicApi implements BaseLlmApi {
           }
           break;
         case "message_start":
-          usage.prompt_tokens = value.message.usage.input_tokens;
+          usage.prompt_tokens = value.message.usage?.input_tokens ?? 0;
           usage.prompt_tokens_details = {
-            cached_tokens: value.message.usage.cache_read_input_tokens || 0,
+            cached_tokens: value.message.usage?.cache_read_input_tokens ?? 0,
           };
           break;
         case "message_delta":
-          usage.completion_tokens = value.usage.output_tokens;
+          usage.completion_tokens = value.usage?.output_tokens ?? 0;
           break;
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
