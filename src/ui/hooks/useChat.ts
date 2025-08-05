@@ -477,17 +477,11 @@ export function useChat({
       return;
     }
 
-    // Local mode: process message normally
-    const newUserMessage: ChatCompletionMessageParam = {
-      role: "user",
-      content: messageContent,
-    };
-    const newHistory = [...chatHistory, newUserMessage];
-    setChatHistory(newHistory);
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
-
-    // Check if auto-compacting is needed (always enabled)
-    if (model && shouldAutoCompact(newHistory, model)) {
+    // Check if auto-compacting is needed BEFORE adding user message
+    let currentCompactionIndex = compactionIndex;
+    let currentChatHistory = chatHistory;
+    
+    if (model && shouldAutoCompact(chatHistory, model)) {
       logger.info("Auto-compacting triggered in TUI mode");
 
       setMessages((prev) => [
@@ -500,11 +494,14 @@ export function useChat({
       ]);
 
       try {
-        const result = await compactChatHistory(newHistory, model, llmApi!);
+        // Compact the history WITHOUT the current user message
+        const result = await compactChatHistory(chatHistory, model, llmApi!);
 
-        // Replace chat history with compacted version
-        newHistory.length = 0;
-        newHistory.push(...result.compactedHistory);
+        // Update local variables immediately
+        currentChatHistory = result.compactedHistory;
+        currentCompactionIndex = result.compactionIndex;
+        
+        // Update state
         setChatHistory(result.compactedHistory);
         setCompactionIndex(result.compactionIndex);
 
@@ -535,6 +532,15 @@ export function useChat({
         // Continue without compaction on error
       }
     }
+
+    // NOW add user message to history and UI
+    const newUserMessage: ChatCompletionMessageParam = {
+      role: "user",
+      content: messageContent,
+    };
+    const newHistory = [...currentChatHistory, newUserMessage];
+    setChatHistory(newHistory);
+    setMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Start streaming response
     const controller = new AbortController();
@@ -648,9 +654,10 @@ export function useChat({
       // streamChatResponse modifies the history array in place, so we need to handle this carefully
 
       if (model && llmApi) {
-        if (compactionIndex !== null && compactionIndex !== undefined) {
+        // Use currentCompactionIndex which has the updated value after potential auto-compaction
+        if (currentCompactionIndex !== null && currentCompactionIndex !== undefined) {
           // When using compaction, we need to send a subset but capture the full history
-          const historyForLLM = getHistoryForLLM(newHistory, compactionIndex);
+          const historyForLLM = getHistoryForLLM(newHistory, currentCompactionIndex);
           const originalLength = historyForLLM.length;
 
           await streamChatResponse(

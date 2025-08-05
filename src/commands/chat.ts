@@ -168,10 +168,7 @@ async function processMessage(
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
 
-  // Add user message to history
-  chatHistory.push({ role: "user", content: userInput });
-
-  // Check if auto-compacting is needed (always enabled)
+  // Check if auto-compacting is needed BEFORE adding user message
   if (shouldAutoCompact(chatHistory, model)) {
     logger.info("Auto-compacting triggered due to context limit");
 
@@ -196,6 +193,7 @@ async function processMessage(
     }
 
     try {
+      // Compact the history WITHOUT the current user message
       const result = await compactChatHistory(chatHistory, model, llmApi);
 
       // Replace chat history with compacted version
@@ -240,6 +238,9 @@ async function processMessage(
       // Continue without compaction on error
     }
   }
+
+  // Add user message to history AFTER potential compaction
+  chatHistory.push({ role: "user", content: userInput });
 
   // Get AI response with potential tool usage
   if (!isHeadless) {
