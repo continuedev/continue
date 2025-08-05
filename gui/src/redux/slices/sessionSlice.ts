@@ -784,6 +784,9 @@ export const sessionSlice = createSlice({
         applyState.status = payload.status ?? applyState.status;
         applyState.numDiffs = payload.numDiffs ?? applyState.numDiffs;
         applyState.filepath = payload.filepath ?? applyState.filepath;
+        applyState.fileContent = payload.fileContent ?? applyState.fileContent;
+        applyState.originalFileContent =
+          payload.originalFileContent ?? applyState.originalFileContent;
       }
 
       if (payload.status === "done") {

@@ -16,6 +16,19 @@ function getDecodedOutput(data: Buffer): string {
   } else {
     return data.toString();
   }
+} // Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
+function getShellCommand(command: string): { shell: string; args: string[] } {
+  if (process.platform === "win32") {
+    // Windows: Use PowerShell
+    return {
+      shell: "powershell.exe",
+      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+    };
+  } else {
+    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+    const userShell = process.env.SHELL || "/bin/bash";
+    return { shell: userShell, args: ["-l", "-c", command] };
+  }
 }
 
 import { fileURLToPath } from "node:url";
@@ -24,6 +37,7 @@ import {
   isProcessBackgrounded,
   removeBackgroundedProcess,
 } from "../../util/processTerminalBackgroundStates";
+import { getBooleanArg, getStringArg } from "../parseArgs";
 
 const asyncExec = util.promisify(childProcess.exec);
 
@@ -50,8 +64,11 @@ const ENABLED_FOR_REMOTES = [
 ];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
+  const command = getStringArg(args, "command");
   // Default to waiting for completion if not specified
-  const waitForCompletion = args.waitForCompletion !== false;
+  const waitForCompletion =
+    getBooleanArg(args, "waitForCompletion", false) ?? true;
+
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
@@ -84,9 +101,9 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               }
 
               // Use spawn with color environment
-              const childProc = childProcess.spawn(args.command, {
+              const { shell, args } = getShellCommand(command);
+              const childProc = childProcess.spawn(shell, args, {
                 cwd,
-                shell: true,
                 env: getColorEnv(), // Add enhanced environment for colors
               });
 
@@ -228,11 +245,49 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
       if (waitForCompletion) {
         // Standard execution, waiting for completion
         try {
-          // Use color environment for exec as well
-          const output = await asyncExec(args.command, {
-            cwd,
-            env: getColorEnv(),
-          });
+          // Use spawn approach for consistency with streaming version
+          const { shell: nonStreamingShell, args: nonStreamingArgs } =
+            getShellCommand(command);
+          const output = await new Promise<{ stdout: string; stderr: string }>(
+            (resolve, reject) => {
+              const childProc = childProcess.spawn(
+                nonStreamingShell,
+                nonStreamingArgs,
+                {
+                  cwd,
+                  env: getColorEnv(),
+                },
+              );
+
+              let stdout = "";
+              let stderr = "";
+
+              childProc.stdout?.on("data", (data) => {
+                stdout += getDecodedOutput(data);
+              });
+
+              childProc.stderr?.on("data", (data) => {
+                stderr += getDecodedOutput(data);
+              });
+
+              childProc.on("close", (code) => {
+                if (code === 0) {
+                  resolve({ stdout, stderr });
+                } else {
+                  const error = new Error(
+                    `Command failed with exit code ${code}`,
+                  );
+                  (error as any).stderr = stderr;
+                  reject(error);
+                }
+              });
+
+              childProc.on("error", (error) => {
+                reject(error);
+              });
+            },
+          );
+
           const status = "Command completed";
           return [
             {
@@ -258,9 +313,10 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // but don't attach any listeners other than error
         try {
           // Use spawn with color environment
-          const childProc = childProcess.spawn(args.command, {
+          const { shell: detachedShell, args: detachedArgs } =
+            getShellCommand(command);
+          const childProc = childProcess.spawn(detachedShell, detachedArgs, {
             cwd,
-            shell: true,
             env: getColorEnv(), // Add color environment
             // Detach the process so it's not tied to the parent
             detached: true,
@@ -309,7 +365,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
   // For remote environments, just run the command
   // Note: waitForCompletion is not supported in remote environments yet
-  await extras.ide.runCommand(args.command);
+  await extras.ide.runCommand(command);
   return [
     {
       name: "Terminal",

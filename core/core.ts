@@ -204,24 +204,6 @@ export class Core {
     dataLogger.ideInfoPromise = ideInfoPromise;
     dataLogger.ideSettingsPromise = ideSettingsPromise;
 
-    void ideSettingsPromise.then((ideSettings) => {
-      // Index on initialization
-      void this.ide.getWorkspaceDirs().then(async (dirs) => {
-        // Respect pauseCodebaseIndexOnStart user settings
-        if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.codeBaseIndexer.paused = true;
-          void this.messenger.request("indexProgress", {
-            progress: 0,
-            desc: "Initial Indexing Skipped",
-            status: "paused",
-          });
-          return;
-        }
-
-        void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
-      });
-    });
-
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
@@ -349,15 +331,9 @@ export class Core {
     });
 
     on("config/openProfile", async (msg) => {
-      await this.configHandler.openConfigProfile(msg.data.profileId);
-    });
-
-    on("config/reload", async (msg) => {
-      // User force reloading will retrigger colocated rules
-      const codebaseRulesCache = CodebaseRulesCache.getInstance();
-      await codebaseRulesCache.refresh(this.ide);
-      void this.configHandler.reloadConfig(
-        "Force reloaded (config/reload message)",
+      await this.configHandler.openConfigProfile(
+        msg.data.profileId,
+        msg.data?.element,
       );
     });
 
@@ -366,8 +342,12 @@ export class Core {
     });
 
     on("config/refreshProfiles", async (msg) => {
-      const { selectOrgId, selectProfileId } = msg.data ?? {};
-      await this.configHandler.refreshAll();
+      // User force reloading will retrigger colocated rules
+      const codebaseRulesCache = CodebaseRulesCache.getInstance();
+      await codebaseRulesCache.refresh(this.ide);
+
+      const { selectOrgId, selectProfileId, reason } = msg.data ?? {};
+      await this.configHandler.refreshAll(reason);
       if (selectOrgId) {
         await this.configHandler.setSelectedOrgId(selectOrgId, selectProfileId);
       } else if (selectProfileId) {
@@ -397,11 +377,18 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      let url = `${env.APP_URL}${msg.data.path}`;
+      const urlPath = msg.data.path.startsWith("/")
+        ? msg.data.path.slice(1)
+        : msg.data.path;
+      let url = `${env.APP_URL}${urlPath}`;
       if (msg.data.orgSlug) {
         url += `?org=${msg.data.orgSlug}`;
       }
       await this.messenger.request("openUrl", url);
+    });
+
+    on("controlPlane/getEnvironment", async (msg) => {
+      return await getControlPlaneEnv(this.ide.getIdeSettings());
     });
 
     on("controlPlane/getFreeTrialStatus", async (msg) => {
@@ -593,6 +580,7 @@ export class Core {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
         msg.data,
         undefined,
+        { withChain: false },
       );
       return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
     });
@@ -731,7 +719,7 @@ export class Core {
           }
         }
         if (localAssistantCreated) {
-          await this.configHandler.refreshAll();
+          await this.configHandler.refreshAll("Local assistant file created");
         }
       }
     });
@@ -750,6 +738,9 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
+      console.log("deleteChain called from files/closed");
+      await NextEditProvider.getInstance().deleteChain();
+
       try {
         const fileUris = await this.ide.getOpenFiles();
         if (fileUris) {

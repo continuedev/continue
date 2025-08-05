@@ -65,6 +65,7 @@
                 "pages": [
                   "features/agent/quick-start",
                   "features/agent/how-it-works",
+                  "features/agent/plan-mode",
                   "features/agent/model-setup",
                   "features/agent/how-to-customize",
                   "features/agent/context-selection"
@@ -167,7 +168,8 @@
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
                   "customize/deep-dives/vscode-actions",
-                  "customize/deep-dives/mcp"
+                  "customize/deep-dives/mcp",
+                  "customize/deep-dives/model-capabilities"
                 ]
               },
               {
@@ -238,6 +240,9 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
+              "guides/understanding-assistants",
+              "guides/cli",
+              "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/llama3.1",
               "guides/set-up-codestral",
@@ -987,6 +992,14 @@
     {
       "source": "/agent/context-selection",
       "destination": "/features/agent/context-selection"
+    },
+    {
+      "source": "/customization/overview#codebase-context",
+      "destination": "/customize/context/codebase"
+    },
+    {
+      "source": "/customization/overview#documentation-context",
+      "destination": "/customize/context/documentation"
     }
   ]
 }

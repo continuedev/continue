@@ -143,7 +143,10 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 config.yaml
 
 ```
-context:  - provider: open    params:      onlyPinned: true
+context:
+  - provider: open
+    params:
+      onlyPinned: true
 ```
 
 config.json
@@ -164,7 +167,10 @@ Optionally, set `n` to limit the number of results returned (default 6).
 config.yaml
 
 ```
-context:  - provider: web    params:      n: 5
+context:
+  - provider: web
+    params:
+      n: 5
 ```
 
 config.json
@@ -183,7 +189,8 @@ Reference the most relevant snippets from your codebase.
 config.yaml
 
 ```
-context:  - provider: codebase
+context:
+  - provider: codebase
 ```
 
 config.json
@@ -223,7 +230,10 @@ Reference the results of codebase search, just like the results you would get fr
 config.yaml
 
 ```
-context:  - provider: search    params:        maxResults: 100 # optional, defaults to 200
+context:
+  - provider: search
+    params:
+      maxResults: 100 # optional, defaults to 200
 ```
 
 config.json
@@ -244,7 +254,8 @@ Reference the markdown converted contents of a given URL.
 config.yaml
 
 ```
-context:  - provider: url
+context:
+  - provider: url
 ```
 
 config.json
@@ -263,7 +274,8 @@ Reference recent clipboard items
 config.yaml
 
 ```
-context:  - provider: clipboard
+context:
+  - provider: clipboard
 ```
 
 config.json
@@ -282,7 +294,8 @@ Reference the structure of your current workspace.
 config.yaml
 
 ```
-context:  - provider: tree
+context:
+  - provider: tree
 ```
 
 config.json
@@ -301,7 +314,8 @@ Get Problems from the current file.
 config.yaml
 
 ```
-context:  - provider: problems
+context:
+  - provider: problems
 ```
 
 config.json
@@ -320,7 +334,10 @@ Reference the contents of the local variables in the debugger. Currently only av
 config.yaml
 
 ```
-context:  - provider: debugger    params:      stackDepth: 3
+context:
+  - provider: debugger
+    params:
+      stackDepth: 3
 ```
 
 config.json
@@ -343,7 +360,10 @@ Reference the outline of your codebase. By default, signatures are included alon
 config.yaml
 
 ```
-context:  - provider: repo-map    params:      includeSignatures: false # default true
+context:
+  - provider: repo-map
+    params:
+      includeSignatures: false # default true
 ```
 
 config.json
@@ -368,7 +388,8 @@ Reference the architecture and platform of your current operating system.
 config.yaml
 
 ```
-context:  - provider: os
+context:
+  - provider: os
 ```
 
 config.json
@@ -387,7 +408,13 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 config.yaml
 
 ```
-mcpServers:  - name: My MCP Server    command: uvx    args:      - mcp-server-sqlite      - --db-path      - /Users/NAME/test.db
+mcpServers:
+  - name: My MCP Server
+    command: uvx
+    args:
+      - mcp-server-sqlite
+      - --db-path
+      - /Users/NAME/test.db
 ```
 
 config.json
@@ -420,7 +447,13 @@ Reference the conversation in a GitHub issue.
 config.yaml
 
 ```
-context:  - provider: issue    params:      repos:        - owner: continuedev          repo: continue      githubToken: ghp_xxx
+context:
+  - provider: issue
+    params:
+      repos:
+        - owner: continuedev
+          repo: continue
+      githubToken: ghp_xxx
 ```
 
 config.json
@@ -451,7 +484,29 @@ Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
 config.yaml
 
 ```
-context:  - provider: database    params:      connections:        - name: examplePostgres          connection_type: postgres          connection:            user: username            host: localhost            database: exampleDB            password: yourPassword            port: 5432        - name: exampleMssql           connection_type: mssql          connection:            user: username            server: localhost            database: exampleDB            password: yourPassword        - name: exampleSqlite          connection_type: sqlite          connection:            filename: /path/to/your/sqlite/database.db
+context:
+  - provider: database
+    params:
+      connections:
+        - name: examplePostgres
+          connection_type: postgres
+          connection:
+            user: username
+            host: localhost
+            database: exampleDB
+            password: yourPassword
+            port: 5432
+        - name: exampleMssql
+          connection_type: mssql
+          connection:
+            user: username
+            server: localhost
+            database: exampleDB
+            password: yourPassword
+        - name: exampleSqlite
+          connection_type: sqlite
+          connection:
+            filename: /path/to/your/sqlite/database.db
 ```
 
 config.json
@@ -504,46 +559,6 @@ Available connection types:
 - `mysql`
 - `sqlite`
 
-### `@Postgres`
-
-Reference the schema of a table, and some sample rows
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:  - provider: postgres    params:      host: localhost      port: 5436      user: myuser      password: catsarecool      database: animals      schema: public      sampleRows: 3
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "postgres",
-      "params": {
-        "host": "localhost",
-        "port": 5436,
-        "user": "myuser",
-        "password": "catsarecool",
-        "database": "animals",
-        "schema": "public",
-        "sampleRows": 3
-      }
-    }
-  ]
-}
-```
-
-The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
-
-By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
-
-[Here is a short demo.](https://github.com/continuedev/continue/pull/859)
-
 ### `@Google`
 
 Reference the results of a Google search.
@@ -554,7 +569,10 @@ Reference the results of a Google search.
 config.yaml
 
 ```
-context:  - provider: google    params:      serperApiKey: <YOUR_SERPER.DEV_API_KEY>
+context:
+  - provider: google
+    params:
+      serperApiKey: <YOUR_SERPER.DEV_API_KEY>
 ```
 
 config.json
@@ -584,7 +602,10 @@ Reference an open MR for this branch on GitLab.
 config.yaml
 
 ```
-context:  - provider: gitlab-mr    params:      token: "..."
+context:
+  - provider: gitlab-mr
+    params:
+      token: "..."
 ```
 
 config.json
@@ -605,7 +626,11 @@ You can specify the domain to communicate with by setting the `domain` parameter
 config.yaml
 
 ```
-context:  - provider: gitlab-mr    params:      token: "..."      domain: "gitlab.example.com"
+context:
+  - provider: gitlab-mr
+    params:
+      token: "..."
+      domain: "gitlab.example.com"
 ```
 
 config.json
@@ -635,7 +660,11 @@ Reference the conversation in a Jira issue.
 config.yaml
 
 ```
-context:  - provider: jira    params:      domain: company.atlassian.net      token: ATATT...
+context:
+  - provider: jira
+    params:
+      domain: company.atlassian.net
+      token: ATATT...
 ```
 
 config.json
@@ -663,7 +692,10 @@ This context provider supports both Jira API version 2 and 3. It will use versio
 config.yaml
 
 ```
-context:  - provider: jira    params:      apiVersion: "2"
+context:
+  - provider: jira
+    params:
+      apiVersion: "2"
 ```
 
 config.json
@@ -696,7 +728,16 @@ Reference the messages in a Discord channel.
 config.yaml
 
 ```
-context:  - provider: discord    params:      discordKey: "bot token"      guildId: "1234567890"       channels:        - id: "123456"          name: "example-channel"        - id: "678901"           name: "example-channel-2"
+context:
+  - provider: discord
+    params:
+      discordKey: "bot token"
+      guildId: "1234567890"
+      channels:
+        - id: "123456"
+          name: "example-channel"
+        - id: "678901"
+          name: "example-channel-2"
 ```
 
 config.json
@@ -731,7 +772,10 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
 config.yaml
 
 ```
-context:  - provider: http    params:      url: "https://api.example.com/v1/users"
+context:
+  - provider: http
+    params:
+      url: "https://api.example.com/v1/users"
 ```
 
 config.json
@@ -770,7 +814,11 @@ Reference specific git commit metadata and diff or all of the recent commits.
 config.yaml
 
 ```
-context:  - provider: commit    params:      Depth: 50      LastXCommitsDepth: 10
+context:
+  - provider: commit
+    params:
+      Depth: 50
+      LastXCommitsDepth: 10
 ```
 
 config.json
@@ -795,7 +843,11 @@ Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
 config.yaml
 
 ```
-context:  - provider: greptile     params:      greptileToken: "..."      githubToken: "..."
+context:
+  - provider: greptile
+    params:
+      greptileToken: "..."
+      githubToken: "..."
 ```
 
 config.json

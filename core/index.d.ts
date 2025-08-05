@@ -237,6 +237,7 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
   faviconUrl?: string;
   useLocalCrawling?: boolean;
+  sourceFile?: string;
 }
 
 export interface DocsIndexingDetails {
@@ -255,6 +256,8 @@ export interface IContextProvider {
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
+
+  get deprecationMessage(): string | null;
 }
 
 export interface Session {
@@ -660,6 +663,8 @@ export interface LLMOptions {
   deploymentId?: string;
 
   env?: Record<string, string | number | boolean>;
+
+  sourceFile?: string;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -803,8 +808,6 @@ export interface IDE {
 
   getWorkspaceDirs(): Promise<string[]>;
 
-  getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-
   fileExists(fileUri: string): Promise<boolean>;
 
   writeFile(path: string, contents: string): Promise<void>;
@@ -871,6 +874,10 @@ export interface IDE {
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
+  gotoTypeDefinition(location: Location): Promise<RangeInFile[]>; // TODO: add to jetbrains
+  getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
+  getReferences(location: Location): Promise<RangeInFile[]>;
+  getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
@@ -1035,6 +1042,7 @@ export interface CustomCommand {
   name: string;
   prompt: string;
   description?: string;
+  sourceFile?: string;
 }
 
 export interface Prediction {
@@ -1080,6 +1088,7 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
+  systemMessageDescription?: string;
 }
 
 interface ToolChoice {
@@ -1152,6 +1161,8 @@ export interface ModelDescription {
   capabilities?: ModelCapability;
   roles?: ModelRole[];
   configurationStatus?: LLMConfigurationStatuses;
+
+  sourceFile?: string;
 }
 
 export interface JSONEmbedOptions {
@@ -1209,6 +1220,7 @@ export interface TabAutocompleteOptions {
   experimental_includeRecentlyVisitedRanges: boolean | number;
   experimental_includeRecentlyEditedRanges: boolean | number;
   experimental_includeDiff: boolean | number;
+  experimental_enableStaticContextualization: boolean;
 }
 
 export interface StdioOptions {
@@ -1306,6 +1318,7 @@ export interface MCPServerStatus extends MCPOptions {
   tools: MCPTool[];
   resources: MCPResource[];
   resourceTemplates: MCPResourceTemplate[];
+  sourceFile?: string;
 }
 
 export interface ContinueUIConfig {
@@ -1350,6 +1363,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  originalFileContent?: string;
   toolCallId?: string;
 }
 
@@ -1409,6 +1423,68 @@ export interface RangeInFileWithNextEditInfo {
 export type SetCodeToEditPayload = RangeInFileWithContents | FileWithContents;
 
 /**
+ * Signature help represents the signature of something
+ * callable. There can be multiple signatures but only one
+ * active and only one active parameter.
+ */
+export class SignatureHelp {
+  /**
+   * One or more signatures.
+   */
+  signatures: SignatureInformation[];
+
+  /**
+   * The active signature.
+   */
+  activeSignature: number;
+
+  /**
+   * The active parameter of the active signature.
+   */
+  activeParameter: number;
+}
+
+/**
+ * Represents the signature of something callable. A signature
+ * can have a label, like a function-name, a doc-comment, and
+ * a set of parameters.
+ */
+export class SignatureInformation {
+  /**
+   * The label of this signature. Will be shown in
+   * the UI.
+   */
+  label: string;
+
+  /**
+   * The parameters of this signature.
+   */
+  parameters: ParameterInformation[];
+
+  /**
+   * The index of the active parameter.
+   *
+   * If provided, this is used in place of {@linkcode SignatureHelp.activeParameter}.
+   */
+  activeParameter?: number;
+}
+
+/**
+ * Represents a parameter of a callable-signature. A parameter can
+ * have a label and a doc-comment.
+ */
+export class ParameterInformation {
+  /**
+   * The label of this signature.
+   *
+   * Either a string or inclusive start and exclusive end offsets within its containing
+   * {@link SignatureInformation.label signature label}. *Note*: A label of type string must be
+   * a substring of its containing signature information's {@link SignatureInformation.label label}.
+   */
+  label: string | [number, number];
+}
+
+/**
  * Represents the configuration for a quick action in the Code Lens.
  * Quick actions are custom commands that can be added to function and class declarations.
  */
@@ -1443,6 +1519,7 @@ export interface ExperimentalConfig {
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
   enableExperimentalTools?: boolean;
+  onlyUseSystemMessageTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1469,15 +1546,16 @@ export interface ExperimentalConfig {
   useCurrentFileAsContext?: boolean;
 
   /**
-   * If enabled, will enable next edit in place of autocomplete
-   */
-  optInNextEditFeature?: boolean;
-
-  /**
    * If enabled, @codebase will only use tool calling
    * instead of embeddings, FTS, recently edited files, etc.
    */
   codebaseToolCallingOnly?: boolean;
+
+  /**
+   * If enabled, static contextualization will be used to
+   * gather context for the model where necessary.
+   */
+  enableStaticContextualization?: boolean;
 }
 
 export interface AnalyticsConfig {
@@ -1720,4 +1798,57 @@ export interface CompiledMessagesResult {
 
 export interface MessageOption {
   precompiled: boolean;
+}
+
+/* LSP-specific interfaces. */
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolKind.
+// We shift this one index down to match vscode.SymbolKind.
+export enum SymbolKind {
+  File = 0,
+  Module = 1,
+  Namespace = 2,
+  Package = 3,
+  Class = 4,
+  Method = 5,
+  Property = 6,
+  Field = 7,
+  Constructor = 8,
+  Enum = 9,
+  Interface = 10,
+  Function = 11,
+  Variable = 12,
+  Constant = 13,
+  String = 14,
+  Number = 15,
+  Boolean = 16,
+  Array = 17,
+  Object = 18,
+  Key = 19,
+  Null = 20,
+  EnumMember = 21,
+  Struct = 22,
+  Event = 23,
+  Operator = 24,
+  TypeParameter = 25,
+}
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolTag.
+export namespace SymbolTag {
+  export const Deprecated: 1 = 1;
+}
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolTag.
+export type SymbolTag = 1;
+
+// See https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentSymbol.
+export interface DocumentSymbol {
+  name: string;
+  detail?: string;
+  kind: SymbolKind;
+  tags?: SymbolTag[];
+  deprecated?: boolean;
+  range: Range;
+  selectionRange: Range;
+  children?: DocumentSymbol[];
 }

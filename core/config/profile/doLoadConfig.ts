@@ -10,7 +10,6 @@ import {
 
 import {
   ContinueConfig,
-  ContinueRcJson,
   IDE,
   IdeSettings,
   ILLMLogger,
@@ -19,6 +18,7 @@ import {
   SlashCommandDescWithSource,
   Tool,
 } from "../../";
+import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
@@ -31,6 +31,7 @@ import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import { getMCPToolName } from "../../tools/mcpToolName";
+import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
@@ -86,7 +87,6 @@ export default async function doLoadConfig(options: {
     packageIdentifier,
   } = options;
 
-  const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ideSettingsPromise;
@@ -126,7 +126,6 @@ export default async function doLoadConfig(options: {
   } else {
     const result = await loadContinueConfigFromJson(
       ide,
-      workspaceConfigs,
       ideSettings,
       ideInfo,
       uniqueId,
@@ -163,6 +162,23 @@ export default async function doLoadConfig(options: {
   ) {
     newConfig.contextProviders.push(new CurrentFileContextProvider({}));
   }
+
+  // Show deprecation warnings for providers
+  const globalContext = new GlobalContext();
+  newConfig.contextProviders.forEach((provider) => {
+    if (provider.deprecationMessage) {
+      const providerTitle = provider.description.title;
+      const shownWarnings =
+        globalContext.get("shownDeprecatedProviderWarnings") ?? {};
+      if (!shownWarnings[providerTitle]) {
+        void ide.showToast("warning", provider.deprecationMessage);
+        globalContext.update("shownDeprecatedProviderWarnings", {
+          ...shownWarnings,
+          [providerTitle]: true,
+        });
+      }
+    }
+  });
 
   // Add rules from colocated rules.md files in the codebase
   const codebaseRulesCache = CodebaseRulesCache.getInstance();
@@ -201,15 +217,39 @@ export default async function doLoadConfig(options: {
       }));
       newConfig.tools.push(...serverTools);
 
+      // Fetch MCP prompt content during config load
       const serverSlashCommands: SlashCommandDescWithSource[] =
-        server.prompts.map((prompt) => ({
-          name: prompt.name,
-          description: prompt.description ?? "MCP Prompt",
-          source: "mcp-prompt",
-          isLegacy: false,
-          mcpServerName: server.name, // Used in client to retrieve prompt
-          mcpArgs: prompt.arguments,
-        }));
+        await Promise.all(
+          server.prompts.map(async (prompt) => {
+            let promptContent: string | undefined;
+
+            try {
+              // Fetch the actual prompt content from the MCP server
+              const mcpPromptResponse = await mcpManager.getPrompt(
+                server.name,
+                prompt.name,
+                {}, // Empty args for now - TODO: handle prompt arguments
+              );
+              promptContent = stringifyMcpPrompt(mcpPromptResponse);
+            } catch (error) {
+              console.warn(
+                `Failed to fetch MCP prompt content for ${prompt.name} from server ${server.name}:`,
+                error,
+              );
+              // Keep promptContent as undefined so the UI can show a fallback
+            }
+
+            return {
+              name: prompt.name,
+              description: prompt.description ?? "MCP Prompt",
+              source: "mcp-prompt",
+              isLegacy: false,
+              prompt: promptContent, // Store the actual prompt content
+              mcpServerName: server.name, // Used in client to retrieve prompt
+              mcpArgs: prompt.arguments,
+            };
+          }),
+        );
       newConfig.slashCommands.push(...serverSlashCommands);
 
       const submenuItems = server.resources
@@ -364,22 +404,4 @@ async function injectControlPlaneProxyInfo(
   });
 
   return config;
-}
-
-async function getWorkspaceConfigs(ide: IDE): Promise<ContinueRcJson[]> {
-  const ideInfo = await ide.getIdeInfo();
-  let workspaceConfigs: ContinueRcJson[] = [];
-
-  try {
-    workspaceConfigs = await ide.getWorkspaceConfigs();
-
-    // Config is sent over the wire from JB so we need to parse it
-    if (ideInfo.ideType === "jetbrains") {
-      workspaceConfigs = (workspaceConfigs as any).map(JSON.parse);
-    }
-  } catch (e) {
-    console.debug("Failed to load workspace configs: ", e);
-  }
-
-  return workspaceConfigs;
 }

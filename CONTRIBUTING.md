@@ -20,19 +20,19 @@
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
     - [Our Git Workflow](#our-git-workflow)
-    - [Development workflow](#development-workflow)
+    - [Development Workflow](#development-workflow)
     - [Formatting](#formatting)
     - [Theme Colors](#theme-colors)
     - [Testing](#testing)
     - [Review Process](#review-process)
-    - [Getting help](#getting-help)
-  - [Contribtuing new LLM Providers/Models](#contribtuing-new-llm-providersmodels)
+    - [Getting Help](#getting-help)
+  - [Contributing new LLM Providers/Models](#contributing-new-llm-providersmodels)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
   - [📐 Continue Architecture](#-continue-architecture)
     - [Continue VS Code Extension](#continue-vs-code-extension)
     - [Continue JetBrains Extension](#continue-jetbrains-extension)
-  - [Contibutor License Agreement](#contributor-license-agreement-cla)
+  - [Contributor License Agreement](#contributor-license-agreement-cla)
 
 # ❤️ Ways to Contribute
 
@@ -192,6 +192,7 @@ To keep the Continue codebase clean and maintainable, we expect the following fr
 - Keep changes focused. Multiple unrelated fixes should be opened as separate PRs
 - Write or update tests for new functionality
 - Update relevant documentation in the `docs` folder
+- **For new features**: Include a short screen recording or screenshot demonstrating the new functionality. This makes it much easier for us as contributors to review and understand your changes. See [this PR](https://github.com/continuedev/continue/pull/6455) as a good example
 - Open a PR against the `main` branch. Make sure to fill in the PR template
 
 ### Formatting
@@ -211,17 +212,17 @@ Guidelines for using theme colors:
 Guidelines for adding/updating theme colors:
 
 - Choose sensible VS Code variables to add/update in [gui/src/styles/theme.ts](gui/src/styles/theme.ts) (see [here](https://code.visualstudio.com/api/references/theme-color) and [here](https://www.notion.so/1fa1d55165f78097b551e3bc296fcf76?pvs=25) for inspiration)
-- Choose sensible Jetbrains named colors to add/update in `GetTheme.kt` (flagship LLMs can give you good suggestions to try)
+- Choose sensible JetBrains named colors to add/update in `GetTheme.kt` (flagship LLMs can give you good suggestions to try)
 - Update `tailwind.config.js` if needed
 - Use the Theme Test Page to check colors. This can be accessed by going to `Settings` -> `Help` -> `Theme Test Page` in dev/debug mode.
 
 ### Testing
 
 We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on
-each pull request. If your PR causes one of these tests to fail, we will ask that you to resolve the issue before we
+each pull request. If your PR causes one of these tests to fail, we will ask you to resolve the issue before we
 merge.
 
-When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
+When contributing, please update or create the appropriate tests to help verify the correctness of your implementation.
 
 ### Review Process
 
@@ -230,11 +231,11 @@ When contributing, please update or create the appropriate tests to help verify 
   maintainable and follows our patterns.
 - **Approval & Merge** - Once the PR is approved, it will be merged into the `main` branch.
 
-### Getting help
+### Getting Help
 
 Join [#contribute on Discord](https://discord.gg/vapESyrFmJ) to engage with maintainers and other contributors.
 
-## Contribtuing new LLM Providers/Models
+## Contributing New LLM Providers/Models
 
 ### Adding an LLM Provider
 
