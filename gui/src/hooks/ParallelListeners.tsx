@@ -23,7 +23,7 @@ import {
   setIsSessionMetadataLoading,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
-import { setTTSActive } from "../redux/slices/uiSlice";
+import { setTaskLists, setTTSActive } from "../redux/slices/uiSlice";
 import { exitEdit } from "../redux/thunks/edit";
 import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfterToolCall";
 
@@ -324,6 +324,18 @@ function ParallelListeners() {
     },
     [autoAcceptEditToolDiffs, ideMessenger],
   );
+
+  useWebviewListener("taskEvent", async (taskEvent) => {
+    dispatch(setTaskLists(taskEvent.tasks));
+  });
+  useEffect(() => {
+    void (async () => {
+      const response = await ideMessenger.request("taskList/list", undefined);
+      if (response.status === "success") {
+        dispatch(setTaskLists(response.content));
+      }
+    })();
+  }, [sessionId]);
 
   useEffect(() => {
     if (!isInEdit) {

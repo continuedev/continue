@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RuleWithSource, Tool } from "core";
+import { RuleWithSource, TaskInfo, Tool } from "core";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
@@ -32,6 +32,7 @@ type UIState = {
   toolGroupSettings: ToolGroupPolicies;
   ruleSettings: RulePolicies;
   ttsActive: boolean;
+  taskLists: TaskInfo[];
 };
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
@@ -70,6 +71,7 @@ export const uiSlice = createSlice({
       [BUILT_IN_GROUP_NAME]: "include",
     },
     ruleSettings: {},
+    taskLists: [],
   } as UIState,
   reducers: {
     setOnboardingCard: (
@@ -159,6 +161,9 @@ export const uiSlice = createSlice({
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
+    setTaskLists: (state, { payload }: PayloadAction<TaskInfo[]>) => {
+      state.taskLists = payload;
+    },
   },
 });
 
@@ -175,6 +180,7 @@ export const {
   addRule,
   toggleRuleSetting,
   setTTSActive,
+  setTaskLists,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
