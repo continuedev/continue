@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolPermissionService } from './ToolPermissionService.js';
+
 import { checkToolPermission } from '../permissions/permissionChecker.js';
+
+import { ToolPermissionService } from './ToolPermissionService.js';
 
 describe('ToolPermissionService - Real Tool Permission Test', () => {
   let service: ToolPermissionService;

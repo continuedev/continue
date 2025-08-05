@@ -1,9 +1,10 @@
 import { exec } from "child_process";
 import * as os from "os";
 import * as path from "path";
+
 import { useState } from "react";
-import { loadAuthConfig, updateAssistantSlug } from "../../auth/workos.js";
-import { reloadService, services, SERVICE_NAMES } from "../../services/index.js";
+
+import { services } from "../../services/index.js";
 
 interface ConfigOption {
   id: string;
@@ -25,7 +26,6 @@ interface UseConfigSelectorProps {
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
 export function useConfigSelector({
-  configPath,
   onMessage,
   onChatReset,
 }: UseConfigSelectorProps) {
@@ -60,7 +60,7 @@ export function useConfigSelector({
           content: `Opening ${url} in your browser to create a new assistant...`,
           messageType: "system" as const,
         });
-      } catch (error) {
+      } catch {
         onMessage({
           role: "system",
           content: `Please visit ${url} to create a new assistant`,

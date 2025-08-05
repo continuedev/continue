@@ -2,6 +2,7 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
+
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
 import { loadAuthConfig } from "../auth/workos.js";
 import {
@@ -19,16 +20,17 @@ import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
-import telemetryService from "../telemetry/telemetryService.js";
+import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatError } from "../util/formatError.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
   shouldAutoCompact,
 } from "../util/tokenizer.js";
+
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**
@@ -44,7 +46,7 @@ function processJsonOutput(response: string): string {
     JSON.parse(trimmedResponse);
     // If it parses successfully, return as-is
     return trimmedResponse;
-  } catch (error) {
+  } catch {
     // If it's not valid JSON, wrap it in a JSON object
     return JSON.stringify({
       response: trimmedResponse,

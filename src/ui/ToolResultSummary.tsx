@@ -1,7 +1,10 @@
-import { Box, Text } from "ink";
 import path from "path";
+
+import { Box, Text } from "ink";
 import React from "react";
+
 import { getToolDisplayName } from "../tools/index.js";
+
 import { ColoredDiff } from "./ColoredDiff.js";
 import { ChecklistDisplay } from "./components/ChecklistDisplay.js";
 
@@ -173,4 +176,4 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   );
 };
 
-export default ToolResultSummary;
+export { ToolResultSummary };

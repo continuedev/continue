@@ -1,7 +1,8 @@
 import { Text } from "ink";
 import React, { useEffect, useState } from "react";
-import { modeService } from "../../services/ModeService.js";
+
 import type { PermissionMode } from "../../permissions/types.js";
+import { modeService } from "../../services/ModeService.js";
 
 interface ModeIndicatorProps {
   mode?: PermissionMode;
@@ -59,4 +60,4 @@ const ModeIndicator: React.FC<ModeIndicatorProps> = ({ mode }) => {
   );
 };
 
-export default ModeIndicator;
+export { ModeIndicator };

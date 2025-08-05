@@ -1,7 +1,8 @@
 import { render } from "ink-testing-library";
 import React from "react";
 import { vi } from "vitest";
-import FreeTrialTransitionUI from "../FreeTrialTransitionUI.js";
+
+import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 
 // Mock the 'open' module to prevent actual URL opening during tests
 vi.mock("open", () => ({

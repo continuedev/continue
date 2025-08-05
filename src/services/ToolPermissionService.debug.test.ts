@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
+
 import { PermissionMode } from "../permissions/types.js";
+
 import { ToolPermissionService } from "./ToolPermissionService.js";
 
 describe("ToolPermissionService - Debug Tool Permissions", () => {

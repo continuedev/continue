@@ -1,6 +1,6 @@
-import { beforeEach, afterEach, describe, expect, it, vi, test } from 'vitest';
+import { beforeEach, afterEach, describe, expect, vi, test } from 'vitest';
+
 import { ModeService } from './ModeService.js';
-import { PermissionMode } from '../permissions/types.js';
 
 describe('ModeService', () => {
   let modeService: ModeService;

@@ -1,9 +1,11 @@
 import { spawn } from "child_process";
-import telemetryService from "../telemetry/telemetryService.js";
+
+import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+
 import { Tool } from "./types.js";
 
 export const runTerminalCommandTool: Tool = {
@@ -41,7 +43,6 @@ export const runTerminalCommandTool: Tool = {
       const child = spawn("sh", ["-c", command]);
       let stdout = "";
       let stderr = "";
-      let lastOutputTime = Date.now();
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
 
@@ -69,13 +70,11 @@ export const runTerminalCommandTool: Tool = {
 
       child.stdout.on("data", (data) => {
         stdout += data.toString();
-        lastOutputTime = Date.now();
         resetTimeout();
       });
 
       child.stderr.on("data", (data) => {
         stderr += data.toString();
-        lastOutputTime = Date.now();
         resetTimeout();
       });
 

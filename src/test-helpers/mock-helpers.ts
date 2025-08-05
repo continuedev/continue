@@ -64,7 +64,7 @@ export function mockOpenAIStream(
     return scope.reply(500, { error: { message: "Internal server error" } });
   }
 
-  return scope.reply(200, (uri, requestBody) => {
+  return scope.reply(200, () => {
     // Return a stream of Server-Sent Events
     const events = chunks.map((chunk, index) => {
       const data = {

@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
-import logger from '../util/logger.js';
-import { ServiceResult, ServiceState, ServiceEvents } from './types.js';
+
+import { logger } from '../util/logger.js';
+
+import { ServiceResult, ServiceState } from './types.js';
 
 /**
  * Central service container that manages service lifecycle and dependencies

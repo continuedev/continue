@@ -1,5 +1,7 @@
 import { vi } from "vitest";
+
 import { formatToolArgument } from "./formatters.js";
+
 import { formatToolCall } from "./index.js";
 
 describe("formatToolCall", () => {

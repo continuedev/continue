@@ -1,7 +1,8 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
-import MarkdownRenderer from "../MarkdownRenderer.js";
-import ToolResultSummary from "../ToolResultSummary.js";
+
+import { MarkdownRenderer } from "../MarkdownRenderer.js";
+import { ToolResultSummary } from "../ToolResultSummary.js";
 import { DisplayMessage } from "../types.js";
 
 interface MemoizedMessageProps {

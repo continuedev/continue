@@ -1,7 +1,8 @@
 import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, test } from 'vitest';
-import ModelCapabilityWarning from './ModelCapabilityWarning.js';
+
+import { ModelCapabilityWarning } from './ModelCapabilityWarning.js';
 
 describe('ModelCapabilityWarning', () => {
   test('should render warning message with model name', () => {

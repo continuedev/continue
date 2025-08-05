@@ -1,66 +1,12 @@
 import type { AssistantUnrolled } from "@continuedev/config-yaml";
 import { vi } from "vitest";
 
-// Minimal mock for LLM API (just enough to prevent errors)
-export class MockLlmApi {
-  async chatCompletionStream(): Promise<AsyncIterable<any>> {
-    return (async function* () {
-      yield { choices: [{ delta: {}, index: 0, finish_reason: "stop" }] };
-    })();
-  }
-  async chatCompletionNonStream() {
-    throw new Error("Not implemented");
-  }
-  async completionStream() {
-    throw new Error("Not implemented");
-  }
-  async completionNonStream() {
-    throw new Error("Not implemented");
-  }
-  async streamChat() {
-    return this.chatCompletionStream();
-  }
-  async completions() {
-    throw new Error("Not implemented");
-  }
-  async streamCompletion() {
-    throw new Error("Not implemented");
-  }
-  async chat() {
-    throw new Error("Not implemented");
-  }
-  async rerank() {
-    return { results: [] };
-  }
-  async embed() {
-    return { data: [], usage: {} };
-  }
-  async fimComplete() {
-    throw new Error("Not implemented");
-  }
-}
+import { MockApiClient } from "./mocks/MockApiClient.js";
+import { MockLlmApi } from "./mocks/MockLlmApi.js";
+import { MockMCPService } from "./mocks/MockMCPService.js";
 
-// Mock MCP Service
-export class MockMCPService {
-  connections = [];
-  assistant = {} as any;
-  getTools() {
-    return [];
-  }
-  getPrompts() {
-    return [];
-  }
-  async runTool() {
-    return { result: "Mock result" };
-  }
-  async executeToolCall() {
-    return { result: "Mock result" };
-  }
-  async close() {}
-  isInitialized() {
-    return true;
-  }
-}
+// Re-export the mocks for backward compatibility
+export { MockApiClient, MockLlmApi, MockMCPService };
 
 // Mock Assistant config
 export const mockAssistant: AssistantUnrolled = {
@@ -94,29 +40,6 @@ vi.mock("glob", () => ({
       "test-file.txt",
     ]),
 }));
-
-// Mock API Client
-export class MockApiClient {
-  async getFreeTrialStatus() {
-    return {
-      optedInToFreeTrial: true,
-      chatCount: 5,
-      chatLimit: 100,
-    };
-  }
-  async listAssistants() {
-    return [];
-  }
-  async getAssistant() {
-    return { configResult: { config: mockAssistant } };
-  }
-  async listOrganizations() {
-    return { organizations: [] };
-  }
-  async syncSecrets() {
-    return [];
-  }
-}
 
 export const createProps = (overrides: any = {}) => ({
   config: mockAssistant,

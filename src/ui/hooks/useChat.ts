@@ -3,16 +3,6 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { useEffect, useState } from "react";
-import { toolPermissionManager } from "../../permissions/permissionManager.js";
-import { loadSession, saveSession } from "../../session.js";
-import { handleSlashCommands } from "../../slashCommands.js";
-import {
-  StreamCallbacks,
-  streamChatResponse,
-} from "../../streamChatResponse.js";
-import telemetryService from "../../telemetry/telemetryService.js";
-import { formatError } from "../../util/formatError.js";
-import logger from "../../util/logger.js";
 
 import { initializeChatHistory } from "../../commands/chat.js";
 import {
@@ -20,9 +10,19 @@ import {
   findCompactionIndex,
   getHistoryForLLM,
 } from "../../compaction.js";
+import { toolPermissionManager } from "../../permissions/permissionManager.js";
+import { loadSession, saveSession } from "../../session.js";
+import { handleSlashCommands } from "../../slashCommands.js";
+import {
+  StreamCallbacks,
+  streamChatResponse,
+} from "../../streamChatResponse.js";
 import { posthogService } from "../../telemetry/posthogService.js";
+import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatToolCall } from "../../tools/index.js";
 import { ToolCallPreview } from "../../tools/types.js";
+import { formatError } from "../../util/formatError.js";
+import { logger } from "../../util/logger.js";
 import { shouldAutoCompact } from "../../util/tokenizer.js";
 import { DisplayMessage } from "../types.js";
 
@@ -53,8 +53,7 @@ export function useChat({
   onShowOrgSelector,
   onShowConfigSelector,
   onShowModelSelector,
-  onLoginPrompt,
-  onReload,
+  onLoginPrompt: _onLoginPrompt,
   isRemoteMode = false,
   remoteUrl,
 }: UseChatProps) {
@@ -68,17 +67,7 @@ export function useChat({
       }
 
       // Synchronously initialize chat history to prevent race conditions
-      // This ensures system message is always loaded before handleUserMessage runs
-      let initialHistory: ChatCompletionMessageParam[] = [];
-
       // Load previous session if resume flag is used
-      if (resume) {
-        const savedHistory = loadSession();
-        if (savedHistory) {
-          initialHistory = savedHistory;
-        }
-      }
-
       // If no session loaded or not resuming, we'll need to add system message
       // We can't make this async, so we'll handle it in the useEffect
       return resume ? loadSession() ?? [] : [];
@@ -351,8 +340,7 @@ export function useChat({
     if (!isRemoteMode && assistant) {
       const commandResult = await handleSlashCommands(
         message,
-        assistant,
-        onLoginPrompt
+        assistant
       );
       if (commandResult) {
         if (commandResult.exit) {

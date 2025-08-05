@@ -1,19 +1,20 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
+
 import { processRule } from "../args.js";
 import {
   AuthConfig,
   loadAuthConfig,
 } from "../auth/workos.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
+
+import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   ApiClientServiceState,
-  AuthServiceState,
   ConfigServiceState,
   SERVICE_NAMES,
 } from "./types.js";
-import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 
 /**
  * Service for managing configuration state and operations
@@ -146,7 +147,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
       return config;
     }
 
-    let processedRules: string[] = [];
+    const processedRules: string[] = [];
 
     for (const ruleSpec of rules) {
       try {
@@ -192,9 +193,6 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     try {
       // Get current auth and API client state needed for config loading
       const authConfig = loadAuthConfig();
-      const authState = await serviceContainer.get<AuthServiceState>(
-        SERVICE_NAMES.AUTH
-      );
       const apiClientState = await serviceContainer.get<ApiClientServiceState>(
         SERVICE_NAMES.API_CLIENT
       );

@@ -1,3 +1,6 @@
+
+// Import after mocking
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 import {
   afterEach,
   beforeEach,
@@ -6,13 +9,11 @@ import {
   vi,
   test,
 } from "vitest";
-import type { AuthServiceState } from "./services/types.js";
 
-// Import after mocking
-import { AssistantUnrolled } from "@continuedev/config-yaml";
 import * as workos from "./auth/workos.js";
 import * as commands from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
+import type { AuthServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
 
 // The imports are already mocked via vitest.setup.ts, so we can use them directly

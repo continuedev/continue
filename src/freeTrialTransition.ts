@@ -1,13 +1,15 @@
-import chalk from "chalk";
 import { spawn } from "child_process";
 import * as fs from "fs";
-import open from "open";
 import * as os from "os";
 import * as path from "path";
+
+import chalk from "chalk";
+import open from "open";
 import * as readlineSync from "readline-sync";
-import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
-import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
+
 import { env } from "./env.js";
+import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
+import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
@@ -63,7 +65,7 @@ export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): P
           "After setting up your models subscription, restart the CLI to continue."
         )
       );
-    } catch (error) {
+    } catch {
       console.log(chalk.yellow("\n⚠ Could not open browser automatically"));
       console.log(chalk.white(`Please visit: ${modelsUrl}`));
       console.log(

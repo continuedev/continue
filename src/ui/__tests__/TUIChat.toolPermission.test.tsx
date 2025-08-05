@@ -1,6 +1,7 @@
-import { vi } from "vitest";
 import { render } from "ink-testing-library";
 import React from "react";
+import { vi } from "vitest";
+
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
@@ -145,7 +146,7 @@ describe("TUIChat - Tool Permission Tests", () => {
     await vi.advanceTimersByTimeAsync(50);
 
     // Initial state should show "> Continue" selected
-    let frame = lastFrame();
+    const frame = lastFrame();
     expect(frame).toMatch(/>\s+Continue/);
 
     // Test that pressing Enter on default selection triggers approval
@@ -190,7 +191,7 @@ describe("TUIChat - Tool Permission Tests", () => {
 
   it("shows tool result with red dot and 'Cancelled by user' message", async () => {
     // Import the components we need for this test
-    const { default: ToolResultSummary } = await import(
+    const { ToolResultSummary } = await import(
       "../ToolResultSummary.js"
     );
     const { MemoizedMessage } = await import(

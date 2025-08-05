@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { initializeServices, getServiceSync, SERVICE_NAMES } from './index.js';
+
 import { serviceContainer } from './ServiceContainer.js';
 import type { ToolPermissionServiceState } from './ToolPermissionService.js';
+
+import { initializeServices, getServiceSync, SERVICE_NAMES } from './index.js';
 
 describe('Service Initialization', () => {
   beforeEach(() => {

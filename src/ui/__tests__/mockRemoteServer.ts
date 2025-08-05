@@ -1,6 +1,8 @@
-import { describe, expect, test } from "vitest";
-import express from "express";
 import { Server } from "http";
+
+import express from "express";
+import { describe, expect, test } from "vitest";
+
 import { DisplayMessage } from "../types.js";
 
 export interface MockRemoteServerConfig {

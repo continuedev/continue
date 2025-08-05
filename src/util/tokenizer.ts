@@ -1,7 +1,8 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { encode } from "gpt-tokenizer";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import logger from "./logger.js";
+
+import { logger } from "./logger.js";
 
 // Global auto-compact threshold (80% of context limit)
 // This is intentionally not configurable to ensure consistent behavior

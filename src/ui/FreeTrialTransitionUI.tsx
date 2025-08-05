@@ -1,12 +1,14 @@
 import * as fs from "fs";
-import { Box, Text, useInput } from "ink";
-import open from "open";
 import * as os from "os";
 import * as path from "path";
+
+import { Box, Text, useInput } from "ink";
+import open from "open";
 import React, { useState } from "react";
-import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
-import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
+
 import { env } from "../env.js";
+import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
+import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
@@ -104,7 +106,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
           `Browser opened to ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
         );
         setCurrentStep("success");
-      } catch (error) {
+      } catch {
         setErrorMessage(
           `Could not open browser automatically. Please visit: ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
         );
@@ -266,4 +268,4 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   return null;
 };
 
-export default FreeTrialTransitionUI;
+export { FreeTrialTransitionUI };

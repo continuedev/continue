@@ -1,14 +1,16 @@
-import { vi } from "vitest";
 import { render } from "ink-testing-library";
 import React from "react";
-import TUIChat from "../TUIChat.js";
+import { vi } from "vitest";
+
+import { TUIChat } from "../TUIChat.js";
+
+import { MockRemoteServer } from "./mockRemoteServer.js";
 import {
   MockApiClient,
   mockAssistant,
   MockLlmApi,
   MockMCPService,
 } from "./TUIChat.setup.js";
-import { MockRemoteServer } from "./mockRemoteServer.js";
 
 // Define RenderResult type to match ink-testing-library's Instance
 interface RenderResult {
@@ -122,7 +124,7 @@ export function runTest(
             allReady: true,
           });
 
-          mockUseService.mockImplementation(<T extends any>(serviceName: string) => ({
+          mockUseService.mockImplementation((serviceName: string) => ({
             value: (() => {
               switch (serviceName) {
                 case "auth":
@@ -274,7 +276,7 @@ export function runTestSuite(
                   allReady: true,
                 });
 
-                mockUseService.mockImplementation(<T extends any>(serviceName: string) => ({
+                mockUseService.mockImplementation((serviceName: string) => ({
                   value: (() => {
                     switch (serviceName) {
                       case "auth":

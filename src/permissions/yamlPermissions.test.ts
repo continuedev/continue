@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as fs from 'fs';
-import { loadPermissionsYaml, yamlConfigToPolicies } from './permissionsYamlLoader.js';
+
 import { checkToolPermission } from './permissionChecker.js';
+import { yamlConfigToPolicies } from './permissionsYamlLoader.js';
 
 // Mock fs module
 vi.mock('fs');

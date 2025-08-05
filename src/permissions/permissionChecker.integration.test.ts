@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+
 import { ToolPermissionService } from '../services/ToolPermissionService.js';
+
 import { checkToolPermission } from './permissionChecker.js';
 
 describe('Permission Integration Tests', () => {

@@ -6,6 +6,7 @@ import {
   it,
   vi,
 } from "vitest";
+
 import { createMinimalTestContext } from "../../test-helpers/ui-test-context.js";
 
 describe("useChat", () => {

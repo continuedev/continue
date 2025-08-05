@@ -1,14 +1,16 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
+
 import { getAllSlashCommands } from "../commands/commands.js";
-import { modeService } from "../services/ModeService.js";
-import { reloadService, SERVICE_NAMES } from "../services/index.js";
 import type { PermissionMode } from "../permissions/types.js";
+import { reloadService, SERVICE_NAMES } from "../services/index.js";
+import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
-import logger from "../util/logger.js";
-import FileSearchUI from "./FileSearchUI.js";
-import SlashCommandUI from "./SlashCommandUI.js";
+import { logger } from "../util/logger.js";
+
+import { FileSearchUI } from "./FileSearchUI.js";
+import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
@@ -369,7 +371,7 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       if (key.downArrow) {
-        const historyEntry = inputHistory.navigateDown(inputText);
+        const historyEntry = inputHistory.navigateDown();
         if (historyEntry !== null) {
           textBuffer.setText(historyEntry);
           textBuffer.setCursor(historyEntry.length);
@@ -547,4 +549,4 @@ const UserInput: React.FC<UserInputProps> = ({
   );
 };
 
-export default UserInput;
+export { UserInput };

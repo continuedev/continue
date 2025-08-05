@@ -1,8 +1,9 @@
+import { MCPService } from "../mcp.js";
 import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
-import { MCPService } from "../mcp.js";
-import telemetryService from "../telemetry/telemetryService.js";
-import logger from "../util/logger.js";
+import { telemetryService } from "../telemetry/telemetryService.js";
+import { logger } from "../util/logger.js";
+
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { formatToolArgument } from "./formatters.js";
@@ -51,7 +52,7 @@ function getDynamicTools(): Tool[] {
     if (isHeadless) {
       dynamicTools.push(exitTool);
     }
-  } catch (error) {
+  } catch {
     // Service not ready yet, no dynamic tools
   }
   
@@ -86,7 +87,7 @@ export function extractToolCalls(
           arguments: toolCallJson.arguments,
         });
       }
-    } catch (e) {
+    } catch {
       logger.error("Failed to parse tool call:", { toolCall: match[1] });
     }
   }

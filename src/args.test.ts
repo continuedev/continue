@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+
 import { parseArgs, processRule } from "./args.js";
 
 describe("parseArgs", () => {

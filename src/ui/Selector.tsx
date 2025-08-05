@@ -25,7 +25,7 @@ interface SelectorProps<T extends SelectorOption> {
   ) => ReactNode;
 }
 
-export default function Selector<T extends SelectorOption>({
+export function Selector<T extends SelectorOption>({
   title,
   options,
   selectedIndex,

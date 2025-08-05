@@ -1,22 +1,23 @@
-import { vi } from 'vitest';
-
+import { ModelConfig } from "@continuedev/config-yaml";
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type {
   ChatCompletionChunk,
   ChatCompletionMessageParam,
 } from "openai/resources/chat/completions.mjs";
+import { vi } from 'vitest';
+
+import { toolPermissionManager } from "./permissions/permissionManager.js";
 import {
   preprocessStreamedToolCalls,
   executeStreamedToolCalls,
   processStreamingResponse,
 } from "./streamChatResponse.js";
 import { ToolCall } from "./tools/index.js";
-import { PreprocessedToolCall } from "./tools/types.js";
-import { toolPermissionManager } from "./permissions/permissionManager.js";
 import { readFileTool } from "./tools/readFile.js";
 import { searchCodeTool } from "./tools/searchCode.js";
+import { PreprocessedToolCall } from "./tools/types.js";
 import { writeFileTool } from "./tools/writeFile.js";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ModelConfig } from "@continuedev/config-yaml";
+
 
 // Test the chunk processing logic that was identified as buggy
 describe("processStreamingResponse - content preservation", () => {

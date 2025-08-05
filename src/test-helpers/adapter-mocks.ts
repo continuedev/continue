@@ -1,5 +1,8 @@
 import { vi } from "vitest";
 
+// Mock BaseLlmApi class to avoid inline class definitions
+class MockBaseLlmApi {}
+
 /**
  * Mock the constructLlmApi function to return a mock LLM API
  */
@@ -38,7 +41,7 @@ export function mockLLMResponse(response: string) {
 
   vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
-    BaseLlmApi: class {},
+    BaseLlmApi: MockBaseLlmApi,
     LLMConfig: {}
   }));
   
@@ -82,7 +85,7 @@ export function mockLLMStreamResponse(chunks: string[]) {
 
   vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
-    BaseLlmApi: class {},
+    BaseLlmApi: MockBaseLlmApi,
     LLMConfig: {}
   }));
   
@@ -113,7 +116,7 @@ export function mockLLMError(errorMessage: string) {
 
   vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
-    BaseLlmApi: class {},
+    BaseLlmApi: MockBaseLlmApi,
     LLMConfig: {}
   }));
   

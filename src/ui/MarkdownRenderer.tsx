@@ -1,5 +1,6 @@
 import { Text } from "ink";
 import React from "react";
+
 import { highlightCode, detectLanguage, SyntaxHighlighterTheme, defaultTheme } from "./SyntaxHighlighter.js";
 
 interface MarkdownRendererProps {
@@ -16,7 +17,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ content,
   const patterns: MarkdownPattern[] = [
     {
       regex: /```(?:(\w+)\n)?([\s\S]*?)```/g,
-      render: (content, key) => {
+      render: (_content, _key) => {
         // content here is the captured group, but we need to parse the full match
         return null; // This will be handled separately
       },
@@ -160,7 +161,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ content,
     combinedMatches.sort((a, b) => a.index - b.index);
 
     // Process matches, avoiding overlaps
-    let processedMatches: typeof combinedMatches = [];
+    const processedMatches: typeof combinedMatches = [];
     for (const match of combinedMatches) {
       const overlaps = processedMatches.some(
         (processed) =>
@@ -210,6 +211,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(({ content,
 
 MarkdownRenderer.displayName = "MarkdownRenderer";
 
-export default MarkdownRenderer;
+export { MarkdownRenderer };
 export type { SyntaxHighlighterTheme };
 export { defaultTheme };

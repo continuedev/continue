@@ -1,5 +1,5 @@
-import { vi } from "vitest";
 import { DEFAULT_TOOL_POLICIES } from "../permissions/defaultPolicies.js";
+
 import { ToolPermissionService } from "./ToolPermissionService.js";
 
 describe("ToolPermissionService E2E", () => {

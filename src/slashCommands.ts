@@ -1,5 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
+
 import {
   isAuthenticated,
   isAuthenticatedConfig,
@@ -11,8 +12,7 @@ import { posthogService } from "./telemetry/posthogService.js";
 
 export async function handleSlashCommands(
   input: string,
-  assistant: AssistantConfig,
-  onLoginPrompt?: (promptText: string) => Promise<string>
+  assistant: AssistantConfig
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -95,7 +95,7 @@ export async function handleSlashCommands(
             exit: true,
             output: "Logged out successfully",
           };
-        } catch (error: any) {
+        } catch {
           return {
             exit: true,
             output: "Logged out successfully",

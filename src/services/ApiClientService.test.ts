@@ -1,9 +1,10 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
-import { ApiClientService } from './ApiClientService.js';
 
 // Mock the config module
 vi.mock('../config.js');
 import * as config from '../config.js';
+
+import { ApiClientService } from './ApiClientService.js';
 
 describe('ApiClientService', () => {
   let service: ApiClientService;

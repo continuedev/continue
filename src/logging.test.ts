@@ -1,3 +1,6 @@
+import chalk from 'chalk';
+import { vi } from 'vitest';
+
 import { 
   configureLogger, 
   isLoggingEnabled, 
@@ -7,8 +10,6 @@ import {
   warn, 
   loggers 
 } from './logging.js';
-import { vi } from 'vitest';
-import chalk from 'chalk';
 
 describe('logging utilities', () => {
   let consoleInfoSpy: ReturnType<typeof vi.spyOn>;

@@ -1,4 +1,7 @@
-import { vi } from 'vitest';
+import * as fs from "fs";
+
+import * as diff from "diff";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock fs module
 vi.mock("fs", async () => {
@@ -17,10 +20,6 @@ vi.mock("./src/telemetry/telemetryService.js"); // Mock diff module
 vi.mock("diff", () => ({
   createTwoFilesPatch: vi.fn(),
 }));
-
-// Import mocked modules
-import * as fs from "fs";
-import * as diff from "diff";
 
 // Get mocked functions using vi.mocked
 const mockExistsSync = vi.mocked(fs.existsSync);

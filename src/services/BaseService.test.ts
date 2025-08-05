@@ -1,4 +1,5 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
+
 import { BaseService, hasDependencies, ServiceWithDependencies } from './BaseService.js';
 
 // Test implementation of BaseService

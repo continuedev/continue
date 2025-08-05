@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import { ToolPermissionService } from './ToolPermissionService.js';
-import { PermissionMode } from '../permissions/types.js';
 
 describe('ToolPermissionService - Mode Functionality', () => {
   let service: ToolPermissionService;

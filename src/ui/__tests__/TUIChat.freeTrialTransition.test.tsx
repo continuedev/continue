@@ -1,5 +1,4 @@
 // Integration tests for free trial transition - simplified version
-import { vi } from "vitest";
 
 describe("TUIChat - Free Trial Transition Integration", () => {
   it("should integrate free trial transition with config selector", () => {
