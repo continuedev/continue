@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="8" cy="8" r="7.5" stroke="#39FF14" stroke-width="1" fill="#0a0a0a"/>
+  <rect x="4" y="4" width="8" height="8" rx="2" fill="#0a0a0a" stroke="#39FF14" stroke-width="0.5"/>
+  <text x="8" y="10.5" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="6" fill="#39FF14" font-weight="bold">E</text>
+</svg>

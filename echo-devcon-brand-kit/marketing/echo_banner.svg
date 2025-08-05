@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="400" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bannerGlow" cx="30%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#39FF14" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#001f3f" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bannerNeonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.223529   0 0 0 0 1   0 0 0 0 0.078431  0 0 0 1 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="400" fill="#0a0a0a"/>
+  <rect width="1200" height="400" fill="url(#bannerGlow)"/>
+  
+  <!-- Echo Logo -->
+  <g transform="translate(100,100)">
+    <circle cx="100" cy="100" r="90" stroke="#39FF14" stroke-width="6" fill="#0a0a0a"/>
+    <text x="100" y="130" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="80" fill="#39FF14" filter="url(#bannerNeonGlow)">E</text>
+  </g>
+  
+  <!-- Text -->
+  <text x="350" y="150" font-family="Orbitron, sans-serif" font-size="72" fill="#39FF14" filter="url(#bannerNeonGlow)">ECHO DEV</text>
+  <text x="350" y="220" font-family="Inter, sans-serif" font-size="32" fill="#39FF14" opacity="0.8">AI-Powered Development Assistant</text>
+  
+  <!-- Alsania badge -->
+  <g transform="translate(1000,300)">
+    <image href="alsania-logos/badge_hex_128x128.svg" width="80" height="80"/>
+  </g>
+</svg>

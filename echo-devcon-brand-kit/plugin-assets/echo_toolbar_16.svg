@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="miniGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/>
+    </filter>
+  </defs>
+  <circle cx="8" cy="8" r="7.5" fill="#0A0A0A"/>
+  <circle cx="8" cy="8" r="7" stroke="#39FF14" stroke-width="1" fill="none"/>
+  <rect x="4.5" y="4.5" width="7" height="7" rx="2" fill="#0A2472" stroke="#39FF14" stroke-width="0.5"/>
+  <text x="8" y="10" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="6" fill="#39FF14">E</text>
+</svg>

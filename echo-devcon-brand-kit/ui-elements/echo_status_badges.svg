@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="24" viewBox="0 0 120 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Online Status -->
+  <g transform="translate(0,0)">
+    <rect x="0" y="0" width="120" height="24" rx="12" fill="#0A2472"/>
+    <circle cx="12" cy="12" r="6" fill="#39FF14">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="30" y="16" font-family="Inter, sans-serif" font-size="12" fill="#39FF14">Echo Online</text>
+  </g>
+  
+  <!-- Thinking Status -->
+  <g transform="translate(0,28)">
+    <rect x="0" y="0" width="120" height="24" rx="12" fill="#0A2472"/>
+    <circle cx="12" cy="12" r="6" fill="#00F6FF">
+      <animate attributeName="r" values="6;4;6" dur="1s" repeatCount="indefinite"/>
+    </circle>
+    <text x="30" y="16" font-family="Inter, sans-serif" font-size="12" fill="#00F6FF">Processing</text>
+  </g>
+  
+  <!-- Error Status -->
+  <g transform="translate(0,56)">
+    <rect x="0" y="0" width="120" height="24" rx="12" fill="#0A2472"/>
+    <circle cx="12" cy="12" r="6" fill="#FF5A36"/>
+    <text x="30" y="16" font-family="Inter, sans-serif" font-size="12" fill="#FF5A36">Error</text>
+  </g>
+</svg>

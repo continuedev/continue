@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0A"/>
+      <stop offset="100%" style="stop-color:#0A2472"/>
+    </linearGradient>
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="300" fill="url(#bgGradient)"/>
+  
+  <!-- Echo Logo -->
+  <g transform="translate(50,50)">
+    <circle cx="100" cy="100" r="90" stroke="#39FF14" stroke-width="4" fill="none" filter="url(#neonGlow)"/>
+    <rect x="60" y="60" width="80" height="80" rx="20" fill="#0A2472" stroke="#39FF14" stroke-width="2"/>
+    <text x="100" y="115" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="48" fill="#39FF14">E</text>
+  </g>
+  
+  <!-- Text -->
+  <text x="300" y="120" font-family="Orbitron, sans-serif" font-size="64" fill="#39FF14" filter="url(#neonGlow)">Echo Dev</text>
+  <text x="300" y="180" font-family="Inter, sans-serif" font-size="24" fill="#72FF5D">AI-Powered Development Assistant</text>
+  
+  <!-- Powered by Alsania -->
+  <g transform="translate(1000,200)">
+    <image href="alsania-logos/badge_hex_128x128.svg" width="64" height="64"/>
+    <text x="32" y="90" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#B3B3B3">Powered by Alsania</text>
+  </g>
+</svg>

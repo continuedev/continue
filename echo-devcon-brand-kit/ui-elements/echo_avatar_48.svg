@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="avatarGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#39FF14" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0A2472" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <circle cx="24" cy="24" r="23" fill="#0A0A0A"/>
+  <!-- Glow -->
+  <circle cx="24" cy="24" r="20" fill="url(#avatarGlow)"/>
+  <!-- Border -->
+  <circle cx="24" cy="24" r="22" stroke="#39FF14" stroke-width="2" fill="none"/>
+  <!-- Echo Symbol -->
+  <rect x="14" y="14" width="20" height="20" rx="6" fill="#0A2472" stroke="#39FF14" stroke-width="1"/>
+  <text x="24" y="29" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="14" fill="#39FF14">E</text>
+</svg>

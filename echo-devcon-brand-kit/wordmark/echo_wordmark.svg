@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="100" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.223529   0 0 0 0 1   0 0 0 0 0.078431  0 0 0 1 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- ECHO text -->
+  <text x="20" y="70" font-family="Orbitron, sans-serif" font-size="60" font-weight="bold" fill="#39FF14" filter="url(#neonGlow)">ECHO</text>
+  
+  <!-- Dev text -->
+  <text x="230" y="70" font-family="Orbitron, sans-serif" font-size="40" fill="#39FF14" opacity="0.8">DEV</text>
+  
+  <!-- Alsania badge -->
+  <image href="alsania-logos/badge_hex_128x128.svg" x="350" y="25" width="40" height="40"/>
+</svg>

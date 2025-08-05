@@ -1,65 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      body {
-        background: linear-gradient(135deg, #0a0a0a 60%, #001f3f 100%);
-        color: #39ff14;
-        font-family: "Orbitron", sans-serif;
-        text-align: center;
-        min-height: 100vh;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-      }
-      .logo {
-        width: 120px;
-        margin-bottom: 32px;
-        filter: drop-shadow(0 0 16px #39ff14);
-        animation: pulse 1.5s infinite;
-      }
-      .title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        letter-spacing: 0.08em;
-        margin-bottom: 12px;
-        text-shadow: 0 0 8px #39ff14;
-      }
-      .subtitle {
-        font-size: 1.2rem;
-        margin-bottom: 32px;
-        opacity: 0.85;
-      }
-      .neon-bar {
-        width: 180px;
-        height: 6px;
-        background: linear-gradient(90deg, #39ff14 0%, #0a0a0a 100%);
-        border-radius: 3px;
-        margin: 0 auto 24px auto;
-        box-shadow: 0 0 12px #39ff14;
-        opacity: 0.7;
-      }
-      @keyframes pulse {
-        0% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
-        100% {
-          opacity: 1;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <img src="echo_logo.svg" class="logo" alt="Echo Logo" />
-    <div class="neon-bar"></div>
-    <div class="title">Echo Devcon</div>
-    <div class="subtitle">
-      Welcome back, Alsanian.<br />Echo online. Ready to create.
-    </div>
-  </body>
+<head>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a0a0a 60%, #001f3f 100%);
+      color: #39FF14;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .logo-wrap {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 32px;
+    }
+    .logo {
+      width: 120px;
+      filter: drop-shadow(0 0 16px #39FF14);
+      animation: pulse 1.5s infinite;
+    }
+    .badge {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 32px;
+      height: 32px;
+    }
+    .title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      text-shadow: 0 0 8px #39FF14;
+    }
+    .subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 32px;
+      opacity: 0.85;
+    }
+    .neon-bar {
+      width: 180px;
+      height: 6px;
+      background: linear-gradient(90deg, #39FF14 0%, #0a0a0a 100%);
+      border-radius: 3px;
+      margin: 0 auto 24px auto;
+      box-shadow: 0 0 12px #39FF14;
+      opacity: 0.7;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <img src="echo_plugin_icon.svg" class="logo" alt="Echo Logo" />
+    <img src="alsania-logos/badge_hex_128x128.svg" class="badge" alt="Alsania Badge" />
+  </div>
+  <div class="neon-bar"></div>
+  <div class="title">Echo Dev Plugin</div>
+  <div class="subtitle">Welcome back, Alsanian.<br>Echo online. Ready to create.</div>
+</body>
 </html>

@@ -1,0 +1,7 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="16" cy="16" r="15" stroke="#39FF14" stroke-width="2" fill="#0a0a0a"/>
+  <rect x="8" y="8" width="16" height="16" rx="4" fill="#0a0a0a" stroke="#39FF14" stroke-width="1"/>
+  <text x="16" y="21" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="12" fill="#39FF14" font-weight="bold">E</text>
+  <!-- Alsania badge in corner -->
+  <image href="alsania-logos/badge_hex_128x128.svg" x="24" y="24" width="7" height="7"/>
+</svg>

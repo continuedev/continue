@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="pulseGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#39FF14" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#001f3f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Outer ring with rotation animation -->
+  <circle cx="60" cy="60" r="56" stroke="#39FF14" stroke-width="4" fill="none" stroke-dasharray="30 10">
+    <animateTransform
+      attributeName="transform"
+      attributeType="XML"
+      type="rotate"
+      from="0 60 60"
+      to="360 60 60"
+      dur="2s"
+      repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Inner glow -->
+  <circle cx="60" cy="60" r="44" fill="url(#pulseGlow)">
+    <animate
+      attributeName="opacity"
+      values="0.3;0.7;0.3"
+      dur="2s"
+      repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Echo symbol -->
+  <text x="60" y="75" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="32" fill="#39FF14" font-weight="bold">E</text>
+  
+  <!-- Alsania badge -->
+  <image href="alsania-logos/badge_hex_128x128.svg" x="88" y="88" width="24" height="24"/>
+</svg>

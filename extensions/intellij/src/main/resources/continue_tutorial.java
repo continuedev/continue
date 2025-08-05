@@ -1,8 +1,8 @@
 //                            _________               _____ _____
-//                               __  ____/______ _______ __  /____(_)_______ ____  _______
-//                               _  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
-//                               / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
-//                               \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/
+//                           __  ____/______ _______ __  /____(_)_______ ____  _______
+//                           _  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
+//                           / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
+//                           \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/
 //
 //                                 Autocomplete, Edit, Chat, and Agent tutorial
 //
@@ -20,7 +20,15 @@
 
 // 1. Highlight the code below
 // 2. Press [Cmd/Ctrl + I] to Edit
-// 3. Try asking Continue to "make this more readable"
+public static void main(String[] args) {
+    // Example usage of sortingAlgorithm
+    int[] arr = {5, 2, 9, 1, 5, 6};
+    int[] sorted = sortingAlgorithm(arr);
+    for (int num : sorted) {
+        System.out.print(num + " ");
+    }
+}
+
 public static int[] sortingAlgorithm(int[] x) {
     for (int i = 0; i < x.length; i++) {
         for (int j = 0; j < x.length - 1; j++) {

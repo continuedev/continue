@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="avatarGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#39FF14" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#001f3f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" stroke="#39FF14" stroke-width="4" fill="#001f3f"/>
+  <circle cx="60" cy="60" r="50" fill="url(#avatarGlow)" opacity="0.5"/>
+  <path d="M45 60h30M60 45v30" stroke="#39FF14" stroke-width="4" stroke-linecap="round"/>
+  <!-- Alsania badge -->
+  <image href="alsania-logos/badge_hex_128x128.svg" x="88" y="88" width="24" height="24"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="neonAgentGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#39FF14" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#001f3f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="51" stroke="#39FF14" stroke-width="6" fill="#001f3f"/>
+  <circle cx="60" cy="60" r="44" fill="url(#neonAgentGlow)" opacity="0.5"/>
+  <rect x="40" y="40" width="40" height="40" rx="12" fill="#001f3f" stroke="#39FF14" stroke-width="3"/>
+  <path d="M52 60h16M60 52v16" stroke="#39FF14" stroke-width="3" stroke-linecap="round"/>
+  <!-- Alsania badge in corner -->
+  <image href="alsania-logos/badge_hex_128x128.svg" x="88" y="88" width="24" height="24"/>
+</svg>
