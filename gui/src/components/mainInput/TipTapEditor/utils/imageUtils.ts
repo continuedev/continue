@@ -40,7 +40,7 @@ export async function handleImageFile(
       "image/jpg",
       "image/png",
       "image/gif",
-      "image/svg",
+      "image/svg+xml",
       "image/webp",
     ].includes(file.type) &&
     filesize < 10

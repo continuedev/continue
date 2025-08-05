@@ -1,8 +1,8 @@
 {
   "name": "echo-devcon-plugin",
-  "icon": "../../logo-symbol/logo_symbol_128x128.png",
+  "icon": "media/echo-icon.png",
   "author": "Echo & Alsania Team",
-  "version": "1.1.73",
+  "version": "1.1.74",
   "repository": {
     "type": "git",
     "url": "https://github.com/SigmaSauer07/echo-dev"
@@ -615,7 +615,7 @@
         {
           "id": "echoDevCon",
           "title": "Echo DevCon",
-          "icon": "../../echo-devcon-brand-kit/plugin-assets/sidebar-icon.svg"
+          "icon": "../../echo-devcon-brand-kit/plugin-assets/echo_toolbar_16.svg"
         }
       ],
       "panel": [
