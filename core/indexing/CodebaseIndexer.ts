@@ -10,9 +10,9 @@ import {
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
+import { Logger } from "../util/Logger";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { Telemetry } from "../util/posthog.js";
-import { captureException } from "../util/sentry/SentryLogger";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
 import { ConfigResult } from "@continuedev/config-yaml";
@@ -125,7 +125,7 @@ export class CodebaseIndexer {
       await fs.unlink(sqliteFilepath);
     } catch (error) {
       // Capture indexer system failures to Sentry
-      captureException(error as Error, {
+      Logger.error(error, {
         context: "indexer_clear_sqlite",
         filepath: sqliteFilepath,
       });
@@ -136,7 +136,7 @@ export class CodebaseIndexer {
       await fs.rm(lanceDbFolder, { recursive: true, force: true });
     } catch (error) {
       // Capture indexer system failures to Sentry
-      captureException(error as Error, {
+      Logger.error(error, {
         context: "indexer_clear_lancedb",
         folderPath: lanceDbFolder,
       });

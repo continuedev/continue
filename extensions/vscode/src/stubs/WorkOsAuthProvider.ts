@@ -8,7 +8,7 @@ import {
   isHubEnv,
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
-import { captureException } from "core/util/sentry/SentryLogger";
+import { Logger } from "core/util/Logger";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -123,7 +123,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       return decodedToken;
     } catch (e: any) {
       // Capture JWT decoding failures to Sentry (could indicate token corruption)
-      captureException(e as Error, {
+      Logger.error(e, {
         context: "workOS_auth_jwt_decode",
         jwtLength: jwt.length,
         jwtPrefix: jwt.substring(0, 20) + "...", // Safe prefix for debugging
@@ -171,7 +171,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       return value;
     } catch (e: any) {
       // Capture session file parsing errors to Sentry
-      captureException(e as Error, {
+      Logger.error(e, {
         context: "workOS_sessions_json_parse",
         dataLength: data.length,
       });
@@ -215,7 +215,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       await this._refreshSessions();
     } catch (e) {
       // Capture session refresh failures to Sentry
-      captureException(e as Error, {
+      Logger.error(e, {
         context: "workOS_auth_session_refresh",
         authType: controlPlaneEnv.AUTH_TYPE,
       });
@@ -249,7 +249,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         });
       } catch (e: any) {
         // Capture individual session refresh failures to Sentry
-        captureException(e as Error, {
+        Logger.error(e, {
           context: "workOS_individual_session_refresh",
           sessionId: session.id,
         });
@@ -285,7 +285,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
       // Capture token refresh retry errors to Sentry
-      captureException(error as Error, {
+      Logger.error(error, {
         context: "workOS_token_refresh_retry",
         attempt,
         errorMessage: error.message,
@@ -412,7 +412,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       return session;
     } catch (e) {
       // Capture authentication failures to Sentry
-      captureException(e as Error, {
+      Logger.error(e, {
         context: "workOS_auth_session_creation",
         scopes: scopes.join(","),
         authType: controlPlaneEnv.AUTH_TYPE,

@@ -33,7 +33,6 @@ import {
   isProcessBackgrounded,
   markProcessAsBackgrounded,
 } from "./util/processTerminalBackgroundStates";
-import { captureException } from "./util/sentry/SentryLogger";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -76,6 +75,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { Logger } from "./util/Logger";
 import { getUriPathBasename } from "./util/uri";
 
 const hasRulesFiles = (uris: string[]): boolean => {
@@ -96,11 +96,6 @@ export class Core {
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
-
-  private handleError = (error: Error, context: string) => {
-    console.error(`Error in Core.${context}:`, error);
-    captureException(error, { context: `core_${context}` });
-  };
 
   private messageAbortControllers = new Map<string, AbortController>();
   private addMessageAbortController(id: string): AbortController {
@@ -261,7 +256,7 @@ export class Core {
       void codebaseRulesCache
         .refresh(ide)
         .catch((e) =>
-          console.error("Failed to initialize colocated rules cache"),
+          Logger.error("Failed to initialize colocated rules cache"),
         )
         .then(() => {
           void this.configHandler.reloadConfig(
@@ -279,7 +274,7 @@ export class Core {
 
       this.registerMessageHandlers(ideSettingsPromise);
     } catch (error) {
-      this.handleError(error as Error, "constructor");
+      Logger.error(error);
       throw error; // Re-throw to prevent partially initialized core
     }
   }
@@ -496,7 +491,7 @@ export class Core {
           });
         return items || [];
       } catch (e) {
-        console.error(e);
+        Logger.error(e);
         return [];
       }
     });
@@ -603,7 +598,7 @@ export class Core {
         });
         return undefined;
       } catch (error) {
-        console.error("Error compacting conversation:", error);
+        Logger.error(`Error compacting conversation: ${error}`);
         return undefined;
       }
     });
@@ -811,7 +806,7 @@ export class Core {
           prevFilepaths.filepaths = filepaths;
         }
       } catch (e) {
-        console.error(
+        Logger.error(
           `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
         );
       }
@@ -836,7 +831,7 @@ export class Core {
               openedFilesLruCache.set(filepath, filepath);
             }
           } catch (e) {
-            console.error(
+            Logger.error(
               `files/opened: failed to update openedFiles cache for ${filepath}`,
             );
           }
@@ -1116,7 +1111,7 @@ export class Core {
               void this.configHandler.reloadConfig("Codebase rule update");
             });
           } catch (e) {
-            console.error("Failed to update codebase rule", e);
+            Logger.error(`Failed to update codebase rule: ${e}`);
           }
         } else if (
           uri.endsWith(".continueignore") ||
@@ -1193,7 +1188,7 @@ export class Core {
         break;
 
       default:
-        console.error(`Invalid mode: ${mode}`);
+        Logger.error(`Invalid mode: ${mode}`);
         editConfigYamlCallback = (config) => config;
     }
 

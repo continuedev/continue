@@ -11,9 +11,9 @@ import {
   IDE,
 } from "../index.js";
 
+import { Logger } from "../util/Logger";
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
-import { captureException } from "../util/sentry/SentryLogger";
 
 export interface ProfileDescription {
   fullSlug: FullSlug;
@@ -98,7 +98,7 @@ export class ProfileLifecycleManager {
           result = await this.profileLoader.doLoadConfig();
         } catch (e) {
           // Capture config loading system failures to Sentry
-          captureException(e as Error, {
+          Logger.error(e, {
             context: "profile_config_loading",
           });
 

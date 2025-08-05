@@ -17,7 +17,7 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
-import { logger } from "../util/logger.js";
+import { Logger } from "../util/Logger.js";
 import { Telemetry } from "../util/posthog.js";
 import {
   ASSISTANTS,
@@ -517,7 +517,7 @@ export class ConfigHandler {
     );
 
     if (config.errors?.length) {
-      logger.warn("Errors loading config: ", config.errors);
+      Logger.error("Errors loading config: ", config.errors);
     }
     return config;
   }

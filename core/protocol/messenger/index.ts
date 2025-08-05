@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
+import { Logger } from "../../util/Logger";
 import type { IProtocol } from "../index";
-import { captureException } from "../../util/sentry/SentryLogger";
 
 export interface Message<T = any> {
   messageType: string;
@@ -91,7 +91,7 @@ export class InProcessMessenger<
       return listener(msg);
     } catch (error) {
       // Capture message handling errors to Sentry
-      captureException(error as Error, {
+      Logger.error(error, {
         context: "message_invoke",
         messageType: String(messageType),
         messageId: msg.messageId,
@@ -143,7 +143,7 @@ export class InProcessMessenger<
       return response;
     } catch (error) {
       // Capture message handling errors to Sentry
-      captureException(error as Error, {
+      Logger.error(error, {
         context: "message_request",
         messageType: String(messageType),
         messageId,
@@ -181,7 +181,7 @@ export class InProcessMessenger<
       return Promise.resolve(response);
     } catch (error) {
       // Capture message handling errors to Sentry
-      captureException(error as Error, {
+      Logger.error(error, {
         context: "message_external_request",
         messageType: String(messageType),
         messageId,
