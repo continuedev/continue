@@ -7,7 +7,7 @@ import { findSearchMatch, SearchMatchResult } from "./findSearchMatch";
 function performReplacement(
   fileContent: string,
   match: SearchMatchResult,
-  replacement: string
+  replacement: string,
 ): string {
   return (
     fileContent.substring(0, match.startIndex) +
@@ -23,12 +23,12 @@ function performReplacement(
 function testSpecificStrategy(
   fileContent: string,
   searchContent: string,
-  expectedStrategy: string
+  expectedStrategy: string,
 ): SearchMatchResult | null {
   const result = findSearchMatch(fileContent, searchContent);
   if (result && result.strategyName !== expectedStrategy) {
     throw new Error(
-      `Expected strategy ${expectedStrategy} but got ${result.strategyName}`
+      `Expected strategy ${expectedStrategy} but got ${result.strategyName}`,
     );
   }
   return result;
@@ -43,18 +43,21 @@ function verifyMatchAndReplacement(
   searchContent: string,
   expectedMatchedText: string,
   replacementText: string,
-  expectedResult: string
+  expectedResult: string,
 ): void {
   const match = findSearchMatch(fileContent, searchContent);
-  
+
   if (!match) {
     throw new Error("No match found");
   }
-  
+
   // Verify the match captures the expected text
-  const actualMatchedText = fileContent.substring(match.startIndex, match.endIndex);
+  const actualMatchedText = fileContent.substring(
+    match.startIndex,
+    match.endIndex,
+  );
   expect(actualMatchedText).toBe(expectedMatchedText);
-  
+
   // Verify replacement works correctly
   const result = performReplacement(fileContent, match, replacementText);
   expect(result).toBe(expectedResult);
@@ -94,16 +97,25 @@ describe("Strategy-specific tests", () => {
         },
       ];
 
-      testCases.forEach(({ name, fileContent, searchContent, expectedStart, expectedEnd }) => {
-        const result = testSpecificStrategy(fileContent, searchContent, "exactMatch");
-        expect(result).not.toBeNull();
-        expect(result!.startIndex).toBe(expectedStart);
-        expect(result!.endIndex).toBe(expectedEnd);
-        
-        // Verify the matched content
-        const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
-        expect(matchedContent).toBe(searchContent);
-      });
+      testCases.forEach(
+        ({ name, fileContent, searchContent, expectedStart, expectedEnd }) => {
+          const result = testSpecificStrategy(
+            fileContent,
+            searchContent,
+            "exactMatch",
+          );
+          expect(result).not.toBeNull();
+          expect(result!.startIndex).toBe(expectedStart);
+          expect(result!.endIndex).toBe(expectedEnd);
+
+          // Verify the matched content
+          const matchedContent = fileContent.substring(
+            result!.startIndex,
+            result!.endIndex,
+          );
+          expect(matchedContent).toBe(searchContent);
+        },
+      );
     });
 
     it("should handle multiline exact matches", () => {
@@ -113,13 +125,20 @@ line3
 line4`;
       const searchContent = `line2
 line3`;
-      
-      const result = testSpecificStrategy(fileContent, searchContent, "exactMatch");
+
+      const result = testSpecificStrategy(
+        fileContent,
+        searchContent,
+        "exactMatch",
+      );
       expect(result).not.toBeNull();
       expect(result!.startIndex).toBe(6); // After "line1\n"
       expect(result!.endIndex).toBe(17); // End of "line3"
-      
-      const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
+
+      const matchedContent = fileContent.substring(
+        result!.startIndex,
+        result!.endIndex,
+      );
       expect(matchedContent).toBe(searchContent);
     });
 
@@ -128,11 +147,18 @@ line3`;
 const str = "Hello, World!";
 const result = str.match(regex);`;
       const searchContent = `const str = "Hello, World!";`;
-      
-      const result = testSpecificStrategy(fileContent, searchContent, "exactMatch");
+
+      const result = testSpecificStrategy(
+        fileContent,
+        searchContent,
+        "exactMatch",
+      );
       expect(result).not.toBeNull();
-      
-      const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
+
+      const matchedContent = fileContent.substring(
+        result!.startIndex,
+        result!.endIndex,
+      );
       expect(matchedContent).toBe(searchContent);
     });
 
@@ -142,15 +168,19 @@ const result = str.match(regex);`;
         "const b = 2;",
         "const b = 2;",
         "const b = 42;",
-        "const a = 1;\nconst b = 42;\nconst c = 3;"
+        "const a = 1;\nconst b = 42;\nconst c = 3;",
       );
     });
 
     it("should handle Windows-style line endings", () => {
       const fileContent = "line1\r\nline2\r\nline3";
       const searchContent = "line2";
-      
-      const result = testSpecificStrategy(fileContent, searchContent, "exactMatch");
+
+      const result = testSpecificStrategy(
+        fileContent,
+        searchContent,
+        "exactMatch",
+      );
       expect(result).not.toBeNull();
       expect(result!.startIndex).toBe(7); // After "line1\r\n"
       expect(result!.endIndex).toBe(12); // End of "line2"
@@ -159,11 +189,18 @@ const result = str.match(regex);`;
     it("should handle mixed line endings", () => {
       const fileContent = "line1\nline2\r\nline3\rline4";
       const searchContent = "line2\r\nline3";
-      
-      const result = testSpecificStrategy(fileContent, searchContent, "exactMatch");
+
+      const result = testSpecificStrategy(
+        fileContent,
+        searchContent,
+        "exactMatch",
+      );
       expect(result).not.toBeNull();
-      
-      const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
+
+      const matchedContent = fileContent.substring(
+        result!.startIndex,
+        result!.endIndex,
+      );
       expect(matchedContent).toBe(searchContent);
     });
   });
@@ -197,22 +234,30 @@ const result = str.match(regex);`;
         },
       ];
 
-      testCases.forEach(({ name, fileContent, searchContent, trimmedSearch }) => {
-        const result = findSearchMatch(fileContent, searchContent);
-        expect(result).not.toBeNull();
-        
-        // For cases where exact match exists, it should be preferred
-        if (fileContent.indexOf(searchContent) !== -1) {
-          expect(result!.strategyName).toBe("exactMatch");
-          const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
-          expect(matchedContent).toBe(searchContent);
-        } else {
-          expect(result!.strategyName).toBe("trimmedMatch");
-          // The match should find the trimmed content with surrounding whitespace
-          const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
-          expect(matchedContent).toContain(trimmedSearch);
-        }
-      });
+      testCases.forEach(
+        ({ name, fileContent, searchContent, trimmedSearch }) => {
+          const result = findSearchMatch(fileContent, searchContent);
+          expect(result).not.toBeNull();
+
+          // For cases where exact match exists, it should be preferred
+          if (fileContent.indexOf(searchContent) !== -1) {
+            expect(result!.strategyName).toBe("exactMatch");
+            const matchedContent = fileContent.substring(
+              result!.startIndex,
+              result!.endIndex,
+            );
+            expect(matchedContent).toBe(searchContent);
+          } else {
+            expect(result!.strategyName).toBe("trimmedMatch");
+            // The match should find the trimmed content with surrounding whitespace
+            const matchedContent = fileContent.substring(
+              result!.startIndex,
+              result!.endIndex,
+            );
+            expect(matchedContent).toContain(trimmedSearch);
+          }
+        },
+      );
     });
 
     it("should handle multiline content with edge whitespace", () => {
@@ -222,7 +267,7 @@ const result = str.match(regex);`;
 }`;
       const searchContent = `  const x = 1;
   const y = 2;  `;
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       // Since there's no exact match (trailing spaces don't exist), trimmedMatch should be used
@@ -233,11 +278,11 @@ const result = str.match(regex);`;
       const fileContent = "start\n  targetContent  \nend";
       const searchContent = "   targetContent   ";
       const replacement = "newContent";
-      
+
       const match = findSearchMatch(fileContent, searchContent);
       expect(match).not.toBeNull();
       expect(match!.strategyName).toBe("trimmedMatch");
-      
+
       const result = performReplacement(fileContent, match!, replacement);
       expect(result).toBe("start\nnewContent\nend");
     });
@@ -245,7 +290,7 @@ const result = str.match(regex);`;
     it("should handle edge case with only whitespace", () => {
       const fileContent = "   \n   \n   ";
       const searchContent = "   \n   ";
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       // Should find exact match since the content matches exactly
@@ -265,13 +310,16 @@ const result = str.match(regex);`;
 if(x>0){
 return true;
 }`;
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
-      
+
       // Verify the match covers the intended code block
-      const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
+      const matchedContent = fileContent.substring(
+        result!.startIndex,
+        result!.endIndex,
+      );
       expect(matchedContent).toContain("const x = 1");
       expect(matchedContent).toContain("return true");
     });
@@ -299,10 +347,15 @@ return true;
         const result = findSearchMatch(fileContent, searchContent);
         expect(result).not.toBeNull();
         expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
-        
+
         // Verify the entire content is matched
-        const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
-        expect(matchedContent.replace(/\s/g, "")).toBe(searchContent.replace(/\s/g, ""));
+        const matchedContent = fileContent.substring(
+          result!.startIndex,
+          result!.endIndex,
+        );
+        expect(matchedContent.replace(/\s/g, "")).toBe(
+          searchContent.replace(/\s/g, ""),
+        );
       });
     });
 
@@ -318,13 +371,16 @@ return true;
     }
 }`;
       const searchContent = `constructor(name){this.name=name;this.items=[];}`;
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
-      
+
       // The match should cover the constructor method
-      const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
+      const matchedContent = fileContent.substring(
+        result!.startIndex,
+        result!.endIndex,
+      );
       expect(matchedContent).toContain("constructor");
       expect(matchedContent).toContain("this.items = []");
     });
@@ -337,11 +393,11 @@ return true;
       const replacement = `function calculate(x, y) {
     return x + y;
 }`;
-      
+
       const match = findSearchMatch(fileContent, searchContent);
       expect(match).not.toBeNull();
       expect(match!.strategyName).toBe("whitespaceIgnoredMatch");
-      
+
       const result = performReplacement(fileContent, match!, replacement);
       expect(result).toBe(replacement);
     });
@@ -349,7 +405,7 @@ return true;
     it("should handle edge cases with empty content after whitespace removal", () => {
       const fileContent = "   \n\t\r\n   ";
       const searchContent = " \n ";
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       // Since search content doesn't exist in file but trims to empty, should return emptySearch
       expect(result).not.toBeNull();
@@ -361,7 +417,7 @@ return true;
 const   a   =   1   ;
 const a = 1;`;
       const searchContent = "const a = 1;";
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       // Should find the exact match first (third occurrence)
@@ -386,7 +442,7 @@ const a = 1;`;
   }
   return total;
 }`;
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       expect(result!.strategyName).toBe("jaroWinklerFuzzyMatch");
@@ -420,8 +476,9 @@ const a = 1;`;
 
     it("should not match when similarity is too low", () => {
       const fileContent = "function add(a, b) { return a + b; }";
-      const searchContent = "class Calculator { multiply(x, y) { return x * y; } }";
-      
+      const searchContent =
+        "class Calculator { multiply(x, y) { return x * y; } }";
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).toBeNull();
     });
@@ -435,7 +492,7 @@ const a = 1;`;
   displayDashboard();
   fetchUserData();
 }`;
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       expect(result!.strategyName).toBe("jaroWinklerFuzzyMatch");
@@ -445,11 +502,11 @@ const a = 1;`;
       const fileContent = "const userName = 'John';";
       const searchContent = "const usrName = 'John';"; // Typo in variable name
       const replacement = "const userName = 'Jane';";
-      
+
       const match = findSearchMatch(fileContent, searchContent);
       expect(match).not.toBeNull();
       expect(match!.strategyName).toBe("jaroWinklerFuzzyMatch");
-      
+
       const result = performReplacement(fileContent, match!, replacement);
       expect(result).toBe(replacement);
     });
@@ -457,7 +514,7 @@ const a = 1;`;
     it("should handle edge case with very short strings", () => {
       const fileContent = "ab";
       const searchContent = "ac";
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       // Should not match due to low similarity on short strings
       expect(result).toBeNull();
@@ -485,8 +542,8 @@ const a = 1;`;
 
     it("should treat whitespace-only search as empty", () => {
       const searchVariants = ["   ", "\n\n", "\t\t", "  \n\t  "];
-      
-      searchVariants.forEach(searchContent => {
+
+      searchVariants.forEach((searchContent) => {
         const result = findSearchMatch("test content", searchContent);
         expect(result).toEqual({
           startIndex: 0,
@@ -502,7 +559,7 @@ const a = 1;`;
       const fileContent = `exact match
 exact match with spaces
 exactmatch`;
-      
+
       // This should find exact match even though fuzzy would also work
       const result = findSearchMatch(fileContent, "exact match");
       expect(result!.strategyName).toBe("exactMatch");
@@ -512,7 +569,7 @@ exactmatch`;
     it("should prefer trimmed match over whitespace-ignored", () => {
       const fileContent = "  content  ";
       const searchContent = "  content  ";
-      
+
       // Should find exact match
       const result = findSearchMatch(fileContent, searchContent);
       expect(result!.strategyName).toBe("exactMatch");
@@ -521,7 +578,7 @@ exactmatch`;
     it("should prefer whitespace-ignored over fuzzy", () => {
       const fileContent = "const   x   =   1;";
       const searchContent = "const x=1;";
-      
+
       // Should use whitespace-ignored, not fuzzy
       const result = findSearchMatch(fileContent, searchContent);
       expect(result!.strategyName).toBe("whitespaceIgnoredMatch");
@@ -557,14 +614,23 @@ exactmatch`;
         },
       ];
 
-      testCases.forEach(({ name, fileContent, searchContent, replacement, expectedResult, expectedStrategy }) => {
-        const match = findSearchMatch(fileContent, searchContent);
-        expect(match).not.toBeNull();
-        expect(match!.strategyName).toBe(expectedStrategy);
-        
-        const result = performReplacement(fileContent, match!, replacement);
-        expect(result).toBe(expectedResult);
-      });
+      testCases.forEach(
+        ({
+          name,
+          fileContent,
+          searchContent,
+          replacement,
+          expectedResult,
+          expectedStrategy,
+        }) => {
+          const match = findSearchMatch(fileContent, searchContent);
+          expect(match).not.toBeNull();
+          expect(match!.strategyName).toBe(expectedStrategy);
+
+          const result = performReplacement(fileContent, match!, replacement);
+          expect(result).toBe(expectedResult);
+        },
+      );
     });
 
     it("should handle edge cases in replacement", () => {
@@ -574,25 +640,25 @@ exactmatch`;
         "target",
         "target",
         "",
-        "before  after"
+        "before  after",
       );
-      
+
       // Replacement longer than original
       verifyMatchAndReplacement(
         "short",
         "short",
         "short",
         "much longer replacement",
-        "much longer replacement"
+        "much longer replacement",
       );
-      
+
       // Multiline replacement
       verifyMatchAndReplacement(
         "single line",
         "single",
         "single",
         "multi\nline\nreplacement",
-        "multi\nline\nreplacement line"
+        "multi\nline\nreplacement line",
       );
     });
   });
@@ -601,7 +667,7 @@ exactmatch`;
     it("should handle very long content efficiently", () => {
       const longContent = "x".repeat(10000) + "target" + "y".repeat(10000);
       const result = findSearchMatch(longContent, "target");
-      
+
       expect(result).not.toBeNull();
       expect(result!.startIndex).toBe(10000);
       expect(result!.endIndex).toBe(10006);
@@ -626,8 +692,11 @@ exactmatch`;
       testCases.forEach(({ fileContent, searchContent }) => {
         const result = findSearchMatch(fileContent, searchContent);
         expect(result).not.toBeNull();
-        
-        const matchedContent = fileContent.substring(result!.startIndex, result!.endIndex);
+
+        const matchedContent = fileContent.substring(
+          result!.startIndex,
+          result!.endIndex,
+        );
         expect(matchedContent).toContain(searchContent);
       });
     });
@@ -635,7 +704,7 @@ exactmatch`;
     it("should handle null bytes and control characters", () => {
       const fileContent = "before\x00null\x01byte\x02after";
       const searchContent = "\x00null\x01byte\x02";
-      
+
       const result = findSearchMatch(fileContent, searchContent);
       expect(result).not.toBeNull();
       expect(result!.strategyName).toBe("exactMatch");
