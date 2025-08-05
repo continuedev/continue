@@ -18,6 +18,7 @@
     "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
     "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml",
     "lint": "tsc --noEmit",
+    "watch:logs": "tail -f ~/.continue/logs/cn.log",
     "prepare": "npm run build",
     "semantic-release": "semantic-release",
     "semantic-release:dry-run": "semantic-release --dry-run"

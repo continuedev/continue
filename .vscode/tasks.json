@@ -27,6 +27,30 @@
         "showReuseMessage": true,
         "clear": false
       }
+    },
+    {
+      "label": "watch-logs",
+      "type": "shell",
+      "command": "npm run watch:logs",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*$",
+          "endsPattern": "^.*$"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false
+      }
     }
   ]
 }
