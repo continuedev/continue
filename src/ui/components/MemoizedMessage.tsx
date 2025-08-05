@@ -63,6 +63,13 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       }
     }
 
+    // Special rendering for compaction messages
+    if (message.messageType === "compaction") {
+      return (
+        <Box key={index} marginBottom={1} borderStyle="single" borderBottom={false} borderLeft={false} borderRight={false} borderColor="gray" />
+      );
+    }
+
     return (
       <Box key={index} marginBottom={1}>
         <Text color={isUser ? "green" : "magenta"}>●</Text>

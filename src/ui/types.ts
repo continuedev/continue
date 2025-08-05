@@ -7,7 +7,8 @@ export interface DisplayMessage {
     | "tool-result"
     | "tool-error"
     | "system"
-    | "tool-permission-request";
+    | "tool-permission-request"
+    | "compaction";
   toolName?: string;
   toolResult?: string;
   toolArgs?: any;

@@ -190,6 +190,13 @@ describe("handleSlashCommands", () => {
       expect(result?.output).toBe("Chat history cleared");
     });
 
+    test("compact command should work normally", async () => {
+      const result = await handleSlashCommands("/compact", mockAssistant);
+
+      expect(result).not.toBeNull();
+      expect(result?.compact).toBe(true);
+    });
+
     test("non-slash input should return null", async () => {
       const result = await handleSlashCommands("regular input", mockAssistant);
       expect(result).toBeNull();
