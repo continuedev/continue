@@ -60,6 +60,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ) {
         return true;
       }
+      // LGAI EXAONE models expose an OpenAI-compatible API with tool
+      // calling support when served via frameworks like vLLM
+      if (model.toLowerCase().includes("exaone")) {
+        return true;
+      }
       // firworks-ai https://docs.fireworks.ai/guides/function-calling
       if (model.startsWith("accounts/fireworks/models/")) {
         switch (model.substring(26)) {
@@ -299,6 +304,8 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt/, /4/],
     [/claude/, /sonnet/, /3\.5|3\.7|3-5|3-7|-4/],
     [/claude/, /opus/, /-4/],
+    // EXAONE 4.0 and 4.0-1 variants
+    [/exaone/, /4\.0(-1)?/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {
@@ -310,6 +317,11 @@ export function isRecommendedAgentModel(modelName: string): boolean {
 export function modelSupportsNativeTools(modelDescription: ModelDescription) {
   if (modelDescription.capabilities?.tools !== undefined) {
     return modelDescription.capabilities.tools;
+  }
+  // EXAONE 4.0 models advertise tool-calling capability regardless of
+  // the provider used to serve them.
+  if (modelDescription.model.toLowerCase().includes("exaone")) {
+    return true;
   }
   const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
