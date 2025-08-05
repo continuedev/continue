@@ -494,8 +494,12 @@ export function useChat({
       ]);
 
       try {
+        if (!llmApi) {
+          throw new Error("LLM API is not available for auto-compaction");
+        }
+        
         // Compact the history WITHOUT the current user message
-        const result = await compactChatHistory(chatHistory, model, llmApi!);
+        const result = await compactChatHistory(chatHistory, model, llmApi);
 
         // Update local variables immediately
         currentChatHistory = result.compactedHistory;
