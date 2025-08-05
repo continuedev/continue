@@ -1,4 +1,5 @@
 import {
+  ArrowDownOnSquareIcon,
   ArrowsPointingInIcon,
   BarsArrowDownIcon,
   PencilSquareIcon,
@@ -7,10 +8,12 @@ import {
 import { ChatHistoryItem } from "core";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { renderChatMessage } from "core/util/messageContent";
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { isShareSessionSupported } from "../../util";
 import { useCompactConversation } from "../../util/compactConversation";
 import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
@@ -24,7 +27,10 @@ export interface ResponseActionsProps {
   onDelete: () => void;
   item: ChatHistoryItem;
   isLast: boolean;
+  sessionId: string;
 }
+
+const shareSessionSupported = isShareSessionSupported();
 
 export default function ResponseActions({
   onContinueGeneration,
@@ -33,8 +39,11 @@ export default function ResponseActions({
   isTruncated,
   onDelete,
   isLast,
+  sessionId,
 }: ResponseActionsProps) {
   const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const contextPercentage = useAppSelector(
     (state) => state.session.contextPercentage,
@@ -53,6 +62,14 @@ export default function ResponseActions({
   const showLabel = isLast && (isPruned || percent >= 60);
 
   const compactConversation = useCompactConversation();
+
+  const saveChat = async () => {
+    if (shareSessionSupported) {
+      await ideMessenger.request("session/share", {
+        sessionId,
+      });
+    }
+  };
 
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
@@ -121,6 +138,15 @@ export default function ResponseActions({
         checkIconClassName="h-3.5 w-3.5 text-success"
       />
 
+      {isLast && shareSessionSupported && (
+        <HeaderButtonWithToolTip
+          tabIndex={-1}
+          text="Save Chat as Markdown"
+          onClick={saveChat}
+        >
+          <ArrowDownOnSquareIcon className="text-description-muted h-3.5 w-3.5" />
+        </HeaderButtonWithToolTip>
+      )}
       <FeedbackButtons item={item} />
     </div>
   );
