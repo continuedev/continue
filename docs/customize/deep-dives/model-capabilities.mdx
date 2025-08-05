@@ -10,28 +10,24 @@ Continue needs to know what features your models support to provide the best exp
 
 Model capabilities tell Continue what features a model supports:
 
-- **`tool_use`** - Whether the model can use tools and functions (required for Agent mode)
+- **`tool_use`** - Whether the model can use tools and functions
 - **`image_input`** - Whether the model can process images
 
 Without proper capability configuration, you may encounter issues like:
 
-- Agent mode being unavailable
+- Agent mode being unavailable (requires tools)
 - Tools not working at all
 - Image uploads being disabled
 
 ## How Continue Detects Capabilities
-You can explicitly set the capabilities you want the model to use. This disables autodetection for any other capabilities. 
 
-<Note>
- You cannot configure a model to use no capabilities.
- </Note>
 Continue uses a two-tier system for determining model capabilities:
 
 ### 1. Automatic Detection (Default)
 
 Continue automatically detects capabilities based on your provider and model name. For example:
 
-- **OpenAI**: GPT-4 models have tool support, GPT-3.5 doesn't
+- **OpenAI**: GPT-4 and GPT-3.5 Turbo models support tools
 - **Anthropic**: Claude 3.5+ models support both tools and images
 - **Ollama**: Most models support tools, vision models support images
 - **Google**: All Gemini models support function calling
@@ -43,11 +39,13 @@ For implementation details, see:
 - [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
 - [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
 
-### 2. Manual Override
+### 2. Manual Configuration
 
-You can configure the model to only use the capabilities you specify in your `config.yaml`, rather than granting it access to everything it supports.
+You can add capabilities to models that Continue doesn't automatically detect in your `config.yaml`.
 
-Explicitly defining the capabilities means that autodetection won’t add anything else.
+<Note>
+You cannot override autodetection - you can only add capabilities. Continue will always use its built-in knowledge about your model in addition to any capabilities you specify.
+</Note>
 
 ```yaml
 models:
@@ -60,9 +58,9 @@ models:
       - image_input
 ```
 
-## When to Override Capabilities
+## When to Add Capabilities
 
-Override autodetection when:
+Add capabilities when:
 
 1. **Using custom deployments** - Your API endpoint serves a model with different capabilities than the standard version
 2. **Using newer models** - Continue doesn't yet recognize a newly released model
@@ -71,9 +69,9 @@ Override autodetection when:
 
 ## Configuration Examples
 
-### Basic Override
+### Basic Configuration
 
-Force tool support for a model that Continue doesn't recognize:
+Add tool support for a model that Continue doesn't recognize:
 
 ```yaml
 models:
@@ -86,10 +84,15 @@ models:
 
 <Info>
   The `tool_use` capability is for native tool/function calling support. The
-  model must actually support tools for this to work. If your model doesn't
-  support native tools, Continue will automatically use system message tools
-  instead.
+  model must actually support tools for this to work.
 </Info>
+
+<Warning>
+  **Experimental**: System message tools are available as an experimental feature
+  for models without native tool support. These are not automatically used as a
+  fallback and must be explicitly configured. Most models are trained for native
+  tools, so system message tools may not work as well.
+</Warning>
 
 ### Disable Capabilities
 
@@ -155,7 +158,7 @@ For troubleshooting capability-related issues like Agent mode being unavailable 
 2. **Test after changes** - Verify tools and images work as expected
 3. **Keep Continue updated** - Newer versions improve autodetection
 
-Remember: Setting capabilities only supplements autodetection. Continue will still use its built-in knowledge about your model in addition to your specified capabilities.
+Remember: Setting capabilities only adds to autodetection. Continue will still use its built-in knowledge about your model in addition to your specified capabilities.
 
 ## Model Capability Support
 
@@ -170,7 +173,7 @@ This matrix shows which models support tool use and image input capabilities. Co
 | GPT-4o        | ✅       | ✅          |
 | GPT-4 Turbo   | ✅       | ✅          |
 | GPT-4         | ✅       | ❌          |
-| GPT-3.5 Turbo | ❌       | ❌          |
+| GPT-3.5 Turbo | ✅       | ❌          |
 
 ### Anthropic
 
@@ -234,8 +237,8 @@ This matrix shows which models support tool use and image input capabilities. Co
 
 ### Notes
 
-- **Tool Use**: Function calling for Agent mode (required for Agent mode)
-- **Image Input**: Processing screenshots and images
+- **Tool Use**: Function calling support (tools are required for Agent mode)
+- **Image Input**: Processing images
 
 ---
 
