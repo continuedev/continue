@@ -5,16 +5,13 @@ import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 fun environment(key: String) = providers.environmentVariable(key)
 
 val remoteRobotVersion = "0.11.23"
-val platformType: String by project
 val platformVersion: String by project
 val pluginGroup: String by project
 val pluginVersion: String by project
-val pluginSinceBuild: String by project
-val pluginRepositoryUrl: String by project
 val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
 plugins {
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "1.9.21"
     id("org.jetbrains.intellij.platform") version "2.6.0"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
@@ -34,7 +31,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create("IC", "2024.1")
+        create("IC", platformVersion)
         plugins(listOf("org.jetbrains.plugins.terminal:223.8214.6"))
         testFramework(TestFrameworkType.Platform)
     }
@@ -50,25 +47,26 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.0") // required to run both JUnit 5 and JUnit 3
 }
 
-kotlin { jvmToolchain(17) }
+kotlin {
+    jvmToolchain(17)
+}
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "241"
+            sinceBuild = "233"
         }
     }
     pluginVerification {
         ides {
-            ide("IC", "2025.1.4")
+            ide("IC", "2025.2")
+            ide("IC", "2025.1")
+            ide("IC", "2024.3")
+            ide("IC", "2024.2")
             ide("IC", "2024.1")
+            ide("IC", "2023.3")
         }
     }
-}
-
-changelog {
-    groups.empty()
-    repositoryUrl = pluginRepositoryUrl
 }
 
 qodana {
@@ -78,7 +76,11 @@ qodana {
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
 }
 
-koverReport { defaults { xml { onCheck = true } } }
+koverReport {
+    defaults {
+        xml { onCheck = true }
+    }
+}
 
 intellijPlatformTesting {
     runIde {

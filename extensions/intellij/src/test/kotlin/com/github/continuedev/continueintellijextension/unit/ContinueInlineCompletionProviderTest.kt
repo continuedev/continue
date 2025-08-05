@@ -69,10 +69,6 @@ class ContinueInlineCompletionProviderTest : BasePlatformTestCase() {
         assertFileContent("digits = '1234567890'<caret>")
     }
 
-    fun `test cycle between multiple completion variants`() {
-        // todo implement
-    }
-
     fun `test multiline`() = myFixture.testInlineCompletion {
         registerSuggestion(": i32) -> i32 {\n    a + b\n}")
         init(PlainTextFileType.INSTANCE, "fn add(a: i32, b<caret>")
@@ -89,16 +85,26 @@ class ContinueInlineCompletionProviderTest : BasePlatformTestCase() {
     }
 
     fun `test accepting completion notifies the service with valid UUID`() = myFixture.testInlineCompletion {
-        var acceptedUuid: String? = null
-        registerSuggestion("test") { acceptedUuid = it }
+        var uuid: String? = null
+        registerSuggestion("test") { uuid = it }
         init(PlainTextFileType.INSTANCE, "test <caret>")
         callInlineCompletion()
         delay()
         insertWithTab()
         assertFileContent("test test<caret>")
         assertDoesNotThrow {
-            UUID.fromString(acceptedUuid)
+            UUID.fromString(uuid)
         }
+    }
+
+    fun `test not accepting completions is not notifying service with UUID`() = myFixture.testInlineCompletion {
+        var uuid: String? = null
+        registerSuggestion("test") { uuid = it }
+        init(PlainTextFileType.INSTANCE, "test <caret>")
+        callInlineCompletion()
+        delay()
+        assertInlineRender("test")
+        assertNull(uuid)
     }
 
     private fun registerSuggestion(variant: String?, accept: (String?) -> Unit = {}) =
