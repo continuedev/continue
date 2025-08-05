@@ -251,6 +251,7 @@ export class VsCodeExtension {
       let orgId = queryParams.get("org_id");
 
       this.core.invoke("config/refreshProfiles", {
+        reason: "VS Code deep link",
         selectOrgId: orgId === "null" ? undefined : (orgId ?? undefined),
         selectProfileId:
           profileId === "null" ? undefined : (profileId ?? undefined),

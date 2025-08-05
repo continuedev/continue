@@ -1,4 +1,4 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../control-plane/client.js";
 import {
@@ -46,7 +46,7 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles;
-  totalConfigLoads: number = 0;
+  totalConfigReloads: number = 0;
 
   public isInitialized: Promise<void>;
   private initter: EventEmitter;
@@ -121,7 +121,7 @@ export class ConfigHandler {
     this.workspaceDirs = null; // forces workspace dirs reload
 
     try {
-      const orgs = await this.getOrgs();
+      const { orgs, errors } = await this.getOrgs();
 
       // Figure out selected org
       const workspaceId = await this.getWorkspaceId();
@@ -136,21 +136,20 @@ export class ConfigHandler {
       // note, ignoring case of zero orgs since should never happen
 
       let selectedOrg: OrgWithProfiles;
-      if (!currentSelection) {
-        selectedOrg = fallback;
-      } else {
+      if (currentSelection) {
         const match = orgs.find((org) => org.id === currentSelection);
         if (match) {
           selectedOrg = match;
         } else {
           selectedOrg = fallback;
         }
+      } else {
+        selectedOrg = fallback;
       }
 
       if (signal.aborted) {
         return; // local only case, no`fetch to throw abort error
       }
-      this.initter.emit("init");
 
       this.globalContext.update("lastSelectedOrgIdForWorkspace", {
         ...selectedOrgs,
@@ -161,28 +160,52 @@ export class ConfigHandler {
       this.currentOrg = selectedOrg;
       this.currentProfile = selectedOrg.currentProfile;
 
-      await this.reloadConfig(reason);
+      await this.reloadConfig(reason, errors);
     } catch (e) {
-      if (e instanceof Error && e.message.includes("AbortError")) {
+      if (signal.aborted) {
         return;
       } else {
-        this.initter.emit("init"); // Error case counts for initialization
+        this.initter.emit("init"); // Error case counts as init
         throw e;
       }
     }
   }
 
-  private async getOrgs(): Promise<OrgWithProfiles[]> {
+  private async getOrgs(): Promise<{
+    orgs: OrgWithProfiles[];
+    errors?: ConfigValidationError[];
+  }> {
+    const errors: ConfigValidationError[] = [];
     const isSignedIn = await this.controlPlaneClient.isSignedIn();
     if (isSignedIn) {
-      const orgDescs = await this.controlPlaneClient.listOrganizations();
-      const orgs = await Promise.all([
-        this.getPersonalHubOrg(),
-        ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
-      ]);
-      return orgs;
-    } else {
-      return [await this.getLocalOrg()];
+      try {
+        const orgDescs = await this.controlPlaneClient.listOrganizations();
+        const orgs = await Promise.all([
+          this.getPersonalHubOrg(),
+          ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+        ]);
+        // TODO make try/catch more granular here, to catch specific org errors
+        return { orgs };
+      } catch (e) {
+        errors.push({
+          fatal: false,
+          message: `Error loading Continue Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
+        });
+      }
+    }
+    // Load local org if not signed in or hub orgs fail
+    try {
+      const orgs = [await this.getLocalOrg()];
+      return { orgs };
+    } catch (e) {
+      errors.push({
+        fatal: true,
+        message: `Error loading local assistants${e instanceof Error ? ":\n" + e.message : ""}`,
+      });
+      return {
+        orgs: [],
+        errors,
+      };
     }
   }
 
@@ -276,9 +299,7 @@ export class ConfigHandler {
       firstNonLocal ?? (profiles.length > 0 ? profiles[0] : null);
 
     let currentProfile: ProfileLifecycleManager | null;
-    if (!currentSelection) {
-      currentProfile = fallback;
-    } else {
+    if (currentSelection) {
       const match = profiles.find(
         (profile) => profile.profileDescription.id === currentSelection,
       );
@@ -287,6 +308,8 @@ export class ConfigHandler {
       } else {
         currentProfile = fallback;
       }
+    } else {
+      currentProfile = fallback;
     }
 
     if (currentProfile) {
@@ -348,8 +371,8 @@ export class ConfigHandler {
   // External actions that can cause a cascading config refresh
   // Should not be used internally
   //////////////////
-  async refreshAll() {
-    await this.cascadeInit("External refresh all");
+  async refreshAll(reason?: string) {
+    await this.cascadeInit(reason ?? "External refresh all");
   }
 
   // Ide settings change: refresh session and cascade refresh from the top
@@ -460,14 +483,17 @@ export class ConfigHandler {
   // IMPORTANT - must always refresh when switching profiles
   // Because of e.g. MCP singleton and docs service using things from config
   // Could improve this
-  async reloadConfig(reason: string) {
+  async reloadConfig(reason: string, injectErrors?: ConfigValidationError[]) {
     const startTime = performance.now();
-    this.totalConfigLoads += 1;
+    this.totalConfigReloads += 1;
     // console.log(`Reloading config (#${this.totalConfigLoads}): ${reason}`); // Uncomment to see config loading logs
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [{ message: "Current profile not found", fatal: true }],
+        errors: [
+          { message: "Current profile not found", fatal: true },
+          ...(injectErrors ?? []),
+        ],
         configLoadInterrupted: true,
       };
     }
@@ -483,10 +509,19 @@ export class ConfigHandler {
       }
     }
 
-    const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig(this.additionalContextProviders);
+    const {
+      config,
+      errors = [],
+      configLoadInterrupted,
+    } = await this.currentProfile.reloadConfig(this.additionalContextProviders);
+
+    if (injectErrors) {
+      errors.unshift(...injectErrors);
+    }
 
     this.notifyConfigListeners({ config, errors, configLoadInterrupted });
+
+    this.initter.emit("init");
 
     // Track config loading telemetry
     const endTime = performance.now();
@@ -494,11 +529,15 @@ export class ConfigHandler {
     void Telemetry.capture("config_reload", {
       duration,
       reason,
-      totalConfigLoads: this.totalConfigLoads,
+      totalConfigLoads: this.totalConfigReloads,
       configLoadInterrupted,
     });
 
-    return { config, errors, configLoadInterrupted };
+    return {
+      config,
+      errors: errors.length ? errors : undefined,
+      configLoadInterrupted,
+    };
   }
 
   // Listeners setup - can listen to current profile updates

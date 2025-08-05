@@ -1,0 +1,246 @@
+---
+title: Model Capabilities
+description: Understanding and configuring model capabilities for tools and image support
+keywords: [capabilities, tools, function calling, image input, config]
+---
+
+Continue needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
+
+## What are Model Capabilities?
+
+Model capabilities tell Continue what features a model supports:
+
+- **`tool_use`** - Whether the model can use tools and functions
+- **`image_input`** - Whether the model can process images
+
+Without proper capability configuration, you may encounter issues like:
+
+- Agent mode being unavailable (requires tools)
+- Tools not working at all
+- Image uploads being disabled
+
+## How Continue Detects Capabilities
+
+Continue uses a two-tier system for determining model capabilities:
+
+### 1. Automatic Detection (Default)
+
+Continue automatically detects capabilities based on your provider and model name. For example:
+
+- **OpenAI**: GPT-4 and GPT-3.5 Turbo models support tools
+- **Anthropic**: Claude 3.5+ models support both tools and images
+- **Ollama**: Most models support tools, vision models support images
+- **Google**: All Gemini models support function calling
+
+This works well for popular models, but may not cover custom deployments or newer models.
+
+For implementation details, see:
+
+- [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
+- [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
+
+### 2. Manual Configuration
+
+You can add capabilities to models that Continue doesn't automatically detect in your `config.yaml`.
+
+<Note>
+You cannot override autodetection - you can only add capabilities. Continue will always use its built-in knowledge about your model in addition to any capabilities you specify.
+</Note>
+
+```yaml
+models:
+  - name: my-custom-gpt4
+    provider: openai
+    apiBase: https://my-deployment.com/v1
+    model: gpt-4-custom
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+## When to Add Capabilities
+
+Add capabilities when:
+
+1. **Using custom deployments** - Your API endpoint serves a model with different capabilities than the standard version
+2. **Using newer models** - Continue doesn't yet recognize a newly released model
+3. **Experiencing issues** - Autodetection isn't working correctly for your setup
+4. **Using proxy services** - Some proxy services modify model capabilities
+
+## Configuration Examples
+
+### Basic Configuration
+
+Add tool support for a model that Continue doesn't recognize:
+
+```yaml
+models:
+  - name: custom-model
+    provider: openai
+    model: my-fine-tuned-gpt4
+    capabilities:
+      - tool_use
+```
+
+<Info>
+  The `tool_use` capability is for native tool/function calling support. The
+  model must actually support tools for this to work.
+</Info>
+
+<Warning>
+  **Experimental**: System message tools are available as an experimental feature
+  for models without native tool support. These are not automatically used as a
+  fallback and must be explicitly configured. Most models are trained for native
+  tools, so system message tools may not work as well.
+</Warning>
+
+### Disable Capabilities
+
+Explicitly set no capabilities (autodetection will still apply):
+
+```yaml
+models:
+  - name: limited-claude
+    provider: anthropic
+    model: claude-4.0-sonnet
+    capabilities: [] # Empty array doesn't disable autodetection
+```
+
+<Warning>
+  An empty capabilities array does not disable autodetection. Continue will
+  still detect and use the model's actual capabilities. To truly limit a model's
+  capabilities, you would need to use a model that doesn't support those
+  features.
+</Warning>
+
+### Multiple Capabilities
+
+Enable both tools and image support:
+
+```yaml
+models:
+  - name: multimodal-gpt
+    provider: openai
+    model: gpt-4-vision-preview
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+## Common Scenarios
+
+Some providers and custom deployments may require explicit capability configuration:
+
+- **OpenRouter**: May not preserve the original model's capabilities
+- **Custom API endpoints**: May have different capabilities than standard models
+- **Local models**: May need explicit capabilities if using non-standard model names
+
+Example configuration:
+
+```yaml
+models:
+  - name: custom-deployment
+    provider: openai
+    apiBase: https://custom-api.company.com/v1
+    model: custom-gpt
+    capabilities:
+      - tool_use # If supports function calling
+      - image_input # If supports vision
+```
+
+## Troubleshooting
+
+For troubleshooting capability-related issues like Agent mode being unavailable or tools not working, see the [Troubleshooting guide](/troubleshooting#agent-mode-is-unavailable-or-tools-arent-working).
+
+## Best Practices
+
+1. **Start with autodetection** - Only override if you experience issues
+2. **Test after changes** - Verify tools and images work as expected
+3. **Keep Continue updated** - Newer versions improve autodetection
+
+Remember: Setting capabilities only adds to autodetection. Continue will still use its built-in knowledge about your model in addition to your specified capabilities.
+
+## Model Capability Support
+
+This matrix shows which models support tool use and image input capabilities. Continue auto-detects these capabilities, but you can override them if needed.
+
+### OpenAI
+
+| Model         | Tool Use | Image Input | Context Window |
+| :------------ | -------- | ----------- | -------------- |
+| o3            | Yes      | No          | 128k           |
+| o3-mini       | Yes      | No          | 128k           |
+| GPT-4o        | Yes      | Yes         | 128k           |
+| GPT-4 Turbo   | Yes      | Yes         | 128k           |
+| GPT-4         | Yes      | No          | 8k             |
+| GPT-3.5 Turbo | Yes      | No          | 16k            |
+
+### Anthropic
+
+| Model             | Tool Use | Image Input | Context Window |
+| :---------------- | -------- | ----------- | -------------- |
+| Claude 4 Sonnet   | Yes      | Yes         | 200k           |
+| Claude 3.5 Sonnet | Yes      | Yes         | 200k           |
+| Claude 3.5 Haiku  | Yes      | Yes         | 200k           |
+
+### Google
+
+| Model            | Tool Use | Image Input | Context Window |
+| :--------------- | -------- | ----------- | -------------- |
+| Gemini 2.5 Pro   | Yes      | Yes         | 2M             |
+| Gemini 2.0 Flash | Yes      | Yes         | 1M             |
+
+### Mistral
+
+| Model           | Tool Use | Image Input | Context Window |
+| :-------------- | -------- | ----------- | -------------- |
+| Devstral Medium | Yes      | No          | 32k            |
+| Mistral         | Yes      | No          | 32k            |
+
+### DeepSeek
+
+| Model             | Tool Use | Image Input | Context Window |
+| :---------------- | -------- | ----------- | -------------- |
+| DeepSeek V3       | Yes      | No          | 128k           |
+| DeepSeek Coder V2 | Yes      | No          | 128k           |
+| DeepSeek Chat     | Yes      | No          | 64k            |
+
+### xAI
+
+| Model  | Tool Use | Image Input | Context Window |
+| :----- | -------- | ----------- | -------------- |
+| Grok 4 | Yes      | Yes         | 128k           |
+
+### Moonshot AI
+
+| Model   | Tool Use | Image Input | Context Window |
+| :------ | -------- | ----------- | -------------- |
+| Kimi K2 | Yes      | Yes         | 128k           |
+
+### Qwen
+
+| Model             | Tool Use | Image Input | Context Window |
+| :---------------- | -------- | ----------- | -------------- |
+| Qwen Coder 3 480B | Yes      | No          | 128k           |
+
+### Ollama (Local Models)
+
+| Model          | Tool Use | Image Input | Context Window |
+| :------------- | -------- | ----------- | -------------- |
+| Qwen 3 Coder   | Yes      | No          | 32k            |
+| Devstral Small | Yes      | No          | 32k            |
+| Llama 3.1      | Yes      | No          | 128k           |
+| Llama 3        | Yes      | No          | 8k             |
+| Mistral        | Yes      | No          | 32k            |
+| Codestral      | Yes      | No          | 32k            |
+| Gemma 3 4B     | Yes      | No          | 8k             |
+
+### Notes
+
+- **Tool Use**: Function calling support (tools are required for Agent mode)
+- **Image Input**: Processing images
+- **Context Window**: Maximum number of tokens the model can process in a single request
+
+---
+
+**Is your model missing or incorrect?** Help improve this documentation! You can edit this page on GitHub using the link below.
