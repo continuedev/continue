@@ -1,3 +1,5 @@
+const MAX_CACHING_MESSAGES = 4;
+
 // Caching strategy type - transforms a clean Anthropic body by adding cache_control
 export type CachingStrategy = (anthropicBody: any) => any;
 
@@ -9,7 +11,7 @@ const noCachingStrategy: CachingStrategy = (body) => body;
 
 // Strategy 2: System Messages Only (Current Implementation)
 const systemOnlyStrategy: CachingStrategy = (body) => {
-  let availableCacheMessages = 4;
+  let availableCacheMessages = MAX_CACHING_MESSAGES;
   if (body.system && Array.isArray(body.system)) {
     return {
       ...body,
@@ -31,7 +33,7 @@ const systemOnlyStrategy: CachingStrategy = (body) => {
 // Strategy 3: System and Tools (High Impact)
 const systemAndToolsStrategy: CachingStrategy = (body) => {
   const result = { ...body };
-  let availableCacheMessages = 4;
+  let availableCacheMessages = MAX_CACHING_MESSAGES;
 
   // Cache system messages
   if (result.system && Array.isArray(result.system)) {
@@ -67,7 +69,7 @@ const systemAndToolsStrategy: CachingStrategy = (body) => {
 // Strategy 4: Optimized (Intelligent Caching)
 const optimizedStrategy: CachingStrategy = (body) => {
   const result = { ...body };
-  let availableCacheMessages = 4;
+  let availableCacheMessages = MAX_CACHING_MESSAGES;
 
   // Always cache system messages
   if (result.system && Array.isArray(result.system)) {
