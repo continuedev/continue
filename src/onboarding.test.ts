@@ -1,9 +1,11 @@
-import { describe, expect, test, beforeEach, afterEach } from 'vitest';
-import { runNormalFlow } from './onboarding.js';
-import type { AuthConfig } from './auth/workos.js';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
+
+import { describe, expect, test, beforeEach, afterEach } from 'vitest';
+
+import type { AuthConfig } from './auth/workos.js';
+import { runNormalFlow } from './onboarding.js';
 
 describe('onboarding config flag handling', () => {
   let tempDir: string;
