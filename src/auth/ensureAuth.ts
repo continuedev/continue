@@ -1,4 +1,5 @@
 import chalk from "chalk";
+
 import { isAuthenticated, login } from "./workos.js";
 
 /**
@@ -22,7 +23,7 @@ export async function ensureAuthenticated(
     await login();
     return true;
   } catch (error) {
-    console.error(chalk.red("Failed to authenticate."));
+    console.error(chalk.red("Failed to authenticate."), error);
     return false;
   }
 }

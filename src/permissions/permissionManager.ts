@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+
 import { ToolCallRequest } from "./types.js";
 
 export interface PermissionRequestResult {

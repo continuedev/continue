@@ -1,3 +1,8 @@
+import * as fs from "fs";
+import { dirname } from "node:path";
+import * as os from "os";
+import * as path from "path";
+
 import {
   AssistantUnrolled,
   RegistryClient,
@@ -5,10 +10,7 @@ import {
 } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
-import * as fs from "fs";
-import { dirname } from "node:path";
-import * as os from "os";
-import * as path from "path";
+
 import {
   AuthConfig,
   getAccessToken,

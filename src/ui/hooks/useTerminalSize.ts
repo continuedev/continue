@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useStdout } from "ink";
+import { useEffect, useState } from "react";
 
 const DEFAULT_ROWS = 24;
 const DEFAULT_COLS = 80;
@@ -43,4 +43,4 @@ const useTerminalSize = (debounce = 100) => {
   return { ...dimensions, isResizing };
 };
 
-export default useTerminalSize;
+export { useTerminalSize };

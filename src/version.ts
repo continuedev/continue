@@ -1,7 +1,8 @@
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import logger from "./util/logger.js";
+
+import { logger } from "./util/logger.js";
 
 export function getVersion(): string {
   try {
@@ -10,7 +11,7 @@ export function getVersion(): string {
     const packageJsonPath = join(__dirname, "../package.json");
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
     return packageJson.version;
-  } catch (error) {
+  } catch {
     console.warn("Warning: Could not read version from package.json");
     return "unknown";
   }

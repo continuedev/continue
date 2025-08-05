@@ -1,10 +1,11 @@
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
+
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
 import { MCPServiceWrapper } from "./MCPServiceWrapper.js";
-import { modeService } from "./ModeService.js";
 import { ModelService } from "./ModelService.js";
+import { modeService } from "./ModeService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   ApiClientServiceState,
@@ -35,7 +36,8 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
     const initArgs: Parameters<typeof modeService.initialize>[0] = {
       allow: overrides.allow,
       ask: overrides.ask,
-      exclude: overrides.exclude
+      exclude: overrides.exclude,
+      isHeadless: options.headless
     };
     
     // Only set the boolean flag that corresponds to the mode
@@ -46,18 +48,26 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
     }
     // If mode is "normal" or undefined, no flags are set
     
-    modeService.initialize(initArgs);
+    await modeService.initialize(initArgs);
+  } else {
+    // Even if no overrides, we need to initialize with defaults
+    await modeService.initialize({
+      isHeadless: options.headless
+    });
   }
   
-  // Always register a factory that returns the current state from modeService
-  // This ensures the service container always has the latest mode state
-  serviceContainer.register(
+  // Register the TOOL_PERMISSIONS service with immediate value
+  // Since ToolPermissionService is already initialized synchronously in ModeService,
+  // we can register it as a ready value instead of a factory
+  const toolPermissionState = modeService.getToolPermissionService().getState();
+  logger.debug("Registering TOOL_PERMISSIONS with state:", {
+    currentMode: toolPermissionState.currentMode,
+    isHeadless: toolPermissionState.isHeadless,
+    policyCount: toolPermissionState.permissions.policies.length
+  });
+  serviceContainer.registerValue(
     SERVICE_NAMES.TOOL_PERMISSIONS,
-    async () => {
-      // Always return the current state from the global mode service
-      return modeService.getToolPermissionService().getState();
-    },
-    []
+    toolPermissionState
   );
 
   serviceContainer.register(
@@ -163,6 +173,10 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
     },
     [SERVICE_NAMES.CONFIG] // Depends on config
   );
+
+  // Eagerly initialize all services to ensure they're ready when needed
+  // This avoids race conditions and "service not ready" errors
+  await serviceContainer.initializeAll();
 
   logger.debug("Service registry initialized");
 }

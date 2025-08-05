@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
-import { Tool } from "./types.js";
+
 import { formatToolArgument } from "./formatters.js";
+import { Tool } from "./types.js";
 
 // List files in a directory
 export const listFilesTool: Tool = {
-  name: "list_files",
+  name: "List",
   displayName: "List",
   description: "List files in a directory",
   parameters: {

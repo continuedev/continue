@@ -12,24 +12,24 @@ describe("permissionsYamlLoader", () => {
       const policies = yamlConfigToPolicies(config);
 
       expect(policies).toEqual([
-        { tool: "run_terminal_command", permission: "exclude" },
-        { tool: "write_file", permission: "ask" },
-        { tool: "read_file", permission: "allow" },
-        { tool: "list_files", permission: "allow" },
+        { tool: "Bash", permission: "exclude" },
+        { tool: "Write", permission: "ask" },
+        { tool: "Read", permission: "allow" },
+        { tool: "List", permission: "allow" },
       ]);
     });
 
     it("should normalize tool names", () => {
       const config = {
-        allow: ["read", "READ", "read_file"],
+        allow: ["read", "READ", "Read"],
       };
 
       const policies = yamlConfigToPolicies(config);
 
       expect(policies).toEqual([
-        { tool: "read_file", permission: "allow" },
-        { tool: "read_file", permission: "allow" },
-        { tool: "read_file", permission: "allow" },
+        { tool: "Read", permission: "allow" },
+        { tool: "Read", permission: "allow" },
+        { tool: "Read", permission: "allow" },
       ]);
     });
 
@@ -63,7 +63,7 @@ describe("permissionsYamlLoader", () => {
 
       const policies = yamlConfigToPolicies(config);
 
-      expect(policies).toEqual([{ tool: "read_file", permission: "allow" }]);
+      expect(policies).toEqual([{ tool: "Read", permission: "allow" }]);
     });
 
     it("should handle all permission types", () => {
@@ -76,12 +76,12 @@ describe("permissionsYamlLoader", () => {
       const policies = yamlConfigToPolicies(config);
 
       expect(policies).toEqual([
-        { tool: "fetch", permission: "exclude" },
-        { tool: "exit", permission: "exclude" },
-        { tool: "write_file", permission: "ask" },
-        { tool: "run_terminal_command", permission: "ask" },
-        { tool: "read_file", permission: "allow" },
-        { tool: "list_files", permission: "allow" },
+        { tool: "Fetch", permission: "exclude" },
+        { tool: "Exit", permission: "exclude" },
+        { tool: "Write", permission: "ask" },
+        { tool: "Bash", permission: "ask" },
+        { tool: "Read", permission: "allow" },
+        { tool: "List", permission: "allow" },
       ]);
     });
   });
@@ -91,7 +91,7 @@ describe("permissionsYamlLoader", () => {
       const policy = parseToolPattern("Write", "allow");
       
       expect(policy).toEqual({
-        tool: "write_file",
+        tool: "Write",
         permission: "allow"
       });
     });
@@ -100,7 +100,7 @@ describe("permissionsYamlLoader", () => {
       const policy = parseToolPattern("Write(**/*.ts)", "exclude");
       
       expect(policy).toEqual({
-        tool: "write_file",
+        tool: "Write",
         permission: "exclude",
         argumentMatches: {
           file_path: "**/*.ts"
@@ -112,7 +112,7 @@ describe("permissionsYamlLoader", () => {
       const policy = parseToolPattern("Bash(npm install)", "ask");
       
       expect(policy).toEqual({
-        tool: "run_terminal_command",
+        tool: "Bash",
         permission: "ask",
         argumentMatches: {
           command: "npm install"
@@ -124,19 +124,19 @@ describe("permissionsYamlLoader", () => {
       const testCases = [
         {
           pattern: "Read(src/**/*.js)",
-          expected: { tool: "read_file", permission: "allow", argumentMatches: { file_path: "src/**/*.js" } }
+          expected: { tool: "Read", permission: "allow", argumentMatches: { file_path: "src/**/*.js" } }
         },
         {
           pattern: "List(/home/user)",
-          expected: { tool: "list_files", permission: "allow", argumentMatches: { path: "/home/user" } }
+          expected: { tool: "List", permission: "allow", argumentMatches: { path: "/home/user" } }
         },
         {
           pattern: "Search(TODO)",
-          expected: { tool: "search_code", permission: "allow", argumentMatches: { query: "TODO" } }
+          expected: { tool: "Search", permission: "allow", argumentMatches: { query: "TODO" } }
         },
         {
           pattern: "Fetch(https://api.example.com)",
-          expected: { tool: "fetch", permission: "allow", argumentMatches: { url: "https://api.example.com" } }
+          expected: { tool: "Fetch", permission: "allow", argumentMatches: { url: "https://api.example.com" } }
         }
       ];
 
@@ -150,7 +150,7 @@ describe("permissionsYamlLoader", () => {
       const policy = parseToolPattern("Write()", "allow");
       
       expect(policy).toEqual({
-        tool: "write_file",
+        tool: "Write",
         permission: "allow"
       });
     });
@@ -159,7 +159,7 @@ describe("permissionsYamlLoader", () => {
       const policy = parseToolPattern("Bash( npm run test )", "ask");
       
       expect(policy).toEqual({
-        tool: "run_terminal_command",
+        tool: "Bash",
         permission: "ask",
         argumentMatches: {
           command: "npm run test"
@@ -187,7 +187,7 @@ describe("permissionsYamlLoader", () => {
       const policy = parseToolPattern("write(**/*.ts)", "allow");
       
       expect(policy).toEqual({
-        tool: "write_file",
+        tool: "Write",
         permission: "allow",
         argumentMatches: {
           file_path: "**/*.ts"

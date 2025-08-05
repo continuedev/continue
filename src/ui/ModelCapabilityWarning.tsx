@@ -24,4 +24,4 @@ const ModelCapabilityWarning: React.FC<ModelCapabilityWarningProps> = ({
   );
 };
 
-export default ModelCapabilityWarning;
+export { ModelCapabilityWarning };

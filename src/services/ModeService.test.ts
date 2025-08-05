@@ -1,6 +1,6 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, afterEach, describe, expect, vi, test } from 'vitest';
+
 import { ModeService } from './ModeService.js';
-import { PermissionMode } from '../permissions/types.js';
 
 describe('ModeService', () => {
   let modeService: ModeService;
@@ -16,61 +16,77 @@ describe('ModeService', () => {
     (ModeService as any).instance = undefined;
   });
 
-  describe('initialization', () => {
-    it('should initialize with normal mode by default', () => {
-      modeService.initialize({});
+  describe('State Management', () => {
+    test('should initialize with normal mode by default', async () => {
+      const state = await modeService.initialize({});
+      
+      expect(state).toEqual({
+        mode: 'normal',
+        toolPermissionService: expect.any(Object)
+      });
       expect(modeService.getCurrentMode()).toBe('normal');
     });
 
-    it('should convert readonly flag to plan mode', () => {
-      modeService.initialize({ readonly: true });
+    test('should convert readonly flag to plan mode', async () => {
+      const state = await modeService.initialize({ readonly: true });
+      
+      expect(state.mode).toBe('plan');
       expect(modeService.getCurrentMode()).toBe('plan');
     });
 
-    it('should convert auto flag to auto mode', () => {
-      modeService.initialize({ auto: true });
+    test('should convert auto flag to auto mode', async () => {
+      const state = await modeService.initialize({ auto: true });
+      
+      expect(state.mode).toBe('auto');
       expect(modeService.getCurrentMode()).toBe('auto');
     });
 
-
-    it('should initialize tool permission service', () => {
-      modeService.initialize({ allow: ['testTool'], exclude: ['badTool'] });
-      const toolPermissionService = modeService.getToolPermissionService();
+    test('should initialize tool permission service with flags', async () => {
+      const state = await modeService.initialize({ 
+        allow: ['testTool'], 
+        exclude: ['badTool'] 
+      });
+      
+      const toolPermissionService = state.toolPermissionService;
       expect(toolPermissionService).toBeDefined();
       expect(toolPermissionService.getState()).toBeDefined();
+      expect(toolPermissionService.getCurrentMode()).toBe('normal');
     });
   });
 
-  describe('mode switching', () => {
-    beforeEach(() => {
-      modeService.initialize({});
+  describe('switchMode()', () => {
+    beforeEach(async () => {
+      await modeService.initialize({});
     });
 
-    it('should switch from normal to plan mode', () => {
+    test('should switch from normal to plan mode', () => {
       expect(modeService.getCurrentMode()).toBe('normal');
+      
+      modeService.switchMode('plan');
+      
+      expect(modeService.getCurrentMode()).toBe('plan');
+      expect(modeService.getState().mode).toBe('plan');
+    });
+
+    test('should switch from plan to auto mode', () => {
       modeService.switchMode('plan');
       expect(modeService.getCurrentMode()).toBe('plan');
-    });
-
-    it('should switch from plan to auto mode', () => {
-      modeService.switchMode('plan');
-      expect(modeService.getCurrentMode()).toBe('plan');
+      
       modeService.switchMode('auto');
+      
       expect(modeService.getCurrentMode()).toBe('auto');
+      expect(modeService.getState().mode).toBe('auto');
     });
 
-    it('should switch to auto mode', () => {
-      modeService.switchMode('auto');
-      expect(modeService.getCurrentMode()).toBe('auto');
-    });
-
-    it('should switch back to normal mode', () => {
+    test('should switch back to normal mode', () => {
       modeService.switchMode('plan');
       modeService.switchMode('normal');
+      
       expect(modeService.getCurrentMode()).toBe('normal');
+      expect(modeService.getState().mode).toBe('normal');
     });
 
-    it('should update tool permission service when switching modes', () => {
+    test('should update tool permission service when switching modes', () => {
       const toolPermissionService = modeService.getToolPermissionService();
       const initialState = toolPermissionService.getState();
       
@@ -84,14 +100,41 @@ describe('ModeService', () => {
         permission: 'allow'
       });
     });
+
+    test('should handle multiple mode switches correctly', () => {
+      // Start in normal
+      expect(modeService.getCurrentMode()).toBe('normal');
+      
+      // Switch to plan
+      modeService.switchMode('plan');
+      const planState = modeService.getToolPermissionService().getState();
+      expect(planState.permissions.policies).toContainEqual({
+        tool: 'Write',
+        permission: 'exclude'
+      });
+      
+      // Switch to auto
+      modeService.switchMode('auto');
+      const autoState = modeService.getToolPermissionService().getState();
+      expect(autoState.permissions.policies).toHaveLength(1);
+      expect(autoState.permissions.policies[0]).toEqual({
+        tool: '*',
+        permission: 'allow'
+      });
+      
+      // Back to normal
+      modeService.switchMode('normal');
+      const normalState = modeService.getToolPermissionService().getState();
+      expect(normalState.currentMode).toBe('normal');
+    });
   });
 
-  describe('available modes', () => {
-    beforeEach(() => {
-      modeService.initialize({});
+  describe('getAvailableModes()', () => {
+    beforeEach(async () => {
+      await modeService.initialize({});
     });
 
-    it('should return all available modes with descriptions', () => {
+    test('should return all available modes with descriptions', () => {
       const modes = modeService.getAvailableModes();
       expect(modes).toHaveLength(3);
       
@@ -108,16 +151,16 @@ describe('ModeService', () => {
     });
   });
 
-  describe('singleton behavior', () => {
-    it('should return the same instance', () => {
+  describe('Singleton Behavior', () => {
+    test('should return the same instance', () => {
       const instance1 = ModeService.getInstance();
       const instance2 = ModeService.getInstance();
       expect(instance1).toBe(instance2);
     });
 
-    it('should maintain state across getInstance calls', () => {
+    test('should maintain state across getInstance calls', async () => {
       const instance1 = ModeService.getInstance();
-      instance1.initialize({});
+      await instance1.initialize({});
       instance1.switchMode('plan');
       
       const instance2 = ModeService.getInstance();
@@ -125,43 +168,92 @@ describe('ModeService', () => {
     });
   });
 
-  describe('event emission', () => {
-    let modeChangeListener: jest.Mock;
+  describe('isReady()', () => {
+    test('should always return true for ModeService', () => {
+      // ModeService is always ready since it's a singleton
+      expect(modeService.isReady()).toBe(true);
+    });
+  });
 
-    beforeEach(() => {
-      modeService.initialize({});
-      modeChangeListener = jest.fn();
+  describe('Event Emission', () => {
+    let modeChangeListener: ReturnType<typeof vi.fn>;
+    let stateChangeListener: ReturnType<typeof vi.fn>;
+
+    beforeEach(async () => {
+      await modeService.initialize({});
+      modeChangeListener = vi.fn();
+      stateChangeListener = vi.fn();
       modeService.on('modeChanged', modeChangeListener);
+      modeService.on('stateChanged', stateChangeListener);
     });
 
     afterEach(() => {
       modeService.off('modeChanged', modeChangeListener);
+      modeService.off('stateChanged', stateChangeListener);
     });
 
-    it('should emit modeChanged event when mode switches', () => {
+    test('should emit modeChanged event when mode switches', () => {
       modeService.switchMode('plan');
       
       expect(modeChangeListener).toHaveBeenCalledWith('plan', 'normal');
       expect(modeChangeListener).toHaveBeenCalledTimes(1);
     });
 
-    it('should emit event with correct previous and new modes', () => {
+    test('should emit stateChanged event when mode switches', () => {
+      modeService.switchMode('plan');
+      
+      expect(stateChangeListener).toHaveBeenCalledWith(
+        expect.objectContaining({ mode: 'plan' }),
+        expect.objectContaining({ mode: 'normal' })
+      );
+    });
+
+    test('should emit event with correct previous and new modes', () => {
       modeService.switchMode('plan');
       modeChangeListener.mockClear();
+      stateChangeListener.mockClear();
       
       modeService.switchMode('auto');
       
       expect(modeChangeListener).toHaveBeenCalledWith('auto', 'plan');
       expect(modeChangeListener).toHaveBeenCalledTimes(1);
+      expect(stateChangeListener).toHaveBeenCalledTimes(1);
     });
 
-    it('should not emit event when switching to same mode', () => {
+    test('should not emit event when switching to same mode', () => {
       modeService.switchMode('plan');
       modeChangeListener.mockClear();
+      stateChangeListener.mockClear();
       
       modeService.switchMode('plan');
       
       expect(modeChangeListener).not.toHaveBeenCalled();
+      // stateChanged might still be called due to setState, but modeChanged should not
+    });
+  });
+
+  describe('Integration with ToolPermissionService', () => {
+    beforeEach(async () => {
+      await modeService.initialize({
+        allow: ['Read'],
+        exclude: ['dangerous_tool']
+      });
+    });
+
+    test('should pass initialization args to ToolPermissionService', () => {
+      const toolService = modeService.getToolPermissionService();
+      const state = toolService.getState();
+      
+      // The state should have processed the allow/exclude rules
+      expect(state.permissions.policies).toBeDefined();
+      expect(state.currentMode).toBe('normal');
+    });
+
+    test('should maintain ToolPermissionService reference', () => {
+      const toolService1 = modeService.getToolPermissionService();
+      const toolService2 = modeService.getToolPermissionService();
+      
+      expect(toolService1).toBe(toolService2);
     });
   });
 });

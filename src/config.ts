@@ -1,8 +1,7 @@
+
 import {
   AssistantUnrolled,
   ModelConfig,
-  RegistryClient,
-  unrollAssistant,
 } from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
@@ -14,14 +13,12 @@ import {
   DefaultApi,
   DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
-import chalk from "chalk";
-import { dirname } from "node:path";
+
 import {
   AuthConfig,
   getAccessToken,
   getOrganizationId,
 } from "./auth/workos.js";
-import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
@@ -75,43 +72,6 @@ export function getLlmApi(
   }
 
   return [llmApi, model];
-}
-
-async function loadConfigYaml(
-  accessToken: string | null,
-  filePath: string,
-  organizationId: string | null,
-  apiClient: DefaultApiInterface
-): Promise<AssistantUnrolled> {
-  const unrollResult = await unrollAssistant(
-    { filePath, uriType: "file" },
-    new RegistryClient({
-      accessToken: accessToken ?? undefined,
-      apiBase: env.apiBase,
-      rootPath: dirname(filePath),
-    }),
-    {
-      currentUserSlug: "",
-      alwaysUseProxy: false,
-      orgScopeId: organizationId,
-      renderSecrets: true,
-      platformClient: new CLIPlatformClient(organizationId, apiClient),
-      onPremProxyUrl: null,
-    }
-  );
-
-  const errorDetails = unrollResult.errors;
-  if (!unrollResult.config) {
-    throw new Error(`Failed to load config file:\n${errorDetails}`);
-  } else if (errorDetails?.length) {
-    const warnings =
-      errorDetails?.length > 1
-        ? errorDetails.map((d) => `\n- ${d.message}`)
-        : errorDetails[0].message;
-    console.warn(chalk.dim(`Warning: ${warnings}`));
-  }
-
-  return unrollResult.config;
 }
 
 export function getApiClient(

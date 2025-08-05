@@ -1,4 +1,5 @@
-import { describe, expect, test, beforeEach, jest } from '@jest/globals';
+import { describe, expect, test, beforeEach, vi } from 'vitest';
+
 import { ServiceContainer } from './ServiceContainer.js';
 
 describe('ServiceContainer', () => {
@@ -6,7 +7,7 @@ describe('ServiceContainer', () => {
 
   beforeEach(() => {
     container = new ServiceContainer();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Dependency Cascade Reloading', () => {

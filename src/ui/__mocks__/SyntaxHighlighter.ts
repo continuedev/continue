@@ -1,4 +1,3 @@
-import { Text } from 'ink';
 import React from 'react';
 
 export interface SyntaxHighlighterTheme {
@@ -17,12 +16,12 @@ export const defaultTheme: SyntaxHighlighterTheme = {
   operator: 'cyan',
 };
 
-export function highlightCode(code: string, language?: string): React.ReactNode[] {
+export function highlightCode(code: string): React.ReactNode[] {
   // Mock implementation that just returns the code as plain text
   return [React.createElement('ink-text', { key: 'mock-code' }, code)];
 }
 
-export function detectLanguage(code: string): string {
+export function detectLanguage(): string {
   // Mock implementation
   return 'javascript';
 }

@@ -69,7 +69,7 @@ export function updateAnthropicModelInYaml(yamlContent: string, apiKey: string):
     doc.set('models', config.models);
 
     return doc.toString();
-  } catch (error) {
+  } catch {
     // If parsing fails completely, create a new config
     const defaultConfig: ConfigStructure = {
       name: "Local Config",

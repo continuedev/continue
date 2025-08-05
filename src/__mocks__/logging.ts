@@ -1,14 +1,16 @@
-export const log = jest.fn();
-export const error = jest.fn();
-export const info = jest.fn();
-export const warn = jest.fn();
+import { vi } from 'vitest';
+
+export const log = vi.fn();
+export const error = vi.fn();
+export const info = vi.fn();
+export const warn = vi.fn();
 export const loggers = {
-  blue: jest.fn(),
-  green: jest.fn(),
-  yellow: jest.fn(),
-  red: jest.fn(),
-  magenta: jest.fn(),
-  cyan: jest.fn(),
-  white: jest.fn(),
-  gray: jest.fn(),
+  blue: vi.fn(),
+  green: vi.fn(),
+  yellow: vi.fn(),
+  red: vi.fn(),
+  magenta: vi.fn(),
+  cyan: vi.fn(),
+  white: vi.fn(),
+  gray: vi.fn(),
 };

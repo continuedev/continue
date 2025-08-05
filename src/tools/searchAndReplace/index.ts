@@ -1,14 +1,16 @@
-import { findSearchMatch } from "./findSearchMatch.js";
-import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
-import { Tool } from "../types.js";
-import { generateDiff } from "../writeFile.js";
 import * as fs from "fs";
-import telemetryService from "../../telemetry/telemetryService.js";
+
+import { telemetryService } from "../../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../../telemetry/utils.js";
+import { Tool } from "../types.js";
+import { generateDiff } from "../writeFile.js";
+
+import { findSearchMatch } from "./findSearchMatch.js";
 import { parseSearchAndReplaceArgs } from "./parseArgs.js";
+import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;
@@ -24,7 +26,7 @@ export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
  * Our starting point is heavily inspired by Cline's `replace_in_file` tool: https://github.com/cline/cline/blob/2709ccefcddc616e89a70962f017bcbbca1f17bf/src/core/prompts/system.ts#L87-L121
  */
 export const searchAndReplaceInFileTool: Tool = {
-  name: "edit_file",
+  name: "Edit",
   displayName: "Edit",
   readonly: false,
   isBuiltIn: true,
@@ -179,7 +181,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       return `Successfully edited ${args.filepath}`;
     } catch (error) {
       throw new Error(
-        `Failed to edit ${args.filepath}:\n ${
+        `Error: failed to edit ${args.filepath}:\n ${
           error instanceof Error ? error.message : String(error)
         }`
       );

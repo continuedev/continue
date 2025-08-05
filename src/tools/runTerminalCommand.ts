@@ -1,13 +1,15 @@
 import { spawn } from "child_process";
-import telemetryService from "../telemetry/telemetryService.js";
+
+import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+
 import { Tool } from "./types.js";
 
 export const runTerminalCommandTool: Tool = {
-  name: "run_terminal_command",
+  name: "Bash",
   displayName: "Bash",
   description: "Executes a terminal command and returns the output",
   parameters: {
@@ -41,11 +43,12 @@ export const runTerminalCommandTool: Tool = {
       const child = spawn("sh", ["-c", command]);
       let stdout = "";
       let stderr = "";
-      let lastOutputTime = Date.now();
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
 
-      const TIMEOUT_MS = 30000; // 30 seconds
+      const TIMEOUT_MS = process.env.NODE_ENV === 'test' && process.env.TEST_TERMINAL_TIMEOUT 
+        ? parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10) 
+        : 30000; // 30 seconds default, configurable for tests
 
       const resetTimeout = () => {
         if (timeoutId) {
@@ -57,7 +60,7 @@ export const runTerminalCommandTool: Tool = {
           child.kill();
           const output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           resolve(
-            output + "\n\n[Command timed out after 30 seconds of no output]"
+            output + `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`
           );
         }, TIMEOUT_MS);
       };
@@ -67,13 +70,11 @@ export const runTerminalCommandTool: Tool = {
 
       child.stdout.on("data", (data) => {
         stdout += data.toString();
-        lastOutputTime = Date.now();
         resetTimeout();
       });
 
       child.stderr.on("data", (data) => {
         stderr += data.toString();
-        lastOutputTime = Date.now();
         resetTimeout();
       });
 

@@ -1,10 +1,11 @@
 import * as fs from "fs";
-import JSZip from "jszip";
 import * as path from "path";
+
+import JSZip from "jszip";
+
 import { env } from "./env.js";
 
 export interface CommandLineArgs {
-  isHeadless: boolean;
   configPath?: string;
   prompt?: string; // Optional prompt argument
   resume?: boolean; // Resume from last session
@@ -108,21 +109,15 @@ export async function processRule(ruleSpec: string): Promise<string> {
 }
 
 /**
- * Parse command line arguments
+ * Parse command line arguments for non-permission related flags
+ * @deprecated Most functionality has been moved to services. This is only kept for backward compatibility.
  * @returns Parsed command line arguments
  */
 export function parseArgs(): CommandLineArgs {
   const args = process.argv.slice(2);
 
   // Default values
-  const result: CommandLineArgs = {
-    isHeadless: false,
-  };
-
-  // Parse flags
-  if (args.includes("--print") || args.includes("-p")) {
-    result.isHeadless = true;
-  }
+  const result: CommandLineArgs = {};
 
   if (args.includes("--resume")) {
     result.resume = true;

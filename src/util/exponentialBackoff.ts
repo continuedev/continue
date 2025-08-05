@@ -1,8 +1,10 @@
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
+
 import { error, warn } from "../logging.js";
+
 import { formatError } from "./formatError.js";
-import logger from "./logger.js";
+import { logger } from "./logger.js";
 
 export interface ExponentialBackoffOptions {
   /** Maximum number of retry attempts */
@@ -157,7 +159,7 @@ export async function* withExponentialBackoff<T>(
   let lastError: any;
 
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
-    let yieldedValues: T[] = [];
+    const yieldedValues: T[] = [];
 
     try {
       // Check if we should abort before creating the generator

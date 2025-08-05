@@ -1,14 +1,16 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
+
 import { getAllSlashCommands } from "../commands/commands.js";
-import { modeService } from "../services/ModeService.js";
-import { reloadService, SERVICE_NAMES } from "../services/index.js";
 import type { PermissionMode } from "../permissions/types.js";
+import { reloadService, SERVICE_NAMES } from "../services/index.js";
+import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
-import logger from "../util/logger.js";
-import FileSearchUI from "./FileSearchUI.js";
-import SlashCommandUI from "./SlashCommandUI.js";
+import { logger } from "../util/logger.js";
+
+import { FileSearchUI } from "./FileSearchUI.js";
+import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
@@ -103,13 +105,13 @@ const UserInput: React.FC<UserInputProps> = ({
           const allCommands = getSlashCommands();
           const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
 
-          // Hide selector if we have an exact match and there's more content after the cursor
+          // Hide selector if we have an exact match and there's a space after cursor
           if (exactMatch) {
             const restOfText = text.slice(cursor);
-            // If there's a space immediately after cursor, or we're at end of line/text, hide selector
+            // Only hide if there's a space or newline immediately after cursor
+            // Don't hide just because we're at the end - user might want to see the suggestion
             if (
               restOfText.startsWith(" ") ||
-              restOfText === "" ||
               restOfText.startsWith("\n")
             ) {
               setShowSlashCommands(false);
@@ -369,7 +371,7 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       if (key.downArrow) {
-        const historyEntry = inputHistory.navigateDown(inputText);
+        const historyEntry = inputHistory.navigateDown();
         if (historyEntry !== null) {
           textBuffer.setText(historyEntry);
           textBuffer.setCursor(historyEntry.length);
@@ -547,4 +549,4 @@ const UserInput: React.FC<UserInputProps> = ({
   );
 };
 
-export default UserInput;
+export { UserInput };

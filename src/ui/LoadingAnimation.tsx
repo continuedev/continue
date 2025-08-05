@@ -1,77 +1,7 @@
 import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 
-const SPINNER_BARS = "▁▂▃▄▅▆▇█▇▆▅▄▃▁";
-const SPINNER_BLOCKS = "▉▊▋▌▍▎▏▎▍▌▋▊▉";
-const SPINNER_CORNERS = "▖▘▝▗";
-const SPINNER_CLASSIC = "-/|\\-/|";
-const SPINNER_BOX = "┤┘┴└├┌┬┐";
-const SPINNER_DOUBLE_BARS = [
-  "▁▁",
-  "▁▂",
-  "▁▃",
-  "▁▄",
-  "▁▅",
-  "▁▆",
-  "▁▇",
-  "▁█",
-  "▂▇",
-  "▃▆",
-  "▄▅",
-  "▅▄",
-  "▆▃",
-  "▇▂",
-  "█▁",
-  "▇▁",
-  "▆▁",
-  "▅▁",
-  "▄▁",
-  "▃▁",
-  "▂▁",
-];
-const SPINNER_SHADES = "░▒▓█▓▒░";
-const SPINNER_RINGS = "○◔◑◕●◐◓◑◒";
-const SPINNER_SPARKLES = "✢✣✤✥✦✧✬✱✲✳✴✵✶✷✸";
-const SPINNER_PULSE = "·∙●⬤●∙·";
-const MITOSIS_FRAMES = [
-  "●",
-  "●●",
-  "● ●", // regular space
-  "●\u2004●", // 1/3 em space
-  "●\u2002●", // 1/2 em space
-  "● ●", // regular space
-  "●●",
-  "●",
-];
 
-const DANCING_NOTES_FRAMES = [
-  "♪   ",
-  "♫   ",
-  "♪ ♫ ",
-  "♫ ♪ ",
-  "♬ ♩ ",
-  "♩ ♬ ",
-  "♫ ♪ ",
-  "♪ ♫ ",
-  "♫   ",
-  "♪   ",
-];
-const MITOSIS_2 = [
-  "⚬  ",
-  "⚭  ",
-  "⚮  ",
-  "⚯  ",
-  "○ ○",
-  "⚯  ",
-  "⚮  ",
-  "⚭  ",
-  "⚬  ",
-];
-
-// Generate all possible Braille characters (from U+2800 to U+28FF)
-const BRAILLE_CHARS = Array.from({ length: 256 }, (_, i) =>
-  String.fromCharCode(0x2800 + i)
-);
 
 const BRAILLE_BY_DENSITY: { [key: number]: string[] } = {
   0: ["⠀"], // No dots
@@ -136,10 +66,6 @@ const STATIC_FADE = [
   ...generateEasedStaticFade(TIMING_CURVE),
 ];
 
-// Linear (same speed throughout)
-const STATIC_FADE_LINEAR = generateEasedStaticFade([2, 2, 2, 2, 2, 2, 2, 2, 2]);
-
-const STARS = "·+✣✤✻✽❊❈❈❈❈❊✽✻✤✣+";
 
 const SPINNER: string | string[] = STATIC_FADE;
 
@@ -171,4 +97,4 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   return <Text color={color}>{animationChars[currentIndex]}</Text>;
 };
 
-export default LoadingAnimation;
+export { LoadingAnimation };

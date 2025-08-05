@@ -22,4 +22,4 @@ const Timer: React.FC<TimerProps> = ({ startTime, color = "gray" }) => {
   return <Text color={color}>{elapsed}s</Text>;
 };
 
-export default Timer;
+export { Timer };

@@ -1,6 +1,8 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
+
 import { MCPService } from '../mcp.js';
-import logger from '../util/logger.js';
+import { logger } from '../util/logger.js';
+
 import { MCPServiceState } from './types.js';
 
 /**
