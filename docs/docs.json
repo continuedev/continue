@@ -239,6 +239,9 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
+              "guides/understanding-assistants",
+              "guides/cli",
+              "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/llama3.1",
               "guides/set-up-codestral",

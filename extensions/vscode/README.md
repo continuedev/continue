@@ -39,18 +39,18 @@ the IDE
 
 ![chat](./media/chat.gif)
 
-## Autocomplete
-
-[Autocomplete](https://continue.dev/docs/autocomplete/how-to-use-it) provides inline code suggestions as you type
-
-![autocomplete](./media/autocomplete.gif)
-
 ## Edit
 
 [Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current
 file
 
 ![edit](./media/edit.gif)
+
+## Autocomplete
+
+[Autocomplete](https://continue.dev/docs/autocomplete/how-to-use-it) provides inline code suggestions as you type
+
+![autocomplete](./media/autocomplete.gif)
 
 </div>
 
