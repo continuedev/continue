@@ -40,6 +40,7 @@ export const editFileTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.EditExistingFile,
     `To edit an EXISTING file, use the ${BuiltInToolNames.EditExistingFile} tool with

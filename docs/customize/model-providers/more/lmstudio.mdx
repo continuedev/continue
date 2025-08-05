@@ -4,13 +4,17 @@ title: "LM Studio"
 
 [LM Studio](https://lmstudio.ai) is an application for Mac, Windows, and Linux that makes it easy to locally run open-source models and comes with a great UI. To get started with LM Studio, download from the website, use the UI to download a model, and then start the local inference server. Continue can then be configured to use the `LMStudio` LLM class:
 
+## Chat model
+
+We recommend configuring **Llama3.1 8B** as your chat model.
+
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: LM Studio
+    - name: Llama3.1 8B Instruct
       provider: lmstudio
-      model: llama2-7b
+      model: meta-llama-3.1-8b-instruct
   ```
   </Tab>
   <Tab title="JSON">
@@ -18,9 +22,9 @@ title: "LM Studio"
   {
     "models": [
       {
-        "title": "LM Studio",
+        "title": "Llama3.1 8B Instruct",
         "provider": "lmstudio",
-        "model": "llama2-7b"
+        "model": "meta-llama-3.1-8b-instruct"
       }
     ]
   }
@@ -28,7 +32,7 @@ title: "LM Studio"
   </Tab>
 </Tabs>
 
-### Embeddings model
+## Embeddings model
 
 LMStudio supports embeddings endpoints, and comes with the `nomic-ai/nomic-embed-text-v1.5-GGUF` model (as of Nov 2024, check your models)
 
@@ -63,21 +67,24 @@ To configure a remote instance of LM Studio, add the `"apiBase"` property to you
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Nomic Embed Text
+    - name: Llama3.1 8B Instruct
       provider: lmstudio
-      model: nomic-ai/nomic-embed-text-v1.5-GGUF
-      roles:
-        - embed
+      model: meta-llama-3.1-8b-instruct
+      apiBase: http://<MY ENDPOINT>/v1
   ```
   </Tab>
   <Tab title="JSON">
   ```json title="config.json"
-  {
-    "embeddingsProvider": {
-      "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+    {
+      "models": [
+        {
+          "title": "Llama3.1 8B Instruct",
+          "provider": "lmstudio",
+          "model": "meta-llama-3.1-8b-instruct",
+          "apiBase": "http://<MY ENDPOINT>/v1"
+        }
+      ]
     }
-  }
   ```
   </Tab>
 </Tabs>

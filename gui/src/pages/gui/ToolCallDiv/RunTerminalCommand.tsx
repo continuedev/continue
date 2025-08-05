@@ -137,8 +137,10 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
           <StatusIcon status={statusType} />
           {isRunning ? "Running" : statusMessage}
           {isRunning && props.toolCallId && (
-            <span
-              onClick={() => {
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
                 // Dispatch the action to move the command to the background
                 dispatch(
                   moveTerminalProcessToBackground({
@@ -149,7 +151,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
               className="text-link ml-3 cursor-pointer text-xs no-underline hover:underline"
             >
               Move to background
-            </span>
+            </a>
           )}
         </div>
       )}

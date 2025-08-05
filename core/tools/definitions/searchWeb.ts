@@ -26,6 +26,7 @@ export const searchWebTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.SearchWeb,
     `To search the web, use the ${BuiltInToolNames.SearchWeb} tool with a natural language query. For example, to search for the current weather, you would respond with:`,
