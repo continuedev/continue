@@ -153,6 +153,7 @@ const createMockNextEditOutcome = (
     accepted: true,
     editableRegionStartLine: 1,
     editableRegionEndLine: 3,
+    diffLines: [],
 
     // Apply any overrides
     ...overrides,
