@@ -1,14 +1,6 @@
-
 // Import after mocking
 import { AssistantUnrolled } from "@continuedev/config-yaml";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  vi,
-  test,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, vi, test } from "vitest";
 
 import * as workos from "./auth/workos.js";
 import * as commands from "./commands/commands.js";
@@ -39,10 +31,12 @@ describe("handleSlashCommands", () => {
 
     // Since the mock already returns the required value, we don't need to set it
     // Just verify it returns what we expect
-    expect(commands.getAllSlashCommands(mockAssistant)).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "help" }),
-      expect.objectContaining({ name: "login" }),
-    ]));
+    expect(commands.getAllSlashCommands(mockAssistant)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "help" }),
+        expect.objectContaining({ name: "login" }),
+      ])
+    );
   });
 
   afterEach(() => {
@@ -114,7 +108,9 @@ describe("handleSlashCommands", () => {
         { id: "org2", name: "Organization 2" },
       ];
 
-      (services.auth.getAvailableOrganizations as any).mockResolvedValue(mockOrgs);
+      (services.auth.getAvailableOrganizations as any).mockResolvedValue(
+        mockOrgs
+      );
 
       const result = await handleSlashCommands("/org list", mockAssistant);
 
@@ -164,9 +160,9 @@ describe("handleSlashCommands", () => {
       const result = await handleSlashCommands("/help", mockAssistant);
 
       expect(result).not.toBeNull();
-      expect(result?.output).toContain("Available commands:");
-      expect(result?.output).toContain("/help - Show help");
-      expect(result?.output).toContain("/login - Authenticate");
+      expect(result?.output).toContain("Slash commands:");
+      expect(result?.output).toContain("/help: Show help");
+      expect(result?.output).toContain("/login: Authenticate");
     });
 
     test.skip("logout command should exit", async () => {
