@@ -164,6 +164,13 @@
         "icon": "$(stop)"
       },
       {
+        "command": "continue.generateCommitMessage",
+        "category": "Continue",
+        "title": "Generate Commit Message",
+        "group": "Continue",
+        "icon": "$(sparkle)"
+      },
+      {
         "command": "continue.acceptVerticalDiffBlock",
         "category": "Continue",
         "title": "Accept Vertical Diff Block",
@@ -486,6 +493,12 @@
       }
     ],
     "menus": {
+      "scm/title": [
+        {
+          "command": "continue.generateCommitMessage",
+          "group": "navigation@0"
+        }
+      ],
       "commandPalette": [
         {
           "command": "continue.focusContinueInput"

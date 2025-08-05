@@ -209,6 +209,10 @@ const getCommandsMap: (
         streamId,
       );
     },
+    "continue.generateCommitMessage": () => {
+      captureCommandTelemetry("generateCommitMessage");
+      // void sidebar.webviewProtocol?.request("generateCommitMessage", undefined);
+    },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
