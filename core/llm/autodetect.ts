@@ -155,6 +155,24 @@ function llmCanGenerateInParallel(provider: string, model: string): boolean {
   return PARALLEL_PROVIDERS.includes(provider);
 }
 
+function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
+  modelName: string,
+): boolean {
+  return (
+    modelName.includes("gpt") ||
+    modelName.includes("command") ||
+    modelName.includes("aya") ||
+    modelName.includes("chat-bison") ||
+    modelName.includes("pplx") ||
+    modelName.includes("gemini") ||
+    modelName.includes("grok") ||
+    modelName.includes("moonshot") ||
+    modelName.includes("kimi") ||
+    modelName.includes("mercury") ||
+    /^o\d/.test(modelName)
+  );
+}
+
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
@@ -162,21 +180,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "codellama-70b";
   }
 
-  if (
-    lower.includes("gpt") ||
-    lower.includes("command") ||
-    lower.includes("aya") ||
-    lower.includes("chat-bison") ||
-    lower.includes("pplx") ||
-    lower.includes("gemini") ||
-    lower.includes("grok") ||
-    lower.includes("moonshot") ||
-    lower.includes("kimi") ||
-    lower.includes("mercury") ||
-    /^o\d/.test(lower)
-  ) {
+  if (isProviderHandlesTemplatingOrNoTemplateTypeRequired(lower)) {
     return undefined;
   }
+
   if (lower.includes("llama3") || lower.includes("llama-3")) {
     return "llama3";
   }
