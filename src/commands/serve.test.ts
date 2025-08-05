@@ -1,3 +1,5 @@
+import type { Server } from "http";
+
 import {
   afterEach,
   beforeEach,
@@ -6,13 +8,12 @@ import {
   it,
   vi,
 } from "vitest";
-import type { Server } from "http";
+
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
 
 describe("serve command", () => {
   let context: any;
   let originalProcessExit: typeof process.exit;
-  let serverPromise: Promise<void>;
   let serverRef: Server | null = null;
 
   beforeEach(() => {

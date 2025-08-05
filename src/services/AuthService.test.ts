@@ -1,5 +1,4 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
-import { AuthService } from './AuthService.js';
 
 // Mock the workos module
 vi.mock('../auth/workos.js');
@@ -14,6 +13,8 @@ import {
   saveAuthConfig,
   listUserOrganizations
 } from '../auth/workos.js';
+
+import { AuthService } from './AuthService.js';
 
 describe('AuthService', () => {
   let service: AuthService;

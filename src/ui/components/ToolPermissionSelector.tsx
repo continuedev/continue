@@ -1,8 +1,10 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
+
 import { formatToolCall } from "../../tools/index.js";
-import { ToolPreview } from "./ToolPreview.js";
 import { ToolCallPreview } from "../../tools/types.js";
+
+import { ToolPreview } from "./ToolPreview.js";
 
 interface PermissionOption {
   id: string;

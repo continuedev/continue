@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+
 import { resetConsoleOverrides } from "./src/util/consoleOverride.js";
 
 // Disable telemetry for tests
@@ -17,7 +18,7 @@ afterEach(() => {
   // Reset console overrides to ensure clean state for each test
   try {
     resetConsoleOverrides();
-  } catch (e) {
+  } catch {
     // Ignore errors when resetting console
   }
 });

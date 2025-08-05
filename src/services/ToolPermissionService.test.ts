@@ -1,13 +1,13 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
-import { ToolPermissionService } from "./ToolPermissionService.js";
-import { PermissionMode, ToolPermissionPolicy } from '../permissions/types.js';
 
 // Mock modules
 vi.mock('../permissions/permissionsYamlLoader.js');
 vi.mock('../permissions/precedenceResolver.js');
 
-import * as permissionsYamlLoader from '../permissions/permissionsYamlLoader.js';
 import * as precedenceResolver from '../permissions/precedenceResolver.js';
+import { ToolPermissionPolicy } from '../permissions/types.js';
+
+import { ToolPermissionService } from "./ToolPermissionService.js";
 
 describe("ToolPermissionService", () => {
   let service: ToolPermissionService;

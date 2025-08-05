@@ -1,8 +1,9 @@
 import { describe, test, expect, beforeEach } from 'vitest';
+
 import { initializeServices, getServiceSync, SERVICE_NAMES } from './services/index.js';
 import { serviceContainer } from './services/ServiceContainer.js';
-import { getAllTools } from './streamChatResponse.js';
 import type { ToolPermissionServiceState } from './services/ToolPermissionService.js';
+import { getAllTools } from './streamChatResponse.js';
 
 describe('getAllTools - Tool Filtering', () => {
   beforeEach(() => {

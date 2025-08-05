@@ -1,8 +1,9 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
+
 import { StreamCallbacks, streamChatResponse } from "./streamChatResponse.js";
-import logger from "./util/logger.js";
+import { logger } from "./util/logger.js";
 
 export const COMPACTION_MARKER = "[COMPACTED HISTORY]";
 

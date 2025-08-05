@@ -1,14 +1,14 @@
-import chalk from "chalk";
 import * as fs from "fs";
-import open from "open";
 import * as os from "os";
 import * as path from "path";
-import { createInterface } from "readline";
-import { env } from "../env.js";
 
+import chalk from "chalk";
 // Polyfill fetch for Node < 18
 import nodeFetch from "node-fetch";
+import open from "open";
+
 import { getApiClient } from "../config.js";
+import { env } from "../env.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
@@ -272,23 +272,6 @@ export function isAuthenticated(): boolean {
 }
 
 /**
- * Prompt the user for input
- */
-function prompt(question: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer);
-    });
-  });
-}
-
-/**
  * Device authorization response from WorkOS
  */
 interface DeviceAuthorizationResponse {
@@ -524,7 +507,7 @@ export async function login(): Promise<AuthConfig> {
   // Try to open the complete verification URL in browser
   try {
     await open(deviceAuth.verification_uri_complete);
-  } catch (error) {
+  } catch {
     console.info(chalk.yellow("Unable to open browser automatically"));
   }
 
@@ -665,7 +648,7 @@ export async function listUserOrganizations(): Promise<
   try {
     const resp = await apiClient.listOrganizations();
     return resp.organizations || [];
-  } catch (error) {
+  } catch {
     return null;
   }
 }

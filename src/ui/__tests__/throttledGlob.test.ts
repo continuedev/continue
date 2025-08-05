@@ -1,3 +1,5 @@
+import { EventEmitter } from "events";
+
 import {
   vi,
   describe,
@@ -6,7 +8,7 @@ import {
   it,
   expect,
 } from "vitest";
-import { EventEmitter } from "events";
+
 import { throttledGlob } from "../FileSearchUI.js";
 
 // Define a custom interface for our mock

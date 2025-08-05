@@ -27,7 +27,7 @@ export function readStdinSync(): string | null {
     // If isTTY is explicitly false, try to read stdin
     const stdinData = fs.readFileSync(0, "utf8");
     return stdinData.trim();
-  } catch (error) {
+  } catch {
     return null;
   }
 }

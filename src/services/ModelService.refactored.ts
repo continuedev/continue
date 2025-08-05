@@ -1,10 +1,12 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi, constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
-import { getLlmApi } from '../config.js';
+import { constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
+
 import { AuthConfig, getAccessToken, getOrganizationId, getModelName } from '../auth/workos.js';
-import logger from '../util/logger.js';
-import { ModelServiceState } from './types.js';
+import { getLlmApi } from '../config.js';
+import { logger } from '../util/logger.js';
+
 import { BaseService, ServiceWithDependencies } from './BaseService.js';
+import { ModelServiceState } from './types.js';
 
 /**
  * Service for managing LLM and model state

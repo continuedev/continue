@@ -8,9 +8,10 @@ import {
   loadAuthConfig,
   saveAuthConfig,
 } from "../auth/workos.js";
-import logger from "../util/logger.js";
-import { AuthServiceState } from "./types.js";
+import { logger } from "../util/logger.js";
+
 import { BaseService } from "./BaseService.js";
+import { AuthServiceState } from "./types.js";
 
 /**
  * Service for managing authentication state and operations

@@ -1,7 +1,8 @@
 import { PermissionMode } from "../permissions/types.js";
-import logger from "../util/logger.js";
-import { ToolPermissionService } from "./ToolPermissionService.js";
+import { logger } from "../util/logger.js";
+
 import { BaseService } from "./BaseService.js";
+import { ToolPermissionService } from "./ToolPermissionService.js";
 
 export interface ModeServiceState {
   mode: PermissionMode;
@@ -70,7 +71,7 @@ export class ModeService extends BaseService<ModeServiceState> {
    */
   public switchMode(mode: PermissionMode): void {
     const previousMode = this.currentState.mode;
-    const newState = this.currentState.toolPermissionService.switchMode(mode);
+    this.currentState.toolPermissionService.switchMode(mode);
     
     this.setState({ mode });
     

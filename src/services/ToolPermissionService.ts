@@ -5,7 +5,8 @@ import {
   ToolPermissionPolicy,
   ToolPermissions,
 } from "../permissions/types.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
+
 import { BaseService } from "./BaseService.js";
 
 export interface ToolPermissionServiceState {

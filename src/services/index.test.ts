@@ -1,7 +1,8 @@
 import { vi } from "vitest";
 
-import { initializeServices } from "./index.js";
 import { modeService } from "./ModeService.js";
+
+import { initializeServices } from "./index.js";
 
 describe("initializeServices", () => {
   let mockModeService: any;

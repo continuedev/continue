@@ -1,7 +1,8 @@
-import { execaNode, type Subprocess } from "execa";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
+
+import { execaNode, type Subprocess } from "execa";
 
 export interface CLITestContext {
   cliPath: string;
@@ -35,7 +36,7 @@ export async function createTestContext(): Promise<CLITestContext> {
   // Ensure the CLI file exists before returning the context
   try {
     await fs.access(cliPath);
-  } catch (error) {
+  } catch {
     throw new Error(`CLI file not found at ${cliPath}. Please run 'npm run build' first.`);
   }
 
@@ -53,7 +54,7 @@ export async function cleanupTestContext(
 ): Promise<void> {
   try {
     await fs.rm(context.testDir, { recursive: true, force: true });
-  } catch (error) {
+  } catch {
     // Ignore cleanup errors
   }
 }
@@ -165,7 +166,7 @@ export async function readSession(
     const content = await fs.readFile(sessionPath, "utf-8");
 
     return JSON.parse(content);
-  } catch (error) {
+  } catch {
     return null;
   }
 }

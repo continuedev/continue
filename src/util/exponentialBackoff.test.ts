@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+
 import { ExponentialBackoffOptions } from "./exponentialBackoff.js";
 
 // Since the functions are not exported, we need to recreate them for testing

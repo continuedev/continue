@@ -1,8 +1,10 @@
 import { Box, Text } from "ink";
 import React from "react";
-import { ColoredDiff } from "../ColoredDiff.js";
-import { ToolCallPreview } from "../../tools/types.js";
+
 import { getToolDisplayName } from "../../tools/index.js";
+import { ToolCallPreview } from "../../tools/types.js";
+import { ColoredDiff } from "../ColoredDiff.js";
+
 import { ChecklistDisplay } from "./ChecklistDisplay.js";
 
 interface ToolPreviewProps {

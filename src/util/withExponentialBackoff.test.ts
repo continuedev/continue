@@ -1,5 +1,7 @@
 import { vi } from "vitest";
+
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
+
 import { withExponentialBackoff } from "./exponentialBackoff.js";
 
 describe("withExponentialBackoff", () => {

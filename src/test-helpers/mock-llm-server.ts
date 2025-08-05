@@ -1,6 +1,7 @@
 import * as fs from "fs/promises";
 import * as http from "http";
 import * as path from "path";
+
 import { CLITestContext } from "./cli-helpers.js";
 
 export interface MockLLMServerOptions {
@@ -78,7 +79,7 @@ export async function createMockLLMServer(
           ? (() => {
               try {
                 return JSON.parse(body);
-              } catch (e) {
+              } catch {
                 return body;
               }
             })()

@@ -8,8 +8,7 @@ import type {
   ChatCompletionTool,
   ChatCompletionToolMessageParam,
 } from "openai/resources.mjs";
-import { getServiceSync, SERVICE_NAMES } from "./services/index.js";
-import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
+
 import { MCPService } from "./mcp.js";
 import {
   checkToolPermission,
@@ -17,23 +16,24 @@ import {
   ToolCallRequest,
 } from "./permissions/index.js";
 import { toolPermissionManager } from "./permissions/permissionManager.js";
-import telemetryService from "./telemetry/telemetryService.js";
+import { getServiceSync, SERVICE_NAMES } from "./services/index.js";
+import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
+import { telemetryService } from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import {
   getAllBuiltinTools,
   executeToolCall,
   getAvailableTools,
-  getToolDisplayName,
   Tool,
   ToolCall,
   validateToolCallArgsPresent,
 } from "./tools/index.js";
+import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
 import {
   chatCompletionStreamWithBackoff,
   withExponentialBackoff,
 } from "./util/exponentialBackoff.js";
-import logger from "./util/logger.js";
-import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
+import { logger } from "./util/logger.js";
 
 dotenv.config();
 
@@ -300,7 +300,7 @@ export async function processStreamingResponse(
 
               // Don't notify onToolStart here anymore - wait until after permission check
               toolCall.startNotified = true;
-            } catch (e) {
+            } catch {
               // JSON not complete yet, continue
             }
           }

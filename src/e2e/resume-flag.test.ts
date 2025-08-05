@@ -1,3 +1,6 @@
+import * as fs from "fs/promises";
+import * as path from "path";
+
 import {
   cleanupTestContext,
   createTestContext,
@@ -8,8 +11,6 @@ import {
   cleanupMockLLMServer,
   type MockLLMServer,
 } from "../test-helpers/mock-llm-server.js";
-import * as fs from "fs/promises";
-import * as path from "path";
 
 describe("E2E: Resume Flag", () => {
   let context: any;
@@ -130,7 +131,7 @@ describe("E2E: Resume Flag", () => {
     expect(firstResult.stdout).toContain("First response");
     
     // Verify the first session was saved correctly
-    let sessionDir = path.join(context.testDir, ".continue-cli", "sessions");
+    const sessionDir = path.join(context.testDir, ".continue-cli", "sessions");
     let sessionFiles = await fs.readdir(sessionDir);
     expect(sessionFiles).toHaveLength(1);
     

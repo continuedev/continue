@@ -1,10 +1,11 @@
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
+
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
 import { MCPServiceWrapper } from "./MCPServiceWrapper.js";
-import { modeService } from "./ModeService.js";
 import { ModelService } from "./ModelService.js";
+import { modeService } from "./ModeService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   ApiClientServiceState,
@@ -28,7 +29,6 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
   logger.debug("Initializing service registry");
 
   // Initialize mode service with tool permission overrides
-  let modeServiceInitialized = false;
   if (options.toolPermissionOverrides) {
     const overrides = { ...options.toolPermissionOverrides };
     
@@ -49,13 +49,11 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
     // If mode is "normal" or undefined, no flags are set
     
     await modeService.initialize(initArgs);
-    modeServiceInitialized = true;
   } else {
     // Even if no overrides, we need to initialize with defaults
     await modeService.initialize({
       isHeadless: options.headless
     });
-    modeServiceInitialized = true;
   }
   
   // Register the TOOL_PERMISSIONS service with immediate value

@@ -79,4 +79,4 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   );
 };
 
-export default SlashCommandUI;
+export { SlashCommandUI };

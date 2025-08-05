@@ -1,6 +1,4 @@
 import { beforeEach, describe, expect, vi, test } from "vitest";
-import { ConfigService } from "./ConfigService.js";
-import { SERVICE_NAMES } from "./types.js";
 
 // Mock modules
 vi.mock("../auth/workos.js");
@@ -8,10 +6,13 @@ vi.mock("../configLoader.js");
 vi.mock("../args.js");
 vi.mock("./ServiceContainer.js");
 
+import * as args from "../args.js";
 import * as workos from "../auth/workos.js";
 import * as configLoader from "../configLoader.js";
-import * as args from "../args.js";
+
+import { ConfigService } from "./ConfigService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { SERVICE_NAMES } from "./types.js";
 
 describe("ConfigService", () => {
   let service: ConfigService;
@@ -226,11 +227,7 @@ describe("ConfigService", () => {
       // Mock service container
       vi.mocked(workos.loadAuthConfig)
         .mockReturnValue({ accessToken: "token", organizationId: "org-123" } as any);
-      vi.mocked(serviceContainer.get).mockResolvedValueOnce({
-        authConfig: { accessToken: "token", organizationId: "org-123" } as any,
-        isAuthenticated: true,
-      });
-      vi.mocked(serviceContainer.get).mockResolvedValueOnce({
+      vi.mocked(serviceContainer.get).mockResolvedValue({
         apiClient: mockApiClient,
       });
 
@@ -269,11 +266,7 @@ describe("ConfigService", () => {
 
       vi.mocked(workos.loadAuthConfig)
         .mockReturnValue({ accessToken: "token", organizationId: "org-123" } as any);
-      vi.mocked(serviceContainer.get).mockResolvedValueOnce({
-        authConfig: { accessToken: "token", organizationId: "org-123" } as any,
-        isAuthenticated: true,
-      });
-      vi.mocked(serviceContainer.get).mockResolvedValueOnce({
+      vi.mocked(serviceContainer.get).mockResolvedValue({
         apiClient: null,
       });
 

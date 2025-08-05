@@ -1,14 +1,16 @@
-import { findSearchMatch } from "./findSearchMatch.js";
-import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
-import { Tool } from "../types.js";
-import { generateDiff } from "../writeFile.js";
 import * as fs from "fs";
-import telemetryService from "../../telemetry/telemetryService.js";
+
+import { telemetryService } from "../../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../../telemetry/utils.js";
+import { Tool } from "../types.js";
+import { generateDiff } from "../writeFile.js";
+
+import { findSearchMatch } from "./findSearchMatch.js";
 import { parseSearchAndReplaceArgs } from "./parseArgs.js";
+import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;

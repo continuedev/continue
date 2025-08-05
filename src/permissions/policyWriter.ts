@@ -1,8 +1,11 @@
 import * as fs from "fs";
+
 import * as yaml from "yaml";
+
+import { logger } from "../util/logger.js";
+
 import { PERMISSIONS_YAML_PATH, PermissionsYamlConfig, loadPermissionsYaml } from "./permissionsYamlLoader.js";
 import { normalizeToolName, getDisplayName } from "./toolNameMapping.js";
-import logger from "../util/logger.js";
 
 /**
  * Generates a policy rule for a given tool call
@@ -34,7 +37,7 @@ export function generatePolicyRule(toolName: string, toolArgs: any): string {
 export async function addPolicyToYaml(policyRule: string): Promise<void> {
   try {
     // Load existing config or create empty one
-    let config: PermissionsYamlConfig = loadPermissionsYaml() || {};
+    const config: PermissionsYamlConfig = loadPermissionsYaml() || {};
     
     // Ensure allow array exists
     if (!config.allow) {

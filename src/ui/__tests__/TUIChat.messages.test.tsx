@@ -1,5 +1,5 @@
-import type { ChatCompletionMessageParam } from "openai/resources/index.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
+
 import { testBothModes, renderInMode } from "./TUIChat.dualModeHelper.js";
 
 describe("TUIChat - Message Display Tests", () => {

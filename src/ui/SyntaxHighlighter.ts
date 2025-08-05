@@ -191,7 +191,7 @@ export function highlightCode(
     }
 
     return elements;
-  } catch (error) {
+  } catch {
     // Fallback to plain text on error
     return [
       React.createElement(

@@ -1,9 +1,10 @@
-import winston from 'winston';
-import path from 'path';
-import os from 'os';
-import fs from 'fs';
 import crypto from 'crypto';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
 import chalk from 'chalk';
+import winston from 'winston';
 
 const { combine, timestamp, printf, errors } = winston.format;
 
@@ -82,7 +83,7 @@ const logFormat = printf(({ level, message, timestamp, stack, ...metadata }) => 
 let isHeadlessMode = false;
 
 // Create the logger instance
-const logger = winston.createLogger({
+const winstonLogger = winston.createLogger({
   level: 'info', // Default level
   format: combine(
     errors({ stack: true }),
@@ -101,7 +102,7 @@ const logger = winston.createLogger({
 
 // Function to set log level
 export function setLogLevel(level: string) {
-  logger.level = level;
+  winstonLogger.level = level;
 }
 
 // Function to configure headless mode
@@ -109,18 +110,18 @@ export function configureHeadlessMode(headless: boolean) {
   isHeadlessMode = headless;
 }
 
-// Export logger methods
-export default {
-  debug: (message: string, meta?: any) => logger.debug(message, meta),
-  info: (message: string, meta?: any) => logger.info(message, meta),
-  warn: (message: string, meta?: any) => logger.warn(message, meta),
+// Export logger methods  
+export const logger = {
+  debug: (message: string, meta?: any) => winstonLogger.debug(message, meta),
+  info: (message: string, meta?: any) => winstonLogger.info(message, meta),
+  warn: (message: string, meta?: any) => winstonLogger.warn(message, meta),
   error: (message: string, error?: Error | any, meta?: any) => {
     if (error instanceof Error) {
-      logger.error(message, { ...meta, error: error.message, stack: error.stack });
+      winstonLogger.error(message, { ...meta, error: error.message, stack: error.stack });
     } else if (error) {
-      logger.error(message, { ...meta, error });
+      winstonLogger.error(message, { ...meta, error });
     } else {
-      logger.error(message, meta);
+      winstonLogger.error(message, meta);
     }
     
     // In headless mode, also output to stderr

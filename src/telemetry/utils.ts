@@ -1,5 +1,6 @@
-import { diffLines } from "diff";
 import path from "path";
+
+import { diffLines } from "diff";
 
 /**
  * Calculate lines of code added/removed from a file diff

@@ -8,7 +8,7 @@ export const exitTool: Tool = {
   parameters: {},
   readonly: false,
   isBuiltIn: true,
-  run: async (args: { dirpath: string }): Promise<string> => {
+  run: async (): Promise<string> => {
     process.exit(1);
   },
 };

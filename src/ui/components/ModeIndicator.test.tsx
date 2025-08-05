@@ -1,8 +1,11 @@
-import { describe, expect, it, beforeEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import ModeIndicator from './ModeIndicator.js';
+import { describe, expect, it, beforeEach } from 'vitest';
+
 import { modeService } from '../../services/ModeService.js';
+
+import { ModeIndicator } from './ModeIndicator.js';
+
 
 describe('ModeIndicator', () => {
   beforeEach(() => {

@@ -1,16 +1,17 @@
-import { describe, it, expect, beforeEach, vi, test } from 'vitest';
+import { AssistantUnrolled, ModelConfig } from '@continuedev/config-yaml';
+import * as openaiAdapters from '@continuedev/openai-adapters';
+import { describe, expect, beforeEach, vi, test } from 'vitest';
 
 // Mock dependencies before imports
 vi.mock('@continuedev/openai-adapters');
 vi.mock('../config.js');
 vi.mock('../auth/workos.js');
 
-import { ModelService } from './ModelService.js';
-import { AssistantUnrolled, ModelConfig } from '@continuedev/config-yaml';
 import { AuthConfig } from '../auth/workos.js';
-import * as config from '../config.js';
 import * as workos from '../auth/workos.js';
-import * as openaiAdapters from '@continuedev/openai-adapters';
+import * as config from '../config.js';
+
+import { ModelService } from './ModelService.js';
 
 describe('ModelService', () => {
   let service: ModelService;

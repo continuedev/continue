@@ -1,6 +1,6 @@
 import { ServiceContainer } from './ServiceContainer.js';
+
 import { initializeServices } from './index.js';
-import { SERVICE_NAMES } from './types.js';
 
 describe('Service Circular Dependencies', () => {
   it('should not have circular dependencies in service setup', async () => {

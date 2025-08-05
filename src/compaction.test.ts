@@ -1,9 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { compactChatHistory, findCompactionIndex, getHistoryForLLM, COMPACTION_MARKER } from "./compaction.js";
-import { streamChatResponse } from "./streamChatResponse.js";
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import { describe, it, expect, vi } from "vitest";
+
+import { compactChatHistory, findCompactionIndex, getHistoryForLLM, COMPACTION_MARKER } from "./compaction.js";
+import { streamChatResponse } from "./streamChatResponse.js";
+
 
 // Mock the streamChatResponse function
 vi.mock("./streamChatResponse.js", () => ({

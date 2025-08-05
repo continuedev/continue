@@ -1,6 +1,7 @@
 import { Continue, ContinueClient } from "@continuedev/sdk";
-import { env } from "./env.js";
 import chalk from "chalk";
+
+import { env } from "./env.js";
 
 /**
  * Initialize the Continue SDK with the given parameters
