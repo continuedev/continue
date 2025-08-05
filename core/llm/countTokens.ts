@@ -17,6 +17,7 @@ import {
 
 import { renderChatMessage } from "../util/messageContent.js";
 import { AsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
+import { DEFAULT_PRUNING_LENGTH } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -354,7 +355,7 @@ function pruneStringFromTop(
 
 const MAX_TOKEN_SAFETY_BUFFER = 1000;
 const TOKEN_SAFETY_PROPORTION = 0.02;
-function getTokenCountingBufferSafety(contextLength: number) {
+export function getTokenCountingBufferSafety(contextLength: number) {
   return Math.min(
     MAX_TOKEN_SAFETY_BUFFER,
     contextLength * TOKEN_SAFETY_PROPORTION,
@@ -409,14 +410,14 @@ function pruneRawPromptFromTop(
 function compileChatMessages({
   modelName,
   msgs,
-  contextLength,
+  knownContextLength,
   maxTokens,
   supportsImages,
   tools,
 }: {
   modelName: string;
   msgs: ChatMessage[];
-  contextLength: number;
+  knownContextLength: number | undefined;
   maxTokens: number;
   supportsImages: boolean;
   tools?: Tool[];
@@ -465,6 +466,7 @@ function compileChatMessages({
     toolTokens = countToolsTokens(tools, modelName);
   }
 
+  const contextLength = knownContextLength ?? DEFAULT_PRUNING_LENGTH;
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
   const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, maxTokens);
 
@@ -480,12 +482,12 @@ function compileChatMessages({
   inputTokensAvailable -= lastMessagesTokens;
 
   // Make sure there's enough context for the non-excludable items
-  if (inputTokensAvailable < 0) {
+  if (knownContextLength !== undefined && inputTokensAvailable < 0) {
     throw new Error(
       `Not enough context available to include the system message, last user message, and tools.
         There must be at least ${minOutputTokens} tokens remaining for output.
         Request had the following token counts:
-        - contextLength: ${contextLength}
+        - contextLength: ${knownContextLength}
         - counting safety buffer: ${countingSafetyBuffer}
         - tools: ~${toolTokens}
         - system message: ~${systemMsgTokens}
@@ -536,7 +538,14 @@ function compileChatMessages({
   };
 }
 
+async function cleanupAsyncEncoders(): Promise<void> {
+  try {
+    await llamaAsyncEncoder.close();
+  } catch (e) {}
+}
+
 export {
+  cleanupAsyncEncoders,
   compileChatMessages,
   countTokens,
   countTokensAsync,

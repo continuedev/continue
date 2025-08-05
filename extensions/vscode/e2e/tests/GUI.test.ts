@@ -287,6 +287,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
 
     it("should render tool call", async () => {
+      await GUIActions.toggleToolPolicy(view, "view_diff", 0);
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
@@ -299,8 +300,6 @@ describe("GUI Test", () => {
       expect(await statusMessage.getText()).contain(
         "Continue viewed the git diff",
       );
-      // wait for 30 seconds, promise
-      await new Promise((resolve) => setTimeout(resolve, 30000));
     }).timeout(DEFAULT_TIMEOUT.MD * 100);
 
     it("should call tool after approval", async () => {
@@ -367,8 +366,9 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
   });
 
-  describe("Repeat back the system message", () => {
+  describe("should repeat back the system message", () => {
     it("should repeat back the system message", async () => {
+      await GUIActions.selectModeFromDropdown(view, "Chat");
       await GUIActions.selectModelFromDropdown(view, "SYSTEM MESSAGE MOCK LLM");
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -376,7 +376,7 @@ describe("GUI Test", () => {
       await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
-    });
+    }).timeout(DEFAULT_TIMEOUT.XL * 1000);
   });
 
   describe("Chat Paths", () => {

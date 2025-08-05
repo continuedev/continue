@@ -1,51 +1,33 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.services.TelemetryService
-import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
-import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
+import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 class CoreMessengerManager(
-    private val project: Project,
-    private val ideProtocolClient: IdeProtocolClient,
+    project: Project,
+    ideProtocolClient: IdeProtocolClient,
     private val coroutineScope: CoroutineScope
 ) {
-    var coreMessenger: CoreMessenger = createCoreMessenger()
-    private var lastBackoffInterval = 0.5
+    val coreMessenger = CoreMessenger(project, ideProtocolClient, coroutineScope, ::onUnexpectedExit)
+    private var backoffIntervalSeconds = 1
     private val log = Logger.getInstance(CoreMessengerManager::class.java)
 
-    init {
-        setupAnonymousTelemetry()
-    }
-
-    fun restart() {
+    private fun onUnexpectedExit() {
         coroutineScope.launch {
             try {
-                coreMessenger.killSubProcess()
-                lastBackoffInterval *= 2
-                log.warn("Continue process exited, retrying in $lastBackoffInterval seconds")
-                delay((lastBackoffInterval * 1000).toLong())
-                coreMessenger = createCoreMessenger()
+                delay(backoffIntervalSeconds.seconds)
+                backoffIntervalSeconds *= 2
+                log.warn("Continue process terminated externally, retrying in $backoffIntervalSeconds seconds")
+                coreMessenger.restart()
             } catch (e: Exception) {
-                service<TelemetryService>().capture("jetbrains_core_start_error", mapOf("error" to e))
+                service<ContinuePostHogService>().capture("jetbrains_core_start_error", mapOf("error" to e))
             }
-        }
-    }
-
-    private fun createCoreMessenger() =
-        CoreMessenger(project, ideProtocolClient, coroutineScope, ::restart)
-
-    private fun setupAnonymousTelemetry() {
-        coreMessenger.request("config/getSerializedProfileInfo", null, null) { response ->
-            val allowAnonymousTelemetry =
-                response.castNestedOrNull<Boolean>("content", "result", "config", "allowAnonymousTelemetry")
-            if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null)
-                service<TelemetryService>().setup(getMachineUniqueID())
         }
     }
 }

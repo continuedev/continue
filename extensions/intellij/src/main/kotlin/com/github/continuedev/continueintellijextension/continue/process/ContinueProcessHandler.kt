@@ -1,7 +1,8 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.BufferedReader
@@ -19,6 +20,7 @@ class ContinueProcessHandler(
     private val pendingWrites = Channel<String>(Channel.UNLIMITED)
     private val writer = OutputStreamWriter(process.output)
     private val reader = BufferedReader(InputStreamReader(process.input))
+    private val log = Logger.getInstance(ContinueProcessHandler::class.java)
 
     init {
         scope.launch(Dispatchers.IO) {
@@ -27,19 +29,21 @@ class ContinueProcessHandler(
                     val line = reader.readLine()
                     if (line != null && line.isNotEmpty()) {
                         try {
+                            log.debug("Handle: $line")
                             handleMessage(line)
                         } catch (e: Exception) {
-                            service<ContinueErrorService>().report(e, "Error handling message: $line")
+                            service<ContinueSentryService>().report(e, "Error handling message: $line")
                         }
                     } else
                         delay(100)
                 }
             } catch (e: IOException) {
-                service<ContinueErrorService>().report(e)
+                service<ContinueSentryService>().report(e)
             }
         }
         scope.launch(Dispatchers.IO) {
             for (message in pendingWrites) {
+                log.debug("Write: $message")
                 writer.write(message)
                 writer.write("\r\n")
                 writer.flush()

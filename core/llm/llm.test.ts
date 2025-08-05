@@ -213,7 +213,7 @@ describe("LLM", () => {
     testToolCall: true,
   });
   testLLM(
-    new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1-preview" }),
+    new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o3-mini" }),
     { skip: false, timeout: 60000 },
   );
   testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1" }), {

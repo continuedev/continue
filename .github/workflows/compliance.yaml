@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   conventional-commits:
-    name: Validate Conventional Commits (Warning Only)
+    name: Validate Conventional Commits
     runs-on: ubuntu-latest
     if: ${{ !github.event.pull_request.draft }}
     continue-on-error: true
@@ -21,22 +21,26 @@ jobs:
       issues: write
       contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Validate PR title format
+        id: pr-title-check
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "Checking PR title: $PR_TITLE"
 
-      - name: Validate conventional commits
-        id: commitlint
-        uses: wagoid/commitlint-github-action@v6
-        with:
-          configFile: .commitlintrc.warning.json
-          # Only check the last commit instead of all commits in the PR
-          commitDepth: 1
-        continue-on-error: true
+          # Regex pattern for conventional commits
+          PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: .+"
 
-      - name: Add commit message guidance comment
-        if: steps.commitlint.outcome == 'failure'
+          if [[ $PR_TITLE =~ $PATTERN ]]; then
+            echo "✅ PR title follows conventional commit format"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ PR title does not follow conventional commit format"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Add PR title guidance comment
+        if: always() && steps.pr-title-check.outputs.valid == 'false'
         uses: actions/github-script@v7
         with:
           script: |
@@ -48,7 +52,7 @@ jobs:
 
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && 
-              comment.body.includes('Conventional Commit Format')
+              comment.body.includes('PR Title Format')
             );
 
             if (!botComment) {
@@ -57,17 +61,13 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
                 body: [
-                  "## ⚠️ Conventional Commit Format",
+                  "## ⚠️ PR Title Format",
                   "",
-                  "Your latest commit message doesn't follow the conventional commit format, but **this won't block your PR from being merged**. We recommend downloading [this extension](https://marketplace.visualstudio.com/items?itemName=vivaxy.vscode-conventional-commits) if you are using VS Code.",
+                  "Your PR title doesn't follow the conventional commit format, but **this won't block your PR from being merged**. We recommend using this format for better project organization.",
                   "",
                   "### Expected Format:",
                   "```",
                   "<type>[optional scope]: <description>",
-                  "",
-                  "[optional body]",
-                  "",
-                  "[optional footer(s)]",
                   "```",
                   "",
                   "### Examples:",
@@ -88,6 +88,9 @@ jobs:
                 ].join('\n')
               });
             }
+      - name: Ensure job always succeeds
+        if: always()
+        run: echo "✅ Conventional commits check completed (warning only)"
 
   security-audit:
     name: Security Audit
