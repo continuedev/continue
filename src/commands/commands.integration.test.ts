@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import type { AssistantConfig } from '@continuedev/sdk';
+import { describe, expect, it } from 'vitest';
+
 import { getAllSlashCommands } from './commands.js';
 
 describe('Slash Commands Integration', () => {

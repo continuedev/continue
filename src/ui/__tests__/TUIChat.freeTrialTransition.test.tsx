@@ -1,5 +1,4 @@
 // Integration tests for free trial transition - simplified version
-import { jest } from "@jest/globals";
 
 describe("TUIChat - Free Trial Transition Integration", () => {
   it("should integrate free trial transition with config selector", () => {

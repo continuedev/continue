@@ -1,5 +1,6 @@
 import { render } from "ink-testing-library";
 import React from "react";
+
 import { ColoredDiff } from "./ColoredDiff.js";
 
 describe("ColoredDiff", () => {

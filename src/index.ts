@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
@@ -10,7 +11,7 @@ import { serve } from "./commands/serve.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { validateFlags, handleValidationErrors } from "./flags/flagValidator.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
-import logger from "./util/logger.js";
+import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
 

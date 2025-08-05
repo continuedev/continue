@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { ToolPermissionService } from './ToolPermissionService.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+
 import { checkToolPermission } from '../permissions/permissionChecker.js';
+
+import { ToolPermissionService } from './ToolPermissionService.js';
 
 describe('ToolPermissionService - Real Tool Permission Test', () => {
   let service: ToolPermissionService;
@@ -14,63 +16,63 @@ describe('ToolPermissionService - Real Tool Permission Test', () => {
       service.initializeSync({ mode: 'plan' });
     });
 
-    it('should deny write_file tool in plan mode', () => {
+    it('should deny Write tool in plan mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'write_file',
+        name: 'Write',
         arguments: { path: 'test.txt', content: 'test' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`write_file permission check result:`, result);
+      console.log(`Write permission check result:`, result);
       expect(result.permission).toBe('exclude');
     });
 
-    it('should deny search_and_replace_in_file tool in plan mode', () => {
+    it('should deny Edit tool in plan mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'search_and_replace_in_file',
+        name: 'Edit',
         arguments: { path: 'test.txt', old_str: 'old', new_str: 'new' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`search_and_replace_in_file permission check result:`, result);
+      console.log(`Edit permission check result:`, result);
       expect(result.permission).toBe('exclude');
     });
 
-    it('should deny run_terminal_command tool in plan mode', () => {
+    it('should deny Bash tool in plan mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'run_terminal_command',
+        name: 'Bash',
         arguments: { command: 'ls' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`run_terminal_command permission check result:`, result);
+      console.log(`Bash permission check result:`, result);
       expect(result.permission).toBe('exclude');
     });
 
-    it('should allow read_file tool in plan mode', () => {
+    it('should allow Read tool in plan mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'read_file',
+        name: 'Read',
         arguments: { path: 'test.txt' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`read_file permission check result:`, result);
+      console.log(`Read permission check result:`, result);
       expect(result.permission).toBe('allow');
     });
 
-    it('should allow list_files tool in plan mode', () => {
+    it('should allow List tool in plan mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'list_files',
+        name: 'List',
         arguments: { path: '.' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`list_files permission check result:`, result);
+      console.log(`List permission check result:`, result);
       expect(result.permission).toBe('allow');
     });
 
@@ -92,27 +94,27 @@ describe('ToolPermissionService - Real Tool Permission Test', () => {
       service.initializeSync({ mode: 'auto' });
     });
 
-    it('should allow write_file tool in auto mode', () => {
+    it('should allow Write tool in auto mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'write_file',
+        name: 'Write',
         arguments: { path: 'test.txt', content: 'test' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`Auto mode write_file permission check result:`, result);
+      console.log(`Auto mode Write permission check result:`, result);
       expect(result.permission).toBe('allow');
     });
 
-    it('should allow run_terminal_command tool in auto mode', () => {
+    it('should allow Bash tool in auto mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
-        name: 'run_terminal_command',
+        name: 'Bash',
         arguments: { command: 'ls' }
       };
       const result = checkToolPermission(toolCall, permissions);
       
-      console.log(`Auto mode run_terminal_command permission check result:`, result);
+      console.log(`Auto mode Bash permission check result:`, result);
       expect(result.permission).toBe('allow');
     });
 
@@ -131,20 +133,20 @@ describe('ToolPermissionService - Real Tool Permission Test', () => {
 
   describe('Mode Override Test', () => {
     it('should override user permissions when switching to plan mode', () => {
-      // Start with user explicitly allowing write_file
+      // Start with user explicitly allowing Write
       service.initializeSync({
-        allow: ['write_file'],
+        allow: ['Write'],
         mode: 'normal'
       });
 
-      // Verify write_file is allowed in normal mode
+      // Verify Write is allowed in normal mode
       let permissions = service.getPermissions();
       const toolCall = {
-        name: 'write_file',
+        name: 'Write',
         arguments: { path: 'test.txt', content: 'test' }
       };
       let result = checkToolPermission(toolCall, permissions);
-      console.log(`Normal mode with user allow - write_file result:`, result);
+      console.log(`Normal mode with user allow - Write result:`, result);
       expect(result.permission).toBe('allow');
 
       // Switch to plan mode - should OVERRIDE user config completely

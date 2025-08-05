@@ -3,6 +3,13 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { useEffect, useState } from "react";
+
+import { initializeChatHistory } from "../../commands/chat.js";
+import {
+  compactChatHistory,
+  findCompactionIndex,
+  getHistoryForLLM,
+} from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
@@ -10,15 +17,14 @@ import {
   StreamCallbacks,
   streamChatResponse,
 } from "../../streamChatResponse.js";
-import telemetryService from "../../telemetry/telemetryService.js";
-import { formatError } from "../../util/formatError.js";
-import logger from "../../util/logger.js";
-
-import { initializeChatHistory } from "../../commands/chat.js";
 import { posthogService } from "../../telemetry/posthogService.js";
-import { DisplayMessage } from "../types.js";
-import { ToolCallPreview } from "../../tools/types.js";
+import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatToolCall } from "../../tools/index.js";
+import { ToolCallPreview } from "../../tools/types.js";
+import { formatError } from "../../util/formatError.js";
+import { logger } from "../../util/logger.js";
+import { shouldAutoCompact } from "../../util/tokenizer.js";
+import { DisplayMessage } from "../types.js";
 
 interface UseChatProps {
   assistant?: AssistantUnrolled;
@@ -47,8 +53,7 @@ export function useChat({
   onShowOrgSelector,
   onShowConfigSelector,
   onShowModelSelector,
-  onLoginPrompt,
-  onReload,
+  onLoginPrompt: _onLoginPrompt,
   isRemoteMode = false,
   remoteUrl,
 }: UseChatProps) {
@@ -62,17 +67,7 @@ export function useChat({
       }
 
       // Synchronously initialize chat history to prevent race conditions
-      // This ensures system message is always loaded before handleUserMessage runs
-      let initialHistory: ChatCompletionMessageParam[] = [];
-
       // Load previous session if resume flag is used
-      if (resume) {
-        const savedHistory = loadSession();
-        if (savedHistory) {
-          initialHistory = savedHistory;
-        }
-      }
-
       // If no session loaded or not resuming, we'll need to add system message
       // We can't make this async, so we'll handle it in the useEffect
       return resume ? loadSession() ?? [] : [];
@@ -118,6 +113,16 @@ export function useChat({
     requestId: string;
     toolCallPreview?: ToolCallPreview[];
   } | null>(null);
+  const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
+    // When resuming, check for compaction markers in the loaded history
+    if (resume) {
+      const savedHistory = loadSession();
+      if (savedHistory) {
+        return findCompactionIndex(savedHistory);
+      }
+    }
+    return null;
+  });
 
   // Remote mode polling
   useEffect(() => {
@@ -335,8 +340,7 @@ export function useChat({
     if (!isRemoteMode && assistant) {
       const commandResult = await handleSlashCommands(
         message,
-        assistant,
-        onLoginPrompt
+        assistant
       );
       if (commandResult) {
         if (commandResult.exit) {
@@ -372,6 +376,12 @@ export function useChat({
               },
             ]);
           }
+          return;
+        }
+
+        if (commandResult.compact) {
+          // Handle compact command
+          await handleCompactCommand();
           return;
         }
 
@@ -455,12 +465,72 @@ export function useChat({
       return;
     }
 
-    // Local mode: process message normally
+    // Check if auto-compacting is needed BEFORE adding user message
+    let currentCompactionIndex = compactionIndex;
+    let currentChatHistory = chatHistory;
+    
+    if (model && shouldAutoCompact(chatHistory, model)) {
+      logger.info("Auto-compacting triggered in TUI mode");
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: "Approaching context limit. Auto-compacting chat history...",
+          messageType: "system" as const,
+        },
+      ]);
+
+      try {
+        if (!llmApi) {
+          throw new Error("LLM API is not available for auto-compaction");
+        }
+        
+        // Compact the history WITHOUT the current user message
+        const result = await compactChatHistory(chatHistory, model, llmApi);
+
+        // Update local variables immediately
+        currentChatHistory = result.compactedHistory;
+        currentCompactionIndex = result.compactionIndex;
+        
+        // Update state
+        setChatHistory(result.compactedHistory);
+        setCompactionIndex(result.compactionIndex);
+
+        // Save the compacted session
+        saveSession(result.compactedHistory);
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content: "✓ Chat history auto-compacted successfully.",
+            messageType: "system" as const,
+          },
+        ]);
+      } catch (error: any) {
+        const errorMessage = `Auto-compaction error: ${formatError(error)}`;
+        logger.error(errorMessage);
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content: `Warning: ${errorMessage}. Continuing without compaction...`,
+            messageType: "system" as const,
+          },
+        ]);
+
+        // Continue without compaction on error
+      }
+    }
+
+    // NOW add user message to history and UI
     const newUserMessage: ChatCompletionMessageParam = {
       role: "user",
       content: messageContent,
     };
-    const newHistory = [...chatHistory, newUserMessage];
+    const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
 
@@ -573,15 +643,36 @@ export function useChat({
       };
 
       // Call streamChatResponse with the new history that includes the user message
-      const finalHistory = [...newHistory];
+      // streamChatResponse modifies the history array in place, so we need to handle this carefully
+
       if (model && llmApi) {
-        await streamChatResponse(
-          finalHistory,
-          model,
-          llmApi,
-          controller,
-          streamCallbacks
-        );
+        // Use currentCompactionIndex which has the updated value after potential auto-compaction
+        if (currentCompactionIndex !== null && currentCompactionIndex !== undefined) {
+          // When using compaction, we need to send a subset but capture the full history
+          const historyForLLM = getHistoryForLLM(newHistory, currentCompactionIndex);
+          const originalLength = historyForLLM.length;
+
+          await streamChatResponse(
+            historyForLLM,
+            model,
+            llmApi,
+            controller,
+            streamCallbacks
+          );
+
+          // Append any new messages (assistant/tool) that were added by streamChatResponse
+          const newMessages = historyForLLM.slice(originalLength);
+          newHistory.push(...newMessages);
+        } else {
+          // No compaction - just pass the full history directly
+          await streamChatResponse(
+            newHistory,
+            model,
+            llmApi,
+            controller,
+            streamCallbacks
+          );
+        }
       }
 
       if (currentStreamingMessage && (currentStreamingMessage as any).content) {
@@ -597,14 +688,14 @@ export function useChat({
       }
 
       // Update the chat history with the complete conversation after streaming
-      setChatHistory(finalHistory);
+      setChatHistory(newHistory);
       logger.debug("Chat history updated", {
-        finalHistoryLength: finalHistory.length,
+        finalHistoryLength: newHistory.length,
       });
 
       // Save the updated history to session
-      logger.debug("Saving session", { historyLength: finalHistory.length });
-      saveSession(finalHistory);
+      logger.debug("Saving session", { historyLength: newHistory.length });
+      saveSession(newHistory);
       logger.debug("Session saved");
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
@@ -654,6 +745,98 @@ export function useChat({
           messageType: "system" as const,
         },
       ]);
+    }
+  };
+
+  const handleCompactCommand = async () => {
+    if (!model || !llmApi) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: "Error: No model configured for compaction",
+          messageType: "system" as const,
+        },
+      ]);
+      return;
+    }
+
+    setIsWaitingForResponse(true);
+    setInputMode(false);
+
+    try {
+      let streamingContent = "";
+
+      const result = await compactChatHistory(chatHistory, model, llmApi, {
+        onStreamContent: (content: string) => {
+          streamingContent += content;
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (
+              lastMessage &&
+              lastMessage.role === "assistant" &&
+              lastMessage.messageType === "compaction" &&
+              lastMessage.isStreaming
+            ) {
+              lastMessage.content = streamingContent;
+            } else {
+              newMessages.push({
+                role: "assistant",
+                content: streamingContent,
+                isStreaming: true,
+                messageType: "compaction",
+              });
+            }
+            return newMessages;
+          });
+        },
+        onStreamComplete: () => {
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage && lastMessage.isStreaming) {
+              lastMessage.isStreaming = false;
+            }
+            return newMessages;
+          });
+        },
+        onError: (error: Error) => {
+          logger.error("Compaction streaming error", error);
+        },
+      });
+
+      // Update state with compacted history
+      setChatHistory(result.compactedHistory);
+      setCompactionIndex(result.compactionIndex);
+
+      // Save the compacted session
+      saveSession(result.compactedHistory);
+
+      // Add success message
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content:
+            "Chat history compacted successfully. Future messages will use the compacted context.",
+          messageType: "system" as const,
+        },
+      ]);
+    } catch (error: any) {
+      const errorMessage = `Compaction error: ${formatError(error)}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: errorMessage,
+          messageType: "system" as const,
+        },
+      ]);
+    } finally {
+      setAbortController(null);
+      setIsWaitingForResponse(false);
+      setInputMode(true);
     }
   };
 

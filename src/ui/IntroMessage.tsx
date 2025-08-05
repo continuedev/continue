@@ -1,11 +1,13 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Text } from "ink";
 import React from "react";
+
 import { parseArgs } from "../args.js";
 import { getAllSlashCommands } from "../commands/commands.js";
 import { MCPService } from "../mcp.js";
 import { isModelCapable } from "../utils/modelCapability.js";
-import ModelCapabilityWarning from "./ModelCapabilityWarning.js";
+
+import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
 
 interface IntroMessageProps {
   config: AssistantUnrolled;
@@ -18,7 +20,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   model,
   mcpService,
 }) => {
-  const mcpTools = mcpService.getTools() ?? [];
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
   // Get all slash commands from central definition
@@ -107,4 +108,4 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   );
 };
 
-export default IntroMessage;
+export { IntroMessage };

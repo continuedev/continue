@@ -1,4 +1,5 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
+
 import { parseArgs, processRule } from "./args.js";
 
 describe("parseArgs", () => {
@@ -16,22 +17,9 @@ describe("parseArgs", () => {
 
   it("should return default values when no arguments provided", () => {
     const result = parseArgs();
-    expect(result).toEqual({
-      isHeadless: false,
-    });
+    expect(result).toEqual({});
   });
 
-  it("should set isHeadless to true when --print flag is present", () => {
-    process.argv = ["node", "script.js", "--print"];
-    const result = parseArgs();
-    expect(result.isHeadless).toBe(true);
-  });
-
-  it("should set isHeadless to true when -p flag is present", () => {
-    process.argv = ["node", "script.js", "-p"];
-    const result = parseArgs();
-    expect(result.isHeadless).toBe(true);
-  });
 
   it("should set resume to true when --resume flag is present", () => {
     process.argv = ["node", "script.js", "--resume"];
@@ -74,7 +62,6 @@ describe("parseArgs", () => {
     process.argv = ["node", "script.js", "--print", "--readonly", "--resume"];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: true,
       readonly: true,
       resume: true,
     });
@@ -84,7 +71,6 @@ describe("parseArgs", () => {
     process.argv = ["node", "script.js", "--config", "config.yaml", "--print"];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: true,
       configPath: "config.yaml",
     });
   });
@@ -93,7 +79,6 @@ describe("parseArgs", () => {
     process.argv = ["node", "script.js", "--rule", "my-rule", "--print"];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: true,
       rules: ["my-rule"],
     });
   });
@@ -102,7 +87,6 @@ describe("parseArgs", () => {
     process.argv = ["node", "script.js", "--print", "What is the weather?"];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: true,
       prompt: "What is the weather?",
     });
   });
@@ -117,7 +101,6 @@ describe("parseArgs", () => {
     ];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: false,
       configPath: "config.yaml",
       prompt: "Test prompt",
     });
@@ -127,7 +110,6 @@ describe("parseArgs", () => {
     process.argv = ["node", "script.js", "--rule", "my-rule", "Test prompt"];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: false,
       rules: ["my-rule"],
       prompt: "Test prompt",
     });
@@ -172,7 +154,6 @@ describe("parseArgs", () => {
     ];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: true,
       configPath: "my-config.yaml",
       rules: ["rule1", "rule2"],
       readonly: true,
@@ -196,14 +177,12 @@ describe("parseArgs", () => {
   it("should handle config flag at the end without value", () => {
     process.argv = ["node", "script.js", "--print", "--config"];
     const result = parseArgs();
-    expect(result.isHeadless).toBe(true);
     expect(result.configPath).toBeUndefined();
   });
 
   it("should handle rule flag at the end without value", () => {
     process.argv = ["node", "script.js", "--print", "--rule"];
     const result = parseArgs();
-    expect(result.isHeadless).toBe(true);
     expect(result.rules).toEqual([]);
   });
 
@@ -211,7 +190,6 @@ describe("parseArgs", () => {
     process.argv = ["node", "script.js"];
     const result = parseArgs();
     expect(result).toEqual({
-      isHeadless: false,
     });
   });
 
@@ -245,7 +223,7 @@ describe("parseArgs", () => {
 describe("processRule (loadRuleFromHub integration)", () => {
   // Mock fetch for hub tests
   const originalFetch = global.fetch;
-  const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+  const mockFetch = vi.fn() as any;
   
   beforeAll(() => {
     global.fetch = mockFetch;

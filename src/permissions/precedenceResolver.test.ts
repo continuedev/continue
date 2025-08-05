@@ -1,4 +1,3 @@
-import { jest } from "@jest/globals";
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import { resolvePermissionPrecedence } from "./precedenceResolver.js";
 import { ToolPermissionPolicy } from "./types.js";
@@ -17,16 +16,16 @@ describe("precedenceResolver", () => {
     it("should prioritize command line flags over defaults", () => {
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
-          exclude: ["read_file"],
-          allow: ["write_file"],
+          exclude: ["Read"],
+          allow: ["Write"],
         },
         personalSettings: false,
         useDefaults: true,
       });
 
       // Command line flags should come first
-      expect(policies[0]).toEqual({ tool: "read_file", permission: "exclude" });
-      expect(policies[1]).toEqual({ tool: "write_file", permission: "allow" });
+      expect(policies[0]).toEqual({ tool: "Read", permission: "exclude" });
+      expect(policies[1]).toEqual({ tool: "Write", permission: "allow" });
     });
 
     it("should handle wildcard patterns", () => {
@@ -55,9 +54,9 @@ describe("precedenceResolver", () => {
       });
 
       expect(policies).toEqual([
-        { tool: "read_file", permission: "allow" },
-        { tool: "write_file", permission: "allow" },
-        { tool: "run_terminal_command", permission: "allow" },
+        { tool: "Read", permission: "allow" },
+        { tool: "Write", permission: "allow" },
+        { tool: "Bash", permission: "allow" },
       ]);
     });
 
@@ -84,24 +83,24 @@ describe("precedenceResolver", () => {
 
       // Order should be: exclude, ask, allow (as specified in the function)
       expect(policies).toEqual([
-        { tool: "write_file", permission: "exclude" },
-        { tool: "run_terminal_command", permission: "exclude" },
-        { tool: "list_files", permission: "ask" },
-        { tool: "search_code", permission: "ask" },
-        { tool: "read_file", permission: "allow" },
-        { tool: "fetch", permission: "allow" },
+        { tool: "Write", permission: "exclude" },
+        { tool: "Bash", permission: "exclude" },
+        { tool: "List", permission: "ask" },
+        { tool: "Search", permission: "ask" },
+        { tool: "Read", permission: "allow" },
+        { tool: "Fetch", permission: "allow" },
       ]);
     });
 
     it("should apply config permissions with proper precedence", () => {
       const configPolicies: ToolPermissionPolicy[] = [
-        { tool: "write_file", permission: "allow" },
-        { tool: "read_file", permission: "ask" },
+        { tool: "Write", permission: "allow" },
+        { tool: "Read", permission: "ask" },
       ];
 
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
-          exclude: ["read_file"], // Should override config
+          exclude: ["Read"], // Should override config
         },
         configPermissions: configPolicies,
         personalSettings: false,
@@ -109,14 +108,14 @@ describe("precedenceResolver", () => {
       });
 
       // CLI flag should override config
-      expect(policies[0]).toEqual({ tool: "read_file", permission: "exclude" });
+      expect(policies[0]).toEqual({ tool: "Read", permission: "exclude" });
       // Config policy should be present
-      expect(policies[1]).toEqual({ tool: "write_file", permission: "allow" });
+      expect(policies[1]).toEqual({ tool: "Write", permission: "allow" });
     });
 
     it("should handle all layers with proper precedence", () => {
       const configPolicies: ToolPermissionPolicy[] = [
-        { tool: "search_code", permission: "ask" },
+        { tool: "Search", permission: "ask" },
       ];
 
       const policies = resolvePermissionPrecedence({
@@ -128,16 +127,16 @@ describe("precedenceResolver", () => {
         useDefaults: true,
       });
 
-      // Find the write_file policy - should be from CLI (allow)
-      const writePolicy = policies.find(p => p.tool === "write_file");
+      // Find the Write policy - should be from CLI (allow)
+      const writePolicy = policies.find(p => p.tool === "Write");
       expect(writePolicy?.permission).toBe("allow");
 
-      // Find the search_code policy - should be from config
-      const searchPolicy = policies.find(p => p.tool === "search_code");
+      // Find the Search policy - should be from config
+      const searchPolicy = policies.find(p => p.tool === "Search");
       expect(searchPolicy?.permission).toBe("ask");
 
       // Should still have default policies
-      const readPolicy = policies.find(p => p.tool === "read_file");
+      const readPolicy = policies.find(p => p.tool === "Read");
       expect(readPolicy).toBeDefined();
     });
 
@@ -154,21 +153,21 @@ describe("precedenceResolver", () => {
       it("should allow CLI flags to override default policies", () => {
         const policies = resolvePermissionPrecedence({
           commandLineFlags: {
-            exclude: ["write_file"],
+            exclude: ["Write"],
           },
           useDefaults: true,
           personalSettings: false,
         });
 
         // CLI exclusion should come first
-        expect(policies[0]).toEqual({ tool: "write_file", permission: "exclude" });
+        expect(policies[0]).toEqual({ tool: "Write", permission: "exclude" });
         // Default policies should follow
         expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
       });
 
       it("should allow config policies to override defaults", () => {
         const configPolicies: ToolPermissionPolicy[] = [
-          { tool: "run_terminal_command", permission: "allow" },
+          { tool: "Bash", permission: "allow" },
         ];
 
         const policies = resolvePermissionPrecedence({
@@ -178,7 +177,7 @@ describe("precedenceResolver", () => {
         });
 
         // Config policy should override default
-        expect(policies[0]).toEqual({ tool: "run_terminal_command", permission: "allow" });
+        expect(policies[0]).toEqual({ tool: "Bash", permission: "allow" });
         // Default policies should follow  
         expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
       });

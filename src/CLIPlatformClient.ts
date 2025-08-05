@@ -1,3 +1,7 @@
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
 import {
   FQSN,
   PlatformClient,
@@ -6,9 +10,6 @@ import {
 } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api";
 import * as dotenv from "dotenv";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
 
 export class CLIPlatformClient implements PlatformClient {
   constructor(

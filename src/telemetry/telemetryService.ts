@@ -1,3 +1,5 @@
+import os from "os";
+
 import { metrics } from "@opentelemetry/api";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
@@ -13,9 +15,9 @@ import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
-import os from "os";
 import { v4 as uuidv4 } from "uuid";
-import logger from "../util/logger.js";
+
+import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
 export interface TelemetryConfig {
@@ -545,4 +547,3 @@ class TelemetryService {
 
 // Export the singleton instance directly
 export const telemetryService = new TelemetryService();
-export default telemetryService;

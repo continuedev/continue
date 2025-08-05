@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import React from "react";
+
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -111,4 +112,4 @@ const ServiceDebugger: React.FC<ServiceDebuggerProps> = ({
   );
 };
 
-export default ServiceDebugger;
+export { ServiceDebugger };

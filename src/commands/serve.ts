@@ -1,12 +1,14 @@
-import chalk from "chalk";
 import { exec } from "child_process";
-import express, { Request, Response } from "express";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import path from "path";
 import { promisify } from "util";
+
+import chalk from "chalk";
+import express, { Request, Response } from "express";
+import type { ChatCompletionMessageParam } from "openai/resources.mjs";
+
+
 import { getAssistantSlug } from "../auth/workos.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
-import { saveSession } from "../session.js";
 import {
   getService,
   initializeServices,
@@ -17,18 +19,19 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
+import { saveSession } from "../session.js";
 import {
   streamChatResponse,
   type StreamCallbacks,
 } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
-import telemetryService from "../telemetry/telemetryService.js";
+import { telemetryService } from "../telemetry/telemetryService.js";
+import { getToolDisplayName } from "../tools/index.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
-import { getToolDisplayName } from "../tools/index.js";
 
 const execAsync = promisify(exec);
 
@@ -117,7 +120,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   // Initialize chat history
-  let chatHistory: ChatCompletionMessageParam[] = [];
+  const chatHistory: ChatCompletionMessageParam[] = [];
   const systemMessage = await constructSystemMessage("", options.rule, undefined, true);
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });

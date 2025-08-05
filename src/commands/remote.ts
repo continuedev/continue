@@ -1,13 +1,14 @@
 import chalk from "chalk";
+
 import {
   getAccessToken,
   isAuthenticatedConfig,
   loadAuthConfig,
 } from "../auth/workos.js";
 import { env } from "../env.js";
-import telemetryService from "../telemetry/telemetryService.js";
+import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
 
 export async function remote(
   prompt: string | undefined,

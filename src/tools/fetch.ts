@@ -1,4 +1,5 @@
 import TurndownService from "turndown";
+
 import { Tool } from "./types.js";
 
 const turndownService = new TurndownService({
@@ -30,7 +31,7 @@ turndownService.addRule("pre", {
 });
 
 export const fetchTool: Tool = {
-  name: "fetch",
+  name: "Fetch",
   displayName: "Fetch",
   description: "Fetches content from a URL and converts it to markdown format",
   parameters: {
