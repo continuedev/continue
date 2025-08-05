@@ -12,44 +12,28 @@ export const taskListTool: Tool = {
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.TaskList,
-    description: `A comprehensive task management tool for organizing, tracking, and executing work in a structured queue-based system.
-This tool helps manage complex workflows by breaking them down into manageable tasks that can be tracked and executed systematically.
+    description: `A task management tool for organizing and tracking work.
+Helps break down complex workflows into manageable tasks that can be tracked systematically.
 
-When to use this tool:
-- Breaking down complex multi-step work into organized tasks
-- Planning and tracking progress on development projects
-- Managing sequences of related changes across a codebase
-- Coordinating multiple tasks that need to be completed in order
-- Organizing work that benefits from structured planning and execution
-- Tracking completion status of various development activities
-- Managing task dependencies and workflow organization
-
-Key features:
-- Add new tasks with detailed descriptions and context
-- List all current tasks with their status and details
-- Update existing tasks with new information or status changes
-- Start/execute tasks by marking them in progress
-
-Task management workflow:
-1. Use 'add' to create new tasks with clear names and detailed descriptions
-2. Use 'list' to view all current tasks and their status
-3. Use 'runTask' to begin working on a specific task
-4. Use 'update' to modify task details
+Operations:
+- add: Create new tasks with names and descriptions
+- list: View all tasks and their status
+- update: Modify existing task details
+- run_task: Begin working on a specific task
 
 Best practices:
-- Create tasks that represent meaningful units of work
-- Use descriptive names that clearly indicate the task purpose
-- Include detailed descriptions with context, requirements, and acceptance criteria
-- Start tasks manually one by one rather than automatic queue processing
+- Create meaningful units of work
+- Use descriptive names
+- Include detailed descriptions with requirements
+- Execute tasks one at a time
 
-Parameters explained:
-- action: The specific operation to perform (add, list, update, run_task)
-- name: Short, descriptive task name (required for add/update operations)
-- description: Detailed task description with context and requirements (required for add/update)
-- task_id: Unique identifier for the task (required for update/remove/run_task operations)
+Parameters:
+- action: Operation to perform (add/list/update/run_task)
+- name: Task name (for add/update)
+- description: Task details and requirements (for add/update)
+- task_id: Internal identifier (for update/run_task)
 
-The tool automatically handles task ID generation, status tracking, and GUI updates.
-Task IDs are managed internally and should not be exposed to users in normal interactions.`,
+Task IDs and status tracking are managed automatically.`,
     parameters: {
       type: "object",
       required: ["action"],
