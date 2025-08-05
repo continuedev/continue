@@ -1,8 +1,6 @@
 import winston from "winston";
 import { captureException } from "./sentry/SentryLogger";
 
-console.log("NODE_ENV", process.env.NODE_ENV);
-
 class LoggerClass {
   private static instance: LoggerClass;
   private winston: winston.Logger;
