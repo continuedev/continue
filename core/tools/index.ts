@@ -12,6 +12,7 @@ import { readFileTool } from "./definitions/readFile";
 import { requestRuleTool } from "./definitions/requestRule";
 import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
 import { searchAndReplaceInFileTool } from "./definitions/searchAndReplaceInFile";
+import { searchContinueDocsTool } from "./definitions/searchContinueDocs";
 import { searchWebTool } from "./definitions/searchWeb";
 import { viewDiffTool } from "./definitions/viewDiff";
 import { viewRepoMapTool } from "./definitions/viewRepoMap";
@@ -27,6 +28,7 @@ const getBaseToolDefinitions = () => [
   createNewFileTool,
   runTerminalCommandTool,
   globSearchTool,
+  searchContinueDocsTool,
   searchWebTool,
   viewDiffTool,
   readCurrentlyOpenFileTool,

@@ -1,5 +1,6 @@
 import {
   ArrowRightIcon,
+  BookOpenIcon,
   CheckIcon,
   CodeBracketIcon,
   DocumentIcon,
@@ -11,7 +12,7 @@ import {
   MapIcon,
   PencilIcon,
   XMarkIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import {
   ContextItem,
   ContextItemWithId,
@@ -72,6 +73,7 @@ export function getGroupActionVerb(toolCallStates: ToolCallState[]): string {
 
 export const toolCallIcons: Record<string, ComponentType> = {
   [BuiltInToolNames.FileGlobSearch]: MagnifyingGlassIcon,
+  [BuiltInToolNames.SearchContinueDocs]: BookOpenIcon,
   [BuiltInToolNames.GrepSearch]: MagnifyingGlassIcon,
   [BuiltInToolNames.LSTool]: FolderIcon,
   [BuiltInToolNames.ReadCurrentlyOpenFile]: DocumentTextIcon,
