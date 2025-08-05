@@ -191,13 +191,13 @@
             "pages": [
               "hub/introduction",
               {
-                "group": "Assistants",
+                "group": "Agents",
                 "icon": "robot",
                 "pages": [
-                  "hub/assistants/intro",
-                  "hub/assistants/use-an-assistant",
-                  "hub/assistants/create-an-assistant",
-                  "hub/assistants/edit-an-assistant"
+                  "hub/agents/intro",
+                  "hub/agents/use-an-agent",
+                  "hub/agents/create-an-agent",
+                  "hub/agents/edit-an-agent"
                 ]
               },
               {
@@ -241,7 +241,7 @@
             "group": "Guides",
             "pages": [
               "guides/overview",
-              "guides/understanding-assistants",
+              "guides/understanding-agents",
               "guides/cli",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
@@ -351,7 +351,7 @@
       "destination": "/hub/secrets/secret-types"
     },
     {
-      "source": "/hub/assistants",
+      "source": "/hub/agents",
       "destination": "/hub/assistants/intro"
     },
     {
