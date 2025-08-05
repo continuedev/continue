@@ -1,7 +1,8 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
 import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
-import { useContext, useMemo, useState } from "react";
+import DocsService from "core/indexing/docs/DocsService";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateIndexingStatus } from "../../../../../redux/slices/indexingSlice";
@@ -26,6 +27,7 @@ function DocsIndexingStatus({
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   const { hideLump } = useLump();
+  const [indexedPages, setIndexedPages] = useState<null | string[]>(null);
 
   const status = useAppSelector(
     (store) => store.indexing.indexing.statuses[docConfig.startUrl],
@@ -78,6 +80,30 @@ function DocsIndexingStatus({
     }
     return Math.min(100, Math.max(0, status.progress * 100)).toFixed(0);
   }, [status?.progress]);
+
+  const docsService = DocsService.getSingleton();
+  // Fetch pages list when the status changes to complete
+  useEffect(() => {
+    async function getPagesList() {
+      if (!docsService) {
+        console.warn("Docs service is not yet initialized");
+        return;
+      }
+
+      try {
+        const pages = await docsService.getIndexedPages(docConfig.startUrl);
+        setIndexedPages([...pages].sort());
+      } catch (ex) {
+        console.error(
+          `Unable to fetch pages list for ${docConfig.startUrl}: ${ex}`,
+        );
+      }
+    }
+
+    if (isComplete) {
+      void getPagesList();
+    }
+  }, [isComplete, docsService]);
 
   const showPagesList = () => {
     // TODO
@@ -169,7 +195,11 @@ function DocsIndexingStatus({
               }
             }}
           >
-            {isComplete ? "25 pages indexed (5.3 MB)" : status.description}
+            {isComplete
+              ? indexedPages
+                ? `${indexedPages.length} page${indexedPages.length === 1 ? "" : "s"} indexed`
+                : "Loading site info..."
+              : status.description}
           </p>
         </div>
       )}
