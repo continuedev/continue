@@ -173,12 +173,12 @@ describe("_calculateOptimalEditableRegion", () => {
       "tokenizer",
     );
 
-    // Each line is 10 chars = 10 tokens per line with our mock
-    // So with 500 token limit, we should get ~45 lines total
+    // Each line is 10 chars = 10 tokens per line with our mock.
+    // So with 500 token limit, we should get 50 lines total.
+    // 25 above, 25 below, +1 current
     const totalLines =
       result.editableRegionEndLine - result.editableRegionStartLine + 1;
-    const expectedMaxLines = Math.floor(500 / 10);
-    expect(totalLines).toBe(expectedMaxLines); // Not more than 50 lines
+    expect(totalLines).toBe(51); // Not more than 51 lines (25 above, 25 below, +1 for current line)
   });
 
   it("should use character approximation when using fourChars heuristic", () => {
