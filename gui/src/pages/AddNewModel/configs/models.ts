@@ -303,13 +303,13 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: true,
   },
   exaone32B: {
-    title: "EXAONE 4.0-1 32B",
+    title: "EXAONE 4.0.1-32B",
     description:
       "LG AI Research's 32B model with integrated reasoning and agentic tool use capabilities.",
-    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.32B",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0.1-32B",
     params: {
-      title: "EXAONE-4.0-1.32B",
-      model: "LGAI-EXAONE/EXAONE-4.0-1.32B",
+      title: "EXAONE-4.0.1-32B",
+      model: "LGAI-EXAONE/EXAONE-4.0.1-32B",
       contextLength: 131072,
     },
     providerOptions: ["openai"],

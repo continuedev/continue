@@ -304,8 +304,8 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt/, /4/],
     [/claude/, /sonnet/, /3\.5|3\.7|3-5|3-7|-4/],
     [/claude/, /opus/, /-4/],
-    // EXAONE 4.0 and 4.0-1 variants
-    [/exaone/, /4\.0(-1)?/],
+    // EXAONE 4.0, 4.0-1, and 4.0.1 variants
+    [/exaone/, /4\.0(?:[-.]1)?/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {
