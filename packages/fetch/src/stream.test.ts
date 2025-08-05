@@ -90,6 +90,13 @@ describe("parseDataLine", () => {
     );
   });
 
+  test("parseDataLine should throw error when data contains error object with message", () => {
+    const line = 'data: {"error":{"message":"detailed error message"}}';
+    expect(() => parseDataLine(line)).toThrow(
+      "Error streaming response: detailed error message",
+    );
+  });
+
   test("parseDataLine should handle empty objects", () => {
     const line = "data: {}";
     const result = parseDataLine(line);

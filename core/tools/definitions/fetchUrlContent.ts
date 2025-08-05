@@ -26,6 +26,7 @@ export const fetchUrlContentTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.FetchUrlContent,
     `To fetch the content of a URL, use the ${BuiltInToolNames.FetchUrlContent} tool. For example, to read the contents of a webpage, you might respond with:`,

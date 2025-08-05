@@ -60,6 +60,7 @@ export const createRuleBlock: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.CreateRuleBlock,
     `Sometimes the user will provide feedback or guidance on your output. If you were not aware of these "rules", consider using the ${BuiltInToolNames.CreateRuleBlock} tool to persist the rule for future interactions.
