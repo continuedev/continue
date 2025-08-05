@@ -315,6 +315,9 @@ export default async function doLoadConfig(options: {
   };
 
   if (newConfig.analytics) {
+    // FIXME before re-enabling TeamAnalytics.setup() populate workspaceId in
+    //   controlPlaneProxyInfo to prevent /proxy/analytics/undefined/capture calls
+    //   where undefined is :workspaceId
     // await TeamAnalytics.setup(
     //   newConfig.analytics,
     //   uniqueId,
