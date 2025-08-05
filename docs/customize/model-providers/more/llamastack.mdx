@@ -1,0 +1,114 @@
+---
+title: "Llama Stack"
+description: "Configure Llama Stack with Continue"
+keywords: [llama, stack, local, api, inference]
+---
+
+[Llama Stack](https://llama-stack.readthedocs.io/en/latest/index.html) is an open-source library that standardizes the core building blocks that simplify AI application development. It codifies best practices across the Llama ecosystem. More specifically, it provides
+
+- **Unified API layer** for Inference, RAG, Agents, Tools, Safety, Evals, and Telemetry.
+- **Plugin architecture** to support the rich ecosystem of different API implementations in various environments, including local development, on-premises, cloud, and mobile.
+- **Prepackaged verified distributions** which offer a one-stop solution for developers to get started quickly and reliably in any environment.
+- **Multiple developer interfaces** like CLI and SDKs for Python, Typescript, iOS, and Android.
+- **Standalone applications** as examples for how to build production-grade AI applications with Llama Stack.
+
+To try Llama Stack locally, run:
+
+```shell
+curl -LsSf https://github.com/meta-llama/llama-stack/raw/main/install.sh | bash
+```
+
+Learn more about how to get started with llama stack in this [guide](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html)
+
+## Chat model
+
+We recommend configuring **Llama 4 Maverick** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Llama4 Maverick
+        provider: llamastack
+        model: meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8
+        apiBase: http://<llama stack endpoint>/v1/openai/v1/
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Llama4 Maverick",
+          "provider": "llamastack",
+          "model": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+          "apiBase": "http://<llama stack endpoint>/v1/openai/v1/"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **CodeLlama 7B** as your autocomplete model.
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: CodeLlama 7B
+       provider: llamastack
+       model: codellama:7b
+       apiBase: http://<llama stack endpoint>/v1/openai/v1/
+       roles:
+         - autocomplete
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "tabAutocompleteModel": {
+        "title": "CodeLlama 7B",
+        "provider": "llamastack",
+        "model": "codellama:7b",
+        "apiBase": "http://<llama stack endpoint>/v1/openai/v1/"
+     }
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Embeddings model
+
+By default, Llama Stack uses **all-MiniLM-L6-v2** as the embeddings model.
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: all-MiniLM-L6-v2
+       provider: llamastack
+       model:  all-MiniLM-L6-v2
+       apiBase: http://<llama stack endpoint>/v1/openai/v1/
+       roles:
+         - embed
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "embeddingsProvider": {
+       "provider": "llamastack",
+       "model": "all-MiniLM-L6-v2",
+       "apiBase": "http://<llama stack endpoint>/v1/openai/v1/"
+     }
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Reranking model
+
+Llama Stack currently did not support Reranking API yet.

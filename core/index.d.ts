@@ -256,6 +256,8 @@ export interface IContextProvider {
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
+
+  get deprecationMessage(): string | null;
 }
 
 export interface Session {
@@ -1067,6 +1069,11 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
+export type ToolPolicy =
+  | "allowedWithPermission"
+  | "allowedWithoutPermission"
+  | "disabled";
+
 export interface Tool {
   type: "function";
   function: {
@@ -1087,6 +1094,7 @@ export interface Tool {
   group: string;
   originalFunctionName?: string;
   systemMessageDescription?: string;
+  defaultToolPolicy?: ToolPolicy;
 }
 
 interface ToolChoice {

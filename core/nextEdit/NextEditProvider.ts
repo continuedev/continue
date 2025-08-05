@@ -21,6 +21,7 @@ import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
+  CODE_TO_EDIT_OPEN,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
@@ -208,6 +209,10 @@ export class NextEditProvider {
     return this.currentEditChainId !== null;
   }
 
+  public getChainLength(): number {
+    return this.previousCompletions.length;
+  }
+
   public getPreviousCompletion(): NextEditOutcome | null {
     return this.previousCompletions[0];
   }
@@ -306,6 +311,16 @@ export class NextEditProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
+      const editableRegionStartLine = Math.max(
+        helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+        0,
+      );
+
+      const editableRegionEndLine = Math.min(
+        helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+        helper.fileLines.length - 1,
+      );
+
       // TODO: Toggle between the default endpoint and the finetuned endpoint.
       const prompts: Prompt[] = [];
 
@@ -324,36 +339,48 @@ export class NextEditProvider {
           contextLines: 3,
         });
 
-        const promptMetadata = await renderPrompt(
-          helper,
-          historyDiff ?? this.diffContext,
-        );
+        const modelName = helper.modelName;
+        let ctx: any;
+
+        if (modelName.includes("mercury-coder-nextedit")) {
+          ctx = {
+            recentlyViewedCodeSnippets:
+              snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
+                filepath: snip.filepath,
+                content: snip.content,
+              })) ?? [],
+            currentFileContent: helper.fileContents,
+            editableRegionStartLine,
+            editableRegionEndLine,
+            editDiffHistory: historyDiff,
+          };
+        } else if (modelName.includes("model-1")) {
+          ctx = {
+            userEdits: historyDiff ?? this.diffContext,
+            languageShorthand: helper.lang.name,
+            userExcerpts: helper.fileContents,
+          };
+        } else {
+          ctx = {};
+        }
+
+        const promptMetadata = await renderPrompt(helper, ctx);
 
         this.promptMetadata = promptMetadata;
 
-        prompts.push({
-          role: "system",
-          content: [
-            "When the user deletes or replaces over previous code, you should respect that decision.",
-            "Respect the new code the user is writing, and complete it.",
-            "For example, if the user is changing a field name, try to autocomplete the new field name. Don't suggest the previous field name.",
-            "Do not roll back to previous content.",
-            "If the user has made a change, make sure you respect that and try to apply it to other parts of the code that used to use the old content.",
-          ].join("\n"),
-        });
+        // prompts.push({
+        //   role: "system",
+        //   content: [
+        //     "When the user deletes or replaces over previous code, you should respect that decision.",
+        //     "Respect the new code the user is writing, and complete it.",
+        //     "For example, if the user is changing a field name, try to autocomplete the new field name. Don't suggest the previous field name.",
+        //     "Do not roll back to previous content.",
+        //     "If the user has made a change, make sure you respect that and try to apply it to other parts of the code that used to use the old content.",
+        //   ].join("\n"),
+        // });
 
         prompts.push(promptMetadata.prompt);
       }
-
-      const editableRegionStartLine = Math.max(
-        helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-        0,
-      );
-
-      const editableRegionEndLine = Math.min(
-        helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-        helper.fileLines.length - 1,
-      );
 
       const oldEditRangeSlice = helper.fileContents
         .split("\n")
@@ -412,11 +439,9 @@ export class NextEditProvider {
 
         if (typeof msg.content === "string") {
           // NOTE: There are cases where msg.conetnt.split("<|start|>")[1] is undefined
-          const nextCompletion = msg.content.split(
-            "<|editable_region_start|>\n",
-          )[1]
+          const nextCompletion = msg.content.split(`${CODE_TO_EDIT_OPEN}\n`)[1]
             ? replaceEscapedCharacters(
-                msg.content.split("<|editable_region_start|>\n")[1],
+                msg.content.split(`${CODE_TO_EDIT_OPEN}\n`)[1],
               ).replace(/\n$/, "")
             : "";
 
@@ -523,6 +548,9 @@ export class NextEditProvider {
         );
 
         if (this.nextEditableRegionsInTheCurrentChain.length === 0) {
+          console.log(
+            "deleteChain called from provideInlineCompletionItemsWithChain",
+          );
           await this.deleteChain();
           return undefined;
         }
@@ -579,6 +607,14 @@ export class NextEditProvider {
   }
 
   public shiftNextEditableRegionsInTheCurrentChain() {
-    this.nextEditableRegionsInTheCurrentChain.shift();
+    return this.nextEditableRegionsInTheCurrentChain.shift();
+  }
+
+  public getNextEditableRegionsInTheCurrentChainLength() {
+    return this.nextEditableRegionsInTheCurrentChain.length;
+  }
+
+  public getNextEditableRegionsInTheCurrentChain(): RangeInFile[] {
+    return [...this.nextEditableRegionsInTheCurrentChain]; // Return a copy to prevent external modification
   }
 }

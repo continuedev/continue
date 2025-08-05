@@ -45,7 +45,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const handleRefreshProfiles = () => {
-    void refreshProfiles();
+    void refreshProfiles("Clicked reload config from stream error dialog");
     dispatch(setShowDialog(false));
     dispatch(setDialogMessage(undefined));
   };

@@ -60,6 +60,7 @@ export const requestRuleTool: GetTool = ({ rules }) => ({
       },
     },
   },
+  defaultToolPolicy: "disabled",
   systemMessageDescription: createSystemMessageExampleCall(
     BuiltInToolNames.RequestRule,
     getRequestRuleSystemMessageDescription(rules),

@@ -120,4 +120,5 @@ ${SEARCH_AND_REPLACE_RULES}
       ],
     ],
   ),
+  defaultToolPolicy: "allowedWithPermission",
 };
