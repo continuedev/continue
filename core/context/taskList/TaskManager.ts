@@ -1,7 +1,9 @@
+import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { TaskInfo } from "../..";
 import type { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import type { IMessenger } from "../../protocol/messenger";
+import { getTaskListsFilePath } from "../../util/paths";
 
 export enum TaskStatus {
   Pending = "pending",
@@ -15,12 +17,31 @@ export interface TaskEvent {
 
 export class TaskManager {
   private taskMap = new Map<TaskInfo["task_id"], TaskInfo>();
+  private taskListsFilePath: string;
 
   constructor(
     private messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-  ) {}
+    sessionId: string,
+  ) {
+    this.taskListsFilePath = getTaskListsFilePath(sessionId);
+    if (fs.existsSync(this.taskListsFilePath)) {
+      this.taskMap = new Map(
+        Object.entries(
+          JSON.parse(fs.readFileSync(this.taskListsFilePath, "utf8")),
+        ),
+      );
+    }
+  }
+
+  async save() {
+    void fs.writeFileSync(
+      this.taskListsFilePath,
+      JSON.stringify(Object.fromEntries(this.taskMap), null, 2),
+    );
+  }
 
   private emitEvent(eventType: TaskEvent["type"]): void {
+    void this.save();
     this.messenger.send("taskEvent", {
       type: eventType,
       tasks: this.list(),
