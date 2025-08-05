@@ -73,6 +73,14 @@ export function getSessionsFolderPath(): string {
   return sessionsPath;
 }
 
+export function getTaskListsSessionsFolderPath(): string {
+  const taskListsPath = path.join(getContinueGlobalPath(), "tasks");
+  if (!fs.existsSync(taskListsPath)) {
+    fs.mkdirSync(taskListsPath);
+  }
+  return taskListsPath;
+}
+
 export function getIndexFolderPath(): string {
   const indexPath = path.join(getContinueGlobalPath(), "index");
   if (!fs.existsSync(indexPath)) {
@@ -99,6 +107,10 @@ export function getSessionsListPath(): string {
     fs.writeFileSync(filepath, JSON.stringify([]));
   }
   return filepath;
+}
+
+export function getTaskListsFilePath(sessionId: string): string {
+  return path.join(getTaskListsSessionsFolderPath(), `${sessionId}.json`);
 }
 
 export function getConfigJsonPath(): string {

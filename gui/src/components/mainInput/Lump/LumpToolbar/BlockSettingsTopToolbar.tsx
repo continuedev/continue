@@ -1,6 +1,7 @@
 import {
   BookOpenIcon,
   ChatBubbleLeftIcon,
+  CheckCircleIcon,
   ChevronLeftIcon,
   CubeIcon,
   EllipsisHorizontalIcon,
@@ -71,6 +72,12 @@ const sections: Section[] = [
     title: "Errors",
     tooltip: <ErrorsSectionTooltip />,
     icon: ExclamationTriangleIcon,
+  },
+  {
+    id: "tasks",
+    title: "Tasks",
+    tooltip: "Tasks",
+    icon: CheckCircleIcon,
   },
 ];
 
@@ -189,11 +196,16 @@ export function BlockSettingsTopToolbar() {
     toggleToolbar();
   };
 
-  const visibleSections = sections.filter(
-    (section) =>
-      section.id !== "error" ||
-      (section.id === "error" && configError && configError?.length > 0),
-  );
+  const visibleSections = sections
+    .filter(
+      (section) =>
+        section.id !== "error" ||
+        (section.id === "error" && configError && configError?.length > 0),
+    )
+    .filter(
+      (section) =>
+        section.id !== "tasks" || config.experimental?.enableTaskLists,
+    );
 
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
