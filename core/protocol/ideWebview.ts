@@ -52,7 +52,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
-  submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap
   newSessionWithPrompt: [{ prompt: string }, void];
   userInput: [{ input: string }, void];
   focusContinueInput: [undefined, void];

@@ -30,7 +30,6 @@ import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfter
 import { store } from "../redux/store";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
-import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { findToolCallById, logToolUsage } from "../redux/util";
 import {
@@ -38,6 +37,7 @@ import {
   setDocumentStylesFromTheme,
 } from "../styles/theme";
 import { isJetBrains } from "../util";
+import { logAgentModeEditOutcome } from "../util/editOutcomeLogger";
 import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
@@ -219,16 +219,6 @@ function ParallelListeners() {
     dispatch(setTTSActive(status));
   });
 
-  // TODO - remove?
-  useWebviewListener("submitMessage", async (data) => {
-    void dispatch(
-      streamResponseThunk({
-        editorState: data.message,
-        modifiers: { useCodebase: false, noContext: true },
-      }),
-    );
-  });
-
   useWebviewListener("addContextItem", async (data) => {
     dispatch(
       addContextItemsAtIndex({
@@ -276,17 +266,40 @@ function ParallelListeners() {
               store.getState().session.history,
               state.toolCallId,
             );
-            if (toolCallState && toolCallState.status !== "canceled") {
-              dispatch(
-                acceptToolCall({
-                  toolCallId: state.toolCallId,
-                }),
-              );
-              void dispatch(
-                streamResponseAfterToolCall({
-                  toolCallId: state.toolCallId,
-                }),
-              );
+
+            if (toolCallState) {
+              const accepted = toolCallState.status !== "canceled";
+
+              logToolUsage(toolCallState, accepted, true, ideMessenger);
+
+              // Log edit outcome for Agent Mode
+              const applyState = store
+                .getState()
+                .session.codeBlockApplyStates.states.find(
+                  (s) => s.streamId === state.streamId,
+                );
+
+              if (applyState) {
+                void logAgentModeEditOutcome(
+                  toolCallState,
+                  applyState,
+                  accepted,
+                  ideMessenger,
+                );
+              }
+
+              if (accepted) {
+                dispatch(
+                  acceptToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+                void dispatch(
+                  streamResponseAfterToolCall({
+                    toolCallId: state.toolCallId,
+                  }),
+                );
+              }
             }
             // const output: ContextItem = {
             //   name: "Edit tool output",

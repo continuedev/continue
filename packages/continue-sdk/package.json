@@ -4,6 +4,8 @@
   "description": "SDK Generator for Continue.dev",
   "type": "module",
   "scripts": {
+    "build": "echo 'No build step needed'",
+    "test": "echo 'No tests to run'",
     "generate-client:typescript": "openapi-generator-cli generate -i ./openapi.yaml -g typescript-fetch -o ./typescript/api -c ./openapi-generator-config.json",
     "generate-client:python": "openapi-generator-cli generate -i ./openapi.yaml -g python -o ./python/api -c ./openapi-generator-config.json",
     "generate-client:ALL": "npm run generate-client:typescript && npm run generate-client:python",

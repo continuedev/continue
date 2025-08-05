@@ -44,7 +44,6 @@ const docSchema = z.object({
   startUrl: z.string(),
   rootUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
-  maxDepth: z.number().optional(),
   useLocalCrawling: z.boolean().optional(),
   sourceFile: z.string().optional(),
 });

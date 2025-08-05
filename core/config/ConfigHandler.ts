@@ -348,8 +348,8 @@ export class ConfigHandler {
   // External actions that can cause a cascading config refresh
   // Should not be used internally
   //////////////////
-  async refreshAll() {
-    await this.cascadeInit("External refresh all");
+  async refreshAll(reason?: string) {
+    await this.cascadeInit(reason ?? "External refresh all");
   }
 
   // Ide settings change: refresh session and cascade refresh from the top
@@ -363,13 +363,42 @@ export class ConfigHandler {
   async updateControlPlaneSessionInfo(
     sessionInfo: ControlPlaneSessionInfo | undefined,
   ) {
-    this.controlPlaneClient = new ControlPlaneClient(
-      Promise.resolve(sessionInfo),
-      this.ideSettingsPromise,
-      this.ide.getIdeInfo(),
-    );
-    this.abortCascade();
-    await this.cascadeInit("Control plane session info update");
+    const currentSession = await this.controlPlaneClient.sessionInfoPromise;
+    const newSession = sessionInfo;
+
+    let reload = false;
+    if (newSession) {
+      if (currentSession) {
+        if (
+          newSession.AUTH_TYPE !== AuthType.OnPrem &&
+          currentSession.AUTH_TYPE !== AuthType.OnPrem
+        ) {
+          if (newSession.account.id !== currentSession.account.id) {
+            // session id change (non-on-prem)
+            reload = true;
+          }
+        }
+      } else {
+        // log in
+        reload = true;
+      }
+    } else {
+      if (currentSession) {
+        // log out
+        reload = true;
+      }
+    }
+
+    if (reload) {
+      this.controlPlaneClient = new ControlPlaneClient(
+        Promise.resolve(sessionInfo),
+        this.ideSettingsPromise,
+        this.ide.getIdeInfo(),
+      );
+      this.abortCascade();
+      await this.cascadeInit("Control plane session info update");
+    }
+    return reload;
   }
 
   // Org id: check id validity, save selection, switch and reload
@@ -438,7 +467,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
@@ -494,7 +523,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
@@ -507,7 +536,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [],
+        errors: [{ message: "Current profile not found", fatal: true }],
         configLoadInterrupted: true,
       };
     }
