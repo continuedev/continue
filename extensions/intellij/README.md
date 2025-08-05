@@ -36,6 +36,38 @@ Agent equips the Chat model with the tools needed to handle a wide range of codi
 
 </div>
 
+## Development Setup
+
+### Prerequisites
+
+This project requires Java 17. If you encounter a "Cannot find a Java installation" error, follow these steps:
+
+1. **Install Java 17** (if not already installed):
+
+   ```bash
+   sudo apt update
+   sudo apt install openjdk-17-jdk
+   ```
+
+2. **Set JAVA_HOME**:
+
+   ```bash
+   export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+   ```
+
+3. **Or use the setup script**:
+
+   ```bash
+   source setup-env.sh
+   ```
+
+4. **Build the project**:
+   ```bash
+   ./gradlew build
+   ```
+
+The `gradle.properties` file has been configured to automatically use Java 17, so the JAVA_HOME setting should only be needed for the first build.
+
 ## License
 
 [Apache 2.0 © 2023-2025 Continue Dev, Inc.](./LICENSE)

@@ -1,1 +1,14 @@
-{}
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["typescript/**/*", "~*/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,8 @@
+<ivy-module version="2.0">
+  <info organisation="bundledModule" module="intellij-platform-test-runtime" revision="IC-223.8836.41"/>
+  <configurations>
+    <conf name="default" visibility="public"/>
+  </configurations>
+  <publications/>
+  <dependencies/>
+</ivy-module>

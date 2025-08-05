@@ -1,0 +1,32 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../echomcp"
+		}
+	],
+	"settings": {
+		"rust-analyzer.linkedProjects": [
+			"./server/Cargo.toml"
+		],
+		"terminal.integrated.defaultProfile.linux": "bash",
+		"terminal.integrated.profiles.linux": {
+			"bash": {
+				"path": "bash",
+				"args": [
+					"-l"
+				]
+			}
+		},
+		"typescript.tsdk": "node_modules/typescript/lib",
+		"conventionalCommits.showNewVersionNotes": false,
+		"conventionalCommits.promptBody": false,
+		"conventionalCommits.promptFooter": false,
+		"conventionalCommits.promptScopes": true,
+		"conventionalCommits.scopes": [
+			"reg"
+		]
+	}
+}

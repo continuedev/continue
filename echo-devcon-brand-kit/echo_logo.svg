@@ -1,0 +1,18 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="neonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#39FF14" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" stroke="#39FF14" stroke-width="6" fill="#0a0a0a" filter="url(#glow)"/>
+  <circle cx="60" cy="60" r="50" fill="url(#neonGlow)" opacity="0.5"/>
+  <g>
+    <rect x="40" y="40" width="40" height="40" rx="12" fill="#0a0a0a" stroke="#39FF14" stroke-width="2"/>
+    <text x="60" y="70" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="32" fill="#39FF14" font-weight="bold">E</text>
+  </g>
+  <g>
+    <path d="M30 60 Q60 20 90 60" stroke="#39FF14" stroke-width="2" fill="none" opacity="0.7"/>
+    <path d="M30 60 Q60 100 90 60" stroke="#39FF14" stroke-width="2" fill="none" opacity="0.7"/>
+  </g>
+</svg>

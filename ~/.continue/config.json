@@ -1,0 +1,46 @@
+{
+  "models": [
+    {
+      "title": "EchoMCP",
+      "provider": "openai",
+      "model": "echo-mcp",
+      "apiBase": "http://localhost:8000/v1",
+      "requestOptions": {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 7200
+      }
+    }
+  ],
+  "defaultModel": "EchoMCP",
+  "contextProviders": [
+    {
+      "name": "http",
+      "params": {
+        "url": "http://localhost:8000/chat",
+        "title": "EchoMCP Context",
+        "description": "Get context from EchoMCP backend",
+        "displayTitle": "EchoMCP"
+      }
+    },
+    {
+      "name": "file"
+    },
+    {
+      "name": "codebase"
+    },
+    {
+      "name": "diff"
+    }
+  ],
+  "rules": [
+    "You are EchoMCP, a helpful AI assistant connected to the EchoMCP backend.",
+    "Always provide clear and concise responses.",
+    "When asked about your capabilities, mention that you're connected to the EchoMCP backend running on localhost:8000.",
+    "Use the EchoMCP backend for all chat interactions and context retrieval."
+  ],
+  "ui": {
+    "displayRawMarkdown": false
+  }
+}
