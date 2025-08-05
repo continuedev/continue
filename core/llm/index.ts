@@ -9,7 +9,7 @@ import {
 import Handlebars from "handlebars";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
-import { Logger } from "../util/Logger";
+import { Logger } from "../util/Logger.js";
 import { DataLogger } from "../data/log.js";
 import {
   CacheBehavior,

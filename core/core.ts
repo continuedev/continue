@@ -75,7 +75,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { Logger } from "./util/Logger";
+import { Logger } from "./util/Logger.js";
 import { getUriPathBasename } from "./util/uri";
 
 const hasRulesFiles = (uris: string[]): boolean => {

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { Logger } from "../../util/Logger";
+import { Logger } from "../../util/Logger.js";
 import type { IProtocol } from "../index";
 
 export interface Message<T = any> {

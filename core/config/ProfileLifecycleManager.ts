@@ -11,7 +11,7 @@ import {
   IDE,
 } from "../index.js";
 
-import { Logger } from "../util/Logger";
+import { Logger } from "../util/Logger.js";
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 

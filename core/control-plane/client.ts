@@ -11,7 +11,7 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
-import { Logger } from "../util/Logger";
+import { Logger } from "../util/Logger.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";

@@ -374,7 +374,9 @@ describe("Sentry Utility Functions", () => {
   describe("captureLog", () => {
     it("should not throw when telemetry is disabled", () => {
       expect(() => captureLog("test message")).not.toThrow();
-      expect(() => captureLog("test message", "info", { context: "test" })).not.toThrow();
+      expect(() =>
+        captureLog("test message", "info", { context: "test" }),
+      ).not.toThrow();
     });
 
     it("should not throw when telemetry is enabled", async () => {
@@ -389,7 +391,9 @@ describe("Sentry Utility Functions", () => {
       );
 
       expect(() => captureLog("test message")).not.toThrow();
-      expect(() => captureLog("test message", "error", { context: "test" })).not.toThrow();
+      expect(() =>
+        captureLog("test message", "error", { context: "test" }),
+      ).not.toThrow();
 
       process.env.NODE_ENV = originalNodeEnv;
     });
@@ -405,9 +409,15 @@ describe("Sentry Utility Functions", () => {
         "test@continue.dev",
       );
 
-      expect(() => captureLog("test message", "info", null as any)).not.toThrow();
-      expect(() => captureLog("test message", "warning", undefined)).not.toThrow();
-      expect(() => captureLog("test message", "error", { circular: {} })).not.toThrow();
+      expect(() =>
+        captureLog("test message", "info", null as any),
+      ).not.toThrow();
+      expect(() =>
+        captureLog("test message", "warning", undefined),
+      ).not.toThrow();
+      expect(() =>
+        captureLog("test message", "error", { circular: {} }),
+      ).not.toThrow();
 
       process.env.NODE_ENV = originalNodeEnv;
     });
@@ -446,7 +456,9 @@ describe("Sentry Utility Functions", () => {
 
       const error = new Error("test error");
       expect(() => captureException(error, { test: "context" })).not.toThrow();
-      expect(() => captureLog("test log message", "info", { test: "context" })).not.toThrow();
+      expect(() =>
+        captureLog("test log message", "info", { test: "context" }),
+      ).not.toThrow();
 
       // Disable telemetry again
       await SentryLogger.setup(
