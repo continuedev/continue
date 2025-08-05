@@ -8,7 +8,14 @@ class LoggerClass {
   private constructor() {
     this.winston = winston.createLogger({
       level: "info",
-      format: winston.format.json(),
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.timestamp(),
+        winston.format.printf(({ level, message, timestamp, ...meta }) => {
+          const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+          return `[@continuedev] ${level}: ${message}${metaStr}`;
+        })
+      ),
       transports: [
         // Write all logs with importance level of `info` or higher to `info.log`
         ...(process.env.NODE_ENV === "test"
