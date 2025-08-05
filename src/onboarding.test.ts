@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach } from '@jest/globals';
+import { describe, expect, test, beforeEach, afterEach } from 'vitest';
 import { runNormalFlow } from './onboarding.js';
 import type { AuthConfig } from './auth/workos.js';
 import * as fs from 'fs';
