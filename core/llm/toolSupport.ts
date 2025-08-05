@@ -293,6 +293,22 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    moonshot: (model) => {
+      // support moonshot models
+      // https://platform.moonshot.ai/docs/pricing/chat#concepts
+      if (
+        model.toLowerCase().startsWith("kimi") &&
+        model.toLowerCase() !== "kimi-thinking-preview"
+      ) {
+        return true;
+      }
+
+      if (model.toLowerCase().startsWith("moonshot")) {
+        return true;
+      }
+
+      return false;
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {
