@@ -51,36 +51,36 @@ function trimmedMatch(
   searchContent: string,
 ): BasicMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
-  
+
   // Don't apply if search content has no leading/trailing whitespace to trim
   if (trimmedSearchContent === searchContent) {
     return null;
   }
-  
+
   // Don't match if trimmed content is empty
   if (trimmedSearchContent === "") {
     return null;
   }
-  
+
   // Look for the trimmed content in the file
   const trimmedContentIndex = fileContent.indexOf(trimmedSearchContent);
   if (trimmedContentIndex === -1) {
     return null;
   }
-  
+
   // Find the boundaries that include surrounding whitespace (but not newlines)
   // Look backwards for horizontal whitespace (spaces and tabs)
   let startIndex = trimmedContentIndex;
   while (startIndex > 0 && /[ \t]/.test(fileContent[startIndex - 1])) {
     startIndex--;
   }
-  
-  // Look forwards for horizontal whitespace (spaces and tabs)  
+
+  // Look forwards for horizontal whitespace (spaces and tabs)
   let endIndex = trimmedContentIndex + trimmedSearchContent.length;
   while (endIndex < fileContent.length && /[ \t]/.test(fileContent[endIndex])) {
     endIndex++;
   }
-  
+
   return {
     startIndex,
     endIndex,
@@ -340,7 +340,7 @@ export function findSearchMatch(
       return {
         startIndex: exactIndex,
         endIndex: exactIndex + searchContent.length,
-        strategyName: "exactMatch"
+        strategyName: "exactMatch",
       };
     }
     // If no exact match for whitespace-only content, treat as empty search
