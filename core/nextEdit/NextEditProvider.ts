@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import {
   ChatMessage,
+  DiffLine,
   IDE,
   ILLM,
   Position,
@@ -427,7 +428,7 @@ export class NextEditProvider {
   } {
     const cursorLine = helper.pos.line;
     const fileLines = helper.fileLines;
-    const MAX_TOKENS = 500;
+    const MAX_TOKENS = 512;
 
     // Initialize with cursor line.
     let editableRegionStartLine = cursorLine;
@@ -594,6 +595,7 @@ export class NextEditProvider {
         userEdits: "",
         userExcerpts: "",
         originalEditableRange: "",
+        diffLines: [],
       });
 
       // Mark as displayed for JetBrains extension
@@ -649,6 +651,8 @@ export class NextEditProvider {
     } else {
       return await this._handleFullFileDiff(
         helper,
+        editableRegionStartLine,
+        editableRegionEndLine,
         startTime,
         llm,
         nextCompletion,
@@ -688,6 +692,7 @@ export class NextEditProvider {
       userEdits: this.promptMetadata!.userEdits,
       userExcerpts: this.promptMetadata!.userExcerpts,
       originalEditableRange: oldEditRangeSlice,
+      diffLines: [],
     });
 
     this.previousCompletions.push(outcomeNext);
@@ -703,12 +708,17 @@ export class NextEditProvider {
 
   private async _handleFullFileDiff(
     helper: HelperVars,
+    editableRegionStartLine: number,
+    editableRegionEndLine: number,
     startTime: number,
     llm: ILLM,
     nextCompletion: string,
   ): Promise<NextEditOutcome | undefined> {
-    const diffLines = myersDiff(helper.fileContents, nextCompletion);
-    const diffGroups = groupDiffLines(diffLines);
+    const fileSlice = helper.fileLines
+      .slice(editableRegionStartLine, editableRegionEndLine + 1)
+      .join("\n");
+    const diffLines = myersDiff(fileSlice, nextCompletion);
+    const diffGroups = groupDiffLines(diffLines, editableRegionStartLine, 5);
     const currentLine = helper.pos.line;
     let cursorLocalDiffGroup: DiffGroup | undefined;
     const prefetchQueue = PrefetchQueue.getInstance();
@@ -826,6 +836,7 @@ export class NextEditProvider {
       originalEditableRange: originalContent,
       cursorPosition: { line: group.startLine, character: 0 },
       completionId: uuidv4(), // Generate a new ID for this prefetched item
+      diffLines: group.lines,
     });
 
     // Add to prefetch queue
@@ -880,6 +891,7 @@ export class NextEditProvider {
       originalEditableRange: originalContent,
       cursorPosition: cursorPos,
       completionId,
+      diffLines: diffGroup.lines,
     });
 
     this.previousCompletions.push(outcomeNext);
@@ -904,6 +916,7 @@ export class NextEditProvider {
     originalEditableRange: string;
     cursorPosition?: Position;
     completionId?: string;
+    diffLines: DiffLine[];
   }): Promise<NextEditOutcome> {
     return {
       elapsed: Date.now() - outcomeCtx.startTime,
@@ -928,6 +941,7 @@ export class NextEditProvider {
       finalCursorPosition: outcomeCtx.finalCursorPosition,
       editableRegionStartLine: outcomeCtx.editableRegionStartLine,
       editableRegionEndLine: outcomeCtx.editableRegionEndLine,
+      diffLines: outcomeCtx.diffLines,
       ...outcomeCtx.helper.options,
     };
   }
