@@ -166,79 +166,80 @@ This matrix shows which models support tool use and image input capabilities. Co
 
 ### OpenAI
 
-| Model         | Tool Use | Image Input |
-| :------------ | -------- | ----------- |
-| o3            | ✅       | ❌          |
-| o3-mini       | ✅       | ❌          |
-| GPT-4o        | ✅       | ✅          |
-| GPT-4 Turbo   | ✅       | ✅          |
-| GPT-4         | ✅       | ❌          |
-| GPT-3.5 Turbo | ✅       | ❌          |
+| Model         | Tool Use | Image Input | Context Window |
+| :------------ | -------- | ----------- | -------------- |
+| o3            | Yes      | No          | 128k           |
+| o3-mini       | Yes      | No          | 128k           |
+| GPT-4o        | Yes      | Yes         | 128k           |
+| GPT-4 Turbo   | Yes      | Yes         | 128k           |
+| GPT-4         | Yes      | No          | 8k             |
+| GPT-3.5 Turbo | Yes      | No          | 16k            |
 
 ### Anthropic
 
-| Model             | Tool Use | Image Input |
-| :---------------- | -------- | ----------- |
-| Claude 4 Sonnet   | ✅       | ✅          |
-| Claude 3.5 Sonnet | ✅       | ✅          |
-| Claude 3.5 Haiku  | ✅       | ✅          |
+| Model             | Tool Use | Image Input | Context Window |
+| :---------------- | -------- | ----------- | -------------- |
+| Claude 4 Sonnet   | Yes      | Yes         | 200k           |
+| Claude 3.5 Sonnet | Yes      | Yes         | 200k           |
+| Claude 3.5 Haiku  | Yes      | Yes         | 200k           |
 
 ### Google
 
-| Model            | Tool Use | Image Input |
-| :--------------- | -------- | ----------- |
-| Gemini 2.5 Pro   | ✅       | ✅          |
-| Gemini 2.0 Flash | ✅       | ✅          |
+| Model            | Tool Use | Image Input | Context Window |
+| :--------------- | -------- | ----------- | -------------- |
+| Gemini 2.5 Pro   | Yes      | Yes         | 2M             |
+| Gemini 2.0 Flash | Yes      | Yes         | 1M             |
 
 ### Mistral
 
-| Model           | Tool Use | Image Input |
-| :-------------- | -------- | ----------- |
-| Devstral Medium | ✅       | ❌          |
-| Mistral         | ✅       | ❌          |
+| Model           | Tool Use | Image Input | Context Window |
+| :-------------- | -------- | ----------- | -------------- |
+| Devstral Medium | Yes      | No          | 32k            |
+| Mistral         | Yes      | No          | 32k            |
 
 ### DeepSeek
 
-| Model             | Tool Use | Image Input |
-| :---------------- | -------- | ----------- |
-| DeepSeek V3       | ✅       | ❌          |
-| DeepSeek Coder V2 | ✅       | ❌          |
-| DeepSeek Chat     | ✅       | ❌          |
+| Model             | Tool Use | Image Input | Context Window |
+| :---------------- | -------- | ----------- | -------------- |
+| DeepSeek V3       | Yes      | No          | 128k           |
+| DeepSeek Coder V2 | Yes      | No          | 128k           |
+| DeepSeek Chat     | Yes      | No          | 64k            |
 
 ### xAI
 
-| Model  | Tool Use | Image Input |
-| :----- | -------- | ----------- |
-| Grok 4 | ✅       | ✅          |
+| Model  | Tool Use | Image Input | Context Window |
+| :----- | -------- | ----------- | -------------- |
+| Grok 4 | Yes      | Yes         | 128k           |
 
 ### Moonshot AI
 
-| Model   | Tool Use | Image Input |
-| :------ | -------- | ----------- |
-| Kimi K2 | ✅       | ✅          |
+| Model   | Tool Use | Image Input | Context Window |
+| :------ | -------- | ----------- | -------------- |
+| Kimi K2 | Yes      | Yes         | 128k           |
 
 ### Qwen
 
-| Model             | Tool Use | Image Input |
-| :---------------- | -------- | ----------- |
-| Qwen Coder 3 480B | ✅       | ❌          |
+| Model             | Tool Use | Image Input | Context Window |
+| :---------------- | -------- | ----------- | -------------- |
+| Qwen Coder 3 480B | Yes      | No          | 128k           |
 
 ### Ollama (Local Models)
 
-| Model          | Tool Use | Image Input |
-| :------------- | -------- | ----------- |
-| Qwen 3 Coder   | ✅       | ❌          |
-| Devstral Small | ✅       | ❌          |
-| Llama 3.1      | ✅       | ❌          |
-| Llama 3        | ✅       | ❌          |
-| Mistral        | ✅       | ❌          |
-| Codestral      | ✅       | ❌          |
-| Gemma 3 4B     | ✅       | ❌          |
+| Model          | Tool Use | Image Input | Context Window |
+| :------------- | -------- | ----------- | -------------- |
+| Qwen 3 Coder   | Yes      | No          | 32k            |
+| Devstral Small | Yes      | No          | 32k            |
+| Llama 3.1      | Yes      | No          | 128k           |
+| Llama 3        | Yes      | No          | 8k             |
+| Mistral        | Yes      | No          | 32k            |
+| Codestral      | Yes      | No          | 32k            |
+| Gemma 3 4B     | Yes      | No          | 8k             |
 
 ### Notes
 
 - **Tool Use**: Function calling support (tools are required for Agent mode)
 - **Image Input**: Processing images
+- **Context Window**: Maximum number of tokens the model can process in a single request
 
 ---
 
