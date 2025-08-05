@@ -15,7 +15,6 @@ import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
-import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { LumpProvider } from "./mainInput/Lump/LumpContext";
@@ -280,7 +279,6 @@ const Layout = () => {
               <GridDiv>
                 <PostHogPageView />
                 <Outlet />
-                <FatalErrorIndicator />
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />

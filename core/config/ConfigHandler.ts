@@ -348,8 +348,8 @@ export class ConfigHandler {
   // External actions that can cause a cascading config refresh
   // Should not be used internally
   //////////////////
-  async refreshAll() {
-    await this.cascadeInit("External refresh all");
+  async refreshAll(reason?: string) {
+    await this.cascadeInit(reason ?? "External refresh all");
   }
 
   // Ide settings change: refresh session and cascade refresh from the top

@@ -48,12 +48,7 @@ class IdeProtocolClient(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
 
-    init {
-        // Setup config.json / config.ts save listeners
-        VirtualFileManager.getInstance().addAsyncFileListener(
-            AsyncFileSaveListener(continuePluginService), project.service<ContinuePluginDisposable>()
-        )
-    }
+    init {}
 
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(limitedDispatcher) {
