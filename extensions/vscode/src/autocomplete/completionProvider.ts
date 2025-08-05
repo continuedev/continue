@@ -13,7 +13,6 @@ import { handleLLMError } from "../util/errorHandling";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
-import { myersDiff } from "core/diff/myers";
 import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { PrefetchQueue } from "core/nextEdit/NextEditPrefetchQueue";
@@ -358,6 +357,7 @@ export class ContinueCompletionProvider
           console.log(
             "No suitable jump location found after trying all positions",
           );
+          this.nextEditProvider.deleteChain();
           return undefined;
         }
       } else {
@@ -390,7 +390,10 @@ export class ContinueCompletionProvider
           // If initial outcome is null, suggest a jump instead.
           // Calling this method again will call it with
           // chain active but jump not suggested yet.
-          if (!outcome || !outcome.completion) {
+          if (
+            !outcome ||
+            (!outcome.completion && outcome.diffLines.length === 0)
+          ) {
             return this.provideInlineCompletionItems(
               document,
               position,
@@ -409,7 +412,14 @@ export class ContinueCompletionProvider
       }
 
       // Return early if no valid outcome was found.
-      if (!outcome || !outcome.completion) {
+      if (
+        !outcome ||
+        (!this.isNextEditActive &&
+          !(outcome as AutocompleteOutcome).completion) ||
+        (this.isNextEditActive &&
+          !(outcome as NextEditOutcome).completion &&
+          (outcome as NextEditOutcome).diffLines.length === 0)
+      ) {
         return null;
       }
 
@@ -509,12 +519,6 @@ export class ContinueCompletionProvider
       // Check the diff between old and new editable region.
       const newEditRangeSlice = completionText;
 
-      // We don't need to show the next edit window if the predicted edits is empty.
-      if (newEditRangeSlice === "") {
-        this.nextEditLoggingService.cancelRejectionTimeout(completionId);
-        return undefined;
-      }
-
       // Get the contents of the old (current) editable region.
       // const editableRegionStartLine = Math.max(
       //   currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
@@ -588,7 +592,7 @@ export class ContinueCompletionProvider
       }
 
       // Handle non-FIM cases with the NextEditWindowManager.
-      const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
+      const diffLines = (outcome as NextEditOutcome).diffLines;
       if (diffLines.length === 0) {
         // At this point, there is no way that diffLines.length === 0.
         // Only time we ever reach this point would be after the jump was taken, or if its after the very first repsonse.
