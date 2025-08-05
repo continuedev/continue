@@ -45,7 +45,9 @@ export class JumpManager {
 
   public dispose() {
     // Dispose current decoration.
-    this._disposables.forEach((d) => d.dispose());
+    this._disposables.forEach((d) => {
+      if (d) d.dispose();
+    });
     this._disposables = [];
   }
 
@@ -73,14 +75,6 @@ export class JumpManager {
           const endLine = Math.min(
             startLine + completionLines.length - 1,
             document.lineCount - 1,
-          );
-
-          console.log(
-            "editor lines:",
-            document
-              .getText()
-              .split("\n")
-              .slice(startLine, endLine + 1),
           );
 
           // First check if we have enough lines in the document
@@ -225,8 +219,7 @@ export class JumpManager {
     }
 
     // Dispose any active listeners.
-    this._disposables.forEach((d) => d.dispose());
-    this._disposables = [];
+    this.dispose();
 
     // Reset the context.
     await vscode.commands.executeCommand(
