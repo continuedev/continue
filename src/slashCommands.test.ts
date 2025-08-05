@@ -1,28 +1,29 @@
+
+// Import after mocking
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 import {
   afterEach,
   beforeEach,
   describe,
   expect,
-  jest,
+  vi,
   test,
-} from "@jest/globals";
-import type { AuthServiceState } from "./services/types.js";
+} from "vitest";
 
-// Import after mocking
-import { AssistantUnrolled } from "@continuedev/config-yaml";
 import * as workos from "./auth/workos.js";
 import * as commands from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
+import type { AuthServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
 
-// The imports are already mocked via jest.setup.ts, so we can use them directly
+// The imports are already mocked via vitest.setup.ts, so we can use them directly
 
 // Mock console to avoid output during tests
 const originalConsole = console;
 const mockConsole = {
-  info: jest.fn(),
-  error: jest.fn(),
-  log: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  log: vi.fn(),
 };
 
 describe("handleSlashCommands", () => {
@@ -34,7 +35,7 @@ describe("handleSlashCommands", () => {
 
   beforeEach(() => {
     Object.assign(console, mockConsole);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Since the mock already returns the required value, we don't need to set it
     // Just verify it returns what we expect
@@ -188,6 +189,13 @@ describe("handleSlashCommands", () => {
       expect(result).not.toBeNull();
       expect(result?.clear).toBe(true);
       expect(result?.output).toBe("Chat history cleared");
+    });
+
+    test("compact command should work normally", async () => {
+      const result = await handleSlashCommands("/compact", mockAssistant);
+
+      expect(result).not.toBeNull();
+      expect(result?.compact).toBe(true);
     });
 
     test("non-slash input should return null", async () => {

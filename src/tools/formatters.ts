@@ -1,25 +1,4 @@
 import path from "path";
-import { getToolDisplayName } from "./index.js";
-
-/**
- * Formats a tool call with its arguments for display
- * @param toolName The name of the tool
- * @param args The tool arguments
- * @returns A formatted string like "ToolName(arg)" or just "ToolName" if no args
- */
-export function formatToolCall(toolName: string, args?: any): string {
-  const displayName = getToolDisplayName(toolName);
-  
-  if (!args || Object.keys(args).length === 0) {
-    return displayName;
-  }
-
-  // Get the first argument value
-  const firstValue = Object.values(args)[0];
-  const formattedValue = formatToolArgument(firstValue);
-  
-  return `${displayName}(${formattedValue})`;
-}
 
 /**
  * Formats a single tool argument for display

@@ -17,7 +17,6 @@ export function createTestServiceContainer(): TestServiceContainer {
   }>();
   
   // Override load instead of register to have more control
-  const originalLoad = container.load.bind(container);
   container.load = async function(serviceName: string) {
     // Check if we already have a resolver for this service
     const existing = serviceResolvers.get(serviceName);

@@ -1,9 +1,9 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 export interface UITestContext {
-  mockUseService: jest.MockedFunction<any>;
-  mockUseServices: jest.MockedFunction<any>;
-  mockUseChat: jest.MockedFunction<any>;
+  mockUseService: ReturnType<typeof vi.fn>;
+  mockUseServices: ReturnType<typeof vi.fn>;
+  mockUseChat: ReturnType<typeof vi.fn>;
   mockServiceContainer: any;
   cleanup: () => void;
 }
@@ -29,15 +29,15 @@ export function createUITestContext(options: {
   } = options;
 
   // Mock useService hook
-  const mockUseService = jest.fn().mockReturnValue({
+  const mockUseService = vi.fn().mockReturnValue({
     value: serviceValue,
     state: serviceState,
     error: null,
-    reload: jest.fn(),
+    reload: vi.fn(),
   });
 
   // Mock useServices hook
-  const mockUseServices = jest.fn().mockReturnValue({
+  const mockUseServices = vi.fn().mockReturnValue({
     services,
     loading: !allServicesReady,
     error: null,
@@ -45,42 +45,42 @@ export function createUITestContext(options: {
   });
 
   // Mock useChat hook
-  const mockUseChat = jest.fn().mockReturnValue({
+  const mockUseChat = vi.fn().mockReturnValue({
     messages: chatMessages,
-    setMessages: jest.fn(),
+    setMessages: vi.fn(),
     chatHistory: [],
-    setChatHistory: jest.fn(),
+    setChatHistory: vi.fn(),
     isWaitingForResponse,
     responseStartTime: null,
     inputMode: true,
     attachedFiles: [],
-    handleUserMessage: jest.fn(),
-    handleInterrupt: jest.fn(),
-    handleFileAttached: jest.fn(),
-    resetChatHistory: jest.fn(),
+    handleUserMessage: vi.fn(),
+    handleInterrupt: vi.fn(),
+    handleFileAttached: vi.fn(),
+    resetChatHistory: vi.fn(),
   });
 
   // Mock service container
   const mockServiceContainer = {
-    getSync: jest.fn((serviceName: string) => ({
+    getSync: vi.fn((serviceName: string) => ({
       state: "error",
       value: null,
       error: new Error(`Service '${serviceName}' not registered`),
     })),
-    isReady: jest.fn(() => allServicesReady),
-    on: jest.fn(),
-    off: jest.fn(),
-    load: jest.fn(() => Promise.resolve()),
-    reload: jest.fn(() => Promise.resolve()),
-    emit: jest.fn(),
-    setMaxListeners: jest.fn(),
+    isReady: vi.fn(() => allServicesReady),
+    on: vi.fn(),
+    off: vi.fn(),
+    load: vi.fn(() => Promise.resolve()),
+    reload: vi.fn(() => Promise.resolve()),
+    emit: vi.fn(),
+    setMaxListeners: vi.fn(),
   };
 
   // Note: Jest mocks need to be hoisted, so they can't be called inside functions
   // The actual mocking should be done at the top of test files
 
   const cleanup = () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   };
 
   return {
@@ -97,7 +97,7 @@ export function createUITestContext(options: {
  */
 export function createMinimalTestContext(): { cleanup: () => void } {
   const cleanup = () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   };
 
   return { cleanup };

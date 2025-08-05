@@ -1,10 +1,16 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
+
 import { getAllSlashCommands } from "../commands/commands.js";
+import type { PermissionMode } from "../permissions/types.js";
+import { reloadService, SERVICE_NAMES } from "../services/index.js";
+import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
-import FileSearchUI from "./FileSearchUI.js";
-import SlashCommandUI from "./SlashCommandUI.js";
+import { logger } from "../util/logger.js";
+
+import { FileSearchUI } from "./FileSearchUI.js";
+import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
@@ -60,6 +66,24 @@ const UserInput: React.FC<UserInputProps> = ({
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
     ];
+  };
+
+  // Cycle through permission modes
+  const cycleModes = async () => {
+    const modes: PermissionMode[] = ["normal", "plan", "auto"];
+    const currentMode = modeService.getCurrentMode();
+    const currentIndex = modes.indexOf(currentMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const nextMode = modes[nextIndex];
+    
+    modeService.switchMode(nextMode);
+    
+    // Reload the tool permissions service to ensure the service container has the latest state
+    await reloadService(SERVICE_NAMES.TOOL_PERMISSIONS);
+    
+    // Show a brief indicator of the mode change
+    // This will be reflected in the ModeIndicator component
+    return nextMode;
   };
 
   // Update slash command UI state based on input
@@ -226,6 +250,14 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
+    // Handle Shift+Tab to cycle through modes
+    if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
+      cycleModes().catch(error => {
+        logger.error("Failed to cycle modes:", error);
+      });
+      return;
+    }
+
     // Handle escape key to interrupt streaming
     if (key.escape && isWaitingForResponse && onInterrupt) {
       onInterrupt();
@@ -339,7 +371,7 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       if (key.downArrow) {
-        const historyEntry = inputHistory.navigateDown(inputText);
+        const historyEntry = inputHistory.navigateDown();
         if (historyEntry !== null) {
           textBuffer.setText(historyEntry);
           textBuffer.setCursor(historyEntry.length);
@@ -517,4 +549,4 @@ const UserInput: React.FC<UserInputProps> = ({
   );
 };
 
-export default UserInput;
+export { UserInput };

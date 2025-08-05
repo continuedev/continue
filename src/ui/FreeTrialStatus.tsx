@@ -40,7 +40,7 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
       const response = await apiClient.getFreeTrialStatus();
       setStatus(response);
       setLoading(false);
-    } catch (error) {
+    } catch {
       // Silently handle errors - component returns null if no status
       setStatus(null);
       setLoading(false);
@@ -105,4 +105,4 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
   );
 };
 
-export default FreeTrialStatus;
+export { FreeTrialStatus };

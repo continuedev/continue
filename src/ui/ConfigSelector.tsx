@@ -1,7 +1,9 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+
 import React, { useEffect, useState } from "react";
+
 import {
   getAccessToken,
   getOrganizationId,
@@ -9,7 +11,8 @@ import {
   getAssistantSlug,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
-import Selector, { SelectorOption } from "./Selector.js";
+
+import { Selector, SelectorOption } from "./Selector.js";
 
 interface ConfigOption extends SelectorOption {
   type: "local" | "assistant" | "create";
@@ -124,4 +127,4 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
   );
 };
 
-export default ConfigSelector;
+export { ConfigSelector };

@@ -1,3 +1,6 @@
+import * as fs from "fs/promises";
+import * as path from "path";
+
 import {
   cleanupTestContext,
   createTestContext,
@@ -10,8 +13,6 @@ import {
   createMockLLMConfig,
   type MockLLMServer,
 } from "../test-helpers/mock-llm-server.js";
-import * as fs from "fs/promises";
-import * as path from "path";
 
 describe("E2E: Headless Mode with Dynamic Responses", () => {
   let context: any;

@@ -1,8 +1,8 @@
 name: Legacy Release (Deprecated)
 
 on:
-  # Disabled automatic scheduling - replaced by beta/stable workflow
   # schedule:
+  #   # Run every day at 9am UTC
   #   - cron: "0 9 * * *"
   workflow_dispatch:
     # Keep manual triggering for emergencies

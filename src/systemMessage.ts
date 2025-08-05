@@ -1,8 +1,10 @@
 import { execSync } from "child_process";
 import * as fs from "fs";
+import * as path from "path";
+
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
-import * as path from "path";
+
 import { processRule } from "./args.js";
 const { WalkerSync } = pkg;
 
@@ -126,7 +128,7 @@ export async function constructSystemMessage(
   }
 
   // Process additional rules from --rule flags
-  let processedRules: string[] = [];
+  const processedRules: string[] = [];
   if (additionalRules && additionalRules.length > 0) {
     for (const ruleSpec of additionalRules) {
       try {

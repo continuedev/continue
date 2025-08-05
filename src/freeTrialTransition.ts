@@ -1,12 +1,15 @@
-import chalk from "chalk";
 import { spawn } from "child_process";
 import * as fs from "fs";
-import open from "open";
 import * as os from "os";
 import * as path from "path";
+
+import chalk from "chalk";
+import open from "open";
 import * as readlineSync from "readline-sync";
-import * as YAML from "yaml";
+
 import { env } from "./env.js";
+import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
+import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
@@ -20,60 +23,12 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  const newModel = {
-    uses: "anthropic/claude-4-sonnet",
-    with: {
-      ANTHROPIC_API_KEY: apiKey,
-    },
-  };
-
-  if (fs.existsSync(CONFIG_PATH)) {
-    const existingContent = fs.readFileSync(CONFIG_PATH, "utf8");
-    let config;
-
-    try {
-      config = YAML.parse(existingContent);
-
-      // Make sure models array exists
-      if (!config.models) {
-        config.models = [];
-      }
-
-      // Check if model already exists
-      const existingModelIndex = config.models.findIndex(
-        (model: any) => model.uses === "anthropic/claude-4-sonnet"
-      );
-
-      if (existingModelIndex >= 0) {
-        // Update existing model
-        config.models[existingModelIndex].with.ANTHROPIC_API_KEY = apiKey;
-      } else {
-        // Add new model
-        config.models.push(newModel);
-      }
-    } catch (error) {
-      // If parsing fails, create a new config
-      config = {
-        name: "Local Config",
-        version: "1.0.0",
-        schema: "v1",
-        models: [newModel],
-      };
-    }
-
-    // Write back to file
-    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
-  } else {
-    // Create new config file
-    const config = {
-      name: "Local Config",
-      version: "1.0.0",
-      schema: "v1",
-      models: [newModel],
-    };
-
-    fs.writeFileSync(CONFIG_PATH, YAML.stringify(config));
-  }
+  const existingContent = fs.existsSync(CONFIG_PATH) 
+    ? fs.readFileSync(CONFIG_PATH, "utf8")
+    : "";
+    
+  const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
+  fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
 
 /**
@@ -83,7 +38,7 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
  * 2. Provides two specific options for continuing
  * 3. Returns to the chat without restarting the entire CLI
  */
-export async function handleMaxedOutFreeTrial(): Promise<void> {
+export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): Promise<void> {
   // Clear the screen but don't show ASCII art - keep it minimal since we're resuming a conversation
   console.clear();
 
@@ -110,7 +65,7 @@ export async function handleMaxedOutFreeTrial(): Promise<void> {
           "After setting up your models subscription, restart the CLI to continue."
         )
       );
-    } catch (error) {
+    } catch {
       console.log(chalk.yellow("\n⚠ Could not open browser automatically"));
       console.log(chalk.white(`Please visit: ${modelsUrl}`));
       console.log(
@@ -128,19 +83,13 @@ export async function handleMaxedOutFreeTrial(): Promise<void> {
     const apiKey = readlineSync.question(
       chalk.white("\nEnter your Anthropic API key: "),
       {
-        limit: /^sk-ant-.+$/, // Must start with "sk-ant-" and have additional characters
-        limitMessage: chalk.dim(
-          "Please enter a valid Anthropic key that starts with 'sk-ant'"
-        ),
         hideEchoBack: true,
       }
     );
 
-    if (!apiKey || !apiKey.startsWith("sk-ant-")) {
+    if (!isValidAnthropicApiKey(apiKey)) {
       console.log(
-        chalk.red(
-          "❌ Invalid Anthropic API key. Please make sure it starts with 'sk-ant'"
-        )
+        chalk.red(`❌ ${getApiKeyValidationError(apiKey)}`)
       );
       process.exit(1);
     }
@@ -148,13 +97,20 @@ export async function handleMaxedOutFreeTrial(): Promise<void> {
     try {
       await createOrUpdateConfig(apiKey);
       console.log(chalk.green(`✓ API key saved successfully!`));
+      console.log(chalk.green("✓ Switching to local configuration..."));
+      
+      // If a reload callback is provided, use it instead of restarting
+      if (onReload) {
+        await onReload();
+        return;
+      }
     } catch (error) {
       console.log(chalk.red(`❌ Error saving API key: ${error}`));
       process.exit(1);
     }
   }
 
-  // After setup completes, restart the CLI to resume the conversation
+  // Fallback: restart the CLI if no reload callback was provided
   console.log(
     chalk.green("\n🔄 Restarting Continue CLI to resume your conversation...\n")
   );

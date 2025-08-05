@@ -1,4 +1,8 @@
+import { ToolCallPreview } from "../tools/types.js";
+
 export type PermissionPolicy = "allow" | "ask" | "exclude";
+
+export type PermissionMode = "normal" | "plan" | "auto";
 
 export interface ToolPermissionPolicy {
   /** The tool name to match against */
@@ -17,6 +21,7 @@ export interface ToolPermissions {
 export interface ToolCallRequest {
   name: string;
   arguments: Record<string, any>;
+  preview?: ToolCallPreview[];
 }
 
 export interface PermissionCheckResult {

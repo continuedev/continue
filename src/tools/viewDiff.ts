@@ -1,12 +1,13 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as util from "util";
+
 import { Tool } from "./types.js";
 
 const execPromise = util.promisify(child_process.exec);
 
 export const viewDiffTool: Tool = {
-  name: "view_diff",
+  name: "Diff",
   displayName: "Diff",
   description: "View all uncommitted changes in the git repository",
   parameters: {
@@ -18,6 +19,18 @@ export const viewDiffTool: Tool = {
     },
   },
   readonly: true,
+  isBuiltIn: true,
+  preprocess: async (args) => {
+    return {
+      args,
+      preview: [
+        {
+          type: "text",
+          content: "Will show git diff",
+        },
+      ],
+    };
+  },
   run: async (args: { path?: string }): Promise<string> => {
     try {
       const repoPath = args.path || process.cwd();
@@ -29,7 +42,7 @@ export const viewDiffTool: Tool = {
         await execPromise("git rev-parse --is-inside-work-tree", {
           cwd: repoPath,
         });
-      } catch (error) {
+      } catch {
         return `Error: The specified path is not a git repository: ${repoPath}`;
       }
 
@@ -47,7 +60,9 @@ export const viewDiffTool: Tool = {
 
       return `Git diff for repository at ${repoPath}:\n\n${stdout}`;
     } catch (error) {
-      return `Error running git diff: ${error instanceof Error ? error.message : String(error)}`;
+      return `Error running git diff: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
     }
   },
 };

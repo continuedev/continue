@@ -1,82 +1,73 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi, constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
-import { getLlmApi } from '../config.js';
+import { constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
+
 import { AuthConfig, getAccessToken, getOrganizationId, getModelName } from '../auth/workos.js';
-import logger from '../util/logger.js';
+import { getLlmApi } from '../config.js';
+import { logger } from '../util/logger.js';
+
+import { BaseService, ServiceWithDependencies } from './BaseService.js';
 import { ModelServiceState } from './types.js';
 
 /**
  * Service for managing LLM and model state
  * Depends on auth config and assistant config
  */
-export class ModelService {
-  private currentState: ModelServiceState = {
-    llmApi: null,
-    model: null
-  };
+export class ModelService extends BaseService<ModelServiceState> implements ServiceWithDependencies {
   private availableModels: ModelConfig[] = [];
   private assistant: AssistantUnrolled | null = null;
   private authConfig: AuthConfig | null = null;
 
+  constructor() {
+    super('ModelService', {
+      llmApi: null,
+      model: null
+    });
+  }
+
+  /**
+   * Declare dependencies on other services
+   */
+  getDependencies(): string[] {
+    return ['auth', 'config'];
+  }
+
   /**
    * Initialize the model service
    */
-  async initialize(
+  async doInitialize(
     assistant: AssistantUnrolled,
     authConfig: AuthConfig
   ): Promise<ModelServiceState> {
-    logger.debug('Initializing ModelService');
+    this.assistant = assistant;
+    this.authConfig = authConfig;
+    this.availableModels = (assistant.models?.filter((model) => 
+      model && model.roles?.includes("chat")
+    ) || []) as ModelConfig[];
     
-    try {
-      this.assistant = assistant;
-      this.authConfig = authConfig;
-      this.availableModels = (assistant.models?.filter((model) => 
-        model && model.roles?.includes("chat")
-      ) || []) as ModelConfig[];
-      
-      // Check if we have a persisted model name and use it if valid
-      const persistedModelName = getModelName(authConfig);
-      if (persistedModelName) {
-        const modelIndex = this.getModelIndexByName(persistedModelName);
-        if (modelIndex !== -1) {
-          // Use the persisted model
-          const state = await this.switchModel(modelIndex);
-          this.currentState = state;
-        } else {
-          // Model name not found, use default model selection
-          const [llmApi, model] = getLlmApi(assistant, authConfig);
-          this.currentState = {
-            llmApi,
-            model
-          };
-        }
+    // Check if we have a persisted model name and use it if valid
+    const persistedModelName = getModelName(authConfig);
+    if (persistedModelName) {
+      const modelIndex = this.getModelIndexByName(persistedModelName);
+      if (modelIndex !== -1) {
+        // Use the persisted model
+        const state = await this.switchModel(modelIndex);
+        return state;
       } else {
-        // Use default model selection
+        // Model name not found, use default model selection
         const [llmApi, model] = getLlmApi(assistant, authConfig);
-        this.currentState = {
+        return {
           llmApi,
           model
         };
       }
-
-      logger.debug('ModelService initialized successfully', {
-        modelProvider: this.currentState.model?.provider,
-        modelName: (this.currentState.model as any)?.name || 'unnamed',
-        availableModels: this.availableModels.length
-      });
-
-      return this.currentState;
-    } catch (error: any) {
-      logger.error('Failed to initialize ModelService:', error);
-      throw error;
+    } else {
+      // Use default model selection
+      const [llmApi, model] = getLlmApi(assistant, authConfig);
+      return {
+        llmApi,
+        model
+      };
     }
-  }
-
-  /**
-   * Get current model state
-   */
-  getState(): ModelServiceState {
-    return { ...this.currentState };
   }
 
   /**
@@ -97,10 +88,10 @@ export class ModelService {
       
       const [llmApi, model] = getLlmApi(assistant, authConfig);
 
-      this.currentState = {
+      this.setState({
         llmApi,
         model
-      };
+      });
 
       logger.debug('ModelService updated successfully', {
         modelProvider: model.provider,
@@ -108,18 +99,21 @@ export class ModelService {
         availableModels: this.availableModels.length
       });
 
-      return this.currentState;
+      return this.getState();
     } catch (error: any) {
       logger.error('Failed to update ModelService:', error);
+      this.emit('error', error);
       throw error;
     }
   }
 
   /**
-   * Check if the current model is ready for use
+   * Override isReady to check for required state
    */
-  isReady(): boolean {
-    return this.currentState.llmApi !== null && this.currentState.model !== null;
+  override isReady(): boolean {
+    return super.isReady() && 
+           this.currentState.llmApi !== null && 
+           this.currentState.model !== null;
   }
 
   /**
@@ -197,19 +191,20 @@ export class ModelService {
         throw new Error('Failed to initialize LLM with selected model');
       }
 
-      this.currentState = {
+      this.setState({
         llmApi,
         model: selectedModel
-      };
+      });
 
       logger.debug('Model switched successfully', {
         modelProvider: selectedModel.provider,
         modelName: (selectedModel as any).name || 'unnamed'
       });
 
-      return this.currentState;
+      return this.getState();
     } catch (error: any) {
       logger.error('Failed to switch model:', error);
+      this.emit('error', error);
       throw error;
     }
   }

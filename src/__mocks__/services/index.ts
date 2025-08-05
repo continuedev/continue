@@ -1,15 +1,15 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 export const services = {
   auth: {
-    login: jest.fn(() => Promise.resolve({})),
-    logout: jest.fn(() => Promise.resolve({})),
-    switchOrganization: jest.fn(() => Promise.resolve({})),
-    getAvailableOrganizations: jest.fn(() => Promise.resolve([])),
+    login: vi.fn(() => Promise.resolve({})),
+    logout: vi.fn(() => Promise.resolve({})),
+    switchOrganization: vi.fn(() => Promise.resolve({})),
+    getAvailableOrganizations: vi.fn(() => Promise.resolve([])),
   },
 };
 
-export const reloadService = jest.fn(() => Promise.resolve(undefined));
+export const reloadService = vi.fn(() => Promise.resolve(undefined));
 
 export const SERVICE_NAMES = {
   AUTH: 'auth',

@@ -1,7 +1,8 @@
 import { render } from "ink-testing-library";
 import React from "react";
+
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import TUIChat from "../TUIChat.js";
+import { TUIChat } from "../TUIChat.js";
 
 describe("TUIChat - Basic UI Tests", () => {
   let context: any;

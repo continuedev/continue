@@ -1,7 +1,8 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
-import MarkdownRenderer from "../MarkdownRenderer.js";
-import ToolResultSummary from "../ToolResultSummary.js";
+
+import { MarkdownRenderer } from "../MarkdownRenderer.js";
+import { ToolResultSummary } from "../ToolResultSummary.js";
 import { DisplayMessage } from "../types.js";
 
 interface MemoizedMessageProps {
@@ -24,8 +25,9 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
           );
 
         case "tool-result":
-          const isFailure = message.toolResult?.includes("Permission denied") || 
-                           message.toolResult?.includes("Error executing tool");
+          const isFailure =
+            message.toolResult?.startsWith("Permission denied") ||
+            message.toolResult?.startsWith("Error");
           return (
             <Box key={index} marginBottom={1} flexDirection="column">
               <Box>
@@ -51,7 +53,6 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             </Box>
           );
 
-
         default:
           return (
             <Box key={index} marginBottom={1}>
@@ -61,6 +62,13 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             </Box>
           );
       }
+    }
+
+    // Special rendering for compaction messages
+    if (message.messageType === "compaction") {
+      return (
+        <Box key={index} marginBottom={1} borderStyle="single" borderBottom={false} borderLeft={false} borderRight={false} borderColor="gray" />
+      );
     }
 
     return (

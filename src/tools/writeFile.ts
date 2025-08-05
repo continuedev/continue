@@ -1,12 +1,15 @@
-import { createTwoFilesPatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import telemetryService from "../telemetry/telemetryService.js";
+
+import { createTwoFilesPatch } from "diff";
+
+import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
-import { Tool } from "./types.js";
+
+import { Tool, ToolCallPreview } from "./types.js";
 
 export function generateDiff(
   oldContent: string,
@@ -25,7 +28,7 @@ export function generateDiff(
 }
 
 export const writeFileTool: Tool = {
-  name: "write_file",
+  name: "Write",
   displayName: "Write",
   description: "Write content to a file at the specified path",
   parameters: {
@@ -41,6 +44,66 @@ export const writeFileTool: Tool = {
     },
   },
   readonly: false,
+  isBuiltIn: true,
+  preprocess: async (args) => {
+    try {
+      if (fs.existsSync(args.filepath)) {
+        const oldContent = fs.readFileSync(args.filepath, "utf-8");
+        const newContent = args.content;
+
+        const diff = createTwoFilesPatch(
+          args.filepath,
+          args.filepath,
+          oldContent,
+          newContent,
+          undefined,
+          undefined,
+          { context: 2 }
+        );
+
+        return {
+          args,
+          preview: [
+            {
+              type: "text",
+              content: "Preview of changes:",
+            },
+            {
+              type: "diff",
+              content: diff,
+            },
+          ],
+        };
+      }
+    } catch {
+      // do nothing
+    }
+    const lines: string[] = args.content.split("\n");
+    const previewLines = lines.slice(0, 3);
+
+    const preview: ToolCallPreview[] = [
+      {
+        type: "text",
+        content: "New file content:",
+      },
+      ...previewLines.map((line) => ({
+        type: "text" as const,
+        content: line || " ",
+        paddingLeft: 2,
+      })),
+    ];
+    if (lines.length > 3) {
+      preview.push({
+        type: "text",
+        content: `... (${lines.length - 3} more lines)`,
+      });
+    }
+
+    return {
+      args,
+      preview,
+    };
+  },
   run: async (args: { filepath: string; content: string }): Promise<string> => {
     try {
       const dirPath = path.dirname(args.filepath);
@@ -76,11 +139,7 @@ export const writeFileTool: Tool = {
           );
         }
 
-        const diff = generateDiff(oldContent, args.content, args.filepath);
-
-        // Record file operation
-
-        return `Successfully wrote to file: ${args.filepath}\n\nDiff:\n${diff}`;
+        return `Successfully wrote to file: ${args.filepath}`;
       } else {
         // New file creation - count all lines as added
         const lineCount = args.content.split("\n").length;

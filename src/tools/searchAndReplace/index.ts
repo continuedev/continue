@@ -1,14 +1,16 @@
-import { findSearchMatch } from "./findSearchMatch.js";
-import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
-import { Tool } from "../types.js";
-import { generateDiff } from "../writeFile.js";
 import * as fs from "fs";
-import * as path from "path";
-import telemetryService from "../../telemetry/telemetryService.js";
+
+import { telemetryService } from "../../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../../telemetry/utils.js";
+import { Tool } from "../types.js";
+import { generateDiff } from "../writeFile.js";
+
+import { findSearchMatch } from "./findSearchMatch.js";
+import { parseSearchAndReplaceArgs } from "./parseArgs.js";
+import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
 
 export interface SearchAndReplaceInFileArgs {
   filepath: string;
@@ -24,9 +26,10 @@ export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
  * Our starting point is heavily inspired by Cline's `replace_in_file` tool: https://github.com/cline/cline/blob/2709ccefcddc616e89a70962f017bcbbca1f17bf/src/core/prompts/system.ts#L87-L121
  */
 export const searchAndReplaceInFileTool: Tool = {
-  name: "search_and_replace_in_file",
-  displayName: "Search and Replace",
+  name: "Edit",
+  displayName: "Edit",
   readonly: false,
+  isBuiltIn: true,
   description: `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
   parameters: {
     filepath: {
@@ -89,66 +92,77 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       required: true,
     },
   },
-  run: async (args) => {
-    try {
-      // Get and validate args
-      const { filepath, diffs } = args;
+  preprocess: async (args) => {
+    // Get and validate args
+    const { filepath, diffs } = parseSearchAndReplaceArgs(args);
 
-      if (!filepath || !diffs) {
-        throw new Error("filepath and diffs args are required");
+    // Get current file contents
+    if (!fs.existsSync(filepath)) {
+      throw new Error(`file ${filepath} does not exist`);
+    }
+    const oldContent = fs.readFileSync(filepath, "utf-8");
+    let newContent = oldContent;
+
+    // Parse blocks
+    const blocks = diffs.map(parseAllSearchReplaceBlocks).flat();
+    if (blocks.length === 0) {
+      throw new Error("No complete search/replace blocks found in any diffs");
+    }
+
+    // Apply all replacements sequentially to build the final content
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const { searchContent, replaceContent } = block;
+
+      if (typeof searchContent === "undefined") {
+        throw new Error(`No search content defined for block ${i + 1}`);
+      }
+      if (typeof replaceContent === "undefined") {
+        throw new Error(`No replace content defined for block ${i + 1}`);
       }
 
-      if (typeof filepath !== "string") {
-        throw new Error("filepath must be a string");
-      }
+      const match = findSearchMatch(newContent, searchContent);
 
-      if (
-        !Array.isArray(diffs) ||
-        diffs.some((diff) => typeof diff !== "string")
-      ) {
+      if (!match) {
         throw new Error(
-          "diffs must be an array of string search/replace blocks"
+          `Search content not found in block ${i + 1}:\n${searchContent}`
         );
       }
 
-      // Get current file contents
-      const fixedPath = filepath.replace(/\/|\\/g, path.sep);
+      newContent =
+        newContent.substring(0, match.startIndex) +
+        replaceContent +
+        newContent.substring(match.endIndex);
+    }
 
-      if (!fs.existsSync(fixedPath)) {
-        throw new Error(`file ${filepath} does not exist`);
-      }
-      const oldContent = fs.readFileSync(fixedPath, "utf-8");
-      let newContent = oldContent;
+    const diff = generateDiff(oldContent, newContent, filepath);
 
-      // Parse blocks
-      const blocks = diffs.map(parseAllSearchReplaceBlocks).flat();
-      if (blocks.length === 0) {
-        throw new Error("No complete search/replace blocks found in any diffs");
-      }
-
-      // Apply all replacements sequentially to build the final content
-      for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
-        const { searchContent, replaceContent } = block;
-
-        const match = findSearchMatch(newContent, searchContent || "");
-
-        if (!match) {
-          throw new Error(
-            `Search content not found in block ${i + 1}:\n${searchContent}`
-          );
-        }
-
-        newContent =
-          newContent.substring(0, match.startIndex) +
-          (replaceContent || "") +
-          newContent.substring(match.endIndex);
-      }
+    return {
+      args: {
+        filepath,
+        newContent,
+        oldContent, // Just for telemetry later
+      },
+      preview: [
+        {
+          type: "text",
+          content: "Will make the following changes:",
+        },
+        {
+          type: "diff",
+          content: diff,
+        },
+      ],
+    };
+  },
+  run: async (args) => {
+    try {
+      fs.writeFileSync(args.filepath, args.newContent, "utf-8");
 
       // Get lines for telemetry
       const { added, removed } = calculateLinesOfCodeDiff(
-        oldContent,
-        args.content
+        args.oldContent,
+        args.newContent
       );
       const language = getLanguageFromFilePath(args.filepath);
 
@@ -163,13 +177,11 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
         );
       }
 
-      const diff = generateDiff(oldContent, args.content, args.filepath);
-
       // Record file operation
-      return `Successfully wrote to file: ${args.filepath}\n\nDiff:\n${diff}`;
+      return `Successfully edited ${args.filepath}`;
     } catch (error) {
       throw new Error(
-        `Failed to apply search and replace: ${
+        `Error: failed to edit ${args.filepath}:\n ${
           error instanceof Error ? error.message : String(error)
         }`
       );

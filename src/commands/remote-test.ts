@@ -1,7 +1,8 @@
 import chalk from "chalk";
-import telemetryService from "../telemetry/telemetryService.js";
+
+import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
 
 export async function remoteTest(
   prompt?: string,

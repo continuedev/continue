@@ -1,10 +1,13 @@
 import { render } from "ink";
 import React from "react";
+
+import { PermissionMode } from "../permissions/types.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
-import TUIChat from "./TUIChat.js";
 
-export { default as MarkdownRenderer } from "./MarkdownRenderer.js";
+import { TUIChat } from "./TUIChat.js";
+
+export { MarkdownRenderer } from "./MarkdownRenderer.js";
 
 export async function startTUIChat(
   initialPrompt?: string,
@@ -15,6 +18,7 @@ export async function startTUIChat(
     allow?: string[];
     ask?: string[];
     exclude?: string[];
+    mode?: PermissionMode;
   }
 ) {
   // Initialize services in the background - TUI will show loading states

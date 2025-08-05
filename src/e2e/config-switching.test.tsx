@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 
 describe('Config Switching Implementation Test', () => {
   test('ConfigService updateConfigPath method exists with correct signature', async () => {
