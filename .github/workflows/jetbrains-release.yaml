@@ -365,7 +365,7 @@ jobs:
 
       # Download the binary artifact
       - name: Download binary artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
           path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
@@ -536,7 +536,7 @@ jobs:
       #     ./gradlew patchChangelog --release-note="$CHANGELOG"
 
       - name: Download the plugin
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/
