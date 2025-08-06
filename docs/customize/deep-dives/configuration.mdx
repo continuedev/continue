@@ -60,6 +60,10 @@ Example
 
 `config.ts` must export a `modifyConfig` function, like:
 
+<Warning>
+  The `slashCommands` array shown below is deprecated. For creating custom slash commands, use [prompt blocks or prompt files](./slash-commands) instead.
+</Warning>
+
 ```ts title="config.ts"
 export function modifyConfig(config: Config): Config {
   config.slashCommands?.push({

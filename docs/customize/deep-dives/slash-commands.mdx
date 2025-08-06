@@ -11,6 +11,13 @@ Slash commands are shortcuts that can be activated by typing '/' in a chat sessi
 
 Slash commands can be combined with additional instructions, including [context providers](../custom-providers.mdx) or highlighted code.
 
+<Note>
+  **Recommended approach**: Use prompt blocks or prompt files to create slash
+  commands instead of the deprecated `config.json` approach. The methods
+  described below provide better flexibility and are the actively maintained
+  ways to add custom commands.
+</Note>
+
 ## Prompts
 
 ### Assistant prompt blocks
@@ -21,7 +28,7 @@ The easiest way to add a slash command is by adding [`prompt` blocks](../../hub/
 
 It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
 
-Learn more about prompt files [here](./prompts.md)
+Learn more about prompt files [here](./prompts.mdx).
 
 ### MCP Server prompts
 
