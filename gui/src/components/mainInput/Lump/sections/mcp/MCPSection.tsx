@@ -7,7 +7,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { useContext, useMemo } from "react";
+import { Fragment, useContext, useMemo } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
@@ -78,25 +78,28 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
               className="flex flex-col gap-0.5"
             >
               {server.errors.map((error, idx) => (
-                <span key={idx}>
-                  <code>
+                <Fragment key={idx}>
+                  <div>
                     {error.length > 150
                       ? error.substring(0, 150) + "..."
                       : error}
-                  </code>
+                  </div>
                   {error.length > 150 && (
                     <Button
                       className="my-0"
                       size="sm"
                       variant="ghost"
-                      onClick={() => {
-                        ideMessenger.ide.showVirtualFile(server.name, error);
-                      }}
+                      onClick={() =>
+                        void ideMessenger.ide.showVirtualFile(
+                          server.name,
+                          error,
+                        )
+                      }
                     >
-                      Know More
+                      View full error
                     </Button>
                   )}
-                </span>
+                </Fragment>
               ))}
             </ToolTip>
           </>
