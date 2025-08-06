@@ -13,6 +13,7 @@ import {
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { initializeWithOnboarding } from "../onboarding.js";
+import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
@@ -300,7 +301,13 @@ async function processMessage(
     // Save session after each successful response
     saveSession(chatHistory);
   } catch (e: any) {
-    logger.error(`\n${chalk.red(`Error: ${formatError(e)}`)}`);
+    const error = e instanceof Error ? e : new Error(String(e));
+    logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
+    sentryService.captureException(error, {
+      context: "chat_response",
+      isHeadless,
+      chatHistoryLength: chatHistory.length,
+    });
     if (!isHeadless) {
       logger.info(
         chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
@@ -442,8 +449,13 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Run headless mode
     await runHeadlessMode(prompt, options);
   } catch (error: any) {
+    const err = error instanceof Error ? error : new Error(String(error));
     // Use headless-aware error logging to ensure fatal errors are shown in headless mode
-    logging.error(chalk.red(`Fatal error: ${formatError(error)}`));
+    logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
+    sentryService.captureException(err, {
+      context: "chat_command_fatal",
+      headless: options.headless,
+    });
     process.exit(1);
   } finally {
     // Stop active time tracking
