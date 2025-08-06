@@ -1,6 +1,5 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { useState } from "react";
 
 import {
   isAuthenticatedConfig,
@@ -9,6 +8,7 @@ import {
 } from "../../auth/workos.js";
 import { initialize } from "../../config.js";
 import { MCPService } from "../../mcp.js";
+import { useNavigation } from "../context/NavigationContext.js";
 
 interface UseOrganizationSelectorProps {
   configPath?: string;
@@ -32,6 +32,7 @@ export function useOrganizationSelector({
   onMessage,
   onChatReset,
 }: UseOrganizationSelectorProps) {
+  const { closeCurrentScreen } = useNavigation();
 
   const handleOrganizationSelect = async (
     organizationId: string | null,
@@ -89,6 +90,9 @@ export function useOrganizationSelector({
         content: `Successfully switched to organization: ${organizationName}`,
         messageType: "system" as const,
       });
+      
+      // Close the organization selector
+      closeCurrentScreen();
     } catch (error: any) {
       // Show error message
       onMessage({
@@ -96,6 +100,9 @@ export function useOrganizationSelector({
         content: `Failed to switch organization: ${error.message}`,
         messageType: "system" as const,
       });
+      
+      // Close selector even on error
+      closeCurrentScreen();
     }
   };
 
