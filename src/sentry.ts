@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
-import logger from "./util/logger.js";
+import { logger } from "./util/logger.js";
 import { getVersion } from "./version.js";
 
 interface SentryConfig {
@@ -25,16 +25,22 @@ class SentryService {
   }
 
   private loadConfig(): SentryConfig {
-    const enabled = process.env.SENTRY_ENABLED !== "false" && !!process.env.SENTRY_DSN;
-    
+    const enabled =
+      process.env.SENTRY_ENABLED !== "false" && !!process.env.SENTRY_DSN;
+
     return {
       enabled,
       dsn: process.env.SENTRY_DSN,
-      environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "development",
+      environment:
+        process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "development",
       release: getVersion(),
       sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || "1.0"),
-      profilesSampleRate: parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || "1.0"),
-      tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || "1.0"),
+      profilesSampleRate: parseFloat(
+        process.env.SENTRY_PROFILES_SAMPLE_RATE || "1.0"
+      ),
+      tracesSampleRate: parseFloat(
+        process.env.SENTRY_TRACES_SAMPLE_RATE || "1.0"
+      ),
     };
   }
 
@@ -51,9 +57,7 @@ class SentryService {
         sampleRate: this.config.sampleRate,
         profilesSampleRate: this.config.profilesSampleRate,
         tracesSampleRate: this.config.tracesSampleRate,
-        integrations: [
-          nodeProfilingIntegration(),
-        ],
+        integrations: [nodeProfilingIntegration()],
         beforeSend(event) {
           // Filter out certain error types if needed
           if (event.exception?.values?.[0]?.type === "AbortError") {
@@ -90,7 +94,11 @@ class SentryService {
     });
   }
 
-  public captureMessage(message: string, level: "info" | "warning" | "error" | "debug" | "fatal" = "info", context?: Record<string, any>) {
+  public captureMessage(
+    message: string,
+    level: "info" | "warning" | "error" | "debug" | "fatal" = "info",
+    context?: Record<string, any>
+  ) {
     if (!this.isEnabled()) return;
 
     Sentry.withScope((scope) => {
@@ -121,7 +129,12 @@ class SentryService {
     Sentry.setContext(key, context);
   }
 
-  public addBreadcrumb(breadcrumb: { message: string; category?: string; level?: "fatal" | "error" | "warning" | "log" | "info" | "debug"; data?: Record<string, any> }) {
+  public addBreadcrumb(breadcrumb: {
+    message: string;
+    category?: string;
+    level?: "fatal" | "error" | "warning" | "log" | "info" | "debug";
+    data?: Record<string, any>;
+  }) {
     if (!this.isEnabled()) return;
 
     Sentry.addBreadcrumb(breadcrumb);
