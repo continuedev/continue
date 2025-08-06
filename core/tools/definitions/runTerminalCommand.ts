@@ -55,6 +55,7 @@ export const runTerminalCommandTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: {
     prefix: `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
 ${RUN_COMMAND_NOTES}

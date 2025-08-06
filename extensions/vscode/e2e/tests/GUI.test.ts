@@ -7,7 +7,7 @@ import {
   WebDriver,
   WebElement,
   WebView,
-  until
+  until,
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -287,6 +287,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
 
     it("should render tool call", async () => {
+      await GUIActions.toggleToolPolicy(view, "view_diff", 0);
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
@@ -376,7 +377,7 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
     }).timeout(DEFAULT_TIMEOUT.XL * 1000);
-  })
+  });
 
   describe("Chat Paths", () => {
     it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {

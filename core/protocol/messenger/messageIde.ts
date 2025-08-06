@@ -2,6 +2,7 @@ import { FromIdeProtocol } from "..";
 import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
+  DocumentSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -51,6 +52,16 @@ export class MessageIde implements IDE {
 
   async getSignatureHelp(location: Location): Promise<SignatureHelp | null> {
     return this.request("getSignatureHelp", { location });
+  }
+
+  async getReferences(location: Location): Promise<RangeInFile[]> {
+    return this.request("getReferences", { location });
+  }
+
+  async getDocumentSymbols(
+    textDocumentIdentifier: string,
+  ): Promise<DocumentSymbol[]> {
+    return this.request("getDocumentSymbols", { textDocumentIdentifier });
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {

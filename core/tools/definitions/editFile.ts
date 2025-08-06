@@ -39,6 +39,7 @@ export const editFileTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
   systemMessageDescription: {
     prefix: `To edit an EXISTING file, use the ${BuiltInToolNames.EditExistingFile} tool with
 - filepath: the relative filepath to the file.

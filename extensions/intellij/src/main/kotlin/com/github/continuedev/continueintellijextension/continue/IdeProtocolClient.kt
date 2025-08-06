@@ -6,7 +6,7 @@ import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
-import com.github.continuedev.continueintellijextension.error.ContinueErrorService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -48,12 +48,7 @@ class IdeProtocolClient(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
 
-    init {
-        // Setup config.json / config.ts save listeners
-        VirtualFileManager.getInstance().addAsyncFileListener(
-            AsyncFileSaveListener(continuePluginService), project.service<ContinuePluginDisposable>()
-        )
-    }
+    init {}
 
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(limitedDispatcher) {
@@ -473,7 +468,7 @@ class IdeProtocolClient(
                 }
             } catch (exception: Exception) {
                 val exceptionMessage = "Error handling message of type $messageType: $exception"
-                service<ContinueErrorService>().report(exception, exceptionMessage)
+                service<ContinueSentryService>().report(exception, exceptionMessage)
                 ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }

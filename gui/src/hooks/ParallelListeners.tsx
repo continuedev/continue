@@ -30,7 +30,6 @@ import { streamResponseAfterToolCall } from "../redux/thunks/streamResponseAfter
 import { store } from "../redux/store";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
-import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { findToolCallById, logToolUsage } from "../redux/util";
 import {
@@ -218,16 +217,6 @@ function ParallelListeners() {
 
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));
-  });
-
-  // TODO - remove?
-  useWebviewListener("submitMessage", async (data) => {
-    void dispatch(
-      streamResponseThunk({
-        editorState: data.message,
-        modifiers: { useCodebase: false, noContext: true },
-      }),
-    );
   });
 
   useWebviewListener("addContextItem", async (data) => {
