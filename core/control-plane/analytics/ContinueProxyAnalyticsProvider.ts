@@ -20,8 +20,12 @@ export default class ContinueProxyAnalyticsProvider
     event: string,
     properties: { [key: string]: any },
   ): Promise<void> {
+    if (!this.controlPlaneProxyInfo?.workspaceId) {
+      return;
+    }
+
     const url = new URL(
-      `proxy/analytics/${this.controlPlaneProxyInfo?.workspaceId}/capture`,
+      `proxy/analytics/${this.controlPlaneProxyInfo.workspaceId}/capture`,
       this.controlPlaneProxyInfo?.controlPlaneProxyUrl,
     ).toString();
     void fetch(url, {
