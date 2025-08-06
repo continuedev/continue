@@ -61,6 +61,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ) {
         return true;
       }
+      if (model.toLowerCase().includes("gpt-oss")) {
+        return true;
+      }
       // https://ai.google.dev/gemma/docs/capabilities/function-calling
       if (model.toLowerCase().startsWith("gemma")) {
         return true;
@@ -237,6 +240,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o1",
         "openai/o3",
         "openai/o4",
+        "openai/gpt-oss",
         "anthropic/claude-3",
         "anthropic/claude-4",
         "microsoft/phi-3",
