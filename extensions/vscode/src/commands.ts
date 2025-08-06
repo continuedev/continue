@@ -17,16 +17,7 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
-import { myersDiff } from "core/diff/myers";
-import {
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-} from "core/nextEdit/constants";
-import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
-import { NextEditProvider } from "core/nextEdit/NextEditProvider";
-import { CompletionDataForAfterJump } from "./activation/JumpManager";
-import { NextEditWindowManager } from "./activation/NextEditWindowManager";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
@@ -813,125 +804,6 @@ const getCommandsMap: (
       await vscode.commands.executeCommand(
         "editor.action.inlineSuggest.trigger",
       );
-    },
-    "continue.showNextEditAfterJump": async (
-      data: CompletionDataForAfterJump,
-    ) => {
-      // NOTE: This could use some cleanup or abstraction.
-      // The logic is largely similar to that of completionProvider.ts
-      // but we don't have access to the class.
-
-      const { completionId, outcome, currentPosition } = data;
-
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        console.log("No active editor when trying to show next edit");
-        return;
-      }
-
-      const documentContent = editor.document.getText();
-
-      // Calculate the editable region boundaries around the current cursor position/
-      const editableRegionStartLine = Math.max(
-        currentPosition.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-        0,
-      );
-      const editableRegionEndLine = Math.min(
-        currentPosition.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-        editor.document.lineCount - 1,
-      );
-
-      // Get the current text in the editable region.
-      const oldEditRangeSlice = documentContent
-        .split("\n")
-        .slice(editableRegionStartLine, editableRegionEndLine + 1)
-        .join("\n");
-
-      // Get the suggested new text from the completion outcome.
-      const newEditRangeSlice = outcome.completion;
-
-      // Skip showing edit if the suggestion is empty.
-      if (newEditRangeSlice === "") {
-        const loggingService = NextEditLoggingService.getInstance();
-        loggingService.cancelRejectionTimeout(completionId);
-        return;
-      }
-
-      // Skip showing edit if the suggestion is identical to current text.
-      if (oldEditRangeSlice === newEditRangeSlice) {
-        const loggingService = NextEditLoggingService.getInstance();
-        loggingService.cancelRejectionTimeout(completionId);
-        return;
-      }
-
-      // Create a cursor position relative to the edit range slice
-      const relativeCursorPos = {
-        line: currentPosition.line - editableRegionStartLine,
-        character: currentPosition.character,
-      };
-      const { isFim, fimText } = checkFim(
-        oldEditRangeSlice,
-        newEditRangeSlice,
-        relativeCursorPos,
-      );
-
-      if (isFim) {
-        if (!fimText) {
-          console.log("deleteChain from commands.ts: !fimText");
-          await NextEditProvider.getInstance().deleteChain();
-        }
-        // For FIM edits, create an inline completion item.
-        const nextEditCompletionItem = new vscode.InlineCompletionItem(
-          fimText,
-          new vscode.Range(
-            new vscode.Position(
-              currentPosition.line,
-              currentPosition.character,
-            ),
-            new vscode.Position(
-              currentPosition.line,
-              currentPosition.character,
-            ),
-          ),
-          {
-            title: "Log Next Edit Outcome",
-            command: "continue.logNextEditOutcomeAccept",
-            arguments: [completionId, NextEditLoggingService.getInstance()],
-          },
-        );
-
-        // Show the ghost text using VS Code's inline completion API.
-        // We need to trigger this manually since we're not in the completion provider.
-        await vscode.commands.executeCommand(
-          "editor.action.inlineSuggest.trigger",
-          {
-            completions: [nextEditCompletionItem],
-            position: currentPosition,
-          },
-        );
-      } else {
-        // For more complex edits, we display a diff inside a window.
-        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
-        if (diffLines.length === 0) {
-          console.log("deleteChain from commands.ts: diffLines.length === 0");
-          await NextEditProvider.getInstance().deleteChain();
-        }
-
-        if (NextEditWindowManager.isInstantiated()) {
-          const windowManager = NextEditWindowManager.getInstance();
-          windowManager.updateCurrentCompletionId(completionId);
-
-          await windowManager.showNextEditWindow(
-            editor,
-            currentPosition,
-            editableRegionStartLine,
-            editableRegionEndLine,
-            oldEditRangeSlice,
-            newEditRangeSlice,
-            diffLines,
-          );
-        }
-      }
     },
   };
 };

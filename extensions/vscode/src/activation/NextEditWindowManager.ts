@@ -10,6 +10,10 @@ import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { getThemeString } from "../util/getTheme";
+import {
+  HandlerPriority,
+  SelectionChangeManager,
+} from "./SelectionChangeManager";
 
 export interface TextApplier {
   applyText(
@@ -124,6 +128,8 @@ export class NextEditWindowManager {
   private textApplier: TextApplier | null = null;
 
   private finalCursorPos: vscode.Position | null = null;
+
+  private isLineDelete: boolean = false;
 
   private context: vscode.ExtensionContext | null = null;
 
@@ -269,18 +275,44 @@ export class NextEditWindowManager {
     newEditRangeSlice: string,
     diffLines: DiffLine[],
   ) {
-    if (!newEditRangeSlice || !this.shouldRenderTip(editor.document.uri)) {
+    if (!this.shouldRenderTip(editor.document.uri)) {
       return;
     }
 
     // Clear any existing decorations first (very important to prevent overlapping).
     await this.hideAllNextEditWindows();
 
+    this.activeEditor = editor;
+
     this.editableRegionStartLine = editableRegionStartLine;
     this.editableRegionEndLine = editableRegionEndLine;
 
     // Store the current tooltip text for accepting later.
     this.currentTooltipText = newEditRangeSlice;
+
+    // Determine if this is a line deletion case
+    // NOTE: A simpler approach might be to just delete the line when newEditRangeSlice is "".
+    // But we opt for the below in case the above note is too naive.
+    this.isLineDelete = false;
+    if (
+      newEditRangeSlice === "" &&
+      editableRegionStartLine === editableRegionEndLine
+    ) {
+      // Check if diffLines contains only deletions (no additions).
+      const onlyDeletions = diffLines.every(
+        (diff) => diff.type === "old" || diff.type === "same",
+      );
+      const hasDeletedLine = diffLines.some((diff) => diff.type === "old");
+
+      if (onlyDeletions && hasDeletedLine) {
+        // Check if the entire line is being deleted (not just characters).
+        const line = editor.document.lineAt(editableRegionStartLine).text;
+        const oldLine = oldEditRangeSlice.trim();
+        if (line.trim() === oldLine || line.trim() === "") {
+          this.isLineDelete = true;
+        }
+      }
+    }
 
     // How far away is the current line from the start of the editable region?
     const lineOffsetAtCursorPos =
@@ -296,22 +328,40 @@ export class NextEditWindowManager {
       lineOffsetAtCursorPos,
     );
 
-    // Calculate the actual line number in the editor by adding the startPos offset
-    // to the line number from the diff calculation.
-    this.finalCursorPos = new vscode.Position(
-      this.editableRegionStartLine + offset.line,
-      offset.character,
-    );
+    // Calculate the final cursor position.
+    if (this.isLineDelete) {
+      // For line deletion, position cursor at the end of the previous line.
+      if (this.editableRegionStartLine > 0) {
+        const prevLine = editor.document.lineAt(
+          this.editableRegionStartLine - 1,
+        );
+        this.finalCursorPos = new vscode.Position(
+          this.editableRegionStartLine - 1,
+          prevLine.text.length,
+        );
+      } else {
+        // If we're deleting the first line, position at the start of the document.
+        this.finalCursorPos = new vscode.Position(0, 0);
+      }
+    } else {
+      // For normal edits, use the standard calculation.
+      this.finalCursorPos = new vscode.Position(
+        this.editableRegionStartLine + offset.line,
+        offset.character,
+      );
+    }
 
     // Create and apply decoration with the text.
-    await this.renderWindow(
-      editor,
-      currCursorPos,
-      oldEditRangeSlice,
-      newEditRangeSlice,
-      this.editableRegionStartLine,
-      diffLines,
-    );
+    if (newEditRangeSlice !== "") {
+      await this.renderWindow(
+        editor,
+        currCursorPos,
+        oldEditRangeSlice,
+        newEditRangeSlice,
+        this.editableRegionStartLine,
+        diffLines,
+      );
+    }
 
     const diffChars = myersCharDiff(oldEditRangeSlice, newEditRangeSlice);
 
@@ -343,11 +393,13 @@ export class NextEditWindowManager {
       this.currentDecoration.dispose();
       this.currentDecoration = null;
 
-      this.disposables.forEach((d) => d.dispose());
-      this.disposables = [];
-
       // Clear the current tooltip text.
       this.currentTooltipText = null;
+    }
+
+    if (this.disposables.length > 0) {
+      this.disposables.forEach((d) => d.dispose());
+      this.disposables = [];
     }
   }
 
@@ -367,8 +419,11 @@ export class NextEditWindowManager {
   /**
    * Accept the current next edit suggestion by inserting it at cursor position.
    */
+  /**
+   * Accept the current next edit suggestion by inserting it at cursor position.
+   */
   private async acceptNextEdit() {
-    if (!this.activeEditor || !this.currentTooltipText) {
+    if (this.activeEditor === null || this.currentTooltipText === null) {
       return;
     }
     this.accepted = true;
@@ -401,16 +456,26 @@ export class NextEditWindowManager {
       );
       const editRange = new vscode.Range(startPos, endPos);
 
-      success = await editor.edit((editBuilder) => {
-        editBuilder.replace(editRange, text);
-      });
+      if (this.isLineDelete) {
+        // Handle line deletion - extend the range to include the newline.
+        let lineDeleteRange = editRange;
 
-      // Disable inline suggestions temporarily.
-      // This prevents the race condition between vscode's inline completion provider
-      // and the next edit window manager's cursor repositioning logic.
-      // await vscode.workspace
-      //   .getConfiguration()
-      //   .update("editor.inlineSuggest.enabled", false, true);
+        // If this isn't the last line, extend to include the newline character.
+        if (this.editableRegionStartLine < editor.document.lineCount - 1) {
+          lineDeleteRange = new vscode.Range(
+            startPos,
+            new vscode.Position(this.editableRegionStartLine + 1, 0),
+          );
+        }
+
+        success = await editor.edit((editBuilder) => {
+          editBuilder.delete(lineDeleteRange);
+        });
+      } else {
+        success = await editor.edit((editBuilder) => {
+          editBuilder.replace(editRange, text);
+        });
+      }
     }
 
     if (success && this.finalCursorPos) {
@@ -420,11 +485,6 @@ export class NextEditWindowManager {
         this.finalCursorPos,
       );
     }
-
-    // Reenable inline suggestions after we move the cursor.
-    // await vscode.workspace
-    //   .getConfiguration()
-    //   .update("editor.inlineSuggest.enabled", true, true);
 
     // Log with accept = true.
     await vscode.commands.executeCommand(
@@ -755,7 +815,6 @@ export class NextEditWindowManager {
     // Store the decoration and editor.
     this.currentDecoration = decoration; // TODO: This might be redundant.
     this.disposables.push(decoration);
-    this.activeEditor = editor;
 
     // Calculate how far off to the right of the cursor the decoration should be.
     const decorationOffsetPosition = this.getDecorationOffsetPosition(
@@ -847,6 +906,24 @@ export class NextEditWindowManager {
 
   public hasAccepted() {
     return this.accepted;
+  }
+
+  public registerSelectionChangeHandler(): void {
+    const manager = SelectionChangeManager.getInstance();
+
+    manager.registerListener(
+      "nextEditWindowManager",
+      async (e, state) => {
+        if (state.nextEditWindowAccepted) {
+          console.log(
+            "NextEditWindowManager: Edit was just accepted, preserving chain",
+          );
+          return true;
+        }
+        return false;
+      },
+      HandlerPriority.CRITICAL,
+    );
   }
 }
 

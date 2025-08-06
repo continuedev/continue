@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { Position } from "../..";
-import { CODE_TO_EDIT_CLOSE, CODE_TO_EDIT_OPEN, CURSOR } from "../constants";
+import {
+  MERCURY_CODE_TO_EDIT_CLOSE,
+  MERCURY_CODE_TO_EDIT_OPEN,
+  MERCURY_CURSOR,
+} from "../constants";
 import {
   currentFileContentBlock,
   editHistoryBlock,
@@ -51,14 +55,14 @@ describe("mercuryCoderNextEdit", () => {
 
       const expected =
         "line 1\n" +
-        CODE_TO_EDIT_OPEN +
+        MERCURY_CODE_TO_EDIT_OPEN +
         "\n" +
         "line 2\n" +
         "lin" +
-        CURSOR +
+        MERCURY_CURSOR +
         "e 3\n" +
         "line 4\n" +
-        CODE_TO_EDIT_CLOSE +
+        MERCURY_CODE_TO_EDIT_CLOSE +
         "\n" +
         "line 5";
 
@@ -78,9 +82,9 @@ describe("mercuryCoderNextEdit", () => {
         cursorPosition,
       );
 
-      expect(result).toContain(CODE_TO_EDIT_OPEN);
-      expect(result).toContain(CURSOR + "line 2");
-      expect(result).toContain(CODE_TO_EDIT_CLOSE);
+      expect(result).toContain(MERCURY_CODE_TO_EDIT_OPEN);
+      expect(result).toContain(MERCURY_CURSOR + "line 2");
+      expect(result).toContain(MERCURY_CODE_TO_EDIT_CLOSE);
     });
 
     it("should handle cursor at the end of a line", () => {
@@ -96,15 +100,16 @@ describe("mercuryCoderNextEdit", () => {
         cursorPosition,
       );
 
-      expect(result).toContain("line 2" + CURSOR);
+      expect(result).toContain("line 2" + MERCURY_CURSOR);
     });
   });
 
   describe("editHistoryBlock", () => {
     it("should return the edit diff history unchanged", () => {
-      const diffHistory = "diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@";
+      const diffHistory =
+        "diff --git a/file.ts b/file.ts\n==============================\n@@ -1,3 +1,4 @@";
       const result = editHistoryBlock(diffHistory);
-      expect(result).toBe(diffHistory);
+      expect(result).toBe("@@ -1,3 +1,4 @@");
     });
 
     it("should handle empty diff history", () => {
