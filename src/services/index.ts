@@ -111,11 +111,10 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
 
       // Use current config path from ConfigService state if available (for reloads),
       // otherwise use initial options.configPath (for first initialization)
+      // IMPORTANT: Always prefer explicit --config flag over saved state
       const currentState = configService.getState();
-      let configPath =
-        currentState.configPath !== undefined
-          ? currentState.configPath
-          : options.configPath;
+      let configPath = options.configPath || 
+        (currentState.configPath !== undefined ? currentState.configPath : undefined);
 
       // If no config path is available, check for saved config URI in auth config
       if (!configPath) {
