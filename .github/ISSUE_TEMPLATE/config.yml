@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Something else? Message us on Discord :)
+  - name: Have a question or thoughts?
+    url: https://github.com/orgs/community/discussions
+    about: Search for existing discussions or start a new one
+  - name: Something else? Join the Continue Community
     url: https://discord.gg/vapESyrFmJ
-    about: Join our Discord to ask questions, share thoughts, and more!
+    about: Join our Discord to chat with our community
