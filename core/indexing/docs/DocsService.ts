@@ -1005,6 +1005,7 @@ export default class DocsService {
       const rows = (await table
         .filter(`starturl = '${startUrl}'`)
         .select(["path"]) // Only select path to minimize data transfer
+        .limit(99999999) // Default is 10, we want to show all
         .execute()) as { path: string }[];
 
       // Get unique paths (pages)
