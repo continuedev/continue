@@ -25,6 +25,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "o3",
         "gemini",
         "claude-opus-4",
+        "gemma",
       ].some((part) => model.toLowerCase().startsWith(part));
     },
     anthropic: (model) => {
@@ -65,6 +66,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       if (model.toLowerCase().includes("exaone")) {
         return true;
       }
+
+      // https://ai.google.dev/gemma/docs/capabilities/function-calling
+      if (model.toLowerCase().startsWith("gemma")) {
+        return true;
+      }
+
       // firworks-ai https://docs.fireworks.ai/guides/function-calling
       if (model.startsWith("accounts/fireworks/models/")) {
         switch (model.substring(26)) {
@@ -289,6 +296,22 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         if (model.toLowerCase().includes(model)) {
           return true;
         }
+      }
+
+      return false;
+    },
+    moonshot: (model) => {
+      // support moonshot models
+      // https://platform.moonshot.ai/docs/pricing/chat#concepts
+      if (
+        model.toLowerCase().startsWith("kimi") &&
+        model.toLowerCase() !== "kimi-thinking-preview"
+      ) {
+        return true;
+      }
+
+      if (model.toLowerCase().startsWith("moonshot")) {
+        return true;
       }
 
       return false;

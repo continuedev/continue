@@ -123,3 +123,42 @@ To configure a remote instance of Ollama, add the `"apiBase"` property to your m
     ```
     </Tab>
 </Tabs>
+
+## Model Capabilities
+
+Ollama models usually have their capabilities auto-detected correctly. However, if you're using custom model names or experiencing issues with tools/images not working, you can explicitly set capabilities:
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Custom Vision Model
+        provider: ollama
+        model: my-custom-llava
+        capabilities:
+          - tool_use      # Enable if your model supports function calling
+          - image_input   # Enable for vision models like llava
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Custom Vision Model",
+          "provider": "ollama",
+          "model": "my-custom-llava",
+          "capabilities": {
+            "tools": true,
+            "uploadImage": true
+          }
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+<Note>
+Most standard Ollama models (like llama3.1, mistral, etc.) support tool use by default. Vision models (like llava) also support image input.
+</Note>

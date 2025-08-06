@@ -125,6 +125,7 @@
                       "customize/model-providers/more/together",
                       "customize/model-providers/more/lmstudio",
                       "customize/model-providers/more/llamacpp",
+                      "customize/model-providers/more/llamastack",
                       "customize/model-providers/more/openrouter",
                       "customize/model-providers/more/huggingfaceinferenceapi",
                       "customize/model-providers/more/cohere",
@@ -168,7 +169,8 @@
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
                   "customize/deep-dives/vscode-actions",
-                  "customize/deep-dives/mcp"
+                  "customize/deep-dives/mcp",
+                  "customize/deep-dives/model-capabilities"
                 ]
               },
               {
@@ -705,10 +707,6 @@
       "destination": "/customize/model-providers/more/flowise"
     },
     {
-      "source": "/advanced/model-providers/more/llamastack",
-      "destination": "/customize/model-providers/llamastack"
-    },
-    {
       "source": "/reference/Model Providers/huggingfaceinferenceapi",
       "destination": "/customize/model-providers/more/huggingfaceinferenceapi"
     },
@@ -739,6 +737,14 @@
     {
       "source": "/advanced/model-providers/more/llamacpp",
       "destination": "/customize/model-providers/more/llamacpp"
+    },
+    {
+      "source": "/reference/Model Providers/llamastack",
+      "destination": "/customize/model-providers/more/llamastack"
+    },
+    {
+      "source": "/advanced/model-providers/more/llamastack",
+      "destination": "/customize/model-providers/more/llamastack"
     },
     {
       "source": "/reference/Model Providers/llamafile",
