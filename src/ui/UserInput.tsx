@@ -105,13 +105,13 @@ const UserInput: React.FC<UserInputProps> = ({
           const allCommands = getSlashCommands();
           const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
 
-          // Hide selector if we have an exact match and there's more content after the cursor
+          // Hide selector if we have an exact match and there's a space after cursor
           if (exactMatch) {
             const restOfText = text.slice(cursor);
-            // If there's a space immediately after cursor, or we're at end of line/text, hide selector
+            // Only hide if there's a space or newline immediately after cursor
+            // Don't hide just because we're at the end - user might want to see the suggestion
             if (
               restOfText.startsWith(" ") ||
-              restOfText === "" ||
               restOfText.startsWith("\n")
             ) {
               setShowSlashCommands(false);

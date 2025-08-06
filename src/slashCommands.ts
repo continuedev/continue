@@ -29,8 +29,8 @@ export async function handleSlashCommands(
       case "help":
         const allCommands = getAllSlashCommands(assistant);
         const helpMessage = [
-          "Available commands:",
-          ...allCommands.map((cmd) => `/${cmd.name} - ${cmd.description}`),
+          chalk.cyan("Slash commands:"),
+          ...allCommands.map((cmd) => `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`),
         ].join("\n");
         posthogService.capture("useSlashCommand", {
           name: "help",

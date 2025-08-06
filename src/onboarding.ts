@@ -12,7 +12,10 @@ import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { MCPService } from "./mcp.js";
-import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
+import {
+  isValidAnthropicApiKey,
+  getApiKeyValidationError,
+} from "./util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
@@ -48,10 +51,10 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  const existingContent = fs.existsSync(CONFIG_PATH) 
+  const existingContent = fs.existsSync(CONFIG_PATH)
     ? fs.readFileSync(CONFIG_PATH, "utf8")
     : "";
-    
+
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
@@ -67,11 +70,12 @@ export async function runOnboardingFlow(
   }
 
   // Step 2: Check if we're in a test/CI environment - if so, skip interactive prompts
-  const isTestEnv = process.env.NODE_ENV === "test" || 
-                    process.env.CI === "true" ||
-                    process.env.VITEST === "true" ||
-                    process.env.GITHUB_ACTIONS === "true" ||
-                    !process.stdin.isTTY;
+  const isTestEnv =
+    process.env.NODE_ENV === "test" ||
+    process.env.CI === "true" ||
+    process.env.VITEST === "true" ||
+    process.env.GITHUB_ACTIONS === "true" ||
+    !process.stdin.isTTY;
 
   if (isTestEnv) {
     // In test/CI environment, return a minimal working configuration
@@ -125,12 +129,21 @@ export async function runNormalFlow(
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
   if (configPath) {
-    const result = await initialize(authConfig, configPath);
-    // Inject rules into the config if provided
-    if (rules && rules.length > 0) {
-      result.config = await injectRulesIntoConfig(result.config, rules);
+    try {
+      const result = await initialize(authConfig, configPath);
+      // Inject rules into the config if provided
+      if (rules && rules.length > 0) {
+        result.config = await injectRulesIntoConfig(result.config, rules);
+      }
+      return { ...result, wasOnboarded: false };
+    } catch (error) {
+      // If user explicitly provided --config flag, fail loudly instead of falling back
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to load config from "${configPath}": ${errorMessage}`
+      );
     }
-    return { ...result, wasOnboarded: false };
   }
 
   // Step 2: If user is logged in, look for first assistant in selected org

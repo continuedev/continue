@@ -48,6 +48,8 @@
     "@opentelemetry/resources": "^2.0.1",
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/semantic-conventions": "^1.36.0",
+    "@sentry/node": "^9.43.0",
+    "@sentry/profiling-node": "^9.43.0",
     "@types/express": "^5.0.3",
     "@types/react": "^19.1.8",
     "@types/turndown": "^5.0.5",

@@ -8,7 +8,11 @@ import { logout } from "./commands/logout.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
-import { validateFlags, handleValidationErrors } from "./flags/flagValidator.js";
+import {
+  validateFlags,
+  handleValidationErrors,
+} from "./flags/flagValidator.js";
+import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import { logger } from "./util/logger.js";
@@ -18,11 +22,18 @@ import { getVersion } from "./version.js";
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at:", { promise, reason });
+  sentryService.captureException(
+    reason instanceof Error ? reason : new Error(String(reason)),
+    {
+      promise: String(promise),
+    }
+  );
   // Don't exit the process, just log the error
 });
 
 process.on("uncaughtException", (error) => {
   logger.error("Uncaught Exception:", error);
+  sentryService.captureException(error);
   // Don't exit the process, just log the error
 });
 
@@ -67,7 +78,7 @@ addCommonOptions(program)
       ask: options.ask,
       exclude: options.exclude,
       isRootCommand: true,
-      commandName: 'cn'
+      commandName: "cn",
     });
 
     if (!validation.isValid) {
@@ -105,7 +116,9 @@ addCommonOptions(program)
 
     // In headless mode, ensure we have a prompt
     if (options.print && !prompt) {
-      console.error("Error: A prompt is required when using the -p/--print flag.\n");
+      console.error(
+        "Error: A prompt is required when using the -p/--print flag.\n"
+      );
       console.error("Usage examples:");
       console.error('  cn -p "please review my current git diff"');
       console.error('  echo "hello" | cn -p');
@@ -190,5 +203,19 @@ try {
   program.parse();
 } catch (error) {
   console.error(error);
+  sentryService.captureException(
+    error instanceof Error ? error : new Error(String(error))
+  );
   process.exit(1);
 }
+
+// Graceful shutdown - flush Sentry data
+process.on("SIGINT", async () => {
+  await sentryService.flush();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await sentryService.flush();
+  process.exit(0);
+});
