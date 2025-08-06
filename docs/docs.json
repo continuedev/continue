@@ -337,6 +337,9 @@
       "apiKey": "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
     }
   },
+  "custom": {
+    "css": ["custom.css"]
+  },
   "redirects": [
     {
       "source": "/hub",
