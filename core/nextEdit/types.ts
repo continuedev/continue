@@ -1,4 +1,10 @@
-import { Position, Range, RangeInFile, TabAutocompleteOptions } from "../";
+import {
+  DiffLine,
+  Position,
+  Range,
+  RangeInFile,
+  TabAutocompleteOptions,
+} from "../";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 
 export type RecentlyEditedRange = RangeInFile & {
@@ -57,6 +63,7 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   accepted?: boolean;
   editableRegionStartLine: number;
   editableRegionEndLine: number;
+  diffLines: DiffLine[];
 }
 
 export interface PromptMetadata {
@@ -93,4 +100,5 @@ export interface MercuryTemplateVars extends TemplateVars {
   recentlyViewedCodeSnippets: string;
   currentFileContent: string;
   editDiffHistory: string; // could be a singe large unified diff
+  currentFilePath: string;
 }
