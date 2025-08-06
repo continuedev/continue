@@ -17,6 +17,8 @@ interface FreeTrialTransitionUIProps {
   onSwitchToLocalConfig?: () => void;
   onFullReload?: () => void;
   onShowConfigSelector?: () => void;
+  onShowOrgSelector?: () => void;
+  hasOrganizations?: boolean;
 }
 
 /**
@@ -42,6 +44,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   onSwitchToLocalConfig,
   onFullReload,
   onShowConfigSelector,
+  onShowOrgSelector,
+  hasOrganizations = false,
 }) => {
   const [currentStep, setCurrentStep] = useState<
     "choice" | "enterApiKey" | "processing" | "success" | "error"
@@ -56,7 +60,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
     if (currentStep === "choice") {
       if (key.upArrow && selectedOption > 1) {
         setSelectedOption(selectedOption - 1);
-      } else if (key.downArrow && selectedOption < 3) {
+      } else if (key.downArrow && selectedOption < (hasOrganizations ? 4 : 3)) {
         setSelectedOption(selectedOption + 1);
       } else if (input === "1") {
         setSelectedOption(1);
@@ -64,6 +68,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         setSelectedOption(2);
       } else if (input === "3") {
         setSelectedOption(3);
+      } else if (input === "4" && hasOrganizations) {
+        setSelectedOption(4);
       } else if (key.return) {
         handleOptionSelect();
       }
@@ -123,6 +129,13 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       } else {
         onComplete();
       }
+    } else if (selectedOption === 4 && hasOrganizations) {
+      // Option 4: Switch to organization
+      if (onShowOrgSelector) {
+        onShowOrgSelector();
+      } else {
+        onComplete();
+      }
     }
   };
 
@@ -175,9 +188,14 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         <Text color={selectedOption === 3 ? "cyan" : "white"}>
           {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different configuration
         </Text>
+        {hasOrganizations && (
+          <Text color={selectedOption === 4 ? "cyan" : "white"}>
+            {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization profile
+          </Text>
+        )}
         <Text></Text>
         <Text color="gray">
-          Use ↑↓ arrows or 1/2/3 to select, Enter to confirm
+          Use ↑↓ arrows or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select, Enter to confirm
         </Text>
       </Box>
     );
