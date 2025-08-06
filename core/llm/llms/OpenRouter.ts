@@ -18,13 +18,15 @@ class OpenRouter extends OpenAI {
     super(options);
     
     // Disable tool use for free tier models that don't support it
-    if (this.model.endsWith(':free')) {
+    if (this.model.endsWith(":free")) {
       if (this.capabilities) {
         this.capabilities.tools = false;
       } else {
         this.capabilities = { tools: false };
       }
-      console.warn(`Tool use disabled for model ${this.model} as it does not support it. Use non-free variant for full capabilities.`);
+      console.warn(
+         `Tool use disabled for model ${this.model} as it does not support it. Use non-free variant for full capabilities.`,
+       );
     }
   }
 }
