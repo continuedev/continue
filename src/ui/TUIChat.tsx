@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
 
 import { useServices } from "../hooks/useService.js";
+import { useNavigation } from "./context/NavigationContext.js";
 import type { PermissionMode } from "../permissions/types.js";
 import { modeService } from "../services/ModeService.js";
 import {
@@ -88,15 +89,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     apiClient: ApiClientServiceState;
   }>(["auth", "config", "model", "mcp", "apiClient"]);
 
-  // State for login prompt handling
-  const [loginPrompt, setLoginPrompt] = useState<{
-    text: string;
-    resolve: (value: string) => void;
-  } | null>(null);
-
-  // State for free trial transition
-  const [isShowingFreeTrialTransition, setIsShowingFreeTrialTransition] =
-    useState(false);
+  // Use navigation context
+  const { state: navState, navigateTo, closeCurrentScreen, isScreenActive } = useNavigation();
 
   // State for intro message display
   const [showIntroMessage, setShowIntroMessage] = useState(false);
@@ -152,15 +146,15 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Custom login prompt handler for TUI
   const handleLoginPrompt = (promptText: string): Promise<string> => {
     return new Promise((resolve) => {
-      setLoginPrompt({ text: promptText, resolve });
+      navigateTo('login', { text: promptText, resolve });
     });
   };
 
   // Handle login token submission
   const handleLoginTokenSubmit = (token: string) => {
-    if (loginPrompt) {
-      loginPrompt.resolve(token);
-      setLoginPrompt(null);
+    if (navState.screenData?.resolve) {
+      navState.screenData.resolve(token);
+      closeCurrentScreen();
     }
   };
 
@@ -192,9 +186,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
-    onShowOrgSelector: () => showOrganizationSelector(),
-    onShowConfigSelector: () => showConfigSelectorUI(),
-    onShowModelSelector: () => showModelSelectorUI(),
+    onShowOrgSelector: () => navigateTo('organization'),
+    onShowConfigSelector: () => navigateTo('config'),
+    onShowModelSelector: () => navigateTo('model'),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration
@@ -242,40 +236,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
     },
   });
 
-  // Handle free trial transition completion
-  const handleFreeTrialTransitionComplete = () => {
-    setIsShowingFreeTrialTransition(false);
-    handleReload();
-  };
-
-  const handleFreeTrialSwitchToLocal = () => {
-    setIsShowingFreeTrialTransition(false);
-    handleReload();
-  };
-
-  const handleFreeTrialFullReload = () => {
-    setIsShowingFreeTrialTransition(false);
-    handleReload();
-  };
-
-  const handleFreeTrialShowConfigSelector = () => {
-    setIsShowingFreeTrialTransition(false);
-    showConfigSelectorUI();
-  };
-
-  const handleFreeTrialShowOrgSelector = () => {
-    setIsShowingFreeTrialTransition(false);
-    showOrganizationSelector();
-  };
 
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
-    showOrgSelector ||
-    showConfigSelector ||
-    showModelSelector ||
-    !!loginPrompt ||
-    isShowingFreeTrialTransition ||
+    navState.currentScreen !== 'chat' ||
     !!activePermissionRequest;
 
   return (
