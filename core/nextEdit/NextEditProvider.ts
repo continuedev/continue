@@ -347,7 +347,7 @@ export class NextEditProvider {
     // This is left for a final check.
     if (!modelSupportsNextEdit(llm.model, llm.title, llm.capabilities)) {
       console.error(`${llm.model} is not capable of next edit.`);
-      return undefined;
+      return { token, startTime, helper: undefined };
     }
 
     if (llm.promptTemplates?.autocomplete) {
