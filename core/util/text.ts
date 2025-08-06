@@ -40,7 +40,7 @@ export function escapeForSVG(text: string): string {
 
 export function kebabOfStr(str: string): string {
   return str
-    .replace(/([a-z])([A-Z])/g, "$1-$2") // handle camelCase and PascalCase
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2") // handle camelCase, PascalCase, and numbers followed by uppercase
     .replace(/[\s_]+/g, "-") // replace spaces and underscores with hyphens
     .toLowerCase();
 }
