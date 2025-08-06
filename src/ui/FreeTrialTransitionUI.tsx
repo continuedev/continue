@@ -11,6 +11,7 @@ import { listUserOrganizations } from "../auth/workos.js";
 import { env } from "../env.js";
 import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
+
 import { useNavigation } from "./context/NavigationContext.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");

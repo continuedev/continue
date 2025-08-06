@@ -2,7 +2,6 @@ import { Box, Text } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
 
 import { useServices } from "../hooks/useService.js";
-import { useNavigation } from "./context/NavigationContext.js";
 import type { PermissionMode } from "../permissions/types.js";
 import { modeService } from "../services/ModeService.js";
 import {
@@ -17,6 +16,7 @@ import { getGitRemoteUrl, isGitRepo } from "../util/git.js";
 import { ModeIndicator } from "./components/ModeIndicator.js";
 import { ToolPermissionSelector } from "./components/ToolPermissionSelector.js";
 import { ConfigSelector } from "./ConfigSelector.js";
+import { useNavigation } from "./context/NavigationContext.js";
 import { startFileIndexing } from "./FileSearchUI.js";
 import { FreeTrialStatus } from "./FreeTrialStatus.js";
 import { FreeTrialTransitionUI } from "./FreeTrialTransitionUI.js";
