@@ -10,9 +10,6 @@ export interface SearchAndReplaceInFileArgs {
 export const NO_PARALLEL_TOOL_CALLING_INSRUCTION =
   "Note this tool CANNOT be called in parallel.";
 
-const SEARCH_AND_REPLACE_TOOL_DESCRIPTION = `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`;
-const SEARCH_AND_REPLACE_FILEPATH_DESCRIPTION =
-  "The path of the file to modify, relative to the root of the workspace.";
 const SEARCH_AND_REPLACE_EXAMPLE_BLOCK = `------- SEARCH
 [exact content to find]
 =======
@@ -39,7 +36,8 @@ const SEARCH_AND_REPLACE_RULES = `Critical rules:
     * DO NOT make back-to-back tool calls. Instead interleave with brief explanation of what each will do. For example, instead of [explanation, tool call, tool call] you should do [explanation, tool call, explanation, tool call]
 6. Special operations:
     * To move code: Use two SEARCH/REPLACE blocks (one to delete from original + one to insert at new location)
-    * To delete code: Use empty REPLACE section`;
+    * To delete code: Use empty REPLACE section
+7. You should always read the file before trying to edit it, to ensure you know the up-to-date file contents`;
 
 const SEARCH_AND_REPLACE_DIFFS_DESCRIPTION = `An array of strings, each containing one or more SEARCH/REPLACE blocks following this exact format:
 \`\`\`
@@ -72,14 +70,14 @@ export const searchAndReplaceInFileTool: Tool = {
   isInstant: false,
   function: {
     name: BuiltInToolNames.SearchAndReplaceInFile,
-    description: SEARCH_AND_REPLACE_TOOL_DESCRIPTION,
+    description: `Request to replace sections of content in an existing file using multiple SEARCH/REPLACE blocks that define exact changes to specific parts of the file. This tool should be used when you need to make targeted changes to specific parts of a file. ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}`,
     parameters: {
       type: "object",
       required: ["filepath", "diffs"],
       properties: {
         filepath: {
           type: "string",
-          description: SEARCH_AND_REPLACE_FILEPATH_DESCRIPTION,
+          description: `The path of the file to modify, relative to the root of the workspace.`,
         },
         diffs: {
           type: "array",
@@ -92,7 +90,7 @@ export const searchAndReplaceInFileTool: Tool = {
     },
   },
   systemMessageDescription: {
-    prefix: `To make targeted edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a "diffs" argument containing an array of SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
+    prefix: `To make targeted edits by replacing sections of content in an existing file, use the ${BuiltInToolNames.SearchAndReplaceInFile} tool with a filepath (relative to the root of the workspace) and a "diffs" argument containing an array of SEARCH/REPLACE blocks that define exact changes to specific parts of the file.
 Each block should follow this format:
 ${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}
 
@@ -104,16 +102,8 @@ ${SEARCH_AND_REPLACE_RULES}
       [
         "diffs",
         `[
-"------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE",
-"------- SEARCH
-[exact content to find]
-=======
-[new content to replace with]
-+++++++ REPLACE"
+"${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}",
+"${SEARCH_AND_REPLACE_EXAMPLE_BLOCK}"
 ]`,
       ],
     ],
