@@ -22,6 +22,10 @@ export class ModeService extends BaseService<ModeServiceState> {
       mode: "normal",
       toolPermissionService
     });
+    
+    // Increase max listeners since ModeService is a singleton that can have
+    // multiple subscribers (UI components, tests, etc.)
+    this.setMaxListeners(100);
   }
 
   public static getInstance(): ModeService {
@@ -106,6 +110,14 @@ export class ModeService extends BaseService<ModeServiceState> {
       { mode: "plan", description: "Planning mode - only allow read-only tools for analysis" },
       { mode: "auto", description: "Automatically allow all tools without asking" }
     ];
+  }
+
+  /**
+   * Override cleanup to properly clean up nested ToolPermissionService
+   */
+  override async cleanup(): Promise<void> {
+    await this.currentState.toolPermissionService.cleanup();
+    await super.cleanup();
   }
 
   /**
