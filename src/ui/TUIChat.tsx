@@ -199,8 +199,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const { renderMessage } = useMessageRenderer();
 
   const { handleOrganizationSelect } = useOrganizationSelector({
-    configPath,
-    onAssistantChange: () => {},
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
