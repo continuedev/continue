@@ -309,19 +309,11 @@ export async function unrollBlocks(
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
-    ...(assistant.tabAutocompleteOptions && {
-      tabAutocompleteOptions: assistant.tabAutocompleteOptions,
-    }),
   };
 
   const sections: (keyof Omit<
     ConfigYaml,
-    | "name"
-    | "version"
-    | "rules"
-    | "schema"
-    | "metadata"
-    | "tabAutocompleteOptions"
+    "name" | "version" | "rules" | "schema" | "metadata"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel

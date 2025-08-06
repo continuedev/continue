@@ -136,27 +136,30 @@ export const uiOptionsSchema = z.object({
 export type UiOptions = z.infer<typeof uiOptionsSchema>;
 
 export const tabAutocompleteOptionsSchema = z.object({
-  disable: z.boolean().optional(),
-  maxPromptTokens: z.number().optional(),
-  debounceDelay: z.number().optional(),
-  maxSuffixPercentage: z.number().optional(),
-  prefixPercentage: z.number().optional(),
+  disable: z.boolean(),
+  maxPromptTokens: z.number(),
+  debounceDelay: z.number(),
+  maxSuffixPercentage: z.number(),
+  prefixPercentage: z.number(),
   transform: z.boolean().optional(),
   template: z.string().optional(),
-  multilineCompletions: z.enum(["always", "never", "auto"]).optional(),
-  slidingWindowPrefixPercentage: z.number().optional(),
-  slidingWindowSize: z.number().optional(),
-  useCache: z.boolean().optional(),
-  onlyMyCode: z.boolean().optional(),
-  useRecentlyEdited: z.boolean().optional(),
-  useRecentlyOpened: z.boolean().optional(),
+  multilineCompletions: z.enum(["always", "never", "auto"]),
+  slidingWindowPrefixPercentage: z.number(),
+  slidingWindowSize: z.number(),
+  useCache: z.boolean(),
+  onlyMyCode: z.boolean(),
+  useRecentlyEdited: z.boolean(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),
-  // Experimental options
-  experimental_includeClipboard: z.boolean().optional(),
-  experimental_includeRecentlyVisitedRanges: z.boolean().optional(),
-  experimental_includeRecentlyEditedRanges: z.boolean().optional(),
-  experimental_includeDiff: z.boolean().optional(),
+  // Experimental options: true = enabled, false = disabled, number = enabled w priority
+  experimental_includeClipboard: z.union([z.boolean(), z.number()]).optional(),
+  experimental_includeRecentlyVisitedRanges: z
+    .union([z.boolean(), z.number()])
+    .optional(),
+  experimental_includeRecentlyEditedRanges: z
+    .union([z.boolean(), z.number()])
+    .optional(),
+  experimental_includeDiff: z.union([z.boolean(), z.number()]).optional(),
   experimental_enableStaticContextualization: z.boolean().optional(),
 });
 export type TabAutocompleteOptions = z.infer<
