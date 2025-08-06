@@ -198,12 +198,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { renderMessage } = useMessageRenderer();
 
-  const {
-    showOrgSelector,
-    handleOrganizationSelect,
-    handleOrganizationCancel,
-    showOrganizationSelector,
-  } = useOrganizationSelector({
+  const { handleOrganizationSelect } = useOrganizationSelector({
     configPath,
     onAssistantChange: () => {},
     onMessage: (message) => {
@@ -212,12 +207,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
-  const {
-    showConfigSelector,
-    handleConfigSelect,
-    handleConfigCancel,
-    showConfigSelectorUI,
-  } = useConfigSelector({
+  const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
@@ -225,12 +215,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
-  const {
-    showModelSelector,
-    handleModelSelect,
-    handleModelCancel,
-    showModelSelectorUI,
-  } = useModelSelector({
+  const { handleModelSelect } = useModelSelector({
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
@@ -287,7 +272,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Login prompt - shows above input when active */}
-        {loginPrompt && (
+        {isScreenActive('login') && navState.screenData && (
           <Box
             paddingX={1}
             borderStyle="round"
@@ -298,7 +283,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             <Text color="yellow" bold>
               Login Required
             </Text>
-            <Text>{loginPrompt.text}</Text>
+            <Text>{navState.screenData.text}</Text>
             <UserInput
               onSubmit={handleLoginTokenSubmit}
               isWaitingForResponse={false}
@@ -312,42 +297,36 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Organization selector - shows above input when active */}
-        {showOrgSelector && (
+        {isScreenActive('organization') && (
           <OrganizationSelector
             onSelect={handleOrganizationSelect}
-            onCancel={handleOrganizationCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* Config selector - shows above input when active */}
-        {showConfigSelector && (
+        {isScreenActive('config') && (
           <ConfigSelector
             onSelect={handleConfigSelect}
-            onCancel={handleConfigCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* Model selector - shows above input when active */}
-        {showModelSelector && (
+        {isScreenActive('model') && (
           <ModelSelector
             onSelect={handleModelSelect}
-            onCancel={handleModelCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* Free trial transition UI - replaces input when active */}
-        {isShowingFreeTrialTransition && (
-          <FreeTrialTransitionUI
-            onComplete={handleFreeTrialTransitionComplete}
-            onSwitchToLocalConfig={handleFreeTrialSwitchToLocal}
-            onFullReload={handleFreeTrialFullReload}
-            onShowConfigSelector={handleFreeTrialShowConfigSelector}
-            onShowOrgSelector={handleFreeTrialShowOrgSelector}
-          />
+        {isScreenActive('free-trial') && (
+          <FreeTrialTransitionUI onReload={handleReload} />
         )}
 
-        {/* Input area - only show when not showing free trial transition */}
-        {!isShowingFreeTrialTransition && (
+        {/* Input area - only show when showing chat screen */}
+        {isScreenActive('chat') && (
           <>
             {/* Show permission selector when there's an active permission request */}
             {activePermissionRequest ? (
@@ -396,7 +375,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
               <FreeTrialStatus
                 apiClient={services.apiClient?.apiClient || undefined}
                 model={services.model.model}
-                onTransitionStateChange={setIsShowingFreeTrialTransition}
+                onTransitionStateChange={(shouldShow) => {
+                  if (shouldShow && navState.currentScreen === 'chat') {
+                    navigateTo('free-trial');
+                  } else if (!shouldShow && navState.currentScreen === 'free-trial') {
+                    closeCurrentScreen();
+                  }
+                }}
               />
             )}
           </Box>

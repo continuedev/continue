@@ -11,15 +11,12 @@ import { listUserOrganizations } from "../auth/workos.js";
 import { env } from "../env.js";
 import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
+import { useNavigation } from "./context/NavigationContext.js";
 
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
 interface FreeTrialTransitionUIProps {
-  onComplete: () => void;
-  onSwitchToLocalConfig?: () => void;
-  onFullReload?: () => void;
-  onShowConfigSelector?: () => void;
-  onShowOrgSelector?: () => void;
+  onReload: () => void;
 }
 
 /**
@@ -41,12 +38,9 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
 }
 
 const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
-  onComplete,
-  onSwitchToLocalConfig,
-  onFullReload,
-  onShowConfigSelector,
-  onShowOrgSelector,
+  onReload,
 }) => {
+  const { navigateTo, closeCurrentScreen } = useNavigation();
   const [currentStep, setCurrentStep] = useState<
     "choice" | "enterApiKey" | "processing" | "success" | "error"
   >("choice");
@@ -102,11 +96,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       }
     } else if (currentStep === "success" || currentStep === "error") {
       if (key.return) {
+        closeCurrentScreen();
         // If user went through models setup, do a full reload to register their purchase
-        if (wasModelsSetup && onFullReload) {
-          onFullReload();
-        } else {
-          onComplete();
+        if (wasModelsSetup) {
+          onReload();
         }
       }
     }
@@ -137,18 +130,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       setWasModelsSetup(false); // This is not models setup
     } else if (selectedOption === 3) {
       // Option 3: Switch to different configuration
-      if (onShowConfigSelector) {
-        onShowConfigSelector();
-      } else {
-        onComplete();
-      }
+      navigateTo('config');
     } else if (selectedOption === 4 && hasOrganizations) {
       // Option 4: Switch to organization
-      if (onShowOrgSelector) {
-        onShowOrgSelector();
-      } else {
-        onComplete();
-      }
+      navigateTo('organization');
     }
   };
 
@@ -164,11 +149,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
       // After a brief delay, switch to local configuration
       setTimeout(() => {
-        if (onSwitchToLocalConfig) {
-          onSwitchToLocalConfig();
-        } else {
-          onComplete();
-        }
+        closeCurrentScreen();
+        onReload();
       }, 1000);
     } catch (error) {
       setErrorMessage(

@@ -32,13 +32,11 @@ export function useOrganizationSelector({
   onMessage,
   onChatReset,
 }: UseOrganizationSelectorProps) {
-  const [showOrgSelector, setShowOrgSelector] = useState(false);
 
   const handleOrganizationSelect = async (
     organizationId: string | null,
     organizationName: string
   ) => {
-    setShowOrgSelector(false);
 
     // Update auth config
     const authConfig = loadAuthConfig();
@@ -101,18 +99,7 @@ export function useOrganizationSelector({
     }
   };
 
-  const handleOrganizationCancel = () => {
-    setShowOrgSelector(false);
-  };
-
-  const showOrganizationSelector = () => {
-    setShowOrgSelector(true);
-  };
-
   return {
-    showOrgSelector,
     handleOrganizationSelect,
-    handleOrganizationCancel,
-    showOrganizationSelector,
   };
 }
