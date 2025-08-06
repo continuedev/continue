@@ -13,13 +13,13 @@ import {
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { initializeWithOnboarding } from "../onboarding.js";
+import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
 import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
-import sentryService from "../sentry.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";

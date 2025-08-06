@@ -5,7 +5,8 @@ import path from "path";
 
 import chalk from "chalk";
 import winston from "winston";
-import sentryService from "../sentry.js";
+
+import { sentryService } from "../sentry.js";
 
 const { combine, timestamp, printf, errors } = winston.format;
 

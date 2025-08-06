@@ -45,6 +45,7 @@ To completely disable Sentry, you can:
 ### Context Information
 
 Sentry automatically includes:
+
 - Application version
 - Environment (development/production)
 - Node.js version and platform
@@ -56,7 +57,7 @@ Sentry automatically includes:
 The Sentry service is automatically initialized and available throughout the application. You can use it directly:
 
 ```typescript
-import sentryService from "./sentry.js";
+import { sentryService } from "./sentry.js";
 
 // Capture an exception with context
 try {
@@ -70,13 +71,13 @@ try {
 
 // Capture a message
 sentryService.captureMessage("Something important happened", "info", {
-  customData: "value"
+  customData: "value",
 });
 
 // Set user context
 sentryService.setUser({
   id: "user123",
-  email: "user@example.com"
+  email: "user@example.com",
 });
 
 // Add breadcrumbs for debugging
@@ -84,7 +85,7 @@ sentryService.addBreadcrumb({
   message: "User performed action",
   category: "user",
   level: "info",
-  data: { action: "click_button" }
+  data: { action: "click_button" },
 });
 ```
 

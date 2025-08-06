@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
+
 import { logger } from "./util/logger.js";
 import { getVersion } from "./version.js";
 
@@ -160,4 +161,3 @@ class SentryService {
 }
 
 export const sentryService = new SentryService();
-export default sentryService;
