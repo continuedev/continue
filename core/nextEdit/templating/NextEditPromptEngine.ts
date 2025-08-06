@@ -33,6 +33,7 @@ import {
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
+// NOTE: When updating this union, update core/llm/autodetect.ts as well.
 export type NextEditModelName =
   | "mercury-coder-nextedit"
   | "model-1"
