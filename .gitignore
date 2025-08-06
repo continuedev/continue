@@ -6,3 +6,6 @@ dist
 chat.log
 
 *notes.md
+
+# Local config files (users should not commit their personal configs)
+config.yaml

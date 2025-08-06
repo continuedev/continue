@@ -4,15 +4,16 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 
 import { CONTINUE_ASCII_ART } from "../asciiArt.js";
-import { loadAuthConfig } from "../auth/workos.js";
 import {
   compactChatHistory,
   findCompactionIndex,
   getHistoryForLLM,
 } from "../compaction.js";
+import { processCommandFlags } from "../flags/flagProcessor.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
-import { initializeWithOnboarding } from "../onboarding.js";
+// initializeWithOnboarding is now handled internally by initializeServices
+// import { initializeWithOnboarding } from "../onboarding.js";
 import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
@@ -321,24 +322,13 @@ async function runHeadlessMode(
   options: ChatOptions
 ): Promise<void> {
   // Initialize services for headless mode
-  // Convert legacy flags to mode
-  let mode: any = undefined;
-  if (options.readonly) {
-    mode = "plan";
-  } else if (options.auto) {
-    mode = "auto";
-  }
+  const { permissionOverrides } = processCommandFlags(options);
 
   await initializeServices({
     configPath: options.config,
     rules: options.rule,
     headless: true,
-    toolPermissionOverrides: {
-      allow: options.allow,
-      ask: options.ask,
-      exclude: options.exclude,
-      mode: mode,
-    },
+    toolPermissionOverrides: permissionOverrides,
   });
 
   // Get required services from the service container
@@ -408,41 +398,36 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Start active time tracking
     telemetryService.startActiveTime();
 
-    // If not in headless mode, check for onboarding first
+    // If not in headless mode, use unified initialization with TUI
     if (!options.headless) {
-      // Load auth config to check for onboarding
-      const authConfig = loadAuthConfig();
+      // Process flags for TUI mode
+      const { permissionOverrides } = processCommandFlags(options);
 
-      // Run onboarding check - this will handle first-time setup
-      const onboardingResult = await initializeWithOnboarding(
-        authConfig,
-        options.config,
-        options.rule
-      );
+      // Initialize services with onboarding handled internally
+      const initResult = await initializeServices({
+        configPath: options.config,
+        rules: options.rule,
+        headless: false,
+        toolPermissionOverrides: permissionOverrides,
+      });
 
-      // If onboarding was completed (user just went through setup), show success message
-      if (onboardingResult.wasOnboarded) {
+      // If onboarding was completed, show success message
+      if (initResult.wasOnboarded) {
         console.log(chalk.green("✓ Setup complete! Starting chat..."));
       }
 
       // Show ASCII art and version for TUI mode
       console.log(CONTINUE_ASCII_ART);
 
-      // Convert legacy flags to mode for TUI
-      let mode: any = undefined;
-      if (options.readonly) {
-        mode = "plan";
-      } else if (options.auto) {
-        mode = "auto";
-      }
-
-      // Start TUI immediately - it will handle service loading
-      await startTUIChat(prompt, options.resume, options.config, options.rule, {
-        allow: options.allow,
-        ask: options.ask,
-        exclude: options.exclude,
-        mode: mode,
-      });
+      // Start TUI with skipOnboarding since we already handled it
+      await startTUIChat(
+        prompt,
+        options.resume,
+        options.config,
+        options.rule,
+        permissionOverrides,
+        true
+      );
       return;
     }
 

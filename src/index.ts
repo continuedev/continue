@@ -8,6 +8,10 @@ import { logout } from "./commands/logout.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
+import {
+  validateFlags,
+  handleValidationErrors,
+} from "./flags/flagValidator.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
@@ -62,26 +66,23 @@ addCommonOptions(program)
     configureConsoleForHeadless(isHeadless);
     logger.configureHeadlessMode(isHeadless);
 
-    // Validate --format flag only works with -p/--print
-    if (options.format && !options.print) {
-      console.error(
-        "Error: --format flag can only be used with -p/--print flag"
-      );
-      process.exit(1);
-    }
+    // Validate all command line flags
+    const validation = validateFlags({
+      print: options.print,
+      format: options.format,
+      silent: options.silent,
+      readonly: options.readonly,
+      auto: options.auto,
+      config: options.config,
+      allow: options.allow,
+      ask: options.ask,
+      exclude: options.exclude,
+      isRootCommand: true,
+      commandName: "cn",
+    });
 
-    // Validate --silent flag only works with -p/--print
-    if (options.silent && !options.print) {
-      console.error(
-        "Error: --silent flag can only be used with -p/--print flag"
-      );
-      process.exit(1);
-    }
-
-    // Validate format value
-    if (options.format && options.format !== "json") {
-      console.error("Error: --format currently only supports 'json'");
-      process.exit(1);
+    if (!validation.isValid) {
+      handleValidationErrors(validation.errors);
     }
 
     if (options.verbose) {

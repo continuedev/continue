@@ -1,3 +1,5 @@
+import { loadAuthConfig } from "../auth/workos.js";
+import { initializeWithOnboarding } from "../onboarding.js";
 import { logger } from "../util/logger.js";
 
 import { ApiClientService } from "./ApiClientService.js";
@@ -13,6 +15,7 @@ import {
   ConfigServiceState,
   SERVICE_NAMES,
   ServiceInitOptions,
+  ServiceInitResult,
 } from "./types.js";
 
 // Service instances
@@ -24,9 +27,23 @@ const mcpServiceWrapper = new MCPServiceWrapper();
 
 /**
  * Initialize all services and register them with the service container
+ * Handles onboarding internally for TUI mode unless skipOnboarding is true
  */
-export async function initializeServices(options: ServiceInitOptions = {}) {
+export async function initializeServices(options: ServiceInitOptions = {}): Promise<ServiceInitResult> {
   logger.debug("Initializing service registry");
+  
+  let wasOnboarded = false;
+  
+  // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
+  if (!options.headless && !options.skipOnboarding) {
+    const authConfig = loadAuthConfig();
+    const onboardingResult = await initializeWithOnboarding(
+      authConfig,
+      options.configPath,
+      options.rules
+    );
+    wasOnboarded = onboardingResult.wasOnboarded;
+  }
 
   // Initialize mode service with tool permission overrides
   if (options.toolPermissionOverrides) {
@@ -178,6 +195,8 @@ export async function initializeServices(options: ServiceInitOptions = {}) {
   await serviceContainer.initializeAll();
 
   logger.debug("Service registry initialized");
+  
+  return { wasOnboarded };
 }
 
 /**
