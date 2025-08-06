@@ -378,7 +378,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
             onFullReload={handleFreeTrialFullReload}
             onShowConfigSelector={handleFreeTrialShowConfigSelector}
             onShowOrgSelector={handleFreeTrialShowOrgSelector}
-            hasOrganizations={services?.auth?.hasOrganizations || false}
           />
         )}
 

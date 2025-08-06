@@ -5,7 +5,9 @@ import * as path from "path";
 import { Box, Text, useInput } from "ink";
 import open from "open";
 import React, { useState } from "react";
+import useSWR from "swr";
 
+import { listUserOrganizations } from "../auth/workos.js";
 import { env } from "../env.js";
 import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
@@ -18,7 +20,6 @@ interface FreeTrialTransitionUIProps {
   onFullReload?: () => void;
   onShowConfigSelector?: () => void;
   onShowOrgSelector?: () => void;
-  hasOrganizations?: boolean;
 }
 
 /**
@@ -45,7 +46,6 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   onFullReload,
   onShowConfigSelector,
   onShowOrgSelector,
-  hasOrganizations = false,
 }) => {
   const [currentStep, setCurrentStep] = useState<
     "choice" | "enterApiKey" | "processing" | "success" | "error"
@@ -55,6 +55,19 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [wasModelsSetup, setWasModelsSetup] = useState(false);
+  
+  // Fetch organizations using SWR
+  const { data: organizations } = useSWR(
+    "organizations",
+    listUserOrganizations,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      shouldRetryOnError: false,
+    }
+  );
+  
+  const hasOrganizations = organizations && organizations.length > 0;
 
   useInput((input, key) => {
     if (currentStep === "choice") {
