@@ -217,6 +217,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     openrouter: (model) => {
       // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
+      // Free tier models don't support tools
+      if (model.toLowerCase().endsWith(':free')) {
+        return false;
+      }
+      
+      // Empty model name
+      if (!model) {
+        return false;
+      }
+      
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
           (part) => model.toLowerCase().includes(part),
@@ -272,15 +282,15 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "arcee-ai/caller-large",
         "nousresearch/hermes-3-llama-3.1-70b",
       ];
-      for (const model of specificModels) {
-        if (model.toLowerCase() === model) {
+      for (const specificModel of specificModels) {
+        if (model.toLowerCase() === specificModel.toLowerCase()) {
           return true;
         }
       }
 
       const supportedContains = ["llama-3.1"];
-      for (const model of supportedContains) {
-        if (model.toLowerCase().includes(model)) {
+      for (const pattern of supportedContains) {
+        if (model.toLowerCase().includes(pattern)) {
           return true;
         }
       }
