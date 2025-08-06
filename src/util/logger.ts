@@ -108,6 +108,11 @@ export function setLogLevel(level: string) {
   winstonLogger.level = level;
 }
 
+// Function to configure headless mode
+export function configureHeadlessMode(headless: boolean) {
+  isHeadlessMode = headless;
+}
+
 // Export winstonLogger methods
 export const logger = {
   debug: (message: string, meta?: any) => winstonLogger.debug(message, meta),
@@ -134,6 +139,17 @@ export const logger = {
     } else {
       winstonLogger.error(message, meta);
       sentryService.captureMessage(message, "error", meta);
+    }
+
+    // In headless mode, also output to stderr
+    if (isHeadlessMode) {
+      if (error instanceof Error) {
+        console.error(chalk.red(`${message}: ${error.message}`));
+      } else if (error) {
+        console.error(chalk.red(`${message}: ${error}`));
+      } else {
+        console.error(chalk.red(message));
+      }
     }
   },
   setLevel: setLogLevel,
