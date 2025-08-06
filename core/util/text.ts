@@ -32,7 +32,10 @@ export function escapeForSVG(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+    .replace(/'/g, "&apos;")
+    .replace(/\n/g, "\\n") // newlines
+    .replace(/\t/g, "\\t") // tabs
+    .replace(/\r/g, "\\r"); // carriage returns
 }
 
 export function kebabOfStr(str: string): string {
