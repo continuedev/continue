@@ -18,6 +18,7 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
@@ -283,6 +284,14 @@ export class NextEditProvider {
 
       const llm = await this._prepareLlm();
       if (!llm) {
+        return undefined;
+      }
+
+      // In vscode, this check is done in extensions/vscode/src/extension/VsCodeExtension.ts.
+      // For other editors, this check should be done in their respective config reloaders.
+      // This is left for a final check.
+      if (!modelSupportsNextEdit(llm.model, llm.title, llm.capabilities)) {
+        console.error(`${llm.model} is not capable of next edit.`);
         return undefined;
       }
 

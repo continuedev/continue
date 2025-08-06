@@ -43,13 +43,14 @@ import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import { getAst } from "core/autocomplete/util/ast";
+import { modelSupportsNextEdit } from "core/llm/autodetect";
 import { DocumentHistoryTracker } from "core/nextEdit/DocumentHistoryTracker";
 import {
   EditableRegionStrategy,
   getNextEditableRegion,
 } from "core/nextEdit/NextEditEditableRegionCalculator";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
-import { isModelCapableOfNextEdit } from "core/nextEdit/utils";
+import { isNextEditTest } from "core/nextEdit/utils";
 import { localPathOrUriToPath } from "core/util/pathToUri";
 import { JumpManager } from "../activation/JumpManager";
 import setupNextEditWindowManager, {
@@ -190,8 +191,13 @@ export class VsCodeExtension {
       async ({ config: newConfig, configLoadInterrupted }) => {
         const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
         if (
-          autocompleteModel &&
-          isModelCapableOfNextEdit(autocompleteModel.model)
+          (autocompleteModel &&
+            modelSupportsNextEdit(
+              autocompleteModel.model,
+              autocompleteModel.title,
+              autocompleteModel.capabilities,
+            )) ||
+          isNextEditTest()
         ) {
           // Set up next edit window manager only for Continue team members
           await setupNextEditWindowManager(context);
