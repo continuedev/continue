@@ -158,6 +158,7 @@ function DocsIndexingStatus({
               <StopIcon
                 className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
                 onClick={abort}
+                data-testid="stop-indexing"
               />
             )}
 
@@ -173,6 +174,7 @@ function DocsIndexingStatus({
               <ArrowPathIcon
                 className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
                 onClick={reIndex}
+                data-testid="reindex-docs"
               />
             )}
 

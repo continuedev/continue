@@ -13,7 +13,10 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
   const mockIdeMessenger = {
     request: vi.fn(),
     post: vi.fn(),
+    respond: vi.fn(),
+    streamRequest: vi.fn(),
     llmStreamChat: vi.fn(),
+    ide: {} as any,
   };
 
   const store = configureStore({
@@ -76,7 +79,12 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
         ...initialState?.config,
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
         ...initialState?.indexing,
       },
       tabs: {
@@ -84,7 +92,10 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
         ...initialState?.tabs,
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
         ...initialState?.profiles,
       },
     } as RootState,
