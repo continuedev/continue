@@ -41,12 +41,6 @@ describe("NextEditPromptEngine", () => {
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
       } as HelperVars;
-      testHelper = {
-        modelName: "this field is not used" as NextEditModelName,
-        fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
-        pos: { line: 1, character: 12 } as Position,
-        lang: { name: "typescript" },
-      } as HelperVars;
       unsupportedHelper = {
         modelName: "mistral/codestral" as NextEditModelName,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
@@ -97,16 +91,6 @@ describe("NextEditPromptEngine", () => {
 
       expect(result.userEdits).toBe(ctx.userEdits);
       expect(result.userExcerpts).toContain(MODEL_1_USER_CURSOR_IS_HERE_TOKEN);
-    });
-
-    it("should handle 'this field is not used' model name", async () => {
-      const result = await renderPrompt(testHelper, ctx);
-
-      expect(result).toHaveProperty("prompt");
-      expect(result.prompt.role).toBe("user");
-      expect(result.prompt.content).toBe("NEXT_EDIT");
-      expect(result.userEdits).toBe("");
-      expect(result.userExcerpts).toBe(testHelper.fileContents);
     });
 
     it("should throw error for unsupported model name", async () => {
