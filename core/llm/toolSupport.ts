@@ -218,15 +218,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     openrouter: (model) => {
       // https://openrouter.ai/models?fmt=cards&supported_parameters=tools
       // Free tier models don't support tools
-      if (model.toLowerCase().endsWith(':free')) {
+      if (!model || model.toLowerCase().endsWith(":free")) {
         return false;
       }
-      
-      // Empty model name
-      if (!model) {
-        return false;
-      }
-      
+      // Continue with existing checks for non-free models
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
           (part) => model.toLowerCase().includes(part),
