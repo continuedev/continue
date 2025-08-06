@@ -34,10 +34,7 @@ import {
 type TemplateRenderer = (vars: TemplateVars) => string;
 
 // NOTE: When updating this union, update core/llm/autodetect.ts as well.
-export type NextEditModelName =
-  | "mercury-coder-nextedit"
-  | "model-1"
-  | "this field is not used";
+export type NextEditModelName = "mercury-coder-nextedit" | "model-1";
 
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "mercury-coder-nextedit": {
@@ -46,9 +43,6 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   "model-1": {
     template:
       "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
-  },
-  "this field is not used": {
-    template: "NEXT_EDIT",
   },
 };
 
@@ -72,17 +66,6 @@ export async function renderPrompt(
   ctx: any,
 ): Promise<PromptMetadata> {
   let modelName = helper.modelName as NextEditModelName;
-
-  if (modelName === "this field is not used") {
-    return {
-      prompt: {
-        role: "user",
-        content: "NEXT_EDIT",
-      },
-      userEdits: "",
-      userExcerpts: helper.fileContents,
-    };
-  }
 
   // Validate that the modelName is actually a supported model.
   if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {

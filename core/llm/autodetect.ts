@@ -178,7 +178,6 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
 const MODEL_SUPPORTS_NEXT_EDIT: string[] = [
   "mercury-coder-nextedit",
   "model-1",
-  "this field is not used",
 ];
 
 function modelSupportsNextEdit(
