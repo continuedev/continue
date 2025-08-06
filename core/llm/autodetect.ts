@@ -173,6 +173,35 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
   );
 }
 
+// NOTE: When updating this list,
+// update core/nextEdit/templating/NextEditPromptEngine.ts as well.
+const MODEL_SUPPORTS_NEXT_EDIT: string[] = [
+  "mercury-coder-nextedit",
+  "model-1",
+  "this field is not used",
+];
+
+function modelSupportsNextEdit(
+  model: string,
+  title: string | undefined,
+  capabilities: ModelCapability | undefined,
+): boolean {
+  if (capabilities?.nextEdit !== undefined) {
+    return capabilities.nextEdit;
+  }
+
+  const lower = model.toLowerCase();
+  if (
+    MODEL_SUPPORTS_NEXT_EDIT.some(
+      (modelName) => lower.includes(modelName) || title?.includes(modelName),
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
@@ -391,4 +420,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
+  modelSupportsNextEdit,
 };
