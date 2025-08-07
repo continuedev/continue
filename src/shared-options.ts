@@ -3,7 +3,10 @@ import { Command } from "commander";
 // Function to add common options to any command
 export function addCommonOptions(command: Command): Command {
   return command
-    .option("--config <path>", "Path to configuration file")
+    .option(
+      "--config <assistant>",
+      "Configure the assistant  (can be a file path or hub slug)"
+    )
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
     .option("-v, --verbose", "Enable verbose logging")
@@ -56,19 +59,22 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
 
   // List of options to inherit from parent if not present in subcommand
   const inheritableOptions = [
-    'config',
-    'readonly',
-    'auto',
-    'tools',
-    'verbose',
-    'rule',
-    'allow',
-    'ask',
-    'exclude'
+    "config",
+    "readonly",
+    "auto",
+    "tools",
+    "verbose",
+    "rule",
+    "allow",
+    "ask",
+    "exclude",
   ];
 
   for (const optName of inheritableOptions) {
-    if (parentOpts[optName] !== undefined && mergedOptions[optName] === undefined) {
+    if (
+      parentOpts[optName] !== undefined &&
+      mergedOptions[optName] === undefined
+    ) {
       mergedOptions[optName] = parentOpts[optName];
     }
   }
