@@ -1095,6 +1095,18 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cohere.png",
     isOpenSource: false,
   },
+  gpt5: {
+    title: "GPT-5",
+    description: "OpenAI's next-generation, high-intelligence flagship model",
+    params: {
+      model: "gpt-5",
+      contextLength: 128_000,
+      title: "GPT-5",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt4turbo: {
     title: "GPT-4 Turbo",
     description:
