@@ -6,6 +6,8 @@ export const NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN = 5;
 export const MODEL_1_USER_CURSOR_IS_HERE_TOKEN = "<|user_cursor_is_here|>";
 export const MODEL_1_EDITABLE_REGION_START_TOKEN = "<|editable_region_start|>";
 export const MODEL_1_EDITABLE_REGION_END_TOKEN = "<|editable_region_end|>";
+export const MODEL_1_CONTEXT_FILE_TOKEN = "<|context_file|>";
+export const MODEL_1_SNIPPET_TOKEN = "<|snippet|>";
 
 // Mercury Coder Next Edit-specific tokens.
 export const MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN =
