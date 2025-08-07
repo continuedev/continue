@@ -11,7 +11,7 @@ val pluginVersion: String by project
 val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
 plugins {
-    kotlin("jvm") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
     id("org.jetbrains.intellij.platform") version "2.6.0"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
@@ -36,7 +36,6 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
     implementation("com.posthog.java:posthog:1.2.0")
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
@@ -55,7 +54,7 @@ kotlin {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "233"
+            sinceBuild = "241"
         }
     }
     pluginVerification {
@@ -65,7 +64,6 @@ intellijPlatform {
             ide("IC", "2024.3")
             ide("IC", "2024.2")
             ide("IC", "2024.1")
-            ide("IC", "2023.3")
         }
     }
 }
