@@ -1,34 +1,12 @@
-import { ToolCallDelta } from "../..";
-import { createDelta, generateOpenAIToolCallId } from "./systemToolUtils";
-
-export type ToolCallParseState = {
-  toolCallId: string;
-  isOnArgBeginLine: boolean;
-  currentArgName: string | undefined;
-  currentArgLines: string[];
-  processedArgNames: Set<string>;
-  currentLineIndex: number;
-  lineChunks: string[][];
-  done: boolean;
-};
-
-export const getInitialTooLCallParseState = (): ToolCallParseState => ({
-  toolCallId: generateOpenAIToolCallId(),
-  isOnArgBeginLine: false,
-  currentArgName: undefined,
-  currentArgLines: [],
-  currentLineIndex: 0,
-  processedArgNames: new Set(),
-  lineChunks: [],
-  done: false,
-});
+import { ToolCallDelta } from "../../..";
+import { createDelta } from "../systemToolUtils";
+import { ToolCallParseState } from "../types";
 
 /*
   Efficiently applies chunks to a tool call state as they come in
   Expects chunks to be broken so that new lines and codeblocks are alone
   For now, this parser collects entire arg before
   This is because support for JSON booleans is tricky otherwise
-
 */
 export function handleToolCallBuffer(
   chunk: string,
@@ -72,14 +50,14 @@ export function handleToolCallBuffer(
       }
       return;
     default:
-      if (state.isOnArgBeginLine) {
+      if (state.isWithinArgStart) {
         if (isNewLine) {
           const argName = (line.split(/begin_?arg:/i)[1] ?? "").trim();
           if (!argName) {
             throw new Error("Invalid begin arg line");
           }
           state.currentArgName = argName;
-          state.isOnArgBeginLine = false;
+          state.isWithinArgStart = false;
           const argPrefix = state.processedArgNames.size === 0 ? "{" : ",";
           return createDelta("", `${argPrefix}"${argName}":`, state.toolCallId);
         }
@@ -87,8 +65,8 @@ export function handleToolCallBuffer(
         if (isNewLine) {
           const isEndArgTag = line.match(/end_?arg/i);
           if (isEndArgTag) {
-            let trimmedValue = state.currentArgLines.join("").trim();
-            state.currentArgLines.length = 0;
+            let trimmedValue = state.currentArgChunks.join("").trim();
+            state.currentArgChunks.length = 0;
             state.processedArgNames.add(state.currentArgName);
             state.currentArgName = undefined;
 
@@ -120,14 +98,14 @@ export function handleToolCallBuffer(
               return createDelta("", stringifiedArg, state.toolCallId);
             }
           } else {
-            state.currentArgLines.push(line);
+            state.currentArgChunks.push(line);
           }
         }
       } else {
         // Check for entry into arg
         const isBeginArgLine = line.match(/begin_?arg:/i);
         if (isBeginArgLine) {
-          state.isOnArgBeginLine = true;
+          state.isWithinArgStart = true;
         }
 
         // Check for exit
