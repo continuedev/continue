@@ -37,9 +37,9 @@ test("getBaseSystemMessage should return the correct system message based on mod
   );
 
   // Test agent mode with default message and tools
-  expect(getBaseSystemMessage("agent", {} as ModelDescription, [mockTool])).toBe(
-    DEFAULT_AGENT_SYSTEM_MESSAGE,
-  );
+  expect(
+    getBaseSystemMessage("agent", {} as ModelDescription, [mockTool]),
+  ).toBe(DEFAULT_AGENT_SYSTEM_MESSAGE);
 
   // Test plan mode with default message and tools
   expect(getBaseSystemMessage("plan", {} as ModelDescription, [mockTool])).toBe(
@@ -59,7 +59,8 @@ test("getBaseSystemMessage should append no-tools warning for agent/plan modes w
     baseAgentSystemMessage: "Custom Agent System Message",
   } as ModelDescription;
 
-  const noToolsWarning = "\n\nTHE USER HAS NOT PROVIDED ANY TOOLS, DO NOT ATTEMPT TO USE ANY TOOLS. STOP AND LET THE USER KNOW THAT THERE ARE NO TOOLS AVAILABLE AND THEY NEED TO TURN ON TOOLS IN THE TOOLS POLICY SECTION";
+  const noToolsWarning =
+    "\n\nTHE USER HAS NOT PROVIDED ANY TOOLS, DO NOT ATTEMPT TO USE ANY TOOLS. STOP AND LET THE USER KNOW THAT THERE ARE NO TOOLS AVAILABLE AND THEY NEED TO TURN ON TOOLS IN THE TOOLS POLICY SECTION";
 
   // Test agent mode without tools
   expect(getBaseSystemMessage("agent", mockModel, [])).toBe(
