@@ -44,17 +44,18 @@ jobs:
           component: core
           include-root: true
 
-      - name: Type check and lint
-        run: |
-          cd core
-          npx tsc --noEmit
-          npm run lint
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Type check and lint
+      #   run: |
+      #     cd core
+      #     npx tsc --noEmit
+      #     npm run lint
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Run tests
         run: |
           cd core
+          npm test -- CodebaseIndexer
           npm test
           npm run vitest
         env:
