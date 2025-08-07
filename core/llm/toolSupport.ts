@@ -53,11 +53,20 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     openai: (model) => {
+      const lower = model.toLowerCase();
       // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
       if (
-        model.toLowerCase().startsWith("gpt-4") ||
-        model.toLowerCase().startsWith("o3")
+        lower.startsWith("gpt-4") ||
+        lower.startsWith("gpt-5") ||
+        lower.startsWith("o3")
       ) {
+        return true;
+      }
+      if (lower.includes("gpt-oss")) {
+        return true;
+      }
+      // https://ai.google.dev/gemma/docs/capabilities/function-calling
+      if (lower.startsWith("gemma")) {
         return true;
       }
       // firworks-ai https://docs.fireworks.ai/guides/function-calling
