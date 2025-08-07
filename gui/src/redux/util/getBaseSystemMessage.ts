@@ -5,6 +5,9 @@ import {
   DEFAULT_PLAN_SYSTEM_MESSAGE,
 } from "core/llm/defaultSystemMessages";
 
+export const NO_TOOL_WARNING =
+  "\n\nTHE USER HAS NOT PROVIDED ANY TOOLS, DO NOT ATTEMPT TO USE ANY TOOLS. STOP AND LET THE USER KNOW THAT THERE ARE NO TOOLS AVAILABLE. The user can provide tools by enabling them in the Tool Policies section of the notch (wrench icon)";
+
 export function getBaseSystemMessage(
   messageMode: string,
   model: ModelDescription,
@@ -22,8 +25,7 @@ export function getBaseSystemMessage(
 
   // Add no-tools warning for agent/plan modes when no tools are available
   if (messageMode !== "chat" && (!activeTools || activeTools.length === 0)) {
-    baseMessage +=
-      "\n\nTHE USER HAS NOT PROVIDED ANY TOOLS, DO NOT ATTEMPT TO USE ANY TOOLS. STOP AND LET THE USER KNOW THAT THERE ARE NO TOOLS AVAILABLE. The user can provide tools by enabling them in the Tool Policies section of the notch (wrench icon)";
+    baseMessage += NO_TOOL_WARNING;
   }
 
   return baseMessage;

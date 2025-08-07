@@ -4,7 +4,7 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_PLAN_SYSTEM_MESSAGE,
 } from "core/llm/defaultSystemMessages";
-import { getBaseSystemMessage } from "./getBaseSystemMessage";
+import { getBaseSystemMessage, NO_TOOL_WARNING } from "./getBaseSystemMessage";
 
 test("getBaseSystemMessage should return the correct system message based on mode", () => {
   const mockModel = {
@@ -59,17 +59,14 @@ test("getBaseSystemMessage should append no-tools warning for agent/plan modes w
     baseAgentSystemMessage: "Custom Agent System Message",
   } as ModelDescription;
 
-  const noToolsWarning =
-    "\n\nTHE USER HAS NOT PROVIDED ANY TOOLS, DO NOT ATTEMPT TO USE ANY TOOLS. STOP AND LET THE USER KNOW THAT THERE ARE NO TOOLS AVAILABLE AND THEY NEED TO TURN ON TOOLS IN THE TOOLS POLICY SECTION";
-
   // Test agent mode without tools
   expect(getBaseSystemMessage("agent", mockModel, [])).toBe(
-    "Custom Agent System Message" + noToolsWarning,
+    "Custom Agent System Message" + NO_TOOL_WARNING,
   );
 
   // Test plan mode without tools
   expect(getBaseSystemMessage("plan", mockModel, [])).toBe(
-    "Custom Plan System Message" + noToolsWarning,
+    "Custom Plan System Message" + NO_TOOL_WARNING,
   );
 
   // Test chat mode without tools (should not append warning)
@@ -79,11 +76,11 @@ test("getBaseSystemMessage should append no-tools warning for agent/plan modes w
 
   // Test agent mode with undefined tools
   expect(getBaseSystemMessage("agent", mockModel)).toBe(
-    "Custom Agent System Message" + noToolsWarning,
+    "Custom Agent System Message" + NO_TOOL_WARNING,
   );
 
   // Test plan mode with undefined tools
   expect(getBaseSystemMessage("plan", mockModel)).toBe(
-    "Custom Plan System Message" + noToolsWarning,
+    "Custom Plan System Message" + NO_TOOL_WARNING,
   );
 });
