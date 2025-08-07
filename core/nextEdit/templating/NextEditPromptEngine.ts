@@ -44,7 +44,7 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
   },
   "model-1": {
     template:
-      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
+      "### User Edits:\n\n{{{editDiffHistory}}}\n### Context:\n{{{recentlyViewedCodeSnippets}}}\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{currentFileContent}}}```\n### Response:",
   },
   "this field is not used": {
     template: "NEXT_EDIT",
@@ -142,9 +142,18 @@ export async function renderPrompt(
       );
 
       const model1Ctx: Model1TemplateVars = {
-        userEdits: ctx.userEdits,
+        recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
+          ctx.recentlyViewedCodeSnippets,
+        ),
+        currentFileContent: currentFileContentBlock(
+          ctx.currentFileContent,
+          ctx.editableRegionStartLine,
+          ctx.editableRegionEndLine,
+          helper.pos,
+        ),
+        editDiffHistory: editHistoryBlock(ctx.editDiffHistory),
+        currentFilePath: ctx.currentFilePath,
         languageShorthand: ctx.languageShorthand,
-        userExcerpts: ctx.userExcerpts,
       };
 
       tv = model1Ctx;
