@@ -5,7 +5,7 @@ export function addCommonOptions(command: Command): Command {
   return command
     .option(
       "--config <assistant>",
-      "Configure the assistant  (can be a file path or hub slug)"
+      "Configure the assistant (can be a file path or hub slug)"
     )
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
