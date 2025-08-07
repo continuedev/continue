@@ -1,23 +1,11 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { useState } from "react";
-
 import {
   isAuthenticatedConfig,
-  loadAuthConfig,
-  saveAuthConfig,
 } from "../../auth/workos.js";
-import { initialize } from "../../config.js";
-import { MCPService } from "../../mcp.js";
+import { services, reloadService } from "../../services/index.js";
+import { SERVICE_NAMES } from "../../services/types.js";
+import { useNavigation } from "../context/NavigationContext.js";
 
 interface UseOrganizationSelectorProps {
-  configPath?: string;
-  onAssistantChange: (
-    assistant: AssistantUnrolled,
-    model: ModelConfig,
-    llmApi: BaseLlmApi,
-    mcpService: MCPService
-  ) => void;
   onMessage: (message: {
     role: string;
     content: string;
@@ -27,40 +15,38 @@ interface UseOrganizationSelectorProps {
 }
 
 export function useOrganizationSelector({
-  configPath,
-  onAssistantChange,
   onMessage,
   onChatReset,
 }: UseOrganizationSelectorProps) {
-  const [showOrgSelector, setShowOrgSelector] = useState(false);
+  const { closeCurrentScreen } = useNavigation();
 
   const handleOrganizationSelect = async (
     organizationId: string | null,
     organizationName: string
   ) => {
-    setShowOrgSelector(false);
-
-    // Update auth config
-    const authConfig = loadAuthConfig();
-
-    // Only allow organization switching for authenticated users
-    if (!isAuthenticatedConfig(authConfig)) {
-      onMessage({
-        role: "system",
-        content:
-          "Organization switching not available for environment variable auth",
-        messageType: "system" as const,
-      });
-      return;
-    }
-
-    const updatedConfig = {
-      ...authConfig,
-      organizationId,
-    };
-    saveAuthConfig(updatedConfig);
-
     try {
+      // Check if user is authenticated
+      const authState = services.auth.getState();
+      if (!authState.isAuthenticated || !authState.authConfig) {
+        onMessage({
+          role: "system",
+          content:
+            "Organization switching not available - not authenticated",
+          messageType: "system" as const,
+        });
+        return;
+      }
+
+      if (!isAuthenticatedConfig(authState.authConfig)) {
+        onMessage({
+          role: "system",
+          content:
+            "Organization switching not available for environment variable auth",
+          messageType: "system" as const,
+        });
+        return;
+      }
+
       // Show loading message
       onMessage({
         role: "system",
@@ -68,16 +54,11 @@ export function useOrganizationSelector({
         messageType: "system" as const,
       });
 
-      // Reinitialize assistant with new organization
-      const {
-        config,
-        llmApi: newLlmApi,
-        model: newModel,
-        mcpService: newMcpService,
-      } = await initialize(updatedConfig, configPath);
+      // Switch organization through the auth service
+      await services.auth.switchOrganization(organizationId);
 
-      // Update assistant configuration
-      onAssistantChange(config, newModel, newLlmApi, newMcpService);
+      // Reload all dependent services (API_CLIENT -> CONFIG -> MODEL/MCP)
+      await reloadService(SERVICE_NAMES.AUTH);
 
       // Reset chat history
       onChatReset();
@@ -91,6 +72,9 @@ export function useOrganizationSelector({
         content: `Successfully switched to organization: ${organizationName}`,
         messageType: "system" as const,
       });
+      
+      // Close the organization selector
+      closeCurrentScreen();
     } catch (error: any) {
       // Show error message
       onMessage({
@@ -98,21 +82,13 @@ export function useOrganizationSelector({
         content: `Failed to switch organization: ${error.message}`,
         messageType: "system" as const,
       });
+      
+      // Close selector even on error
+      closeCurrentScreen();
     }
   };
 
-  const handleOrganizationCancel = () => {
-    setShowOrgSelector(false);
-  };
-
-  const showOrganizationSelector = () => {
-    setShowOrgSelector(true);
-  };
-
   return {
-    showOrgSelector,
     handleOrganizationSelect,
-    handleOrganizationCancel,
-    showOrganizationSelector,
   };
 }

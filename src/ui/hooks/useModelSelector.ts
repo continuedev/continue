@@ -1,8 +1,7 @@
-import { useState } from "react";
-
 import { updateModelName } from "../../auth/workos.js";
 import { services, serviceContainer, SERVICE_NAMES } from "../../services/index.js";
 import { ModelServiceState } from "../../services/types.js";
+import { useNavigation } from "../context/NavigationContext.js";
 
 interface ModelOption {
   id: string;
@@ -24,10 +23,10 @@ export function useModelSelector({
   onMessage,
   onModelSwitch,
 }: UseModelSelectorProps) {
-  const [showModelSelector, setShowModelSelector] = useState(false);
+  const { closeCurrentScreen } = useNavigation();
 
   const handleModelSelect = async (model: ModelOption) => {
-    setShowModelSelector(false);
+    closeCurrentScreen();
 
     try {
       await services.model.switchModel(model.index);
@@ -61,18 +60,7 @@ export function useModelSelector({
     }
   };
 
-  const handleModelCancel = () => {
-    setShowModelSelector(false);
-  };
-
-  const showModelSelectorUI = () => {
-    setShowModelSelector(true);
-  };
-
   return {
-    showModelSelector,
     handleModelSelect,
-    handleModelCancel,
-    showModelSelectorUI,
   };
 }
