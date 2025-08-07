@@ -205,9 +205,9 @@ export class VsCodeExtension {
         if (
           (autocompleteModel &&
             modelSupportsNextEdit(
+              autocompleteModel.capabilities,
               autocompleteModel.model,
               autocompleteModel.title,
-              autocompleteModel.capabilities,
             )) ||
           isNextEditTest()
         ) {
