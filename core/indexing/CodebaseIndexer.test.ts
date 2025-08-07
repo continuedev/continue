@@ -746,11 +746,12 @@ describe("CodebaseIndexer", () => {
       jest.spyOn(testIde, "getIdeSettings").mockResolvedValue(mockIdeSettings);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
       jest.clearAllMocks();
+      await new Promise((resolve) => setTimeout(resolve, 500)); // wait for error logs to cleanup
     });
 
-    test.skip("should create specific indexTypes for the requested context providers", async () => {
+    test("should create specific indexTypes for the requested context providers", async () => {
       mockConfig.contextProviders = [
         {
           description: {
@@ -774,7 +775,7 @@ describe("CodebaseIndexer", () => {
       expect(indexes[1].artifactId).toBe("codeSnippets");
     });
 
-    test.skip("should handle duplicate contexts", async () => {
+    test("should handle duplicate contexts", async () => {
       mockConfig.contextProviders = [
         {
           description: {
