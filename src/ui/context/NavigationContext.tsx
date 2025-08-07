@@ -31,20 +31,15 @@ type NavigationAction =
 function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
   switch (action.type) {
     case 'NAVIGATE_TO':
-      // Don't navigate if we're already on that screen
-      if (state.currentScreen === action.screen) {
-        return state;
-      }
-      
       return {
         currentScreen: action.screen,
-        screenData: action.data,
+        screenData: action.data ?? null,
       };
 
     case 'CLOSE_SCREEN':
       return {
         currentScreen: 'chat',
-        screenData: undefined,
+        screenData: null,
       };
 
     default:
@@ -81,6 +76,7 @@ interface NavigationProviderProps {
 export function NavigationProvider({ children }: NavigationProviderProps) {
   const [state, dispatch] = useReducer(navigationReducer, {
     currentScreen: 'chat',
+    screenData: null,
   });
 
   const navigateTo = useCallback((screen: NavigationScreen, data?: any) => {
