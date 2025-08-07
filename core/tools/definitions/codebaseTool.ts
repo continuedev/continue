@@ -1,6 +1,5 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const codebaseTool: Tool = {
   type: "function",
@@ -28,9 +27,10 @@ export const codebaseTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithPermission",
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.CodebaseTool,
-    `To search the codebase, use the ${BuiltInToolNames.CodebaseTool} tool with a natural language query. For example, to find authentication logic, you might respond with:`,
-    [["query", "How is user authentication handled in this codebase?"]],
-  ),
+  systemMessageDescription: {
+    prefix: `To search the codebase, use the ${BuiltInToolNames.CodebaseTool} tool with a natural language query. For example, to find authentication logic, you might respond with:`,
+    exampleArgs: [
+      ["query", "How is user authentication handled in this codebase?"],
+    ],
+  },
 };
