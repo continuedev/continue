@@ -107,7 +107,7 @@ runs:
         Xvfb -ac :99 -screen 0 1920x1080x24 &
         sleep 10
         mkdir -p build/reports
-        ./gradlew runIdeForUiTests --info --stacktrace &
+        ./gradlew runIdeForUiTests &
 
     - name: Wait for JB connection
       uses: jtalk/url-health-check-action@v3
@@ -121,7 +121,7 @@ runs:
       run: |
         cd extensions/intellij
         export DISPLAY=:99.0
-        ./gradlew test
+        ./gradlew test --info --stacktrace
 
     - name: Move video
       if: ${{ failure() }}
