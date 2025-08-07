@@ -277,7 +277,6 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "deepseek/deepseek-chat",
         "meta-llama/llama-4",
         "all-hands/openhands-lm-32b",
-        "lgai-exaone/exaone",
       ];
       for (const prefix of supportedPrefixes) {
         if (model.toLowerCase().startsWith(prefix)) {
