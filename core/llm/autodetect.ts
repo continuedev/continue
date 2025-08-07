@@ -1,4 +1,5 @@
 import { ChatMessage, ModelCapability, TemplateType } from "../index.js";
+import { NEXT_EDIT_MODELS } from "./constants.js";
 
 import {
   anthropicTemplateMessages,
@@ -176,14 +177,14 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
 // NOTE: When updating this list,
 // update core/nextEdit/templating/NextEditPromptEngine.ts as well.
 const MODEL_SUPPORTS_NEXT_EDIT: string[] = [
-  "mercury-coder-nextedit",
-  "model-1",
+  NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT,
+  NEXT_EDIT_MODELS.MODEL_1,
 ];
 
 function modelSupportsNextEdit(
+  capabilities: ModelCapability | undefined,
   model: string,
   title: string | undefined,
-  capabilities: ModelCapability | undefined,
 ): boolean {
   if (capabilities?.nextEdit !== undefined) {
     return capabilities.nextEdit;

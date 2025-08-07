@@ -30,13 +30,11 @@ import {
   insertCursorToken,
   insertEditableRegionTokensWithStaticRange,
 } from "./utils";
+import { NEXT_EDIT_MODELS } from "../../llm/constants";
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
-// NOTE: When updating this union, update core/llm/autodetect.ts as well.
-export type NextEditModelName = "mercury-coder-nextedit" | "model-1";
-
-const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
+const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
   "mercury-coder-nextedit": {
     template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at {{{currentFilePath}}}.\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
   },
@@ -47,7 +45,7 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
 };
 
 function templateRendererOfModel(
-  modelName: NextEditModelName,
+  modelName: NEXT_EDIT_MODELS,
 ): TemplateRenderer {
   let template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
   if (!template) {
@@ -65,7 +63,7 @@ export async function renderPrompt(
   helper: HelperVars,
   ctx: any,
 ): Promise<PromptMetadata> {
-  let modelName = helper.modelName as NextEditModelName;
+  let modelName = helper.modelName as NEXT_EDIT_MODELS;
 
   // Validate that the modelName is actually a supported model.
   if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
@@ -75,7 +73,7 @@ export async function renderPrompt(
     );
 
     if (matchingModel) {
-      modelName = matchingModel as NextEditModelName;
+      modelName = matchingModel as NEXT_EDIT_MODELS;
     } else {
       throw new Error(
         `${helper.modelName} is not yet supported for next edit.`,
