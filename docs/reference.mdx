@@ -347,6 +347,7 @@ List of documentation sites to index.
 
 - `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+- `rootUrl`: Specify the base URL to match for crawling subpages of a site. If not provided, this is inferred from `startUrl`.
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
 - `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
@@ -356,6 +357,7 @@ List of documentation sites to index.
 docs:
   - name: Continue
     startUrl: https://docs.continue.dev/intro
+    rootUrl: https://docs.continue.dev/
     favicon: https://docs.continue.dev/favicon.ico
 ```
 
