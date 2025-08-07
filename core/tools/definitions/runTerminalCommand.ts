@@ -1,17 +1,16 @@
+import os from "os";
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-
-import os from "os";
 
 /**
  * Get the preferred shell for the current platform
  * @returns The preferred shell command or path
  */
-export function getPreferredShell(): string {
+function getPreferredShell(): string {
   const platform = os.platform();
 
   if (platform === "win32") {
-    return process.env.COMSPEC || "cmd.exe";
+    return "powershell.exe";
   } else if (platform === "darwin") {
     return process.env.SHELL || "/bin/zsh";
   } else {
@@ -20,7 +19,13 @@ export function getPreferredShell(): string {
   }
 }
 
-export const PLATFORM_INFO = `Choose terminal commands and scripts optimized for ${os.platform()} and ${os.arch()} and shell ${getPreferredShell()}.`;
+const PLATFORM_INFO = `Choose terminal commands and scripts optimized for ${os.platform()} and ${os.arch()} and shell ${getPreferredShell()}.`;
+
+const RUN_COMMAND_NOTES = `The shell is not stateful and will not remember any previous commands.\
+      When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
+      When suggesting subsequent shell commands ALWAYS format them in shell command blocks.\
+      Do NOT perform actions requiring special/admin privileges.\
+      ${PLATFORM_INFO}`;
 
 export const runTerminalCommandTool: Tool = {
   type: "function",
@@ -32,12 +37,7 @@ export const runTerminalCommandTool: Tool = {
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.RunTerminalCommand,
-    description: `Run a terminal command in the current directory.\
-      The shell is not stateful and will not remember any previous commands.\
-      When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
-      When suggesting subsequent shell commands ALWAYS format them in shell command blocks.\
-      Do NOT perform actions requiring special/admin privileges.\
-      ${PLATFORM_INFO}`,
+    description: `Run a terminal command in the current directory.\n${RUN_COMMAND_NOTES}`,
     parameters: {
       type: "object",
       required: ["command"],
@@ -54,5 +54,13 @@ export const runTerminalCommandTool: Tool = {
         },
       },
     },
+  },
+  defaultToolPolicy: "allowedWithPermission",
+  systemMessageDescription: {
+    prefix: `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
+${RUN_COMMAND_NOTES}
+You can also optionally include the waitForCompletion argument set to false to run the command in the background.      
+For example, to see the git log, you could respond with:`,
+    exampleArgs: [["command", "git log"]],
   },
 };

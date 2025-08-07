@@ -5,26 +5,36 @@ export interface RequestRuleArgs {
   name: string;
 }
 
-export function getRequestRuleDescription(
-  rules: ConfigDependentToolParams["rules"],
-): string {
+function getAvailableRules(rules: ConfigDependentToolParams["rules"]) {
   // Must be explicitly false and no globs
   const agentRequestedRules = rules.filter(
     (rule) => rule.alwaysApply === false && !rule.globs,
   );
 
-  const prefix =
-    "Use this tool to select additional rules, specifically based on their descriptions. Available rules:\n";
-
-  const body = agentRequestedRules
-    .map((rule) => `${rule.name}: ${rule.description}`)
-    .join("\n");
-
-  if (body.length === 0) {
-    return prefix + "No rules available.";
+  if (agentRequestedRules.length === 0) {
+    return "No rules available.";
   }
 
-  return prefix + body;
+  return agentRequestedRules
+    .map((rule) => `${rule.name}: ${rule.description}`)
+    .join("\n");
+}
+
+export function getRequestRuleDescription(
+  rules: ConfigDependentToolParams["rules"],
+): string {
+  const prefix =
+    "Use this tool to retrieve additional 'rules' that contain more context/instructions based on their descriptions. Available rules:\n";
+  return prefix + getAvailableRules(rules);
+}
+
+function getRequestRuleSystemMessageDescription(
+  rules: ConfigDependentToolParams["rules"],
+): string {
+  const prefix = `To retrieve "rules" that contain more context/instructions based on their descriptions, use the ${BuiltInToolNames.RequestRule} tool with the name of the rule. The available rules are:\n`;
+  const availableRules = getAvailableRules(rules);
+  const suffix = "\n\nFor example, you might respond with:";
+  return prefix + availableRules + suffix;
 }
 
 export const requestRuleTool: GetTool = ({ rules }) => ({
@@ -49,4 +59,9 @@ export const requestRuleTool: GetTool = ({ rules }) => ({
       },
     },
   },
+  systemMessageDescription: {
+    prefix: getRequestRuleSystemMessageDescription(rules),
+    exampleArgs: [["name", "rule_name"]],
+  },
+  defaultToolPolicy: "disabled",
 });

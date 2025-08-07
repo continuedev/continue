@@ -59,11 +59,16 @@ export const ToolPoliciesSection = () => {
   return (
     <>
       {(mode === "chat" || mode === "plan") && (
-        <div className="my-1 mb-3">
+        <div className="bg-background sticky top-0 z-10 my-1 mb-3">
           <Alert type="info" size="sm">
             <span className="text-2xs italic">{message}</span>
           </Alert>
         </div>
+      )}
+      {toolsByGroup.length === 0 && (
+        <span className="text-description text-sm italic">
+          No tools available
+        </span>
       )}
       {toolsByGroup.map(([groupName, tools]) => {
         const isGroupEnabled =

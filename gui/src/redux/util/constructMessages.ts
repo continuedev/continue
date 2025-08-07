@@ -2,30 +2,26 @@ import {
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
-  ModelDescription,
   RuleWithSource,
   TextMessagePart,
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
-import {
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
-  DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_PLAN_SYSTEM_MESSAGE,
-} from "core/llm/defaultSystemMessages";
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import {
+  CANCELLED_TOOL_CALL_MESSAGE,
+  NO_TOOL_CALL_OUTPUT_MESSAGE,
+} from "core/tools/constants";
+import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
+import { SystemMessageToolsFramework } from "core/tools/systemMessageTools/types";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
-
-export const NO_TOOL_CALL_OUTPUT_MESSAGE = "No tool output";
-export const CANCELLED_TOOL_CALL_MESSAGE = "The user cancelled this tool call.";
-
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -35,6 +31,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
+  useSystemToolsFramework?: SystemMessageToolsFramework,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
@@ -98,6 +95,25 @@ export function constructMessages(
         message: item.message,
       });
     } else if (item.message.role === "assistant") {
+      // When using system message tools, convert tool calls/states to text content
+      if (item.toolCallStates?.length && useSystemToolsFramework) {
+        const { userMessage, assistantMessage } =
+          convertToolCallStatesToSystemCallsAndOutput(
+            item.message,
+            item.toolCallStates ?? [],
+            useSystemToolsFramework,
+          );
+        msgs.push({
+          message: assistantMessage,
+          ctxItems: [],
+        });
+        msgs.push({
+          message: userMessage,
+          ctxItems: [],
+        });
+        continue;
+      }
+
       msgs.push({
         ctxItems: item.contextItems,
         message: item.message,
@@ -198,17 +214,4 @@ export function constructMessages(
     appliedRules,
     appliedRuleIndex,
   };
-}
-
-export function getBaseSystemMessage(
-  messageMode: string,
-  model: ModelDescription,
-): string {
-  if (messageMode === "agent") {
-    return model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
-  } else if (messageMode === "plan") {
-    return model.basePlanSystemMessage ?? DEFAULT_PLAN_SYSTEM_MESSAGE;
-  } else {
-    return model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
-  }
 }

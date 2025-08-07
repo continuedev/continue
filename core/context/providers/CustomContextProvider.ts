@@ -30,6 +30,10 @@ class CustomContextProviderClass implements IContextProvider {
   async loadSubmenuItems(args: LoadSubmenuItemsArgs) {
     return this.custom.loadSubmenuItems?.(args) ?? [];
   }
+
+  get deprecationMessage() {
+    return null;
+  }
 }
 
 export default CustomContextProviderClass;

@@ -43,7 +43,6 @@ export type GlobalContextType = {
   isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
   failedDocs: SiteIndexingConfig[];
-
   mcpOauthStorage: Record<
     string,
     {
@@ -52,6 +51,9 @@ export type GlobalContextType = {
       codeVerifier?: string;
     }
   >;
+  shownDeprecatedProviderWarnings: {
+    [providerTitle: string]: boolean;
+  };
 };
 
 /**
