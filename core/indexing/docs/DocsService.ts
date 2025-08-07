@@ -155,6 +155,61 @@ const siteIndexingConfigsAreEqualExceptTitleAndFavicon = (
   );
 };
 
+function removeSuffix(str: string, suffix: string): string {
+  return str.endsWith(suffix) ? str.slice(0, -suffix.length) : str;
+}
+
+export function getRootFromStartUrl(startUrl: URL): URL {
+  let rootUrl = startUrl;
+  // Remove hash and query params since those will definitely result in failed URL matching
+  rootUrl.hash = "";
+  rootUrl.search = "";
+
+  // For path name, we need to guess the most likely base path
+  //
+  // Some examples:
+  //
+  // startUrl: https://docs.github.com/en/actions
+  // rootUrl: https://docs.github.com/en/actions (keep as is)
+  //
+  // startUrl: https://jestjs.io/docs/29.7/getting-started
+  // rootUrl: https://jestjs.io/docs/29.7/ (there are a few sites like this which force you
+  // to a "getting-started" or similar path, but that is actually a sub-page)
+  //
+  // startUrl: https://www.sea-ql.org/SeaORM/docs/index/
+  // rootUrl: https://www.sea-ql.org/SeaORM/docs/ (similar case as above)
+  //
+  // startUrl: https://www.vapoursynth.com/doc/functions.html
+  // rootUrl: https://www.vapoursynth.com/doc/ (anything with a file extension cannot be a root URL)
+
+  const isLikelyIntroPath = (path: string): boolean => {
+    const strippedPath = path.toLowerCase();
+    return !!strippedPath.match(/\b(?:start|intro|index|begin)/);
+  };
+
+  const pathSegments = removeSuffix(rootUrl.pathname, "/").split("/");
+  const finalPathSegment = pathSegments.findLast(() => true);
+
+  if (!finalPathSegment) {
+    // This is already a subdomain root
+    return rootUrl;
+  }
+
+  if (
+    !rootUrl.pathname.endsWith("/") &&
+    !!finalPathSegment.match(/.*(?:\.[a-zA-Z0-9]+)/)
+  ) {
+    // This is a file, so remove it
+    pathSegments.pop();
+  } else if (isLikelyIntroPath(finalPathSegment)) {
+    // This is a landing page for the docs section, so remove it
+    pathSegments.pop();
+  }
+
+  rootUrl.pathname = pathSegments.join("/");
+  return rootUrl;
+}
+
 /*
   General process:
   - On config update:
@@ -492,7 +547,7 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     forceReindex: boolean = false,
   ): Promise<void> {
-    const { startUrl, useLocalCrawling, maxDepth, faviconUrl } =
+    const { startUrl, rootUrl, useLocalCrawling, maxDepth, faviconUrl } =
       siteIndexingConfig;
 
     // First, if indexing is already in process, don't attempt
@@ -620,7 +675,10 @@ export default class DocsService {
         useLocalCrawling,
         this.githubToken,
       );
-      const crawlerGen = docsCrawler.crawl(new URL(startUrl));
+      const crawlerGen = docsCrawler.crawl(
+        new URL(startUrl),
+        rootUrl ? new URL(rootUrl) : undefined,
+      );
 
       while (!done) {
         const result = await crawlerGen.next();

@@ -7,11 +7,14 @@ import { PageData } from "./DocsCrawler";
 export class DefaultCrawler {
   constructor(
     private readonly startUrl: URL,
+    private readonly rootUrl: URL,
     private readonly maxRequestsPerCrawl: number,
     private readonly maxDepth: number,
   ) {}
 
   async crawl(): Promise<PageData[]> {
+    // TODO: How do we edit the remote crawler? I see there is a `control-plane` folder
+    // but I don't see any reference to "startUrl" in there.
     const resp = await fetch(new URL("crawl", TRIAL_PROXY_URL).toString(), {
       method: "POST",
       headers: {
@@ -20,6 +23,7 @@ export class DefaultCrawler {
       },
       body: JSON.stringify({
         startUrl: this.startUrl.toString(),
+        rootUrl: this.rootUrl.toString(),
         maxDepth: this.maxDepth,
         limit: this.maxRequestsPerCrawl,
       }),
