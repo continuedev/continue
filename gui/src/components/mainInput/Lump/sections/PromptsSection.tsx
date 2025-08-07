@@ -81,7 +81,7 @@ function PromptRow({
       </div>
       <div className="flex items-center gap-2">
         <PencilIcon
-          className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125${!canEdit ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
+          className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125 ${!canEdit ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
           onClick={canEdit ? handleEditClick : undefined}
           aria-disabled={!canEdit}
         />
