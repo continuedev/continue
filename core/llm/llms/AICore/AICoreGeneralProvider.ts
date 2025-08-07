@@ -169,51 +169,55 @@ export class AICoreGeneralProvider extends BaseLLM {
 
         // // Chat Completion
 
-        let response;
-        try {
-            response = await orchestrationClient.chatCompletion(aiCorePrompt);
-        }
-        catch (e) {
-            throw e;
-        }
-        
-        const toolsCallsAiCore = response.getToolCalls();
-        const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseToolsResponce(toolsCallsAiCore)
-
-        const content = response.getContent() || ""
-
-        // Yield the assistant message with tool calls
-        const assistantMessage: ChatMessage = {
-            role: "assistant",
-            content: content,
-            toolCalls: toolCalls
-        };
-        yield assistantMessage;
-
-        // Streaming
+        // let response;
         // try {
-            
-        //     let response = await orchestrationClient.stream(aiCorePrompt)
-        //     for await (const chunk of response.stream) {
-        //         const toolsCallsAiCore = chunk.getDeltaToolCalls();
-        //         const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseDeltaToolResponce(toolsCallsAiCore)
-        //         const content = chunk.getDeltaContent() || ""
-        //         if(!content && toolCalls.length === 0){
-        //         }
-        //         else{
-        //             // Yield the assistant message with tool calls
-        //             const assistantMessage: ChatMessage = {
-        //                 role: "assistant",
-        //                 content: content,
-        //                 toolCalls: toolCalls
-        //             };
-        //             yield assistantMessage;
-        //         }
-        //     }
+        //     response = await orchestrationClient.chatCompletion(aiCorePrompt);
         // }
         // catch (e) {
         //     throw e;
         // }
+        
+        // const toolsCallsAiCore = response.getToolCalls();
+        // const toolCalls: ToolCallDelta[] = (!toolsCallsAiCore) ? [] : this.parseToolsResponce(toolsCallsAiCore)
+
+        // const content = response.getContent() || ""
+
+        // // Yield the assistant message with tool calls
+        // const assistantMessage: ChatMessage = {
+        //     role: "assistant",
+        //     content: content,
+        //     toolCalls: toolCalls
+        // };
+        // yield assistantMessage;
+
+        // Streaming
+        try {
+            let response = await orchestrationClient.stream(aiCorePrompt)
+            for await (const chunk of response.stream) {
+                const content = chunk.getDeltaContent();
+                if(content){
+                    const assistantMessage: ChatMessage = {
+                        role: "assistant",
+                        content: content,
+                        toolCalls: []
+                    };
+                    yield assistantMessage;
+                }
+            }
+            const toolsCallsAiCore = response.getToolCalls();
+            if(toolsCallsAiCore && toolsCallsAiCore.length > 0){
+                const toolCalls: ToolCallDelta[] = this.parseToolsResponce(toolsCallsAiCore)
+                const assistantMessage: ChatMessage = {
+                    role: "assistant",
+                    content: "",
+                    toolCalls: toolCalls
+                };
+                yield assistantMessage;
+            }
+        }
+        catch (e) {
+            throw e;
+        }
 
     }
     parseDeltaToolResponce(toolsCallsAiCore: ToolCallChunk[]): ToolCallDelta[] {
