@@ -68,6 +68,7 @@ async function modelConfigToBaseLLM({
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),
+      nextEdit: model.capabilities?.includes("next_edit"),
     },
     autocompleteOptions: model.autocompleteOptions,
   };
