@@ -545,9 +545,17 @@ export class NextEditProvider {
       };
     } else if (modelName.includes("model-1")) {
       ctx = {
-        userEdits: historyDiff ?? this.diffContext,
+        recentlyViewedCodeSnippets:
+          snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
+            filepath: snip.filepath,
+            content: snip.content,
+          })) ?? [],
+        currentFileContent: helper.fileContents,
+        editableRegionStartLine,
+        editableRegionEndLine,
+        editDiffHistory: this.diffContext,
+        currentFilePath: helper.filepath,
         languageShorthand: helper.lang.name,
-        userExcerpts: helper.fileContents,
       };
     } else {
       ctx = {};
