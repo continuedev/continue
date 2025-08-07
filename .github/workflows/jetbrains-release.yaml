@@ -140,7 +140,7 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+          ./gradlew printProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # # Setup Node.js
       - name: Use Node.js from .nvmrc
@@ -365,7 +365,7 @@ jobs:
 
       # Download the binary artifact
       - name: Download binary artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
           path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
@@ -504,7 +504,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
-          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
+          key: plugin-verifier-${{ hashFiles('build/printProductsReleases.txt') }}
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
@@ -536,7 +536,7 @@ jobs:
       #     ./gradlew patchChangelog --release-note="$CHANGELOG"
 
       - name: Download the plugin
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/

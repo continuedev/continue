@@ -61,9 +61,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ) {
         return true;
       }
+
       // LGAI EXAONE models expose an OpenAI-compatible API with tool
       // calling support when served via frameworks like vLLM
       if (model.toLowerCase().includes("exaone")) {
+        return true;
+      }
+
+      if (model.toLowerCase().includes("gpt-oss")) {
         return true;
       }
 
@@ -182,6 +187,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "mistral",
           "devstral",
           "exaone",
+          "gpt-oss",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
         return true;
@@ -245,6 +251,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o1",
         "openai/o3",
         "openai/o4",
+        "openai/gpt-oss",
         "anthropic/claude-3",
         "anthropic/claude-4",
         "microsoft/phi-3",
@@ -329,8 +336,6 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/gpt/, /4/],
     [/claude/, /sonnet/, /3\.5|3\.7|3-5|3-7|-4/],
     [/claude/, /opus/, /-4/],
-    // EXAONE 4.0, 4.0-1, and 4.0.1 variants
-    [/exaone/, /4\.0(?:[-.]1)?/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {
