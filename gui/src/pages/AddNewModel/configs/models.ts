@@ -1100,7 +1100,7 @@ export const models: { [key: string]: ModelPackage } = {
     description: "OpenAI's next-generation, high-intelligence flagship model",
     params: {
       model: "gpt-5",
-      contextLength: 128_000,
+      contextLength: 400_000,
       title: "GPT-5",
     },
     providerOptions: ["openai"],
