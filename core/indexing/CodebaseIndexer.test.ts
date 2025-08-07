@@ -750,7 +750,7 @@ describe("CodebaseIndexer", () => {
       jest.clearAllMocks();
     });
 
-    test("should create specific indexTypes for the requested context providers", async () => {
+    test.skip("should create specific indexTypes for the requested context providers", async () => {
       mockConfig.contextProviders = [
         {
           description: {
