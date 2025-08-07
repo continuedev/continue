@@ -245,12 +245,14 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
       // Trigger warning message
       ideMessenger.ide.showToast(
         "warning",
-        fileSize > 0 ? "File exceeds context length" : "Can't load the file",
+        fileSize > 0
+          ? "File exceeds model's context length"
+          : "Error loading file",
         {
           modal: true,
           detail:
             fileSize > 0
-              ? `'${item.title}' is ${formatFileSize(fileSize)} which exceeds the allowed context length and cannot be processed by the model`
+              ? `'${item.title}' cannot be added because it exceeds the model's allowed context length. File size: ${formatFileSize(fileSize)}`
               : `'${item.title}' could not be loaded. Please check if the file exists and has the correct permissions.`,
         },
       );
