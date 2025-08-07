@@ -36,6 +36,7 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
     implementation("com.posthog.java:posthog:1.2.0")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
