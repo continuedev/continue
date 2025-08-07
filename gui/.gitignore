@@ -25,3 +25,5 @@ dist-ssr
 
 # test result files
 coverage
+# Sentry Config File
+.env.sentry-build-plugin
