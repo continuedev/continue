@@ -14,6 +14,7 @@ import {
 import { ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 
 export const callToolById = createAsyncThunk<
   void,
@@ -36,9 +37,11 @@ export const callToolById = createAsyncThunk<
 
   // Check if this is an auto-approved tool
   const toolSettings = state.ui.toolSettings;
-  const isAutoApproved =
-    toolSettings[toolCallState.toolCall.function.name] ===
-    "allowedWithoutPermission";
+  const toolPolicy =
+    toolSettings[toolCallState.toolCall.function.name] ??
+    toolCallState.tool?.defaultToolPolicy ??
+    DEFAULT_TOOL_SETTING;
+  const isAutoApproved = toolPolicy === "allowedWithoutPermission";
 
   posthog.capture("gui_tool_call_decision", {
     decision: isAutoApproved ? "auto_accept" : "accept",

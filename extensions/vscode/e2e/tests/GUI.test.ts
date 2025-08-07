@@ -287,7 +287,6 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.MD);
 
     it("should render tool call", async () => {
-      await GUIActions.toggleToolPolicy(view, "view_diff", 0);
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
