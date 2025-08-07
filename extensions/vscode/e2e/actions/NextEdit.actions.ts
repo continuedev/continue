@@ -50,7 +50,7 @@ export class NextEditActions {
 
     await new Workbench().executeCommand("Continue: Force Next Edit");
     console.log("Executed 'Force Next Edit' command");
-    
+
     // console.log("Waiting for SVG decoration to appear...");
     // await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.MD);
     // console.log("Wait completed, looking for decoration...");

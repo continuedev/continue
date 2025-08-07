@@ -1,6 +1,5 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 const NAME_ARG_DESC =
   "Short, descriptive name summarizing the rule's purpose (e.g. 'React Standards', 'Type Hints')";
@@ -60,9 +59,9 @@ export const createRuleBlock: Tool = {
       },
     },
   },
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.CreateRuleBlock,
-    `Sometimes the user will provide feedback or guidance on your output. If you were not aware of these "rules", consider using the ${BuiltInToolNames.CreateRuleBlock} tool to persist the rule for future interactions.
+  defaultToolPolicy: "allowedWithPermission",
+  systemMessageDescription: {
+    prefix: `Sometimes the user will provide feedback or guidance on your output. If you were not aware of these "rules", consider using the ${BuiltInToolNames.CreateRuleBlock} tool to persist the rule for future interactions.
 This tool cannot be used to edit existing rules, but you can search in the ".continue/rules" folder and use the edit tool to manage rules.
 To create a rule, respond with a ${BuiltInToolNames.CreateRuleBlock} tool call and the following arguments:
 - name: ${NAME_ARG_DESC}
@@ -71,7 +70,7 @@ To create a rule, respond with a ${BuiltInToolNames.CreateRuleBlock} tool call a
 - globs: ${GLOB_ARG_DESC}
 - alwaysApply: ${ALWAYS_APPLY_DESC}
 For example:`,
-    [
+    exampleArgs: [
       ["name", "Use PropTypes"],
       [
         "rule",
@@ -84,5 +83,5 @@ For example:`,
       ["globs", "**/*.js"],
       ["alwaysApply", "false"],
     ],
-  ),
+  },
 };

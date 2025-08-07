@@ -119,11 +119,11 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       results?.sort(
         (a, b) => scores[chunkIndexMap.get(b)!] - scores[chunkIndexMap.get(a)!],
       );
-      results = results.slice(-this.options.nFinal);
+      results = results.slice(0, this.options.nFinal);
       return results;
     } catch (e) {
       console.warn(`Failed to rerank retrieval results\n${e}`);
-      return chunks.slice(-this.options.nFinal);
+      return chunks.slice(0, this.options.nFinal);
     }
   }
 

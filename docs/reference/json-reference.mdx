@@ -1,12 +1,18 @@
 ---
-title: "config.json Reference"
+title: "config.json Reference (Deprecated)"
+description: "Legacy configuration reference for config.json - use config.yaml instead"
+noindex: true
 ---
 
-<Info>
-  We recently introduced a new configuration format, `config.yaml`, to replace
-  `config.json`. See the `config.yaml` reference and migration guide
-  [here](/reference).
-</Info>
+<Warning>
+  **This page documents deprecated functionality.** For creating slash commands and customizing Continue, please use:
+  - [Prompt blocks and prompt files](/customize/deep-dives/slash-commands) for slash commands
+  - [config.yaml](/reference) for configuration
+
+See the `config.yaml` reference and migration guide
+[here](/reference).
+
+</Warning>
 
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
 
@@ -468,16 +474,19 @@ Several experimental config parameters are available, as described below:
 - `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
 
 - `modelRoles`:
+
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
 
 - `quickActions`: Array of custom quick actions
+
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
   - `sendToChat`: If `true`, sends result to chat; else inserts in document. Default is `false`.
 
 - `contextMenuPrompts`:
+
   - `comment`: Prompt for commenting code.
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
@@ -529,15 +538,18 @@ Some deprecated `config.json` settings are no longer stored in config and have b
 - `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
 
 - `tabAutocompleteOptions`
+
   - `useCache`: This value will override during migration.
   - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
   - `multilineCompletions`: This value will override during migration.
 
 - `experimental`
+
   - `useChromiumForDocsCrawling`: This value will override during migration.
   - `readResponseTTS`: This value will override during migration.
 
 - `ui` - all will override during migration
+
   - `codeBlockToolbarPosition`
   - `fontSize`
   - `codeWrap`

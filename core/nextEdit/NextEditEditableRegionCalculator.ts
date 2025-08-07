@@ -2,9 +2,14 @@ import Parser from "web-tree-sitter";
 import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
 import { getAst } from "../autocomplete/util/ast";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker";
+import {
+  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+} from "./constants";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
+  Sliding = "sliding",
   Rerank = "rerank",
   StaticRerank = "staticRerank",
   Static = "static",
@@ -17,6 +22,8 @@ export async function getNextEditableRegion(
   switch (strategy) {
     case EditableRegionStrategy.Naive:
       return naiveJump(ctx);
+    case EditableRegionStrategy.Sliding:
+      return slidingJump(ctx);
     case EditableRegionStrategy.Rerank:
       return await rerankJump(ctx);
     case EditableRegionStrategy.StaticRerank:
@@ -49,6 +56,63 @@ function naiveJump(ctx: any): RangeInFile[] | null {
       },
     },
   ];
+}
+
+// Sliding splits the file using into sliding window.
+function slidingJump(ctx: any): RangeInFile[] | null {
+  const { fileLines, filepath } = ctx;
+  if (!fileLines || !filepath) {
+    console.warn("Missing required context for naive jump");
+    return null;
+  }
+
+  const windowSize =
+    NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN +
+    NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN +
+    1; // 1 for current line;
+
+  if (fileLines.length <= windowSize) {
+    return [
+      {
+        filepath,
+        range: {
+          start: { line: 0, character: 0 },
+          end: {
+            line: fileLines.length - 1,
+            character: fileLines[fileLines.length - 1].length,
+          },
+        },
+      },
+    ];
+  }
+
+  const slidingStep = Math.max(1, Math.floor(windowSize / 2));
+  const ranges: RangeInFile[] = [];
+
+  for (
+    let startLine = 0;
+    startLine < fileLines.length;
+    startLine += slidingStep
+  ) {
+    const endLine = Math.min(startLine + windowSize - 1, fileLines.length - 1);
+
+    ranges.push({
+      filepath,
+      range: {
+        start: { line: startLine, character: 0 },
+        end: {
+          line: endLine,
+          character: fileLines[endLine].length,
+        },
+      },
+    });
+
+    if (endLine >= fileLines.length - 1) {
+      break;
+    }
+  }
+
+  return ranges;
 }
 
 // A rerank jump splits the current file into chunks.

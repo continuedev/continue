@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Something else? Message us on Discord :)
+  - name: Have a feature request?
+    url: https://github.com/continuedev/continue/discussions
+    about: Upvote existing suggestions or make a new one
+  - name: Have a question?
+    url: https://github.com/continuedev/continue/discussions
+    about: Search for existing questions or ask a new one
+  - name: Something else? Join the Continue Community
     url: https://discord.gg/vapESyrFmJ
-    about: Join our Discord to ask questions, share thoughts, and more!
+    about: Join our Discord to chat with our community

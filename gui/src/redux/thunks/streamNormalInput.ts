@@ -3,6 +3,7 @@ import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -24,6 +25,7 @@ import { constructMessages } from "../util/constructMessages";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
+import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
@@ -146,6 +148,9 @@ export const streamNormalInput = createAsyncThunk<
     // Use the centralized selector to determine if system message tools should be used
     const useSystemTools = selectUseSystemMessageTools(state);
     const useNativeTools = !useSystemTools && supportsNativeTools;
+    const systemToolsFramework = useSystemTools
+      ? new SystemMessageToolCodeblocksFramework()
+      : undefined;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
@@ -170,8 +175,12 @@ export const streamNormalInput = createAsyncThunk<
       selectedChatModel,
     );
 
-    const systemMessage = useSystemTools
-      ? addSystemMessageToolsToSystemMessage(baseSystemMessage, activeTools)
+    const systemMessage = systemToolsFramework
+      ? addSystemMessageToolsToSystemMessage(
+          systemToolsFramework,
+          baseSystemMessage,
+          activeTools,
+        )
       : baseSystemMessage;
 
     const withoutMessageIds = state.session.history.map((item) => {
@@ -184,7 +193,7 @@ export const streamNormalInput = createAsyncThunk<
       systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
-      !useNativeTools,
+      systemToolsFramework,
     );
 
     // TODO parallel tool calls will cause issues with this
@@ -232,8 +241,8 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
-    if (!useNativeTools && activeTools.length > 0) {
-      gen = interceptSystemToolCalls(gen, streamAborter);
+    if (systemToolsFramework && activeTools.length > 0) {
+      gen = interceptSystemToolCalls(gen, streamAborter, systemToolsFramework);
     }
 
     let next = await gen.next();
@@ -276,7 +285,32 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-    dispatch(setInactive());
+
+    // Check if we have any tool calls that were just generated
+    const newState = getState();
+    const toolSettings = newState.ui.toolSettings;
+    const allToolCallStates = selectCurrentToolCalls(newState);
+    const generatingToolCalls = allToolCallStates.filter(
+      (toolCallState) => toolCallState.status === "generating",
+    );
+
+    // Check if ALL generating tool calls are auto-approved
+    const allAutoApproved =
+      generatingToolCalls.length > 0 &&
+      generatingToolCalls.every(
+        (toolCallState) =>
+          toolSettings[toolCallState.toolCall.function.name] ===
+          "allowedWithoutPermission",
+      );
+
+    // Only set inactive if:
+    // 1. There are no tool calls, OR
+    // 2. There are tool calls but they require manual approval
+    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
+    if (generatingToolCalls.length === 0 || !allAutoApproved) {
+      dispatch(setInactive());
+    }
+
     await handleToolCallExecution(dispatch, getState);
   },
 );
