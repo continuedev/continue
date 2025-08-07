@@ -345,7 +345,7 @@ export class NextEditProvider {
     // In vscode, this check is done in extensions/vscode/src/extension/VsCodeExtension.ts.
     // For other editors, this check should be done in their respective config reloaders.
     // This is left for a final check.
-    if (!modelSupportsNextEdit(llm.model, llm.title, llm.capabilities)) {
+    if (!modelSupportsNextEdit(llm.capabilities, llm.model, llm.title)) {
       console.error(`${llm.model} is not capable of next edit.`);
       return { token, startTime, helper: undefined };
     }

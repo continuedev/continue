@@ -205,51 +205,55 @@ test("autodetectTemplateType handles models with mixed keywords", () => {
 describe("modelSupportsNextEdit", () => {
   describe("when capabilities.nextEdit is defined", () => {
     it("should return true when capabilities.nextEdit is true", () => {
-      const result = modelSupportsNextEdit("any-model", "Any Title", {
-        nextEdit: true,
-      });
-
-      expect(result).toBe(true);
+      expect(
+        modelSupportsNextEdit(
+          {
+            nextEdit: true,
+          },
+          "any-model",
+          "Any Title",
+        ),
+      ).toBe(true);
     });
 
     it("should return false when capabilities.nextEdit is false", () => {
-      const result = modelSupportsNextEdit(
-        "mercury-coder-nextedit",
-        "Mercury Coder",
-        { nextEdit: false },
-      );
-
-      expect(result).toBe(false);
+      expect(
+        modelSupportsNextEdit(
+          { nextEdit: false },
+          "mercury-coder-nextedit",
+          "Mercury Coder",
+        ),
+      ).toBe(false);
     });
 
     it("should prioritize capabilities over model name matching", () => {
       // Even though model name matches, capabilities should take precedence.
-      const result = modelSupportsNextEdit(
-        "mercury-coder-nextedit",
-        "Mercury Coder",
-        { nextEdit: false },
-      );
-
-      expect(result).toBe(false);
+      expect(
+        modelSupportsNextEdit(
+          { nextEdit: false },
+          "mercury-coder-nextedit",
+          "Mercury Coder",
+        ),
+      ).toBe(false);
     });
   });
 
   describe("when capabilities.nextEdit is undefined", () => {
     it("should return true for mercury-coder-nextedit model (case insensitive)", () => {
       expect(
-        modelSupportsNextEdit("Mercury-Coder-Nextedit", undefined, undefined),
+        modelSupportsNextEdit(undefined, "Mercury-Coder-Nextedit", undefined),
       ).toBe(true);
     });
 
     it("should return true for model-1", () => {
-      expect(modelSupportsNextEdit("model-1", undefined, undefined)).toBe(true);
+      expect(modelSupportsNextEdit(undefined, "model-1", undefined)).toBe(true);
     });
 
     it("should return true when model contains supported model name as substring", () => {
       expect(
         modelSupportsNextEdit(
-          "provider/mercury-coder-nextedit-v2",
           undefined,
+          "provider/mercury-coder-nextedit-v2",
           undefined,
         ),
       ).toBe(true);
@@ -258,67 +262,75 @@ describe("modelSupportsNextEdit", () => {
     it("should return true when title contains supported model name", () => {
       expect(
         modelSupportsNextEdit(
+          undefined,
           "some-model",
           "This is mercury-coder-nextedit model",
-          undefined,
         ),
       ).toBe(true);
     });
 
     it("should return true when title contains model-1", () => {
       expect(
-        modelSupportsNextEdit("some-model", "model-1 deployment", undefined),
+        modelSupportsNextEdit(undefined, "some-model", "model-1 deployment"),
       ).toBe(true);
     });
 
     it("should return true for unsupported models that have capabilities explicitly set to true", () => {
       expect(
-        modelSupportsNextEdit("gpt-4", "GPT-4 Model", {
-          nextEdit: true,
-        }),
+        modelSupportsNextEdit(
+          {
+            nextEdit: true,
+          },
+          "gpt-4",
+          "GPT-4 Model",
+        ),
       ).toBe(true);
     });
 
     it("should return false for unsupported models", () => {
-      expect(modelSupportsNextEdit("gpt-4", "GPT-4 Model", undefined)).toBe(
+      expect(modelSupportsNextEdit(undefined, "gpt-4", "GPT-4 Model")).toBe(
         false,
       );
     });
 
     it("should return false when model and title are both undefined/null", () => {
-      expect(modelSupportsNextEdit("", undefined, undefined)).toBe(false);
+      expect(modelSupportsNextEdit(undefined, "", undefined)).toBe(false);
     });
 
     it("should return false when model and title do not contain supported names", () => {
       expect(
-        modelSupportsNextEdit("claude-3", "Claude 3 Sonnet", undefined),
+        modelSupportsNextEdit(undefined, "claude-3", "Claude 3 Sonnet"),
       ).toBe(false);
     });
   });
 
   describe("edge cases", () => {
     it("should handle empty strings", () => {
-      expect(modelSupportsNextEdit("", "", undefined)).toBe(false);
+      expect(modelSupportsNextEdit(undefined, "", "")).toBe(false);
     });
 
     it("should handle undefined title gracefully", () => {
       expect(
-        modelSupportsNextEdit("mercury-coder-nextedit", undefined, undefined),
+        modelSupportsNextEdit(undefined, "mercury-coder-nextedit", undefined),
       ).toBe(true);
     });
 
     it("should handle case sensitivity correctly", () => {
       expect(
-        modelSupportsNextEdit("MERCURY-CODER-NEXTEDIT", "MODEL-1", undefined),
+        modelSupportsNextEdit(undefined, "MERCURY-CODER-NEXTEDIT", "MODEL-1"),
       ).toBe(true);
     });
 
     it("should handle capabilities with other properties", () => {
       expect(
-        modelSupportsNextEdit("unsupported-model", undefined, {
-          nextEdit: true,
-          uploadImage: false,
-        }),
+        modelSupportsNextEdit(
+          {
+            nextEdit: true,
+            uploadImage: false,
+          },
+          "unsupported-model",
+          undefined,
+        ),
       ).toBe(true);
     });
   });
