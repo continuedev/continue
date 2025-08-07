@@ -709,96 +709,97 @@ describe("CodebaseIndexer", () => {
         ]);
       });
     });
-  });
 
-  describe("getIndexesToBuild", () => {
-    let indexer: CodebaseIndexer;
-    let mockConfig: any;
-    let mockEmbeddingsModel: any;
-    let mockIdeSettings: any;
+    describe("getIndexesToBuild", () => {
+      let indexer: CodebaseIndexer;
+      let mockConfig: any;
+      let mockEmbeddingsModel: any;
+      let mockIdeSettings: any;
 
-    beforeEach(async () => {
-      indexer = new CodebaseIndexer(
-        testConfigHandler,
-        testIde,
-        mockMessenger as any,
-        false,
-      );
+      beforeEach(async () => {
+        indexer = new CodebaseIndexer(
+          testConfigHandler,
+          testIde,
+          mockMessenger as any,
+          false,
+        );
 
-      mockEmbeddingsModel = {
-        maxEmbeddingChunkSize: 1000,
-        model: "test-model",
-        provider: "test-provider",
-      };
+        mockEmbeddingsModel = {
+          maxEmbeddingChunkSize: 1000,
+          model: "test-model",
+          provider: "test-provider",
+        };
 
-      mockIdeSettings = {
-        remoteConfigServerUrl: "http://test.com",
-        userToken: "test-token",
-      };
+        mockIdeSettings = {
+          remoteConfigServerUrl: "http://test.com",
+          userToken: "test-token",
+        };
 
-      mockConfig = {
-        selectedModelByRole: {
-          embed: mockEmbeddingsModel,
-        },
-        contextProviders: [],
-      };
-
-      jest.spyOn(testIde, "getIdeSettings").mockResolvedValue(mockIdeSettings);
-    });
-
-    afterEach(async () => {
-      jest.clearAllMocks();
-      await new Promise((resolve) => setTimeout(resolve, 500)); // wait for error logs to cleanup
-    });
-
-    test("should create specific indexTypes for the requested context providers", async () => {
-      mockConfig.contextProviders = [
-        {
-          description: {
-            dependsOnIndexing: ["chunk", "codeSnippets"],
+        mockConfig = {
+          selectedModelByRole: {
+            embed: mockEmbeddingsModel,
           },
-        },
-      ];
+          contextProviders: [],
+        };
 
-      jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
-        config: mockConfig,
-        errors: [],
-        configLoadInterrupted: false,
+        jest
+          .spyOn(testIde, "getIdeSettings")
+          .mockResolvedValue(mockIdeSettings);
       });
 
-      const indexes = (await (
-        indexer as any
-      ).getIndexesToBuild()) as CodebaseIndex[];
-
-      expect(indexes).toHaveLength(2);
-      expect(indexes[0].artifactId).toBe("chunks");
-      expect(indexes[1].artifactId).toBe("codeSnippets");
-    });
-
-    test("should handle duplicate contexts", async () => {
-      mockConfig.contextProviders = [
-        {
-          description: {
-            dependsOnIndexing: ["codeSnippets"],
-          },
-        },
-        {
-          description: {
-            dependsOnIndexing: ["codeSnippets"],
-          },
-        },
-      ];
-
-      jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
-        config: mockConfig,
-        errors: [],
-        configLoadInterrupted: false,
+      afterEach(() => {
+        jest.clearAllMocks();
       });
 
-      const indexes = await (indexer as any).getIndexesToBuild();
+      test("should create specific indexTypes for the requested context providers", async () => {
+        mockConfig.contextProviders = [
+          {
+            description: {
+              dependsOnIndexing: ["chunk", "codeSnippets"],
+            },
+          },
+        ];
 
-      expect(indexes).toHaveLength(1);
-      expect(indexes[0].artifactId).toBe("codeSnippets");
+        jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
+          config: mockConfig,
+          errors: [],
+          configLoadInterrupted: false,
+        });
+
+        const indexes = (await (
+          indexer as any
+        ).getIndexesToBuild()) as CodebaseIndex[];
+
+        expect(indexes).toHaveLength(2);
+        expect(indexes[0].artifactId).toBe("chunks");
+        expect(indexes[1].artifactId).toBe("codeSnippets");
+      });
+
+      test("should handle duplicate contexts", async () => {
+        mockConfig.contextProviders = [
+          {
+            description: {
+              dependsOnIndexing: ["codeSnippets"],
+            },
+          },
+          {
+            description: {
+              dependsOnIndexing: ["codeSnippets"],
+            },
+          },
+        ];
+
+        jest.spyOn(testConfigHandler, "loadConfig").mockResolvedValue({
+          config: mockConfig,
+          errors: [],
+          configLoadInterrupted: false,
+        });
+
+        const indexes = await (indexer as any).getIndexesToBuild();
+
+        expect(indexes).toHaveLength(1);
+        expect(indexes[0].artifactId).toBe("codeSnippets");
+      });
     });
   });
 });
