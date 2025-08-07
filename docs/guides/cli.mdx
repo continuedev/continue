@@ -1,0 +1,93 @@
+---
+title: "Continue CLI (cn)"
+description: "Context engineering on the command line"
+---
+
+<Warning>Continue CLI (cn) is currently in Alpha</Warning>
+
+`cn` is an open-source, modular coding agent for the command line.
+
+It provides a battle-tested agent loop so you can simply plug in your model, rules, and tools.
+
+![cn](/images/cn-demo.gif)
+
+## Quick start
+
+<Info>
+  Make sure you have [Node.js 18 or higher
+  installed](https://nodejs.org/en/download/).
+</Info>
+
+```bash
+# Install
+npm i -g @continuedev/cli
+
+# Interactive mode
+cn
+
+# Headless mode
+cn -p "Generate a conventional commit name for the current git changes"
+```
+
+## Basic usage
+
+Out of the box, `cn` comes with tools that let it understand your codebase, edit files, run terminal commands, and more (if you approve). You can ask `cn` to:
+
+- Fix failing tests
+- Find something in the codebase
+- Execute a refactor
+- Write a new feature
+- And a lot more
+
+Use '@' to give it file context, or '/' to run slash commands.
+
+If you want to resume a previous conversation, run `cn --resume`.
+
+## Headless mode (`-p` flag)
+
+In headless mode, `cn` will only output its final response, making it perfect for Unix Philosophy-style scripting and automation. For example, you could pipe your git diff into `cn` to generate a commit message, and write this to a file:
+
+```bash
+echo "$(git diff) Generate a conventional commit name for the current git changes" | cn -p > commit-message.txt
+```
+
+## Configuration
+
+`cn` uses [`config.yaml`](./reference.mdx), the exact same configuration file as Continue. This means that you can log in to [Continue Hub](./hub/introduction.mdx) or use your existing local configuration.
+
+To switch between configurations, you can use the `/config` slash command in `cn`, or you can start it with the `--config` flag (e.g. `cn --config continuedev/default-agent` or `cn --config ~/.continue/config.yaml`).
+
+### Models
+
+Learn how to add custom models [here](./customization/models.mdx). Then, you can use the `/model` slash command to switch between them in `cn`.
+
+### Rules
+
+`cn` supports [rules](./customize/deep-dives/rules.mdx) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from the hub. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
+
+### Tools
+
+`cn` supports MCP tools, which can be configured in the [same way](./customize/deep-dives/mcp.mdx) as with the Continue IDE extensions.
+
+#### Tool Permissions
+
+`cn` includes a tool permission system to make sure you approve of the agent's actions. It will begin with minimal permissions but as you approve tool calls, it will add policies to `~/.continue/permissions.yaml` to remember your preferences.
+
+If you want to explicitly allow or deny tools for a single session, you can use the command line flags `--allow`, `--ask`, and `--exclude`. For example:
+
+```bash
+# Always allow the Write tool
+cn --allow Write()
+
+# Always ask before running curl
+cn --ask Bash(curl*)
+
+# Never use the Fetch tool
+cn --exclude Fetch
+```
+
+## Troubleshooting
+
+Run `cn` with the `--verbose` flag to see more detailed logs. These will be output to `~/.continue/logs/cn.log`.
+
+If you have feedback on the alpha, please [share in our Discord](https://discord.com/invite/EfJEfdFnDQ).

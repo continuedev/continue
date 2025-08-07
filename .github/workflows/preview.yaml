@@ -80,8 +80,7 @@ jobs:
           arch: ${{ matrix.arch }}
           npm_config_arch: ${{ matrix.npm_config_arch }}
           pre-release: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v4
@@ -105,7 +104,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       # Download the .vsix artifacts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           pattern: "*-vsix"
           path: vsix-artifacts
@@ -143,7 +142,7 @@ jobs:
         run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
 
       # 1. Download the artifacts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           pattern: "*-vsix"
           path: vsix-artifacts

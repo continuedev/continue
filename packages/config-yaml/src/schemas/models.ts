@@ -36,6 +36,7 @@ export type ModelRole = z.infer<typeof modelRolesSchema>;
 export const modelCapabilitySchema = z.union([
   z.literal("tool_use"),
   z.literal("image_input"),
+  z.literal("next_edit"),
 ]);
 export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
 

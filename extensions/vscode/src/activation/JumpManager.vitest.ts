@@ -8,78 +8,66 @@ import { CompletionDataForAfterJump, JumpManager } from "./JumpManager";
 vi.mock("vscode", () => {
   return {
     window: {
-      createTextEditorDecorationType: vi.fn(() => ({
-        dispose: vi.fn(),
-      })),
       activeTextEditor: {
         document: {
-          lineAt: vi.fn((line) => ({
-            text: "Test line content",
-            lineNumber: line,
-          })),
-          lineCount: 10,
+          lineAt: vi.fn().mockReturnValue({
+            text: "Sample line text",
+            lineNumber: 0,
+          }),
+          getText: vi.fn().mockReturnValue("Sample document text"),
+          lineCount: 5,
+        },
+        selection: {
+          active: { line: 0, character: 0 },
         },
         setDecorations: vi.fn(),
-        selection: { active: { line: 0, character: 0 } },
         revealRange: vi.fn(),
-        visibleRanges: [{ start: { line: 0 }, end: { line: 5 } }],
+        visibleRanges: [
+          {
+            start: { line: 0, character: 0 },
+            end: { line: 4, character: 0 }, // Changed to be within document bounds
+          },
+        ],
       },
-      onDidChangeTextEditorSelection: vi.fn(() => ({
+      createTextEditorDecorationType: vi.fn().mockReturnValue({
         dispose: vi.fn(),
-      })),
-    },
-    commands: {
-      executeCommand: vi.fn(),
-      registerCommand: vi.fn(() => ({
+      }),
+      onDidChangeTextEditorSelection: vi.fn().mockReturnValue({
         dispose: vi.fn(),
-      })),
+      }),
     },
     Position: class {
-      line: number;
-      character: number;
-      constructor(line: number, character: number) {
-        this.line = line;
-        this.character = character;
-      }
-      isEqual(other: any): boolean {
+      constructor(
+        public line: number,
+        public character: number,
+      ) {}
+      isEqual(other: any) {
         return this.line === other.line && this.character === other.character;
       }
     },
-    Range: class {
-      start: any;
-      end: any;
-      constructor(
-        startLine: number,
-        startChar: number,
-        endLine: number,
-        endChar: number,
-      ) {
-        this.start = { line: startLine, character: startChar };
-        this.end = { line: endLine, character: endChar };
-      }
-    },
     Selection: class {
-      anchor: any;
-      active: any;
-      constructor(anchor: any, active: any) {
-        this.anchor = anchor;
-        this.active = active;
-      }
+      constructor(
+        public anchor: any,
+        public active: any,
+      ) {}
     },
-    TextEditorDecorationType: class {
-      dispose: () => void;
-      constructor() {
-        this.dispose = vi.fn();
-      }
+    Range: class {
+      constructor(
+        public start: any,
+        public end: any,
+      ) {}
     },
     TextEditorRevealType: {
-      InCenter: "inCenter",
+      InCenter: 2,
     },
     ThemeColor: class {
-      id: string;
-      constructor(id: string) {
-        this.id = id;
-      }
+      constructor(public id: string) {}
+    },
+    commands: {
+      executeCommand: vi.fn(),
+      registerCommand: vi.fn().mockReturnValue({
+        dispose: vi.fn(),
+      }),
     },
   };
 });
@@ -153,6 +141,7 @@ const createMockNextEditOutcome = (
     accepted: true,
     editableRegionStartLine: 1,
     editableRegionEndLine: 3,
+    diffLines: [],
 
     // Apply any overrides
     ...overrides,
@@ -165,6 +154,19 @@ describe("JumpManager", () => {
   beforeEach(() => {
     // Reset mocks
     vi.resetAllMocks();
+
+    // Re-setup the lineAt mock after reset
+    const mockLineAt = vi.fn().mockReturnValue({
+      text: "Sample line text",
+      lineNumber: 0,
+    });
+
+    // Ensure our mock is properly set up after reset
+    if (vscode.window.activeTextEditor?.document) {
+      vi.mocked(
+        vscode.window.activeTextEditor.document.lineAt,
+      ).mockImplementation(mockLineAt);
+    }
 
     // Clear any existing instance
     JumpManager.clearInstance();
@@ -216,18 +218,26 @@ describe("JumpManager", () => {
       const completionContent = "Test line content";
 
       // Mock document content to match the completion content
-      vscode.window.activeTextEditor!.document.lineAt = vi.fn(() => ({
+      const mockLineAt = vi.fn().mockReturnValue({
         text: "Test line content",
         lineNumber: 3,
-      })) as any;
+      });
 
-      await jumpManager.suggestJump(
+      // Override the mock for this specific test
+      vi.mocked(
+        vscode.window.activeTextEditor!.document.lineAt,
+      ).mockImplementation(mockLineAt);
+
+      const result = await jumpManager.suggestJump(
         currentPosition,
         nextJumpLocation,
         completionContent,
       );
 
-      // Jump should not be suggested, so decorations should not be created
+      // Jump should not be suggested
+      expect(result).toBe(false);
+      expect(jumpManager.isJumpInProgress()).toBe(false);
+      // Decorations should not be created
       expect(
         vscode.window.createTextEditorDecorationType,
       ).not.toHaveBeenCalled();
@@ -260,10 +270,11 @@ describe("JumpManager", () => {
 
     it("should render decoration for jump location outside visible range (above)", async () => {
       // Set visible range to be below the jump target
-      // @ts-ignore
-      vscode.window.activeTextEditor!.visibleRanges = [
-        { start: { line: 5 }, end: { line: 10 } },
-      ];
+      const mockEditor = vscode.window.activeTextEditor!;
+      Object.defineProperty(mockEditor, "visibleRanges", {
+        value: [{ start: { line: 5 }, end: { line: 10 } }],
+        writable: true,
+      });
 
       const currentPosition = new vscode.Position(6, 0);
       const nextJumpLocation = new vscode.Position(2, 0); // Outside visible range (above)
@@ -273,21 +284,30 @@ describe("JumpManager", () => {
       // Should create decoration
       expect(vscode.window.createTextEditorDecorationType).toHaveBeenCalled();
     });
+
+    it("should render decoration for jump location within visible range", async () => {
+      const currentPosition = new vscode.Position(1, 0);
+      const nextJumpLocation = new vscode.Position(2, 0); // Within visible range (0-4)
+
+      await jumpManager.suggestJump(currentPosition, nextJumpLocation);
+
+      // Should create decoration
+      expect(vscode.window.createTextEditorDecorationType).toHaveBeenCalled();
+      // Should reveal range
+      expect(vscode.window.activeTextEditor!.revealRange).toHaveBeenCalled();
+    });
   });
 
   describe("registerKeyListeners", () => {
     it("should register acceptJump command that moves cursor", async () => {
-      // Setup private method access (this is a bit of a hack for testing private methods)
+      // Setup private method access
       const privateJumpManager = jumpManager as any;
 
       // Mock context
       privateJumpManager._jumpDecorationVisible = true;
 
-      // Create editor mock
-      const editor = {
-        selection: null,
-        setSelection: vi.fn(),
-      };
+      // Create editor mock that matches the expected interface
+      const editor = vscode.window.activeTextEditor!;
 
       // Create jump position
       const jumpPosition = new vscode.Position(3, 5);
@@ -296,11 +316,14 @@ describe("JumpManager", () => {
       await privateJumpManager.registerKeyListeners(editor, jumpPosition);
 
       // Find the command handler
-      //@ts-ignore
-      const commandArgs = vscode.commands.registerCommand.mock.calls.find(
-        (call: any) => call[0] === "continue.acceptJump",
-      );
-      const acceptJumpHandler = commandArgs[1];
+      const commandArgs = vi
+        .mocked(vscode.commands.registerCommand)
+        .mock.calls.find((call: any) => call[0] === "continue.acceptJump");
+      expect(commandArgs).toBeDefined();
+      const acceptJumpHandler = commandArgs![1];
+
+      // Clear previous executeCommand calls
+      vi.mocked(vscode.commands.executeCommand).mockClear();
 
       // Call the handler
       await acceptJumpHandler();
@@ -314,6 +337,10 @@ describe("JumpManager", () => {
         "setContext",
         "continue.jumpDecorationVisible",
         false,
+      );
+      // Expect inline suggest to be triggered
+      expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+        "editor.action.inlineSuggest.trigger",
       );
     });
 
@@ -332,17 +359,16 @@ describe("JumpManager", () => {
 
       // Call the private method
       await privateJumpManager.registerKeyListeners(
-        {} as vscode.TextEditor,
+        vscode.window.activeTextEditor!,
         new vscode.Position(0, 0),
       );
 
       // Find the command handler
-      //@ts-ignore
-      const commandArgs = vscode.commands.registerCommand.mock.calls.find(
-        (call: any) => call[0] === "continue.rejectJump",
-      );
+      const commandArgs = vi
+        .mocked(vscode.commands.registerCommand)
+        .mock.calls.find((call: any) => call[0] === "continue.rejectJump");
       expect(commandArgs).toBeDefined();
-      const rejectJumpHandler = commandArgs?.[1];
+      const rejectJumpHandler = commandArgs![1];
       expect(rejectJumpHandler).toBeDefined();
 
       // Reset executeCommand mock
@@ -350,9 +376,6 @@ describe("JumpManager", () => {
 
       // Call the handler
       await rejectJumpHandler();
-
-      // Debug: Log state after calling handler
-      console.log("mockDeleteChain called:", mockDeleteChain.mock.calls.length);
 
       // Expect NextEditProvider.deleteChain to be called
       expect(mockDeleteChain).toHaveBeenCalled();
@@ -362,6 +385,44 @@ describe("JumpManager", () => {
         "setContext",
         "continue.jumpDecorationVisible",
         false,
+      );
+    });
+
+    it("should register selection change listener that rejects jump on cursor movement", async () => {
+      const privateJumpManager = jumpManager as any;
+      privateJumpManager._jumpDecorationVisible = true;
+      privateJumpManager._oldCursorPosition = new vscode.Position(1, 0);
+
+      const jumpPosition = new vscode.Position(3, 0);
+
+      await privateJumpManager.registerKeyListeners(
+        vscode.window.activeTextEditor!,
+        jumpPosition,
+      );
+
+      // Find the selection change listener
+      expect(vscode.window.onDidChangeTextEditorSelection).toHaveBeenCalled();
+      const selectionChangeListener = vi.mocked(
+        vscode.window.onDidChangeTextEditorSelection,
+      ).mock.calls[0][0];
+
+      // Mock a selection change event that moves cursor away from both old and jump positions
+      const newPosition = new vscode.Position(5, 0);
+      const mockEvent = {
+        textEditor: vscode.window.activeTextEditor!,
+        kind: undefined, // Can be undefined according to VSCode API
+        selections: [new vscode.Selection(newPosition, newPosition)], // Use proper Selection object
+      };
+
+      // Reset executeCommand mock
+      vi.mocked(vscode.commands.executeCommand).mockClear();
+
+      // Call the selection change listener
+      selectionChangeListener(mockEvent);
+
+      // Should trigger reject jump
+      expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+        "continue.rejectJump",
       );
     });
   });

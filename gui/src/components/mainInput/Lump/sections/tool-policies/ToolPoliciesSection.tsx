@@ -65,6 +65,11 @@ export const ToolPoliciesSection = () => {
           </Alert>
         </div>
       )}
+      {toolsByGroup.length === 0 && (
+        <span className="text-description text-sm italic">
+          No tools available
+        </span>
+      )}
       {toolsByGroup.map(([groupName, tools]) => {
         const isGroupEnabled =
           !allToolsOff && toolGroupSettings[groupName] !== "exclude";

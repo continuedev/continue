@@ -1,19 +1,16 @@
-let boundaryTypeIndex = 0;
+import { SystemMessageToolsFramework } from "./types";
 
-// Poor models are really bad at following instructions
-// Give some leeway in how the initiate
-const acceptedToolStarts: [string, string][] = [
-  ["```tool\n", "```tool\n"],
-  ["tool_name:", "```tool\nTOOL_NAME:"],
-];
-
-export function detectToolCallStart(buffer: string) {
+export function detectToolCallStart(
+  buffer: string,
+  toolCallFramework: SystemMessageToolsFramework,
+) {
+  const starts = toolCallFramework.acceptedToolCallStarts;
   let modifiedBuffer = buffer;
   let isInToolCall = false;
   let isInPartialStart = false;
   const lowerCaseBuffer = buffer.toLowerCase();
-  for (let i = 0; i < acceptedToolStarts.length; i++) {
-    const [start, replacement] = acceptedToolStarts[i];
+  for (let i = 0; i < starts.length; i++) {
+    const [start, replacement] = starts[i];
     if (lowerCaseBuffer.startsWith(start)) {
       // for non-standard cases like no ```tool codeblock, etc, replace before adding to buffer, case insensitive
       if (i !== 0) {

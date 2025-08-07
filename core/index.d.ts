@@ -261,6 +261,8 @@ export interface IContextProvider {
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
+
+  get deprecationMessage(): string | null;
 }
 
 export interface Session {
@@ -1072,6 +1074,11 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
+export type ToolPolicy =
+  | "allowedWithPermission"
+  | "allowedWithoutPermission"
+  | "disabled";
+
 export interface Tool {
   type: "function";
   function: {
@@ -1091,7 +1098,11 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
-  systemMessageDescription?: string;
+  systemMessageDescription?: {
+    prefix: string;
+    exampleArgs?: Array<[string, string | number]>;
+  };
+  defaultToolPolicy?: ToolPolicy;
 }
 
 interface ToolChoice {
@@ -1135,6 +1146,7 @@ export interface BaseCompletionOptions {
 export interface ModelCapability {
   uploadImage?: boolean;
   tools?: boolean;
+  nextEdit?: boolean;
 }
 
 export interface ModelDescription {

@@ -36,9 +36,7 @@ export const TRIAL_PROXY_URL =
 
 export class ControlPlaneClient {
   constructor(
-    private readonly sessionInfoPromise: Promise<
-      ControlPlaneSessionInfo | undefined
-    >,
+    readonly sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
     private readonly ideSettingsPromise: Promise<IdeSettings>,
     private readonly ideInfoPromise: Promise<IdeInfo>,
   ) {}
