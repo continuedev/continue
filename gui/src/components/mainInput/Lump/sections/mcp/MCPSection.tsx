@@ -181,37 +181,27 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
         {server.isProtectedResource && (
           <>
             <div
-              className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
-              data-tooltip-id={mcpAuthTooltipId}
+              className="text-lightgray flex cursor-pointer items-center hover:text-white hover:opacity-80"
+              data-tooltip-id={
+                server.status !== "authenticating" ? mcpAuthTooltipId : ""
+              }
             >
               {server.status === "error" ? (
-                <ShieldExclamationIcon className="h-3 w-3" />
+                <ShieldExclamationIcon
+                  className="h-3 w-3"
+                  onClick={onAuthenticate}
+                />
               ) : server.status === "authenticating" ? (
                 <GlobeAltIcon className="animate-spin-slow h-3 w-3" />
               ) : (
-                <ShieldCheckIcon className="h-3 w-3" />
+                <ShieldCheckIcon className="h-3 w-3" onClick={onRemoveAuth} />
               )}
             </div>
-            <ToolTip
-              place="left"
-              delayHide={2000}
-              hidden={server.status === "authenticating"}
-              id={mcpAuthTooltipId}
-            >
-              <div className="pointer-events-auto">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={
-                    server.status === "connected"
-                      ? onRemoveAuth
-                      : onAuthenticate
-                  }
-                >
-                  {server.status === "error" ? "Authenticate" : "Logout"}
-                </Button>
-              </div>
-            </ToolTip>
+            {server.status !== "authenticating" && (
+              <ToolTip place="left" id={mcpAuthTooltipId}>
+                {server.status === "error" ? "Authenticate" : "Logout"}
+              </ToolTip>
+            )}
           </>
         )}
         <EditBlockButton
