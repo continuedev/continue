@@ -41,7 +41,7 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
   },
   "model-1": {
     template:
-      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
+      "### User Edits:\n\n{{{editDiffHistory}}}\n### Context:\n{{{recentlyViewedCodeSnippets}}}\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{currentFileContent}}}```\n### Response:",
   },
 };
 
