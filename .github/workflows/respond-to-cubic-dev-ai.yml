@@ -1,4 +1,4 @@
-name: Respond to cubic-dev-ai Comments
+name: Respond to @continuedev Comments
 
 on:
   issue_comment:
@@ -16,29 +16,29 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Check if comment is from cubic-dev-ai
-        id: check-author
+      - name: Check if comment contains @continuedev
+        id: check-mention
         run: |
-          if [ "${{ github.event.comment.user.login }}" = "cubic-dev-ai" ]; then
-            echo "is_cubic_dev_ai=true" >> $GITHUB_OUTPUT
+          if echo "${{ github.event.comment.body }}" | grep -q "@continuedev"; then
+            echo "contains_mention=true" >> $GITHUB_OUTPUT
           else
-            echo "is_cubic_dev_ai=false" >> $GITHUB_OUTPUT
+            echo "contains_mention=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Get comment content
-        if: steps.check-author.outputs.is_cubic_dev_ai == 'true'
+        if: steps.check-mention.outputs.contains_mention == 'true'
         id: comment-content
         run: |
           # Store the comment body for debugging/logging
-          echo "Comment from cubic-dev-ai:"
+          echo "Comment mentioning @continuedev from ${{ github.event.comment.user.login }}:"
           echo "${{ github.event.comment.body }}"
 
-      - name: Respond to cubic-dev-ai comment
-        if: steps.check-author.outputs.is_cubic_dev_ai == 'true'
+      - name: Respond to @continuedev mention
+        if: steps.check-mention.outputs.contains_mention == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const commentBody = `👋 Thanks for the feedback, @cubic-dev-ai! 
+            const commentBody = `👋 Thanks for mentioning @continuedev, @${{ github.event.comment.user.login }}! 
 
             I've received your comment:
             > ${{ github.event.comment.body }}
@@ -53,7 +53,7 @@ jobs:
             });
 
       - name: Log acknowledgement
-        if: steps.check-author.outputs.is_cubic_dev_ai == 'true'
+        if: steps.check-mention.outputs.contains_mention == 'true'
         run: |
-          echo "✅ Successfully acknowledged comment from cubic-dev-ai on PR #${{ github.event.issue.number }}"
+          echo "✅ Successfully acknowledged comment mentioning @continuedev from ${{ github.event.comment.user.login }} on PR #${{ github.event.issue.number }}"
           echo "Original comment: ${{ github.event.comment.body }}"
