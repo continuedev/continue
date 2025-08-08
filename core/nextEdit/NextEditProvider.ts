@@ -37,6 +37,7 @@ import { replaceEscapedCharacters } from "../util/text.js";
 import {
   MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_SYSTEM_PROMPT,
+  MODEL_1_SYSTEM_PROMPT,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
@@ -60,8 +61,6 @@ import {
   PromptMetadata,
   RecentlyEditedRange,
 } from "./types.js";
-import { getAutocompleteContext } from "./context/autocompleteContextFetching.js";
-import { EditAggregator } from "./context/aggregateEdits.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -578,7 +577,9 @@ export class NextEditProvider {
 
     const systemPrompt: Prompt = {
       role: "system",
-      content: MERCURY_SYSTEM_PROMPT,
+      content: modelName.includes("mercury-coder-nextedit")
+        ? MERCURY_SYSTEM_PROMPT
+        : MODEL_1_SYSTEM_PROMPT,
     };
 
     return [systemPrompt, promptMetadata.prompt];
