@@ -7,6 +7,7 @@ import { env } from "./env.js";
 
 export interface CommandLineArgs {
   configPath?: string;
+  organizationSlug?: string; // Organization slug to use for this session
   prompt?: string; // Optional prompt argument
   resume?: boolean; // Resume from last session
   readonly?: boolean; // Start in plan mode (backward compatibility)
@@ -143,6 +144,14 @@ export function parseArgs(): CommandLineArgs {
     result.configPath = args[configIndex + 1];
   }
 
+  // Get organization slug from --org flag
+  const orgIndex = args.indexOf("--org");
+  if (orgIndex !== -1 && orgIndex + 1 < args.length) {
+    const orgValue = args[orgIndex + 1];
+    // Convert "personal" to undefined right away to simplify downstream logic
+    result.organizationSlug = orgValue.toLowerCase() === "personal" ? undefined : orgValue;
+  }
+
   // Get rules from --rule flags (can be specified multiple times)
   const ruleIndices: number[] = [];
   for (let i = 0; i < args.length; i++) {
@@ -161,7 +170,7 @@ export function parseArgs(): CommandLineArgs {
   }
 
   // Find the last argument that's not a flag or a flag value
-  const flagsWithValues = ["--config", "--rule", "--format"];
+  const flagsWithValues = ["--config", "--org", "--rule", "--format"];
   const nonFlagArgs = args.filter((arg, index) => {
     // Skip flags (starting with --)
     if (arg.startsWith("--") || arg === "-p") return false;

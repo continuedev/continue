@@ -2,7 +2,7 @@ import { render } from "ink-testing-library";
 import React from "react";
 
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import { TUIChat } from "../TUIChat.js";
+import { AppRoot } from "../AppRoot.js";
 
 export type TestMode = 'local' | 'remote';
 
@@ -68,8 +68,8 @@ export function testBothModes(
 export function renderInMode(mode: TestMode, props?: any) {
   return render(
     mode === 'remote' 
-      ? React.createElement(TUIChat, { remoteUrl: "http://localhost:3000", ...props })
-      : React.createElement(TUIChat, props)
+      ? React.createElement(AppRoot, { remoteUrl: "http://localhost:3000", ...props })
+      : React.createElement(AppRoot, props)
   ) as ReturnType<typeof render>; // Explicit type to avoid TypeScript issues
 }
 

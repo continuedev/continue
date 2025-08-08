@@ -96,7 +96,8 @@ export class AuthService extends BaseService<AuthServiceState> {
    * Ensure organization is selected, prompting if necessary
    */
   async ensureOrganization(
-    isHeadless: boolean = false
+    isHeadless: boolean = false,
+    cliOrganizationSlug?: string
   ): Promise<AuthServiceState> {
     if (!this.currentState.authConfig) {
       throw new Error("Not authenticated - cannot ensure organization");
@@ -105,11 +106,13 @@ export class AuthService extends BaseService<AuthServiceState> {
     logger.debug("Ensuring organization is selected", {
       currentOrgId: this.currentState.organizationId,
       isHeadless,
+      cliOrganizationSlug,
     });
 
     const updatedConfig = await ensureOrganization(
       this.currentState.authConfig,
-      isHeadless
+      isHeadless,
+      cliOrganizationSlug
     );
 
     this.setState({

@@ -5,7 +5,7 @@ import { PermissionMode } from "../permissions/types.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
 
-import { TUIChat } from "./TUIChat.js";
+import { AppRoot } from "./AppRoot.js";
 
 export { MarkdownRenderer } from "./MarkdownRenderer.js";
 
@@ -13,6 +13,7 @@ export async function startTUIChat(
   initialPrompt?: string,
   resume?: boolean,
   configPath?: string,
+  organizationSlug?: string,
   additionalRules?: string[],
   toolPermissionOverrides?: {
     allow?: string[];
@@ -26,6 +27,7 @@ export async function startTUIChat(
   if (!skipOnboarding) {
     initializeServices({
       configPath,
+      organizationSlug,
       rules: additionalRules,
       headless: false,
       toolPermissionOverrides,
@@ -37,7 +39,7 @@ export async function startTUIChat(
   // Start the TUI immediately - it will handle loading states
   const { unmount } = render(
     React.createElement(ServiceContainerProvider, {
-      children: React.createElement(TUIChat, {
+      children: React.createElement(AppRoot, {
         configPath,
         initialPrompt,
         resume,
@@ -62,7 +64,7 @@ export async function startRemoteTUIChat(
   // Start the TUI in remote mode - no services needed
   const { unmount } = render(
     React.createElement(ServiceContainerProvider, {
-      children: React.createElement(TUIChat, {
+      children: React.createElement(AppRoot, {
         remoteUrl,
         initialPrompt,
       })

@@ -4,6 +4,7 @@ import { Command } from "commander";
 export function addCommonOptions(command: Command): Command {
   return command
     .option("--config <path>", "Path to configuration file")
+    .option("--org <slug>", "Organization slug to use for this session (supported only in headless mode)")
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
     .option("-v, --verbose", "Enable verbose logging")
@@ -57,6 +58,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
   // List of options to inherit from parent if not present in subcommand
   const inheritableOptions = [
     'config',
+    'org',
     'readonly',
     'auto',
     'tools',

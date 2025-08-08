@@ -5,18 +5,19 @@ import * as path from "path";
 import { Box, Text, useInput } from "ink";
 import open from "open";
 import React, { useState } from "react";
+import useSWR from "swr";
 
+import { listUserOrganizations } from "../auth/workos.js";
 import { env } from "../env.js";
 import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
 
+import { useNavigation } from "./context/NavigationContext.js";
+
 const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
 
 interface FreeTrialTransitionUIProps {
-  onComplete: () => void;
-  onSwitchToLocalConfig?: () => void;
-  onFullReload?: () => void;
-  onShowConfigSelector?: () => void;
+  onReload: () => void;
 }
 
 /**
@@ -38,11 +39,9 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
 }
 
 const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
-  onComplete,
-  onSwitchToLocalConfig,
-  onFullReload,
-  onShowConfigSelector,
+  onReload,
 }) => {
+  const { navigateTo, closeCurrentScreen } = useNavigation();
   const [currentStep, setCurrentStep] = useState<
     "choice" | "enterApiKey" | "processing" | "success" | "error"
   >("choice");
@@ -51,12 +50,25 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [wasModelsSetup, setWasModelsSetup] = useState(false);
+  
+  // Fetch organizations using SWR
+  const { data: organizations } = useSWR(
+    "organizations",
+    listUserOrganizations,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      shouldRetryOnError: false,
+    }
+  );
+  
+  const hasOrganizations = organizations && organizations.length > 0;
 
   useInput((input, key) => {
     if (currentStep === "choice") {
       if (key.upArrow && selectedOption > 1) {
         setSelectedOption(selectedOption - 1);
-      } else if (key.downArrow && selectedOption < 3) {
+      } else if (key.downArrow && selectedOption < (hasOrganizations ? 4 : 3)) {
         setSelectedOption(selectedOption + 1);
       } else if (input === "1") {
         setSelectedOption(1);
@@ -64,6 +76,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         setSelectedOption(2);
       } else if (input === "3") {
         setSelectedOption(3);
+      } else if (input === "4" && hasOrganizations) {
+        setSelectedOption(4);
       } else if (key.return) {
         handleOptionSelect();
       }
@@ -83,11 +97,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       }
     } else if (currentStep === "success" || currentStep === "error") {
       if (key.return) {
+        closeCurrentScreen();
         // If user went through models setup, do a full reload to register their purchase
-        if (wasModelsSetup && onFullReload) {
-          onFullReload();
-        } else {
-          onComplete();
+        if (wasModelsSetup) {
+          onReload();
         }
       }
     }
@@ -118,11 +131,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       setWasModelsSetup(false); // This is not models setup
     } else if (selectedOption === 3) {
       // Option 3: Switch to different configuration
-      if (onShowConfigSelector) {
-        onShowConfigSelector();
-      } else {
-        onComplete();
-      }
+      navigateTo('config');
+    } else if (selectedOption === 4 && hasOrganizations) {
+      // Option 4: Switch to organization
+      navigateTo('organization');
     }
   };
 
@@ -138,11 +150,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
       // After a brief delay, switch to local configuration
       setTimeout(() => {
-        if (onSwitchToLocalConfig) {
-          onSwitchToLocalConfig();
-        } else {
-          onComplete();
-        }
+        closeCurrentScreen();
+        onReload();
       }, 1000);
     } catch (error) {
       setErrorMessage(
@@ -175,9 +184,14 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         <Text color={selectedOption === 3 ? "cyan" : "white"}>
           {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different configuration
         </Text>
+        {hasOrganizations && (
+          <Text color={selectedOption === 4 ? "cyan" : "white"}>
+            {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization profile
+          </Text>
+        )}
         <Text></Text>
         <Text color="gray">
-          Use ↑↓ arrows or 1/2/3 to select, Enter to confirm
+          Use ↑↓ arrows or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select, Enter to confirm
         </Text>
       </Box>
     );

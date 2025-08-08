@@ -21,8 +21,8 @@ import type { ToolPermissionServiceState } from "./services/ToolPermissionServic
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import {
-  getAllBuiltinTools,
   executeToolCall,
+  getAllBuiltinTools,
   getAvailableTools,
   Tool,
   ToolCall,
@@ -38,7 +38,6 @@ import { logger } from "./util/logger.js";
 dotenv.config();
 
 export function getAllTools() {
-
   // Get all available tool names
   const allBuiltinTools = getAllBuiltinTools();
   const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
@@ -52,18 +51,25 @@ export function getAllTools() {
   const serviceResult = getServiceSync<ToolPermissionServiceState>(
     SERVICE_NAMES.TOOL_PERMISSIONS
   );
-  
+
   let allowedToolNames: string[];
-  if (serviceResult.state === 'ready' && serviceResult.value) {
+  if (serviceResult.state === "ready" && serviceResult.value) {
     // Filter out excluded tools based on permissions
-    allowedToolNames = filterExcludedTools(allToolNames, serviceResult.value.permissions);
+    allowedToolNames = filterExcludedTools(
+      allToolNames,
+      serviceResult.value.permissions
+    );
   } else {
     // Service not ready - this is a critical error since tools should only be
     // requested after services are properly initialized
-    logger.error("ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue");
-    throw new Error("ToolPermissionService not initialized. Services must be initialized before requesting tools.");
+    logger.error(
+      "ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue"
+    );
+    throw new Error(
+      "ToolPermissionService not initialized. Services must be initialized before requesting tools."
+    );
   }
-  
+
   const allowedToolNamesSet = new Set(allowedToolNames);
 
   // Filter builtin tools
@@ -81,7 +87,11 @@ export function getAllTools() {
         properties: Object.fromEntries(
           Object.entries(tool.parameters).map(([key, param]) => [
             key,
-            { type: param.type, description: param.description },
+            {
+              type: param.type,
+              description: param.description,
+              items: param.items,
+            },
           ])
         ),
         required: Object.entries(tool.parameters)
