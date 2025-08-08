@@ -82,6 +82,7 @@ export interface ChatOptions extends ExtendedCommandOptions {
   rule?: string[]; // Array of rule specifications
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
+  org?: string; // Organization slug to use for this session
 }
 
 export async function initializeChatHistory(
@@ -326,6 +327,7 @@ async function runHeadlessMode(
 
   await initializeServices({
     configPath: options.config,
+    organizationSlug: options.org,
     rules: options.rule,
     headless: true,
     toolPermissionOverrides: permissionOverrides,
@@ -406,6 +408,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       // Initialize services with onboarding handled internally
       const initResult = await initializeServices({
         configPath: options.config,
+        organizationSlug: options.org,
         rules: options.rule,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
@@ -424,6 +427,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         prompt,
         options.resume,
         options.config,
+        options.org,
         options.rule,
         permissionOverrides,
         true

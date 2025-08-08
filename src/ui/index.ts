@@ -13,6 +13,7 @@ export async function startTUIChat(
   initialPrompt?: string,
   resume?: boolean,
   configPath?: string,
+  organizationSlug?: string,
   additionalRules?: string[],
   toolPermissionOverrides?: {
     allow?: string[];
@@ -26,6 +27,7 @@ export async function startTUIChat(
   if (!skipOnboarding) {
     initializeServices({
       configPath,
+      organizationSlug,
       rules: additionalRules,
       headless: false,
       toolPermissionOverrides,

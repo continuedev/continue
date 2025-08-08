@@ -82,6 +82,7 @@ export const SERVICE_NAMES = {
  */
 export interface ServiceInitOptions {
   configPath?: string;
+  organizationSlug?: string; // Organization slug to use for this session
   rules?: string[];
   headless?: boolean;
   skipOnboarding?: boolean; // Skip onboarding check even in TUI mode

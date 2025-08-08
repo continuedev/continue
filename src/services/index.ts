@@ -112,11 +112,12 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
         serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),
       ]);
 
-      // Ensure organization is selected if authenticated and not headless
+      // Ensure organization is selected if authenticated
       let finalAuthState = authState;
-      if (authState.authConfig && !options.headless) {
+      if (authState.authConfig) {
         finalAuthState = await authService.ensureOrganization(
-          options.headless ?? false
+          options.headless ?? false,
+          options.organizationSlug
         );
         // Update the auth service state in container
         serviceContainer.set(SERVICE_NAMES.AUTH, finalAuthState);

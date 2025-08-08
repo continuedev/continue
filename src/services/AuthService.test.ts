@@ -136,6 +136,59 @@ describe('AuthService', () => {
         'Not authenticated - cannot ensure organization'
       );
     });
+
+    test('should pass organization slug to ensureOrganization in headless mode', async () => {
+      vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
+      vi.mocked(isAuthenticated).mockReturnValue(true);
+      await service.initialize();
+
+      const updatedConfig = { ...mockAuthConfig, organizationId: 'org-456' };
+      vi.mocked(ensureOrganization).mockResolvedValue(updatedConfig);
+
+      const state = await service.ensureOrganization(true, 'org-slug');
+
+      expect(ensureOrganization).toHaveBeenCalledWith(mockAuthConfig, true, 'org-slug');
+      expect(state).toEqual({
+        authConfig: updatedConfig,
+        isAuthenticated: true,
+        organizationId: 'org-456'
+      });
+    });
+
+    test('should handle personal organization slug', async () => {
+      vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
+      vi.mocked(isAuthenticated).mockReturnValue(true);
+      await service.initialize();
+
+      const personalConfig = { ...mockAuthConfig, organizationId: null };
+      vi.mocked(ensureOrganization).mockResolvedValue(personalConfig);
+
+      const state = await service.ensureOrganization(true, 'personal');
+
+      expect(ensureOrganization).toHaveBeenCalledWith(mockAuthConfig, true, 'personal');
+      expect(state).toEqual({
+        authConfig: personalConfig,
+        isAuthenticated: true,
+        organizationId: undefined
+      });
+    });
+
+    test('should work without organization slug parameter', async () => {
+      vi.mocked(loadAuthConfig).mockReturnValue(mockAuthConfig);
+      vi.mocked(isAuthenticated).mockReturnValue(true);
+      await service.initialize();
+
+      vi.mocked(ensureOrganization).mockResolvedValue(mockAuthConfig);
+
+      const state = await service.ensureOrganization(false);
+
+      expect(ensureOrganization).toHaveBeenCalledWith(mockAuthConfig, false, undefined);
+      expect(state).toEqual({
+        authConfig: mockAuthConfig,
+        isAuthenticated: true,
+        organizationId: 'org-123'
+      });
+    });
   });
 
   describe('switchOrganization()', () => {
@@ -189,8 +242,8 @@ describe('AuthService', () => {
       await service.initialize();
 
       const mockOrgs = [
-        { id: 'org-1', name: 'Org 1' },
-        { id: 'org-2', name: 'Org 2' }
+        { id: 'org-1', name: 'Org 1', slug: 'org-1' },
+        { id: 'org-2', name: 'Org 2', slug: 'org-2' }
       ];
       vi.mocked(listUserOrganizations).mockResolvedValue(mockOrgs);
 
@@ -234,8 +287,8 @@ describe('AuthService', () => {
       await service.initialize();
 
       vi.mocked(listUserOrganizations).mockResolvedValue([
-        { id: 'org-1', name: 'Org 1' },
-        { id: 'org-2', name: 'Org 2' }
+        { id: 'org-1', name: 'Org 1', slug: 'org-1' },
+        { id: 'org-2', name: 'Org 2', slug: 'org-2' }
       ]);
 
       const hasMultiple = await service.hasMultipleOrganizations();

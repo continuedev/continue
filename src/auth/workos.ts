@@ -30,8 +30,15 @@ export interface AuthenticatedConfig {
 
 // Represents configuration when using environment variable auth
 export interface EnvironmentAuthConfig {
+  /**
+   * This userId?: undefined; field a trick to help TypeScript differentiate between
+   * AuthenticatedConfig and EnvironmentAuthConfig. Otherwise AuthenticatedConfig is
+   * a possible subtype of EnvironmentAuthConfig and TypeScript gets confused where
+   * type guards are involved.
+   */
+  userId?: undefined;
   accessToken: string;
-  organizationId: null; // Environment auth always uses personal organization
+  organizationId: string | null; // Can be set via --org flag in headless mode
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
   modelName?: string; // Name of the selected model
 }
@@ -259,7 +266,11 @@ export function isAuthenticated(): boolean {
     return true;
   }
 
-  // Check if token is expired
+  /**
+   * THIS CODE DOESN'T WORK.
+   * .catch() will never return in a non-async function.
+   * It's a hallucination.
+   **/
   if (Date.now() > config.expiresAt) {
     // Try refreshing the token
     refreshToken(config.refreshToken).catch(() => {
@@ -526,14 +537,74 @@ export async function login(): Promise<AuthConfig> {
 }
 
 /**
+ * Helper function to resolve organization by slug
+ */
+async function resolveOrganizationBySlug(
+  apiClient: ReturnType<typeof getApiClient>,
+  organizationSlug: string
+): Promise<{ id: string; slug: string }> {
+  const resp = await apiClient.listOrganizations();
+  const organizations = resp.organizations;
+
+  // Find organization by slug (case-insensitive)
+  const matchedOrg = organizations.find(
+    (org) => org?.slug?.toLowerCase() === organizationSlug.toLowerCase()
+  );
+
+  if (matchedOrg) {
+    return { id: matchedOrg.id, slug: matchedOrg.slug };
+  } else {
+    // Organization not found - show available options
+    const availableSlugs = organizations
+      .map((org) => org?.slug)
+      .filter(Boolean);
+    const availableOptions = ["personal", ...availableSlugs];
+    console.info(
+      chalk.yellow("Available organizations:"),
+      availableOptions.join(", ")
+    );
+
+    throw new Error(`Organization "${organizationSlug}" not found`);
+  }
+}
+
+/**
  * Ensures the user has selected an organization, automatically selecting the first one if available
  */
 export async function ensureOrganization(
   authConfig: AuthConfig,
-  isHeadless: boolean = false
+  isHeadless: boolean = false,
+  cliOrganizationSlug?: string
 ): Promise<AuthConfig> {
-  // If using CONTINUE_API_KEY environment variable, don't require organization selection
-  if (isEnvironmentAuthConfig(authConfig)) {
+  // Handle CLI organization slug if provided (undefined means no --org flag or --org personal)
+  if (cliOrganizationSlug) {
+    // Only allow --org flag in headless mode
+    if (!isHeadless) {
+      console.error(
+        chalk.red(
+          "The --org flag is only supported in headless mode (with -p/--print flag)"
+        )
+      );
+      process.exit(1);
+    }
+
+    // For environment auth configs
+    if (isEnvironmentAuthConfig(authConfig)) {
+      const apiClient = getApiClient(authConfig.accessToken);
+
+      const resolvedOrg = await resolveOrganizationBySlug(
+        apiClient,
+        cliOrganizationSlug
+      );
+
+      // Return modified environment auth config with organization ID
+      return {
+        ...authConfig,
+        organizationId: resolvedOrg.id,
+      };
+    }
+  } else if (isEnvironmentAuthConfig(authConfig)) {
+    // No CLI organization slug (or "personal" was specified) - return as-is
     return authConfig;
   }
 
@@ -543,7 +614,24 @@ export async function ensureOrganization(
   }
 
   // TypeScript now knows authConfig is AuthenticatedConfig
-  const authenticatedConfig = authConfig;
+  const authenticatedConfig: AuthenticatedConfig = authConfig;
+
+  // If a CLI organization slug is provided, try to use it (for authenticated configs)
+  if (cliOrganizationSlug) {
+    const apiClient = getApiClient(authenticatedConfig.accessToken);
+
+    const resolvedOrg = await resolveOrganizationBySlug(
+      apiClient,
+      cliOrganizationSlug
+    );
+
+    const updatedConfig: AuthenticatedConfig = {
+      ...authenticatedConfig,
+      organizationId: resolvedOrg.id,
+    };
+    saveAuthConfig(updatedConfig);
+    return updatedConfig;
+  }
 
   // If already have organization ID (including null for personal), return as-is
   if (authenticatedConfig.organizationId !== undefined) {
@@ -630,7 +718,7 @@ export async function ensureOrganization(
  * Gets the list of available organizations for the user
  */
 export async function listUserOrganizations(): Promise<
-  { id: string; name: string }[] | null
+  { id: string; name: string; slug: string }[] | null
 > {
   const authConfig = loadAuthConfig();
 
@@ -647,7 +735,14 @@ export async function listUserOrganizations(): Promise<
 
   try {
     const resp = await apiClient.listOrganizations();
-    return resp.organizations || [];
+    // Map the organizations to include slug field
+    return (
+      resp.organizations?.map((org) => ({
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+      })) || []
+    );
   } catch {
     return null;
   }
