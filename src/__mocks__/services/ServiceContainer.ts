@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 export const serviceContainer = {
   get: vi.fn<(name: string) => any>(),

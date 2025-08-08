@@ -70,8 +70,8 @@ export function useChat({
       // Load previous session if resume flag is used
       // If no session loaded or not resuming, we'll need to add system message
       // We can't make this async, so we'll handle it in the useEffect
-      return resume ? loadSession() ?? [] : [];
-    }
+      return resume ? (loadSession() ?? []) : [];
+    },
   );
 
   const [messages, setMessages] = useState<DisplayMessage[]>(() => {
@@ -91,7 +91,7 @@ export function useChat({
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
-    null
+    null,
   );
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
@@ -99,7 +99,7 @@ export function useChat({
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && loadSession() !== null)
+    isRemoteMode || (resume && loadSession() !== null),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
@@ -162,7 +162,7 @@ export function useChat({
                     prevMsg.toolName !== msg.toolName ||
                     prevMsg.toolResult !== msg.toolResult
                   );
-                }
+                },
               );
 
               // Only update if there are actual changes
@@ -189,7 +189,7 @@ export function useChat({
                     prevMsg.role !== msg.role ||
                     prevMsg.content !== msg.content
                   );
-                }
+                },
               );
 
               return hasChanged ? newChatHistory : prevChatHistory;
@@ -338,10 +338,7 @@ export function useChat({
 
     // Handle slash commands (skip in remote mode except for /exit which we handled above)
     if (!isRemoteMode && assistant) {
-      const commandResult = await handleSlashCommands(
-        message,
-        assistant
-      );
+      const commandResult = await handleSlashCommands(message, assistant);
       if (commandResult) {
         if (commandResult.exit) {
           exit();
@@ -360,7 +357,7 @@ export function useChat({
 
         if (commandResult.clear) {
           const systemMessage = chatHistory.find(
-            (msg) => msg.role === "system"
+            (msg) => msg.role === "system",
           );
           const newHistory = systemMessage ? [systemMessage] : [];
           setChatHistory(newHistory);
@@ -421,7 +418,7 @@ export function useChat({
     if (attachedFiles.length > 0) {
       const fileContents = attachedFiles
         .map(
-          (file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`
+          (file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`,
         )
         .join("");
       messageContent = `${message}${fileContents}`;
@@ -468,7 +465,7 @@ export function useChat({
     // Check if auto-compacting is needed BEFORE adding user message
     let currentCompactionIndex = compactionIndex;
     let currentChatHistory = chatHistory;
-    
+
     if (model && shouldAutoCompact(chatHistory, model)) {
       logger.info("Auto-compacting triggered in TUI mode");
 
@@ -485,14 +482,14 @@ export function useChat({
         if (!llmApi) {
           throw new Error("LLM API is not available for auto-compaction");
         }
-        
+
         // Compact the history WITHOUT the current user message
         const result = await compactChatHistory(chatHistory, model, llmApi);
 
         // Update local variables immediately
         currentChatHistory = result.compactedHistory;
         currentCompactionIndex = result.compactionIndex;
-        
+
         // Update state
         setChatHistory(result.compactedHistory);
         setCompactionIndex(result.compactionIndex);
@@ -630,7 +627,7 @@ export function useChat({
           toolName: string,
           toolArgs: any,
           requestId: string,
-          toolCallPreview?: ToolCallPreview[]
+          toolCallPreview?: ToolCallPreview[],
         ) => {
           // Set the active permission request to show the selector
           setActivePermissionRequest({
@@ -647,9 +644,15 @@ export function useChat({
 
       if (model && llmApi) {
         // Use currentCompactionIndex which has the updated value after potential auto-compaction
-        if (currentCompactionIndex !== null && currentCompactionIndex !== undefined) {
+        if (
+          currentCompactionIndex !== null &&
+          currentCompactionIndex !== undefined
+        ) {
           // When using compaction, we need to send a subset but capture the full history
-          const historyForLLM = getHistoryForLLM(newHistory, currentCompactionIndex);
+          const historyForLLM = getHistoryForLLM(
+            newHistory,
+            currentCompactionIndex,
+          );
           const originalLength = historyForLLM.length;
 
           await streamChatResponse(
@@ -657,7 +660,7 @@ export function useChat({
             model,
             llmApi,
             controller,
-            streamCallbacks
+            streamCallbacks,
           );
 
           // Append any new messages (assistant/tool) that were added by streamChatResponse
@@ -670,7 +673,7 @@ export function useChat({
             model,
             llmApi,
             controller,
-            streamCallbacks
+            streamCallbacks,
           );
         }
       }
@@ -856,7 +859,7 @@ export function useChat({
   const handleToolPermissionResponse = async (
     requestId: string,
     approved: boolean,
-    createPolicy?: boolean
+    createPolicy?: boolean,
   ) => {
     // Capture the current permission request before clearing it
     const currentRequest = activePermissionRequest;
@@ -873,7 +876,7 @@ export function useChat({
 
         const policyRule = generatePolicyRule(
           currentRequest.toolName,
-          currentRequest.toolArgs
+          currentRequest.toolArgs,
         );
 
         await addPolicyToYaml(policyRule);

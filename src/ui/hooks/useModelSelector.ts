@@ -1,5 +1,9 @@
 import { updateModelName } from "../../auth/workos.js";
-import { services, serviceContainer, SERVICE_NAMES } from "../../services/index.js";
+import {
+  services,
+  serviceContainer,
+  SERVICE_NAMES,
+} from "../../services/index.js";
 import { ModelServiceState } from "../../services/types.js";
 import { useNavigation } from "../context/NavigationContext.js";
 
@@ -31,16 +35,19 @@ export function useModelSelector({
     try {
       await services.model.switchModel(model.index);
       const modelInfo = services.model.getModelInfo();
-      
+
       // Update the service container to trigger re-renders
       const currentState = services.model.getState();
-      serviceContainer.set<ModelServiceState>(SERVICE_NAMES.MODEL, currentState);
-      
+      serviceContainer.set<ModelServiceState>(
+        SERVICE_NAMES.MODEL,
+        currentState,
+      );
+
       // Persist the model choice using the actual model name
       if (modelInfo?.name) {
         updateModelName(modelInfo.name);
       }
-      
+
       onMessage({
         role: "system",
         content: `Switched to model: ${modelInfo?.provider}/${modelInfo?.name}`,

@@ -24,7 +24,7 @@ export class PosthogService {
           "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
           {
             host: "https://app.posthog.com",
-          }
+          },
         );
       }
     } else {

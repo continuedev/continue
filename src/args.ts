@@ -12,7 +12,7 @@ export interface CommandLineArgs {
   resume?: boolean; // Resume from last session
   readonly?: boolean; // Start in plan mode (backward compatibility)
   rules?: string[]; // Array of rule specifications
-  format?: 'json'; // Output format for headless mode
+  format?: "json"; // Output format for headless mode
 }
 
 /**
@@ -41,14 +41,14 @@ async function loadRuleFromHub(slug: string): Promise<string> {
   const parts = slug.split("/");
   if (parts.length !== 2) {
     throw new Error(
-      `Invalid hub slug format. Expected "owner/package", got: ${slug}`
+      `Invalid hub slug format. Expected "owner/package", got: ${slug}`,
     );
   }
 
   const [ownerSlug, ruleSlug] = parts;
   const downloadUrl = new URL(
     `v0/${ownerSlug}/${ruleSlug}/latest/download`,
-    env.apiBase
+    env.apiBase,
   );
 
   try {
@@ -65,7 +65,8 @@ async function loadRuleFromHub(slug: string): Promise<string> {
 
     // Find the first .md or .txt file (rule content)
     const ruleFiles = Object.keys(zipContents.files).filter(
-      (filename) => filename.endsWith(".md") && !zipContents.files[filename].dir
+      (filename) =>
+        filename.endsWith(".md") && !zipContents.files[filename].dir,
     );
 
     if (ruleFiles.length === 0) {
@@ -128,13 +129,12 @@ export function parseArgs(): CommandLineArgs {
     result.readonly = true;
   }
 
-
   // Get format from --format flag
   const formatIndex = args.indexOf("--format");
   if (formatIndex !== -1 && formatIndex + 1 < args.length) {
     const formatValue = args[formatIndex + 1];
-    if (formatValue === 'json') {
-      result.format = 'json';
+    if (formatValue === "json") {
+      result.format = "json";
     }
   }
 
@@ -149,7 +149,8 @@ export function parseArgs(): CommandLineArgs {
   if (orgIndex !== -1 && orgIndex + 1 < args.length) {
     const orgValue = args[orgIndex + 1];
     // Convert "personal" to undefined right away to simplify downstream logic
-    result.organizationSlug = orgValue.toLowerCase() === "personal" ? undefined : orgValue;
+    result.organizationSlug =
+      orgValue.toLowerCase() === "personal" ? undefined : orgValue;
   }
 
   // Get rules from --rule flags (can be specified multiple times)

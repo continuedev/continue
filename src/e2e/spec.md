@@ -21,20 +21,20 @@ A typical E2E test follows this structure:
 ```typescript
 describe("E2E: Feature", () => {
   let context: any;
-  
+
   beforeEach(async () => {
     context = await createTestContext();
   });
-  
+
   afterEach(async () => {
     await cleanupTestContext(context);
   });
-  
+
   it("should do something", async () => {
     const result = await runCLI(context, {
       args: ["command", "--flag"],
     });
-    
+
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("Expected output");
   });
@@ -78,9 +78,10 @@ const result = await runCLI(context, {
 
 ```typescript
 // For complex interactive flows
-const result = await withInteractiveInput(context, 
-  ["chat"], 
-  ["First input", "Second input"]
+const result = await withInteractiveInput(
+  context,
+  ["chat"],
+  ["First input", "Second input"],
 );
 ```
 
@@ -120,7 +121,7 @@ it("should get response from mock LLM", async () => {
   const result = await runCLI(context, {
     args: ["-p", "--config", context.configPath, "Hi"],
   });
-  
+
   expect(result.stdout).toContain("Hello World!");
 });
 ```
@@ -128,15 +129,16 @@ it("should get response from mock LLM", async () => {
 ### Advanced Mock LLM Features
 
 - **Dynamic responses** based on prompts:
+
   ```typescript
   mockServer = await setupMockLLMTest(context, {
-    response: (prompt) => prompt.includes("weather") 
-      ? "It's sunny!" 
-      : "I don't know",
+    response: (prompt) =>
+      prompt.includes("weather") ? "It's sunny!" : "I don't know",
   });
   ```
 
 - **Non-streaming responses**:
+
   ```typescript
   mockServer = await setupMockLLMTest(context, {
     response: "All at once response",
@@ -166,7 +168,7 @@ const configPath = await createTestConfig(context, {
 // Create a mock session
 await createMockSession(context, [
   { role: "user", content: "Hello" },
-  { role: "assistant", content: "Hi there!" }
+  { role: "assistant", content: "Hi there!" },
 ]);
 
 // Read the session
@@ -199,7 +201,7 @@ const result = await runCLI(context, {
 const result = await withInteractiveInput(
   context,
   ["chat"],
-  ["User input", "/exit"]
+  ["User input", "/exit"],
 );
 ```
 

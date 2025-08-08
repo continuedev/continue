@@ -4,7 +4,10 @@ import { Command } from "commander";
 export function addCommonOptions(command: Command): Command {
   return command
     .option("--config <path>", "Path to configuration file")
-    .option("--org <slug>", "Organization slug to use for this session (supported only in headless mode)")
+    .option(
+      "--org <slug>",
+      "Organization slug to use for this session (supported only in headless mode)",
+    )
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
     .option("-v, --verbose", "Enable verbose logging")
@@ -16,7 +19,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     )
     .option(
       "--allow <tool>",
@@ -26,7 +29,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     )
     .option(
       "--ask <tool>",
@@ -36,7 +39,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     )
     .option(
       "--exclude <tool>",
@@ -46,7 +49,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     );
 }
 
@@ -57,20 +60,23 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
 
   // List of options to inherit from parent if not present in subcommand
   const inheritableOptions = [
-    'config',
-    'org',
-    'readonly',
-    'auto',
-    'tools',
-    'verbose',
-    'rule',
-    'allow',
-    'ask',
-    'exclude'
+    "config",
+    "org",
+    "readonly",
+    "auto",
+    "tools",
+    "verbose",
+    "rule",
+    "allow",
+    "ask",
+    "exclude",
   ];
 
   for (const optName of inheritableOptions) {
-    if (parentOpts[optName] !== undefined && mergedOptions[optName] === undefined) {
+    if (
+      parentOpts[optName] !== undefined &&
+      mergedOptions[optName] === undefined
+    ) {
       mergedOptions[optName] = parentOpts[optName];
     }
   }

@@ -12,7 +12,7 @@ import { PermissionPolicy, ToolPermissionPolicy } from "./types.js";
 export const PERMISSIONS_YAML_PATH = path.join(
   os.homedir(),
   ".continue",
-  "permissions.yaml"
+  "permissions.yaml",
 );
 
 export interface PermissionsYamlConfig {
@@ -44,7 +44,7 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
         (key) =>
           validKeys.includes(key) &&
           (!parsed[key as keyof PermissionsYamlConfig] ||
-            Array.isArray(parsed[key as keyof PermissionsYamlConfig]))
+            Array.isArray(parsed[key as keyof PermissionsYamlConfig])),
       );
 
       if (hasValidStructure) {
@@ -79,7 +79,7 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
  */
 export function parseToolPattern(
   pattern: string,
-  permission: PermissionPolicy
+  permission: PermissionPolicy,
 ): ToolPermissionPolicy {
   const match = pattern.match(/^([^(]+)(?:\(([^)]*)\))?$/);
   if (!match) {
@@ -123,7 +123,7 @@ export function parseToolPattern(
  * Converts permissions YAML config to ToolPermissionPolicy array
  */
 export function yamlConfigToPolicies(
-  config: PermissionsYamlConfig
+  config: PermissionsYamlConfig,
 ): ToolPermissionPolicy[] {
   const policies: ToolPermissionPolicy[] = [];
 

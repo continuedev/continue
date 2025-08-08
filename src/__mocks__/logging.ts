@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 export const log = vi.fn();
 export const error = vi.fn();

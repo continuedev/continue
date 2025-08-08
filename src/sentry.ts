@@ -37,10 +37,10 @@ class SentryService {
       release: getVersion(),
       sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || "1.0"),
       profilesSampleRate: parseFloat(
-        process.env.SENTRY_PROFILES_SAMPLE_RATE || "1.0"
+        process.env.SENTRY_PROFILES_SAMPLE_RATE || "1.0",
       ),
       tracesSampleRate: parseFloat(
-        process.env.SENTRY_TRACES_SAMPLE_RATE || "1.0"
+        process.env.SENTRY_TRACES_SAMPLE_RATE || "1.0",
       ),
     };
   }
@@ -98,7 +98,7 @@ class SentryService {
   public captureMessage(
     message: string,
     level: "info" | "warning" | "error" | "debug" | "fatal" = "info",
-    context?: Record<string, any>
+    context?: Record<string, any>,
   ) {
     if (!this.isEnabled()) return;
 

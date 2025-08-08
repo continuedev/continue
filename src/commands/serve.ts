@@ -6,7 +6,6 @@ import chalk from "chalk";
 import express, { Request, Response } from "express";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
-
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
@@ -112,8 +111,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     chalk.dim(
       `  Assistant: ${assistantName}${
         assistantSlug ? ` (${assistantSlug})` : ""
-      }`
-    )
+      }`,
+    ),
   );
   console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
   if (options.config) {
@@ -122,7 +121,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   // Initialize chat history
   const chatHistory: ChatCompletionMessageParam[] = [];
-  const systemMessage = await constructSystemMessage("", options.rule, undefined, true);
+  const systemMessage = await constructSystemMessage(
+    "",
+    options.rule,
+    undefined,
+    true,
+  );
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });
   }
@@ -267,7 +271,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // POST /exit - Gracefully shut down the server
   app.post("/exit", async (_req: Request, res: Response) => {
     console.log(
-      chalk.yellow("\nReceived exit request, shutting down server...")
+      chalk.yellow("\nReceived exit request, shutting down server..."),
     );
 
     // Respond immediately before shutting down
@@ -308,24 +312,24 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
       chalk.dim(
-        "  POST /message    - Send a message (body: { message: string })"
-      )
+        "  POST /message    - Send a message (body: { message: string })",
+      ),
     );
     console.log(
       chalk.dim(
-        "  POST /permission - Approve/reject tool (body: { requestId, approved })"
-      )
+        "  POST /permission - Approve/reject tool (body: { requestId, approved })",
+      ),
     );
     console.log(
-      chalk.dim("  GET  /diff       - Get git diff against main branch")
+      chalk.dim("  GET  /diff       - Get git diff against main branch"),
     );
     console.log(
-      chalk.dim("  POST /exit       - Gracefully shut down the server")
+      chalk.dim("  POST /exit       - Gracefully shut down the server"),
     );
     console.log(
       chalk.dim(
-        `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`
-      )
+        `\nServer will shut down after ${timeoutSeconds} seconds of inactivity`,
+      ),
     );
 
     // If initial prompt provided, queue it for processing
@@ -357,7 +361,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           state,
           llmApi,
           state.currentAbortController,
-          () => state.shouldInterrupt
+          () => state.shouldInterrupt,
         );
 
         // Save session after successful response
@@ -407,8 +411,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     if (!state.isProcessing && Date.now() - state.lastActivity > timeoutMs) {
       console.log(
         chalk.yellow(
-          `\nShutting down due to ${timeoutSeconds} seconds of inactivity`
-        )
+          `\nShutting down due to ${timeoutSeconds} seconds of inactivity`,
+        ),
       );
       state.serverRunning = false;
       server.close(() => {
@@ -442,7 +446,7 @@ async function streamChatResponseWithInterruption(
   state: ServerState,
   llmApi: any,
   abortController: AbortController,
-  shouldInterrupt: () => boolean
+  shouldInterrupt: () => boolean,
 ): Promise<string> {
   // Import the original streamChatResponse logic but add interruption checks
   // Create a wrapper that checks for interruption
@@ -557,7 +561,7 @@ async function streamChatResponseWithInterruption(
     onToolPermissionRequest: (
       toolName: string,
       toolArgs: any,
-      requestId: string
+      requestId: string,
     ) => {
       // Set pending permission state
       state.pendingPermission = {
@@ -585,7 +589,7 @@ async function streamChatResponseWithInterruption(
       state.model,
       llmApi,
       abortController,
-      callbacks
+      callbacks,
     );
     return response || "";
   } finally {

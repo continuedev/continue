@@ -17,7 +17,7 @@ import {
 export function matchesToolPattern(
   toolName: string,
   pattern: string,
-  toolArguments?: Record<string, any>
+  toolArguments?: Record<string, any>,
 ): boolean {
   if (pattern === "*") return true;
   if (pattern === toolName) return true;
@@ -66,7 +66,7 @@ export function matchesToolPattern(
  */
 export function matchesArguments(
   args: Record<string, any>,
-  patterns?: Record<string, any>
+  patterns?: Record<string, any>,
 ): boolean {
   if (!patterns) return true;
 
@@ -109,14 +109,14 @@ export function matchesArguments(
  */
 export function checkToolPermission(
   toolCall: ToolCallRequest,
-  permissions?: ToolPermissions
+  permissions?: ToolPermissions,
 ): PermissionCheckResult {
   // Get permissions from service if not provided
   let policies = permissions?.policies;
 
   if (!policies) {
     const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS
+      SERVICE_NAMES.TOOL_PERMISSIONS,
     );
 
     // Only use defaults if service is not ready, not registered, or has no value
@@ -152,12 +152,12 @@ export function checkToolPermission(
  */
 export function filterExcludedTools(
   toolNames: string[],
-  permissions?: ToolPermissions
+  permissions?: ToolPermissions,
 ): string[] {
   return toolNames.filter((toolName) => {
     const result = checkToolPermission(
       { name: toolName, arguments: {} },
-      permissions
+      permissions,
     );
     return result.permission !== "exclude";
   });

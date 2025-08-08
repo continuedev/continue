@@ -21,7 +21,7 @@ export interface SearchMatchResult extends BasicMatchResult {
  */
 type MatchStrategy = (
   fileContent: string,
-  searchContent: string
+  searchContent: string,
 ) => BasicMatchResult | null;
 
 /**
@@ -29,7 +29,7 @@ type MatchStrategy = (
  */
 function exactMatch(
   fileContent: string,
-  searchContent: string
+  searchContent: string,
 ): BasicMatchResult | null {
   const exactIndex = fileContent.indexOf(searchContent);
   if (exactIndex !== -1) {
@@ -46,7 +46,7 @@ function exactMatch(
  */
 function trimmedMatch(
   fileContent: string,
-  searchContent: string
+  searchContent: string,
 ): BasicMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
   const trimmedIndex = fileContent.indexOf(trimmedSearchContent);
@@ -65,7 +65,7 @@ function trimmedMatch(
  */
 function whitespaceIgnoredMatch(
   fileContent: string,
-  searchContent: string
+  searchContent: string,
 ): BasicMatchResult | null {
   // Remove all whitespace (spaces, tabs, newlines, etc.)
   const strippedFileContent = fileContent.replace(/\s/g, "");
@@ -171,7 +171,7 @@ function jaroSimilarity(s1: string, s2: string): number {
 function jaroWinklerSimilarity(
   s1: string,
   s2: string,
-  prefixScale = 0.1
+  prefixScale = 0.1,
 ): number {
   const jaroSim = jaroSimilarity(s1, s2);
 
@@ -198,7 +198,7 @@ function jaroWinklerSimilarity(
 function findFuzzyMatch(
   fileContent: string,
   searchContent: string,
-  threshold: number = 0.9
+  threshold: number = 0.9,
 ): BasicMatchResult | null {
   const searchLines = searchContent.split("\n");
   const fileLines = fileContent.split("\n");
@@ -296,7 +296,7 @@ const matchingStrategies: Array<{ strategy: MatchStrategy; name: string }> = [
  */
 export function findSearchMatch(
   fileContent: string,
-  searchContent: string
+  searchContent: string,
 ): SearchMatchResult | null {
   const trimmedSearchContent = searchContent.trim();
 

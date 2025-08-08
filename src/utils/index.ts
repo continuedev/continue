@@ -1,1 +1,1 @@
-export { isModelCapable } from './modelCapability.js';
+export { isModelCapable } from "./modelCapability.js";

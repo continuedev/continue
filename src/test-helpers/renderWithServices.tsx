@@ -1,9 +1,12 @@
-import { render } from 'ink-testing-library';
-import React from 'react';
+import { render } from "ink-testing-library";
+import React from "react";
 
-import { ServiceContainerProvider } from '../services/ServiceContainerContext.js';
+import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
 
-import { createTestServiceContainer, TestServiceContainer } from './testServiceContainer.js';
+import {
+  createTestServiceContainer,
+  TestServiceContainer,
+} from "./testServiceContainer.js";
 
 export interface RenderWithServicesOptions {
   services?: Record<string, any>;
@@ -23,23 +26,23 @@ export interface RenderWithServicesResult {
 
 export function renderWithServices(
   ui: React.ReactElement,
-  options?: RenderWithServicesOptions
+  options?: RenderWithServicesOptions,
 ): RenderWithServicesResult {
   const container = options?.container || createTestServiceContainer();
-  
+
   // Register default services if provided
   if (options?.services) {
     Object.entries(options.services).forEach(([name, value]) => {
       container.register(name, () => Promise.resolve(value));
     });
   }
-  
+
   const rendered = render(
     <ServiceContainerProvider container={container}>
       {ui}
-    </ServiceContainerProvider>
+    </ServiceContainerProvider>,
   );
-  
+
   return {
     ...rendered,
     container,

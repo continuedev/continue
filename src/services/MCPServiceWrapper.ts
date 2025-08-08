@@ -1,9 +1,9 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 
-import { MCPService } from '../mcp.js';
-import { logger } from '../util/logger.js';
+import { MCPService } from "../mcp.js";
+import { logger } from "../util/logger.js";
 
-import { MCPServiceState } from './types.js';
+import { MCPServiceState } from "./types.js";
 
 /**
  * Service wrapper for managing MCP service state
@@ -11,30 +11,30 @@ import { MCPServiceState } from './types.js';
  */
 export class MCPServiceWrapper {
   private currentState: MCPServiceState = {
-    mcpService: null
+    mcpService: null,
   };
 
   /**
    * Initialize the MCP service wrapper
    */
   async initialize(assistant: AssistantUnrolled): Promise<MCPServiceState> {
-    logger.debug('Initializing MCPServiceWrapper');
-    
+    logger.debug("Initializing MCPServiceWrapper");
+
     try {
       const mcpService = await MCPService.create(assistant);
 
       this.currentState = {
-        mcpService
+        mcpService,
       };
 
-      logger.debug('MCPServiceWrapper initialized successfully', {
+      logger.debug("MCPServiceWrapper initialized successfully", {
         toolCount: mcpService.getTools().length,
-        promptCount: mcpService.getPrompts().length
+        promptCount: mcpService.getPrompts().length,
       });
 
       return this.currentState;
     } catch (error: any) {
-      logger.error('Failed to initialize MCPServiceWrapper:', error);
+      logger.error("Failed to initialize MCPServiceWrapper:", error);
       throw error;
     }
   }
@@ -51,26 +51,26 @@ export class MCPServiceWrapper {
    * Note: This creates a new MCP service since the original is a singleton
    */
   async update(assistant: AssistantUnrolled): Promise<MCPServiceState> {
-    logger.debug('Updating MCPServiceWrapper');
-    
+    logger.debug("Updating MCPServiceWrapper");
+
     try {
       // Clear the existing singleton instance to force recreation
       (MCPService as any).instance = null;
-      
+
       const mcpService = await MCPService.create(assistant);
 
       this.currentState = {
-        mcpService
+        mcpService,
       };
 
-      logger.debug('MCPServiceWrapper updated successfully', {
+      logger.debug("MCPServiceWrapper updated successfully", {
         toolCount: mcpService.getTools().length,
-        promptCount: mcpService.getPrompts().length
+        promptCount: mcpService.getPrompts().length,
       });
 
       return this.currentState;
     } catch (error: any) {
-      logger.error('Failed to update MCPServiceWrapper:', error);
+      logger.error("Failed to update MCPServiceWrapper:", error);
       throw error;
     }
   }
@@ -92,7 +92,7 @@ export class MCPServiceWrapper {
 
     return {
       toolCount: this.currentState.mcpService.getTools().length,
-      promptCount: this.currentState.mcpService.getPrompts().length
+      promptCount: this.currentState.mcpService.getPrompts().length,
     };
   }
 }

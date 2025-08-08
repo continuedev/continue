@@ -9,7 +9,7 @@ import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 /**
  * Service lifecycle states
  */
-export type ServiceState = 'idle' | 'loading' | 'ready' | 'error';
+export type ServiceState = "idle" | "loading" | "ready" | "error";
 
 /**
  * Generic service result with state tracking
@@ -69,12 +69,12 @@ export interface ToolPermissionServiceState {
  * Service names as constants to prevent typos
  */
 export const SERVICE_NAMES = {
-  AUTH: 'auth',
-  CONFIG: 'config', 
-  MODEL: 'model',
-  MCP: 'mcp',
-  API_CLIENT: 'apiClient',
-  TOOL_PERMISSIONS: 'toolPermissions'
+  AUTH: "auth",
+  CONFIG: "config",
+  MODEL: "model",
+  MCP: "mcp",
+  API_CLIENT: "apiClient",
+  TOOL_PERMISSIONS: "toolPermissions",
 } as const;
 
 /**

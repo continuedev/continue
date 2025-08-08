@@ -23,7 +23,7 @@ export function getGitRemoteUrl(remote: string = "origin"): string | null {
  */
 export function isGitRepo(): boolean {
   try {
-    execSync("git rev-parse --is-inside-work-tree", { 
+    execSync("git rev-parse --is-inside-work-tree", {
       stdio: "ignore",
       cwd: process.cwd(),
     });
