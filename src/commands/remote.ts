@@ -12,7 +12,7 @@ import { logger } from "../util/logger.js";
 
 export async function remote(
   prompt: string | undefined,
-  options: { url?: string } = {}
+  options: { url?: string; idempotencyKey?: string } = {}
 ) {
   // If --url is provided, connect directly to that URL
   if (options.url) {
@@ -47,18 +47,21 @@ export async function remote(
 
     const accessToken = getAccessToken(authConfig);
 
+    const requestBody = {
+      cUserId: authConfig.userId,
+      repoUrl: "https://github.com/continuedev/amplified.dev", // getRepoUrl(),
+      name: `devbox-${Date.now()}`,
+      prompt: prompt,
+      idempotencyKey: options.idempotencyKey,
+    };
+
     const response = await fetch(new URL("agents/devboxes", env.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        cUserId: authConfig.userId,
-        repoUrl: "https://github.com/continuedev/amplified.dev", // getRepoUrl(),
-        name: `devbox-${Date.now()}`,
-        prompt: prompt,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
