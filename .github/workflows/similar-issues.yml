@@ -17,7 +17,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'bdougie/deja-view'
-          path: deja-view
+          # Option 1: Pin to specific commit (most secure)
+          ref: '45e7696'  # Pin to specific commit for stability
       
       - name: Setup Python
         uses: actions/setup-python@v5
