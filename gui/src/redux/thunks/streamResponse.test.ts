@@ -566,13 +566,21 @@ describe("streamResponseThunk", () => {
         returnToMode: "chat",
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
       },
       tabs: {
         tabsItems: [],
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
       },
     });
   });
@@ -1086,13 +1094,21 @@ describe("streamResponseThunk", () => {
         returnToMode: "chat",
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
       },
       tabs: {
         tabsItems: [],
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
       },
     });
   });
@@ -1631,13 +1647,21 @@ describe("streamResponseThunk", () => {
         returnToMode: "chat",
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
       },
       tabs: {
         tabsItems: [],
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
       },
     });
   });
