@@ -1,5 +1,5 @@
 ---
-title: "@Docs"
+title: "How to Set Up @Docs Context Provider in Continue"
 description: Learn how to access and search your project's documentation directly within Continue
 keywords:
   [
@@ -13,11 +13,12 @@ keywords:
     documentation,
   ]
 toc_max_heading_level: 5
+sidebar
 ---
 
 The [`@Docs` context provider](../custom-providers#docs) allows you to efficiently reference documentation directly within Continue.
 
-## Enabling the `@Docs` context provider
+## How to Enable the @Docs Context Provider
 
 To enable the `@Docs` context provider, add it to the list of context providers in your `config.json` file.
 
@@ -41,7 +42,7 @@ To enable the `@Docs` context provider, add it to the list of context providers 
   </Tab>
 </Tabs>
 
-## How It Works
+## How the @Docs Context Provider Works
 
 The `@Docs` context provider works by
 
@@ -50,13 +51,13 @@ The `@Docs` context provider works by
 3. Storing the embeddings locally on your machine
 4. Embedding chat input to include similar documentation chunks as context
 
-## Indexing Your Own Documentation
+## How to Index Your Own Documentation
 
-### Hub `docs` Blocks
+### Using Hub `docs` Blocks
 
 @Docs uses [`docs` blocks](../../hub/blocks/block-types#docs) in Assistants from the hub. Visit the hub to [explore `docs` blocks](https://hub.continue.dev/explore/docs) or [create your own](https://hub.continue.dev/new?type=block&blockType=docs).
 
-### Through the `@Docs` Context Provider
+### How to Add Documentation Through the @Docs Context Provider
 
 To add a single documentation site, we recommend using the **Add Documentation** Form within the GUI. This can be accessed
 
@@ -79,7 +80,7 @@ Documentation sources may be suggested based on package files in your repo. This
 
 ![Add documentation form](/images/docs-form.png)
 
-### In a configuration file
+### How to Add Documentation in Configuration Files
 
 For bulk documentation site adds or edits, we recommend editing your global configuration file directly. Documentation sites are stored in an array within `docs` in your global configuration, as follows:
 
@@ -111,13 +112,13 @@ See [the config reference](/reference) for all documentation site configuration 
 
 Indexing will re-sync upon saving the configuration file.
 
-## Configuration
+## How to Configure @Docs Advanced Settings
 
-### Using Your Embeddings Provider
+### How to Use Your Custom Embeddings Provider
 
 If you have set up an [embeddings provider](../model-roles/embeddings.mdx), @docs will use your embeddings provider. Switching embeddings providers will trigger a re-index of all documentation sites in your configuration.
 
-### Reranking
+### How to Configure Reranking for Better Results
 
 As with [@Codebase context provider configuration](./codebase#configuration), you can adjust the reranking behavior of the `@Docs` context provider with the `nRetrieve`, `nFinal`, and `useReranking`.
 
@@ -150,7 +151,7 @@ As with [@Codebase context provider configuration](./codebase#configuration), yo
   </Tab>
 </Tabs>
 
-### GitHub
+### How to Set Up GitHub Token for GitHub Documentation
 
 The GitHub API rate limits public requests to 60 per hour. If you want to reliably index GitHub repos, you can add a github token to your config file:
 
@@ -179,7 +180,7 @@ The GitHub API rate limits public requests to 60 per hour. If you want to reliab
   </Tab>
 </Tabs>
 
-### Local Crawling
+### How to Enable Local Crawling for Private Documentation
 
 By default, Continue crawls documentation sites using a specialized crawling service that provides the best experience for most users and documentation sites.
 
@@ -222,7 +223,7 @@ Further notes:
 - If the site is only locally accessible, the default crawler will fail anyways and fall back to the local crawler. `useLocalCrawling` is especially useful if the URL itself is confidential.
 - For GitHub Repos this has no effect because only the GitHub Crawler will be used, and if the repo is private it can only be accessed with a priveleged GitHub token anyways.
 
-## Managing your docs indexes
+## How to Manage Your Documentation Indexes
 
 You can view indexing statuses and manage your documentation sites from the `@docs indexes` section of the `More` page (three dots)
 
@@ -239,9 +240,9 @@ You can also view the overall status of currently indexing docs from a hideable 
 
 You can also use the following IDE command to force a re-index of all docs: `Continue: Docs Force Re-Index`.
 
-## Examples
+## Configuration Examples for Different Setups
 
-### VS Code minimal setup
+### How to Set Up @Docs in VS Code (Minimal Configuration)
 
 The following configuration example works out of the box for VS Code. This uses the built-in embeddings provider with no reranking.
 
@@ -275,7 +276,7 @@ The following configuration example works out of the box for VS Code. This uses 
   </Tab>
 </Tabs>
 
-### Jetbrains minimal setup
+### How to Set Up @Docs in JetBrains IDEs (Minimal Configuration)
 
 Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../model-roles/embeddings.mdx).
 
@@ -318,7 +319,7 @@ Here is the equivalent minimal example for Jetbrains, which requires setting up 
   </Tab>
 </Tabs>
 
-### Full-power setup (VS Code or Jetbrains)
+### How to Set Up @Docs with Advanced Features (VS Code or JetBrains)
 
 The following configuration example includes:
 
