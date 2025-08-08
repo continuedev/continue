@@ -29,6 +29,7 @@ import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTo
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -36,6 +37,7 @@ import { callToolById } from "./callToolById";
 async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
+  activeTools: Tool[],
 ): Promise<void> {
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
@@ -52,11 +54,15 @@ async function handleToolCallExecution(
   }
 
   // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every(
-    (toolCallState) =>
-      toolSettings[toolCallState.toolCall.function.name] ===
-      "allowedWithoutPermission",
-  );
+  const allAutoApproved = toolCallStates.every((toolCallState) => {
+    const toolPolicy =
+      toolSettings[toolCallState.toolCall.function.name] ??
+      activeTools.find(
+        (tool) => tool.function.name === toolCallState.toolCall.function.name,
+      )?.defaultToolPolicy ??
+      DEFAULT_TOOL_SETTING;
+    return toolPolicy == "allowedWithoutPermission";
+  });
 
   // Set all tools as generated first
   toolCallStates.forEach((toolCallState) => {
@@ -173,6 +179,7 @@ export const streamNormalInput = createAsyncThunk<
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
       selectedChatModel,
+      activeTools,
     );
 
     const systemMessage = systemToolsFramework
@@ -297,11 +304,16 @@ export const streamNormalInput = createAsyncThunk<
     // Check if ALL generating tool calls are auto-approved
     const allAutoApproved =
       generatingToolCalls.length > 0 &&
-      generatingToolCalls.every(
-        (toolCallState) =>
-          toolSettings[toolCallState.toolCall.function.name] ===
-          "allowedWithoutPermission",
-      );
+      generatingToolCalls.every((toolCallState) => {
+        const toolPolicy =
+          toolSettings[toolCallState.toolCall.function.name] ??
+          activeTools.find(
+            (tool) =>
+              tool.function.name === toolCallState.toolCall.function.name,
+          )?.defaultToolPolicy ??
+          DEFAULT_TOOL_SETTING;
+        return toolPolicy == "allowedWithoutPermission";
+      });
 
     // Only set inactive if:
     // 1. There are no tool calls, OR
@@ -311,6 +323,6 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(setInactive());
     }
 
-    await handleToolCallExecution(dispatch, getState);
+    await handleToolCallExecution(dispatch, getState, activeTools);
   },
 );
