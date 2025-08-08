@@ -6,7 +6,6 @@ import {
   MODEL_1_SNIPPET_TOKEN,
   MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
-import { extractMetadataFromUnifiedDiff } from "../context/diffFormatting";
 import { insertCursorToken } from "./utils";
 
 /**
@@ -68,26 +67,57 @@ export function currentFileContentBlock(
 }
 
 export function editHistoryBlock(
-  editDiffHistories: string[], // list of unified diffs
+  editDiffHistories: string, // unified diffs with Index headers
 ) {
-  // diffHistory is made from createDiff.
-  // This uses createPatch from npm diff library, which includes an index line and a separator.
-  // We get rid of these first two lines.
-  const block: string[] = [];
+  if (!editDiffHistories.trim()) {
+    return "";
+  }
 
-  editDiffHistories.forEach((diff) => {
-    const diffWithoutHeader = diff.split("\n").slice(2).join("\n");
-    const metadata = extractMetadataFromUnifiedDiff(diffWithoutHeader);
-    block.push(
-      [
-        `User edited file \"${metadata.oldFilename}\"`,
-        "",
-        "```diff",
-        `${diffWithoutHeader}`,
-        "```",
-      ].join("\n"),
+  const blocks: string[] = [];
+
+  // Split on Index: lines to get the unified diff.
+  const diffSections = editDiffHistories
+    .split(/^Index: /m)
+    .filter((section) => section.trim());
+
+  for (const section of diffSections) {
+    const lines = section.split("\n");
+
+    // Extract filename from the first line (after "Index: " was split off).
+    const filename = lines[0];
+
+    // Find the start of the actual diff content (skip ---, +++, and === lines).
+    const diffLines = lines
+      .filter(
+        (line) =>
+          !line.startsWith("---") &&
+          !line.startsWith("+++") &&
+          !line.startsWith("===") &&
+          line.trim() !== "", // remove empty lines from header section
+      )
+      .slice(1); // remove the filename line
+
+    // Only include lines that are actual diff content (@@, +, -, or context lines).
+    const actualDiffContent = diffLines.filter(
+      (line) =>
+        line.startsWith("@@") ||
+        line.startsWith("+") ||
+        line.startsWith("-") ||
+        line.startsWith(" "), // context lines
     );
-  });
 
-  return block.join("\n");
+    if (actualDiffContent.length === 0) continue;
+
+    const diffBlock = [
+      `User edited file "${filename}"`,
+      "",
+      "```diff",
+      actualDiffContent.join("\n"),
+      "```",
+    ].join("\n");
+
+    blocks.push(diffBlock);
+  }
+
+  return blocks.join("\n");
 }
