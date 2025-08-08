@@ -8,6 +8,7 @@ import {
 import { env } from "../env.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
+import { getRepoUrl } from "../util/git.js";
 import { logger } from "../util/logger.js";
 
 export async function remote(
@@ -47,9 +48,9 @@ export async function remote(
 
     const accessToken = getAccessToken(authConfig);
 
-    const requestBody = {
+    const requestBody: any = {
       cUserId: authConfig.userId,
-      repoUrl: "https://github.com/continuedev/amplified.dev", // getRepoUrl(),
+      repoUrl: getRepoUrl(),
       name: `devbox-${Date.now()}`,
       prompt: prompt,
       idempotencyKey: options.idempotencyKey,

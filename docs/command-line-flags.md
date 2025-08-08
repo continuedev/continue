@@ -91,6 +91,16 @@ The backend manages session lifecycle based on the idempotency key:
 - Existing key = connect to existing session
 - Sessions may expire based on backend configuration
 
+### Repository Detection
+
+The `cn remote` command automatically detects your repository URL:
+
+- **GitHub Actions**: Uses `GITHUB_REPOSITORY` and `GITHUB_SERVER_URL` environment variables
+- **Git Repository**: Uses `git remote get-url origin`
+- **Fallback**: Uses current working directory path
+
+This ensures the remote environment is created with the correct repository context.
+
 ## Common Examples
 
 ```bash

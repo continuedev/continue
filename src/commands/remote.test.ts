@@ -7,12 +7,14 @@ vi.mock("../auth/workos.js");
 vi.mock("../env.js");
 vi.mock("../telemetry/telemetryService.js");
 vi.mock("../ui/index.js");
+vi.mock("../util/git.js");
 vi.mock("../util/logger.js");
 
 const mockWorkos = vi.mocked(
   await import("../auth/workos.js")
 );
 const mockEnv = vi.mocked(await import("../env.js"));
+const mockGit = vi.mocked(await import("../util/git.js"));
 const mockStartRemoteTUIChat = vi.mocked(
   await import("../ui/index.js")
 );
@@ -34,6 +36,11 @@ describe("remote command", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
+    // Clear GitHub Actions environment variables
+    delete process.env.GITHUB_ACTIONS;
+    delete process.env.GITHUB_REPOSITORY;
+    delete process.env.GITHUB_SERVER_URL;
+    
     // Setup default mocks
     mockWorkos.loadAuthConfig.mockReturnValue({
       userId: "test-user-id",
@@ -52,6 +59,8 @@ describe("remote command", () => {
       workOsClientId: "test-client-id",
       appUrl: "https://test.example.com",
     };
+    
+    mockGit.getRepoUrl.mockReturnValue("https://github.com/user/test-repo.git");
     
     mockFetch.mockResolvedValue({
       ok: true,
@@ -145,10 +154,33 @@ describe("remote command", () => {
     
     expect(requestBody).toEqual({
       cUserId: "test-user-id",
-      repoUrl: "https://github.com/continuedev/amplified.dev",
+      repoUrl: "https://github.com/user/test-repo.git",
       name: expect.stringMatching(/^devbox-\d+$/),
       prompt: "test prompt",
       idempotencyKey: testIdempotencyKey,
     });
+  });
+
+  it("should call getRepoUrl to get the current repository URL", async () => {
+    await remote("test prompt", {});
+    
+    expect(mockGit.getRepoUrl).toHaveBeenCalled();
+  });
+
+  it("should work correctly in GitHub Actions environment", async () => {
+    // Simulate GitHub Actions environment
+    process.env.GITHUB_ACTIONS = "true";
+    process.env.GITHUB_REPOSITORY = "myorg/myrepo";
+    
+    // Mock getRepoUrl to return the GitHub Actions URL
+    mockGit.getRepoUrl.mockReturnValue("https://github.com/myorg/myrepo.git");
+    
+    await remote("test prompt", { idempotencyKey: "github-actions-key" });
+    
+    const fetchCall = mockFetch.mock.calls[0];
+    const requestBody = JSON.parse(fetchCall[1].body);
+    
+    expect(requestBody.repoUrl).toBe("https://github.com/myorg/myrepo.git");
+    expect(requestBody.idempotencyKey).toBe("github-actions-key");
   });
 });
