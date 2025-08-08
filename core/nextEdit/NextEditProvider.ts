@@ -59,6 +59,8 @@ import {
   PromptMetadata,
   RecentlyEditedRange,
 } from "./types.js";
+import { getAutocompleteContext } from "./context/autocompleteContextFetching.js";
+import { EditAggregator } from "./context/aggregateEdits.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -82,6 +84,7 @@ export class NextEditProvider {
   private contextRetrievalService: ContextRetrievalService;
   private endpointType: "default" | "fineTuned";
   private diffContext: string = "";
+  private autocompleteContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
   private currentEditChainId: string | null = null;
   private previousRequest: AutocompleteInput | null = null;
@@ -134,6 +137,10 @@ export class NextEditProvider {
 
   public addDiffToContext(diff: string): void {
     this.diffContext = diff;
+  }
+
+  public addAutocompleteContext(ctx: string): void {
+    this.autocompleteContext = ctx;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -545,11 +552,7 @@ export class NextEditProvider {
       };
     } else if (modelName.includes("model-1")) {
       ctx = {
-        recentlyViewedCodeSnippets:
-          snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
-            filepath: snip.filepath,
-            content: snip.content,
-          })) ?? [],
+        contextSnippets: this.autocompleteContext,
         currentFileContent: helper.fileContents,
         editableRegionStartLine,
         editableRegionEndLine,
