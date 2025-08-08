@@ -1,0 +1,59 @@
+name: Respond to cubic-dev-ai Comments
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  respond-to-comment:
+    # Only run on pull request comments
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check if comment is from cubic-dev-ai
+        id: check-author
+        run: |
+          if [ "${{ github.event.comment.user.login }}" = "cubic-dev-ai" ]; then
+            echo "is_cubic_dev_ai=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_cubic_dev_ai=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get comment content
+        if: steps.check-author.outputs.is_cubic_dev_ai == 'true'
+        id: comment-content
+        run: |
+          # Store the comment body for debugging/logging
+          echo "Comment from cubic-dev-ai:"
+          echo "${{ github.event.comment.body }}"
+
+      - name: Respond to cubic-dev-ai comment
+        if: steps.check-author.outputs.is_cubic_dev_ai == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commentBody = `👋 Thanks for the feedback, @cubic-dev-ai! 
+
+            I've received your comment:
+            > ${{ github.event.comment.body }}
+
+            Your input has been acknowledged and will be reviewed by the team.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody
+            });
+
+      - name: Log acknowledgement
+        if: steps.check-author.outputs.is_cubic_dev_ai == 'true'
+        run: |
+          echo "✅ Successfully acknowledged comment from cubic-dev-ai on PR #${{ github.event.issue.number }}"
+          echo "Original comment: ${{ github.event.comment.body }}"
