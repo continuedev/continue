@@ -10,7 +10,6 @@ import {
   JSONModelDescription,
   PromptTemplate,
 } from "../";
-import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../llm/defaultSystemMessages";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigFile } from "../util/paths";
 
@@ -80,12 +79,6 @@ export function addModel(
         maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
       };
-      if (model.systemMessage) {
-        desc.chatOptions = {
-          baseSystemMessage:
-            DEFAULT_CHAT_SYSTEM_MESSAGE + "\n\n" + model.systemMessage,
-        };
-      }
       config.models.push(desc);
       return config;
     },
