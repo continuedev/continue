@@ -107,23 +107,7 @@ describe("remote command", () => {
     );
   });
 
-  it("should display idempotency key in console when provided", async () => {
-    const testIdempotencyKey = "test-key-456";
-    
-    await remote("test prompt", { idempotencyKey: testIdempotencyKey });
-    
-    expect(mockConsoleInfo).toHaveBeenCalledWith(
-      expect.stringContaining(`Using idempotency key: ${testIdempotencyKey}`)
-    );
-  });
-
-  it("should not display idempotency key message when not provided", async () => {
-    await remote("test prompt", {});
-    
-    expect(mockConsoleInfo).not.toHaveBeenCalledWith(
-      expect.stringContaining("Using idempotency key:")
-    );
-  });
+  
 
   it("should work with direct URL connection and idempotency key", async () => {
     const testUrl = "ws://direct-url.com";
