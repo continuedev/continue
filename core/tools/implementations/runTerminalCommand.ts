@@ -96,36 +96,27 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         return new Promise((resolve, reject) => {
           let terminalOutput = "";
 
-              if (!waitForCompletion) {
-                const status = "Command is running in the background...";
-                if (extras.onPartialOutput) {
-                  extras.onPartialOutput({
-                    toolCallId,
-                    contextItems: [
-                      {
-                        name: "Terminal",
-                        description: "Terminal command output",
-                        content: "",
-                        status: status,
-                      },
-                    ],
-                  });
-                }
-              }
-
-              // Use spawn with color environment
-              const { shell, args } = getShellCommand(command);
-              const childProc = childProcess.spawn(shell, args, {
-                cwd,
-                env: getColorEnv(), // Add enhanced environment for colors
+          if (!waitForCompletion) {
+            const status = "Command is running in the background...";
+            if (extras.onPartialOutput) {
+              extras.onPartialOutput({
+                toolCallId,
+                contextItems: [
+                  {
+                    name: "Terminal",
+                    description: "Terminal command output",
+                    content: "",
+                    status: status,
+                  },
+                ],
               });
             }
           }
 
           // Use spawn with color environment
-          const childProc = childProcess.spawn(command, {
+          const { shell, args } = getShellCommand(command);
+          const childProc = childProcess.spawn(shell, args, {
             cwd,
-            shell: true,
             env: getColorEnv(), // Add enhanced environment for colors
           });
 
