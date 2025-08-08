@@ -265,6 +265,35 @@ describe("diffFormatting", () => {
         newStart: 1,
         newCount: 6,
         header: "function header",
+        lines: [
+          {
+            content: "line1",
+            newLineNumber: 1,
+            oldLineNumber: 1,
+            type: "context",
+          },
+          {
+            content: "line2",
+            oldLineNumber: 2,
+            type: "deletion",
+          },
+          {
+            content: "modified2",
+            newLineNumber: 2,
+            type: "addition",
+          },
+          {
+            content: "newline",
+            newLineNumber: 3,
+            type: "addition",
+          },
+          {
+            content: "line3",
+            newLineNumber: 4,
+            oldLineNumber: 3,
+            type: "context",
+          },
+        ],
       });
       expect(metadata.hunks![1]).toEqual({
         oldStart: 10,
@@ -272,6 +301,30 @@ describe("diffFormatting", () => {
         newStart: 11,
         newCount: 3,
         header: undefined,
+        lines: [
+          {
+            content: "line10",
+            newLineNumber: 11,
+            oldLineNumber: 10,
+            type: "context",
+          },
+          {
+            content: "line11",
+            oldLineNumber: 11,
+            type: "deletion",
+          },
+          {
+            content: "modified11",
+            newLineNumber: 12,
+            type: "addition",
+          },
+          {
+            content: "line12",
+            newLineNumber: 13,
+            oldLineNumber: 12,
+            type: "context",
+          },
+        ],
       });
     });
 
@@ -292,6 +345,18 @@ describe("diffFormatting", () => {
         newStart: 1,
         newCount: 1,
         header: undefined,
+        lines: [
+          {
+            content: "old",
+            oldLineNumber: 1,
+            type: "deletion",
+          },
+          {
+            content: "new",
+            newLineNumber: 1,
+            type: "addition",
+          },
+        ],
       });
     });
 
