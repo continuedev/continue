@@ -87,6 +87,34 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
+  gptOss20B: {
+    title: "gpt-oss-20b",
+    description:
+      "OpenAI's 20B open-weight model with native tool use and reasoning for agentic tasks.",
+    refUrl: "https://huggingface.co/openai/gpt-oss-20b",
+    params: {
+      title: "gpt-oss-20b",
+      model: "openai/gpt-oss-20b",
+      contextLength: 128_000,
+    },
+    icon: "openai.png",
+    providerOptions: ["vllm"],
+    isOpenSource: true,
+  },
+  gptOss120B: {
+    title: "gpt-oss-120b",
+    description:
+      "OpenAI's 120B flagship open-weight model built for complex, high‑reasoning agentic workflows.",
+    refUrl: "https://huggingface.co/openai/gpt-oss-120b",
+    params: {
+      title: "gpt-oss-120b",
+      model: "openai/gpt-oss-120b",
+      contextLength: 128_000,
+    },
+    icon: "openai.png",
+    providerOptions: ["vllm"],
+    isOpenSource: true,
+  },
   llama318BChat: {
     title: "Llama 3.1 8B",
     description: "A model from Meta, fine-tuned for chat",
@@ -1065,6 +1093,18 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["cohere"],
     icon: "cohere.png",
+    isOpenSource: false,
+  },
+  gpt5: {
+    title: "GPT-5",
+    description: "OpenAI's next-generation, high-intelligence flagship model",
+    params: {
+      model: "gpt-5",
+      contextLength: 400_000,
+      title: "GPT-5",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
     isOpenSource: false,
   },
   gpt4turbo: {

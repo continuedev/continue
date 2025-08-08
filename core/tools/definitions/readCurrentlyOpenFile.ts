@@ -1,6 +1,5 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const readCurrentlyOpenFileTool: Tool = {
   type: "function",
@@ -21,10 +20,8 @@ export const readCurrentlyOpenFileTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithPermission",
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.ReadCurrentlyOpenFile,
-    `To view the user's currently open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.
+  systemMessageDescription: {
+    prefix: `To view the user's currently open file, use the ${BuiltInToolNames.ReadCurrentlyOpenFile} tool.
 If the user is asking about a file and you don't see any code, use this to check the current file`,
-    [],
-  ),
+  },
 };

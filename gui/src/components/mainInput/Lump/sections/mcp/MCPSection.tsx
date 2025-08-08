@@ -7,13 +7,14 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { useContext, useMemo } from "react";
+import { Fragment, useContext, useMemo } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateConfig } from "../../../../../redux/slices/configSlice";
 import { fontSize } from "../../../../../util";
 import { ToolTip } from "../../../../gui/Tooltip";
+import { Button } from "../../../../ui";
 import EditBlockButton from "../../EditBlockButton";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
 
@@ -68,9 +69,37 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
               className={`h-3 w-3 ${server.status === "error" ? "text-red-500" : "text-yellow-500"}`}
               data-tooltip-id={errorsTooltipId}
             />
-            <ToolTip id={errorsTooltipId} className="flex flex-col gap-0.5">
+            <ToolTip
+              clickable
+              id={errorsTooltipId}
+              delayHide={
+                server.errors.some((error) => error.length > 150) ? 1500 : 0
+              }
+              className="flex flex-col gap-0.5"
+            >
               {server.errors.map((error, idx) => (
-                <code key={idx}>{error}</code>
+                <Fragment key={idx}>
+                  <div>
+                    {error.length > 150
+                      ? error.substring(0, 150) + "..."
+                      : error}
+                  </div>
+                  {error.length > 150 && (
+                    <Button
+                      className="my-0"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        void ideMessenger.ide.showVirtualFile(
+                          server.name,
+                          error,
+                        )
+                      }
+                    >
+                      View full error
+                    </Button>
+                  )}
+                </Fragment>
               ))}
             </ToolTip>
           </>
