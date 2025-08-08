@@ -108,6 +108,12 @@ export interface DiffMetadata {
     newStart: number; // Starting line in modified file
     newCount: number; // Number of lines in modified file
     header?: string; // Optional section header
+    lines: Array<{
+      type: "context" | "addition" | "deletion";
+      content: string;
+      oldLineNumber?: number;
+      newLineNumber?: number;
+    }>;
   }>;
   isBinary?: boolean; // Whether this is a binary file diff
   isNew?: boolean; // Whether this is a new file
@@ -159,23 +165,62 @@ export function extractMetadataFromUnifiedDiff(
     }
   }
 
-  // Parse hunk headers
+  // Parse hunk headers and content
   metadata.hunks = [];
   const hunkHeaderRegex =
     /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?:\s(.*))?$/;
+
+  let currentHunk: NonNullable<DiffMetadata["hunks"]>[0] | null = null;
+  let oldLineNumber = 0;
+  let newLineNumber = 0;
 
   for (let i = 2; i < lines.length; i++) {
     const line = lines[i];
     const hunkMatch = line.match(hunkHeaderRegex);
 
     if (hunkMatch) {
-      metadata.hunks.push({
-        oldStart: parseInt(hunkMatch[1], 10),
-        oldCount: hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1,
-        newStart: parseInt(hunkMatch[3], 10),
-        newCount: hunkMatch[4] ? parseInt(hunkMatch[4], 10) : 1,
-        header: hunkMatch[5],
-      });
+      currentHunk = {
+        oldStart: parseInt(hunkMatch[1], 10), // line number where changes start in original file
+        oldCount: hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1, // number of changed lines in original file, default to 1 if not specified
+        newStart: parseInt(hunkMatch[3], 10), // line number where changes start in modified file
+        newCount: hunkMatch[4] ? parseInt(hunkMatch[4], 10) : 1, // number of changed lines in modified file, default to 1 if not specified
+        header: hunkMatch[5], // the line starting with @@
+        lines: [], // the actual line changes
+      };
+
+      oldLineNumber = currentHunk.oldStart;
+      newLineNumber = currentHunk.newStart;
+
+      metadata.hunks.push(currentHunk);
+    } else if (
+      currentHunk &&
+      (line.startsWith(" ") || line.startsWith("+") || line.startsWith("-"))
+    ) {
+      // Process hunk content lines.
+      const lineType = line[0];
+      const content = line.slice(1);
+
+      if (lineType === " ") {
+        // Context line (unchanged).
+        currentHunk.lines.push({
+          type: "context",
+          content,
+          oldLineNumber: oldLineNumber++,
+          newLineNumber: newLineNumber++,
+        });
+      } else if (lineType === "+") {
+        currentHunk.lines.push({
+          type: "addition",
+          content,
+          newLineNumber: newLineNumber++,
+        });
+      } else if (lineType === "-") {
+        currentHunk.lines.push({
+          type: "deletion",
+          content,
+          oldLineNumber: oldLineNumber++,
+        });
+      }
     }
 
     // Check for binary file marker
