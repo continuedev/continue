@@ -1,15 +1,13 @@
-type NextEditModelName = "mercury-coder-nextedit";
+export function isNextEditTest(): boolean {
+  const enabled = process.env.NEXT_EDIT_TEST_ENABLED;
 
-export function isModelCapableOfNextEdit(modelName: string): boolean {
-  // In test mode, we can control whether next edit is enabled via environment variable.
-  if (process.env.NEXT_EDIT_TEST_ENABLED === "false") {
+  if (enabled === "false") {
     return false;
   }
 
-  if (process.env.NEXT_EDIT_TEST_ENABLED === "true") {
+  if (enabled === "true") {
     return true;
   }
 
-  const supportedModels: NextEditModelName[] = ["mercury-coder-nextedit"];
-  return supportedModels.some((supported) => modelName.includes(supported));
+  return false;
 }

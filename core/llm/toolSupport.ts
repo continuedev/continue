@@ -54,26 +54,28 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     openai: (model) => {
+      const lower = model.toLowerCase();
       // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
       if (
-        model.toLowerCase().startsWith("gpt-4") ||
-        model.toLowerCase().startsWith("o3")
+        lower.startsWith("gpt-4") ||
+        lower.startsWith("gpt-5") ||
+        lower.startsWith("o3")
       ) {
         return true;
       }
 
       // LGAI EXAONE models expose an OpenAI-compatible API with tool
       // calling support when served via frameworks like vLLM
-      if (model.toLowerCase().includes("exaone")) {
+      if (lower.includes("exaone")) {
         return true;
       }
 
-      if (model.toLowerCase().includes("gpt-oss")) {
+      if (lower.includes("gpt-oss")) {
         return true;
       }
 
       // https://ai.google.dev/gemma/docs/capabilities/function-calling
-      if (model.toLowerCase().startsWith("gemma")) {
+      if (lower.startsWith("gemma")) {
         return true;
       }
 

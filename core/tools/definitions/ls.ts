@@ -1,7 +1,6 @@
 import { Tool } from "../..";
 
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export const lsTool: Tool = {
   type: "function",
@@ -32,12 +31,11 @@ export const lsTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithoutPermission",
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.LSTool,
-    `To list files and folders in a given directory, call the ${BuiltInToolNames.LSTool} tool with "dirPath" and "recursive". For example:`,
-    [
+  systemMessageDescription: {
+    prefix: `To list files and folders in a given directory, call the ${BuiltInToolNames.LSTool} tool with "dirPath" and "recursive". For example:`,
+    exampleArgs: [
       ["dirPath", "path/to/dir"],
       ["recursive", "false"],
     ],
-  ),
+  },
 };
