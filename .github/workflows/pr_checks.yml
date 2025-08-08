@@ -46,6 +46,9 @@ jobs:
       - name: Run linting
         run: npm run lint
 
+      - name: Check code formatting
+        run: npm run format:check
+
   review:
     uses: ./.github/workflows/continue-review.yaml
     secrets:
