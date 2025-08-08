@@ -9,19 +9,33 @@ import {
 import { extractMetadataFromUnifiedDiff } from "../context/diffFormatting";
 import { insertCursorToken } from "./utils";
 
-export function recentlyViewedCodeSnippetsBlock(
-  recentlyViewedCodeSnippets: { filepath: string; content: string }[],
-) {
-  return recentlyViewedCodeSnippets.reduce((acc, snippet, i) => {
-    const block = [
-      `${MODEL_1_CONTEXT_FILE_TOKEN}: ${snippet.filepath}`,
-      `${MODEL_1_SNIPPET_TOKEN}\n${snippet.content}`,
-    ].join("\n");
+/**
+ * @param contextSnippets Codestral style snippet with +++++ filename\ncontent or an empty string.
+ */
+export function contextSnippetsBlock(contextSnippets: string) {
+  const headerRegex = /^(\+\+\+\+\+ )(.*)/g;
+  const lines = contextSnippets.split("\n");
 
-    return (
-      acc + block + (i === recentlyViewedCodeSnippets.length - 1 ? "" : "\n")
-    );
-  }, "");
+  return lines
+    .reduce<string[]>((acc, line) => {
+      const matches = line.match(headerRegex);
+      if (matches) {
+        acc.push("\n");
+        const filename = matches[2];
+        acc.push(`${MODEL_1_CONTEXT_FILE_TOKEN}: ${filename}`);
+      } else {
+        if (
+          acc.length > 0 &&
+          acc[acc.length - 1].match(headerRegex) // if header was added just before
+        ) {
+          acc.push(`${MODEL_1_SNIPPET_TOKEN}`);
+        }
+        acc.push(line);
+      }
+
+      return acc;
+    }, [])
+    .join("\n");
 }
 
 export function currentFileContentBlock(
@@ -74,15 +88,4 @@ export function editHistoryBlock(
   });
 
   return block.join("\n");
-}
-
-function mercuryNextEditTemplateBuilder(
-  recentlyViewedCodeSnippets: { filepath: string; code: string }[],
-  currentFileContent: string,
-  codeToEdit: string,
-  codeToEditRange: Range,
-  cursorPosition: Position,
-  editDiffHistory: string, // could be a singe large unified diff
-): string {
-  return "";
 }
