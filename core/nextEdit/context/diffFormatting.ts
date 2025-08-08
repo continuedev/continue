@@ -124,9 +124,7 @@ export function extractMetadataFromUnifiedDiff(
   // Parse the header lines (first two lines)
   if (lines.length >= 2) {
     // Parse original file info (--- line)
-    const oldFileMatch = lines[0].match(
-      /^--- (a\/)?([^\t\s]+)(?:[\t\s]+(.+))?$/,
-    );
+    const oldFileMatch = lines[0].match(/^--- (a\/)?(.+?)(?:\t(.+))?$/);
     if (oldFileMatch) {
       metadata.oldFilename = oldFileMatch[2];
       metadata.oldTimestamp = oldFileMatch[3];
@@ -138,9 +136,7 @@ export function extractMetadataFromUnifiedDiff(
     }
 
     // Parse modified file info (+++ line)
-    const newFileMatch = lines[1].match(
-      /^\+\+\+ (b\/)?([^\t\s]+)(?:[\t\s]+(.+))?$/,
-    );
+    const newFileMatch = lines[1].match(/^\+\+\+ (b\/)?(.+?)(?:\t(.+))?$/);
     if (newFileMatch) {
       metadata.newFilename = newFileMatch[2];
       metadata.newTimestamp = newFileMatch[3];
