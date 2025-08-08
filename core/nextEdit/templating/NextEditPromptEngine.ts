@@ -45,7 +45,7 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
     template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at {{{currentFilePath}}}.\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
   },
   "model-1": {
-    template: `${MODEL_1_USER_PROMPT_PREFIX}\n\n### Context:\n{{{recentlyViewedCodeSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{currentFileContent}}}\`\`\`\n### Response:`,
+    template: `${MODEL_1_USER_PROMPT_PREFIX}\n\n### Context:\n{{{contextSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpts:\n\n\`\`\`{{{languageShorthand}}}\n{{{currentFileContent}}}\`\`\`\n### Response:`,
   },
 };
 
@@ -120,7 +120,7 @@ export async function renderPrompt(
       break;
     }
     case "model-1": {
-      userEdits = ctx.userEdits;
+      userEdits = ctx.editDiffHistory;
 
       editedCodeWithTokens = insertTokens(
         helper.fileContents.split("\n"),
