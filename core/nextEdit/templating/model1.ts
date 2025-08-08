@@ -1,4 +1,4 @@
-import { Position, Range } from "../..";
+import { Position } from "../..";
 import {
   MODEL_1_CONTEXT_FILE_TOKEN,
   MODEL_1_EDITABLE_REGION_END_TOKEN,
@@ -13,20 +13,19 @@ import { insertCursorToken } from "./utils";
  * @param contextSnippets Codestral style snippet with +++++ filename\ncontent or an empty string.
  */
 export function contextSnippetsBlock(contextSnippets: string) {
-  const headerRegex = /^(\+\+\+\+\+ )(.*)/g;
+  const headerRegex = /^(\+\+\+\+\+ )(.*)/;
   const lines = contextSnippets.split("\n");
 
   return lines
     .reduce<string[]>((acc, line) => {
       const matches = line.match(headerRegex);
       if (matches) {
-        acc.push("\n");
         const filename = matches[2];
         acc.push(`${MODEL_1_CONTEXT_FILE_TOKEN}: ${filename}`);
       } else {
         if (
           acc.length > 0 &&
-          acc[acc.length - 1].match(headerRegex) // if header was added just before
+          acc[acc.length - 1].startsWith(MODEL_1_CONTEXT_FILE_TOKEN) // if header was added just before
         ) {
           acc.push(`${MODEL_1_SNIPPET_TOKEN}`);
         }
@@ -75,13 +74,14 @@ export function editHistoryBlock(
   const block: string[] = [];
 
   editDiffHistories.forEach((diff) => {
-    const metadata = extractMetadataFromUnifiedDiff(diff);
+    const diffWithoutHeader = diff.split("\n").slice(2).join("\n");
+    const metadata = extractMetadataFromUnifiedDiff(diffWithoutHeader);
     block.push(
       [
         `User edited file \"${metadata.oldFilename}\"`,
         "",
         "```diff",
-        `${diff.split("\n").slice(2).join("\n")}`,
+        `${diffWithoutHeader}`,
         "```",
       ].join("\n"),
     );
