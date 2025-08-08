@@ -30,6 +30,7 @@ import {
   insertCursorToken,
   insertEditableRegionTokensWithStaticRange,
 } from "./utils";
+import { contextSnippetsBlock } from "./model1";
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
@@ -142,9 +143,7 @@ export async function renderPrompt(
       );
 
       const model1Ctx: Model1TemplateVars = {
-        recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
-          ctx.recentlyViewedCodeSnippets,
-        ),
+        contextSnippets: contextSnippetsBlock(ctx.contextSnippets),
         currentFileContent: currentFileContentBlock(
           ctx.currentFileContent,
           ctx.editableRegionStartLine,
