@@ -39,6 +39,8 @@ export function contextSnippetsBlock(contextSnippets: string) {
 
 export function currentFileContentBlock(
   currentFileContent: string,
+  windowStart: number,
+  windowEnd: number,
   editableRegionStartLine: number,
   editableRegionEndLine: number,
   cursorPosition: Position,
@@ -52,14 +54,14 @@ export function currentFileContentBlock(
   );
 
   const instrumentedLines = [
-    ...insertedCursorLines.slice(0, editableRegionStartLine),
+    ...insertedCursorLines.slice(windowStart, editableRegionStartLine),
     MODEL_1_EDITABLE_REGION_START_TOKEN,
     ...insertedCursorLines.slice(
       editableRegionStartLine,
       editableRegionEndLine + 1,
     ),
     MODEL_1_EDITABLE_REGION_END_TOKEN,
-    ...insertedCursorLines.slice(editableRegionEndLine + 1),
+    ...insertedCursorLines.slice(editableRegionEndLine + 1, windowEnd + 1),
   ];
 
   return instrumentedLines.join("\n");

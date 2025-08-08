@@ -132,6 +132,8 @@ export async function renderPrompt(
         contextSnippets: contextSnippetsBlock(ctx.contextSnippets),
         currentFileContent: model1CurrentFileContentBlock(
           ctx.currentFileContent,
+          ctx.windowStart,
+          ctx.windowEnd,
           ctx.editableRegionStartLine,
           ctx.editableRegionEndLine,
           helper.pos,

@@ -559,11 +559,30 @@ export class NextEditProvider {
         currentFilePath: helper.filepath,
       };
     } else if (modelName.includes("model-1")) {
+      // Calculate the window around the cursor position (25 lines above and below).
+      const windowStart = Math.max(0, helper.pos.line - 25);
+      const windowEnd = Math.min(
+        helper.fileLines.length - 1,
+        helper.pos.line + 25,
+      );
+
+      // The editable region is defined as: cursor line - 1 to cursor line + 5 (inclusive).
+      const actualEditableStart = Math.max(0, helper.pos.line - 1);
+      const actualEditableEnd = Math.min(
+        helper.fileLines.length - 1,
+        helper.pos.line + 5,
+      );
+
+      // Ensure editable region boundaries are within the window.
+      const adjustedEditableStart = Math.max(windowStart, actualEditableStart);
+      const adjustedEditableEnd = Math.min(windowEnd, actualEditableEnd);
       ctx = {
         contextSnippets: this.autocompleteContext,
         currentFileContent: helper.fileContents,
-        editableRegionStartLine,
-        editableRegionEndLine,
+        windowStart,
+        windowEnd,
+        adjustedEditableStart,
+        adjustedEditableEnd,
         editDiffHistory: this.diffContext,
         currentFilePath: helper.filepath,
         languageShorthand: helper.lang.name,
