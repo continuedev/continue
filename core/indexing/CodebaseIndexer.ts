@@ -735,6 +735,7 @@ export class CodebaseIndexer {
       });
     }
     if (this.indexingCancellationController === localController) {
+      this.indexingCancellationController.abort(); // abort before clearing to prevent race condition (multiple starts)
       this.indexingCancellationController = undefined;
     }
   }
