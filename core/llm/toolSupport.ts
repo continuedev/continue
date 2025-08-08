@@ -277,6 +277,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "deepseek/deepseek-chat",
         "meta-llama/llama-4",
         "all-hands/openhands-lm-32b",
+        "lgai-exaone/exaone"
       ];
       for (const prefix of supportedPrefixes) {
         if (model.toLowerCase().startsWith(prefix)) {
@@ -347,11 +348,7 @@ export function modelSupportsNativeTools(modelDescription: ModelDescription) {
   if (modelDescription.capabilities?.tools !== undefined) {
     return modelDescription.capabilities.tools;
   }
-  // EXAONE 4.0 models advertise tool-calling capability regardless of
-  // the provider used to serve them.
-  if (modelDescription.model.toLowerCase().includes("exaone")) {
-    return true;
-  }
+
   const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
     return false;
