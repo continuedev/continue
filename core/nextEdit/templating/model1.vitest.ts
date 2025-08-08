@@ -94,12 +94,16 @@ line 1
 line 2
 line 3
 line 4`;
+    const windowStart = 0;
+    const windowEnd = 4;
     const cursorPosition: Position = { line: 2, character: 4 };
     const editableRegionStartLine = 1;
     const editableRegionEndLine = 3;
 
     const result = currentFileContentBlock(
       content,
+      windowStart,
+      windowEnd,
       editableRegionStartLine,
       editableRegionEndLine,
       cursorPosition,
@@ -120,12 +124,16 @@ line 4`;
     const content = `line 0
 line 1
 line 2`;
+    const windowStart = 0;
+    const windowEnd = 2;
     const cursorPosition: Position = { line: 1, character: 0 };
     const editableRegionStartLine = 0;
     const editableRegionEndLine = 2;
 
     const result = currentFileContentBlock(
       content,
+      windowStart,
+      windowEnd,
       editableRegionStartLine,
       editableRegionEndLine,
       cursorPosition,
@@ -144,12 +152,16 @@ line 2
     const content = `line 0
 line 1
 line 2`;
+    const windowStart = 0;
+    const windowEnd = 2;
     const cursorPosition: Position = { line: 1, character: 6 }; // end of "line 1"
     const editableRegionStartLine = 0;
     const editableRegionEndLine = 2;
 
     const result = currentFileContentBlock(
       content,
+      windowStart,
+      windowEnd,
       editableRegionStartLine,
       editableRegionEndLine,
       cursorPosition,
@@ -168,12 +180,16 @@ line 2
     const content = `line 0
 line 1
 line 2`;
+    const windowStart = 0;
+    const windowEnd = 2;
     const cursorPosition: Position = { line: 1, character: 2 };
     const editableRegionStartLine = 1;
     const editableRegionEndLine = 1;
 
     const result = currentFileContentBlock(
       content,
+      windowStart,
+      windowEnd,
       editableRegionStartLine,
       editableRegionEndLine,
       cursorPosition,
@@ -188,15 +204,19 @@ line 2`;
     expect(result).toBe(expected);
   });
 
-  test("should handle cursor outside bounds gracefully", () => {
+  test("should handle cursor outside bounds gracefully (this shouldn't happen)", () => {
     const content = `line 0
 line 1`;
+    const windowStart = 0;
+    const windowEnd = 1;
     const cursorPosition: Position = { line: 10, character: 0 }; // out of bounds
     const editableRegionStartLine = 0;
     const editableRegionEndLine = 1;
 
     const result = currentFileContentBlock(
       content,
+      windowStart,
+      windowEnd,
       editableRegionStartLine,
       editableRegionEndLine,
       cursorPosition,
@@ -214,12 +234,16 @@ line 1
     const content = `line 0
 line 1
 line 2`;
+    const windowStart = 0;
+    const windowEnd = 2;
     const cursorPosition: Position = { line: 1, character: 0 };
     const editableRegionStartLine = 0;
     const editableRegionEndLine = 2;
 
     const result = currentFileContentBlock(
       content,
+      windowStart,
+      windowEnd,
       editableRegionStartLine,
       editableRegionEndLine,
       cursorPosition,
@@ -230,6 +254,36 @@ line 0
 <|user_cursor_is_here|>line 1
 line 2
 <|editable_region_end|>`;
+
+    expect(result).toBe(expected);
+  });
+
+  test("should handle windowing - content outside window not included", () => {
+    const content = `line 0
+line 1
+line 2
+line 3
+line 4`;
+    const windowStart = 1;
+    const windowEnd = 3;
+    const cursorPosition: Position = { line: 2, character: 2 };
+    const editableRegionStartLine = 2;
+    const editableRegionEndLine = 2;
+
+    const result = currentFileContentBlock(
+      content,
+      windowStart,
+      windowEnd,
+      editableRegionStartLine,
+      editableRegionEndLine,
+      cursorPosition,
+    );
+
+    const expected = `line 1
+<|editable_region_start|>
+li<|user_cursor_is_here|>ne 2
+<|editable_region_end|>
+line 3`;
 
     expect(result).toBe(expected);
   });
