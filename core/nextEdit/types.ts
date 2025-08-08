@@ -91,9 +91,11 @@ export interface NextEditTemplate {
 export interface TemplateVars {}
 
 export interface Model1TemplateVars extends TemplateVars {
-  userEdits: string;
+  contextSnippets: string;
+  currentFileContent: string;
+  editDiffHistory: string; // could be a singe large unified diff
+  currentFilePath: string;
   languageShorthand: string;
-  userExcerpts: string;
 }
 
 export interface MercuryTemplateVars extends TemplateVars {

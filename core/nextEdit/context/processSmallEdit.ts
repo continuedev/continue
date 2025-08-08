@@ -20,7 +20,7 @@ export const processSmallEdit = async (
       afterContent: beforeAfterdiff.afterContent,
       filePath: beforeAfterdiff.filePath,
       diffType: DiffFormatType.Unified,
-      contextLines: 3, // NOTE: This can change depending on experiments!
+      contextLines: 5, // NOTE: This can change depending on experiments!
     }),
   );
 

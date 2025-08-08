@@ -37,6 +37,7 @@ import { replaceEscapedCharacters } from "../util/text.js";
 import {
   MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_SYSTEM_PROMPT,
+  MODEL_1_SYSTEM_PROMPT,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "./constants.js";
@@ -83,6 +84,7 @@ export class NextEditProvider {
   private contextRetrievalService: ContextRetrievalService;
   private endpointType: "default" | "fineTuned";
   private diffContext: string = "";
+  private autocompleteContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
   private currentEditChainId: string | null = null;
   private previousRequest: AutocompleteInput | null = null;
@@ -135,6 +137,10 @@ export class NextEditProvider {
 
   public addDiffToContext(diff: string): void {
     this.diffContext = diff;
+  }
+
+  public addAutocompleteContext(ctx: string): void {
+    this.autocompleteContext = ctx;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -553,10 +559,33 @@ export class NextEditProvider {
         currentFilePath: helper.filepath,
       };
     } else if (modelName.includes("model-1")) {
+      // Calculate the window around the cursor position (25 lines above and below).
+      const windowStart = Math.max(0, helper.pos.line - 25);
+      const windowEnd = Math.min(
+        helper.fileLines.length - 1,
+        helper.pos.line + 25,
+      );
+
+      // The editable region is defined as: cursor line - 1 to cursor line + 5 (inclusive).
+      const actualEditableStart = Math.max(0, helper.pos.line - 1);
+      const actualEditableEnd = Math.min(
+        helper.fileLines.length - 1,
+        helper.pos.line + 5,
+      );
+
+      // Ensure editable region boundaries are within the window.
+      const adjustedEditableStart = Math.max(windowStart, actualEditableStart);
+      const adjustedEditableEnd = Math.min(windowEnd, actualEditableEnd);
       ctx = {
-        userEdits: historyDiff ?? this.diffContext,
+        contextSnippets: this.autocompleteContext,
+        currentFileContent: helper.fileContents,
+        windowStart,
+        windowEnd,
+        adjustedEditableStart,
+        adjustedEditableEnd,
+        editDiffHistory: this.diffContext,
+        currentFilePath: helper.filepath,
         languageShorthand: helper.lang.name,
-        userExcerpts: helper.fileContents,
       };
     } else {
       ctx = {};
@@ -567,7 +596,9 @@ export class NextEditProvider {
 
     const systemPrompt: Prompt = {
       role: "system",
-      content: MERCURY_SYSTEM_PROMPT,
+      content: modelName.includes("mercury-coder-nextedit")
+        ? MERCURY_SYSTEM_PROMPT
+        : MODEL_1_SYSTEM_PROMPT,
     };
 
     return [systemPrompt, promptMetadata.prompt];
