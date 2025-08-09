@@ -151,9 +151,9 @@ jobs:
         if: inputs.prompt == '' && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.event != 'pull_request')
         run: |
           cat > review_prompt.txt << 'EOF'
-          Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement. 
+          Please review the recent changes to this codebase and provide feedback on code quality, potential issues, and suggestions for improvement. You do not need to acknowledge what was done well. 
 
-          Format your response as a markdown code review.
+          Format your response as a markdown code review with each comment having only a short description about the problem and suggested solution, each being separated by "\n\n---\n\n".
 
           Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
           EOF
