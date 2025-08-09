@@ -11,14 +11,14 @@ export class MCPConnection {
   private constructor(public readonly client: Client) {}
 
   public static async create(
-    config: NonNullable<AssistantConfig["mcpServers"]>[number]
+    config: NonNullable<AssistantConfig["mcpServers"]>[number],
   ) {
     const client = new Client(
       {
         name: "continue-cli-client",
         version: "1.0.0",
       },
-      { capabilities: {} }
+      { capabilities: {} },
     );
 
     // Construct transport
@@ -39,10 +39,13 @@ export class MCPConnection {
 
     // Connect and get all prompts and tools
     const connection = new MCPConnection(client);
-    logger.debug('Connecting to MCP server', { command: config.command });
+    logger.debug("Connecting to MCP server", { command: config.command });
     await client.connect(transport);
     const capabilities = client.getServerCapabilities();
-    logger.debug('MCP server capabilities', { hasPrompts: !!capabilities?.prompts, hasTools: !!capabilities?.tools });
+    logger.debug("MCP server capabilities", {
+      hasPrompts: !!capabilities?.prompts,
+      hasTools: !!capabilities?.tools,
+    });
 
     if (capabilities?.prompts) {
       connection.prompts = (await client.listPrompts()).prompts;

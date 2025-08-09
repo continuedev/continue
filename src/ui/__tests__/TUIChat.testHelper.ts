@@ -46,7 +46,7 @@ export interface TestOptions {
 export function runTest(
   name: string,
   testFn: (ctx: TestContext) => void | Promise<void>,
-  options: TestOptions = {}
+  options: TestOptions = {},
 ) {
   const { mode = "both", serverSetup, props = {} } = options;
   const modes = mode === "both" ? ["normal", "remote"] : [mode];
@@ -89,7 +89,7 @@ export function runTest(
           let renderResult: RenderResult | null = null;
           try {
             renderResult = render(
-              React.createElement(TUIChat, { remoteUrl, ...props })
+              React.createElement(TUIChat, { remoteUrl, ...props }),
             ) as RenderResult;
 
             await testFn({
@@ -124,35 +124,38 @@ export function runTest(
             allReady: true,
           });
 
-          mockUseService.mockImplementation((serviceName: string) => ({
-            value: (() => {
-              switch (serviceName) {
-                case "auth":
-                  return { authConfig: null, isAuthenticated: false };
-                case "config":
-                  return { config: mockAssistant };
-                case "model":
-                  return {
-                    llmApi: new MockLlmApi(),
-                    model: { provider: "test", name: "test" },
-                  };
-                case "mcp":
-                  return { mcpService: new MockMCPService() };
-                case "apiClient":
-                  return { apiClient: new MockApiClient() };
-                default:
-                  return null;
-              }
-            })(),
-            state: "ready" as const,
-            error: null,
-            reload: vi.fn(() => Promise.resolve()),
-          } as any));
+          mockUseService.mockImplementation(
+            (serviceName: string) =>
+              ({
+                value: (() => {
+                  switch (serviceName) {
+                    case "auth":
+                      return { authConfig: null, isAuthenticated: false };
+                    case "config":
+                      return { config: mockAssistant };
+                    case "model":
+                      return {
+                        llmApi: new MockLlmApi(),
+                        model: { provider: "test", name: "test" },
+                      };
+                    case "mcp":
+                      return { mcpService: new MockMCPService() };
+                    case "apiClient":
+                      return { apiClient: new MockApiClient() };
+                    default:
+                      return null;
+                  }
+                })(),
+                state: "ready" as const,
+                error: null,
+                reload: vi.fn(() => Promise.resolve()),
+              }) as any,
+          );
 
           let renderResult: RenderResult | null = null;
           try {
             renderResult = render(
-              React.createElement(TUIChat, { ...props })
+              React.createElement(TUIChat, { ...props }),
             ) as RenderResult;
 
             await testFn({
@@ -180,7 +183,7 @@ export function runTest(
 export function runTestSuite(
   suiteName: string,
   suiteFn: () => void,
-  defaultOptions: TestOptions = {}
+  defaultOptions: TestOptions = {},
 ) {
   const modes =
     defaultOptions.mode === "both" || !defaultOptions.mode
@@ -204,7 +207,7 @@ export function runTestSuite(
         global.runTest = (
           name: string,
           testFn: any,
-          options: TestOptions = {}
+          options: TestOptions = {},
         ) => {
           // If test specifies a mode, only run if it matches current mode
           const testMode = options.mode || "both";
@@ -241,7 +244,7 @@ export function runTestSuite(
                     React.createElement(TUIChat, {
                       remoteUrl,
                       ...options.props,
-                    })
+                    }),
                   ) as RenderResult;
 
                   await testFn({
@@ -276,35 +279,38 @@ export function runTestSuite(
                   allReady: true,
                 });
 
-                mockUseService.mockImplementation((serviceName: string) => ({
-                  value: (() => {
-                    switch (serviceName) {
-                      case "auth":
-                        return { authConfig: null, isAuthenticated: false };
-                      case "config":
-                        return { config: mockAssistant };
-                      case "model":
-                        return {
-                          llmApi: new MockLlmApi(),
-                          model: { provider: "test", name: "test" },
-                        };
-                      case "mcp":
-                        return { mcpService: new MockMCPService() };
-                      case "apiClient":
-                        return { apiClient: new MockApiClient() };
-                      default:
-                        return null;
-                    }
-                  })(),
-                  state: "ready" as const,
-                  error: null,
-                  reload: vi.fn(() => Promise.resolve()),
-                } as any));
+                mockUseService.mockImplementation(
+                  (serviceName: string) =>
+                    ({
+                      value: (() => {
+                        switch (serviceName) {
+                          case "auth":
+                            return { authConfig: null, isAuthenticated: false };
+                          case "config":
+                            return { config: mockAssistant };
+                          case "model":
+                            return {
+                              llmApi: new MockLlmApi(),
+                              model: { provider: "test", name: "test" },
+                            };
+                          case "mcp":
+                            return { mcpService: new MockMCPService() };
+                          case "apiClient":
+                            return { apiClient: new MockApiClient() };
+                          default:
+                            return null;
+                        }
+                      })(),
+                      state: "ready" as const,
+                      error: null,
+                      reload: vi.fn(() => Promise.resolve()),
+                    }) as any,
+                );
 
                 let renderResult: RenderResult | null = null;
                 try {
                   renderResult = render(
-                    React.createElement(TUIChat, { ...options.props })
+                    React.createElement(TUIChat, { ...options.props }),
                   ) as RenderResult;
 
                   await testFn({
@@ -345,7 +351,7 @@ export function runTestSuite(
 export async function waitForServerState(
   server: MockRemoteServer,
   predicate: (state: any) => boolean,
-  timeout: number = 5000
+  timeout: number = 5000,
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -359,7 +365,7 @@ export async function waitForServerState(
 
   const finalState = (server as any).state || {};
   throw new Error(
-    `Timeout waiting for server state: ${JSON.stringify(finalState)}`
+    `Timeout waiting for server state: ${JSON.stringify(finalState)}`,
   );
 }
 
@@ -369,7 +375,7 @@ export async function waitForServerState(
 export async function sendMessage(
   ctx: TestContext,
   message: string,
-  waitTime: number = 100
+  waitTime: number = 100,
 ): Promise<void> {
   const { renderResult } = ctx;
 
@@ -383,15 +389,15 @@ export async function sendMessage(
         ctx.server,
         (state) =>
           state.messages?.some?.(
-            (m: any) => m.content === message && m.role === "user"
+            (m: any) => m.content === message && m.role === "user",
           ),
-        2000
+        2000,
       );
     } catch (error) {
       // If waiting fails, continue anyway - the server might be slow
       console.warn(
         "Warning: Message might not have been processed by server:",
-        error
+        error,
       );
     }
     // Extra wait for UI to poll and update
@@ -428,7 +434,7 @@ declare global {
   var runTest: (
     name: string,
     testFn: (ctx: TestContext) => void | Promise<void>,
-    options?: TestOptions
+    options?: TestOptions,
   ) => void;
 }
 

@@ -9,7 +9,10 @@ import useSWR from "swr";
 
 import { listUserOrganizations } from "../auth/workos.js";
 import { env } from "../env.js";
-import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
+import {
+  isValidAnthropicApiKey,
+  getApiKeyValidationError,
+} from "../util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
 
 import { useNavigation } from "./context/NavigationContext.js";
@@ -30,10 +33,10 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  const existingContent = fs.existsSync(CONFIG_PATH) 
+  const existingContent = fs.existsSync(CONFIG_PATH)
     ? fs.readFileSync(CONFIG_PATH, "utf8")
     : "";
-    
+
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
@@ -50,7 +53,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [wasModelsSetup, setWasModelsSetup] = useState(false);
-  
+
   // Fetch organizations using SWR
   const { data: organizations } = useSWR(
     "organizations",
@@ -59,9 +62,9 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       shouldRetryOnError: false,
-    }
+    },
   );
-  
+
   const hasOrganizations = organizations && organizations.length > 0;
 
   useInput((input, key) => {
@@ -116,12 +119,12 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       try {
         await open(modelsUrl);
         setSuccessMessage(
-          `Browser opened to ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
+          `Browser opened to ${modelsUrl}. After setting up your models subscription, press Enter to continue.`,
         );
         setCurrentStep("success");
       } catch {
         setErrorMessage(
-          `Could not open browser automatically. Please visit: ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
+          `Could not open browser automatically. Please visit: ${modelsUrl}. After setting up your models subscription, press Enter to continue.`,
         );
         setCurrentStep("error");
       }
@@ -131,10 +134,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       setWasModelsSetup(false); // This is not models setup
     } else if (selectedOption === 3) {
       // Option 3: Switch to different configuration
-      navigateTo('config');
+      navigateTo("config");
     } else if (selectedOption === 4 && hasOrganizations) {
       // Option 4: Switch to organization
-      navigateTo('organization');
+      navigateTo("organization");
     }
   };
 
@@ -144,7 +147,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
     try {
       await createOrUpdateConfig(apiKey);
       setSuccessMessage(
-        "✓ API key saved successfully! Switching to local configuration..."
+        "✓ API key saved successfully! Switching to local configuration...",
       );
       setCurrentStep("success");
 
@@ -155,7 +158,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       }, 1000);
     } catch (error) {
       setErrorMessage(
-        `❌ Error saving API key: ${error}. Press Enter to try again.`
+        `❌ Error saving API key: ${error}. Press Enter to try again.`,
       );
       setCurrentStep("error");
     }
@@ -179,19 +182,23 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
           (recommended)
         </Text>
         <Text color={selectedOption === 2 ? "cyan" : "white"}>
-          {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API key
+          {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API
+          key
         </Text>
         <Text color={selectedOption === 3 ? "cyan" : "white"}>
-          {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different configuration
+          {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different
+          configuration
         </Text>
         {hasOrganizations && (
           <Text color={selectedOption === 4 ? "cyan" : "white"}>
-            {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization profile
+            {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization
+            profile
           </Text>
         )}
         <Text></Text>
         <Text color="gray">
-          Use ↑↓ arrows or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select, Enter to confirm
+          Use ↑↓ arrows or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select,
+          Enter to confirm
         </Text>
       </Box>
     );

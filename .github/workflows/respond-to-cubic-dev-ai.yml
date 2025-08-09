@@ -14,7 +14,7 @@ jobs:
     # Only run on pull request comments
     if: github.event.issue.pull_request
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Check if comment contains @continuedev
         id: check-mention

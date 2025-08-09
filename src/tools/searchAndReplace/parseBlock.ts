@@ -28,7 +28,7 @@ export interface SearchReplaceBlockResult {
  * @returns ParseResult with completion status and extracted content
  */
 export function parseSearchReplaceBlock(
-  content: string
+  content: string,
 ): SearchReplaceBlockResult {
   const lines = content.split("\n");
 
@@ -99,7 +99,7 @@ export function parseSearchReplaceBlock(
  * @throws Error if any malformed blocks are encountered
  */
 export function parseAllSearchReplaceBlocks(
-  content: string
+  content: string,
 ): SearchReplaceBlockResult[] {
   const blocks: SearchReplaceBlockResult[] = [];
   const lines = content.split("\n");

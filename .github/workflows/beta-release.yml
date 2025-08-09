@@ -46,11 +46,11 @@ jobs:
             echo "Using latest npm version: $LATEST_VERSION"
             CURRENT_VERSION=$LATEST_VERSION
           fi
-          
+
           # Create beta version with current date
           DATE_SUFFIX=$(date -u +%Y%m%d)
           BETA_VERSION="${CURRENT_VERSION}-beta.${DATE_SUFFIX}"
-          
+
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "beta_version=$BETA_VERSION" >> $GITHUB_OUTPUT
           echo "date_suffix=$DATE_SUFFIX" >> $GITHUB_OUTPUT
@@ -79,7 +79,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git tag "v${{ steps.get_version.outputs.beta_version }}"
           git push origin "v${{ steps.get_version.outputs.beta_version }}"
-          
+
           # Create GitHub release
           gh release create "v${{ steps.get_version.outputs.beta_version }}" \
             --title "Beta Release v${{ steps.get_version.outputs.beta_version }}" \

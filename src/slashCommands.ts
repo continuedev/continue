@@ -12,7 +12,7 @@ import { posthogService } from "./telemetry/posthogService.js";
 
 export async function handleSlashCommands(
   input: string,
-  assistant: AssistantConfig
+  assistant: AssistantConfig,
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -30,7 +30,10 @@ export async function handleSlashCommands(
         const allCommands = getAllSlashCommands(assistant);
         const helpMessage = [
           chalk.cyan("Slash commands:"),
-          ...allCommands.map((cmd) => `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`),
+          ...allCommands.map(
+            (cmd) =>
+              `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
+          ),
         ].join("\n");
         posthogService.capture("useSlashCommand", {
           name: "help",
@@ -195,7 +198,7 @@ export async function handleSlashCommands(
         }
       default:
         const assistantPrompt = assistant.prompts?.find(
-          (prompt) => prompt?.name === command
+          (prompt) => prompt?.name === command,
         );
         if (assistantPrompt) {
           const newInput = assistantPrompt.prompt + args.join(" ");

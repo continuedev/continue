@@ -31,7 +31,7 @@ export async function compactChatHistory(
   chatHistory: ChatCompletionMessageParam[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
-  callbacks?: CompactionCallbacks
+  callbacks?: CompactionCallbacks,
 ): Promise<CompactionResult> {
   // Create a prompt to summarize the conversation
   const compactionPrompt: ChatCompletionMessageParam = {
@@ -63,7 +63,7 @@ export async function compactChatHistory(
       model,
       llmApi,
       controller,
-      streamCallbacks
+      streamCallbacks,
     );
 
     // Create the compacted history with a special marker
@@ -103,13 +103,13 @@ export async function compactChatHistory(
  * @returns The index of the compaction message, or null if not found
  */
 export function findCompactionIndex(
-  chatHistory: ChatCompletionMessageParam[]
+  chatHistory: ChatCompletionMessageParam[],
 ): number | null {
   const compactedIndex = chatHistory.findIndex(
     (msg) =>
       msg.role === "assistant" &&
       typeof msg.content === "string" &&
-      msg.content.startsWith(COMPACTION_MARKER)
+      msg.content.startsWith(COMPACTION_MARKER),
   );
   return compactedIndex !== -1 ? compactedIndex : null;
 }
@@ -122,7 +122,7 @@ export function findCompactionIndex(
  */
 export function getHistoryForLLM(
   fullHistory: ChatCompletionMessageParam[],
-  compactionIndex: number | null
+  compactionIndex: number | null,
 ): ChatCompletionMessageParam[] {
   if (compactionIndex === null || compactionIndex >= fullHistory.length) {
     return fullHistory;

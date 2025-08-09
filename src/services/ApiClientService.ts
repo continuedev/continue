@@ -9,9 +9,12 @@ import { ApiClientServiceState } from "./types.js";
  * Service for managing API client state
  * Provides access to the Continue SDK API client
  */
-export class ApiClientService extends BaseService<ApiClientServiceState> implements ServiceWithDependencies {
+export class ApiClientService
+  extends BaseService<ApiClientServiceState>
+  implements ServiceWithDependencies
+{
   constructor() {
-    super('ApiClientService', {
+    super("ApiClientService", {
       apiClient: null,
     });
   }
@@ -20,7 +23,7 @@ export class ApiClientService extends BaseService<ApiClientServiceState> impleme
    * Declare dependencies on other services
    */
   getDependencies(): string[] {
-    return ['auth'];
+    return ["auth"];
   }
 
   /**
@@ -51,7 +54,7 @@ export class ApiClientService extends BaseService<ApiClientServiceState> impleme
       return this.getState();
     } catch (error: any) {
       logger.error("Failed to update ApiClientService:", error);
-      this.emit('error', error);
+      this.emit("error", error);
       throw error;
     }
   }

@@ -85,7 +85,7 @@ function useWordLevelDiff(oldContent: string, newContent: string) {
 
 function renderWordLevelContent(
   changes: Change[],
-  showType: "removed" | "added"
+  showType: "removed" | "added",
 ): React.ReactNode {
   const segments: React.ReactNode[] = [];
 
@@ -96,7 +96,7 @@ function renderWordLevelContent(
         segments.push(
           <Text key={index} backgroundColor={COLORS.DELETION_HIGHLIGHT}>
             {change.value}
-          </Text>
+          </Text>,
         );
       } else if (!change.added) {
         // Unchanged text - no special styling
@@ -108,7 +108,7 @@ function renderWordLevelContent(
         segments.push(
           <Text key={index} backgroundColor={COLORS.ADDITION_HIGHLIGHT}>
             {change.value}
-          </Text>
+          </Text>,
         );
       } else if (!change.removed) {
         // Unchanged text - no special styling
@@ -125,8 +125,8 @@ const WordLevelDiffGroup: React.FC<{
   delLines: DiffLine[];
   addLines: DiffLine[];
 }> = ({ groupIndex, delLines, addLines }) => {
-  const oldContent = delLines.map(l => l.content).join('\n');
-  const newContent = addLines.map(l => l.content).join('\n');
+  const oldContent = delLines.map((l) => l.content).join("\n");
+  const newContent = addLines.map((l) => l.content).join("\n");
   const changes = useWordLevelDiff(oldContent, newContent);
 
   return (
@@ -163,7 +163,7 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
   }
 
   const displayableLines = parsedLines.filter(
-    (l) => l.type !== "hunk" && l.type !== "other"
+    (l) => l.type !== "hunk" && l.type !== "other",
   );
 
   const truncatedLines = displayableLines.slice(0, 16);
@@ -193,7 +193,7 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
           } else {
             // Single type, treat as individual lines
             currentGroup.forEach((l) =>
-              groupedLines.push({ type: "single", lines: [l] })
+              groupedLines.push({ type: "single", lines: [l] }),
             );
           }
         } else {

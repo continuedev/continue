@@ -1,10 +1,14 @@
 /**
  * Determines if a model is recommended for use with `cn`
  */
-export function isModelCapable(provider: string, name: string, model?: string): boolean {
+export function isModelCapable(
+  provider: string,
+  name: string,
+  model?: string,
+): boolean {
   // Check both name and model properties
   const normalizedName = name.toLowerCase();
-  const normalizedModel = model ? model.toLowerCase() : '';
+  const normalizedModel = model ? model.toLowerCase() : "";
 
   const patterns = [/gemini/, /claude/, /gpt/, /o\d/, /kimi/, /qwen/];
 

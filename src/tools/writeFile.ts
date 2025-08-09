@@ -14,7 +14,7 @@ import { Tool, ToolCallPreview } from "./types.js";
 export function generateDiff(
   oldContent: string,
   newContent: string,
-  filePath: string
+  filePath: string,
 ): string {
   return createTwoFilesPatch(
     filePath,
@@ -23,7 +23,7 @@ export function generateDiff(
     newContent,
     undefined,
     undefined,
-    { context: 3 }
+    { context: 3 },
   );
 }
 
@@ -58,7 +58,7 @@ export const writeFileTool: Tool = {
           newContent,
           undefined,
           undefined,
-          { context: 2 }
+          { context: 2 },
         );
 
         return {
@@ -124,7 +124,7 @@ export const writeFileTool: Tool = {
       if (oldContent) {
         const { added, removed } = calculateLinesOfCodeDiff(
           oldContent,
-          args.content
+          args.content,
         );
         const language = getLanguageFromFilePath(args.filepath);
 
@@ -135,7 +135,7 @@ export const writeFileTool: Tool = {
           telemetryService.recordLinesOfCodeModified(
             "removed",
             removed,
-            language
+            language,
           );
         }
 
@@ -148,7 +148,7 @@ export const writeFileTool: Tool = {
         telemetryService.recordLinesOfCodeModified(
           "added",
           lineCount,
-          language
+          language,
         );
 
         return `Successfully created file: ${args.filepath}`;

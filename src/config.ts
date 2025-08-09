@@ -1,8 +1,4 @@
-
-import {
-  AssistantUnrolled,
-  ModelConfig,
-} from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
   constructLlmApi,
@@ -25,16 +21,16 @@ import { MCPService } from "./mcp.js";
 
 export function getLlmApi(
   assistant: AssistantUnrolled,
-  authConfig: AuthConfig
+  authConfig: AuthConfig,
 ): [BaseLlmApi, ModelConfig] {
   const model = assistant.models?.find(
     (model) =>
-      model?.roles?.includes("chat") || (model && model.roles === undefined)
+      model?.roles?.includes("chat") || (model && model.roles === undefined),
   );
 
   if (!model) {
     throw new Error(
-      "No models with the chat role found in the configured assistant"
+      "No models with the chat role found in the configured assistant",
     );
   }
 
@@ -67,7 +63,7 @@ export function getLlmApi(
 
   if (!llmApi) {
     throw new Error(
-      "Failed to initialize LLM. Please check your configuration."
+      "Failed to initialize LLM. Please check your configuration.",
     );
   }
 
@@ -75,19 +71,19 @@ export function getLlmApi(
 }
 
 export function getApiClient(
-  accessToken: string | undefined | null
+  accessToken: string | undefined | null,
 ): DefaultApi {
   return new DefaultApi(
     new Configuration({
       basePath: env.apiBase.replace(/\/$/, ""),
       accessToken: accessToken ?? undefined,
-    })
+    }),
   );
 }
 
 export async function initialize(
   authConfig: AuthConfig,
-  configPath: string | undefined
+  configPath: string | undefined,
 ): Promise<{
   config: AssistantUnrolled;
   llmApi: BaseLlmApi;

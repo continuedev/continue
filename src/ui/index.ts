@@ -21,7 +21,7 @@ export async function startTUIChat(
     exclude?: string[];
     mode?: PermissionMode;
   },
-  skipOnboarding?: boolean
+  skipOnboarding?: boolean,
 ) {
   // Initialize services only if not already done (skipOnboarding means already initialized)
   if (!skipOnboarding) {
@@ -44,8 +44,8 @@ export async function startTUIChat(
         initialPrompt,
         resume,
         additionalRules,
-      })
-    })
+      }),
+    }),
   );
 
   // Handle cleanup
@@ -59,7 +59,7 @@ export async function startTUIChat(
 
 export async function startRemoteTUIChat(
   remoteUrl: string,
-  initialPrompt?: string
+  initialPrompt?: string,
 ) {
   // Start the TUI in remote mode - no services needed
   const { unmount } = render(
@@ -67,8 +67,8 @@ export async function startRemoteTUIChat(
       children: React.createElement(AppRoot, {
         remoteUrl,
         initialPrompt,
-      })
-    })
+      }),
+    }),
   );
 
   // Handle cleanup

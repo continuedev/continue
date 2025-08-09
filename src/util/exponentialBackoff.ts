@@ -69,7 +69,7 @@ function isRetryableError(error: any): boolean {
  */
 function calculateDelay(
   attempt: number,
-  options: Required<ExponentialBackoffOptions>
+  options: Required<ExponentialBackoffOptions>,
 ): number {
   const baseDelay =
     options.initialDelay * Math.pow(options.backoffMultiplier, attempt);
@@ -90,7 +90,7 @@ export async function chatCompletionStreamWithBackoff(
   llmApi: BaseLlmApi,
   params: ChatCompletionCreateParamsStreaming,
   abortSignal: AbortSignal,
-  options: ExponentialBackoffOptions = {}
+  options: ExponentialBackoffOptions = {},
 ): Promise<AsyncGenerator<any>> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let lastError: any;
@@ -128,7 +128,7 @@ export async function chatCompletionStreamWithBackoff(
         warn(
           `Retrying LLM API call (attempt ${attempt + 1 - opts.hiddenRetries}/${
             opts.maxRetries + 1 - opts.hiddenRetries
-          }) after ${delay}ms delay. Error: ${err.message}`
+          }) after ${delay}ms delay. Error: ${err.message}`,
         );
       }
 
@@ -141,7 +141,7 @@ export async function chatCompletionStreamWithBackoff(
   error(
     `LLM API call failed after ${opts.maxRetries + 1} attempts. Last error: ${
       lastError.message
-    }`
+    }`,
   );
   throw lastError;
 }
@@ -153,7 +153,7 @@ export async function chatCompletionStreamWithBackoff(
 export async function* withExponentialBackoff<T>(
   generatorFactory: () => Promise<AsyncGenerator<T>>,
   abortSignal: AbortSignal,
-  options: ExponentialBackoffOptions = {}
+  options: ExponentialBackoffOptions = {},
 ): AsyncGenerator<T> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let lastError: any;
@@ -208,7 +208,7 @@ export async function* withExponentialBackoff<T>(
         warn(
           `Retrying request (${attempt + 1 - opts.hiddenRetries}/${
             opts.maxRetries + 1 - opts.hiddenRetries
-          }). Error: ${formatError(err)}`
+          }). Error: ${formatError(err)}`,
         );
       }
 
@@ -222,7 +222,7 @@ export async function* withExponentialBackoff<T>(
   error(
     `Failed after ${opts.maxRetries + 1} attempts. Last error: ${
       lastError.message
-    }`
+    }`,
   );
   throw lastError;
 }

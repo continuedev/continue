@@ -7,7 +7,7 @@ import { isAuthenticated, login } from "./workos.js";
  * Returns true if authentication is successful, false otherwise
  */
 export async function ensureAuthenticated(
-  requireAuth: boolean = true
+  requireAuth: boolean = true,
 ): Promise<boolean> {
   if (isAuthenticated()) {
     return true;

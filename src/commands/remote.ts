@@ -12,12 +12,12 @@ import { logger } from "../util/logger.js";
 
 export async function remote(
   prompt: string | undefined,
-  options: { url?: string } = {}
+  options: { url?: string } = {},
 ) {
   // If --url is provided, connect directly to that URL
   if (options.url) {
     console.info(
-      chalk.white(`Connecting to remote environment at: ${options.url}`)
+      chalk.white(`Connecting to remote environment at: ${options.url}`),
     );
 
     // Record session start
@@ -40,7 +40,7 @@ export async function remote(
 
     if (!isAuthenticatedConfig(authConfig)) {
       console.error(
-        chalk.red("Not authenticated. Please run 'cn login' first.")
+        chalk.red("Not authenticated. Please run 'cn login' first."),
       );
       process.exit(1);
     }
@@ -64,20 +64,20 @@ export async function remote(
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Failed to create remote environment: ${response.status} ${errorText}`
+        `Failed to create remote environment: ${response.status} ${errorText}`,
       );
     }
 
     const result = await response.json();
 
     console.info(
-      chalk.green("✅ Remote development environment created successfully!")
+      chalk.green("✅ Remote development environment created successfully!"),
     );
 
     if (result.url && result.port) {
       const remoteUrl = result.url;
       console.info(
-        chalk.white(`Connecting to remote environment at: ${remoteUrl}`)
+        chalk.white(`Connecting to remote environment at: ${remoteUrl}`),
       );
 
       // Record session start
@@ -92,12 +92,12 @@ export async function remote(
       }
     } else {
       throw new Error(
-        "No URL or port returned from remote environment creation"
+        "No URL or port returned from remote environment creation",
       );
     }
   } catch (error: any) {
     logger.error(
-      chalk.red(`Failed to create remote environment: ${error.message}`)
+      chalk.red(`Failed to create remote environment: ${error.message}`),
     );
     process.exit(1);
   }

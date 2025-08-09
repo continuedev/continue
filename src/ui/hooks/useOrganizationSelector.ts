@@ -1,6 +1,4 @@
-import {
-  isAuthenticatedConfig,
-} from "../../auth/workos.js";
+import { isAuthenticatedConfig } from "../../auth/workos.js";
 import { services, reloadService } from "../../services/index.js";
 import { SERVICE_NAMES } from "../../services/types.js";
 import { useNavigation } from "../context/NavigationContext.js";
@@ -22,7 +20,7 @@ export function useOrganizationSelector({
 
   const handleOrganizationSelect = async (
     organizationId: string | null,
-    organizationName: string
+    organizationName: string,
   ) => {
     try {
       // Check if user is authenticated
@@ -30,8 +28,7 @@ export function useOrganizationSelector({
       if (!authState.isAuthenticated || !authState.authConfig) {
         onMessage({
           role: "system",
-          content:
-            "Organization switching not available - not authenticated",
+          content: "Organization switching not available - not authenticated",
           messageType: "system" as const,
         });
         return;
@@ -72,7 +69,7 @@ export function useOrganizationSelector({
         content: `Successfully switched to organization: ${organizationName}`,
         messageType: "system" as const,
       });
-      
+
       // Close the organization selector
       closeCurrentScreen();
     } catch (error: any) {
@@ -82,7 +79,7 @@ export function useOrganizationSelector({
         content: `Failed to switch organization: ${error.message}`,
         messageType: "system" as const,
       });
-      
+
       // Close selector even on error
       closeCurrentScreen();
     }

@@ -50,7 +50,7 @@ export type AuthConfig = AuthenticatedConfig | EnvironmentAuthConfig | null;
  * Type guard to check if config is authenticated via file-based auth
  */
 export function isAuthenticatedConfig(
-  config: AuthConfig
+  config: AuthConfig,
 ): config is AuthenticatedConfig {
   return config !== null && "userId" in config;
 }
@@ -59,7 +59,7 @@ export function isAuthenticatedConfig(
  * Type guard to check if config is authenticated via environment variable
  */
 export function isEnvironmentAuthConfig(
-  config: AuthConfig
+  config: AuthConfig,
 ): config is EnvironmentAuthConfig {
   return config !== null && !("userId" in config);
 }
@@ -313,7 +313,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: params,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -324,7 +324,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
   } catch (error: any) {
     console.error(
       chalk.red("Device authorization error:"),
-      error.message || error
+      error.message || error,
     );
     throw error;
   }
@@ -336,7 +336,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
 async function pollForDeviceToken(
   deviceCode: string,
   interval: number,
-  expiresIn: number
+  expiresIn: number,
 ): Promise<AuthenticatedConfig> {
   const startTime = Date.now();
   const expirationTime = startTime + expiresIn * 1000;
@@ -361,7 +361,7 @@ async function pollForDeviceToken(
           method: "POST",
           headers,
           body: params,
-        }
+        },
       );
 
       if (response.ok) {
@@ -392,21 +392,21 @@ async function pollForDeviceToken(
         // Log response details for debugging
         if (response.status === 401) {
           throw new Error(
-            "Oops! We had trouble authenticating. Please try again and reach out if the error persists."
+            "Oops! We had trouble authenticating. Please try again and reach out if the error persists.",
           );
         }
 
         if (errorCode === "authorization_pending") {
           // Continue polling
           await new Promise((resolve) =>
-            setTimeout(resolve, currentInterval * 1000)
+            setTimeout(resolve, currentInterval * 1000),
           );
           continue;
         } else if (errorCode === "slow_down") {
           // Increase polling interval
           currentInterval += 5;
           await new Promise((resolve) =>
-            setTimeout(resolve, currentInterval * 1000)
+            setTimeout(resolve, currentInterval * 1000),
           );
           continue;
         } else if (errorCode === "access_denied") {
@@ -430,7 +430,7 @@ async function pollForDeviceToken(
  * Refreshes the access token using a refresh token
  */
 async function refreshToken(
-  refreshToken: string
+  refreshToken: string,
 ): Promise<AuthenticatedConfig> {
   try {
     // Load existing config to preserve organizationId and other fields
@@ -493,7 +493,7 @@ export async function login(): Promise<AuthConfig> {
   // If CONTINUE_API_KEY environment variable exists, use that instead
   if (process.env.CONTINUE_API_KEY) {
     console.info(
-      chalk.green("Using CONTINUE_API_KEY from environment variables")
+      chalk.green("Using CONTINUE_API_KEY from environment variables"),
     );
     return {
       accessToken: process.env.CONTINUE_API_KEY,
@@ -507,12 +507,14 @@ export async function login(): Promise<AuthConfig> {
   const deviceAuth = await requestDeviceAuthorization();
 
   console.info(
-    chalk.white(`Your authentication code: ${chalk.bold(deviceAuth.user_code)}`)
+    chalk.white(
+      `Your authentication code: ${chalk.bold(deviceAuth.user_code)}`,
+    ),
   );
   console.info(
     chalk.dim(
-      `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
-    )
+      `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`,
+    ),
   );
 
   // Try to open the complete verification URL in browser
@@ -528,7 +530,7 @@ export async function login(): Promise<AuthConfig> {
   const authConfig = await pollForDeviceToken(
     deviceAuth.device_code,
     deviceAuth.interval,
-    deviceAuth.expires_in
+    deviceAuth.expires_in,
   );
 
   console.info(chalk.white("✅ Success!"));
@@ -541,14 +543,14 @@ export async function login(): Promise<AuthConfig> {
  */
 async function resolveOrganizationBySlug(
   apiClient: ReturnType<typeof getApiClient>,
-  organizationSlug: string
+  organizationSlug: string,
 ): Promise<{ id: string; slug: string }> {
   const resp = await apiClient.listOrganizations();
   const organizations = resp.organizations;
 
   // Find organization by slug (case-insensitive)
   const matchedOrg = organizations.find(
-    (org) => org?.slug?.toLowerCase() === organizationSlug.toLowerCase()
+    (org) => org?.slug?.toLowerCase() === organizationSlug.toLowerCase(),
   );
 
   if (matchedOrg) {
@@ -561,7 +563,7 @@ async function resolveOrganizationBySlug(
     const availableOptions = ["personal", ...availableSlugs];
     console.info(
       chalk.yellow("Available organizations:"),
-      availableOptions.join(", ")
+      availableOptions.join(", "),
     );
 
     throw new Error(`Organization "${organizationSlug}" not found`);
@@ -574,7 +576,7 @@ async function resolveOrganizationBySlug(
 export async function ensureOrganization(
   authConfig: AuthConfig,
   isHeadless: boolean = false,
-  cliOrganizationSlug?: string
+  cliOrganizationSlug?: string,
 ): Promise<AuthConfig> {
   // Handle CLI organization slug if provided (undefined means no --org flag or --org personal)
   if (cliOrganizationSlug) {
@@ -582,8 +584,8 @@ export async function ensureOrganization(
     if (!isHeadless) {
       console.error(
         chalk.red(
-          "The --org flag is only supported in headless mode (with -p/--print flag)"
-        )
+          "The --org flag is only supported in headless mode (with -p/--print flag)",
+        ),
       );
       process.exit(1);
     }
@@ -594,7 +596,7 @@ export async function ensureOrganization(
 
       const resolvedOrg = await resolveOrganizationBySlug(
         apiClient,
-        cliOrganizationSlug
+        cliOrganizationSlug,
       );
 
       // Return modified environment auth config with organization ID
@@ -622,7 +624,7 @@ export async function ensureOrganization(
 
     const resolvedOrg = await resolveOrganizationBySlug(
       apiClient,
-      cliOrganizationSlug
+      cliOrganizationSlug,
     );
 
     const updatedConfig: AuthenticatedConfig = {
@@ -696,7 +698,7 @@ export async function ensureOrganization(
   } catch (error: any) {
     console.error(
       chalk.red("Error fetching organizations:"),
-      error.response?.data?.message || error.message || error
+      error.response?.data?.message || error.message || error,
     );
     console.info(chalk.yellow("Continuing without organization selection."));
     const updatedConfig: AuthenticatedConfig = {
@@ -764,7 +766,7 @@ export function logout(): void {
   const onboardingFlagPath = path.join(
     os.homedir(),
     ".continue",
-    ".onboarding_complete"
+    ".onboarding_complete",
   );
 
   // Remove onboarding completion flag so user will go through onboarding again
@@ -775,8 +777,8 @@ export function logout(): void {
   if (process.env.CONTINUE_API_KEY) {
     console.info(
       chalk.yellow(
-        "Using CONTINUE_API_KEY from environment variables, nothing to log out"
-      )
+        "Using CONTINUE_API_KEY from environment variables, nothing to log out",
+      ),
     );
     return;
   }

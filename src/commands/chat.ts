@@ -86,7 +86,7 @@ export interface ChatOptions extends ExtendedCommandOptions {
 }
 
 export async function initializeChatHistory(
-  options: ChatOptions
+  options: ChatOptions,
 ): Promise<ChatCompletionMessageParam[]> {
   let chatHistory: ChatCompletionMessageParam[] = [];
 
@@ -108,7 +108,7 @@ export async function initializeChatHistory(
       rulesSystemMessage,
       options.rule,
       options.format,
-      options.headless
+      options.headless,
     );
     if (systemMessage) {
       chatHistory.push({ role: "system", content: systemMessage });
@@ -126,7 +126,7 @@ async function processMessage(
   isHeadless: boolean,
   format?: "json",
   silent?: boolean,
-  compactionIndex?: number | null
+  compactionIndex?: number | null,
 ): Promise<{ compactionIndex?: number | null } | void> {
   // Check for slash commands in headless mode
   if (userInput.trim() === "/compact") {
@@ -152,7 +152,7 @@ async function processMessage(
             status: "success",
             message: "Chat history compacted",
             historyLength: chatHistory.length,
-          }) + "\n"
+          }) + "\n",
         );
       }
 
@@ -163,7 +163,7 @@ async function processMessage(
         console.error(chalk.red(errorMsg));
       } else {
         safeStdout(
-          JSON.stringify({ status: "error", message: errorMsg }) + "\n"
+          JSON.stringify({ status: "error", message: errorMsg }) + "\n",
         );
       }
       return;
@@ -180,8 +180,8 @@ async function processMessage(
     if (!isHeadless) {
       console.info(
         chalk.yellow(
-          "\nApproaching context limit. Auto-compacting chat history..."
-        )
+          "\nApproaching context limit. Auto-compacting chat history...",
+        ),
       );
     } else if (format === "json") {
       safeStdout(
@@ -191,9 +191,9 @@ async function processMessage(
           contextUsage:
             calculateContextUsagePercentage(
               countChatHistoryTokens(chatHistory),
-              model
+              model,
             ) + "%",
-        }) + "\n"
+        }) + "\n",
       );
     }
 
@@ -210,7 +210,7 @@ async function processMessage(
 
       if (!isHeadless) {
         console.info(
-          chalk.green("✓ Chat history auto-compacted successfully.")
+          chalk.green("✓ Chat history auto-compacted successfully."),
         );
       } else if (format === "json") {
         safeStdout(
@@ -218,7 +218,7 @@ async function processMessage(
             status: "success",
             message: "Auto-compacted successfully",
             historyLength: chatHistory.length,
-          }) + "\n"
+          }) + "\n",
         );
       }
 
@@ -236,7 +236,7 @@ async function processMessage(
           JSON.stringify({
             status: "warning",
             message: "Auto-compaction failed, continuing without compaction",
-          }) + "\n"
+          }) + "\n",
         );
       }
 
@@ -266,7 +266,7 @@ async function processMessage(
         historyForLLM,
         model,
         llmApi,
-        abortController
+        abortController,
       );
 
       // Append any new messages (assistant/tool) that were added by streamChatResponse
@@ -278,7 +278,7 @@ async function processMessage(
         chatHistory,
         model,
         llmApi,
-        abortController
+        abortController,
       );
     }
 
@@ -312,7 +312,7 @@ async function processMessage(
     });
     if (!isHeadless) {
       logger.info(
-        chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`)
+        chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`),
       );
     }
   }
@@ -320,7 +320,7 @@ async function processMessage(
 
 async function runHeadlessMode(
   prompt: string | undefined,
-  options: ChatOptions
+  options: ChatOptions,
 ): Promise<void> {
   // Initialize services for headless mode
   const { permissionOverrides } = processCommandFlags(options);
@@ -335,7 +335,7 @@ async function runHeadlessMode(
 
   // Get required services from the service container
   const modelState = await serviceContainer.get<ModelServiceState>(
-    SERVICE_NAMES.MODEL
+    SERVICE_NAMES.MODEL,
   );
   const { llmApi, model } = modelState;
 
@@ -375,7 +375,7 @@ async function runHeadlessMode(
       true,
       options.format,
       options.silent,
-      compactionIndex
+      compactionIndex,
     );
 
     // Update compaction index if compaction occurred
@@ -430,7 +430,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         options.org,
         options.rule,
         permissionOverrides,
-        true
+        true,
       );
       return;
     }

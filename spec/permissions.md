@@ -19,6 +19,7 @@ There is a default set of permissions for the builtin tools in [`src/permissions
 5. Default policies
 
 **Note:** Mode policies **completely override all other permission settings** in plan and auto modes. Available modes:
+
 - `normal`: No mode policies (uses existing configuration)
 - `plan`: **Absolute override** - excludes all write tools, allows only read tools (ignores user config)
 - `auto`: **Absolute override** - allows all tools without asking (ignores user config)
@@ -41,7 +42,7 @@ Each of the `--allow`, `--ask`, and `--exclude` flags allow you to set the permi
 # Allow Read, Ask Write, and Exclude Bash
 cn --allow Read --ask Write --exclude Bash
 
-# Start in plan mode (read-only tools only) 
+# Start in plan mode (read-only tools only)
 cn --readonly "Help me understand this codebase"
 
 # Use mode switching during chat
@@ -101,7 +102,7 @@ To use tools that normally require confirmation in headless mode, you must expli
 # Headless mode with explicit permissions for write operations
 cn -p --allow write_file "Write a hello world script"
 
-# Headless mode with wildcard permission (allow all tools)  
+# Headless mode with wildcard permission (allow all tools)
 cn -p --allow "*" "Write and run a script"
 
 # Headless mode with specific restrictions
