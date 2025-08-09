@@ -1,18 +1,22 @@
 class Calculator {
+  #result;
+
   constructor() {
-    this.result = 0;
+    this.#result = 0;
   }
 
   add(number) {
-    this.result += number;
+    this.#result += number;
     return this;
   }
+
   subtract(number) {
+    this.#result -= number;
     return this;
   }
 
   multiply(number) {
-    this.result *= number;
+    this.#result *= number;
     return this;
   }
 
@@ -20,16 +24,16 @@ class Calculator {
     if (number === 0) {
       throw new Error("Cannot divide by zero");
     }
-    this.result /= number;
+    this.#result /= number;
     return this;
   }
 
   getResult() {
-    return this.result;
+    return this.#result;
   }
 
   reset() {
-    this.result = 0;
+    this.#result = 0;
     return this;
   }
 }
