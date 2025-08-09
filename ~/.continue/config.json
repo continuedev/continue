@@ -1,19 +1,42 @@
 {
-  "models": [
+  "mcpServers": [
     {
-      "title": "EchoMCP",
-      "provider": "openai",
-      "model": "echo-mcp",
-      "apiBase": "http://localhost:8000/v1",
+      "name": "EchoMCP",
+      "url": "http://localhost:8000",
+      "type": "sse",
       "requestOptions": {
         "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": "Bearer not_needed"
         },
         "timeout": 7200
       }
     }
   ],
-  "defaultModel": "EchoMCP",
+  "models": [
+    {
+      "title": "Echo-001",
+      "provider": "custom",
+      "model": "echo-001",
+      "apiBase": "http://localhost:8000/v1",
+      "mcpServer": "EchoMCP",
+      "maxTokens": 4096,
+      "temperature": 0.5,
+      "topP": 1,
+      "frequencyPenalty": 0,
+      "presencePenalty": 0,
+      "stopSequences": [],
+      "logitBias": {},
+      "requestOptions": {
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer not_needed"
+        },
+        "timeout": 30000
+      }
+    }
+  ],
+  "defaultModel": "Echo-001",
   "contextProviders": [
     {
       "name": "http",
@@ -38,9 +61,13 @@
     "You are EchoMCP, a helpful AI assistant connected to the EchoMCP backend.",
     "Always provide clear and concise responses.",
     "When asked about your capabilities, mention that you're connected to the EchoMCP backend running on localhost:8000.",
-    "Use the EchoMCP backend for all chat interactions and context retrieval."
+    "Use the EchoMCP backend for all chat interactions and context retrieval.",
+    "Always follow the alsania-rules.md rules.",
+    "Always follow the alsania-code-of-conduct.md code of conduct."
   ],
   "ui": {
-    "displayRawMarkdown": false
-  }
+    "theme": "dark"
+  },
+  "extensions": [],
+  "plugins": []
 }

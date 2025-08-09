@@ -21,6 +21,8 @@ const modelDescriptionSchema = z.object({
     "siliconflow",
     "scaleway",
     "watsonx",
+    "custom",
+    "alsania"
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -46,6 +48,7 @@ const modelDescriptionSchema = z.object({
       "gemma",
       "llama3",
       "codestral",
+      "echo"
     ])
     .optional(),
   completionOptions: z
