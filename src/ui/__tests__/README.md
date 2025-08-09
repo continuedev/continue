@@ -9,17 +9,22 @@ The testing framework ensures that the TUI behaves consistently whether running 
 ## Key Components
 
 ### 1. Mock Remote Server (`mockRemoteServer.ts`)
+
 A mock Express server that simulates the `cn serve` endpoints:
+
 - `GET /state` - Returns current chat state
 - `POST /message` - Receives user messages and can simulate responses
 
 ### 2. Test Helper (`TUIChat.testHelper.ts`)
+
 Provides utilities for writing tests that work in both modes:
+
 - `runTest()` - Run a single test in specified mode(s)
 - `runTestSuite()` - Run a test suite in specified mode(s)
 - Helper functions for common operations
 
 ### 3. Test Files
+
 - `TUIChat.basic.test.tsx` - Basic UI and layout tests
 - `TUIChat.messages.test.tsx` - Message handling tests
 - `TUIChat.remote.test.tsx` - Remote-specific behavior tests
@@ -28,16 +33,17 @@ Provides utilities for writing tests that work in both modes:
 ## Writing Tests
 
 ### Basic Test (runs in both modes)
+
 ```typescript
 import { runTest } from "./TUIChat.testHelper.js";
 
 runTest("my test name", async (ctx) => {
   const { renderResult, mode, server } = ctx;
-  
+
   // Your test code here
   const frame = renderResult.lastFrame();
   expect(frame).toContain("Expected content");
-  
+
   // Mode-specific logic if needed
   if (mode === "remote" && server) {
     // Remote-specific assertions
@@ -46,6 +52,7 @@ runTest("my test name", async (ctx) => {
 ```
 
 ### Test Suite (runs all tests in both modes)
+
 ```typescript
 import { runTestSuite } from "./TUIChat.testHelper.js";
 
@@ -53,7 +60,7 @@ runTestSuite("My Test Suite", () => {
   runTest("test 1", async (ctx) => {
     // Test code
   });
-  
+
   runTest("test 2", async (ctx) => {
     // Test code
   });
@@ -61,6 +68,7 @@ runTestSuite("My Test Suite", () => {
 ```
 
 ### Mode-Specific Tests
+
 ```typescript
 // Remote-only test
 runTest(
@@ -68,39 +76,41 @@ runTest(
   async (ctx) => {
     // This only runs in remote mode
   },
-  { mode: "remote" }
+  { mode: "remote" },
 );
 
 // Normal-only test
 runTest(
-  "local-specific behavior", 
+  "local-specific behavior",
   async (ctx) => {
     // This only runs in normal mode
   },
-  { mode: "normal" }
+  { mode: "normal" },
 );
 ```
 
 ## Helper Functions
 
 ### `sendMessage(ctx, message, waitTime?)`
+
 Sends a message and waits for it to be processed:
+
 ```typescript
 await sendMessage(ctx, "Hello world");
 ```
 
 ### `waitForServerState(server, predicate, timeout?)`
+
 Waits for server state to match a condition (remote mode only):
+
 ```typescript
-await waitForServerState(
-  server,
-  state => state.messages.length > 0,
-  5000
-);
+await waitForServerState(server, (state) => state.messages.length > 0, 5000);
 ```
 
 ### `expectRemoteMode(frame)` / `expectNormalMode(frame)`
+
 Verify mode-specific UI indicators:
+
 ```typescript
 if (mode === "remote") {
   expectRemoteMode(frame);
@@ -112,6 +122,7 @@ if (mode === "remote") {
 ## Server Setup
 
 For tests that need specific server behavior:
+
 ```typescript
 runTest(
   "test with custom server",
@@ -124,8 +135,8 @@ runTest(
         // Custom response logic
         server.simulateResponse(`Echo: ${msg}`);
       });
-    }
-  }
+    },
+  },
 );
 ```
 

@@ -9,7 +9,10 @@ The `mock-llm-server.ts` module provides utilities for creating mock LLM servers
 ### Basic Usage
 
 ```typescript
-import { setupMockLLMTest, cleanupMockLLMServer } from "../test-helpers/mock-llm-server.js";
+import {
+  setupMockLLMTest,
+  cleanupMockLLMServer,
+} from "../test-helpers/mock-llm-server.js";
 
 describe("My Test", () => {
   let context: any;
@@ -87,13 +90,17 @@ expect(mockServer.requests[0].body.messages[0].content).toBe("User prompt");
 ### API Reference
 
 #### `setupMockLLMTest(context, options)`
+
 Sets up a complete test environment with mock LLM server, config file, and skips onboarding.
 
 #### `createMockLLMServer(options)`
+
 Creates just the mock server without test environment setup.
 
 #### `createMockLLMConfig(mockServer, modelName)`
+
 Generates a config YAML string for the mock server.
 
 #### `cleanupMockLLMServer(mockServer)`
+
 Properly shuts down the mock server.

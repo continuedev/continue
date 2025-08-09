@@ -7,7 +7,7 @@ import { diffLines } from "diff";
  */
 export function calculateLinesOfCodeDiff(
   oldContent: string,
-  newContent: string
+  newContent: string,
 ): { added: number; removed: number } {
   const diff = diffLines(oldContent, newContent);
   let added = 0;
@@ -119,7 +119,7 @@ export function isPullRequestCommand(command: string): boolean {
 export function calculateTokenCost(
   inputTokens: number,
   outputTokens: number,
-  model: string
+  model: string,
 ): number {
   // Pricing per 1K tokens (these are approximate and should be updated)
   const pricingMap: Record<string, { input: number; output: number }> = {
@@ -134,7 +134,7 @@ export function calculateTokenCost(
 
   // Find pricing for model (case insensitive partial match)
   const modelKey = Object.keys(pricingMap).find((key) =>
-    model.toLowerCase().includes(key.toLowerCase())
+    model.toLowerCase().includes(key.toLowerCase()),
   );
 
   if (!modelKey) {

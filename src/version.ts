@@ -18,12 +18,12 @@ export function getVersion(): string {
 }
 
 export async function getLatestVersion(
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<string | null> {
   try {
     const response = await fetch(
       "https://registry.npmjs.org/@continuedev/cli/latest",
-      { signal }
+      { signal },
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -42,7 +42,7 @@ export async function getLatestVersion(
 
 export function compareVersions(
   current: string,
-  latest: string
+  latest: string,
 ): "newer" | "same" | "older" {
   if (current === "unknown" || latest === "unknown") {
     return "same";

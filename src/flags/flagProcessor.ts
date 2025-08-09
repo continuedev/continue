@@ -20,19 +20,22 @@ export interface ProcessedFlags {
  * Converts legacy readonly/auto flags to the new mode system
  * This logic was previously duplicated in chat.ts lines 168-173 and 259-264
  */
-export function convertLegacyModeFlags(readonly?: boolean, auto?: boolean): PermissionMode | undefined {
+export function convertLegacyModeFlags(
+  readonly?: boolean,
+  auto?: boolean,
+): PermissionMode | undefined {
   if (readonly && auto) {
     throw new Error("Cannot use both --readonly and --auto flags together");
   }
-  
+
   if (readonly) {
     return "plan";
   }
-  
+
   if (auto) {
     return "auto";
   }
-  
+
   return undefined;
 }
 
@@ -44,7 +47,7 @@ export function buildPermissionOverrides(
   allow?: string[],
   ask?: string[],
   exclude?: string[],
-  mode?: PermissionMode
+  mode?: PermissionMode,
 ): PermissionOverrides {
   return {
     allow,
@@ -67,15 +70,15 @@ export function processCommandFlags(options: {
 }): ProcessedFlags {
   // Convert legacy flags to mode
   const mode = convertLegacyModeFlags(options.readonly, options.auto);
-  
+
   // Build permission overrides
   const permissionOverrides = buildPermissionOverrides(
     options.allow,
     options.ask,
     options.exclude,
-    mode
+    mode,
   );
-  
+
   return {
     mode,
     permissionOverrides,

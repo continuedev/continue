@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       beta_version:
-        description: 'Specific beta version to promote (e.g., 1.2.3-beta.20240115)'
+        description: "Specific beta version to promote (e.g., 1.2.3-beta.20240115)"
         required: false
         type: string
 
@@ -70,10 +70,10 @@ jobs:
             BETA_VERSION=$CANDIDATE_VERSION
             echo "Selected beta version for promotion: $BETA_VERSION"
           fi
-          
+
           # Extract base version (remove -beta.YYYYMMDD suffix)
           STABLE_VERSION=$(echo "$BETA_VERSION" | sed 's/-beta\.[0-9]\{8\}//')
-          
+
           echo "beta_version=$BETA_VERSION" >> $GITHUB_OUTPUT
           echo "stable_version=$STABLE_VERSION" >> $GITHUB_OUTPUT
 
@@ -83,11 +83,11 @@ jobs:
         run: |
           # Download the specific beta version
           npm pack @continuedev/cli@${{ steps.find_beta.outputs.beta_version }}
-          
+
           # Extract and verify the package
           PACKAGE_FILE=$(ls continuedev-cli-*.tgz)
           tar -xzf "$PACKAGE_FILE"
-          
+
           echo "Beta package contents verified"
           ls -la package/
 
@@ -95,7 +95,7 @@ jobs:
         run: |
           # Copy the beta package contents
           cp -r package/* .
-          
+
           # Update version to stable (remove beta suffix)
           npm version ${{ steps.find_beta.outputs.stable_version }} --no-git-tag-version
 
@@ -121,7 +121,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git tag "v${{ steps.find_beta.outputs.stable_version }}"
           git push origin "v${{ steps.find_beta.outputs.stable_version }}"
-          
+
           # Create GitHub release
           gh release create "v${{ steps.find_beta.outputs.stable_version }}" \
             --title "Stable Release v${{ steps.find_beta.outputs.stable_version }}" \

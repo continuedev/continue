@@ -56,6 +56,6 @@ export function createMinimalTestContext() {
   return {
     cleanup: () => {
       vi.clearAllMocks();
-    }
+    },
   };
 }

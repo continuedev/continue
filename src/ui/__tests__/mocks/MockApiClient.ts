@@ -12,8 +12,8 @@ export class MockApiClient {
   }
   async getAssistant() {
     // Return a minimal assistant config
-    return { 
-      configResult: { 
+    return {
+      configResult: {
         config: {
           name: "test-assistant",
           models: [
@@ -26,8 +26,8 @@ export class MockApiClient {
           systemMessage: "You are a helpful assistant",
           tools: [],
           mcpServers: [],
-        } 
-      } 
+        },
+      },
     };
   }
   async listOrganizations() {

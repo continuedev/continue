@@ -21,13 +21,17 @@ export class MCPService {
     const service = new MCPService(assistant);
 
     if (assistant.mcpServers?.length) {
-      logger.debug('Creating MCP connections', { serverCount: assistant.mcpServers.length });
+      logger.debug("Creating MCP connections", {
+        serverCount: assistant.mcpServers.length,
+      });
       const connectionPromises = assistant.mcpServers.map((server) =>
-        MCPConnection.create(server)
+        MCPConnection.create(server),
       );
       const connections = await Promise.all(connectionPromises);
       service.connections.push(...connections);
-      logger.debug('MCP connections established', { connectionCount: connections.length });
+      logger.debug("MCP connections established", {
+        connectionCount: connections.length,
+      });
     }
 
     // Store the instance and return it

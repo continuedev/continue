@@ -2,10 +2,7 @@ import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import { processRule } from "../args.js";
-import {
-  AuthConfig,
-  loadAuthConfig,
-} from "../auth/workos.js";
+import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
@@ -20,9 +17,12 @@ import {
  * Service for managing configuration state and operations
  * Handles loading configs from files or assistant slugs
  */
-export class ConfigService extends BaseService<ConfigServiceState> implements ServiceWithDependencies {
+export class ConfigService
+  extends BaseService<ConfigServiceState>
+  implements ServiceWithDependencies
+{
   constructor() {
-    super('ConfigService', {
+    super("ConfigService", {
       config: null,
       configPath: undefined,
     });
@@ -43,12 +43,12 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     configPath: string | undefined,
     organizationId: string | null,
     apiClient: DefaultApiInterface,
-    rules?: string[]
+    rules?: string[],
   ): Promise<ConfigServiceState> {
     // Use the new streamlined config loader
     const { loadConfiguration } = await import("../configLoader.js");
     const result = await loadConfiguration(authConfig, configPath, apiClient);
-    
+
     let config = result.config;
 
     // Inject rules if provided
@@ -59,7 +59,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     // Config URI persistence is now handled by the streamlined loader
 
     logger.debug("ConfigService initialized successfully");
-    
+
     return {
       config,
       configPath,
@@ -74,7 +74,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     authConfig: AuthConfig,
     organizationId: string | null,
     apiClient: DefaultApiInterface,
-    rules?: string[]
+    rules?: string[],
   ): Promise<ConfigServiceState> {
     logger.debug("Switching configuration", {
       from: this.currentState.configPath,
@@ -84,8 +84,12 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     try {
       // Use the new streamlined config loader
       const { loadConfiguration } = await import("../configLoader.js");
-      const result = await loadConfiguration(authConfig, newConfigPath, apiClient);
-      
+      const result = await loadConfiguration(
+        authConfig,
+        newConfigPath,
+        apiClient,
+      );
+
       let config = result.config;
 
       // Inject rules if provided
@@ -107,7 +111,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
       return this.getState();
     } catch (error: any) {
       logger.error("Failed to switch configuration:", error);
-      this.emit('error', error);
+      this.emit("error", error);
       throw error;
     }
   }
@@ -119,7 +123,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     authConfig: AuthConfig,
     organizationId: string | null,
     apiClient: DefaultApiInterface,
-    rules?: string[]
+    rules?: string[],
   ): Promise<ConfigServiceState> {
     if (!this.currentState.configPath) {
       throw new Error("No configuration path available for reload");
@@ -132,7 +136,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
       authConfig,
       organizationId,
       apiClient,
-      rules
+      rules,
     );
   }
 
@@ -141,7 +145,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
    */
   private async injectRulesIntoConfig(
     config: AssistantUnrolled,
-    rules: string[]
+    rules: string[],
   ): Promise<AssistantUnrolled> {
     if (!rules || rules.length === 0) {
       return config;
@@ -170,9 +174,8 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
     const rulesSection = processedRules.join("\n\n");
 
     if (existingSystemMessage) {
-      (
-        modifiedConfig as any
-      ).systemMessage = `${existingSystemMessage}\n\n${rulesSection}`;
+      (modifiedConfig as any).systemMessage =
+        `${existingSystemMessage}\n\n${rulesSection}`;
     } else {
       (modifiedConfig as any).systemMessage = rulesSection;
     }
@@ -194,7 +197,7 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
       // Get current auth and API client state needed for config loading
       const authConfig = loadAuthConfig();
       const apiClientState = await serviceContainer.get<ApiClientServiceState>(
-        SERVICE_NAMES.API_CLIENT
+        SERVICE_NAMES.API_CLIENT,
       );
 
       if (!apiClientState.apiClient) {
@@ -204,9 +207,9 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
       // Load the new configuration using streamlined loader
       const { loadConfiguration } = await import("../configLoader.js");
       const result = await loadConfiguration(
-        authConfig, 
-        newConfigPath, 
-        apiClientState.apiClient
+        authConfig,
+        newConfigPath,
+        apiClientState.apiClient,
       );
 
       // Update internal state
@@ -230,9 +233,8 @@ export class ConfigService extends BaseService<ConfigServiceState> implements Se
       });
     } catch (error: any) {
       logger.error("Failed to update configuration path:", error);
-      this.emit('error', error);
+      this.emit("error", error);
       throw error;
     }
   }
-
 }

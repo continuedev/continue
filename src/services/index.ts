@@ -29,18 +29,20 @@ const mcpServiceWrapper = new MCPServiceWrapper();
  * Initialize all services and register them with the service container
  * Handles onboarding internally for TUI mode unless skipOnboarding is true
  */
-export async function initializeServices(options: ServiceInitOptions = {}): Promise<ServiceInitResult> {
+export async function initializeServices(
+  options: ServiceInitOptions = {},
+): Promise<ServiceInitResult> {
   logger.debug("Initializing service registry");
-  
+
   let wasOnboarded = false;
-  
+
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!options.headless && !options.skipOnboarding) {
     const authConfig = loadAuthConfig();
     const onboardingResult = await initializeWithOnboarding(
       authConfig,
       options.configPath,
-      options.rules
+      options.rules,
     );
     wasOnboarded = onboardingResult.wasOnboarded;
   }
@@ -48,15 +50,15 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
   // Initialize mode service with tool permission overrides
   if (options.toolPermissionOverrides) {
     const overrides = { ...options.toolPermissionOverrides };
-    
+
     // Convert mode to boolean flags for ModeService
     const initArgs: Parameters<typeof modeService.initialize>[0] = {
       allow: overrides.allow,
       ask: overrides.ask,
       exclude: overrides.exclude,
-      isHeadless: options.headless
+      isHeadless: options.headless,
     };
-    
+
     // Only set the boolean flag that corresponds to the mode
     if (overrides.mode === "plan") {
       initArgs.readonly = true;
@@ -64,15 +66,15 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
       initArgs.auto = true;
     }
     // If mode is "normal" or undefined, no flags are set
-    
+
     await modeService.initialize(initArgs);
   } else {
     // Even if no overrides, we need to initialize with defaults
     await modeService.initialize({
-      isHeadless: options.headless
+      isHeadless: options.headless,
     });
   }
-  
+
   // Register the TOOL_PERMISSIONS service with immediate value
   // Since ToolPermissionService is already initialized synchronously in ModeService,
   // we can register it as a ready value instead of a factory
@@ -80,28 +82,28 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
   logger.debug("Registering TOOL_PERMISSIONS with state:", {
     currentMode: toolPermissionState.currentMode,
     isHeadless: toolPermissionState.isHeadless,
-    policyCount: toolPermissionState.permissions.policies.length
+    policyCount: toolPermissionState.permissions.policies.length,
   });
   serviceContainer.registerValue(
     SERVICE_NAMES.TOOL_PERMISSIONS,
-    toolPermissionState
+    toolPermissionState,
   );
 
   serviceContainer.register(
     SERVICE_NAMES.AUTH,
     () => authService.initialize(),
-    [] // No dependencies
+    [], // No dependencies
   );
 
   serviceContainer.register(
     SERVICE_NAMES.API_CLIENT,
     async () => {
       const authState = await serviceContainer.get<AuthServiceState>(
-        SERVICE_NAMES.AUTH
+        SERVICE_NAMES.AUTH,
       );
       return apiClientService.initialize(authState.authConfig);
     },
-    [SERVICE_NAMES.AUTH] // Depends on auth
+    [SERVICE_NAMES.AUTH], // Depends on auth
   );
 
   serviceContainer.register(
@@ -112,11 +114,12 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
         serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),
       ]);
 
-      // Ensure organization is selected if authenticated and not headless
+      // Ensure organization is selected if authenticated
       let finalAuthState = authState;
-      if (authState.authConfig && !options.headless) {
+      if (authState.authConfig) {
         finalAuthState = await authService.ensureOrganization(
-          options.headless ?? false
+          options.headless ?? false,
+          options.organizationSlug,
         );
         // Update the auth service state in container
         serviceContainer.set(SERVICE_NAMES.AUTH, finalAuthState);
@@ -130,8 +133,11 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
       // otherwise use initial options.configPath (for first initialization)
       // IMPORTANT: Always prefer explicit --config flag over saved state
       const currentState = configService.getState();
-      let configPath = options.configPath || 
-        (currentState.configPath !== undefined ? currentState.configPath : undefined);
+      let configPath =
+        options.configPath ||
+        (currentState.configPath !== undefined
+          ? currentState.configPath
+          : undefined);
 
       // If no config path is available, check for saved config URI in auth config
       if (!configPath) {
@@ -151,10 +157,10 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
         configPath,
         finalAuthState.organizationId || null,
         apiClientState.apiClient,
-        options.rules
+        options.rules,
       );
     },
-    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT] // Depends on auth and API client
+    [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT], // Depends on auth and API client
   );
 
   serviceContainer.register(
@@ -171,14 +177,14 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
 
       return modelService.initialize(configState.config, authState.authConfig);
     },
-    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH] // Depends on config and auth
+    [SERVICE_NAMES.CONFIG, SERVICE_NAMES.AUTH], // Depends on config and auth
   );
 
   serviceContainer.register(
     SERVICE_NAMES.MCP,
     async () => {
       const configState = await serviceContainer.get<ConfigServiceState>(
-        SERVICE_NAMES.CONFIG
+        SERVICE_NAMES.CONFIG,
       );
 
       if (!configState.config) {
@@ -187,7 +193,7 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
 
       return mcpServiceWrapper.initialize(configState.config);
     },
-    [SERVICE_NAMES.CONFIG] // Depends on config
+    [SERVICE_NAMES.CONFIG], // Depends on config
   );
 
   // Eagerly initialize all services to ensure they're ready when needed
@@ -195,7 +201,7 @@ export async function initializeServices(options: ServiceInitOptions = {}): Prom
   await serviceContainer.initializeAll();
 
   logger.debug("Service registry initialized");
-  
+
   return { wasOnboarded };
 }
 

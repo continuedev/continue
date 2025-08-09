@@ -80,7 +80,7 @@ const logFormat = printf(
     }
 
     return msg;
-  }
+  },
 );
 
 // Track headless mode
@@ -92,7 +92,7 @@ const winstonLogger = winston.createLogger({
   format: combine(
     errors({ stack: true }),
     timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
-    logFormat
+    logFormat,
   ),
   transports: [
     // File transport for all logs
@@ -135,7 +135,7 @@ export const logger = {
       sentryService.captureMessage(
         `${message}: ${String(error)}`,
         "error",
-        meta
+        meta,
       );
     } else {
       winstonLogger.error(message, meta);

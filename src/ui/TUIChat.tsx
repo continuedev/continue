@@ -33,7 +33,6 @@ import { Timer } from "./Timer.js";
 import { UpdateNotification } from "./UpdateNotification.js";
 import { UserInput } from "./UserInput.js";
 
-
 interface TUIChatProps {
   // Remote mode props
   remoteUrl?: string;
@@ -78,10 +77,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   }, [remoteUrl]);
 
   // Get all services reactively - only in normal mode
-  const {
-    services,
-    allReady: allServicesReady,
-  } = useServices<{
+  const { services, allReady: allServicesReady } = useServices<{
     auth: AuthServiceState;
     config: ConfigServiceState;
     model: ModelServiceState;
@@ -90,14 +86,19 @@ const TUIChat: React.FC<TUIChatProps> = ({
   }>(["auth", "config", "model", "mcp", "apiClient"]);
 
   // Use navigation context
-  const { state: navState, navigateTo, closeCurrentScreen, isScreenActive } = useNavigation();
+  const {
+    state: navState,
+    navigateTo,
+    closeCurrentScreen,
+    isScreenActive,
+  } = useNavigation();
 
   // State for intro message display
   const [showIntroMessage, setShowIntroMessage] = useState(false);
 
   // State for current mode (for hiding cwd in plan/auto modes)
   const [currentMode, setCurrentMode] = useState<PermissionMode>(
-    modeService.getCurrentMode()
+    modeService.getCurrentMode(),
   );
 
   // Listen for mode changes to update UI
@@ -106,9 +107,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
       setCurrentMode(newMode);
     };
 
-    modeService.on('modeChanged', handleModeChange);
+    modeService.on("modeChanged", handleModeChange);
     return () => {
-      modeService.off('modeChanged', handleModeChange);
+      modeService.off("modeChanged", handleModeChange);
     };
   }, []);
 
@@ -146,7 +147,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Custom login prompt handler for TUI
   const handleLoginPrompt = (promptText: string): Promise<string> => {
     return new Promise((resolve) => {
-      navigateTo('login', { text: promptText, resolve });
+      navigateTo("login", { text: promptText, resolve });
     });
   };
 
@@ -186,9 +187,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
-    onShowOrgSelector: () => navigateTo('organization'),
-    onShowConfigSelector: () => navigateTo('config'),
-    onShowModelSelector: () => navigateTo('model'),
+    onShowOrgSelector: () => navigateTo("organization"),
+    onShowConfigSelector: () => navigateTo("config"),
+    onShowModelSelector: () => navigateTo("model"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration
@@ -219,12 +220,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
     },
   });
 
-
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
-    navState.currentScreen !== 'chat' ||
-    !!activePermissionRequest;
+    navState.currentScreen !== "chat" || !!activePermissionRequest;
 
   return (
     <Box flexDirection="column" height="100%">
@@ -270,7 +269,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Login prompt - shows above input when active */}
-        {isScreenActive('login') && navState.screenData && (
+        {isScreenActive("login") && navState.screenData && (
           <Box
             paddingX={1}
             borderStyle="round"
@@ -295,7 +294,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Organization selector - shows above input when active */}
-        {isScreenActive('organization') && (
+        {isScreenActive("organization") && (
           <OrganizationSelector
             onSelect={handleOrganizationSelect}
             onCancel={closeCurrentScreen}
@@ -303,7 +302,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Config selector - shows above input when active */}
-        {isScreenActive('config') && (
+        {isScreenActive("config") && (
           <ConfigSelector
             onSelect={handleConfigSelect}
             onCancel={closeCurrentScreen}
@@ -311,7 +310,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Model selector - shows above input when active */}
-        {isScreenActive('model') && (
+        {isScreenActive("model") && (
           <ModelSelector
             onSelect={handleModelSelect}
             onCancel={closeCurrentScreen}
@@ -319,12 +318,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Free trial transition UI - replaces input when active */}
-        {isScreenActive('free-trial') && (
+        {isScreenActive("free-trial") && (
           <FreeTrialTransitionUI onReload={handleReload} />
         )}
 
         {/* Input area - only show when showing chat screen */}
-        {isScreenActive('chat') && (
+        {isScreenActive("chat") && (
           <>
             {/* Show permission selector when there's an active permission request */}
             {activePermissionRequest ? (
@@ -358,7 +357,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         >
           <Box flexDirection="row" alignItems="center">
             {/* Only show cwd in normal mode to save space in plan/auto modes */}
-            {currentMode === 'normal' && (
+            {currentMode === "normal" && (
               <>
                 <Text color="dim" wrap="truncate-start">
                   {repoURlText}
@@ -374,9 +373,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
                 apiClient={services.apiClient?.apiClient || undefined}
                 model={services.model.model}
                 onTransitionStateChange={(shouldShow) => {
-                  if (shouldShow && navState.currentScreen === 'chat') {
-                    navigateTo('free-trial');
-                  } else if (!shouldShow && navState.currentScreen === 'free-trial') {
+                  if (shouldShow && navState.currentScreen === "chat") {
+                    navigateTo("free-trial");
+                  } else if (
+                    !shouldShow &&
+                    navState.currentScreen === "free-trial"
+                  ) {
                     closeCurrentScreen();
                   }
                 }}

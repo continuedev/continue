@@ -1,3 +1,5 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
-export const resolvePermissionPrecedence = vi.fn<(options: any) => any[]>(() => []);
+export const resolvePermissionPrecedence = vi.fn<(options: any) => any[]>(
+  () => [],
+);

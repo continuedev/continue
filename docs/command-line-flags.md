@@ -33,7 +33,7 @@ cn --auto -p "fix the failing tests"        # Dangerous: will modify files
 ## Fine-grained Permissions
 
 - `--allow <tool>` - Allow specific tools
-- `--ask <tool>` - Ask before using tools  
+- `--ask <tool>` - Ask before using tools
 - `--exclude <tool>` - Block specific tools
 
 ```bash
@@ -66,7 +66,7 @@ cn serve --timeout 600          # 10 minute timeout
 ## Remote Development
 
 ```bash
-cn remote "help debug this"                    # Create new remote environment  
+cn remote "help debug this"                    # Create new remote environment
 cn remote --url https://my-server.com "work"   # Connect to existing server
 cn remote --idempotency-key my-session "work"  # Resume or create idempotent session
 ```

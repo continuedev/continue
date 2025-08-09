@@ -26,7 +26,7 @@ process.on("unhandledRejection", (reason, promise) => {
     reason instanceof Error ? reason : new Error(String(reason)),
     {
       promise: String(promise),
-    }
+    },
   );
   // Don't exit the process, just log the error
 });
@@ -42,7 +42,7 @@ const program = new Command();
 program
   .name("cn")
   .description(
-    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output."
+    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
   )
   .version(getVersion());
 
@@ -53,11 +53,11 @@ addCommonOptions(program)
   .option("-p, --print", "Print response and exit (useful for pipes)")
   .option(
     "--format <format>",
-    "Output format for headless mode (json). Only works with -p/--print flag."
+    "Output format for headless mode (json). Only works with -p/--print flag.",
   )
   .option(
     "--silent",
-    "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag."
+    "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag.",
   )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
@@ -94,7 +94,7 @@ addCommonOptions(program)
         console.log(`Verbose logging enabled (session: ${sessionId})`);
         console.log(`Logs: ${logPath}`);
         console.log(
-          `Filter this session: grep '\\[${sessionId}\\]' ${logPath}`
+          `Filter this session: grep '\\[${sessionId}\\]' ${logPath}`,
         );
       }
       logger.debug("Verbose logging enabled");
@@ -117,7 +117,7 @@ addCommonOptions(program)
     // In headless mode, ensure we have a prompt
     if (options.print && !prompt) {
       console.error(
-        "Error: A prompt is required when using the -p/--print flag.\n"
+        "Error: A prompt is required when using the -p/--print flag.\n",
       );
       console.error("Usage examples:");
       console.error('  cn -p "please review my current git diff"');
@@ -154,7 +154,7 @@ program
   .description("Launch a remote instance of the cn agent")
   .option(
     "--url <url>",
-    "Connect directly to the specified URL instead of creating a new remote environment"
+    "Connect directly to the specified URL instead of creating a new remote environment",
   )
   .option(
     "--idempotency-key <key>",
@@ -171,7 +171,7 @@ program
   .option(
     "--timeout <seconds>",
     "Inactivity timeout in seconds (default: 300)",
-    "300"
+    "300",
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
   .action(async (prompt, options) => {
@@ -208,7 +208,7 @@ try {
 } catch (error) {
   console.error(error);
   sentryService.captureException(
-    error instanceof Error ? error : new Error(String(error))
+    error instanceof Error ? error : new Error(String(error)),
   );
   process.exit(1);
 }

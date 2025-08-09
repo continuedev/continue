@@ -20,7 +20,7 @@ let isHeadlessMode = false;
  */
 export function configureConsoleForHeadless(headless: boolean): void {
   isHeadlessMode = headless;
-  
+
   if (headless && !originalConsole) {
     // Backup original console methods
     originalConsole = {
@@ -33,10 +33,10 @@ export function configureConsoleForHeadless(headless: boolean): void {
 
     // Override console methods to suppress output in headless mode
     console.log = () => {}; // Suppress all console.log
-    console.info = () => {}; // Suppress all console.info  
+    console.info = () => {}; // Suppress all console.info
     console.warn = () => {}; // Suppress all console.warn
     console.debug = () => {}; // Suppress all console.debug
-    
+
     // Keep console.error for genuine errors, but send to stderr
     console.error = (...args: any[]) => {
       originalConsole!.error(...args);
@@ -48,7 +48,7 @@ export function configureConsoleForHeadless(headless: boolean): void {
     console.warn = originalConsole.warn;
     console.error = originalConsole.error;
     console.debug = originalConsole.debug;
-    
+
     originalConsole = null;
   }
 }
@@ -62,7 +62,7 @@ export function safeStdout(message: string): void {
 }
 
 /**
- * Safe stderr output that bypasses console overrides  
+ * Safe stderr output that bypasses console overrides
  * Use this for error messages that should always be visible
  */
 export function safeStderr(message: string): void {
@@ -81,7 +81,7 @@ export function withOriginalConsole<T>(fn: () => T): T {
   // Temporarily restore
   const tempConsole = { ...console };
   Object.assign(console, originalConsole);
-  
+
   try {
     return fn();
   } finally {
@@ -108,7 +108,7 @@ export function resetConsoleOverrides(): void {
     console.warn = originalConsole.warn;
     console.error = originalConsole.error;
     console.debug = originalConsole.debug;
-    
+
     originalConsole = null;
   }
   isHeadlessMode = false;

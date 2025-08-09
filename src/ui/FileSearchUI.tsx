@@ -263,7 +263,7 @@ export async function throttledGlob(
   patterns: string[],
   options: GlobOptionsWithFileTypesFalse,
   batchSize = 100,
-  delay = 20
+  delay = 20,
 ): Promise<string[]> {
   return new Promise<string[]>((resolve, reject) => {
     const allMatches: string[] = [];
