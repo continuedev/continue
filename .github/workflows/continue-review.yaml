@@ -167,7 +167,7 @@ jobs:
           echo ""
 
           # Run the CLI with the generated prompt and pipe output to code_review.md
-          cat review_prompt.txt | cn --config "${{ inputs.assistant }}" -p > code_review.md
+          cat review_prompt.txt | cn --auto --config "${{ inputs.assistant }}" -p > code_review.md
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
