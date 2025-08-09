@@ -2,6 +2,7 @@
 title: "How to Set Up Model Context Protocol (MCP) in Continue"
 description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
+sidebarTitle: "Model Context Protocol (MCP)"
 ---
 
 As AI systems get better, they're still held back by their training data and
@@ -24,7 +25,7 @@ explore available MCP server blocks
 
 <Info>MCP can only be used in the **agent** mode.</Info>
 
-## How to Set Up Your First MCP Server
+## Quick Start: How to Set Up Your First MCP Server
 
 Below is a quick example of setting up a new MCP server for use in your assistant:
 
@@ -114,7 +115,7 @@ MCP blocks follow the established syntax for blocks, with a few additional prope
 
 MCP now supports remote server connections through HTTP-based transports, expanding beyond the traditional local stdio transport method. This enables integration with cloud-hosted MCP servers and distributed architectures.
 
-#### How to Use Server-Sent Events Transport (SSE)
+#### How to Use Server-Sent Events Transport (`sse`)
 
 For real-time streaming communication, use the SSE transport:
 
@@ -125,7 +126,7 @@ mcpServers:
     url: https://....
 ```
 
-#### How to Use Standard Input/Output (stdio)
+#### How to Use Standard Input/Output (`stdio`)
 
 For local MCP servers that communicate via standard input and output:
 
