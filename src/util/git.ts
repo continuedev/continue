@@ -23,7 +23,7 @@ export function getGitRemoteUrl(remote: string = "origin"): string | null {
  */
 export function isGitRepo(): boolean {
   try {
-    execSync("git rev-parse --is-inside-work-tree", { 
+    execSync("git rev-parse --is-inside-work-tree", {
       stdio: "ignore",
       cwd: process.cwd(),
     });
@@ -34,14 +34,54 @@ export function isGitRepo(): boolean {
 }
 
 /**
- * Get the current repository URL, falling back to local path if not a git repo
- * @returns Git remote URL or local path
+ * Check if running in GitHub Actions
+ */
+export function isGitHubActions(): boolean {
+  return process.env.GITHUB_ACTIONS === "true";
+}
+
+/**
+ * Get repository URL from GitHub Actions environment variables
+ * @returns GitHub repository URL or null if not available
+ */
+export function getGitHubActionsRepoUrl(): string | null {
+  if (!isGitHubActions()) {
+    return null;
+  }
+
+  // GITHUB_REPOSITORY is in format "owner/repo"
+  const githubRepository = process.env.GITHUB_REPOSITORY;
+  if (!githubRepository) {
+    return null;
+  }
+
+  // GITHUB_SERVER_URL defaults to https://github.com but can be different for GitHub Enterprise
+  const serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com";
+
+  return `${serverUrl}/${githubRepository}.git`;
+}
+
+/**
+ * Get the current repository URL with enhanced detection for CI environments
+ * Priority order:
+ * 1. GitHub Actions environment variables (if running in GitHub Actions)
+ * 2. Git remote URL (if in a git repository)
+ * 3. Current working directory (fallback)
+ * @returns Repository URL or local path
  */
 export function getRepoUrl(): string {
+  // First, check if we're in GitHub Actions and can get repo URL from env vars
+  const githubActionsUrl = getGitHubActionsRepoUrl();
+  if (githubActionsUrl) {
+    return githubActionsUrl;
+  }
+
+  // Then check if we're in a git repository
   if (!isGitRepo()) {
     return process.cwd();
   }
 
+  // Try to get the remote URL from git
   const remoteUrl = getGitRemoteUrl();
   return remoteUrl || process.cwd();
 }

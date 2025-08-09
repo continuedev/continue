@@ -28,7 +28,7 @@ export interface ConfigLoadResult {
   source: ConfigSource;
 }
 
-export type ConfigSource = 
+export type ConfigSource =
   | { type: "cli-flag"; path: string }
   | { type: "saved-uri"; uri: string }
   | { type: "user-assistant"; slug: string }
@@ -42,17 +42,22 @@ export type ConfigSource =
 export async function loadConfiguration(
   authConfig: AuthConfig,
   cliConfigPath: string | undefined,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<ConfigLoadResult> {
   const organizationId = getOrganizationId(authConfig);
   const accessToken = getAccessToken(authConfig);
 
   // Step 1: Determine config source using precedence rules
   const configSource = determineConfigSource(authConfig, cliConfigPath);
-  
+
   // Step 2: Load configuration from the determined source
-  const config = await loadFromSource(configSource, accessToken, organizationId, apiClient);
-  
+  const config = await loadFromSource(
+    configSource,
+    accessToken,
+    organizationId,
+    apiClient,
+  );
+
   // Step 3: Save config URI for session continuity (only for file-based auth)
   if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
     const uri = getUriFromSource(configSource);
@@ -72,7 +77,7 @@ export async function loadConfiguration(
  */
 function determineConfigSource(
   authConfig: AuthConfig,
-  cliConfigPath: string | undefined
+  cliConfigPath: string | undefined,
 ): ConfigSource {
   // Priority 1: CLI --config flag
   if (cliConfigPath) {
@@ -108,32 +113,50 @@ async function loadFromSource(
   source: ConfigSource,
   accessToken: string | null,
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   try {
     switch (source.type) {
       case "cli-flag":
-        return await loadFromCliFlag(source.path, accessToken, organizationId, apiClient);
-      
+        return await loadFromCliFlag(
+          source.path,
+          accessToken,
+          organizationId,
+          apiClient,
+        );
+
       case "saved-uri":
-        return await loadFromSavedUri(source.uri, accessToken, organizationId, apiClient);
-      
+        return await loadFromSavedUri(
+          source.uri,
+          accessToken,
+          organizationId,
+          apiClient,
+        );
+
       case "user-assistant":
         return await loadUserAssistantWithFallback(organizationId, apiClient);
-      
+
       case "default-config-yaml":
-        return await loadDefaultConfigYaml(accessToken, organizationId, apiClient);
-      
+        return await loadDefaultConfigYaml(
+          accessToken,
+          organizationId,
+          apiClient,
+        );
+
       case "default-agent":
         return await loadDefaultAgent(organizationId, apiClient);
-      
+
       default:
         throw new Error(`Unknown config source type: ${(source as any).type}`);
     }
   } catch (error) {
     // If we're trying user assistants and it fails, fall back to default agent
     if (source.type === "user-assistant") {
-      console.warn(chalk.yellow("Failed to load user assistants, falling back to default agent"));
+      console.warn(
+        chalk.yellow(
+          "Failed to load user assistants, falling back to default agent",
+        ),
+      );
       return await loadDefaultAgent(organizationId, apiClient);
     }
     throw error;
@@ -148,11 +171,16 @@ async function loadFromCliFlag(
   configPath: string,
   accessToken: string | null,
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   if (isFilePath(configPath)) {
     // Load local YAML file
-    return await loadConfigYaml(configPath, accessToken, organizationId, apiClient);
+    return await loadConfigYaml(
+      configPath,
+      accessToken,
+      organizationId,
+      apiClient,
+    );
   } else {
     // Load assistant slug
     return await loadAssistantSlug(configPath, organizationId, apiClient);
@@ -166,18 +194,23 @@ async function loadFromSavedUri(
   uri: string,
   accessToken: string | null,
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const filePath = uriToPath(uri);
   if (filePath) {
-    return await loadConfigYaml(filePath, accessToken, organizationId, apiClient);
+    return await loadConfigYaml(
+      filePath,
+      accessToken,
+      organizationId,
+      apiClient,
+    );
   }
-  
+
   const slug = uriToSlug(uri);
   if (slug) {
     return await loadAssistantSlug(slug, organizationId, apiClient);
   }
-  
+
   throw new Error(`Invalid saved config URI: ${uri}`);
 }
 
@@ -186,7 +219,7 @@ async function loadFromSavedUri(
  */
 async function loadUserAssistantWithFallback(
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const assistants = await apiClient.listAssistants({
     alwaysUseProxy: "false",
@@ -211,10 +244,15 @@ async function loadUserAssistantWithFallback(
 async function loadDefaultConfigYaml(
   accessToken: string | null,
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const defaultConfigPath = path.join(env.continueHome, "config.yaml");
-  return await loadConfigYaml(defaultConfigPath, accessToken, organizationId, apiClient);
+  return await loadConfigYaml(
+    defaultConfigPath,
+    accessToken,
+    organizationId,
+    apiClient,
+  );
 }
 
 /**
@@ -222,7 +260,7 @@ async function loadDefaultConfigYaml(
  */
 async function loadDefaultAgent(
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const resp = await apiClient.getAssistant({
     ownerSlug: "continuedev",
@@ -233,7 +271,7 @@ async function loadDefaultAgent(
   if (!resp.configResult.config) {
     throw new Error("Failed to load default agent.");
   }
-  
+
   return resp.configResult.config as AssistantUnrolled;
 }
 
@@ -244,7 +282,7 @@ async function loadConfigYaml(
   filePath: string,
   accessToken: string | null,
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const unrollResult = await unrollAssistant(
     { filePath, uriType: "file" },
@@ -260,7 +298,7 @@ async function loadConfigYaml(
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       onPremProxyUrl: null,
-    }
+    },
   );
 
   const errorDetails = unrollResult.errors;
@@ -283,11 +321,13 @@ async function loadConfigYaml(
 async function loadAssistantSlug(
   slug: string,
   organizationId: string | null,
-  apiClient: DefaultApiInterface
+  apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const [ownerSlug, packageSlug] = slug.split("/");
   if (!ownerSlug || !packageSlug) {
-    throw new Error(`Invalid assistant slug format. Expected "owner/package", got: ${slug}`);
+    throw new Error(
+      `Invalid assistant slug format. Expected "owner/package", got: ${slug}`,
+    );
   }
 
   const resp = await apiClient.getAssistant({
@@ -330,8 +370,8 @@ function isFilePath(configPath: string): boolean {
 function getUriFromSource(source: ConfigSource): string | null {
   switch (source.type) {
     case "cli-flag":
-      return isFilePath(source.path) 
-        ? `file://${source.path}` 
+      return isFilePath(source.path)
+        ? `file://${source.path}`
         : `slug://${source.path}`;
     case "saved-uri":
       return source.uri;

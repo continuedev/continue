@@ -1,16 +1,22 @@
-import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  ReactNode,
+} from "react";
 
 /**
  * Navigation screens for the UI
  * Only one screen can be active at a time
  */
-export type NavigationScreen = 
-  | 'chat'               // Normal chat interface
-  | 'organization'       // Organization selector
-  | 'config'            // Config selector
-  | 'model'             // Model selector
-  | 'free-trial'        // Free trial transition UI
-  | 'login';            // Login prompt
+export type NavigationScreen =
+  | "chat" // Normal chat interface
+  | "organization" // Organization selector
+  | "config" // Config selector
+  | "model" // Model selector
+  | "free-trial" // Free trial transition UI
+  | "login"; // Login prompt
 
 interface NavigationState {
   currentScreen: NavigationScreen;
@@ -22,23 +28,26 @@ interface NavigationState {
  * Navigation actions
  */
 type NavigationAction =
-  | { type: 'NAVIGATE_TO'; screen: NavigationScreen; data?: any }
-  | { type: 'CLOSE_SCREEN' };
+  | { type: "NAVIGATE_TO"; screen: NavigationScreen; data?: any }
+  | { type: "CLOSE_SCREEN" };
 
 /**
  * Navigation reducer - handles all state transitions deterministically
  */
-function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
+function navigationReducer(
+  state: NavigationState,
+  action: NavigationAction,
+): NavigationState {
   switch (action.type) {
-    case 'NAVIGATE_TO':
+    case "NAVIGATE_TO":
       return {
         currentScreen: action.screen,
         screenData: action.data ?? null,
       };
 
-    case 'CLOSE_SCREEN':
+    case "CLOSE_SCREEN":
       return {
-        currentScreen: 'chat',
+        currentScreen: "chat",
         screenData: null,
       };
 
@@ -50,21 +59,23 @@ function navigationReducer(state: NavigationState, action: NavigationAction): Na
 interface NavigationContextValue {
   // Current navigation state
   state: NavigationState;
-  
+
   // Navigation methods
   navigateTo: (screen: NavigationScreen, data?: any) => void;
   closeCurrentScreen: () => void;
-  
+
   // Check if a specific screen is active
   isScreenActive: (screen: NavigationScreen) => boolean;
 }
 
-const NavigationContext = createContext<NavigationContextValue | undefined>(undefined);
+const NavigationContext = createContext<NavigationContextValue | undefined>(
+  undefined,
+);
 
 export function useNavigation() {
   const context = useContext(NavigationContext);
   if (!context) {
-    throw new Error('useNavigation must be used within NavigationProvider');
+    throw new Error("useNavigation must be used within NavigationProvider");
   }
   return context;
 }
@@ -75,21 +86,24 @@ interface NavigationProviderProps {
 
 export function NavigationProvider({ children }: NavigationProviderProps) {
   const [state, dispatch] = useReducer(navigationReducer, {
-    currentScreen: 'chat',
+    currentScreen: "chat",
     screenData: null,
   });
 
   const navigateTo = useCallback((screen: NavigationScreen, data?: any) => {
-    dispatch({ type: 'NAVIGATE_TO', screen, data });
+    dispatch({ type: "NAVIGATE_TO", screen, data });
   }, []);
 
   const closeCurrentScreen = useCallback(() => {
-    dispatch({ type: 'CLOSE_SCREEN' });
+    dispatch({ type: "CLOSE_SCREEN" });
   }, []);
 
-  const isScreenActive = useCallback((screen: NavigationScreen): boolean => {
-    return state.currentScreen === screen;
-  }, [state.currentScreen]);
+  const isScreenActive = useCallback(
+    (screen: NavigationScreen): boolean => {
+      return state.currentScreen === screen;
+    },
+    [state.currentScreen],
+  );
 
   const value: NavigationContextValue = {
     state,

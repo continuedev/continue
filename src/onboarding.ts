@@ -13,8 +13,8 @@ import { initialize } from "./config.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 import {
-  isValidAnthropicApiKey,
   getApiKeyValidationError,
+  isValidAnthropicApiKey,
 } from "./util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
@@ -30,7 +30,7 @@ export interface OnboardingResult {
 }
 
 export async function checkHasAcceptableModel(
-  configPath: string
+  configPath: string,
 ): Promise<boolean> {
   try {
     if (!fs.existsSync(configPath)) {
@@ -61,7 +61,7 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
 
 export async function runOnboardingFlow(
   configPath: string | undefined,
-  authConfig: AuthConfig
+  authConfig: AuthConfig,
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
   if (configPath !== undefined) {
@@ -103,7 +103,7 @@ export async function runOnboardingFlow(
       chalk.white("\nEnter your Anthropic API key: "),
       {
         hideEchoBack: true,
-      }
+      },
     );
 
     if (!isValidAnthropicApiKey(apiKey)) {
@@ -112,7 +112,7 @@ export async function runOnboardingFlow(
 
     await createOrUpdateConfig(apiKey);
     console.log(
-      chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`)
+      chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`),
     );
 
     const result = await initialize(authConfig, CONFIG_PATH);
@@ -125,7 +125,7 @@ export async function runOnboardingFlow(
 export async function runNormalFlow(
   authConfig: AuthConfig,
   configPath?: string,
-  rules?: string[]
+  rules?: string[],
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
   if (configPath !== undefined) {
@@ -146,7 +146,7 @@ export async function runNormalFlow(
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       throw new Error(
-        `Failed to load config from "${configPath}": ${errorMessage}`
+        `Failed to load config from "${configPath}": ${errorMessage}`,
       );
     }
   }
@@ -221,7 +221,7 @@ export async function markOnboardingComplete(): Promise<void> {
  */
 async function injectRulesIntoConfig(
   config: AssistantUnrolled,
-  rules: string[]
+  rules: string[],
 ): Promise<AssistantUnrolled> {
   if (!rules || rules.length === 0) {
     return config;
@@ -235,8 +235,8 @@ async function injectRulesIntoConfig(
     } catch (error: any) {
       console.warn(
         chalk.yellow(
-          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`
-        )
+          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`,
+        ),
       );
     }
   }
@@ -253,9 +253,8 @@ async function injectRulesIntoConfig(
   const rulesSection = processedRules.join("\n\n");
 
   if (existingSystemMessage) {
-    (
-      modifiedConfig as any
-    ).systemMessage = `${existingSystemMessage}\n\n${rulesSection}`;
+    (modifiedConfig as any).systemMessage =
+      `${existingSystemMessage}\n\n${rulesSection}`;
   } else {
     (modifiedConfig as any).systemMessage = rulesSection;
   }
@@ -266,7 +265,7 @@ async function injectRulesIntoConfig(
 export async function initializeWithOnboarding(
   authConfig: AuthConfig,
   configPath: string | undefined,
-  rules?: string[]
+  rules?: string[],
 ): Promise<OnboardingResult> {
   const firstTime = await isFirstTime();
 

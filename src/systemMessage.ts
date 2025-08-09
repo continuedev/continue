@@ -107,7 +107,7 @@ export async function constructSystemMessage(
   rulesSystemMessage: string,
   additionalRules?: string[],
   format?: "json",
-  headless?: boolean
+  headless?: boolean,
 ): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
@@ -136,7 +136,7 @@ export async function constructSystemMessage(
         processedRules.push(processedRule);
       } catch (error: any) {
         console.warn(
-          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`
+          `Warning: Failed to process rule "${ruleSpec}": ${error.message}`,
         );
       }
     }

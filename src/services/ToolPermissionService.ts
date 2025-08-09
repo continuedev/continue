@@ -165,7 +165,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
       modePolicyCount: 0, // Reset since we're replacing all policies
     });
     logger.debug(
-      `Updated tool permissions with ${newPolicies.length} policies`
+      `Updated tool permissions with ${newPolicies.length} policies`,
     );
   }
 
@@ -174,7 +174,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    */
   switchMode(newMode: PermissionMode): ToolPermissionServiceState {
     logger.debug(
-      `Switching from mode '${this.currentState.currentMode}' to '${newMode}'`
+      `Switching from mode '${this.currentState.currentMode}' to '${newMode}'`,
     );
 
     // Store original policies when leaving normal mode for the first time
@@ -190,7 +190,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         },
       });
       logger.debug(
-        `Stored ${this.currentState.permissions.policies.length} original policies`
+        `Stored ${this.currentState.permissions.policies.length} original policies`,
       );
     }
 
@@ -214,11 +214,11 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         const originalModePolicyCount = 0; // Normal mode has no mode policies
         const originalNonModePolicies =
           this.currentState.originalPolicies.policies.slice(
-            originalModePolicyCount
+            originalModePolicyCount,
           );
         allPolicies = [...modePolicies, ...originalNonModePolicies];
         logger.debug(
-          `Restored ${originalNonModePolicies.length} original user policies`
+          `Restored ${originalNonModePolicies.length} original user policies`,
         );
       } else {
         // Fallback to existing behavior if no original policies stored
@@ -239,7 +239,7 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
     });
 
     logger.debug(
-      `Mode switched to '${newMode}' with ${allPolicies.length} total policies`
+      `Mode switched to '${newMode}' with ${allPolicies.length} total policies`,
     );
     return this.getState();
   }

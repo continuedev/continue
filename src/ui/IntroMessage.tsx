@@ -30,7 +30,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   const commandLineRules = args.rules || [];
   const configRules =
     config.rules?.map((rule: any) =>
-      typeof rule === "string" ? rule : rule?.name || "Unknown"
+      typeof rule === "string" ? rule : rule?.name || "Unknown",
     ) || [];
 
   const allRules = [...commandLineRules, ...configRules];
@@ -54,7 +54,9 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {!modelCapable && (
         <>
           <Text> </Text>
-          <ModelCapabilityWarning modelName={model.name.split("/").pop() || model.name} />
+          <ModelCapabilityWarning
+            modelName={model.name.split("/").pop() || model.name}
+          />
         </>
       )}
 

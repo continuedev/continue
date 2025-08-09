@@ -28,7 +28,7 @@ export function getModelContextLimit(model: ModelConfig): number {
  * @returns The estimated token count
  */
 export function countMessageTokens(
-  message: ChatCompletionMessageParam
+  message: ChatCompletionMessageParam,
 ): number {
   try {
     let tokenCount = 0;
@@ -86,7 +86,7 @@ export function countMessageTokens(
  * @returns The estimated total token count
  */
 export function countChatHistoryTokens(
-  chatHistory: ChatCompletionMessageParam[]
+  chatHistory: ChatCompletionMessageParam[],
 ): number {
   let totalTokens = 0;
 
@@ -108,7 +108,7 @@ export function countChatHistoryTokens(
  */
 export function calculateContextUsagePercentage(
   tokenCount: number,
-  model: ModelConfig
+  model: ModelConfig,
 ): number {
   const limit = getModelContextLimit(model);
   return Math.min(100, Math.round((tokenCount / limit) * 100));
@@ -122,7 +122,7 @@ export function calculateContextUsagePercentage(
  */
 export function shouldAutoCompact(
   chatHistory: ChatCompletionMessageParam[],
-  model: ModelConfig
+  model: ModelConfig,
 ): boolean {
   const tokenCount = countChatHistoryTokens(chatHistory);
   const limit = getModelContextLimit(model);

@@ -25,7 +25,7 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
   model,
 }) => {
   const [status, setStatus] = useState<GetFreeTrialStatus200Response | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
 

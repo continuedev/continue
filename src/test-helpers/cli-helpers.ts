@@ -37,7 +37,9 @@ export async function createTestContext(): Promise<CLITestContext> {
   try {
     await fs.access(cliPath);
   } catch {
-    throw new Error(`CLI file not found at ${cliPath}. Please run 'npm run build' first.`);
+    throw new Error(
+      `CLI file not found at ${cliPath}. Please run 'npm run build' first.`,
+    );
   }
 
   return {
@@ -50,7 +52,7 @@ export async function createTestContext(): Promise<CLITestContext> {
  * Cleans up test context
  */
 export async function cleanupTestContext(
-  context: CLITestContext
+  context: CLITestContext,
 ): Promise<void> {
   try {
     await fs.rm(context.testDir, { recursive: true, force: true });
@@ -64,7 +66,7 @@ export async function cleanupTestContext(
  */
 export async function runCLI(
   context: CLITestContext,
-  options: CLIRunOptions = {}
+  options: CLIRunOptions = {},
 ): Promise<CLIRunResult> {
   const {
     args = [],
@@ -85,7 +87,7 @@ export async function runCLI(
       HOMEDRIVE: path.parse(context.testDir).root,
       HOMEPATH: path.relative(
         path.parse(context.testDir).root,
-        context.testDir
+        context.testDir,
       ),
       ...env,
     },
@@ -121,7 +123,7 @@ export async function runCLI(
  */
 export async function createTestConfig(
   context: CLITestContext,
-  config: any
+  config: any,
 ): Promise<string> {
   const configPath = path.join(context.testDir, "test-config.yaml");
   const configContent =
@@ -139,7 +141,7 @@ export async function createTestConfig(
 export async function createTestRule(
   context: CLITestContext,
   ruleName: string,
-  content: string
+  content: string,
 ): Promise<string> {
   const rulePath = path.join(context.testDir, `${ruleName}.md`);
   await fs.writeFile(rulePath, content);
@@ -150,7 +152,7 @@ export async function createTestRule(
  * Reads the session file if it exists
  */
 export async function readSession(
-  context: CLITestContext
+  context: CLITestContext,
 ): Promise<any | null> {
   try {
     const sessionDir = path.join(context.testDir, ".continue", "sessions");
@@ -176,7 +178,7 @@ export async function readSession(
  */
 export async function createMockSession(
   context: CLITestContext,
-  messages: any[]
+  messages: any[],
 ): Promise<string> {
   const sessionDir = path.join(context.testDir, ".continue", "sessions");
   await fs.mkdir(sessionDir, { recursive: true });
@@ -203,7 +205,7 @@ export async function createMockSession(
 export function waitForPattern(
   proc: Subprocess,
   pattern: RegExp | string,
-  timeout: number = 5000
+  timeout: number = 5000,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     let output = "";
@@ -236,7 +238,7 @@ export function waitForPattern(
 export async function withInteractiveInput(
   context: CLITestContext,
   args: string[],
-  inputs: string[]
+  inputs: string[],
 ): Promise<CLIRunResult> {
   const proc = execaNode(context.cliPath, args, {
     cwd: context.testDir,
@@ -249,7 +251,7 @@ export async function withInteractiveInput(
       HOMEDRIVE: path.parse(context.testDir).root,
       HOMEPATH: path.relative(
         path.parse(context.testDir).root,
-        context.testDir
+        context.testDir,
       ),
     },
   });

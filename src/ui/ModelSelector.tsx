@@ -29,7 +29,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       try {
         const availableModels = services.model.getAvailableChatModels();
         const currentIndex = services.model.getCurrentModelIndex();
-        
+
         if (availableModels.length === 0) {
           setError("No chat models available in the configuration");
           setLoading(false);
@@ -64,7 +64,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       loading={loading}
       error={error}
       loadingMessage="Loading available models..."
-      currentId={currentModelIndex >= 0 && models[currentModelIndex] ? models[currentModelIndex].id : null}
+      currentId={
+        currentModelIndex >= 0 && models[currentModelIndex]
+          ? models[currentModelIndex].id
+          : null
+      }
       onSelect={onSelect}
       onCancel={onCancel}
       onNavigate={setSelectedIndex}

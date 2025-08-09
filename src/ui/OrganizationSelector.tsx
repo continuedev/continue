@@ -39,9 +39,10 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
         }
 
         const options: Organization[] = [
-          { 
-            id: "personal", 
-            name: "Personal"
+          {
+            id: "personal",
+            name: "Personal",
+            slug: "personal",
           },
           ...organizations,
         ];

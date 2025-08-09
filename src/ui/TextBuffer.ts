@@ -56,7 +56,7 @@ export class TextBuffer {
 
   private findWordBoundary(
     position: number,
-    direction: "left" | "right"
+    direction: "left" | "right",
   ): number {
     if (direction === "left") {
       // Find start of current word or previous word
@@ -199,7 +199,7 @@ export class TextBuffer {
         this.moveWordRight();
         return true;
       }
-      
+
       // Handle option+left/right as characters (on Mac, option+arrow sends character codes)
       if (input === "b") {
         this.moveWordLeft();

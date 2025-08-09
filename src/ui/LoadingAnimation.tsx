@@ -1,8 +1,6 @@
 import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 
-
-
 const BRAILLE_BY_DENSITY: { [key: number]: string[] } = {
   0: ["⠀"], // No dots
   1: ["⠁", "⠂", "⠄", "⠈", "⠐", "⠠", "⡀", "⢀"], // 1 dot
@@ -20,13 +18,13 @@ const generateDensityFrame = (dotCount: number): string => {
   const chars = BRAILLE_BY_DENSITY[Math.min(8, Math.max(0, dotCount))];
   return Array.from(
     { length: 3 },
-    () => chars[Math.floor(Math.random() * chars.length)]
+    () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
 };
 
 // Helper function to generate eased static fade animation with full timing control
 const generateEasedStaticFade = (
-  timingCurve: number[] = [3, 3, 2, 1, 1, 1, 2, 3, 3]
+  timingCurve: number[] = [3, 3, 2, 1, 1, 1, 2, 3, 3],
 ): string[] => {
   const frames: string[] = [];
 
@@ -65,7 +63,6 @@ const STATIC_FADE = [
   ...generateEasedStaticFade(TIMING_CURVE),
   ...generateEasedStaticFade(TIMING_CURVE),
 ];
-
 
 const SPINNER: string | string[] = STATIC_FADE;
 

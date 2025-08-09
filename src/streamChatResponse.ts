@@ -49,7 +49,7 @@ export function getAllTools() {
 
   // Check if the ToolPermissionService is ready
   const serviceResult = getServiceSync<ToolPermissionServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS
+    SERVICE_NAMES.TOOL_PERMISSIONS,
   );
 
   let allowedToolNames: string[];
@@ -57,16 +57,16 @@ export function getAllTools() {
     // Filter out excluded tools based on permissions
     allowedToolNames = filterExcludedTools(
       allToolNames,
-      serviceResult.value.permissions
+      serviceResult.value.permissions,
     );
   } else {
     // Service not ready - this is a critical error since tools should only be
     // requested after services are properly initialized
     logger.error(
-      "ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue"
+      "ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue",
     );
     throw new Error(
-      "ToolPermissionService not initialized. Services must be initialized before requesting tools."
+      "ToolPermissionService not initialized. Services must be initialized before requesting tools.",
     );
   }
 
@@ -74,7 +74,7 @@ export function getAllTools() {
 
   // Filter builtin tools
   const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name)
+    allowedToolNamesSet.has(tool.name),
   );
 
   const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
@@ -92,7 +92,7 @@ export function getAllTools() {
               description: param.description,
               items: param.items,
             },
-          ])
+          ]),
         ),
         required: Object.entries(tool.parameters)
           .filter(([_, param]) => param.required)
@@ -104,7 +104,7 @@ export function getAllTools() {
   // Add filtered MCP tools
   const mcpTools = MCPService.getInstance()?.getTools() ?? [];
   const allowedMcpTools = mcpTools.filter((tool) =>
-    allowedToolNamesSet.has(tool.name)
+    allowedToolNamesSet.has(tool.name),
   );
 
   allTools.push(
@@ -115,7 +115,7 @@ export function getAllTools() {
         description: tool.description,
         parameters: tool.inputSchema,
       },
-    }))
+    })),
   );
 
   return allTools;
@@ -131,11 +131,11 @@ export interface StreamCallbacks {
     toolName: string,
     toolArgs: any,
     requestId: string,
-    preview?: ToolCallPreview[]
+    preview?: ToolCallPreview[],
   ) => void;
 }
 function getDefaultCompletionOptions(
-  opts?: CompletionOptions
+  opts?: CompletionOptions,
 ): Partial<ChatCompletionCreateParamsStreaming> {
   if (!opts) return {};
   return {
@@ -155,7 +155,7 @@ export async function processStreamingResponse(
   abortController: AbortController,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
-  tools?: ChatCompletionTool[]
+  tools?: ChatCompletionTool[],
 ): Promise<{
   content: string;
   finalContent: string; // Added field for final content only
@@ -179,7 +179,7 @@ export async function processStreamingResponse(
         tools,
         ...getDefaultCompletionOptions(model.defaultCompletionOptions),
       },
-      abortController.signal
+      abortController.signal,
     );
   };
 
@@ -194,7 +194,7 @@ export async function processStreamingResponse(
   try {
     const streamWithBackoff = withExponentialBackoff(
       streamFactory,
-      abortController.signal
+      abortController.signal,
     );
 
     let chunkCount = 0;
@@ -213,7 +213,7 @@ export async function processStreamingResponse(
           firstTokenTime - requestStartTime,
           model.model,
           "time_to_first_token",
-          (tools?.length || 0) > 0
+          (tools?.length || 0) > 0,
         );
       }
 
@@ -332,7 +332,7 @@ export async function processStreamingResponse(
       totalDuration,
       model.model,
       "total_response_time",
-      (tools?.length || 0) > 0
+      (tools?.length || 0) > 0,
     );
 
     // Log API request event
@@ -343,7 +343,7 @@ export async function processStreamingResponse(
       undefined, // no error
       inputTokens,
       outputTokens,
-      cost
+      cost,
     );
 
     logger.debug("Stream complete", {
@@ -363,7 +363,7 @@ export async function processStreamingResponse(
       model.model,
       errorDuration,
       false, // failed
-      error.message || String(error)
+      error.message || String(error),
     );
 
     if (error.name === "AbortError" || abortController?.signal.aborted) {
@@ -413,7 +413,7 @@ export async function processStreamingResponse(
  */
 export async function preprocessStreamedToolCalls(
   toolCalls: ToolCall[],
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
 ): Promise<{
   preprocessedCalls: PreprocessedToolCall[];
   errorChatEntries: ChatCompletionToolMessageParam[];
@@ -468,7 +468,7 @@ export async function preprocessStreamedToolCalls(
         toolCall.name,
         false,
         duration,
-        errorMessage
+        errorMessage,
       );
 
       // Add error to chat history
@@ -495,7 +495,7 @@ export async function preprocessStreamedToolCalls(
 export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
   callbacks?: StreamCallbacks,
-  isHeadless?: boolean
+  isHeadless?: boolean,
 ): Promise<{
   hasRejection: boolean;
   chatHistoryEntries: ChatCompletionToolMessageParam[];
@@ -541,13 +541,13 @@ export async function executeStreamedToolCalls(
           const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
           const toolName = tool?.displayName || toolCall.name;
           console.error(
-            `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`
+            `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`,
           );
           console.error(
-            `If you want to allow this tool, use --allow ${toolName}.`
+            `If you want to allow this tool, use --allow ${toolName}.`,
           );
           console.error(
-            `If you don't want the tool to be included, use --exclude ${toolName}.`
+            `If you don't want the tool to be included, use --exclude ${toolName}.`,
           );
 
           process.exit(1);
@@ -570,21 +570,21 @@ export async function executeStreamedToolCalls(
             if (event.toolCall.name === toolCall.name) {
               toolPermissionManager.off(
                 "permissionRequested",
-                handlePermissionRequested
+                handlePermissionRequested,
               );
               // Notify UI about permission request
               callbacks.onToolPermissionRequest!(
                 event.toolCall.name,
                 event.toolCall.arguments,
                 event.requestId,
-                event.toolCall.preview
+                event.toolCall.preview,
               );
             }
           };
 
           toolPermissionManager.on(
             "permissionRequested",
-            handlePermissionRequested
+            handlePermissionRequested,
           );
 
           // Request permission using the proper API
@@ -667,7 +667,7 @@ export async function streamChatResponse(
   model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
 ) {
   logger.debug("streamChatResponse called", {
     model,
@@ -676,7 +676,7 @@ export async function streamChatResponse(
   });
 
   const serviceResult = getServiceSync<ToolPermissionServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS
+    SERVICE_NAMES.TOOL_PERMISSIONS,
   );
   const isHeadless = serviceResult.value?.isHeadless ?? false;
   const tools = getAllTools();
@@ -701,7 +701,7 @@ export async function streamChatResponse(
         abortController,
         callbacks,
         isHeadless,
-        tools
+        tools,
       );
 
     fullResponse += content;
@@ -756,12 +756,12 @@ export async function streamChatResponse(
         await executeStreamedToolCalls(
           preprocessedCalls,
           callbacks,
-          isHeadless
+          isHeadless,
         );
 
       if (isHeadless && hasRejection) {
         logger.debug(
-          "Tool call rejected in headless mode - returning current content"
+          "Tool call rejected in headless mode - returning current content",
         );
         return finalResponse || content || fullResponse;
       }

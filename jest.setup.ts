@@ -32,7 +32,7 @@ afterEach(() => {
       // Ignore errors when clearing timers
     }
   }
-  
+
   // Reset console overrides to ensure clean state for each test
   try {
     resetConsoleOverrides();

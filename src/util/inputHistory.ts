@@ -14,7 +14,7 @@ export interface InputHistoryEntry {
 export class InputHistory {
   private history: InputHistoryEntry[] = [];
   private currentIndex: number = -1;
-  private originalInput: string = '';
+  private originalInput: string = "";
 
   constructor() {
     this.loadHistory();
@@ -28,11 +28,11 @@ export class InputHistory {
       }
 
       if (fs.existsSync(HISTORY_FILE)) {
-        const data = fs.readFileSync(HISTORY_FILE, 'utf8');
+        const data = fs.readFileSync(HISTORY_FILE, "utf8");
         this.history = JSON.parse(data);
       }
     } catch (error) {
-      console.error('Failed to load input history:', error);
+      console.error("Failed to load input history:", error);
       this.history = [];
     }
   }
@@ -46,7 +46,7 @@ export class InputHistory {
 
       fs.writeFileSync(HISTORY_FILE, JSON.stringify(this.history, null, 2));
     } catch (error) {
-      console.error('Failed to save input history:', error);
+      console.error("Failed to save input history:", error);
     }
   }
 
@@ -54,12 +54,12 @@ export class InputHistory {
     if (!text.trim()) return;
 
     // Remove duplicate if it exists
-    this.history = this.history.filter(entry => entry.text !== text);
+    this.history = this.history.filter((entry) => entry.text !== text);
 
     // Add new entry at the beginning
     this.history.unshift({
       text,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Limit history size
@@ -100,7 +100,7 @@ export class InputHistory {
 
   resetNavigation(): void {
     this.currentIndex = -1;
-    this.originalInput = '';
+    this.originalInput = "";
   }
 
   getHistory(): InputHistoryEntry[] {

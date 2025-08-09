@@ -15,12 +15,12 @@ import { env } from "./env.js";
 export class CLIPlatformClient implements PlatformClient {
   constructor(
     private orgScopeId: string | null,
-    private readonly apiClient: DefaultApiInterface
+    private readonly apiClient: DefaultApiInterface,
   ) {}
 
   private findSecretInEnvFile(
     filePath: string,
-    secretName: string
+    secretName: string,
   ): string | undefined {
     try {
       if (!fs.existsSync(filePath)) return undefined;
@@ -32,7 +32,7 @@ export class CLIPlatformClient implements PlatformClient {
       console.warn(
         `Error reading .env file at ${filePath}: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
       return undefined;
     }
@@ -71,7 +71,7 @@ export class CLIPlatformClient implements PlatformClient {
     }
 
     const results: (SecretResult | undefined)[] = new Array(fqsns.length).fill(
-      undefined
+      undefined,
     );
 
     // Try to resolve secrets through the API client first
@@ -93,7 +93,7 @@ export class CLIPlatformClient implements PlatformClient {
       console.warn(
         `Error resolving FQSNs through API: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
 

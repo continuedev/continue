@@ -13,38 +13,42 @@ export function mockLLMResponse(response: string) {
       const words = response.split(" ");
       for (const word of words) {
         yield {
-          choices: [{
-            delta: {
-              content: word + " "
-            }
-          }]
+          choices: [
+            {
+              delta: {
+                content: word + " ",
+              },
+            },
+          ],
         };
       }
     },
-    
+
     chatCompletion: async () => ({
-      choices: [{
-        message: {
-          role: "assistant",
-          content: response
-        }
-      }]
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: response,
+          },
+        },
+      ],
     }),
-    
+
     // Add any other methods that might be used
     completionStream: async function* () {
       yield response;
     },
-    
+
     completion: async () => response,
   };
 
   vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
     BaseLlmApi: MockBaseLlmApi,
-    LLMConfig: {}
+    LLMConfig: {},
   }));
-  
+
   return mockApi;
 }
 
@@ -56,39 +60,43 @@ export function mockLLMStreamResponse(chunks: string[]) {
     chatCompletionStream: async function* () {
       for (const chunk of chunks) {
         yield {
-          choices: [{
-            delta: {
-              content: chunk
-            }
-          }]
+          choices: [
+            {
+              delta: {
+                content: chunk,
+              },
+            },
+          ],
         };
       }
     },
-    
+
     chatCompletion: async () => ({
-      choices: [{
-        message: {
-          role: "assistant",
-          content: chunks.join("")
-        }
-      }]
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: chunks.join(""),
+          },
+        },
+      ],
     }),
-    
+
     completionStream: async function* () {
       for (const chunk of chunks) {
         yield chunk;
       }
     },
-    
+
     completion: async () => chunks.join(""),
   };
 
   vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
     BaseLlmApi: MockBaseLlmApi,
-    LLMConfig: {}
+    LLMConfig: {},
   }));
-  
+
   return mockApi;
 }
 
@@ -100,15 +108,15 @@ export function mockLLMError(errorMessage: string) {
     chatCompletionStream: async function* () {
       throw new Error(errorMessage);
     },
-    
+
     chatCompletion: async () => {
       throw new Error(errorMessage);
     },
-    
+
     completionStream: async function* () {
       throw new Error(errorMessage);
     },
-    
+
     completion: async () => {
       throw new Error(errorMessage);
     },
@@ -117,9 +125,9 @@ export function mockLLMError(errorMessage: string) {
   vi.doMock("@continuedev/openai-adapters", () => ({
     constructLlmApi: () => mockApi,
     BaseLlmApi: MockBaseLlmApi,
-    LLMConfig: {}
+    LLMConfig: {},
   }));
-  
+
   return mockApi;
 }
 
