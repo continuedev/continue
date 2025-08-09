@@ -11,7 +11,7 @@ import { PermissionPolicy, ToolPermissionPolicy } from "./types.js";
 
 export const PERMISSIONS_YAML_PATH = path.join(
   env.continueHome,
-  "permissions.yaml"
+  "permissions.yaml",
 );
 
 export interface PermissionsYamlConfig {

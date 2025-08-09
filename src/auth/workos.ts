@@ -764,7 +764,7 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
 export function logout(): void {
   const onboardingFlagPath = path.join(
     env.continueHome,
-    ".onboarding_complete"
+    ".onboarding_complete",
   );
 
   // Remove onboarding completion flag so user will go through onboarding again

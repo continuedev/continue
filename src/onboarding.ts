@@ -131,9 +131,11 @@ export async function runNormalFlow(
   if (configPath !== undefined) {
     // Empty string is invalid and should be treated as an error
     if (configPath === "") {
-      throw new Error(`Failed to load config from "": Config path cannot be empty`);
+      throw new Error(
+        `Failed to load config from "": Config path cannot be empty`,
+      );
     }
-    
+
     try {
       const result = await initialize(authConfig, configPath);
       // Inject rules into the config if provided
@@ -197,9 +199,7 @@ export async function runNormalFlow(
 }
 
 export async function isFirstTime(): Promise<boolean> {
-  return !fs.existsSync(
-    path.join(env.continueHome, ".onboarding_complete")
-  );
+  return !fs.existsSync(path.join(env.continueHome, ".onboarding_complete"));
 }
 
 export async function markOnboardingComplete(): Promise<void> {
