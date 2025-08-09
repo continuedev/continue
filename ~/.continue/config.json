@@ -2,11 +2,12 @@
   "mcpServers": [
     {
       "name": "EchoMCP",
-      "url": "http://localhost:8000/v1",
-      "provider": "alsania",
+      "url": "http://localhost:8000",
+      "provider": "openai",
       "requestOptions": {
         "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": "Bearer not_needed"
         },
         "timeout": 7200
       }
@@ -15,8 +16,9 @@
   "models": [
     {
       "title": "Echo-001",
-      "provider": "openrouter",
+      "provider": "openai",
       "model": "echo-001",
+      "apiKey": "not_needed",
       "mcpServer": "EchoMCP",
       "maxTokens": 30000,
       "temperature": 0.7,
@@ -27,7 +29,8 @@
       "logitBias": {},
       "requestOptions": {
         "headers": {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": "Bearer not_needed"
         },
         "timeout": 30000
       }
@@ -36,8 +39,9 @@
   "defaultModel": "echo-001",
   "contextProviders": [
     {
-      "name": "alsania",
+      "name": "http",
       "params": {
+        "url": "http://localhost:8000/chat",
         "title": "EchoMCP Context",
         "description": "Get context from EchoMCP backend",
         "displayTitle": "Echo-001"
