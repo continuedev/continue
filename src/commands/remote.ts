@@ -13,7 +13,7 @@ import { logger } from "../util/logger.js";
 
 export async function remote(
   prompt: string | undefined,
-  options: { url?: string; idempotencyKey?: string } = {}
+  options: { url?: string; idempotencyKey?: string } = {},
 ) {
   // If --url is provided, connect directly to that URL
   if (options.url) {

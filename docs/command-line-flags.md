@@ -87,6 +87,7 @@ cn remote --idempotency-key "feature-dev" "work on new feature"
 ```
 
 The backend manages session lifecycle based on the idempotency key:
+
 - New key = new remote environment
 - Existing key = connect to existing session
 - Sessions may expire based on backend configuration

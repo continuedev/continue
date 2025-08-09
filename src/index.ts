@@ -158,7 +158,7 @@ program
   )
   .option(
     "--idempotency-key <key>",
-    "Idempotency key for session management - allows resuming existing sessions"
+    "Idempotency key for session management - allows resuming existing sessions",
   )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
