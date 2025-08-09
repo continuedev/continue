@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import type { PermissionMode } from "../permissions/types.js";
-import { reloadService, SERVICE_NAMES } from "../services/index.js";
+import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 import { logger } from "../util/logger.js";
@@ -78,8 +78,11 @@ const UserInput: React.FC<UserInputProps> = ({
 
     modeService.switchMode(nextMode);
 
-    // Reload the tool permissions service to ensure the service container has the latest state
-    await reloadService(SERVICE_NAMES.TOOL_PERMISSIONS);
+    // Update the service container with the new tool permissions state
+    // Since TOOL_PERMISSIONS was registered with registerValue(), we need to
+    // update its value directly rather than reloading from a factory
+    const updatedState = modeService.getToolPermissionService().getState();
+    serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
 
     // Show a brief indicator of the mode change
     // This will be reflected in the ModeIndicator component
