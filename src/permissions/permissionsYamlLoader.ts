@@ -9,10 +9,10 @@ import { logger } from "../util/logger.js";
 import { normalizeToolName } from "./toolNameMapping.js";
 import { PermissionPolicy, ToolPermissionPolicy } from "./types.js";
 
-export const PERMISSIONS_YAML_PATH = path.join(
+export const PERMISSIONS_YAML_PATH = path.resolve(path.join(
   env.continueHome,
   "permissions.yaml",
-);
+));
 
 export interface PermissionsYamlConfig {
   allow?: string[];
