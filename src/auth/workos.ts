@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
@@ -14,7 +13,7 @@ if (!globalThis.fetch) {
 }
 
 // Config file path
-const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
+const AUTH_CONFIG_PATH = path.join(env.continueHome, "auth.json");
 
 // Represents an authenticated user's configuration
 export interface AuthenticatedConfig {
@@ -764,8 +763,7 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  */
 export function logout(): void {
   const onboardingFlagPath = path.join(
-    os.homedir(),
-    ".continue",
+    env.continueHome,
     ".onboarding_complete",
   );
 

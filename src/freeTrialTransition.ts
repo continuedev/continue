@@ -1,6 +1,5 @@
 import { spawn } from "child_process";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
@@ -14,7 +13,7 @@ import {
 } from "./util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 /**
  * Creates or updates the local config with Anthropic API key
