@@ -155,7 +155,6 @@ jobs:
 
           Format your response as a markdown code review with each comment having only a short description about the problem and suggested solution, each being separated by "\n\n---\n\n".
 
-          Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
           EOF
 
       - name: Run Continue CLI Review
