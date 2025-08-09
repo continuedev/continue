@@ -2,6 +2,7 @@
 title: "How to Configure Continue Assistants"
 description: Learn how to access and manage Continue assistant configurations through Hub or local YAML files
 keywords: [config, settings, customize]
+sidebarTitle: "Assistant Configuration"
 ---
 
 You can easily access your assistant configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Assistant selector above the main chat input. Then, you can hover over an assistant and click the `new window` (hub assistants) or `gear` (local assistants) icon.
@@ -39,7 +40,7 @@ See the full reference for `config.yaml` [here](/reference).
   - `~/.continue/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
-### How to Use .continuerc.json for Workspace Configuration
+### How to Use `.continuerc.json` for Workspace Configuration
 
 The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
 
@@ -54,7 +55,7 @@ Example
 }
 ```
 
-### How to Use config.ts for Advanced Configuration
+### How to Use `config.ts` for Advanced Configuration
 
 `config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continue configuration, you can use a `config.ts` file, placed at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
 
