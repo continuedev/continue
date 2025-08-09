@@ -68,7 +68,39 @@ cn serve --timeout 600          # 10 minute timeout
 ```bash
 cn remote "help debug this"                    # Create new remote environment
 cn remote --url https://my-server.com "work"   # Connect to existing server
+cn remote --idempotency-key my-session "work"  # Resume or create idempotent session
 ```
+
+### Idempotent Sessions
+
+Use `--idempotency-key` to create resumable remote sessions:
+
+```bash
+# First time - creates new session
+cn remote --idempotency-key "project-review" "start code review"
+
+# Later - resumes same session if it exists
+cn remote --idempotency-key "project-review" "continue where we left off"
+
+# Different key - creates separate session
+cn remote --idempotency-key "feature-dev" "work on new feature"
+```
+
+The backend manages session lifecycle based on the idempotency key:
+
+- New key = new remote environment
+- Existing key = connect to existing session
+- Sessions may expire based on backend configuration
+
+### Repository Detection
+
+The `cn remote` command automatically detects your repository URL:
+
+- **GitHub Actions**: Uses `GITHUB_REPOSITORY` and `GITHUB_SERVER_URL` environment variables
+- **Git Repository**: Uses `git remote get-url origin`
+- **Fallback**: Uses current working directory path
+
+This ensures the remote environment is created with the correct repository context.
 
 ## Common Examples
 

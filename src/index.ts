@@ -156,6 +156,10 @@ program
     "--url <url>",
     "Connect directly to the specified URL instead of creating a new remote environment",
   )
+  .option(
+    "--idempotency-key <key>",
+    "Idempotency key for session management - allows resuming existing sessions",
+  )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
   });
