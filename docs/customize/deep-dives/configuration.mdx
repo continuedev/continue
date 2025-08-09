@@ -1,5 +1,5 @@
 ---
-title: "Configuration"
+title: "How to Configure Continue Assistants"
 description: Learn how to access and manage Continue assistant configurations through Hub or local YAML files
 keywords: [config, settings, customize]
 ---
@@ -8,11 +8,11 @@ You can easily access your assistant configuration from the Continue Chat sideba
 
 ![configure an assistant](/images/configure-continue.png)
 
-## Hub Assistants
+## How to Manage Hub Assistants
 
 Hub Assistants can be managed in [the Hub](https://hub.continue.dev). See [Editing an Assistant](../../hub/assistants/edit-an-assistant.md)
 
-## YAML Config
+## How to Configure Local Assistants with YAML
 
 Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
@@ -27,19 +27,19 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
-## Deprecated configuration methods
+## Legacy Configuration Methods (Deprecated)
 
 <Info>
   View the `config.json` migration guide [here](../yaml-migration.mdx)
 </Info>
 
 - [`config.json`](/reference) - The original configuration format which is stored in a file at the same location as `config.yaml`
-- [`.continuerc.json`](#continuercjson) - Workspace-level configuration
-- [`config.ts`](#configts) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
+- [`.continuerc.json`](#how-to-use-continuercjson-for-workspace-configuration) - Workspace-level configuration
+- [`config.ts`](#how-to-use-configts-for-advanced-configuration) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
   - `~/.continue/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
-### `.continuerc.json`
+### How to Use .continuerc.json for Workspace Configuration
 
 The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
 
@@ -54,7 +54,7 @@ Example
 }
 ```
 
-### `config.ts`
+### How to Use config.ts for Advanced Configuration
 
 `config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continue configuration, you can use a `config.ts` file, placed at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
 

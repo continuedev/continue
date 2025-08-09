@@ -1,5 +1,5 @@
 ---
-title: "Rules"
+title: "How to Create and Manage Rules in Continue"
 description: "Rules are used to provide instructions to the model for Agent, Chat, and Edit requests."
 keywords: [rules, .continuerules, system, prompt, message]
 ---
@@ -11,15 +11,15 @@ Rules provide instructions to the model for [Agent](../../features/agent/quick-s
   [apply](../model-roles/apply.mdx).
 </Info>
 
-## How it works
+## How Rules Work in Continue
 
 You can view the current rules by clicking the pen icon above the main toolbar:
 
 ![rules input toolbar section](/images/notch-rules.png)
 
-To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#chat-system-message)).
+To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#how-to-customize-chat-system-message)).
 
-## Quick Start
+## How to Create Your First Rule File
 
 Below is a quick example of setting up a new rule file:
 
@@ -39,7 +39,7 @@ Now test your rules by asking a question about a file in chat.
 
 ![pirate rule test](/images/pirate-rule-test.png)
 
-## Creating rules blocks
+## How to Create Rules Blocks
 
 Rules can be added locally using the "Add Rules" button while viewing the Local Assistant's rules.
 
@@ -56,7 +56,7 @@ Rules can also be added to an Assistant on the Continue Hub.
 
 Explore available rules [here](https://hub.continue.dev), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
 
-### Syntax
+### How to Configure Rule Properties and Syntax
 
 <Info>
   Rules were originally defined in YAML format (demonstrated below), but we
@@ -125,13 +125,13 @@ rules:
 </Tab>
 </Tabs>
 
-### `.continue/rules` folder
+### How to Set Up Project-Specific Rules
 
 You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
 
 Rules files are loaded in lexicographical order, so you can prefix them with numbers to control the order in which they are applied. For example: `01-general.md`, `02-frontend.md`, `03-backend.md`.
 
-### Example: TypeScript Rules
+### Example: How to Create TypeScript-Specific Rules
 
 ```md title=".continue/rules/typescript.md"
 ---
@@ -149,7 +149,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 - modularize components into smaller, reusable pieces
 ```
 
-### Chat System Message
+### How to Customize Chat System Message
 
 Continue includes a simple default system message for [Agent](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
@@ -157,7 +157,7 @@ This can be viewed in the rules section of the toolbar (see above), or in the so
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
 
-### `.continuerules`
+### Legacy: .continuerules File (Deprecated)
 
 <Warning>
   `.continuerules` will be deprecated in a future release. Please use the

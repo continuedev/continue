@@ -1,5 +1,5 @@
 ---
-title: MCP
+title: "How to Set Up Model Context Protocol (MCP) in Continue"
 description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 ---
@@ -13,7 +13,7 @@ the wider digital world. This standard, created by Anthropic to bring together
 prompts, context, and tool use, is key for building truly useful AI experiences
 that can be set up with custom tools.
 
-## How it works
+## How MCP Works in Continue
 
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
@@ -24,7 +24,7 @@ explore available MCP server blocks
 
 <Info>MCP can only be used in the **agent** mode.</Info>
 
-## Quick Start
+## How to Set Up Your First MCP Server
 
 Below is a quick example of setting up a new MCP server for use in your assistant:
 
@@ -53,13 +53,13 @@ The result will be a generated file called `hn.txt` in the current working direc
 
 ![playwright mcp](/images/mcp-playwright.png)
 
-## Continue Documentation Search
+## How to Set Up Continue Documentation Search with MCP
 
 You can set up an MCP server to search the Continue documentation directly from your agent. This is particularly useful for getting help with Continue configuration and features.
 
 For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
 
-## Using MCP Servers
+## How to Configure MCP Servers
 
 To set up your own MCP server, read the [MCP
 quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
@@ -100,7 +100,7 @@ server block to your [config file](./configuration.md):
   </Tab>
 </Tabs>
 
-### Syntax
+### How to Configure MCP Server Properties
 
 MCP blocks follow the established syntax for blocks, with a few additional properties specific to MCP servers.
 
@@ -110,11 +110,11 @@ MCP blocks follow the established syntax for blocks, with a few additional prope
 - `args`: Arguments to pass to the command.
 - `env`: Secrets to be injected into the command as environment variables.
 
-### Transport Types
+### How to Choose MCP Transport Types
 
 MCP now supports remote server connections through HTTP-based transports, expanding beyond the traditional local stdio transport method. This enables integration with cloud-hosted MCP servers and distributed architectures.
 
-#### Server-Sent Events Transport (`sse`)
+#### How to Use Server-Sent Events Transport (SSE)
 
 For real-time streaming communication, use the SSE transport:
 
@@ -125,7 +125,7 @@ mcpServers:
     url: https://....
 ```
 
-#### Standard Input/Output (`stdio`)
+#### How to Use Standard Input/Output (stdio)
 
 For local MCP servers that communicate via standard input and output:
 
@@ -139,7 +139,7 @@ mcpServers:
       - "/path/to/your/database.db"
 ```
 
-#### Streamable HTTP Transport (`streamable-http`)
+#### How to Use Streamable HTTP Transport
 
 For standard HTTP-based communication with streaming capabilities:
 
@@ -154,7 +154,7 @@ These remote transport options allow you to connect to MCP servers hosted on rem
 
 For detailed information about transport mechanisms and their use cases, refer to the official MCP documentation on [transports](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse).
 
-### Working with Secrets
+### How to Work with Secrets in MCP Servers
 
 With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets
 as well as access hosted secrets in the Continue Hub. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.

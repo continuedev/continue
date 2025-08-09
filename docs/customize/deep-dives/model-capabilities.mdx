@@ -1,12 +1,12 @@
 ---
-title: Model Capabilities
+title: "How to Configure Model Capabilities in Continue"
 description: Understanding and configuring model capabilities for tools and image support
 keywords: [capabilities, tools, function calling, image input, config]
 ---
 
 Continue needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
 
-## What are Model Capabilities?
+## What Are Model Capabilities?
 
 Model capabilities tell Continue what features a model supports:
 
@@ -19,11 +19,11 @@ Without proper capability configuration, you may encounter issues like:
 - Tools not working at all
 - Image uploads being disabled
 
-## How Continue Detects Capabilities
+## How Continue Detects Model Capabilities
 
 Continue uses a two-tier system for determining model capabilities:
 
-### 1. Automatic Detection (Default)
+### How Automatic Detection Works (Default)
 
 Continue automatically detects capabilities based on your provider and model name. For example:
 
@@ -39,7 +39,7 @@ For implementation details, see:
 - [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
 - [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
 
-### 2. Manual Configuration
+### How to Configure Capabilities Manually
 
 You can add capabilities to models that Continue doesn't automatically detect in your `config.yaml`.
 
@@ -58,7 +58,7 @@ models:
       - image_input
 ```
 
-## When to Add Capabilities
+## When to Add Capabilities Manually
 
 Add capabilities when:
 
@@ -67,9 +67,9 @@ Add capabilities when:
 3. **Experiencing issues** - Autodetection isn't working correctly for your setup
 4. **Using proxy services** - Some proxy services modify model capabilities
 
-## Configuration Examples
+## How to Configure Model Capabilities (Examples)
 
-### Basic Configuration
+### How to Add Basic Tool Support
 
 Add tool support for a model that Continue doesn't recognize:
 
@@ -94,7 +94,7 @@ models:
   tools, so system message tools may not work as well.
 </Warning>
 
-### Disable Capabilities
+### How to Handle Models with Limited Capabilities
 
 Explicitly set no capabilities (autodetection will still apply):
 
@@ -113,7 +113,7 @@ models:
   features.
 </Warning>
 
-### Multiple Capabilities
+### How to Enable Multiple Capabilities
 
 Enable both tools and image support:
 
@@ -127,7 +127,7 @@ models:
       - image_input
 ```
 
-## Common Scenarios
+## Common Configuration Scenarios
 
 Some providers and custom deployments may require explicit capability configuration:
 
@@ -148,11 +148,11 @@ models:
       - image_input # If supports vision
 ```
 
-## Troubleshooting
+## How to Troubleshoot Capability Issues
 
 For troubleshooting capability-related issues like Agent mode being unavailable or tools not working, see the [Troubleshooting guide](/troubleshooting#agent-mode-is-unavailable-or-tools-arent-working).
 
-## Best Practices
+## Best Practices for Model Capabilities
 
 1. **Start with autodetection** - Only override if you experience issues
 2. **Test after changes** - Verify tools and images work as expected
