@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
 
 import {
@@ -10,6 +9,8 @@ import {
 } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api";
 import * as dotenv from "dotenv";
+
+import { env } from "./env.js";
 
 export class CLIPlatformClient implements PlatformClient {
   constructor(
@@ -41,7 +42,7 @@ export class CLIPlatformClient implements PlatformClient {
     // Check in priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
     const workspaceDir = process.cwd();
     const envPaths = [
-      path.join(os.homedir(), ".continue", ".env"),
+      path.join(env.continueHome, ".env"),
       path.join(workspaceDir, ".continue", ".env"),
       path.join(workspaceDir, ".env"),
     ];

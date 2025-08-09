@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import { Box, Text, useInput } from "ink";
@@ -14,7 +13,7 @@ import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
 
 import { useNavigation } from "./context/NavigationContext.js";
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 interface FreeTrialTransitionUIProps {
   onReload: () => void;

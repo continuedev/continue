@@ -1,11 +1,11 @@
 import crypto from "crypto";
 import fs from "fs";
-import os from "os";
 import path from "path";
 
 import chalk from "chalk";
 import winston from "winston";
 
+import { env } from "../env.js";
 import { sentryService } from "../sentry.js";
 
 const { combine, timestamp, printf, errors } = winston.format;
@@ -15,8 +15,7 @@ const SESSION_ID = crypto.randomBytes(4).toString("hex");
 
 // Get log directory
 function getLogDir(): string {
-  const homeDir = os.homedir();
-  const logDir = path.join(homeDir, ".continue", "logs");
+  const logDir = path.join(env.continueHome, "logs");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(logDir)) {

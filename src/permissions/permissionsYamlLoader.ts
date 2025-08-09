@@ -1,17 +1,16 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import * as yaml from "yaml";
 
+import { env } from "../env.js";
 import { logger } from "../util/logger.js";
 
 import { normalizeToolName } from "./toolNameMapping.js";
 import { PermissionPolicy, ToolPermissionPolicy } from "./types.js";
 
 export const PERMISSIONS_YAML_PATH = path.join(
-  os.homedir(),
-  ".continue",
+  env.continueHome,
   "permissions.yaml"
 );
 

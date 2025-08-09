@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import React, { useEffect, useState } from "react";
@@ -11,6 +10,7 @@ import {
   getAssistantSlug,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
+import { env } from "../env.js";
 
 import { Selector, SelectorOption } from "./Selector.js";
 
@@ -24,7 +24,7 @@ interface ConfigSelectorProps {
   onCancel: () => void;
 }
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 const ConfigSelector: React.FC<ConfigSelectorProps> = ({
   onSelect,

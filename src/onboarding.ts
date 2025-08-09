@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
@@ -11,6 +10,7 @@ import * as readlineSync from "readline-sync";
 import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
+import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 import {
   isValidAnthropicApiKey,
@@ -18,7 +18,7 @@ import {
 } from "./util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 export interface OnboardingResult {
   config: AssistantUnrolled;
@@ -64,7 +64,7 @@ export async function runOnboardingFlow(
   authConfig: AuthConfig
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
-  if (configPath) {
+  if (configPath !== undefined) {
     const result = await initialize(authConfig, configPath);
     return { ...result, wasOnboarded: false };
   }
@@ -128,7 +128,12 @@ export async function runNormalFlow(
   rules?: string[]
 ): Promise<OnboardingResult> {
   // Step 1: Check if --config flag is provided
-  if (configPath) {
+  if (configPath !== undefined) {
+    // Empty string is invalid and should be treated as an error
+    if (configPath === "") {
+      throw new Error(`Failed to load config from "": Config path cannot be empty`);
+    }
+    
     try {
       const result = await initialize(authConfig, configPath);
       // Inject rules into the config if provided
@@ -193,12 +198,12 @@ export async function runNormalFlow(
 
 export async function isFirstTime(): Promise<boolean> {
   return !fs.existsSync(
-    path.join(os.homedir(), ".continue", ".onboarding_complete")
+    path.join(env.continueHome, ".onboarding_complete")
   );
 }
 
 export async function markOnboardingComplete(): Promise<void> {
-  const flagPath = path.join(os.homedir(), ".continue", ".onboarding_complete");
+  const flagPath = path.join(env.continueHome, ".onboarding_complete");
   const flagDir = path.dirname(flagPath);
 
   if (!fs.existsSync(flagDir)) {

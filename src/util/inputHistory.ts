@@ -1,8 +1,9 @@
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 
-const HISTORY_FILE = path.join(os.homedir(), '.continue', 'input_history.json');
+import { env } from '../env.js';
+
+const HISTORY_FILE = path.join(env.continueHome, 'input_history.json');
 const MAX_HISTORY_SIZE = 1000;
 
 export interface InputHistoryEntry {
