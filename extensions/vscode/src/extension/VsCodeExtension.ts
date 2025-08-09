@@ -6,11 +6,7 @@ import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/protocol/messenger";
-import {
-  getConfigJsonPath,
-  getConfigTsPath,
-  getConfigYamlPath,
-} from "core/util/paths";
+import { getContinueGlobalPath } from "core/util/paths";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
@@ -338,35 +334,50 @@ export class VsCodeExtension {
     // Disabled due to performance issues
     // registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
 
+    // Regex to catch global blocks modification
+    const blockRegex =
+      /^(models|prompts|assistants|context|docs|data|mcpServers|rules)\/.*\.(yaml|yml)$/;
+
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
-    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
-      if (stats.size === 0) {
-        return;
-      }
-      await this.configHandler.reloadConfig(
-        "Global JSON config updated - fs file watch",
-      );
-    });
-
-    fs.watchFile(
-      getConfigYamlPath("vscode"),
-      { interval: 1000 },
-      async (stats) => {
-        if (stats.size === 0) {
-          return;
+    const watcher = fs.watch(
+      getContinueGlobalPath(),
+      { recursive: true },
+      async (_, filename) => {
+        switch (filename) {
+          case null:
+            break;
+          case "config.json":
+            void this.configHandler.reloadConfig(
+              "Global JSON config updated - fs file watch",
+            );
+            break;
+          case "config.yaml":
+            void this.configHandler.reloadConfig(
+              "Global YAML config updated - fs file watch",
+            );
+            break;
+          case "config.ts":
+            void this.configHandler.reloadConfig(
+              "config.ts updated - fs file watch",
+            );
+            break;
+          default:
+            if (blockRegex.test(filename)) {
+              void this.configHandler.reloadConfig(
+                "Global blocks updated - fs file watch",
+              );
+            }
         }
-        await this.configHandler.reloadConfig(
-          "Global YAML config updated - fs file watch",
-        );
       },
     );
 
-    fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
-      if (stats.size === 0) {
-        return;
-      }
-      void this.configHandler.reloadConfig("config.ts updated - fs file watch");
+    // Might happen when Windows users delete the global directory
+    watcher.on("error", (err) => {
+      this.ide.showToast(
+        "error",
+        `Failed to watch the global directory: ${err}`,
+      );
     });
 
     vscode.workspace.onDidChangeTextDocument(async (event) => {
