@@ -58,6 +58,7 @@ describe("remote command", () => {
       apiBase: "https://api.example.com",
       workOsClientId: "test-client-id",
       appUrl: "https://test.example.com",
+      continueHome: "/tmp/test-continue-home",
     };
     
     mockGit.getRepoUrl.mockReturnValue("https://github.com/user/test-repo.git");
