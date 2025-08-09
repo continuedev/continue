@@ -1,12 +1,13 @@
 ---
-title: Ollama
+title: "How to Configure Ollama with Continue"
 slug: ../ollama
 description: "Configure Ollama with Continue to run powerful open source models locally including Llama3.1 for chat, Qwen2.5-Coder for autocomplete, and Nomic Embed Text for embeddings"
+sidebarTitle: "Ollama"
 ---
 
 Ollama is an open-source tool that allows to run large language models (LLMs) locally on their own computers. To use Ollama, you can install it [here](https://ollama.ai/download) and download the model you want to run with the `ollama run` command.
 
-## Chat model
+## How to Set Up Ollama Chat Models
 
 We recommend configuring **Llama3.1 8B** as your chat model.
 
@@ -34,7 +35,7 @@ We recommend configuring **Llama3.1 8B** as your chat model.
     </Tab>
 </Tabs>
 
-## Autocomplete model
+## How to Configure Ollama Autocomplete Models
 
 We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
 
@@ -62,7 +63,7 @@ We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
     </Tab>
 </Tabs>
 
-## Embeddings model
+## How to Set Up Ollama Embeddings Models
 
 We recommend configuring **Nomic Embed Text** as your embeddings model.
 
@@ -89,13 +90,13 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
     </Tab>
 </Tabs>
 
-## Reranking model
+## Ollama Reranking Model Availability
 
 Ollama currently does not offer any reranking models.
 
 [Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
 
-## Using a remote instance
+## How to Configure Remote Ollama Instance
 
 To configure a remote instance of Ollama, add the `"apiBase"` property to your model in config.json:
 
@@ -125,7 +126,7 @@ To configure a remote instance of Ollama, add the `"apiBase"` property to your m
     </Tab>
 </Tabs>
 
-## Model Capabilities
+## How to Configure Model Capabilities in Ollama
 
 Ollama models usually have their capabilities auto-detected correctly. However, if you're using custom model names or experiencing issues with tools/images not working, you can explicitly set capabilities:
 

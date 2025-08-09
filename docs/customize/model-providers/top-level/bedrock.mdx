@@ -1,12 +1,13 @@
 ---
-title: Amazon Bedrock
+title: "How to Configure Amazon Bedrock with Continue"
 slug: ../bedrock
 description: "Configure Amazon Bedrock with Continue to access foundation models like Claude 3.7 Sonnet for chat, Titan for embeddings, and Cohere for reranking, with AWS credential authentication"
+sidebarTitle: "Amazon Bedrock"
 ---
 
 Amazon Bedrock is a fully managed service on AWS that provides access to foundation models from various AI companies through a single API.
 
-## Chat model
+## How to Set Up Amazon Bedrock Chat Models
 
 We recommend configuring **Claude 3.7 Sonnet** as your chat model.
 
@@ -76,13 +77,13 @@ We recommend configuring **Claude 3.7 Sonnet** as your chat model.
   </Tab>
 </Tabs>
 
-## Autocomplete model
+## How to Set Up Amazon Bedrock Autocomplete Models
 
 Bedrock currently does not offer any autocomplete models. However, [Codestral from Mistral](https://mistral.ai/news/codestral-2501/) and [Point from Poolside](https://aws.amazon.com/bedrock/poolside/) will be supported in the near future.
 
 In the meantime, you can view a list of autocomplete model providers [here](../../model-roles/autocomplete.md).
 
-## Embeddings model
+## How to Configure Amazon Bedrock Embeddings Models
 
 We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazon.com/bedrock/latest/devguide/models.html#amazon.titan-embed-text-v2-0) as your embeddings model.
 
@@ -113,7 +114,7 @@ We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazo
   </Tab>
 </Tabs>
 
-## Reranking model
+## How to Configure Amazon Bedrock Reranking Models
 
 We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may also use `amazon.rerank-v1:0`.
 
@@ -145,7 +146,7 @@ We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may
   </Tab>
 </Tabs>
 
-## Prompt caching
+## How to Enable Prompt Caching with Amazon Bedrock
 
 Bedrock allows Claude models to cache tool payloads, system messages, and chat
 messages between requests. Enable this behavior by adding
@@ -175,7 +176,7 @@ models:
 
 Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
-## Authentication
+## How to Set Up Authentication for Amazon Bedrock
 
 Authentication will be through temporary or long-term credentials in
 `~/.aws/credentials` under a configured profile (e.g. "bedrock").
@@ -222,7 +223,7 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
   </Tab>
 </Tabs>
 
-## Custom Imported Models
+## How to Configure Custom Imported Models with Amazon Bedrock
 
 To setup Bedrock using custom imported models, add the following to your config file:
 

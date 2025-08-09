@@ -1,7 +1,8 @@
 ---
-title: OpenAI
+title: "How to Configure OpenAI Models with Continue"
 slug: ../openai
 description: "Configure OpenAI models with Continue, including GPT-4o for chat and text-embedding-3-large for embeddings, with support for OpenAI-compatible servers and APIs"
+sidebarTitle: "OpenAI"
 ---
 
 <Info>
@@ -9,7 +10,7 @@ description: "Configure OpenAI models with Continue, including GPT-4o for chat a
   console](https://platform.openai.com/account/api-keys)
 </Info>
 
-## Chat model
+## How to Set Up OpenAI Chat Models
 
 We recommend configuring **GPT-4o** as your chat model.
 
@@ -39,13 +40,13 @@ We recommend configuring **GPT-4o** as your chat model.
   </Tab>
 </Tabs>
 
-## Autocomplete model
+## OpenAI Autocomplete Model Availability
 
 OpenAI currently does not offer any autocomplete models.
 
 [Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
 
-## Embeddings model
+## How to Configure OpenAI Embeddings Models
 
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
@@ -74,13 +75,13 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
   </Tab>
 </Tabs>
 
-## Reranking model
+## OpenAI Reranking Model Availability
 
 OpenAI currently does not offer any reranking models.
 
 [Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
 
-## OpenAI compatible servers / APIs
+## How to Use OpenAI-Compatible Servers and APIs
 
 OpenAI compatible servers
 
@@ -97,6 +98,8 @@ OpenAI compatible APIs
 
 - [Anyscale Endpoints](https://github.com/continuedev/deploy-os-code-llm#others)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints)
+
+### How to Configure Custom API Base for OpenAI-Compatible Services
 
 If you are using an OpenAI compatible server / API, you can change the `apiBase` like this:
 
@@ -127,6 +130,8 @@ If you are using an OpenAI compatible server / API, you can change the `apiBase`
   ```
   </Tab>
 </Tabs>
+
+### How to Force Legacy Completions Endpoint Usage
 
 To force usage of `chat/completions` instead of `completions` endpoint you can set:
 
