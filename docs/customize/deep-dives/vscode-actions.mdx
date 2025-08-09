@@ -2,6 +2,7 @@
 title: "How to Use Continue's VS Code Actions and Quick Features"
 keywords: [vscode, quick actions, quick, actions]
 description: "Learn about Continue's VS Code-specific actions including quick actions buttons, right-click context menu options, debug shortcuts, and quick fixes for errors in your code"
+sidebarTitle: "VS Code Actions"
 ---
 
 <Info>Currently all of these are only available in VS Code</Info>
@@ -14,13 +15,13 @@ Quick Actions are displayed as buttons above top-level classes and functions in 
 
 ![quick-actions](/images/quick-actions.png)
 
-By default, quick actions are disabled, but can be enabled with the "Continue: Enable Quick Actions" in VS Code settings.
+By default, quick actions are disabled, but can be enabled with the “Continue: Enable Quick Actions” in VS Code settings.
 
 ## How to Use Right Click Actions
 
 Right click actions let you highlight a desired region of code, right click, and then select an action from the dropdown menu.
 
-The highlighted code you've selected will be included in your prompt alongside a pre-written set of instructions depending on the selected action. This is the only section of code that the model will attempt to edit.
+The highlighted code you’ve selected will be included in your prompt alongside a pre-written set of instructions depending on the selected action. This is the only section of code that the model will attempt to edit.
 
 Right click actions that generate inline diffs use the same prompt and response processing logic as [Edit](../../features/edit/how-it-works.mdx).
 
@@ -38,7 +39,7 @@ I got the following error, can you please help explain how to fix it?
 
 ## How to Use Quick Fixes for Code Errors
 
-Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> will show a dropdown menu of quick fixes. One of these will be the "Ask Continue" action. Either click or use <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> again and Continue will attempt to help solve the problem.
+Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> again and Continue will attempt to help solve the problem.
 
-Similarly to the debug action, quick actions transparently inject a prompt into the chat window. When you select "Ask Continue", the 3 lines above and below the error are sent to the chat followed by the question "How do I fix the following problem in the above code?: [ERROR_MESSAGE]".
+Similarly to the debug action, quick actions transparently inject a prompt into the chat window. When you select “Ask Continue”, the 3 lines above and below the error are sent to the chat followed by the question “How do I fix the following problem in the above code?: [ERROR_MESSAGE]”.
 
