@@ -298,9 +298,20 @@ class MCPConnection {
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
-        const env: Record<string, string> = options.transport.env
-          ? { ...options.transport.env }
-          : {};
+
+        // BAS Customization
+        // Filter out undefined values from process.env. 
+        // We want to propagate all BAS env vars into MCP processes
+        const baseEnv = Object.fromEntries(
+          Object.entries(process.env).filter(([_, value]) => value !== undefined)
+        ) as Record<string, string>;
+
+        // Merge with options.transport.env (if provided) — overrides baseEnv
+        const env: Record<string, string> = {
+          ...baseEnv,
+          ...(options.transport.env ?? {})
+        };
+        // End BAS Customization
 
         if (process.env.PATH !== undefined) {
           // Set the initial PATH from process.env

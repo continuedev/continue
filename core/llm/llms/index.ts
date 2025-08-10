@@ -9,7 +9,7 @@ import {
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
 import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
 import { BaseLLM } from "../index";
-import { AICore } from "./AICore";
+import { AICore } from "./AICore.bas";
 
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";

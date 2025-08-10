@@ -1,8 +1,4 @@
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
-import { BaseLLM } from "../index.js";
-import { AICoreClaudeProvider } from "./AICore/AICoreClaudeProvider.js";
-import { AICoreGeneralProvider } from "./AICore/AICoreGeneralProvider.js";
-const CAP_MESSAGE = `
+export const CAP_MESSAGE = `
     <CREATE_CAP_APPLICATION_SYSTEM_PROMPT> 
         You are an AI assistant specialized in creating SAP Cloud Application Programming Model (CAP) applications. Your task is to guide the user through the process of creating and setting up a CAP application, following specific guidelines and using various tools. Here are your instructions:
 
@@ -130,75 +126,4 @@ const CAP_MESSAGE = `
         Your final response should only include the content within the <output> tags. Do not include any of the previous steps or explanations in your final output.
     <PUBLISH_APPLICATION_TO_GIT_HUB_FLOW>
 
-      `
-
-export class AICore extends BaseLLM {
-    private aICoreClaudeProvider?: AICoreClaudeProvider;
-    private aICoreGeneralProvider?: AICoreGeneralProvider;
-    private llmOptions: LLMOptions;
-    static providerName = "aiCore";
-
-    static defaultOptions: Partial<LLMOptions> = {
-        model: "anthropic--claude-3.7-sonnet",
-        contextLength: 200_000,
-        completionOptions: {
-            model: "anthropic--claude-3.7-sonnet",
-            maxTokens: 8192,
-        },
-    };
-
-    constructor(options: LLMOptions) {
-        super(options);
-        this.llmOptions = options
-    }
-
-    protected async *_streamComplete(
-        prompt: string,
-        signal: AbortSignal,
-        options: CompletionOptions,
-    ): AsyncGenerator<string> {
-        const messages = [{ role: "user" as const, content: prompt }];
-        for await (const update of this._streamChat(messages, signal, options)) {
-            const content = update.content;
-            if (Array.isArray(content)) {
-                for (const chunk of content) {
-                    if (chunk.type === "text") {
-                        yield chunk.text;
-                    }
-                }
-            }
-            else {
-                yield content
-            }
-
-        }
-    }
-
-    protected async *_streamChat(
-        messages: ChatMessage[],
-        signal: AbortSignal,
-        options: CompletionOptions,
-    ): AsyncGenerator<ChatMessage> {
-        let provider: AICoreClaudeProvider | AICoreGeneralProvider;
-        if(messages.length > 1){
-            const content = messages[0].content;
-            messages[0].content = `<BASIC_INSTRUCTIONS> ${content} </BASIC_INSTRUCTIONS> ${CAP_MESSAGE}`;
-        }
-        if (!options.model || options.model.includes("claude-3.7") || options.model.includes("claude-4")) {
-            if (!this.aICoreClaudeProvider) {
-                this.aICoreClaudeProvider = new AICoreClaudeProvider(this.llmOptions)
-            }
-            provider = this.aICoreClaudeProvider
-        }
-        else {
-            if (!this.aICoreGeneralProvider) {
-                this.aICoreGeneralProvider = new AICoreGeneralProvider(this.llmOptions)
-            }
-            provider = this.aICoreGeneralProvider
-        }
-        for await (const message of provider._streamChat(messages, signal, options)) {
-            yield message
-        }
-    }
-
-}
+      `;

@@ -16,7 +16,8 @@ const esbuildConfig = {
   external: [
     "express",        
     "esbuild",        
-    "./xhr-sync-worker.js"
+    "./xhr-sync-worker.js",
+    "vscode"
   ],
   metafile: true,
   loader: {
