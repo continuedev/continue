@@ -1,4 +1,3 @@
-import { MCPService } from "../mcp.js";
 import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";

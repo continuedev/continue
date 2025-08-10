@@ -1,3 +1,4 @@
+import { AssistantConfig } from "@continuedev/sdk";
 import {
   describe,
   it,
@@ -6,9 +7,9 @@ import {
   afterEach,
   jest,
 } from "@jest/globals";
-import { AssistantConfig } from "@continuedev/sdk";
+
 import { MCPService } from "./mcp.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
 
 // Mock the logger
 jest.mock("./src/util/logger", () => ({

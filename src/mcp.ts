@@ -1,7 +1,8 @@
 import { type AssistantConfig } from "@continuedev/sdk";
-import {logger} from "./util/logger.js";
-import { MCPServiceState } from "./services/types.js";
+
 import { MCPConnection, MCPServerStatus } from "./MCPConnection.js";
+import { MCPServiceState } from "./services/types.js";
+import {logger} from "./util/logger.js";
 
 
 export interface MCPConnectionInfo {

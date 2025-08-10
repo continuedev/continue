@@ -1,5 +1,6 @@
 import { Box, Text, useInput } from "ink";
 import React, { useMemo, useState } from "react";
+
 import { useServices } from "../hooks/useService.js";
 import { MCPServiceState } from "../services/types.js";
 
@@ -15,7 +16,7 @@ interface MCPMenuItem {
   disabled?: boolean;
 }
 
-const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
+export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const [menuState, setMenuState] = useState<MCPMenuState>("main");
   const [selectedServer, setSelectedServer] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -349,5 +350,3 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     </Box>
   );
 };
-
-export default MCPSelector;

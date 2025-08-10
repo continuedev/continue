@@ -1,4 +1,3 @@
-import MCPSelector from "./MCPSelector.js";
 import { Box, Text } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -28,6 +27,7 @@ import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import { IntroMessage } from "./IntroMessage.js";
 import { LoadingAnimation } from "./LoadingAnimation.js";
+import {MCPSelector} from "./MCPSelector.js";
 import { ModelSelector } from "./ModelSelector.js";
 import { OrganizationSelector } from "./OrganizationSelector.js";
 import { Timer } from "./Timer.js";
