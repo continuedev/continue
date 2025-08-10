@@ -1,6 +1,6 @@
 ---
 title: "Configuration"
-description: Configuration
+description: Learn how to access and manage Continue assistant configurations through Hub or local YAML files
 keywords: [config, settings, customize]
 ---
 
@@ -59,6 +59,11 @@ Example
 `config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continue configuration, you can use a `config.ts` file, placed at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
 
 `config.ts` must export a `modifyConfig` function, like:
+
+<Warning>
+  The `slashCommands` array shown below is deprecated. For creating custom slash
+  commands, use [prompt files](./slash-commands) instead.
+</Warning>
 
 ```ts title="config.ts"
 export function modifyConfig(config: Config): Config {

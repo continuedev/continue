@@ -30,4 +30,12 @@ export const createNewFileTool: Tool = {
       },
     },
   },
+  defaultToolPolicy: "allowedWithPermission",
+  systemMessageDescription: {
+    prefix: `To create a NEW file, use the ${BuiltInToolNames.CreateNewFile} tool with the relative filepath and new contents. For example, to create a file located at 'path/to/file.txt', you would respond with:`,
+    exampleArgs: [
+      ["filepath", "path/to/the_file.txt"],
+      ["contents", "Contents of the file"],
+    ],
+  },
 };

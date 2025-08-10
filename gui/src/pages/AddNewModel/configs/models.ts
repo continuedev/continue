@@ -87,6 +87,34 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
+  gptOss20B: {
+    title: "gpt-oss-20b",
+    description:
+      "OpenAI's 20B open-weight model with native tool use and reasoning for agentic tasks.",
+    refUrl: "https://huggingface.co/openai/gpt-oss-20b",
+    params: {
+      title: "gpt-oss-20b",
+      model: "openai/gpt-oss-20b",
+      contextLength: 128_000,
+    },
+    icon: "openai.png",
+    providerOptions: ["vllm"],
+    isOpenSource: true,
+  },
+  gptOss120B: {
+    title: "gpt-oss-120b",
+    description:
+      "OpenAI's 120B flagship open-weight model built for complex, high‑reasoning agentic workflows.",
+    refUrl: "https://huggingface.co/openai/gpt-oss-120b",
+    params: {
+      title: "gpt-oss-120b",
+      model: "openai/gpt-oss-120b",
+      contextLength: 128_000,
+    },
+    icon: "openai.png",
+    providerOptions: ["vllm"],
+    isOpenSource: true,
+  },
   llama318BChat: {
     title: "Llama 3.1 8B",
     description: "A model from Meta, fine-tuned for chat",
@@ -300,6 +328,32 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "deepseek.png",
     providerOptions: ["nebius"],
+    isOpenSource: true,
+  },
+  exaone32B: {
+    title: "EXAONE 4.0.1-32B",
+    description:
+      "LG AI Research's 32B model with integrated reasoning and agentic tool use capabilities.",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0.1-32B",
+    params: {
+      title: "EXAONE-4.0.1-32B",
+      model: "LGAI-EXAONE/EXAONE-4.0.1-32B",
+      contextLength: 131072,
+    },
+    providerOptions: ["openai"],
+    isOpenSource: true,
+  },
+  exaone12B: {
+    title: "EXAONE 4.0-1.2B",
+    description:
+      "Compact EXAONE 4.0 model suitable for on-device use while retaining tool calling support.",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B",
+    params: {
+      title: "EXAONE-4.0-1.2B",
+      model: "LGAI-EXAONE/EXAONE-4.0-1.2B",
+      contextLength: 65536,
+    },
+    providerOptions: ["openai"],
     isOpenSource: true,
   },
   moonshotChat: {
@@ -1065,6 +1119,18 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["cohere"],
     icon: "cohere.png",
+    isOpenSource: false,
+  },
+  gpt5: {
+    title: "GPT-5",
+    description: "OpenAI's next-generation, high-intelligence flagship model",
+    params: {
+      model: "gpt-5",
+      contextLength: 400_000,
+      title: "GPT-5",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
     isOpenSource: false,
   },
   gpt4turbo: {

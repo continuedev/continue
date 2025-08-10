@@ -36,9 +36,7 @@ export const TRIAL_PROXY_URL =
 
 export class ControlPlaneClient {
   constructor(
-    private readonly sessionInfoPromise: Promise<
-      ControlPlaneSessionInfo | undefined
-    >,
+    readonly sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
     private readonly ideSettingsPromise: Promise<IdeSettings>,
     private readonly ideInfoPromise: Promise<IdeInfo>,
   ) {}
@@ -58,7 +56,7 @@ export class ControlPlaneClient {
       }));
     }
 
-    const resp = await this.request("ide/sync-secrets", {
+    const resp = await this.requestAndHandleError("ide/sync-secrets", {
       method: "POST",
       body: JSON.stringify({ fqsns, orgScopeId }),
     });
@@ -101,6 +99,15 @@ export class ControlPlaneClient {
       },
     });
 
+    return resp;
+  }
+
+  private async requestAndHandleError(
+    path: string,
+    init: RequestInit,
+  ): Promise<Response> {
+    const resp = await this.request(path, init);
+
     if (!resp.ok) {
       throw new Error(
         `Control plane request failed: ${resp.status} ${await resp.text()}`,
@@ -128,7 +135,7 @@ export class ControlPlaneClient {
         ? `ide/list-assistants?organizationId=${organizationId}`
         : "ide/list-assistants";
 
-      const resp = await this.request(url, {
+      const resp = await this.requestAndHandleError(url, {
         method: "GET",
       });
       return (await resp.json()) as any;
@@ -142,15 +149,48 @@ export class ControlPlaneClient {
       return [];
     }
 
-    try {
+    // We try again here because when users sign up with an email domain that is
+    // captured by an org, we need to wait for the user account creation webhook to
+    // take effect. Otherwise the organization(s) won't show up.
+    // This error manifests as a 404 (user not found)
+    let retries = 0;
+    const maxRetries = 10;
+    const maxWaitTime = 20000; // 20 seconds in milliseconds
+
+    while (retries < maxRetries) {
       const resp = await this.request("ide/list-organizations", {
         method: "GET",
       });
+
+      if (resp.status === 404) {
+        retries++;
+        if (retries >= maxRetries) {
+          console.warn(
+            `Failed to list organizations after ${maxRetries} retries: user not found`,
+          );
+          return [];
+        }
+        const waitTime = Math.min(
+          Math.pow(2, retries) * 100,
+          maxWaitTime / maxRetries,
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        continue;
+      } else if (!resp.ok) {
+        console.warn(
+          `Failed to list organizations (${resp.status}): ${await resp.text()}`,
+        );
+        return [];
+      }
       const { organizations } = (await resp.json()) as any;
       return organizations;
-    } catch (e) {
-      return [];
     }
+
+    // This should never be reached due to the while condition, but adding for safety
+    console.warn(
+      `Failed to list organizations after ${maxRetries} retries: maximum attempts exceeded`,
+    );
+    return [];
   }
 
   public async listAssistantFullSlugs(
@@ -165,7 +205,7 @@ export class ControlPlaneClient {
       : "ide/list-assistant-full-slugs";
 
     try {
-      const resp = await this.request(url, {
+      const resp = await this.requestAndHandleError(url, {
         method: "GET",
       });
       const { fullSlugs } = (await resp.json()) as any;
@@ -181,7 +221,7 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request("ide/free-trial-status", {
+      const resp = await this.requestAndHandleError("ide/free-trial-status", {
         method: "GET",
       });
       return (await resp.json()) as FreeTrialStatus;
@@ -212,7 +252,7 @@ export class ControlPlaneClient {
         params.set("vscode_uri_scheme", vsCodeUriScheme);
       }
 
-      const resp = await this.request(
+      const resp = await this.requestAndHandleError(
         `ide/get-models-add-on-checkout-url?${params.toString()}`,
         {
           method: "GET",

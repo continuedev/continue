@@ -151,6 +151,16 @@ export const tabAutocompleteOptionsSchema = z.object({
   useRecentlyEdited: z.boolean(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),
+  // Experimental options: true = enabled, false = disabled, number = enabled w priority
+  experimental_includeClipboard: z.union([z.boolean(), z.number()]).optional(),
+  experimental_includeRecentlyVisitedRanges: z
+    .union([z.boolean(), z.number()])
+    .optional(),
+  experimental_includeRecentlyEditedRanges: z
+    .union([z.boolean(), z.number()])
+    .optional(),
+  experimental_includeDiff: z.union([z.boolean(), z.number()]).optional(),
+  experimental_enableStaticContextualization: z.boolean().optional(),
 });
 export type TabAutocompleteOptions = z.infer<
   typeof tabAutocompleteOptionsSchema
@@ -205,7 +215,7 @@ export type DevData = z.infer<typeof devDataSchema>;
 
 export const siteIndexingConfigSchema = z.object({
   startUrl: z.string(),
-  // rootUrl: z.string(),
+  rootUrl: z.string().optional(),
   title: z.string(),
   maxDepth: z.number().optional(),
   faviconUrl: z.string().optional(),

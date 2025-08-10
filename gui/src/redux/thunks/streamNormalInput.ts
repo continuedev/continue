@@ -1,10 +1,11 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
-import { modelSupportsTools } from "core/llm/autodetect";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
+import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -19,14 +20,16 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
-import {
-  constructMessages,
-  getBaseSystemMessage,
-} from "../util/constructMessages";
+import { constructMessages } from "../util/constructMessages";
 
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
+import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
+import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
+import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -34,6 +37,7 @@ import { callToolById } from "./callToolById";
 async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
+  activeTools: Tool[],
 ): Promise<void> {
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
@@ -50,11 +54,15 @@ async function handleToolCallExecution(
   }
 
   // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every(
-    (toolCallState) =>
-      toolSettings[toolCallState.toolCall.function.name] ===
-      "allowedWithoutPermission",
-  );
+  const allAutoApproved = toolCallStates.every((toolCallState) => {
+    const toolPolicy =
+      toolSettings[toolCallState.toolCall.function.name] ??
+      activeTools.find(
+        (tool) => tool.function.name === toolCallState.toolCall.function.name,
+      )?.defaultToolPolicy ??
+      DEFAULT_TOOL_SETTING;
+    return toolPolicy == "allowedWithoutPermission";
+  });
 
   // Set all tools as generated first
   toolCallStates.forEach((toolCallState) => {
@@ -141,11 +149,18 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const allActiveTools = selectActiveTools(state);
     const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
-    const toolsSupported = modelSupportsTools(selectedChatModel);
+    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
+
+    // Use the centralized selector to determine if system message tools should be used
+    const useSystemTools = selectUseSystemMessageTools(state);
+    const useNativeTools = !useSystemTools && supportsNativeTools;
+    const systemToolsFramework = useSystemTools
+      ? new SystemMessageToolCodeblocksFramework()
+      : undefined;
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
-    if (toolsSupported && activeTools.length > 0) {
+    if (useNativeTools && activeTools.length > 0) {
       completionOptions = {
         tools: activeTools,
       };
@@ -164,17 +179,28 @@ export const streamNormalInput = createAsyncThunk<
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
       selectedChatModel,
+      activeTools,
     );
+
+    const systemMessage = systemToolsFramework
+      ? addSystemMessageToolsToSystemMessage(
+          systemToolsFramework,
+          baseSystemMessage,
+          activeTools,
+        )
+      : baseSystemMessage;
 
     const withoutMessageIds = state.session.history.map((item) => {
       const { id, ...messageWithoutId } = item.message;
       return { ...item, message: messageWithoutId };
     });
+
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
-      baseSystemMessage,
+      systemMessage,
       state.config.config.rules,
       state.ui.ruleSettings,
+      systemToolsFramework,
     );
 
     // TODO parallel tool calls will cause issues with this
@@ -212,7 +238,7 @@ export const streamNormalInput = createAsyncThunk<
 
     // Send request and stream response
     const streamAborter = state.session.streamAborter;
-    const gen = extra.ideMessenger.llmStreamChat(
+    let gen = extra.ideMessenger.llmStreamChat(
       {
         completionOptions,
         title: selectedChatModel.title,
@@ -222,6 +248,9 @@ export const streamNormalInput = createAsyncThunk<
       },
       streamAborter.signal,
     );
+    if (systemToolsFramework && activeTools.length > 0) {
+      gen = interceptSystemToolCalls(gen, streamAborter, systemToolsFramework);
+    }
 
     let next = await gen.next();
     while (!next.done) {
@@ -263,7 +292,37 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-    dispatch(setInactive());
-    await handleToolCallExecution(dispatch, getState);
+
+    // Check if we have any tool calls that were just generated
+    const newState = getState();
+    const toolSettings = newState.ui.toolSettings;
+    const allToolCallStates = selectCurrentToolCalls(newState);
+    const generatingToolCalls = allToolCallStates.filter(
+      (toolCallState) => toolCallState.status === "generating",
+    );
+
+    // Check if ALL generating tool calls are auto-approved
+    const allAutoApproved =
+      generatingToolCalls.length > 0 &&
+      generatingToolCalls.every((toolCallState) => {
+        const toolPolicy =
+          toolSettings[toolCallState.toolCall.function.name] ??
+          activeTools.find(
+            (tool) =>
+              tool.function.name === toolCallState.toolCall.function.name,
+          )?.defaultToolPolicy ??
+          DEFAULT_TOOL_SETTING;
+        return toolPolicy == "allowedWithoutPermission";
+      });
+
+    // Only set inactive if:
+    // 1. There are no tool calls, OR
+    // 2. There are tool calls but they require manual approval
+    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
+    if (generatingToolCalls.length === 0 || !allAutoApproved) {
+      dispatch(setInactive());
+    }
+
+    await handleToolCallExecution(dispatch, getState, activeTools);
   },
 );

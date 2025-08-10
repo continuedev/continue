@@ -1,4 +1,10 @@
-import { Position, Range, RangeInFile, TabAutocompleteOptions } from "../";
+import {
+  DiffLine,
+  Position,
+  Range,
+  RangeInFile,
+  TabAutocompleteOptions,
+} from "../";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 
 export type RecentlyEditedRange = RangeInFile & {
@@ -53,7 +59,11 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   originalEditableRange: string;
   completion: string;
   cursorPosition: { line: number; character: number };
+  finalCursorPosition: { line: number; character: number };
   accepted?: boolean;
+  editableRegionStartLine: number;
+  editableRegionEndLine: number;
+  diffLines: DiffLine[];
 }
 
 export interface PromptMetadata {
@@ -78,8 +88,17 @@ export interface NextEditTemplate {
   template: string;
 }
 
-export interface TemplateVars {
+export interface TemplateVars {}
+
+export interface Model1TemplateVars extends TemplateVars {
   userEdits: string;
   languageShorthand: string;
   userExcerpts: string;
+}
+
+export interface MercuryTemplateVars extends TemplateVars {
+  recentlyViewedCodeSnippets: string;
+  currentFileContent: string;
+  editDiffHistory: string; // could be a singe large unified diff
+  currentFilePath: string;
 }

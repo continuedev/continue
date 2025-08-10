@@ -682,8 +682,6 @@ declare global {
   
     getWorkspaceDirs(): Promise<string[]>;
   
-    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
-  
     fileExists(filepath: string): Promise<boolean>;
   
     writeFile(path: string, contents: string): Promise<void>;
@@ -745,6 +743,10 @@ declare global {
   
     // LSP
     gotoDefinition(location: Location): Promise<RangeInFile[]>;
+    gotoTypeDefinition(location: Location): Promise<RangeInFile[]>;
+    getSignatureHelp(location: Location): Promise<SignatureHelp | null>;
+    getReferences(location: Location): Promise<RangeInFile[]>;
+    getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
   
     // Callbacks
     onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
@@ -1123,7 +1125,6 @@ declare global {
      * This is needed to crawl a large number of documentation sites that are dynamically rendered.
      */
     useChromiumForDocsCrawling?: boolean;
-    useTools?: boolean;
     modelContextProtocolServers?: MCPOptions[];
   }
   

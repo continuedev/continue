@@ -19,4 +19,8 @@ export const viewDiffTool: Tool = {
       properties: {},
     },
   },
+  systemMessageDescription: {
+    prefix: `To view the current git diff, use the ${BuiltInToolNames.ViewDiff} tool. This will show you the changes made in the working directory compared to the last commit.`,
+  },
+  defaultToolPolicy: "allowedWithoutPermission",
 };

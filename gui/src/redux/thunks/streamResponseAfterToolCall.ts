@@ -24,7 +24,7 @@ function areAllToolsDoneStreaming(
 
   // Only continue if all tool calls are complete
   const completedToolCalls = assistantMessage.toolCallStates.filter(
-    (tc) => tc.status === "done",
+    (tc) => tc.status === "done" || tc.status === "errored",
   );
 
   return completedToolCalls.length === assistantMessage.toolCallStates.length;
@@ -53,7 +53,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const toolOutput = toolCallState.output ?? [];
 
         dispatch(resetNextCodeBlockToApplyIndex());
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        // await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Create and dispatch the tool message
         const newMessage: ChatMessage = {
