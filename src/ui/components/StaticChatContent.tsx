@@ -3,6 +3,7 @@ import { Static } from "ink";
 import React from "react";
 
 import type { MCPService } from "../../mcp.js";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
 import type { DisplayMessage } from "../types.js";
 
@@ -23,6 +24,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   messages,
   renderMessage,
 }) => {
+  const { columns } = useTerminalSize();
   // Create a combined array of items to render
   const staticItems = React.useMemo(() => {
     const items: Array<{
@@ -45,7 +47,13 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   }, [showIntroMessage, config, model, mcpService, messages]);
 
   return (
-    <Static items={staticItems}>
+    <Static
+      items={staticItems}
+      style={{
+        width: columns - 1,
+        textWrap: "wrap",
+      }}
+    >
       {(item) => {
         if (item.type === "intro" && config && model && mcpService) {
           return (
