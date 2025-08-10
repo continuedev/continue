@@ -43,8 +43,37 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Print prettier version
-        run: npx prettier --version
+      - name: Debug environment info
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Prettier version: $(npx prettier --version)"
+          echo "Platform: $(uname -a)"
+
+      - name: Show formatting differences for all files
+        run: |
+          echo "Finding files that would be changed by prettier..."
+          # Get list of files that prettier would change
+          UNFORMATTED_FILES=$(npx prettier --check . 2>&1 | grep -E '^\[warn\]' | sed 's/\[warn\] //' || true)
+          
+          if [ -z "$UNFORMATTED_FILES" ]; then
+            echo "No files need formatting changes."
+          else
+            echo "Files that need formatting:"
+            echo "$UNFORMATTED_FILES"
+            echo ""
+            echo "Showing diffs for each file:"
+            echo "$UNFORMATTED_FILES" | while read -r file; do
+              if [ -n "$file" ] && [ -f "$file" ]; then
+                echo "======================================"
+                echo "Diff for: $file"
+                echo "======================================"
+                npx prettier "$file" > "/tmp/$(basename "$file").formatted"
+                diff -u "$file" "/tmp/$(basename "$file").formatted" || true
+                echo ""
+              fi
+            done
+          fi
 
       - name: Check code formatting
         run: npm run format:check
