@@ -230,11 +230,11 @@ export abstract class BaseLLM implements ILLM {
         options.completionOptions?.maxTokens ??
         (llmInfo?.maxCompletionTokens
           ? Math.min(
-            llmInfo.maxCompletionTokens,
-            // Even if the model has a large maxTokens, we don't want to use that every time,
-            // because it takes away from the context length
-            this.contextLength / 4,
-          )
+              llmInfo.maxCompletionTokens,
+              // Even if the model has a large maxTokens, we don't want to use that every time,
+              // because it takes away from the context length
+              this.contextLength / 4,
+            )
           : DEFAULT_MAX_TOKENS),
     };
     this.requestOptions = options.requestOptions;
@@ -1160,7 +1160,7 @@ export abstract class BaseLLM implements ILLM {
 
       throw new Error(
         `Unexpected rerank response format from ${this.providerName}. ` +
-        `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
+          `Expected 'data' array but got: ${JSON.stringify(Object.keys(results))}`,
       );
     }
 
