@@ -14,6 +14,7 @@ import {
 import { getGitRemoteUrl, isGitRepo } from "../util/git.js";
 
 import { ModeIndicator } from "./components/ModeIndicator.js";
+import { StaticChatContent } from "./components/StaticChatContent.js";
 import { ToolPermissionSelector } from "./components/ToolPermissionSelector.js";
 import { ConfigSelector } from "./ConfigSelector.js";
 import { useNavigation } from "./context/NavigationContext.js";
@@ -25,7 +26,6 @@ import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
-import { IntroMessage } from "./IntroMessage.js";
 import { LoadingAnimation } from "./LoadingAnimation.js";
 import { ModelSelector } from "./ModelSelector.js";
 import { OrganizationSelector } from "./OrganizationSelector.js";
@@ -241,19 +241,15 @@ const TUIChat: React.FC<TUIChatProps> = ({
           />
         )} */}
 
-        {/* Show intro message when ready */}
-        {showIntroMessage &&
-          !isRemoteMode &&
-          services.config?.config &&
-          services.model?.model &&
-          services.mcp?.mcpService && (
-            <IntroMessage
-              config={services.config.config}
-              model={services.model.model}
-              mcpService={services.mcp.mcpService}
-            />
-          )}
-        {messages.map(renderMessage)}
+        {/* Chat content with intro message and messages in static container */}
+        <StaticChatContent
+          showIntroMessage={showIntroMessage && !isRemoteMode}
+          config={services.config?.config || undefined}
+          model={services.model?.model || undefined}
+          mcpService={services.mcp?.mcpService || undefined}
+          messages={messages}
+          renderMessage={renderMessage}
+        />
       </Box>
 
       {/* Fixed bottom section */}
