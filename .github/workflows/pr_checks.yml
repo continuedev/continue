@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Print prettier version
+        run: npx prettier --version
+
       - name: Check code formatting
         run: npm run format:check
 
