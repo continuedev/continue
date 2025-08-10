@@ -23,6 +23,11 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
       return;
     }
 
+    // Skip update check for development versions
+    if (currentVersion.endsWith("-dev")) {
+      return;
+    }
+
     const abortController = new AbortController();
 
     const checkForUpdate = async () => {

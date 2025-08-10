@@ -95,6 +95,7 @@ const initializeCache = async (): Promise<void> => {
           "**/*.tgz",
           "**/*.rar",
           "**/*.7z",
+          "**/*.next",
         ],
         dot: true,
         absolute: false,
