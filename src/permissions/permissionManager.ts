@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+
 import { ToolCallRequest } from "./types.js";
 
 export interface PermissionRequestResult {
@@ -22,7 +23,7 @@ export class ToolPermissionManager extends EventEmitter {
    * when the user approves or rejects the request.
    */
   async requestPermission(
-    toolCall: ToolCallRequest
+    toolCall: ToolCallRequest,
   ): Promise<PermissionRequestResult> {
     const requestId = `tool-request-${++this.requestCounter}`;
 

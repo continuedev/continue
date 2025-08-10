@@ -1,7 +1,8 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
-import MarkdownRenderer from "../MarkdownRenderer.js";
-import ToolResultSummary from "../ToolResultSummary.js";
+
+import { MarkdownRenderer } from "../MarkdownRenderer.js";
+import { ToolResultSummary } from "../ToolResultSummary.js";
 import { DisplayMessage } from "../types.js";
 
 interface MemoizedMessageProps {
@@ -63,6 +64,21 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       }
     }
 
+    // Special rendering for compaction messages
+    if (message.messageType === "compaction") {
+      return (
+        <Box
+          key={index}
+          marginBottom={1}
+          borderStyle="single"
+          borderBottom={false}
+          borderLeft={false}
+          borderRight={false}
+          borderColor="gray"
+        />
+      );
+    }
+
     return (
       <Box key={index} marginBottom={1}>
         <Text color={isUser ? "green" : "magenta"}>●</Text>
@@ -90,7 +106,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         nextProps.message.permissionRequestId &&
       prevProps.index === nextProps.index
     );
-  }
+  },
 );
 
 MemoizedMessage.displayName = "MemoizedMessage";

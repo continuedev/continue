@@ -21,11 +21,11 @@ interface SelectorProps<T extends SelectorOption> {
   renderOption?: (
     option: T,
     isSelected: boolean,
-    isCurrent: boolean
+    isCurrent: boolean,
   ) => ReactNode;
 }
 
-export default function Selector<T extends SelectorOption>({
+export function Selector<T extends SelectorOption>({
   title,
   options,
   selectedIndex,
@@ -97,7 +97,7 @@ export default function Selector<T extends SelectorOption>({
   const defaultRenderOption = (
     option: T,
     isSelected: boolean,
-    isCurrent: boolean
+    isCurrent: boolean,
   ) => (
     <Text
       color={isSelected ? "blue" : "white"}

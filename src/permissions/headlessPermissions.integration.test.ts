@@ -1,6 +1,6 @@
-import { resolvePermissionPrecedence } from "./precedenceResolver.js";
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
 import { checkToolPermission } from "./permissionChecker.js";
+import { resolvePermissionPrecedence } from "./precedenceResolver.js";
 
 describe("Headless Permissions Integration", () => {
   describe("precedence resolution", () => {
@@ -34,13 +34,13 @@ describe("Headless Permissions Integration", () => {
       const permissions = { policies: DEFAULT_TOOL_POLICIES };
 
       // Read-only tools should be allowed
-      expect(checkToolPermission({ name: "read_file", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "list_files", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "search_code", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Read", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "List", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Search", arguments: {} }, permissions).permission).toBe("allow");
 
       // Write operations should require permission  
-      expect(checkToolPermission({ name: "write_file", arguments: {} }, permissions).permission).toBe("ask");
-      expect(checkToolPermission({ name: "run_terminal_command", arguments: {} }, permissions).permission).toBe("ask");
+      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("ask");
+      expect(checkToolPermission({ name: "Bash", arguments: {} }, permissions).permission).toBe("ask");
 
       // Unknown tools should default to ask
       expect(checkToolPermission({ name: "unknown_tool", arguments: {} }, permissions).permission).toBe("ask");
@@ -61,8 +61,8 @@ describe("Headless Permissions Integration", () => {
       expect(excludedResult.permission).toBe("exclude");
 
       // Default tools should follow their normal rules
-      expect(checkToolPermission({ name: "read_file", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "write_file", arguments: {} }, permissions).permission).toBe("ask");
+      expect(checkToolPermission({ name: "Read", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("ask");
     });
   });
 
@@ -74,7 +74,7 @@ describe("Headless Permissions Integration", () => {
           // Still exclude truly dangerous operations
           exclude: ["rm", "sudo"],
           // Allow specific tools that would normally require confirmation
-          allow: ["write_file", "run_terminal_command"],
+          allow: ["Write", "Bash"],
         },
         useDefaults: true,
         personalSettings: false,
@@ -87,11 +87,11 @@ describe("Headless Permissions Integration", () => {
       expect(checkToolPermission({ name: "sudo", arguments: {} }, permissions).permission).toBe("exclude");
 
       // Explicitly allowed tools should be allowed
-      expect(checkToolPermission({ name: "write_file", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "run_terminal_command", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Bash", arguments: {} }, permissions).permission).toBe("allow");
 
       // Read-only tools should still be allowed by default
-      expect(checkToolPermission({ name: "read_file", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Read", arguments: {} }, permissions).permission).toBe("allow");
       
       // Unknown tools should default to ask (since no wildcard allow override was provided)
       expect(checkToolPermission({ name: "unknown_tool", arguments: {} }, permissions).permission).toBe("ask");
@@ -109,8 +109,8 @@ describe("Headless Permissions Integration", () => {
       const permissions = { policies };
 
       // All tools should be allowed due to wildcard override
-      expect(checkToolPermission({ name: "write_file", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "run_terminal_command", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("allow");
+      expect(checkToolPermission({ name: "Bash", arguments: {} }, permissions).permission).toBe("allow");
       expect(checkToolPermission({ name: "unknown_tool", arguments: {} }, permissions).permission).toBe("allow");
     });
   });

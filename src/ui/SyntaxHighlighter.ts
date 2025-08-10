@@ -82,7 +82,7 @@ const tokenColorMap: Record<string, keyof SyntaxHighlighterTheme> = {
 export function highlightCode(
   code: string,
   language: string = "javascript",
-  theme: SyntaxHighlighterTheme = defaultTheme
+  theme: SyntaxHighlighterTheme = defaultTheme,
 ): React.ReactNode[] {
   try {
     // Create lowlight instance with common languages
@@ -97,7 +97,7 @@ export function highlightCode(
 
     function processNode(
       node: any,
-      parentColor: string = theme.default
+      parentColor: string = theme.default,
     ): React.ReactNode {
       if (node.type === "text") {
         const text = node.value;
@@ -108,7 +108,7 @@ export function highlightCode(
               key: `text-${keyCounter++}`,
               color: parentColor,
             },
-            text
+            text,
           );
         }
         return null;
@@ -155,7 +155,7 @@ export function highlightCode(
               key: `element-${keyCounter++}`,
               color,
             },
-            textContent
+            textContent,
           );
         }
       }
@@ -191,13 +191,13 @@ export function highlightCode(
     }
 
     return elements;
-  } catch (error) {
+  } catch {
     // Fallback to plain text on error
     return [
       React.createElement(
         Text,
         { key: "error-fallback", color: theme.default },
-        code
+        code,
       ),
     ];
   }
@@ -230,7 +230,7 @@ export function detectLanguage(code: string): string {
   ];
 
   // Check patterns line by line for multiline code
-  const lines = code.split('\n');
+  const lines = code.split("\n");
   for (const line of lines) {
     for (const pattern of patterns) {
       if (pattern.regex.test(line)) {

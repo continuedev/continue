@@ -1,26 +1,39 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
+import {
+  validateFlags,
+  handleValidationErrors,
+} from "./flags/flagValidator.js";
+import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { configureConsoleForHeadless } from "./util/consoleOverride.js";
-import logger from "./util/logger.js";
+import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
 
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at:", { promise, reason });
+  sentryService.captureException(
+    reason instanceof Error ? reason : new Error(String(reason)),
+    {
+      promise: String(promise),
+    },
+  );
   // Don't exit the process, just log the error
 });
 
 process.on("uncaughtException", (error) => {
   logger.error("Uncaught Exception:", error);
+  sentryService.captureException(error);
   // Don't exit the process, just log the error
 });
 
@@ -29,7 +42,7 @@ const program = new Command();
 program
   .name("cn")
   .description(
-    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output."
+    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
   )
   .version(getVersion());
 
@@ -40,26 +53,36 @@ addCommonOptions(program)
   .option("-p, --print", "Print response and exit (useful for pipes)")
   .option(
     "--format <format>",
-    "Output format for headless mode (json). Only works with -p/--print flag."
+    "Output format for headless mode (json). Only works with -p/--print flag.",
+  )
+  .option(
+    "--silent",
+    "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag.",
   )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
+    logger.configureHeadlessMode(isHeadless);
 
-    // Validate --format flag only works with -p/--print
-    if (options.format && !options.print) {
-      console.error(
-        "Error: --format flag can only be used with -p/--print flag"
-      );
-      process.exit(1);
-    }
+    // Validate all command line flags
+    const validation = validateFlags({
+      print: options.print,
+      format: options.format,
+      silent: options.silent,
+      readonly: options.readonly,
+      auto: options.auto,
+      config: options.config,
+      allow: options.allow,
+      ask: options.ask,
+      exclude: options.exclude,
+      isRootCommand: true,
+      commandName: "cn",
+    });
 
-    // Validate format value
-    if (options.format && options.format !== "json") {
-      console.error("Error: --format currently only supports 'json'");
-      process.exit(1);
+    if (!validation.isValid) {
+      handleValidationErrors(validation.errors);
     }
 
     if (options.verbose) {
@@ -71,7 +94,7 @@ addCommonOptions(program)
         console.log(`Verbose logging enabled (session: ${sessionId})`);
         console.log(`Logs: ${logPath}`);
         console.log(
-          `Filter this session: grep '\\[${sessionId}\\]' ${logPath}`
+          `Filter this session: grep '\\[${sessionId}\\]' ${logPath}`,
         );
       }
       logger.debug("Verbose logging enabled");
@@ -93,7 +116,9 @@ addCommonOptions(program)
 
     // In headless mode, ensure we have a prompt
     if (options.print && !prompt) {
-      console.error("Error: A prompt is required when using the -p/--print flag.\n");
+      console.error(
+        "Error: A prompt is required when using the -p/--print flag.\n",
+      );
       console.error("Usage examples:");
       console.error('  cn -p "please review my current git diff"');
       console.error('  echo "hello" | cn -p');
@@ -129,7 +154,11 @@ program
   .description("Launch a remote instance of the cn agent")
   .option(
     "--url <url>",
-    "Connect directly to the specified URL instead of creating a new remote environment"
+    "Connect directly to the specified URL instead of creating a new remote environment",
+  )
+  .option(
+    "--idempotency-key <key>",
+    "Idempotency key for session management - allows resuming existing sessions",
   )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
@@ -142,7 +171,7 @@ program
   .option(
     "--timeout <seconds>",
     "Inactivity timeout in seconds (default: 300)",
-    "300"
+    "300",
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
   .action(async (prompt, options) => {
@@ -178,5 +207,19 @@ try {
   program.parse();
 } catch (error) {
   console.error(error);
+  sentryService.captureException(
+    error instanceof Error ? error : new Error(String(error)),
+  );
   process.exit(1);
 }
+
+// Graceful shutdown - flush Sentry data
+process.on("SIGINT", async () => {
+  await sentryService.flush();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await sentryService.flush();
+  process.exit(0);
+});

@@ -1,6 +1,7 @@
 import { Continue, ContinueClient } from "@continuedev/sdk";
-import { env } from "./env.js";
 import chalk from "chalk";
+
+import { env } from "./env.js";
 
 /**
  * Initialize the Continue SDK with the given parameters
@@ -12,7 +13,7 @@ import chalk from "chalk";
 export async function initializeContinueSDK(
   apiKey: string | undefined,
   assistantSlug: string,
-  organizationId?: string
+  organizationId?: string,
 ): Promise<ContinueClient> {
   if (!apiKey) {
     console.error(chalk.red("Error: No API key provided for Continue SDK"));
@@ -29,7 +30,7 @@ export async function initializeContinueSDK(
   } catch (error) {
     console.error(
       chalk.red("Error initializing Continue SDK:"),
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
     throw error;
   }

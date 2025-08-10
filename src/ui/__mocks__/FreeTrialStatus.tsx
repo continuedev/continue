@@ -5,7 +5,7 @@ const FreeTrialStatus: React.FC<any> = () => {
   return null;
 };
 
-export default FreeTrialStatus;
+export { FreeTrialStatus };
 export function isModelUsingFreeTrial(): boolean {
   return false;
 }

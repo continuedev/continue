@@ -1,30 +1,30 @@
-import { jest } from '@jest/globals';
+import * as fs from "fs";
+
+import * as diff from "diff";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock fs module
-jest.mock("fs", () => {
+vi.mock("fs", async () => {
   // Use actual fs implementation for non-mocked functions
-  const actualFs = jest.requireActual("fs");
+  const actualFs = await vi.importActual("fs");
   return {
     ...(actualFs as any),
-    existsSync: jest.fn(),
-    readFileSync: jest.fn(),
+    default: actualFs,
+    existsSync: vi.fn(),
+    readFileSync: vi.fn(),
   };
 });
 
 // Mock telemetry service
-jest.mock("./src/telemetry/telemetryService.js"); // Mock diff module
-jest.mock("diff", () => ({
-  createTwoFilesPatch: jest.fn(),
+vi.mock("./src/telemetry/telemetryService.js"); // Mock diff module
+vi.mock("diff", () => ({
+  createTwoFilesPatch: vi.fn(),
 }));
 
-// Import mocked modules
-import * as fs from "fs";
-import * as diff from "diff";
-
-// Get mocked functions using jest.mocked
-const mockExistsSync = jest.mocked(fs.existsSync);
-const mockReadFileSync = jest.mocked(fs.readFileSync);
-const mockCreateTwoFilesPatch = jest.mocked(diff.createTwoFilesPatch);
+// Get mocked functions using vi.mocked
+const mockExistsSync = vi.mocked(fs.existsSync);
+const mockReadFileSync = vi.mocked(fs.readFileSync);
+const mockCreateTwoFilesPatch = vi.mocked(diff.createTwoFilesPatch);
 
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
@@ -37,7 +37,7 @@ import { writeFileTool } from "./writeFile.js";
 
 describe.skip("Tool preprocess functions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // The mock functions will be configured in each test as needed
   });
 

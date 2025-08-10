@@ -1,7 +1,8 @@
 import { render } from "ink-testing-library";
 import React from "react";
+
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import TUIChat from "../TUIChat.js";
+import { AppRoot } from "../AppRoot.js";
 
 describe("TUIChat - Tool Display Tests", () => {
   let context: any;
@@ -19,7 +20,7 @@ describe("TUIChat - Tool Display Tests", () => {
 
   it("renders without crashing when tools are available", () => {
     const { lastFrame } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
     
@@ -29,7 +30,7 @@ describe("TUIChat - Tool Display Tests", () => {
 
   it("handles UI with no tools configured", () => {
     const { lastFrame } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
     
@@ -40,7 +41,7 @@ describe("TUIChat - Tool Display Tests", () => {
 
   it("maintains UI stability during tool operations", async () => {
     const { lastFrame, stdin } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
 
     // Type a message that might trigger tool use
@@ -59,7 +60,7 @@ describe("TUIChat - Tool Display Tests", () => {
 
   it("shows tool-related slash commands", async () => {
     const { lastFrame, stdin } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
 
     // Wait for initial render

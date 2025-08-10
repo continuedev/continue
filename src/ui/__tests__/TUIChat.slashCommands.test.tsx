@@ -1,4 +1,3 @@
-import { jest } from "@jest/globals";
 import { testBothModes, renderInMode } from "./TUIChat.dualModeHelper.js";
 
 describe("TUIChat - Slash Commands Tests", () => {

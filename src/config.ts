@@ -1,9 +1,4 @@
-import {
-  AssistantUnrolled,
-  ModelConfig,
-  RegistryClient,
-  unrollAssistant,
-} from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
   constructLlmApi,
@@ -14,30 +9,28 @@ import {
   DefaultApi,
   DefaultApiInterface,
 } from "@continuedev/sdk/dist/api/dist/index.js";
-import chalk from "chalk";
-import { dirname } from "node:path";
+
 import {
   AuthConfig,
   getAccessToken,
   getOrganizationId,
 } from "./auth/workos.js";
-import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 
 export function getLlmApi(
   assistant: AssistantUnrolled,
-  authConfig: AuthConfig
+  authConfig: AuthConfig,
 ): [BaseLlmApi, ModelConfig] {
   const model = assistant.models?.find(
     (model) =>
-      model?.roles?.includes("chat") || (model && model.roles === undefined)
+      model?.roles?.includes("chat") || (model && model.roles === undefined),
   );
 
   if (!model) {
     throw new Error(
-      "No models with the chat role found in the configured assistant"
+      "No models with the chat role found in the configured assistant",
     );
   }
 
@@ -70,64 +63,27 @@ export function getLlmApi(
 
   if (!llmApi) {
     throw new Error(
-      "Failed to initialize LLM. Please check your configuration."
+      "Failed to initialize LLM. Please check your configuration.",
     );
   }
 
   return [llmApi, model];
 }
 
-async function loadConfigYaml(
-  accessToken: string | null,
-  filePath: string,
-  organizationId: string | null,
-  apiClient: DefaultApiInterface
-): Promise<AssistantUnrolled> {
-  const unrollResult = await unrollAssistant(
-    { filePath, uriType: "file" },
-    new RegistryClient({
-      accessToken: accessToken ?? undefined,
-      apiBase: env.apiBase,
-      rootPath: dirname(filePath),
-    }),
-    {
-      currentUserSlug: "",
-      alwaysUseProxy: false,
-      orgScopeId: organizationId,
-      renderSecrets: true,
-      platformClient: new CLIPlatformClient(organizationId, apiClient),
-      onPremProxyUrl: null,
-    }
-  );
-
-  const errorDetails = unrollResult.errors;
-  if (!unrollResult.config) {
-    throw new Error(`Failed to load config file:\n${errorDetails}`);
-  } else if (errorDetails?.length) {
-    const warnings =
-      errorDetails?.length > 1
-        ? errorDetails.map((d) => `\n- ${d.message}`)
-        : errorDetails[0].message;
-    console.warn(chalk.dim(`Warning: ${warnings}`));
-  }
-
-  return unrollResult.config;
-}
-
 export function getApiClient(
-  accessToken: string | undefined | null
+  accessToken: string | undefined | null,
 ): DefaultApi {
   return new DefaultApi(
     new Configuration({
       basePath: env.apiBase.replace(/\/$/, ""),
       accessToken: accessToken ?? undefined,
-    })
+    }),
   );
 }
 
 export async function initialize(
   authConfig: AuthConfig,
-  configPath: string | undefined
+  configPath: string | undefined,
 ): Promise<{
   config: AssistantUnrolled;
   llmApi: BaseLlmApi;

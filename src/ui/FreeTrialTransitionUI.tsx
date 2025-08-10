@@ -1,20 +1,25 @@
 import * as fs from "fs";
+import * as path from "path";
+
 import { Box, Text, useInput } from "ink";
 import open from "open";
-import * as os from "os";
-import * as path from "path";
 import React, { useState } from "react";
-import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
-import { isValidAnthropicApiKey, getApiKeyValidationError } from "../util/apiKeyValidation.js";
-import { env } from "../env.js";
+import useSWR from "swr";
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+import { listUserOrganizations } from "../auth/workos.js";
+import { env } from "../env.js";
+import {
+  isValidAnthropicApiKey,
+  getApiKeyValidationError,
+} from "../util/apiKeyValidation.js";
+import { updateAnthropicModelInYaml } from "../util/yamlConfigUpdater.js";
+
+import { useNavigation } from "./context/NavigationContext.js";
+
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 interface FreeTrialTransitionUIProps {
-  onComplete: () => void;
-  onSwitchToLocalConfig?: () => void;
-  onFullReload?: () => void;
-  onShowConfigSelector?: () => void;
+  onReload: () => void;
 }
 
 /**
@@ -27,20 +32,18 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  const existingContent = fs.existsSync(CONFIG_PATH) 
+  const existingContent = fs.existsSync(CONFIG_PATH)
     ? fs.readFileSync(CONFIG_PATH, "utf8")
     : "";
-    
+
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
 
 const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
-  onComplete,
-  onSwitchToLocalConfig,
-  onFullReload,
-  onShowConfigSelector,
+  onReload,
 }) => {
+  const { navigateTo, closeCurrentScreen } = useNavigation();
   const [currentStep, setCurrentStep] = useState<
     "choice" | "enterApiKey" | "processing" | "success" | "error"
   >("choice");
@@ -50,11 +53,24 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   const [successMessage, setSuccessMessage] = useState("");
   const [wasModelsSetup, setWasModelsSetup] = useState(false);
 
+  // Fetch organizations using SWR
+  const { data: organizations } = useSWR(
+    "organizations",
+    listUserOrganizations,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      shouldRetryOnError: false,
+    },
+  );
+
+  const hasOrganizations = organizations && organizations.length > 0;
+
   useInput((input, key) => {
     if (currentStep === "choice") {
       if (key.upArrow && selectedOption > 1) {
         setSelectedOption(selectedOption - 1);
-      } else if (key.downArrow && selectedOption < 3) {
+      } else if (key.downArrow && selectedOption < (hasOrganizations ? 4 : 3)) {
         setSelectedOption(selectedOption + 1);
       } else if (input === "1") {
         setSelectedOption(1);
@@ -62,6 +78,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         setSelectedOption(2);
       } else if (input === "3") {
         setSelectedOption(3);
+      } else if (input === "4" && hasOrganizations) {
+        setSelectedOption(4);
       } else if (key.return) {
         handleOptionSelect();
       }
@@ -81,11 +99,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       }
     } else if (currentStep === "success" || currentStep === "error") {
       if (key.return) {
+        closeCurrentScreen();
         // If user went through models setup, do a full reload to register their purchase
-        if (wasModelsSetup && onFullReload) {
-          onFullReload();
-        } else {
-          onComplete();
+        if (wasModelsSetup) {
+          onReload();
         }
       }
     }
@@ -101,12 +118,12 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       try {
         await open(modelsUrl);
         setSuccessMessage(
-          `Browser opened to ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
+          `Browser opened to ${modelsUrl}. After setting up your models subscription, press Enter to continue.`,
         );
         setCurrentStep("success");
-      } catch (error) {
+      } catch {
         setErrorMessage(
-          `Could not open browser automatically. Please visit: ${modelsUrl}. After setting up your models subscription, press Enter to continue.`
+          `Could not open browser automatically. Please visit: ${modelsUrl}. After setting up your models subscription, press Enter to continue.`,
         );
         setCurrentStep("error");
       }
@@ -116,11 +133,10 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       setWasModelsSetup(false); // This is not models setup
     } else if (selectedOption === 3) {
       // Option 3: Switch to different configuration
-      if (onShowConfigSelector) {
-        onShowConfigSelector();
-      } else {
-        onComplete();
-      }
+      navigateTo("config");
+    } else if (selectedOption === 4 && hasOrganizations) {
+      // Option 4: Switch to organization
+      navigateTo("organization");
     }
   };
 
@@ -130,21 +146,18 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
     try {
       await createOrUpdateConfig(apiKey);
       setSuccessMessage(
-        "✓ API key saved successfully! Switching to local configuration..."
+        "✓ API key saved successfully! Switching to local configuration...",
       );
       setCurrentStep("success");
 
       // After a brief delay, switch to local configuration
       setTimeout(() => {
-        if (onSwitchToLocalConfig) {
-          onSwitchToLocalConfig();
-        } else {
-          onComplete();
-        }
+        closeCurrentScreen();
+        onReload();
       }, 1000);
     } catch (error) {
       setErrorMessage(
-        `❌ Error saving API key: ${error}. Press Enter to try again.`
+        `❌ Error saving API key: ${error}. Press Enter to try again.`,
       );
       setCurrentStep("error");
     }
@@ -168,14 +181,23 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
           (recommended)
         </Text>
         <Text color={selectedOption === 2 ? "cyan" : "white"}>
-          {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API key
+          {selectedOption === 2 ? "▶ " : "  "}2. 🔑 Enter your Anthropic API
+          key
         </Text>
         <Text color={selectedOption === 3 ? "cyan" : "white"}>
-          {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different configuration
+          {selectedOption === 3 ? "▶ " : "  "}3. ⚙️ Switch to a different
+          configuration
         </Text>
+        {hasOrganizations && (
+          <Text color={selectedOption === 4 ? "cyan" : "white"}>
+            {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization
+            profile
+          </Text>
+        )}
         <Text></Text>
         <Text color="gray">
-          Use ↑↓ arrows or 1/2/3 to select, Enter to confirm
+          Use ↑↓ arrows or {hasOrganizations ? "1/2/3/4" : "1/2/3"} to select,
+          Enter to confirm
         </Text>
       </Box>
     );
@@ -266,4 +288,4 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   return null;
 };
 
-export default FreeTrialTransitionUI;
+export { FreeTrialTransitionUI };

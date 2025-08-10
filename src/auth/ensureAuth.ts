@@ -1,4 +1,5 @@
 import chalk from "chalk";
+
 import { isAuthenticated, login } from "./workos.js";
 
 /**
@@ -6,7 +7,7 @@ import { isAuthenticated, login } from "./workos.js";
  * Returns true if authentication is successful, false otherwise
  */
 export async function ensureAuthenticated(
-  requireAuth: boolean = true
+  requireAuth: boolean = true,
 ): Promise<boolean> {
   if (isAuthenticated()) {
     return true;
@@ -22,7 +23,7 @@ export async function ensureAuthenticated(
     await login();
     return true;
   } catch (error) {
-    console.error(chalk.red("Failed to authenticate."));
+    console.error(chalk.red("Failed to authenticate."), error);
     return false;
   }
 }

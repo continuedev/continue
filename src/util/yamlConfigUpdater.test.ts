@@ -1,5 +1,6 @@
-import { updateAnthropicModelInYaml } from './yamlConfigUpdater.js';
 import { parse } from 'yaml';
+
+import { updateAnthropicModelInYaml } from './yamlConfigUpdater.js';
 
 describe('updateAnthropicModelInYaml', () => {
   const testApiKey = 'sk-ant-test123456789';

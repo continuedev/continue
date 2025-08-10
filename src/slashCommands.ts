@@ -1,5 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
+
 import {
   isAuthenticated,
   isAuthenticatedConfig,
@@ -12,7 +13,6 @@ import { posthogService } from "./telemetry/posthogService.js";
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-  onLoginPrompt?: (promptText: string) => Promise<string>
 ): Promise<{
   output?: string;
   exit?: boolean;
@@ -21,6 +21,7 @@ export async function handleSlashCommands(
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
   openMCPSelector?: boolean;
+  compact?: boolean;
 } | null> {
   // Only trigger slash commands if slash is the very first character
   if (input.startsWith("/") && input.trim().startsWith("/")) {
@@ -29,8 +30,11 @@ export async function handleSlashCommands(
       case "help":
         const allCommands = getAllSlashCommands(assistant);
         const helpMessage = [
-          "Available commands:",
-          ...allCommands.map((cmd) => `/${cmd.name} - ${cmd.description}`),
+          chalk.cyan("Slash commands:"),
+          ...allCommands.map(
+            (cmd) =>
+              `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
+          ),
         ].join("\n");
         posthogService.capture("useSlashCommand", {
           name: "help",
@@ -95,7 +99,7 @@ export async function handleSlashCommands(
             exit: true,
             output: "Logged out successfully",
           };
-        } catch (error: any) {
+        } catch {
           return {
             exit: true,
             output: "Logged out successfully",
@@ -136,6 +140,11 @@ export async function handleSlashCommands(
         });
         // Open MCP management UI
         return { openMCPSelector: true };
+      case "compact":
+        posthogService.capture("useSlashCommand", {
+          name: "compact",
+        });
+        return { compact: true };
 
       case "org":
         posthogService.capture("useSlashCommand", {
@@ -196,7 +205,7 @@ export async function handleSlashCommands(
         }
       default:
         const assistantPrompt = assistant.prompts?.find(
-          (prompt) => prompt?.name === command
+          (prompt) => prompt?.name === command,
         );
         if (assistantPrompt) {
           const newInput = assistantPrompt.prompt + args.join(" ");

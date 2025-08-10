@@ -1,7 +1,8 @@
 import { render } from "ink-testing-library";
 import React from "react";
+
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import TUIChat from "../TUIChat.js";
+import { AppRoot } from "../AppRoot.js";
 
 describe("TUIChat - Basic UI Tests", () => {
   let context: any;
@@ -19,7 +20,7 @@ describe("TUIChat - Basic UI Tests", () => {
   });
 
   it("renders without crashing", () => {
-    const { lastFrame } = render(React.createElement(TUIChat));
+    const { lastFrame } = render(React.createElement(AppRoot));
     const frame = lastFrame();
 
     expect(frame).toBeDefined();
@@ -37,7 +38,7 @@ describe("TUIChat - Basic UI Tests", () => {
       allReady: false,
     });
 
-    const { lastFrame } = render(React.createElement(TUIChat));
+    const { lastFrame } = render(React.createElement(AppRoot));
     const frame = lastFrame();
 
     expect(frame).toBeDefined();
@@ -49,7 +50,7 @@ describe("TUIChat - Basic UI Tests", () => {
 
   it("handles remote URL prop", () => {
     const { lastFrame } = render(
-      React.createElement(TUIChat, { remoteUrl: "http://localhost:3000" })
+      React.createElement(AppRoot, { remoteUrl: "http://localhost:3000" })
     );
     const frame = lastFrame();
 

@@ -8,7 +8,7 @@ import type {
   ChatCompletionTool,
   ChatCompletionToolMessageParam,
 } from "openai/resources.mjs";
-import { parseArgs } from "./args.js";
+
 import { MCPService } from "./mcp.js";
 import {
   checkToolPermission,
@@ -16,42 +16,65 @@ import {
   ToolCallRequest,
 } from "./permissions/index.js";
 import { toolPermissionManager } from "./permissions/permissionManager.js";
-import telemetryService from "./telemetry/telemetryService.js";
+import { getServiceSync, SERVICE_NAMES, serviceContainer } from "./services/index.js";
+import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
+import { telemetryService } from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import {
-  BUILTIN_TOOLS,
   executeToolCall,
+  getAllBuiltinTools,
   getAvailableTools,
-  getToolDisplayName,
   Tool,
   ToolCall,
   validateToolCallArgsPresent,
 } from "./tools/index.js";
+import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
 import {
   chatCompletionStreamWithBackoff,
   withExponentialBackoff,
 } from "./util/exponentialBackoff.js";
-import logger from "./util/logger.js";
-import { PreprocessedToolCall, ToolCallPreview } from "./tools/types.js";
+import { logger } from "./util/logger.js";
 
 dotenv.config();
 
-export async function getAllTools() {
-  const args = parseArgs();
+  export async function getAllTools() {
+    const allBuiltinTools = getAllBuiltinTools();
+    const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
 
-  // Get all available tool names
-  const builtinToolNames = BUILTIN_TOOLS.map((tool) => tool.name);
-  const mcpService = (await import('./services/index.js')).getServiceSync('mcp');
-  const mcpToolNames = (mcpService as any)?.mcpService?.getTools().map((tool: any) => tool.name) ?? [];
+    const mcpService = await serviceContainer.get<MCPService>(SERVICE_NAMES.MCP)
+    const mcpTools = mcpService.getTools()
+    const mcpToolNames = mcpTools.map(t => t.name)
+
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
-  // Filter out excluded tools based on permissions
-  const allowedToolNames = filterExcludedTools(allToolNames);
+  // Check if the ToolPermissionService is ready
+  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
+  );
+
+  let allowedToolNames: string[];
+  if (serviceResult.state === "ready" && serviceResult.value) {
+    // Filter out excluded tools based on permissions
+    allowedToolNames = filterExcludedTools(
+      allToolNames,
+      serviceResult.value.permissions,
+    );
+  } else {
+    // Service not ready - this is a critical error since tools should only be
+    // requested after services are properly initialized
+    logger.error(
+      "ToolPermissionService not ready in getAllTools - this indicates a service initialization timing issue",
+    );
+    throw new Error(
+      "ToolPermissionService not initialized. Services must be initialized before requesting tools.",
+    );
+  }
+
   const allowedToolNamesSet = new Set(allowedToolNames);
 
   // Filter builtin tools
-  const allowedBuiltinTools = BUILTIN_TOOLS.filter((tool) =>
-    allowedToolNamesSet.has(tool.name)
+  const allowedBuiltinTools = allBuiltinTools.filter((tool) =>
+    allowedToolNamesSet.has(tool.name),
   );
 
   const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
@@ -64,8 +87,12 @@ export async function getAllTools() {
         properties: Object.fromEntries(
           Object.entries(tool.parameters).map(([key, param]) => [
             key,
-            { type: param.type, description: param.description },
-          ])
+            {
+              type: param.type,
+              description: param.description,
+              items: param.items,
+            },
+          ]),
         ),
         required: Object.entries(tool.parameters)
           .filter(([_, param]) => param.required)
@@ -75,9 +102,8 @@ export async function getAllTools() {
   }));
 
   // Add filtered MCP tools
-  const mcpTools = (mcpService as any)?.mcpService?.getTools() ?? [];
-  const allowedMcpTools = mcpTools.filter((tool: any) =>
-    allowedToolNamesSet.has(tool.name)
+  const allowedMcpTools = mcpTools.filter((tool) =>
+    allowedToolNamesSet.has(tool.name),
   );
 
   allTools.push(
@@ -88,7 +114,7 @@ export async function getAllTools() {
         description: tool.description,
         parameters: tool.inputSchema,
       },
-    }))
+    })),
   );
 
   return allTools;
@@ -104,11 +130,11 @@ export interface StreamCallbacks {
     toolName: string,
     toolArgs: any,
     requestId: string,
-    preview?: ToolCallPreview[]
+    preview?: ToolCallPreview[],
   ) => void;
 }
 function getDefaultCompletionOptions(
-  opts?: CompletionOptions
+  opts?: CompletionOptions,
 ): Partial<ChatCompletionCreateParamsStreaming> {
   if (!opts) return {};
   return {
@@ -128,7 +154,7 @@ export async function processStreamingResponse(
   abortController: AbortController,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
-  tools?: ChatCompletionTool[]
+  tools?: ChatCompletionTool[],
 ): Promise<{
   content: string;
   finalContent: string; // Added field for final content only
@@ -152,7 +178,7 @@ export async function processStreamingResponse(
         tools,
         ...getDefaultCompletionOptions(model.defaultCompletionOptions),
       },
-      abortController.signal
+      abortController.signal,
     );
   };
 
@@ -167,7 +193,7 @@ export async function processStreamingResponse(
   try {
     const streamWithBackoff = withExponentialBackoff(
       streamFactory,
-      abortController.signal
+      abortController.signal,
     );
 
     let chunkCount = 0;
@@ -186,7 +212,7 @@ export async function processStreamingResponse(
           firstTokenTime - requestStartTime,
           model.model,
           "time_to_first_token",
-          (tools?.length || 0) > 0
+          (tools?.length || 0) > 0,
         );
       }
 
@@ -283,7 +309,7 @@ export async function processStreamingResponse(
 
               // Don't notify onToolStart here anymore - wait until after permission check
               toolCall.startNotified = true;
-            } catch (e) {
+            } catch {
               // JSON not complete yet, continue
             }
           }
@@ -305,7 +331,7 @@ export async function processStreamingResponse(
       totalDuration,
       model.model,
       "total_response_time",
-      (tools?.length || 0) > 0
+      (tools?.length || 0) > 0,
     );
 
     // Log API request event
@@ -316,7 +342,7 @@ export async function processStreamingResponse(
       undefined, // no error
       inputTokens,
       outputTokens,
-      cost
+      cost,
     );
 
     logger.debug("Stream complete", {
@@ -336,7 +362,7 @@ export async function processStreamingResponse(
       model.model,
       errorDuration,
       false, // failed
-      error.message || String(error)
+      error.message || String(error),
     );
 
     if (error.name === "AbortError" || abortController?.signal.aborted) {
@@ -386,7 +412,7 @@ export async function processStreamingResponse(
  */
 export async function preprocessStreamedToolCalls(
   toolCalls: ToolCall[],
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
 ): Promise<{
   preprocessedCalls: PreprocessedToolCall[];
   errorChatEntries: ChatCompletionToolMessageParam[];
@@ -441,7 +467,7 @@ export async function preprocessStreamedToolCalls(
         toolCall.name,
         false,
         duration,
-        errorMessage
+        errorMessage,
       );
 
       // Add error to chat history
@@ -468,7 +494,7 @@ export async function preprocessStreamedToolCalls(
 export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
   callbacks?: StreamCallbacks,
-  isHeadless?: boolean
+  isHeadless?: boolean,
 ): Promise<{
   hasRejection: boolean;
   chatHistoryEntries: ChatCompletionToolMessageParam[];
@@ -510,16 +536,17 @@ export async function executeStreamedToolCalls(
       } else if (permissionCheck.permission === "ask") {
         if (isHeadless) {
           // In headless mode, exit immediately with instructions
-          const tool = BUILTIN_TOOLS.find((t) => t.name === toolCall.name);
+          const allBuiltinTools = getAllBuiltinTools();
+          const tool = allBuiltinTools.find((t) => t.name === toolCall.name);
           const toolName = tool?.displayName || toolCall.name;
           console.error(
-            `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`
+            `Error: Tool '${toolName}' requires permission but cn is running in headless mode.`,
           );
           console.error(
-            `If you want to allow this tool, use --allow ${toolName}.`
+            `If you want to allow this tool, use --allow ${toolName}.`,
           );
           console.error(
-            `If you don't want the tool to be included, use --exclude ${toolName}.`
+            `If you don't want the tool to be included, use --exclude ${toolName}.`,
           );
 
           process.exit(1);
@@ -542,21 +569,21 @@ export async function executeStreamedToolCalls(
             if (event.toolCall.name === toolCall.name) {
               toolPermissionManager.off(
                 "permissionRequested",
-                handlePermissionRequested
+                handlePermissionRequested,
               );
               // Notify UI about permission request
               callbacks.onToolPermissionRequest!(
                 event.toolCall.name,
                 event.toolCall.arguments,
                 event.requestId,
-                event.toolCall.preview
+                event.toolCall.preview,
               );
             }
           };
 
           toolPermissionManager.on(
             "permissionRequested",
-            handlePermissionRequested
+            handlePermissionRequested,
           );
 
           // Request permission using the proper API
@@ -639,7 +666,7 @@ export async function streamChatResponse(
   model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
-  callbacks?: StreamCallbacks
+  callbacks?: StreamCallbacks,
 ) {
   logger.debug("streamChatResponse called", {
     model,
@@ -647,8 +674,10 @@ export async function streamChatResponse(
     hasCallbacks: !!callbacks,
   });
 
-  const args = parseArgs();
-  const isHeadless = args.isHeadless;
+  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
+  );
+  const isHeadless = serviceResult.value?.isHeadless ?? false;
   const tools = await getAllTools();
 
   logger.debug("Tools prepared", {
@@ -671,7 +700,7 @@ export async function streamChatResponse(
         abortController,
         callbacks,
         isHeadless,
-        tools
+        tools,
       );
 
     fullResponse += content;
@@ -726,12 +755,12 @@ export async function streamChatResponse(
         await executeStreamedToolCalls(
           preprocessedCalls,
           callbacks,
-          isHeadless
+          isHeadless,
         );
 
       if (isHeadless && hasRejection) {
         logger.debug(
-          "Tool call rejected in headless mode - returning current content"
+          "Tool call rejected in headless mode - returning current content",
         );
         return finalResponse || content || fullResponse;
       }

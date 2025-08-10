@@ -15,6 +15,12 @@ jest.mock("./src/auth/workos.js");
 jest.mock("./src/commands/commands.js");
 jest.mock("./src/services/index.js");
 jest.mock("./src/services/ServiceContainerContext.js");
+jest.mock("./src/config.js");
+jest.mock("./src/configLoader.js");
+jest.mock("./src/args.js");
+jest.mock("./src/services/ServiceContainer.js");
+jest.mock("./src/permissions/permissionsYamlLoader.js");
+jest.mock("./src/permissions/precedenceResolver.js");
 
 // Set up global afterEach hook to clear all timers and reset console
 afterEach(() => {
@@ -26,7 +32,7 @@ afterEach(() => {
       // Ignore errors when clearing timers
     }
   }
-  
+
   // Reset console overrides to ensure clean state for each test
   try {
     resetConsoleOverrides();

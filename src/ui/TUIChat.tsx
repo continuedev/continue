@@ -1,6 +1,10 @@
-import { Box, Text, useApp, useStdout } from "ink";
+import MCPSelector from "./MCPSelector.js";
+import { Box, Text } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
+
 import { useServices } from "../hooks/useService.js";
+import type { PermissionMode } from "../permissions/types.js";
+import { modeService } from "../services/ModeService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -8,30 +12,27 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
+import { getGitRemoteUrl, isGitRepo } from "../util/git.js";
+
+import { ModeIndicator } from "./components/ModeIndicator.js";
 import { ToolPermissionSelector } from "./components/ToolPermissionSelector.js";
-import ConfigSelector from "./ConfigSelector.js";
+import { ConfigSelector } from "./ConfigSelector.js";
+import { useNavigation } from "./context/NavigationContext.js";
 import { startFileIndexing } from "./FileSearchUI.js";
-import FreeTrialStatus from "./FreeTrialStatus.js";
-import FreeTrialTransitionUI from "./FreeTrialTransitionUI.js";
+import { FreeTrialStatus } from "./FreeTrialStatus.js";
+import { FreeTrialTransitionUI } from "./FreeTrialTransitionUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
-import IntroMessage from "./IntroMessage.js";
-import LoadingAnimation from "./LoadingAnimation.js";
-import MCPSelector from "./MCPSelector.js";
-import ModelSelector from "./ModelSelector.js";
-import OrganizationSelector from "./OrganizationSelector.js";
-import Timer from "./Timer.js";
-import UpdateNotification from "./UpdateNotification.js";
-import UserInput from "./UserInput.js";
-import ModeIndicator from "./components/ModeIndicator.js";
-import MCPStatusIndicator from "./components/MCPStatusIndicator.js";
-import { getGitRemoteUrl, getRepoUrl, isGitRepo } from "../util/git.js";
-import useTerminalSize from "./hooks/useTerminalSize.js";
-import { modeService } from "../services/ModeService.js";
-import type { PermissionMode } from "../permissions/types.js";
+import { IntroMessage } from "./IntroMessage.js";
+import { LoadingAnimation } from "./LoadingAnimation.js";
+import { ModelSelector } from "./ModelSelector.js";
+import { OrganizationSelector } from "./OrganizationSelector.js";
+import { Timer } from "./Timer.js";
+import { UpdateNotification } from "./UpdateNotification.js";
+import { UserInput } from "./UserInput.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -77,12 +78,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   }, [remoteUrl]);
 
   // Get all services reactively - only in normal mode
-  const {
-    services,
-    loading: servicesLoading,
-    error: servicesError,
-    allReady: allServicesReady,
-  } = useServices<{
+  const { services, allReady: allServicesReady } = useServices<{
     auth: AuthServiceState;
     config: ConfigServiceState;
     model: ModelServiceState;
@@ -90,27 +86,21 @@ const TUIChat: React.FC<TUIChatProps> = ({
     apiClient: ApiClientServiceState;
   }>(["auth", "config", "model", "mcp", "apiClient"]);
 
-  // State for login prompt handling
-  const [loginPrompt, setLoginPrompt] = useState<{
-    text: string;
-    resolve: (value: string) => void;
-  } | null>(null);
-  const [loginToken, setLoginToken] = useState("");
-
-  // State for free trial transition
-  const [isShowingFreeTrialTransition, setIsShowingFreeTrialTransition] =
-    useState(false);
+  // Use navigation context
+  const {
+    state: navState,
+    navigateTo,
+    closeCurrentScreen,
+    isScreenActive,
+  } = useNavigation();
 
   // State for intro message display
   const [showIntroMessage, setShowIntroMessage] = useState(false);
 
   // State for current mode (for hiding cwd in plan/auto modes)
   const [currentMode, setCurrentMode] = useState<PermissionMode>(
-    modeService.getCurrentMode()
+    modeService.getCurrentMode(),
   );
-
-  // State for MCP selector
-  const [showMCPSelector, setShowMCPSelector] = useState(false);
 
   // Listen for mode changes to update UI
   useEffect(() => {
@@ -118,9 +108,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
       setCurrentMode(newMode);
     };
 
-    modeService.on('modeChanged', handleModeChange);
+    modeService.on("modeChanged", handleModeChange);
     return () => {
-      modeService.off('modeChanged', handleModeChange);
+      modeService.off("modeChanged", handleModeChange);
     };
   }, []);
 
@@ -158,16 +148,15 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Custom login prompt handler for TUI
   const handleLoginPrompt = (promptText: string): Promise<string> => {
     return new Promise((resolve) => {
-      setLoginPrompt({ text: promptText, resolve });
+      navigateTo("login", { text: promptText, resolve });
     });
   };
 
   // Handle login token submission
   const handleLoginTokenSubmit = (token: string) => {
-    if (loginPrompt) {
-      setLoginToken("");
-      loginPrompt.resolve(token);
-      setLoginPrompt(null);
+    if (navState.screenData?.resolve) {
+      navState.screenData.resolve(token);
+      closeCurrentScreen();
     }
   };
 
@@ -186,7 +175,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isWaitingForResponse,
     responseStartTime,
     inputMode,
-    attachedFiles,
     activePermissionRequest,
     handleUserMessage,
     handleInterrupt,
@@ -200,10 +188,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
-    onShowOrgSelector: () => showOrganizationSelector(),
-    onShowConfigSelector: () => showConfigSelectorUI(),
-    onShowModelSelector: () => showModelSelectorUI(),
-    onShowMCPSelector: () => setShowMCPSelector(true),
+    onShowOrgSelector: () => navigateTo("organization"),
+    onShowConfigSelector: () => navigateTo("config"),
+    onShowModelSelector: () => navigateTo("model"),
+    onShowMCPSelector: () => navigateTo("mcp"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration
@@ -213,26 +201,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { renderMessage } = useMessageRenderer();
 
-  const {
-    showOrgSelector,
-    handleOrganizationSelect,
-    handleOrganizationCancel,
-    showOrganizationSelector,
-  } = useOrganizationSelector({
-    configPath,
-    onAssistantChange: (newAssistant, newModel, newLlmApi, newMcpService) => {},
+  const { handleOrganizationSelect } = useOrganizationSelector({
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
     onChatReset: resetChatHistory,
   });
 
-  const {
-    showConfigSelector,
-    handleConfigSelect,
-    handleConfigCancel,
-    showConfigSelectorUI,
-  } = useConfigSelector({
+  const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
@@ -240,53 +216,16 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onChatReset: resetChatHistory,
   });
 
-  const {
-    showModelSelector,
-    handleModelSelect,
-    handleModelCancel,
-    showModelSelectorUI,
-  } = useModelSelector({
+  const { handleModelSelect } = useModelSelector({
     onMessage: (message) => {
       setMessages((prev) => [...prev, message]);
     },
   });
-
-  // Handle free trial transition completion
-  const handleFreeTrialTransitionComplete = () => {
-    setIsShowingFreeTrialTransition(false);
-    handleReload();
-  };
-
-  const handleFreeTrialSwitchToLocal = () => {
-    setIsShowingFreeTrialTransition(false);
-    handleReload();
-  };
-
-  const handleFreeTrialFullReload = () => {
-    setIsShowingFreeTrialTransition(false);
-    handleReload();
-  };
-
-  const handleFreeTrialShowConfigSelector = () => {
-    setIsShowingFreeTrialTransition(false);
-    showConfigSelectorUI();
-  };
-
-  // MCP selector handlers
-  const handleMCPCancel = () => {
-    setShowMCPSelector(false);
-  };
 
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
-    showOrgSelector ||
-    showConfigSelector ||
-    showModelSelector ||
-    showMCPSelector ||
-    !!loginPrompt ||
-    isShowingFreeTrialTransition ||
-    !!activePermissionRequest;
+    navState.currentScreen !== "chat" || !!activePermissionRequest;
 
   return (
     <Box flexDirection="column" height="100%">
@@ -332,7 +271,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Login prompt - shows above input when active */}
-        {loginPrompt && (
+        {isScreenActive("login") && navState.screenData && (
           <Box
             paddingX={1}
             borderStyle="round"
@@ -343,7 +282,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
             <Text color="yellow" bold>
               Login Required
             </Text>
-            <Text>{loginPrompt.text}</Text>
+            <Text>{navState.screenData.text}</Text>
             <UserInput
               onSubmit={handleLoginTokenSubmit}
               isWaitingForResponse={false}
@@ -357,48 +296,43 @@ const TUIChat: React.FC<TUIChatProps> = ({
         )}
 
         {/* Organization selector - shows above input when active */}
-        {showOrgSelector && (
+        {isScreenActive("organization") && (
           <OrganizationSelector
             onSelect={handleOrganizationSelect}
-            onCancel={handleOrganizationCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* Config selector - shows above input when active */}
-        {showConfigSelector && (
+        {isScreenActive("config") && (
           <ConfigSelector
             onSelect={handleConfigSelect}
-            onCancel={handleConfigCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* Model selector - shows above input when active */}
-        {showModelSelector && (
+        {isScreenActive("model") && (
           <ModelSelector
             onSelect={handleModelSelect}
-            onCancel={handleModelCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* MCP selector - shows above input when active */}
-        {showMCPSelector && (
+        {isScreenActive("mcp") && (
           <MCPSelector
-            onCancel={handleMCPCancel}
+            onCancel={closeCurrentScreen}
           />
         )}
 
         {/* Free trial transition UI - replaces input when active */}
-        {isShowingFreeTrialTransition && (
-          <FreeTrialTransitionUI
-            onComplete={handleFreeTrialTransitionComplete}
-            onSwitchToLocalConfig={handleFreeTrialSwitchToLocal}
-            onFullReload={handleFreeTrialFullReload}
-            onShowConfigSelector={handleFreeTrialShowConfigSelector}
-          />
+        {isScreenActive("free-trial") && (
+          <FreeTrialTransitionUI onReload={handleReload} />
         )}
 
-        {/* Input area - only show when not showing free trial transition */}
-        {!isShowingFreeTrialTransition && (
+        {/* Input area - only show when showing chat screen */}
+        {isScreenActive("chat") && (
           <>
             {/* Show permission selector when there's an active permission request */}
             {activePermissionRequest ? (
@@ -432,7 +366,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         >
           <Box flexDirection="row" alignItems="center">
             {/* Only show cwd in normal mode to save space in plan/auto modes */}
-            {currentMode === 'normal' && (
+            {currentMode === "normal" && (
               <>
                 <Text color="dim" wrap="truncate-start">
                   {repoURlText}
@@ -441,19 +375,22 @@ const TUIChat: React.FC<TUIChatProps> = ({
               </>
             )}
             <ModeIndicator />
-            {services.mcp && (
-              <>
-                <Text> </Text>
-                <MCPStatusIndicator mcpState={services.mcp} />
-              </>
-            )}
           </Box>
           <Box>
             {!isRemoteMode && services.model?.model && (
               <FreeTrialStatus
                 apiClient={services.apiClient?.apiClient || undefined}
                 model={services.model.model}
-                onTransitionStateChange={setIsShowingFreeTrialTransition}
+                onTransitionStateChange={(shouldShow) => {
+                  if (shouldShow && navState.currentScreen === "chat") {
+                    navigateTo("free-trial");
+                  } else if (
+                    !shouldShow &&
+                    navState.currentScreen === "free-trial"
+                  ) {
+                    closeCurrentScreen();
+                  }
+                }}
               />
             )}
           </Box>
@@ -466,4 +403,4 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 };
 
-export default TUIChat;
+export { TUIChat };

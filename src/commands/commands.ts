@@ -23,11 +23,6 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "exit",
-    description: "Exit the chat",
-    category: "system",
-  },
-  {
     name: "login",
     description: "Authenticate with your account",
     category: "system",
@@ -43,11 +38,6 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "org",
-    description: "Switch organization",
-    category: "system",
-  },
-  {
     name: "model",
     description: "Switch between available chat models",
     category: "system",
@@ -58,8 +48,23 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+<<<<<<< HEAD
     name: "mcp",
     description: "Manage MCP server connections",
+=======
+    name: "org",
+    description: "Switch organization",
+    category: "system",
+  },
+  {
+    name: "compact",
+    description: "Summarize chat history into a compact form",
+    category: "system",
+  },
+  {
+    name: "exit",
+    description: "Exit the chat",
+>>>>>>> 4effd5de05497ea750ede3957b3213e657746cd8
     category: "system",
   },
 ];
@@ -78,7 +83,7 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
  */
 export function getAllSlashCommands(
   assistant: AssistantConfig,
-  options: { isRemoteMode?: boolean } = {}
+  options: { isRemoteMode?: boolean } = {},
 ): SlashCommand[] {
   const { isRemoteMode = false } = options;
 
@@ -105,7 +110,7 @@ export function getAllSlashCommands(
  * Get assistant prompt commands only
  */
 export function getAssistantSlashCommands(
-  assistant: AssistantConfig
+  assistant: AssistantConfig,
 ): SlashCommand[] {
   return (
     assistant?.prompts?.map((prompt) => ({

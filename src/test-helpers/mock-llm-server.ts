@@ -1,6 +1,7 @@
 import * as fs from "fs/promises";
 import * as http from "http";
 import * as path from "path";
+
 import { CLITestContext } from "./cli-helpers.js";
 
 export interface MockLLMServerOptions {
@@ -32,7 +33,7 @@ export interface MockLLMServer {
  * @returns A promise that resolves to the mock server instance
  */
 export async function createMockLLMServer(
-  options: MockLLMServerOptions = {}
+  options: MockLLMServerOptions = {},
 ): Promise<MockLLMServer> {
   const {
     response = "Hello World!",
@@ -54,7 +55,7 @@ export async function createMockLLMServer(
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
+      "Content-Type, Authorization",
     );
 
     if (req.method === "OPTIONS") {
@@ -78,7 +79,7 @@ export async function createMockLLMServer(
           ? (() => {
               try {
                 return JSON.parse(body);
-              } catch (e) {
+              } catch {
                 return body;
               }
             })()
@@ -114,7 +115,7 @@ export async function createMockLLMServer(
             // Properly escape JSON content
             const escapedContent = JSON.stringify(content).slice(1, -1);
             res.write(
-              `data: {"choices":[{"delta":{"content":"${escapedContent}"},"index":0}]}\n\n`
+              `data: {"choices":[{"delta":{"content":"${escapedContent}"},"index":0}]}\n\n`,
             );
           });
         } else {
@@ -122,7 +123,7 @@ export async function createMockLLMServer(
           // Properly escape JSON content
           const escapedContent = JSON.stringify(responseText).slice(1, -1);
           res.write(
-            `data: {"choices":[{"delta":{"content":"${escapedContent}"},"index":0}]}\n\n`
+            `data: {"choices":[{"delta":{"content":"${escapedContent}"},"index":0}]}\n\n`,
           );
         }
 
@@ -187,7 +188,7 @@ export async function createMockLLMServer(
  */
 export function createMockLLMConfig(
   mockServer: MockLLMServer,
-  modelName: string = "gpt-4"
+  modelName: string = "gpt-4",
 ): string {
   return `name: Test Assistant
 version: 1.0.0
@@ -211,7 +212,7 @@ models:
  */
 export async function setupMockLLMTest(
   context: CLITestContext,
-  options: MockLLMServerOptions = {}
+  options: MockLLMServerOptions = {},
 ): Promise<MockLLMServer> {
   // Create mock server
   const mockServer = await createMockLLMServer(options);
@@ -226,7 +227,7 @@ export async function setupMockLLMTest(
   const onboardingFlagPath = path.join(
     context.testDir,
     ".continue",
-    ".onboarding_complete"
+    ".onboarding_complete",
   );
   await fs.mkdir(path.dirname(onboardingFlagPath), { recursive: true });
   await fs.writeFile(onboardingFlagPath, new Date().toISOString());
@@ -239,7 +240,7 @@ export async function setupMockLLMTest(
  * @param mockServer The mock server to clean up
  */
 export async function cleanupMockLLMServer(
-  mockServer: MockLLMServer
+  mockServer: MockLLMServer,
 ): Promise<void> {
   return new Promise((resolve) => {
     if (!mockServer?.server) {
@@ -272,7 +273,7 @@ export async function cleanupMockLLMServer(
         }
         resolveOnce();
       });
-      
+
       // Force close after a short timeout
       setTimeout(() => {
         if (mockServer.server.listening) {

@@ -1,7 +1,9 @@
-import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
-import telemetryService from "../telemetry/telemetryService.js";
-import logger from "../util/logger.js";
+import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { telemetryService } from "../telemetry/telemetryService.js";
+import { logger } from "../util/logger.js";
+
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { formatToolArgument } from "./formatters.js";
@@ -21,7 +23,8 @@ import { writeFileTool } from "./writeFile.js";
 
 export type { Tool, ToolCall, ToolParameters };
 
-const ALL_BUILTIN_TOOLS: Tool[] = [
+// Base tools that are always available
+const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   searchAndReplaceInFileTool,
@@ -30,24 +33,45 @@ const ALL_BUILTIN_TOOLS: Tool[] = [
   runTerminalCommandTool,
   fetchTool,
   writeChecklistTool,
-  // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
-  ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
 
-export const BUILTIN_TOOLS: Tool[] = (() => {
-  // Note: Tool filtering is now handled by the permission system
-  // This just returns all available tools, and the filtering happens
-  // at tool call time based on the current mode
-  return ALL_BUILTIN_TOOLS;
-})();
+// Export BUILTIN_TOOLS as the base set of tools
+// Dynamic tools (like exit tool in headless mode) are added separately
+export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
+
+// Get dynamic tools based on current state
+function getDynamicTools(): Tool[] {
+  const dynamicTools: Tool[] = [];
+
+  // Add headless-specific tools if in headless mode
+  try {
+    const serviceResult = getServiceSync<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+    );
+    const isHeadless = serviceResult.value?.isHeadless ?? false;
+    if (isHeadless) {
+      dynamicTools.push(exitTool);
+    }
+  } catch {
+    // Service not ready yet, no dynamic tools
+  }
+
+  return dynamicTools;
+}
+
+// Get all builtin tools including dynamic ones
+export function getAllBuiltinTools(): Tool[] {
+  return [...BUILTIN_TOOLS, ...getDynamicTools()];
+}
 
 export function getToolDisplayName(toolName: string): string {
-  const tool = BUILTIN_TOOLS.find((t) => t.name === toolName);
+  const allTools = getAllBuiltinTools();
+  const tool = allTools.find((t) => t.name === toolName);
   return tool?.displayName || toolName;
 }
 
 export function extractToolCalls(
-  response: string
+  response: string,
 ): Array<{ name: string; arguments: Record<string, any> }> {
   const toolCallRegex = /<tool>([\s\S]*?)<\/tool>/g;
   const matches = [...response.matchAll(toolCallRegex)];
@@ -63,7 +87,7 @@ export function extractToolCalls(
           arguments: toolCallJson.arguments,
         });
       }
-    } catch (e) {
+    } catch {
       logger.error("Failed to parse tool call:", { toolCall: match[1] });
     }
   }
@@ -88,8 +112,6 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
 }
 
 export async function getAvailableTools() {
-  const args = parseArgs();
-
   // Load MCP tools
   const mcpService = (await import('../services/index.js')).getServiceSync('mcp');
   const mcpTools: Tool[] = (mcpService as any)?.mcpService?.getTools().map((t: any) => ({
@@ -105,12 +127,12 @@ export async function getAvailableTools() {
     },
   })) || [];
 
-  const allTools: Tool[] = [...BUILTIN_TOOLS, ...mcpTools];
+  const allTools: Tool[] = [...getAllBuiltinTools(), ...mcpTools];
   return allTools;
 }
 
 export async function executeToolCall(
-  toolCall: PreprocessedToolCall
+  toolCall: PreprocessedToolCall,
 ): Promise<string> {
   const startTime = Date.now();
 
@@ -123,7 +145,7 @@ export async function executeToolCall(
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
-      toolCall.preprocessResult?.args ?? toolCall.arguments
+      toolCall.preprocessResult?.args ?? toolCall.arguments,
     );
     const duration = Date.now() - startTime;
 
@@ -134,7 +156,7 @@ export async function executeToolCall(
       undefined, // no error
       undefined, // no decision
       undefined, // no source
-      JSON.stringify(toolCall.arguments)
+      JSON.stringify(toolCall.arguments),
     );
 
     logger.debug("Tool execution completed", {
@@ -154,7 +176,7 @@ export async function executeToolCall(
       errorMessage,
       undefined, // no decision
       undefined, // no source
-      JSON.stringify(toolCall.arguments)
+      JSON.stringify(toolCall.arguments),
     );
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
@@ -169,7 +191,7 @@ export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
         toolCall.arguments[paramName] === null)
     ) {
       throw new Error(
-        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`
+        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`,
       );
     }
   }

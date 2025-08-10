@@ -1,14 +1,16 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useState } from "react";
+
 import { getAllSlashCommands } from "../commands/commands.js";
-import { modeService } from "../services/ModeService.js";
-import { reloadService, SERVICE_NAMES } from "../services/index.js";
 import type { PermissionMode } from "../permissions/types.js";
+import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
+import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
-import logger from "../util/logger.js";
-import FileSearchUI from "./FileSearchUI.js";
-import SlashCommandUI from "./SlashCommandUI.js";
+import { logger } from "../util/logger.js";
+
+import { FileSearchUI } from "./FileSearchUI.js";
+import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
@@ -73,12 +75,15 @@ const UserInput: React.FC<UserInputProps> = ({
     const currentIndex = modes.indexOf(currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     const nextMode = modes[nextIndex];
-    
+
     modeService.switchMode(nextMode);
-    
-    // Reload the tool permissions service to ensure the service container has the latest state
-    await reloadService(SERVICE_NAMES.TOOL_PERMISSIONS);
-    
+
+    // Update the service container with the new tool permissions state
+    // Since TOOL_PERMISSIONS was registered with registerValue(), we need to
+    // update its value directly rather than reloading from a factory
+    const updatedState = modeService.getToolPermissionService().getState();
+    serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
+
     // Show a brief indicator of the mode change
     // This will be reflected in the ModeIndicator component
     return nextMode;
@@ -91,7 +96,7 @@ const UserInput: React.FC<UserInputProps> = ({
       const trimmedText = text.trimStart();
       const beforeCursor = trimmedText.slice(
         0,
-        cursor - (text.length - trimmedText.length)
+        cursor - (text.length - trimmedText.length),
       );
 
       // Only show if cursor is after the slash and before any whitespace
@@ -103,15 +108,12 @@ const UserInput: React.FC<UserInputProps> = ({
           const allCommands = getSlashCommands();
           const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
 
-          // Hide selector if we have an exact match and there's more content after the cursor
+          // Hide selector if we have an exact match and there's a space after cursor
           if (exactMatch) {
             const restOfText = text.slice(cursor);
-            // If there's a space immediately after cursor, or we're at end of line/text, hide selector
-            if (
-              restOfText.startsWith(" ") ||
-              restOfText === "" ||
-              restOfText.startsWith("\n")
-            ) {
+            // Only hide if there's a space or newline immediately after cursor
+            // Don't hide just because we're at the end - user might want to see the suggestion
+            if (restOfText.startsWith(" ") || restOfText.startsWith("\n")) {
               setShowSlashCommands(false);
               return;
             }
@@ -168,7 +170,7 @@ const UserInput: React.FC<UserInputProps> = ({
     const allCommands = getSlashCommands();
     return allCommands
       .filter((cmd) =>
-        cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase())
+        cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase()),
       )
       .sort((a, b) => {
         const aStartsWith = a.name
@@ -250,7 +252,7 @@ const UserInput: React.FC<UserInputProps> = ({
 
     // Handle Shift+Tab to cycle through modes
     if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
-      cycleModes().catch(error => {
+      cycleModes().catch((error) => {
         logger.error("Failed to cycle modes:", error);
       });
       return;
@@ -289,14 +291,14 @@ const UserInput: React.FC<UserInputProps> = ({
 
       if (key.upArrow) {
         setSelectedCommandIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredCommands.length - 1
+          prev > 0 ? prev - 1 : filteredCommands.length - 1,
         );
         return;
       }
 
       if (key.downArrow) {
         setSelectedCommandIndex((prev) =>
-          prev < filteredCommands.length - 1 ? prev + 1 : 0
+          prev < filteredCommands.length - 1 ? prev + 1 : 0,
         );
         return;
       }
@@ -322,14 +324,14 @@ const UserInput: React.FC<UserInputProps> = ({
         setSelectedFileIndex((prev) =>
           prev > 0
             ? prev - 1
-            : Math.max(0, Math.min(currentFiles.length - 1, 9))
+            : Math.max(0, Math.min(currentFiles.length - 1, 9)),
         );
         return;
       }
 
       if (key.downArrow) {
         setSelectedFileIndex((prev) =>
-          prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0
+          prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0,
         );
         return;
       }
@@ -369,7 +371,7 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       if (key.downArrow) {
-        const historyEntry = inputHistory.navigateDown(inputText);
+        const historyEntry = inputHistory.navigateDown();
         if (historyEntry !== null) {
           textBuffer.setText(historyEntry);
           textBuffer.setCursor(historyEntry.length);
@@ -547,4 +549,4 @@ const UserInput: React.FC<UserInputProps> = ({
   );
 };
 
-export default UserInput;
+export { UserInput };

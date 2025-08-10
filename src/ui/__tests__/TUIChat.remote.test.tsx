@@ -1,7 +1,8 @@
 import { render } from "ink-testing-library";
 import React from "react";
+
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import TUIChat from "../TUIChat.js";
+import { AppRoot } from "../AppRoot.js";
 
 describe("TUIChat - Remote Server Tests", () => {
   let context: any;
@@ -19,7 +20,7 @@ describe("TUIChat - Remote Server Tests", () => {
 
   it("renders in remote mode with remote URL", () => {
     const { lastFrame } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
     
@@ -30,7 +31,7 @@ describe("TUIChat - Remote Server Tests", () => {
 
   it("shows remote mode indicator", () => {
     const { lastFrame } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
     
@@ -40,7 +41,7 @@ describe("TUIChat - Remote Server Tests", () => {
 
   it("does not show service loading in remote mode", () => {
     const { lastFrame } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
     
@@ -53,7 +54,7 @@ describe("TUIChat - Remote Server Tests", () => {
 
   it("handles different remote URLs", () => {
     const { lastFrame } = render(
-      <TUIChat remoteUrl="https://api.example.com:8080" />
+      <AppRoot remoteUrl="https://api.example.com:8080" />
     );
     const frame = lastFrame();
     
@@ -64,7 +65,7 @@ describe("TUIChat - Remote Server Tests", () => {
 
   it("shows slash commands in remote mode", async () => {
     const { lastFrame, stdin } = render(
-      <TUIChat remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />
     );
 
     // Wait for initial render

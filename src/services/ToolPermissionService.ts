@@ -5,11 +5,14 @@ import {
   ToolPermissionPolicy,
   ToolPermissions,
 } from "../permissions/types.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
+
+import { BaseService } from "./BaseService.js";
 
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
+  isHeadless: boolean;
   modePolicyCount?: number; // Track how many policies are from mode vs other sources
   originalPolicies?: ToolPermissions; // Store original policies when switching modes
 }
@@ -17,41 +20,36 @@ export interface ToolPermissionServiceState {
 /**
  * Service for managing tool permissions with a single source of truth
  */
-export class ToolPermissionService {
-  private state: ToolPermissionServiceState = {
-    permissions: { policies: [] },
-    currentMode: "normal",
-    modePolicyCount: 0,
-  };
+export class ToolPermissionService extends BaseService<ToolPermissionServiceState> {
+  constructor() {
+    super("ToolPermissionService", {
+      permissions: { policies: [] },
+      currentMode: "normal",
+      isHeadless: false,
+      modePolicyCount: 0,
+    });
+  }
 
   /**
    * Generate mode-specific policies based on the current mode
    */
   private generateModePolicies(): ToolPermissionPolicy[] {
-    switch (this.state.currentMode) {
+    switch (this.currentState.currentMode) {
       case "plan":
         // Plan mode: Complete override - exclude all write operations, allow only reads
         return [
-          // Exclude all write tools with absolute priority (using actual tool names)
-          { tool: "write_file", permission: "exclude" },
-          { tool: "edit_file", permission: "exclude" },
-          { tool: "write_checklist", permission: "allow" },
-          { tool: "search_and_replace_in_file", permission: "exclude" },
-          { tool: "run_terminal_command", permission: "exclude" },
-          // Also exclude capitalized versions in case they exist
+          // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
           { tool: "Bash", permission: "exclude" },
-          // Allow all read tools (using actual tool names)
-          { tool: "read_file", permission: "allow" },
-          { tool: "list_files", permission: "allow" },
-          { tool: "search_code", permission: "allow" },
-          { tool: "fetch", permission: "allow" },
-          { tool: "view_diff", permission: "allow" },
-          // Also allow capitalized versions in case they exist
+          // Allow all read tools
           { tool: "Read", permission: "allow" },
+          { tool: "List", permission: "allow" },
+          { tool: "Search", permission: "allow" },
+          { tool: "Fetch", permission: "allow" },
+          { tool: "Diff", permission: "allow" },
           { tool: "Checklist", permission: "allow" },
           { tool: "NotebookRead", permission: "allow" },
           { tool: "LS", permission: "allow" },
@@ -85,15 +83,18 @@ export class ToolPermissionService {
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
+    isHeadless?: boolean;
   }): ToolPermissionServiceState {
-    logger.debug("Synchronously initializing ToolPermissionService", {
-      hasOverrides: !!runtimeOverrides,
-      mode: runtimeOverrides?.mode,
-    });
+    logger.debug("Synchronously initializing ToolPermissionService");
 
     // Set mode from overrides or default
     if (runtimeOverrides?.mode) {
-      this.state.currentMode = runtimeOverrides.mode;
+      this.setState({ currentMode: runtimeOverrides.mode });
+    }
+
+    // Set headless flag from overrides
+    if (runtimeOverrides?.isHeadless !== undefined) {
+      this.setState({ isHeadless: runtimeOverrides.isHeadless });
     }
 
     // Generate mode-specific policies first (highest priority)
@@ -103,8 +104,8 @@ export class ToolPermissionService {
     // For normal mode, combine with user configuration
     let allPolicies: ToolPermissionPolicy[];
     if (
-      this.state.currentMode === "plan" ||
-      this.state.currentMode === "auto"
+      this.currentState.currentMode === "plan" ||
+      this.currentState.currentMode === "auto"
     ) {
       // Absolute override: ignore all user configuration
       allPolicies = modePolicies;
@@ -118,23 +119,28 @@ export class ToolPermissionService {
       allPolicies = [...modePolicies, ...compiledPolicies];
     }
 
-    this.state = {
+    this.setState({
       permissions: { policies: allPolicies },
-      currentMode: this.state.currentMode,
+      currentMode: this.currentState.currentMode,
+      isHeadless: this.currentState.isHeadless,
       modePolicyCount: modePolicies.length,
-    };
+    });
 
-    return this.state;
+    // Mark as initialized since we're bypassing the async initialize flow
+    (this as any).isInitialized = true;
+
+    return this.getState();
   }
 
   /**
    * Initialize the tool permission service with runtime overrides (async version)
    */
-  async initialize(runtimeOverrides?: {
+  async doInitialize(runtimeOverrides?: {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
+    isHeadless?: boolean;
   }): Promise<ToolPermissionServiceState> {
     // Ensure permissions.yaml exists before loading
     await ensurePermissionsYamlExists();
@@ -144,30 +150,22 @@ export class ToolPermissionService {
   }
 
   /**
-   * Get the current permission state
-   */
-  getState(): ToolPermissionServiceState {
-    return this.state;
-  }
-
-  /**
    * Get the compiled permissions
    */
   getPermissions(): ToolPermissions {
-    return this.state.permissions;
+    return this.getState().permissions;
   }
 
   /**
    * Update permissions (e.g., when config changes)
    */
   updatePermissions(newPolicies: ToolPermissionPolicy[]) {
-    this.state = {
+    this.setState({
       permissions: { policies: newPolicies },
-      currentMode: this.state.currentMode,
       modePolicyCount: 0, // Reset since we're replacing all policies
-    };
+    });
     logger.debug(
-      `Updated tool permissions with ${newPolicies.length} policies`
+      `Updated tool permissions with ${newPolicies.length} policies`,
     );
   }
 
@@ -176,25 +174,27 @@ export class ToolPermissionService {
    */
   switchMode(newMode: PermissionMode): ToolPermissionServiceState {
     logger.debug(
-      `Switching from mode '${this.state.currentMode}' to '${newMode}'`
+      `Switching from mode '${this.currentState.currentMode}' to '${newMode}'`,
     );
 
     // Store original policies when leaving normal mode for the first time
     if (
-      this.state.currentMode === "normal" &&
+      this.currentState.currentMode === "normal" &&
       newMode !== "normal" &&
-      !this.state.originalPolicies
+      !this.currentState.originalPolicies
     ) {
       // Deep copy the policies array to preserve the original state
-      this.state.originalPolicies = {
-        policies: [...this.state.permissions.policies],
-      };
+      this.setState({
+        originalPolicies: {
+          policies: [...this.currentState.permissions.policies],
+        },
+      });
       logger.debug(
-        `Stored ${this.state.permissions.policies.length} original policies`
+        `Stored ${this.currentState.permissions.policies.length} original policies`,
       );
     }
 
-    this.state.currentMode = newMode;
+    this.currentState.currentMode = newMode;
 
     // Regenerate policies with the new mode
     const modePolicies = this.generateModePolicies();
@@ -207,21 +207,23 @@ export class ToolPermissionService {
       allPolicies = modePolicies;
     } else {
       // Normal mode: restore original policies if we have them
-      if (this.state.originalPolicies) {
+      if (this.currentState.originalPolicies) {
         // Restore the original user policies
         // When original policies were stored in normal mode, they had 0 mode policies
         // So we need to slice from the number of mode policies that were active when stored
         const originalModePolicyCount = 0; // Normal mode has no mode policies
         const originalNonModePolicies =
-          this.state.originalPolicies.policies.slice(originalModePolicyCount);
+          this.currentState.originalPolicies.policies.slice(
+            originalModePolicyCount,
+          );
         allPolicies = [...modePolicies, ...originalNonModePolicies];
         logger.debug(
-          `Restored ${originalNonModePolicies.length} original user policies`
+          `Restored ${originalNonModePolicies.length} original user policies`,
         );
       } else {
         // Fallback to existing behavior if no original policies stored
-        const existingPolicies = this.state.permissions.policies;
-        const previousModePolicyCount = this.state.modePolicyCount || 0;
+        const existingPolicies = this.currentState.permissions.policies;
+        const previousModePolicyCount = this.currentState.modePolicyCount || 0;
         const nonModePolicies =
           existingPolicies.length > previousModePolicyCount
             ? existingPolicies.slice(previousModePolicyCount)
@@ -230,23 +232,36 @@ export class ToolPermissionService {
       }
     }
 
-    this.state = {
-      ...this.state,
+    this.setState({
       permissions: { policies: allPolicies },
       currentMode: newMode,
       modePolicyCount: modePolicies.length,
-    };
+    });
 
     logger.debug(
-      `Mode switched to '${newMode}' with ${allPolicies.length} total policies`
+      `Mode switched to '${newMode}' with ${allPolicies.length} total policies`,
     );
-    return this.state;
+    return this.getState();
   }
 
   /**
    * Get the current permission mode
    */
   getCurrentMode(): PermissionMode {
-    return this.state.currentMode;
+    return this.currentState.currentMode;
+  }
+
+  /**
+   * Get the headless state
+   */
+  isHeadless(): boolean {
+    return this.currentState.isHeadless;
+  }
+
+  /**
+   * Override isReady to always return true since we initialize synchronously
+   */
+  override isReady(): boolean {
+    return true;
   }
 }

@@ -1,20 +1,19 @@
-import chalk from "chalk";
 import * as fs from "fs";
-import open from "open";
-import * as os from "os";
 import * as path from "path";
-import { createInterface } from "readline";
-import { env } from "../env.js";
 
+import chalk from "chalk";
 // Polyfill fetch for Node < 18
 import nodeFetch from "node-fetch";
+import open from "open";
+
 import { getApiClient } from "../config.js";
+import { env } from "../env.js";
 if (!globalThis.fetch) {
   globalThis.fetch = nodeFetch as unknown as typeof globalThis.fetch;
 }
 
 // Config file path
-const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
+const AUTH_CONFIG_PATH = path.join(env.continueHome, "auth.json");
 
 // Represents an authenticated user's configuration
 export interface AuthenticatedConfig {
@@ -30,8 +29,15 @@ export interface AuthenticatedConfig {
 
 // Represents configuration when using environment variable auth
 export interface EnvironmentAuthConfig {
+  /**
+   * This userId?: undefined; field a trick to help TypeScript differentiate between
+   * AuthenticatedConfig and EnvironmentAuthConfig. Otherwise AuthenticatedConfig is
+   * a possible subtype of EnvironmentAuthConfig and TypeScript gets confused where
+   * type guards are involved.
+   */
+  userId?: undefined;
   accessToken: string;
-  organizationId: null; // Environment auth always uses personal organization
+  organizationId: string | null; // Can be set via --org flag in headless mode
   configUri?: string; // Optional config URI (file:// or slug://owner/slug)
   modelName?: string; // Name of the selected model
 }
@@ -43,7 +49,7 @@ export type AuthConfig = AuthenticatedConfig | EnvironmentAuthConfig | null;
  * Type guard to check if config is authenticated via file-based auth
  */
 export function isAuthenticatedConfig(
-  config: AuthConfig
+  config: AuthConfig,
 ): config is AuthenticatedConfig {
   return config !== null && "userId" in config;
 }
@@ -52,7 +58,7 @@ export function isAuthenticatedConfig(
  * Type guard to check if config is authenticated via environment variable
  */
 export function isEnvironmentAuthConfig(
-  config: AuthConfig
+  config: AuthConfig,
 ): config is EnvironmentAuthConfig {
   return config !== null && !("userId" in config);
 }
@@ -259,7 +265,11 @@ export function isAuthenticated(): boolean {
     return true;
   }
 
-  // Check if token is expired
+  /**
+   * THIS CODE DOESN'T WORK.
+   * .catch() will never return in a non-async function.
+   * It's a hallucination.
+   **/
   if (Date.now() > config.expiresAt) {
     // Try refreshing the token
     refreshToken(config.refreshToken).catch(() => {
@@ -269,23 +279,6 @@ export function isAuthenticated(): boolean {
   }
 
   return true;
-}
-
-/**
- * Prompt the user for input
- */
-function prompt(question: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer);
-    });
-  });
 }
 
 /**
@@ -319,7 +312,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: params,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -330,7 +323,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
   } catch (error: any) {
     console.error(
       chalk.red("Device authorization error:"),
-      error.message || error
+      error.message || error,
     );
     throw error;
   }
@@ -342,7 +335,7 @@ async function requestDeviceAuthorization(): Promise<DeviceAuthorizationResponse
 async function pollForDeviceToken(
   deviceCode: string,
   interval: number,
-  expiresIn: number
+  expiresIn: number,
 ): Promise<AuthenticatedConfig> {
   const startTime = Date.now();
   const expirationTime = startTime + expiresIn * 1000;
@@ -367,7 +360,7 @@ async function pollForDeviceToken(
           method: "POST",
           headers,
           body: params,
-        }
+        },
       );
 
       if (response.ok) {
@@ -398,21 +391,21 @@ async function pollForDeviceToken(
         // Log response details for debugging
         if (response.status === 401) {
           throw new Error(
-            "Oops! We had trouble authenticating. Please try again and reach out if the error persists."
+            "Oops! We had trouble authenticating. Please try again and reach out if the error persists.",
           );
         }
 
         if (errorCode === "authorization_pending") {
           // Continue polling
           await new Promise((resolve) =>
-            setTimeout(resolve, currentInterval * 1000)
+            setTimeout(resolve, currentInterval * 1000),
           );
           continue;
         } else if (errorCode === "slow_down") {
           // Increase polling interval
           currentInterval += 5;
           await new Promise((resolve) =>
-            setTimeout(resolve, currentInterval * 1000)
+            setTimeout(resolve, currentInterval * 1000),
           );
           continue;
         } else if (errorCode === "access_denied") {
@@ -436,7 +429,7 @@ async function pollForDeviceToken(
  * Refreshes the access token using a refresh token
  */
 async function refreshToken(
-  refreshToken: string
+  refreshToken: string,
 ): Promise<AuthenticatedConfig> {
   try {
     // Load existing config to preserve organizationId and other fields
@@ -499,7 +492,7 @@ export async function login(): Promise<AuthConfig> {
   // If CONTINUE_API_KEY environment variable exists, use that instead
   if (process.env.CONTINUE_API_KEY) {
     console.info(
-      chalk.green("Using CONTINUE_API_KEY from environment variables")
+      chalk.green("Using CONTINUE_API_KEY from environment variables"),
     );
     return {
       accessToken: process.env.CONTINUE_API_KEY,
@@ -513,18 +506,20 @@ export async function login(): Promise<AuthConfig> {
   const deviceAuth = await requestDeviceAuthorization();
 
   console.info(
-    chalk.white(`Your authentication code: ${chalk.bold(deviceAuth.user_code)}`)
+    chalk.white(
+      `Your authentication code: ${chalk.bold(deviceAuth.user_code)}`,
+    ),
   );
   console.info(
     chalk.dim(
-      `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`
-    )
+      `If the browser doesn't automatically open, use this link: ${deviceAuth.verification_uri_complete}`,
+    ),
   );
 
   // Try to open the complete verification URL in browser
   try {
     await open(deviceAuth.verification_uri_complete);
-  } catch (error) {
+  } catch {
     console.info(chalk.yellow("Unable to open browser automatically"));
   }
 
@@ -534,7 +529,7 @@ export async function login(): Promise<AuthConfig> {
   const authConfig = await pollForDeviceToken(
     deviceAuth.device_code,
     deviceAuth.interval,
-    deviceAuth.expires_in
+    deviceAuth.expires_in,
   );
 
   console.info(chalk.white("✅ Success!"));
@@ -543,14 +538,74 @@ export async function login(): Promise<AuthConfig> {
 }
 
 /**
+ * Helper function to resolve organization by slug
+ */
+async function resolveOrganizationBySlug(
+  apiClient: ReturnType<typeof getApiClient>,
+  organizationSlug: string,
+): Promise<{ id: string; slug: string }> {
+  const resp = await apiClient.listOrganizations();
+  const organizations = resp.organizations;
+
+  // Find organization by slug (case-insensitive)
+  const matchedOrg = organizations.find(
+    (org) => org?.slug?.toLowerCase() === organizationSlug.toLowerCase(),
+  );
+
+  if (matchedOrg) {
+    return { id: matchedOrg.id, slug: matchedOrg.slug };
+  } else {
+    // Organization not found - show available options
+    const availableSlugs = organizations
+      .map((org) => org?.slug)
+      .filter(Boolean);
+    const availableOptions = ["personal", ...availableSlugs];
+    console.info(
+      chalk.yellow("Available organizations:"),
+      availableOptions.join(", "),
+    );
+
+    throw new Error(`Organization "${organizationSlug}" not found`);
+  }
+}
+
+/**
  * Ensures the user has selected an organization, automatically selecting the first one if available
  */
 export async function ensureOrganization(
   authConfig: AuthConfig,
-  isHeadless: boolean = false
+  isHeadless: boolean = false,
+  cliOrganizationSlug?: string,
 ): Promise<AuthConfig> {
-  // If using CONTINUE_API_KEY environment variable, don't require organization selection
-  if (isEnvironmentAuthConfig(authConfig)) {
+  // Handle CLI organization slug if provided (undefined means no --org flag or --org personal)
+  if (cliOrganizationSlug) {
+    // Only allow --org flag in headless mode
+    if (!isHeadless) {
+      console.error(
+        chalk.red(
+          "The --org flag is only supported in headless mode (with -p/--print flag)",
+        ),
+      );
+      process.exit(1);
+    }
+
+    // For environment auth configs
+    if (isEnvironmentAuthConfig(authConfig)) {
+      const apiClient = getApiClient(authConfig.accessToken);
+
+      const resolvedOrg = await resolveOrganizationBySlug(
+        apiClient,
+        cliOrganizationSlug,
+      );
+
+      // Return modified environment auth config with organization ID
+      return {
+        ...authConfig,
+        organizationId: resolvedOrg.id,
+      };
+    }
+  } else if (isEnvironmentAuthConfig(authConfig)) {
+    // No CLI organization slug (or "personal" was specified) - return as-is
     return authConfig;
   }
 
@@ -560,7 +615,24 @@ export async function ensureOrganization(
   }
 
   // TypeScript now knows authConfig is AuthenticatedConfig
-  const authenticatedConfig = authConfig;
+  const authenticatedConfig: AuthenticatedConfig = authConfig;
+
+  // If a CLI organization slug is provided, try to use it (for authenticated configs)
+  if (cliOrganizationSlug) {
+    const apiClient = getApiClient(authenticatedConfig.accessToken);
+
+    const resolvedOrg = await resolveOrganizationBySlug(
+      apiClient,
+      cliOrganizationSlug,
+    );
+
+    const updatedConfig: AuthenticatedConfig = {
+      ...authenticatedConfig,
+      organizationId: resolvedOrg.id,
+    };
+    saveAuthConfig(updatedConfig);
+    return updatedConfig;
+  }
 
   // If already have organization ID (including null for personal), return as-is
   if (authenticatedConfig.organizationId !== undefined) {
@@ -625,7 +697,7 @@ export async function ensureOrganization(
   } catch (error: any) {
     console.error(
       chalk.red("Error fetching organizations:"),
-      error.response?.data?.message || error.message || error
+      error.response?.data?.message || error.message || error,
     );
     console.info(chalk.yellow("Continuing without organization selection."));
     const updatedConfig: AuthenticatedConfig = {
@@ -647,7 +719,7 @@ export async function ensureOrganization(
  * Gets the list of available organizations for the user
  */
 export async function listUserOrganizations(): Promise<
-  { id: string; name: string }[] | null
+  { id: string; name: string; slug: string }[] | null
 > {
   const authConfig = loadAuthConfig();
 
@@ -664,8 +736,15 @@ export async function listUserOrganizations(): Promise<
 
   try {
     const resp = await apiClient.listOrganizations();
-    return resp.organizations || [];
-  } catch (error) {
+    // Map the organizations to include slug field
+    return (
+      resp.organizations?.map((org) => ({
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+      })) || []
+    );
+  } catch {
     return null;
   }
 }
@@ -684,9 +763,8 @@ export async function hasMultipleOrganizations(): Promise<boolean> {
  */
 export function logout(): void {
   const onboardingFlagPath = path.join(
-    os.homedir(),
-    ".continue",
-    ".onboarding_complete"
+    env.continueHome,
+    ".onboarding_complete",
   );
 
   // Remove onboarding completion flag so user will go through onboarding again
@@ -697,8 +775,8 @@ export function logout(): void {
   if (process.env.CONTINUE_API_KEY) {
     console.info(
       chalk.yellow(
-        "Using CONTINUE_API_KEY from environment variables, nothing to log out"
-      )
+        "Using CONTINUE_API_KEY from environment variables, nothing to log out",
+      ),
     );
     return;
   }

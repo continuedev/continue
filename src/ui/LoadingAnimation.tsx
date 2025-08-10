@@ -1,78 +1,6 @@
 import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 
-const SPINNER_BARS = "▁▂▃▄▅▆▇█▇▆▅▄▃▁";
-const SPINNER_BLOCKS = "▉▊▋▌▍▎▏▎▍▌▋▊▉";
-const SPINNER_CORNERS = "▖▘▝▗";
-const SPINNER_CLASSIC = "-/|\\-/|";
-const SPINNER_BOX = "┤┘┴└├┌┬┐";
-const SPINNER_DOUBLE_BARS = [
-  "▁▁",
-  "▁▂",
-  "▁▃",
-  "▁▄",
-  "▁▅",
-  "▁▆",
-  "▁▇",
-  "▁█",
-  "▂▇",
-  "▃▆",
-  "▄▅",
-  "▅▄",
-  "▆▃",
-  "▇▂",
-  "█▁",
-  "▇▁",
-  "▆▁",
-  "▅▁",
-  "▄▁",
-  "▃▁",
-  "▂▁",
-];
-const SPINNER_SHADES = "░▒▓█▓▒░";
-const SPINNER_RINGS = "○◔◑◕●◐◓◑◒";
-const SPINNER_SPARKLES = "✢✣✤✥✦✧✬✱✲✳✴✵✶✷✸";
-const SPINNER_PULSE = "·∙●⬤●∙·";
-const MITOSIS_FRAMES = [
-  "●",
-  "●●",
-  "● ●", // regular space
-  "●\u2004●", // 1/3 em space
-  "●\u2002●", // 1/2 em space
-  "● ●", // regular space
-  "●●",
-  "●",
-];
-
-const DANCING_NOTES_FRAMES = [
-  "♪   ",
-  "♫   ",
-  "♪ ♫ ",
-  "♫ ♪ ",
-  "♬ ♩ ",
-  "♩ ♬ ",
-  "♫ ♪ ",
-  "♪ ♫ ",
-  "♫   ",
-  "♪   ",
-];
-const MITOSIS_2 = [
-  "⚬  ",
-  "⚭  ",
-  "⚮  ",
-  "⚯  ",
-  "○ ○",
-  "⚯  ",
-  "⚮  ",
-  "⚭  ",
-  "⚬  ",
-];
-
-// Generate all possible Braille characters (from U+2800 to U+28FF)
-const BRAILLE_CHARS = Array.from({ length: 256 }, (_, i) =>
-  String.fromCharCode(0x2800 + i)
-);
-
 const BRAILLE_BY_DENSITY: { [key: number]: string[] } = {
   0: ["⠀"], // No dots
   1: ["⠁", "⠂", "⠄", "⠈", "⠐", "⠠", "⡀", "⢀"], // 1 dot
@@ -90,13 +18,13 @@ const generateDensityFrame = (dotCount: number): string => {
   const chars = BRAILLE_BY_DENSITY[Math.min(8, Math.max(0, dotCount))];
   return Array.from(
     { length: 3 },
-    () => chars[Math.floor(Math.random() * chars.length)]
+    () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
 };
 
 // Helper function to generate eased static fade animation with full timing control
 const generateEasedStaticFade = (
-  timingCurve: number[] = [3, 3, 2, 1, 1, 1, 2, 3, 3]
+  timingCurve: number[] = [3, 3, 2, 1, 1, 1, 2, 3, 3],
 ): string[] => {
   const frames: string[] = [];
 
@@ -136,11 +64,6 @@ const STATIC_FADE = [
   ...generateEasedStaticFade(TIMING_CURVE),
 ];
 
-// Linear (same speed throughout)
-const STATIC_FADE_LINEAR = generateEasedStaticFade([2, 2, 2, 2, 2, 2, 2, 2, 2]);
-
-const STARS = "·+✣✤✻✽❊❈❈❈❈❊✽✻✤✣+";
-
 const SPINNER: string | string[] = STATIC_FADE;
 
 interface LoadingAnimationProps {
@@ -171,4 +94,4 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   return <Text color={color}>{animationChars[currentIndex]}</Text>;
 };
 
-export default LoadingAnimation;
+export { LoadingAnimation };

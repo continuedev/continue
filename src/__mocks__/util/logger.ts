@@ -1,11 +1,13 @@
+import { vi } from "vitest";
+
 const mockLogger: any = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  child: jest.fn((): any => mockLogger),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  child: vi.fn((): any => mockLogger),
 };
 
 export default mockLogger;
-export const getLogPath = jest.fn(() => "/mock/log/path");
-export const getSessionId = jest.fn(() => "mock-session-id");
+export const getLogPath = vi.fn(() => "/mock/log/path");
+export const getSessionId = vi.fn(() => "mock-session-id");

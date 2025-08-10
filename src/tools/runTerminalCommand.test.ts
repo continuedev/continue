@@ -1,6 +1,16 @@
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 
 describe("runTerminalCommandTool", () => {
+  const TEST_TIMEOUT_MS = 1000; // 1 second for tests
+  
+  beforeAll(() => {
+    process.env.NODE_ENV = 'test';
+    process.env.TEST_TERMINAL_TIMEOUT = String(TEST_TIMEOUT_MS);
+  });
+
+  afterAll(() => {
+    delete process.env.TEST_TERMINAL_TIMEOUT;
+  });
   describe("basic command execution", () => {
     it("should execute simple echo command and return stdout", async () => {
       const result = await runTerminalCommandTool.run({ command: "echo 'hello world'" });
@@ -12,10 +22,18 @@ describe("runTerminalCommandTool", () => {
       expect(result.trim()).toMatch(/^\/.*$/); // Should be an absolute path
     });
 
-    it("should execute ls command and return file listings", async () => {
-      const result = await runTerminalCommandTool.run({ command: "ls -la ." });
-      expect(result).toContain(".");
-      expect(result).toContain("..");
+    it("should execute directory listing command and return file listings", async () => {
+      // Use a cross-platform command that works on both Unix and Windows
+      const command = process.platform === 'win32' ? 'dir' : 'ls -la .';
+      const result = await runTerminalCommandTool.run({ command });
+      
+      // On Windows, look for <DIR> entries, on Unix look for . and ..
+      if (process.platform === 'win32') {
+        expect(result).toContain(".");
+      } else {
+        expect(result).toContain(".");
+        expect(result).toContain("..");
+      }
     });
 
     it("should handle commands with multiple arguments", async () => {
@@ -48,57 +66,64 @@ describe("runTerminalCommandTool", () => {
   });
 
   describe("timeout functionality", () => {
-    it("should timeout commands that produce no output for 30+ seconds", async () => {
-      // Create a command that sleeps for 35 seconds without producing output
+    it("should timeout commands that produce no output for configured duration", async () => {
+      // Create a command that sleeps longer than the timeout
+      const sleepDuration = TEST_TIMEOUT_MS / 1000 + 0.5; // Sleep 0.5s longer than timeout
       const startTime = Date.now();
-      const result = await runTerminalCommandTool.run({ command: "sleep 35" });
+      const result = await runTerminalCommandTool.run({ command: `sleep ${sleepDuration}` });
       const endTime = Date.now();
+      const elapsed = endTime - startTime;
       
-      // Should timeout in roughly 30 seconds, not 35
-      expect(endTime - startTime).toBeLessThan(32000);
-      expect(endTime - startTime).toBeGreaterThan(29000);
-      expect(result).toContain("[Command timed out after 30 seconds of no output]");
-    }, 35000); // Set Jest timeout to 35 seconds for this test
+      // Should timeout within a reasonable margin of the configured timeout
+      expect(elapsed).toBeLessThan(TEST_TIMEOUT_MS + 200); // Allow 200ms margin
+      expect(elapsed).toBeGreaterThan(TEST_TIMEOUT_MS - 100); // Allow 100ms margin
+      expect(result).toContain(`[Command timed out after ${TEST_TIMEOUT_MS / 1000} seconds of no output]`);
+    }, TEST_TIMEOUT_MS + 2000); // Set Jest timeout with buffer
 
     it("should not timeout commands that continuously produce output", async () => {
-      // Create a command that produces output every second for 5 seconds
+      // Create a command that produces output at intervals shorter than timeout
+      const outputInterval = TEST_TIMEOUT_MS / 1000 / 3; // Output 3 times within timeout period
+      const iterations = 3;
       const startTime = Date.now();
       const result = await runTerminalCommandTool.run({ 
-        command: "for i in 1 2 3 4 5; do echo \"output $i\"; sleep 1; done" 
+        command: `for i in $(seq 1 ${iterations}); do echo "output $i"; sleep ${outputInterval}; done` 
       });
       const endTime = Date.now();
       
-      // Should complete normally in about 5 seconds
-      expect(endTime - startTime).toBeLessThan(10000);
+      // Should complete normally
+      expect(endTime - startTime).toBeLessThan(TEST_TIMEOUT_MS * 2);
       expect(result).toContain("output 1");
-      expect(result).toContain("output 5");
+      expect(result).toContain(`output ${iterations}`);
       expect(result).not.toContain("[Command timed out");
-    }, 15000); // Set Jest timeout to 15 seconds for this test
+    }, TEST_TIMEOUT_MS * 3); // Set Jest timeout with buffer
 
     it("should reset timeout when command produces stderr output", async () => {
       // Create a command that produces stderr output periodically
+      const outputInterval = TEST_TIMEOUT_MS / 1000 / 3; // Output 3 times within timeout period
+      const iterations = 3;
       const startTime = Date.now();
       const result = await runTerminalCommandTool.run({ 
-        command: "for i in 1 2 3; do echo \"error $i\" >&2; sleep 1; done; echo 'done'" 
+        command: `for i in $(seq 1 ${iterations}); do echo "error $i" >&2; sleep ${outputInterval}; done; echo 'done'` 
       });
       const endTime = Date.now();
       
-      // Should complete normally in about 3 seconds
-      expect(endTime - startTime).toBeLessThan(8000);
+      // Should complete normally
+      expect(endTime - startTime).toBeLessThan(TEST_TIMEOUT_MS * 2);
       expect(result).toContain("done");
       expect(result).toContain("Stderr: error 1");
       expect(result).not.toContain("[Command timed out");
-    }, 12000); // Set Jest timeout to 12 seconds for this test
+    }, TEST_TIMEOUT_MS * 3); // Set Jest timeout with buffer
 
     it("should include partial output when timing out", async () => {
       // Create a command that produces some output then stops
+      const sleepDuration = TEST_TIMEOUT_MS / 1000 + 0.5; // Sleep longer than timeout
       const result = await runTerminalCommandTool.run({ 
-        command: "echo 'initial output'; sleep 35" 
+        command: `echo 'initial output'; sleep ${sleepDuration}` 
       });
       
       expect(result).toContain("initial output");
-      expect(result).toContain("[Command timed out after 30 seconds of no output]");
-    }, 35000); // Set Jest timeout to 35 seconds for this test
+      expect(result).toContain(`[Command timed out after ${TEST_TIMEOUT_MS / 1000} seconds of no output]`);
+    }, TEST_TIMEOUT_MS + 2000); // Set Jest timeout with buffer
   });
 
   describe("output handling", () => {

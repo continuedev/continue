@@ -1,7 +1,8 @@
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import logger from "./util/logger.js";
+
+import { logger } from "./util/logger.js";
 
 export function getVersion(): string {
   try {
@@ -10,19 +11,19 @@ export function getVersion(): string {
     const packageJsonPath = join(__dirname, "../package.json");
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
     return packageJson.version;
-  } catch (error) {
+  } catch {
     console.warn("Warning: Could not read version from package.json");
     return "unknown";
   }
 }
 
 export async function getLatestVersion(
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<string | null> {
   try {
     const response = await fetch(
       "https://registry.npmjs.org/@continuedev/cli/latest",
-      { signal }
+      { signal },
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -41,7 +42,7 @@ export async function getLatestVersion(
 
 export function compareVersions(
   current: string,
-  latest: string
+  latest: string,
 ): "newer" | "same" | "older" {
   if (current === "unknown" || latest === "unknown") {
     return "same";

@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 import {
   FQSN,
   PlatformClient,
@@ -6,19 +9,18 @@ import {
 } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api";
 import * as dotenv from "dotenv";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
+
+import { env } from "./env.js";
 
 export class CLIPlatformClient implements PlatformClient {
   constructor(
     private orgScopeId: string | null,
-    private readonly apiClient: DefaultApiInterface
+    private readonly apiClient: DefaultApiInterface,
   ) {}
 
   private findSecretInEnvFile(
     filePath: string,
-    secretName: string
+    secretName: string,
   ): string | undefined {
     try {
       if (!fs.existsSync(filePath)) return undefined;
@@ -30,7 +32,7 @@ export class CLIPlatformClient implements PlatformClient {
       console.warn(
         `Error reading .env file at ${filePath}: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
       return undefined;
     }
@@ -40,7 +42,7 @@ export class CLIPlatformClient implements PlatformClient {
     // Check in priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
     const workspaceDir = process.cwd();
     const envPaths = [
-      path.join(os.homedir(), ".continue", ".env"),
+      path.join(env.continueHome, ".env"),
       path.join(workspaceDir, ".continue", ".env"),
       path.join(workspaceDir, ".env"),
     ];
@@ -69,7 +71,7 @@ export class CLIPlatformClient implements PlatformClient {
     }
 
     const results: (SecretResult | undefined)[] = new Array(fqsns.length).fill(
-      undefined
+      undefined,
     );
 
     // Try to resolve secrets through the API client first
@@ -91,7 +93,7 @@ export class CLIPlatformClient implements PlatformClient {
       console.warn(
         `Error resolving FQSNs through API: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
 

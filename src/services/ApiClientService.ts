@@ -1,43 +1,40 @@
 import { AuthConfig } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
-import logger from "../util/logger.js";
+import { logger } from "../util/logger.js";
+
+import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { ApiClientServiceState } from "./types.js";
 
 /**
  * Service for managing API client state
  * Provides access to the Continue SDK API client
  */
-export class ApiClientService {
-  private currentState: ApiClientServiceState = {
-    apiClient: null,
-  };
+export class ApiClientService
+  extends BaseService<ApiClientServiceState>
+  implements ServiceWithDependencies
+{
+  constructor() {
+    super("ApiClientService", {
+      apiClient: null,
+    });
+  }
+
+  /**
+   * Declare dependencies on other services
+   */
+  getDependencies(): string[] {
+    return ["auth"];
+  }
 
   /**
    * Initialize the API client service
    */
-  async initialize(authConfig: AuthConfig): Promise<ApiClientServiceState> {
-    logger.debug("Initializing ApiClientService");
+  async doInitialize(authConfig: AuthConfig): Promise<ApiClientServiceState> {
+    const apiClient = getApiClient(authConfig?.accessToken);
 
-    try {
-      const apiClient = getApiClient(authConfig?.accessToken);
-
-      this.currentState = {
-        apiClient,
-      };
-
-      logger.debug("ApiClientService initialized successfully");
-      return this.currentState;
-    } catch (error: any) {
-      logger.error("Failed to initialize ApiClientService:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get current API client state
-   */
-  getState(): ApiClientServiceState {
-    return { ...this.currentState };
+    return {
+      apiClient,
+    };
   }
 
   /**
@@ -49,22 +46,23 @@ export class ApiClientService {
     try {
       const apiClient = getApiClient(authConfig?.accessToken);
 
-      this.currentState = {
+      this.setState({
         apiClient,
-      };
+      });
 
       logger.debug("ApiClientService updated successfully");
-      return this.currentState;
+      return this.getState();
     } catch (error: any) {
       logger.error("Failed to update ApiClientService:", error);
+      this.emit("error", error);
       throw error;
     }
   }
 
   /**
-   * Check if the API client is ready
+   * Override isReady to check for API client
    */
-  isReady(): boolean {
-    return this.currentState.apiClient !== null;
+  override isReady(): boolean {
+    return super.isReady() && this.currentState.apiClient !== null;
   }
 }

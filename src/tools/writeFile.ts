@@ -1,17 +1,20 @@
-import { createTwoFilesPatch } from "diff";
 import * as fs from "fs";
 import * as path from "path";
-import telemetryService from "../telemetry/telemetryService.js";
+
+import { createTwoFilesPatch } from "diff";
+
+import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
+
 import { Tool, ToolCallPreview } from "./types.js";
 
 export function generateDiff(
   oldContent: string,
   newContent: string,
-  filePath: string
+  filePath: string,
 ): string {
   return createTwoFilesPatch(
     filePath,
@@ -20,12 +23,12 @@ export function generateDiff(
     newContent,
     undefined,
     undefined,
-    { context: 3 }
+    { context: 3 },
   );
 }
 
 export const writeFileTool: Tool = {
-  name: "write_file",
+  name: "Write",
   displayName: "Write",
   description: "Write content to a file at the specified path",
   parameters: {
@@ -55,7 +58,7 @@ export const writeFileTool: Tool = {
           newContent,
           undefined,
           undefined,
-          { context: 2 }
+          { context: 2 },
         );
 
         return {
@@ -72,7 +75,7 @@ export const writeFileTool: Tool = {
           ],
         };
       }
-    } catch (e) {
+    } catch {
       // do nothing
     }
     const lines: string[] = args.content.split("\n");
@@ -121,7 +124,7 @@ export const writeFileTool: Tool = {
       if (oldContent) {
         const { added, removed } = calculateLinesOfCodeDiff(
           oldContent,
-          args.content
+          args.content,
         );
         const language = getLanguageFromFilePath(args.filepath);
 
@@ -132,7 +135,7 @@ export const writeFileTool: Tool = {
           telemetryService.recordLinesOfCodeModified(
             "removed",
             removed,
-            language
+            language,
           );
         }
 
@@ -145,7 +148,7 @@ export const writeFileTool: Tool = {
         telemetryService.recordLinesOfCodeModified(
           "added",
           lineCount,
-          language
+          language,
         );
 
         return `Successfully created file: ${args.filepath}`;

@@ -1,14 +1,17 @@
 import os from "node:os";
 
+import * as node_machine_id from 'node-machine-id';
 import type { PostHog as PostHogType } from "posthog-node";
 
-export class PosthogService {
+import { loadAuthConfig, isAuthenticatedConfig } from "../auth/workos.js";
+
+ export class PosthogService {
   private os: string | undefined;
   private uniqueId: string;
 
   constructor() {
     this.os = os.platform();
-    this.uniqueId = "NOT_UNIQUE";
+    this.uniqueId = this.getEventUserId();
   }
 
   get isEnabled() {
@@ -24,13 +27,28 @@ export class PosthogService {
           "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
           {
             host: "https://app.posthog.com",
-          }
+          },
         );
       }
     } else {
       this._client = undefined;
     }
     return this._client;
+  }
+
+  /**
+   * - Continue user id if signed in
+   * - Unique machine id if not signed in
+   */
+  private getEventUserId(): string {
+    const authConfig = loadAuthConfig();
+
+    if (isAuthenticatedConfig(authConfig)) {
+      return authConfig.userId;
+    }
+
+    // Fall back to unique machine id if not signed in
+    return node_machine_id.machineIdSync();
   }
 
   async capture(event: string, properties: { [key: string]: any }) {

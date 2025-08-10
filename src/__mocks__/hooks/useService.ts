@@ -1,13 +1,13 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
-export const useService = jest.fn(() => ({
+export const useService = vi.fn(() => ({
   value: null,
   state: "idle",
   error: null,
-  reload: jest.fn(() => Promise.resolve()),
+  reload: vi.fn(() => Promise.resolve()),
 }));
 
-export const useServices = jest.fn(() => ({
+export const useServices = vi.fn(() => ({
   services: {
     auth: { isAuthenticated: true },
     config: { config: { name: "test-assistant" } },

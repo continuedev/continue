@@ -16,7 +16,7 @@ export const ToolPermissionRequest: React.FC<ToolPermissionRequestProps> = ({
 }) => {
   const [responded, setResponded] = useState(false);
 
-  useInput((input, key) => {
+  useInput((input) => {
     if (responded) return;
 
     if (input === "y" || input === "Y") {

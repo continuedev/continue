@@ -1,18 +1,18 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 // Create mock objects that will be used by tests
-export const mockUseService = jest.fn();
-export const mockUseServices = jest.fn();
-export const mockUseChat = jest.fn();
+export const mockUseService = vi.fn();
+export const mockUseServices = vi.fn();
+export const mockUseChat = vi.fn();
 export const mockServiceContainer = {
-  getSync: jest.fn(),
-  isReady: jest.fn(),
-  on: jest.fn(),
-  off: jest.fn(),
-  load: jest.fn(),
-  reload: jest.fn(),
-  emit: jest.fn(),
-  setMaxListeners: jest.fn(),
+  getSync: vi.fn(),
+  isReady: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
+  load: vi.fn(),
+  reload: vi.fn(),
+  emit: vi.fn(),
+  setMaxListeners: vi.fn(),
 };
 
 export function createMinimalTestContext() {
@@ -21,7 +21,7 @@ export function createMinimalTestContext() {
     value: null,
     state: "idle",
     error: null,
-    reload: jest.fn(),
+    reload: vi.fn(),
   });
 
   mockUseServices.mockReturnValue({
@@ -33,17 +33,17 @@ export function createMinimalTestContext() {
 
   mockUseChat.mockReturnValue({
     messages: [],
-    setMessages: jest.fn(),
+    setMessages: vi.fn(),
     chatHistory: [],
-    setChatHistory: jest.fn(),
+    setChatHistory: vi.fn(),
     isWaitingForResponse: false,
     responseStartTime: null,
     inputMode: true,
     attachedFiles: [],
-    handleUserMessage: jest.fn(),
-    handleInterrupt: jest.fn(),
-    handleFileAttached: jest.fn(),
-    resetChatHistory: jest.fn(),
+    handleUserMessage: vi.fn(),
+    handleInterrupt: vi.fn(),
+    handleFileAttached: vi.fn(),
+    resetChatHistory: vi.fn(),
   });
 
   mockServiceContainer.getSync.mockReturnValue({
@@ -55,7 +55,7 @@ export function createMinimalTestContext() {
 
   return {
     cleanup: () => {
-      jest.clearAllMocks();
-    }
+      vi.clearAllMocks();
+    },
   };
 }

@@ -1,7 +1,9 @@
-import { Text, useStdout } from "ink";
+import { Text } from "ink";
 import React, { useEffect, useMemo, useState } from "react";
+
 import { compareVersions, getLatestVersion, getVersion } from "../version.js";
-import useTerminalSize from "./hooks/useTerminalSize.js";
+
+import { useTerminalSize } from "./hooks/useTerminalSize.js";
 
 interface UpdateNotificationProps {
   isRemoteMode?: boolean;
@@ -18,6 +20,11 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
   useEffect(() => {
     // Skip update check in test environment
     if (process.env.NODE_ENV === "test") {
+      return;
+    }
+
+    // Skip update check for development versions
+    if (currentVersion.endsWith("-dev")) {
       return;
     }
 
@@ -65,4 +72,4 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
   return <Text color="dim">{text}</Text>;
 };
 
-export default UpdateNotification;
+export { UpdateNotification };

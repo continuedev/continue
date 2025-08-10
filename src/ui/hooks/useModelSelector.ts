@@ -1,7 +1,11 @@
-import { useState } from "react";
-import { services, serviceContainer, SERVICE_NAMES } from "../../services/index.js";
-import { ModelServiceState } from "../../services/types.js";
 import { updateModelName } from "../../auth/workos.js";
+import {
+  services,
+  serviceContainer,
+  SERVICE_NAMES,
+} from "../../services/index.js";
+import { ModelServiceState } from "../../services/types.js";
+import { useNavigation } from "../context/NavigationContext.js";
 
 interface ModelOption {
   id: string;
@@ -23,24 +27,27 @@ export function useModelSelector({
   onMessage,
   onModelSwitch,
 }: UseModelSelectorProps) {
-  const [showModelSelector, setShowModelSelector] = useState(false);
+  const { closeCurrentScreen } = useNavigation();
 
   const handleModelSelect = async (model: ModelOption) => {
-    setShowModelSelector(false);
+    closeCurrentScreen();
 
     try {
       await services.model.switchModel(model.index);
       const modelInfo = services.model.getModelInfo();
-      
+
       // Update the service container to trigger re-renders
       const currentState = services.model.getState();
-      serviceContainer.set<ModelServiceState>(SERVICE_NAMES.MODEL, currentState);
-      
+      serviceContainer.set<ModelServiceState>(
+        SERVICE_NAMES.MODEL,
+        currentState,
+      );
+
       // Persist the model choice using the actual model name
       if (modelInfo?.name) {
         updateModelName(modelInfo.name);
       }
-      
+
       onMessage({
         role: "system",
         content: `Switched to model: ${modelInfo?.provider}/${modelInfo?.name}`,
@@ -60,18 +67,7 @@ export function useModelSelector({
     }
   };
 
-  const handleModelCancel = () => {
-    setShowModelSelector(false);
-  };
-
-  const showModelSelectorUI = () => {
-    setShowModelSelector(true);
-  };
-
   return {
-    showModelSelector,
     handleModelSelect,
-    handleModelCancel,
-    showModelSelectorUI,
   };
 }

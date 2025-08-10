@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+
 import {
   getOrganizationId,
   listUserOrganizations,
   loadAuthConfig,
 } from "../auth/workos.js";
-import Selector, { SelectorOption } from "./Selector.js";
+
+import { Selector, SelectorOption } from "./Selector.js";
 
 interface Organization extends SelectorOption {}
 
@@ -37,9 +39,10 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
         }
 
         const options: Organization[] = [
-          { 
-            id: "personal", 
-            name: "Personal"
+          {
+            id: "personal",
+            name: "Personal",
+            slug: "personal",
           },
           ...organizations,
         ];
@@ -79,4 +82,4 @@ const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
   );
 };
 
-export default OrganizationSelector;
+export { OrganizationSelector };

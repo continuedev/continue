@@ -1,82 +1,81 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi, constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
-import { getLlmApi } from '../config.js';
-import { AuthConfig, getAccessToken, getOrganizationId, getModelName } from '../auth/workos.js';
-import logger from '../util/logger.js';
-import { ModelServiceState } from './types.js';
+import { constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
+
+import {
+  AuthConfig,
+  getAccessToken,
+  getOrganizationId,
+  getModelName,
+} from "../auth/workos.js";
+import { getLlmApi } from "../config.js";
+import { logger } from "../util/logger.js";
+
+import { BaseService, ServiceWithDependencies } from "./BaseService.js";
+import { ModelServiceState } from "./types.js";
 
 /**
  * Service for managing LLM and model state
  * Depends on auth config and assistant config
  */
-export class ModelService {
-  private currentState: ModelServiceState = {
-    llmApi: null,
-    model: null
-  };
+export class ModelService
+  extends BaseService<ModelServiceState>
+  implements ServiceWithDependencies
+{
   private availableModels: ModelConfig[] = [];
   private assistant: AssistantUnrolled | null = null;
   private authConfig: AuthConfig | null = null;
 
-  /**
-   * Initialize the model service
-   */
-  async initialize(
-    assistant: AssistantUnrolled,
-    authConfig: AuthConfig
-  ): Promise<ModelServiceState> {
-    logger.debug('Initializing ModelService');
-    
-    try {
-      this.assistant = assistant;
-      this.authConfig = authConfig;
-      this.availableModels = (assistant.models?.filter((model) => 
-        model && model.roles?.includes("chat")
-      ) || []) as ModelConfig[];
-      
-      // Check if we have a persisted model name and use it if valid
-      const persistedModelName = getModelName(authConfig);
-      if (persistedModelName) {
-        const modelIndex = this.getModelIndexByName(persistedModelName);
-        if (modelIndex !== -1) {
-          // Use the persisted model
-          const state = await this.switchModel(modelIndex);
-          this.currentState = state;
-        } else {
-          // Model name not found, use default model selection
-          const [llmApi, model] = getLlmApi(assistant, authConfig);
-          this.currentState = {
-            llmApi,
-            model
-          };
-        }
-      } else {
-        // Use default model selection
-        const [llmApi, model] = getLlmApi(assistant, authConfig);
-        this.currentState = {
-          llmApi,
-          model
-        };
-      }
-
-      logger.debug('ModelService initialized successfully', {
-        modelProvider: this.currentState.model?.provider,
-        modelName: (this.currentState.model as any)?.name || 'unnamed',
-        availableModels: this.availableModels.length
-      });
-
-      return this.currentState;
-    } catch (error: any) {
-      logger.error('Failed to initialize ModelService:', error);
-      throw error;
-    }
+  constructor() {
+    super("ModelService", {
+      llmApi: null,
+      model: null,
+    });
   }
 
   /**
-   * Get current model state
+   * Declare dependencies on other services
    */
-  getState(): ModelServiceState {
-    return { ...this.currentState };
+  getDependencies(): string[] {
+    return ["auth", "config"];
+  }
+
+  /**
+   * Initialize the model service
+   */
+  async doInitialize(
+    assistant: AssistantUnrolled,
+    authConfig: AuthConfig,
+  ): Promise<ModelServiceState> {
+    this.assistant = assistant;
+    this.authConfig = authConfig;
+    this.availableModels = (assistant.models?.filter(
+      (model) => model && model.roles?.includes("chat"),
+    ) || []) as ModelConfig[];
+
+    // Check if we have a persisted model name and use it if valid
+    const persistedModelName = getModelName(authConfig);
+    if (persistedModelName) {
+      const modelIndex = this.getModelIndexByName(persistedModelName);
+      if (modelIndex !== -1) {
+        // Use the persisted model
+        const state = await this.switchModel(modelIndex);
+        return state;
+      } else {
+        // Model name not found, use default model selection
+        const [llmApi, model] = getLlmApi(assistant, authConfig);
+        return {
+          llmApi,
+          model,
+        };
+      }
+    } else {
+      // Use default model selection
+      const [llmApi, model] = getLlmApi(assistant, authConfig);
+      return {
+        llmApi,
+        model,
+      };
+    }
   }
 
   /**
@@ -84,42 +83,47 @@ export class ModelService {
    */
   async update(
     assistant: AssistantUnrolled,
-    authConfig: AuthConfig
+    authConfig: AuthConfig,
   ): Promise<ModelServiceState> {
-    logger.debug('Updating ModelService');
-    
+    logger.debug("Updating ModelService");
+
     try {
       this.assistant = assistant;
       this.authConfig = authConfig;
-      this.availableModels = (assistant.models?.filter((model) => 
-        model && model.roles?.includes("chat")
+      this.availableModels = (assistant.models?.filter(
+        (model) => model && model.roles?.includes("chat"),
       ) || []) as ModelConfig[];
-      
+
       const [llmApi, model] = getLlmApi(assistant, authConfig);
 
-      this.currentState = {
+      this.setState({
         llmApi,
-        model
-      };
-
-      logger.debug('ModelService updated successfully', {
-        modelProvider: model.provider,
-        modelName: (model as any).name || 'unnamed',
-        availableModels: this.availableModels.length
+        model,
       });
 
-      return this.currentState;
+      logger.debug("ModelService updated successfully", {
+        modelProvider: model.provider,
+        modelName: (model as any).name || "unnamed",
+        availableModels: this.availableModels.length,
+      });
+
+      return this.getState();
     } catch (error: any) {
-      logger.error('Failed to update ModelService:', error);
+      logger.error("Failed to update ModelService:", error);
+      this.emit("error", error);
       throw error;
     }
   }
 
   /**
-   * Check if the current model is ready for use
+   * Override isReady to check for required state
    */
-  isReady(): boolean {
-    return this.currentState.llmApi !== null && this.currentState.model !== null;
+  override isReady(): boolean {
+    return (
+      super.isReady() &&
+      this.currentState.llmApi !== null &&
+      this.currentState.model !== null
+    );
   }
 
   /**
@@ -132,18 +136,22 @@ export class ModelService {
 
     return {
       provider: this.currentState.model.provider,
-      name: (this.currentState.model as any).name || 'unnamed'
+      name: (this.currentState.model as any).name || "unnamed",
     };
   }
 
   /**
    * Get list of available chat models
    */
-  getAvailableChatModels(): Array<{ provider: string; name: string; index: number }> {
+  getAvailableChatModels(): Array<{
+    provider: string;
+    name: string;
+    index: number;
+  }> {
     return this.availableModels.map((model, index) => ({
       provider: model.provider,
-      name: (model as any).name || (model as any).model || 'unnamed',
-      index
+      name: (model as any).name || (model as any).model || "unnamed",
+      index,
     }));
   }
 
@@ -152,18 +160,20 @@ export class ModelService {
    */
   async switchModel(modelIndex: number): Promise<ModelServiceState> {
     if (!this.assistant || !this.authConfig) {
-      throw new Error('ModelService not initialized');
+      throw new Error("ModelService not initialized");
     }
 
     if (modelIndex < 0 || modelIndex >= this.availableModels.length) {
-      throw new Error(`Invalid model index: ${modelIndex}. Available models: 0-${this.availableModels.length - 1}`);
+      throw new Error(
+        `Invalid model index: ${modelIndex}. Available models: 0-${this.availableModels.length - 1}`,
+      );
     }
 
     const selectedModel = this.availableModels[modelIndex];
-    logger.debug('Switching to model', {
+    logger.debug("Switching to model", {
       modelIndex,
       provider: selectedModel.provider,
-      name: (selectedModel as any).name || 'unnamed'
+      name: (selectedModel as any).name || "unnamed",
     });
 
     try {
@@ -194,22 +204,23 @@ export class ModelService {
       const llmApi = constructLlmApi(config);
 
       if (!llmApi) {
-        throw new Error('Failed to initialize LLM with selected model');
+        throw new Error("Failed to initialize LLM with selected model");
       }
 
-      this.currentState = {
+      this.setState({
         llmApi,
-        model: selectedModel
-      };
-
-      logger.debug('Model switched successfully', {
-        modelProvider: selectedModel.provider,
-        modelName: (selectedModel as any).name || 'unnamed'
+        model: selectedModel,
       });
 
-      return this.currentState;
+      logger.debug("Model switched successfully", {
+        modelProvider: selectedModel.provider,
+        modelName: (selectedModel as any).name || "unnamed",
+      });
+
+      return this.getState();
     } catch (error: any) {
-      logger.error('Failed to switch model:', error);
+      logger.error("Failed to switch model:", error);
+      this.emit("error", error);
       throw error;
     }
   }
@@ -222,9 +233,10 @@ export class ModelService {
       return -1;
     }
 
-    return this.availableModels.findIndex(model => 
-      model.provider === this.currentState.model?.provider &&
-      (model as any).name === (this.currentState.model as any).name
+    return this.availableModels.findIndex(
+      (model) =>
+        model.provider === this.currentState.model?.provider &&
+        (model as any).name === (this.currentState.model as any).name,
     );
   }
 
@@ -232,14 +244,14 @@ export class ModelService {
    * Get model index by name and provider
    */
   getModelIndexByName(modelName: string, provider?: string): number {
-    return this.availableModels.findIndex(model => {
+    return this.availableModels.findIndex((model) => {
       const name = (model as any).name || (model as any).model;
       const nameMatches = name === modelName;
-      
+
       if (provider) {
         return nameMatches && model.provider === provider;
       }
-      
+
       return nameMatches;
     });
   }

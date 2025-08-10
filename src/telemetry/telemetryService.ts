@@ -1,3 +1,5 @@
+import os from "os";
+
 import { metrics } from "@opentelemetry/api";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
@@ -13,9 +15,9 @@ import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
-import os from "os";
 import { v4 as uuidv4 } from "uuid";
-import logger from "../util/logger.js";
+
+import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
 export interface TelemetryConfig {
@@ -108,13 +110,13 @@ class TelemetryService {
                     `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics` ||
                     "http://localhost:4318/v1/metrics",
                   headers: this.parseHeaders(
-                    process.env.OTEL_EXPORTER_OTLP_HEADERS || ""
+                    process.env.OTEL_EXPORTER_OTLP_HEADERS || "",
                   ),
                 }),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000"
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
                 ),
-              })
+              }),
             );
             break;
           case "console":
@@ -122,9 +124,9 @@ class TelemetryService {
               new PeriodicExportingMetricReader({
                 exporter: new ConsoleMetricExporter(),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000"
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
                 ),
-              })
+              }),
             );
             break;
         }
@@ -173,7 +175,7 @@ class TelemetryService {
       {
         description: "Count of CLI sessions started",
         unit: "count",
-      }
+      },
     );
 
     this.linesOfCodeCounter = this.meter.createCounter(
@@ -181,7 +183,7 @@ class TelemetryService {
       {
         description: "Count of lines of code modified",
         unit: "count",
-      }
+      },
     );
 
     this.pullRequestCounter = this.meter.createCounter(
@@ -189,7 +191,7 @@ class TelemetryService {
       {
         description: "Number of pull requests created",
         unit: "count",
-      }
+      },
     );
 
     this.commitCounter = this.meter.createCounter("continue.cli.commit.count", {
@@ -212,7 +214,7 @@ class TelemetryService {
       {
         description: "Count of code editing tool permission decisions",
         unit: "count",
-      }
+      },
     );
 
     this.activeTimeCounter = this.meter.createCounter(
@@ -220,7 +222,7 @@ class TelemetryService {
       {
         description: "Total active time in seconds",
         unit: "s",
-      }
+      },
     );
 
     // Additional Continue CLI specific metrics
@@ -229,7 +231,7 @@ class TelemetryService {
       {
         description: "Authentication attempts",
         unit: "{attempt}",
-      }
+      },
     );
 
     this.mcpConnectionsGauge = this.meter.createObservableGauge(
@@ -237,7 +239,7 @@ class TelemetryService {
       {
         description: "Active MCP connections",
         unit: "{connection}",
-      }
+      },
     );
 
     this.startupTimeHistogram = this.meter.createHistogram(
@@ -245,7 +247,7 @@ class TelemetryService {
       {
         description: "Time from CLI start to ready state",
         unit: "ms",
-      }
+      },
     );
 
     this.responseTimeHistogram = this.meter.createHistogram(
@@ -253,7 +255,7 @@ class TelemetryService {
       {
         description: "LLM response time metrics",
         unit: "ms",
-      }
+      },
     );
   }
 
@@ -263,7 +265,7 @@ class TelemetryService {
   }
 
   private getStandardAttributes(
-    additionalAttributes: Record<string, string> = {}
+    additionalAttributes: Record<string, string> = {},
   ) {
     const attributes: Record<string, string> = { ...additionalAttributes };
 
@@ -317,7 +319,7 @@ class TelemetryService {
   public recordLinesOfCodeModified(
     type: "added" | "removed",
     count: number,
-    language?: string
+    language?: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -350,7 +352,7 @@ class TelemetryService {
   public recordTokenUsage(
     tokens: number,
     type: "input" | "output" | "cacheRead" | "cacheCreation",
-    model: string
+    model: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -360,7 +362,7 @@ class TelemetryService {
   public recordCodeEditDecision(
     tool: string,
     decision: "accept" | "reject",
-    language?: string
+    language?: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -389,26 +391,26 @@ class TelemetryService {
 
       this.activeTimeCounter.add(
         this.totalActiveTime / 1000,
-        this.getStandardAttributes()
+        this.getStandardAttributes(),
       );
     }
   }
 
   public recordAuthAttempt(
     result: "success" | "failure" | "cancelled",
-    method: "workos" | "token"
+    method: "workos" | "token",
   ) {
     if (!this.isEnabled()) return;
 
     this.authAttemptsCounter.add(
       1,
-      this.getStandardAttributes({ result, method })
+      this.getStandardAttributes({ result, method }),
     );
   }
 
   public recordMCPConnection(
     serverName: string,
-    status: "connected" | "disconnected" | "error"
+    status: "connected" | "disconnected" | "error",
   ) {
     if (!this.isEnabled()) return;
 
@@ -423,7 +425,7 @@ class TelemetryService {
   public recordStartupTime(
     timeMs: number,
     mode?: "tui" | "headless" | "standard",
-    coldStart?: boolean
+    coldStart?: boolean,
   ) {
     if (!this.isEnabled()) return;
 
@@ -438,7 +440,7 @@ class TelemetryService {
     timeMs: number,
     model: string,
     metricType: "time_to_first_token" | "total_response_time",
-    hasTools?: boolean
+    hasTools?: boolean,
   ) {
     if (!this.isEnabled()) return;
 
@@ -476,7 +478,7 @@ class TelemetryService {
     error?: string,
     decision?: "accept" | "reject",
     source?: string,
-    toolParameters?: string
+    toolParameters?: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -504,7 +506,7 @@ class TelemetryService {
     error?: string,
     inputTokens?: number,
     outputTokens?: number,
-    costUsd?: number
+    costUsd?: number,
   ) {
     if (!this.isEnabled()) return;
 
@@ -545,4 +547,3 @@ class TelemetryService {
 
 // Export the singleton instance directly
 export const telemetryService = new TelemetryService();
-export default telemetryService;

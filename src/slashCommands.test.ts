@@ -1,28 +1,21 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from "@jest/globals";
-import type { AuthServiceState } from "./services/types.js";
-
 // Import after mocking
 import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { afterEach, beforeEach, describe, expect, vi, test } from "vitest";
+
 import * as workos from "./auth/workos.js";
 import * as commands from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
+import type { AuthServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
 
-// The imports are already mocked via jest.setup.ts, so we can use them directly
+// The imports are already mocked via vitest.setup.ts, so we can use them directly
 
 // Mock console to avoid output during tests
 const originalConsole = console;
 const mockConsole = {
-  info: jest.fn(),
-  error: jest.fn(),
-  log: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  log: vi.fn(),
 };
 
 describe("handleSlashCommands", () => {
@@ -34,14 +27,16 @@ describe("handleSlashCommands", () => {
 
   beforeEach(() => {
     Object.assign(console, mockConsole);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Since the mock already returns the required value, we don't need to set it
     // Just verify it returns what we expect
-    expect(commands.getAllSlashCommands(mockAssistant)).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: "help" }),
-      expect.objectContaining({ name: "login" }),
-    ]));
+    expect(commands.getAllSlashCommands(mockAssistant)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "help" }),
+        expect.objectContaining({ name: "login" }),
+      ])
+    );
   });
 
   afterEach(() => {
@@ -113,7 +108,9 @@ describe("handleSlashCommands", () => {
         { id: "org2", name: "Organization 2" },
       ];
 
-      (services.auth.getAvailableOrganizations as any).mockResolvedValue(mockOrgs);
+      (services.auth.getAvailableOrganizations as any).mockResolvedValue(
+        mockOrgs
+      );
 
       const result = await handleSlashCommands("/org list", mockAssistant);
 
@@ -163,9 +160,9 @@ describe("handleSlashCommands", () => {
       const result = await handleSlashCommands("/help", mockAssistant);
 
       expect(result).not.toBeNull();
-      expect(result?.output).toContain("Available commands:");
-      expect(result?.output).toContain("/help - Show help");
-      expect(result?.output).toContain("/login - Authenticate");
+      expect(result?.output).toContain("Slash commands:");
+      expect(result?.output).toContain("/help: Show help");
+      expect(result?.output).toContain("/login: Authenticate");
     });
 
     test.skip("logout command should exit", async () => {
@@ -188,6 +185,13 @@ describe("handleSlashCommands", () => {
       expect(result).not.toBeNull();
       expect(result?.clear).toBe(true);
       expect(result?.output).toBe("Chat history cleared");
+    });
+
+    test("compact command should work normally", async () => {
+      const result = await handleSlashCommands("/compact", mockAssistant);
+
+      expect(result).not.toBeNull();
+      expect(result?.compact).toBe(true);
     });
 
     test("non-slash input should return null", async () => {
