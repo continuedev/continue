@@ -78,7 +78,16 @@ export async function runOnboardingFlow(
     !process.stdin.isTTY;
 
   if (isTestEnv) {
-    // In test/CI environment, return a minimal working configuration
+    // In test/CI environment, check for ANTHROPIC_API_KEY first
+    if (process.env.ANTHROPIC_API_KEY) {
+      console.log(chalk.blue("✓ Using ANTHROPIC_API_KEY from environment"));
+      await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
+      console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
+      const result = await initialize(authConfig, CONFIG_PATH);
+      return { ...result, wasOnboarded: false };
+    }
+    
+    // Otherwise return a minimal working configuration
     const result = await initialize(authConfig, undefined);
     return { ...result, wasOnboarded: false };
   }
