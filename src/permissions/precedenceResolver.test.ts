@@ -44,7 +44,7 @@ describe("precedenceResolver", () => {
       ]);
     });
 
-    it("should normalize tool names in command line flags", () => {
+    it("should use exact tool names from command line flags", () => {
       const policies = resolvePermissionPrecedence({
         commandLineFlags: {
           allow: ["Read", "write", "BASH"],
@@ -55,8 +55,8 @@ describe("precedenceResolver", () => {
 
       expect(policies).toEqual([
         { tool: "Read", permission: "allow" },
-        { tool: "Write", permission: "allow" },
-        { tool: "Bash", permission: "allow" },
+        { tool: "write", permission: "allow" },
+        { tool: "BASH", permission: "allow" },
       ]);
     });
 

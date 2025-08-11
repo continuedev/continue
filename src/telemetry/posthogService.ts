@@ -1,11 +1,11 @@
 import os from "node:os";
 
-import * as node_machine_id from 'node-machine-id';
+import * as node_machine_id from "node-machine-id";
 import type { PostHog as PostHogType } from "posthog-node";
 
 import { loadAuthConfig, isAuthenticatedConfig } from "../auth/workos.js";
 
- export class PosthogService {
+export class PosthogService {
   private os: string | undefined;
   private uniqueId: string;
 

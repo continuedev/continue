@@ -120,7 +120,8 @@ If you want to create a new file, use:
     },
     edits: {
       type: "array",
-      description: "Array of edit operations to perform sequentially on the file",
+      description:
+        "Array of edit operations to perform sequentially on the file",
       required: true,
     },
   },
@@ -132,7 +133,9 @@ If you want to create a new file, use:
       throw new Error("file_path is required");
     }
     if (!edits || !Array.isArray(edits) || edits.length === 0) {
-      throw new Error("edits array is required and must contain at least one edit");
+      throw new Error(
+        "edits array is required and must contain at least one edit",
+      );
     }
 
     // Validate each edit operation
@@ -145,7 +148,9 @@ If you want to create a new file, use:
         throw new Error(`Edit ${i + 1}: new_string is required`);
       }
       if (edit.old_string === edit.new_string) {
-        throw new Error(`Edit ${i + 1}: old_string and new_string must be different`);
+        throw new Error(
+          `Edit ${i + 1}: old_string and new_string must be different`,
+        );
       }
     }
 
@@ -154,7 +159,7 @@ If you want to create a new file, use:
 
     if (isCreatingNewFile) {
       // For new file creation, check if parent directory exists
-      const parentDir = file_path.substring(0, file_path.lastIndexOf('/'));
+      const parentDir = file_path.substring(0, file_path.lastIndexOf("/"));
       if (parentDir && !fs.existsSync(parentDir)) {
         throw new Error(`Parent directory does not exist: ${parentDir}`);
       }
@@ -162,9 +167,11 @@ If you want to create a new file, use:
     } else {
       // For existing files, check if file has been read
       if (!hasFileBeenRead(file_path)) {
-        throw new Error(`You must use the Read tool to read ${file_path} before editing it.`);
+        throw new Error(
+          `You must use the Read tool to read ${file_path} before editing it.`,
+        );
       }
-      
+
       // Check if file exists
       if (!fs.existsSync(file_path)) {
         throw new Error(`File ${file_path} does not exist`);
@@ -176,7 +183,7 @@ If you want to create a new file, use:
     if (!isCreatingNewFile) {
       currentContent = fs.readFileSync(file_path, "utf-8");
     }
-    
+
     const originalContent = currentContent;
     let newContent = currentContent;
 
@@ -193,7 +200,9 @@ If you want to create a new file, use:
 
       // Check if old_string exists in current content
       if (!newContent.includes(old_string)) {
-        throw new Error(`Edit ${i + 1}: String not found in file: "${old_string}"`);
+        throw new Error(
+          `Edit ${i + 1}: String not found in file: "${old_string}"`,
+        );
       }
 
       if (replace_all) {
@@ -204,7 +213,7 @@ If you want to create a new file, use:
         const occurrences = newContent.split(old_string).length - 1;
         if (occurrences > 1) {
           throw new Error(
-            `Edit ${i + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`
+            `Edit ${i + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
           );
         }
         newContent = newContent.replace(old_string, new_string);
@@ -225,7 +234,7 @@ If you want to create a new file, use:
       preview: [
         {
           type: "text",
-          content: `Will apply ${edits.length} edit${edits.length === 1 ? '' : 's'} to ${isCreatingNewFile ? 'create' : 'modify'} ${file_path}:`,
+          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${isCreatingNewFile ? "create" : "modify"} ${file_path}:`,
         },
         {
           type: "diff",
@@ -234,9 +243,9 @@ If you want to create a new file, use:
       ],
     };
   },
-  run: async (args: { 
-    file_path: string; 
-    newContent: string; 
+  run: async (args: {
+    file_path: string;
+    newContent: string;
     originalContent: string;
     isCreatingNewFile: boolean;
     editCount: number;
@@ -263,7 +272,7 @@ If you want to create a new file, use:
       }
 
       const action = args.isCreatingNewFile ? "created" : "edited";
-      return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? '' : 's'}`;
+      return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}`;
     } catch (error) {
       throw new Error(
         `Error: failed to edit ${args.file_path}: ${

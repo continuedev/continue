@@ -14,6 +14,7 @@ export const DEFAULT_TOOL_POLICIES: ToolPermissionPolicy[] = [
   // Write operations should require confirmation
   { tool: "Write", permission: "ask" },
   { tool: "Edit", permission: "ask" },
+  { tool: "MultiEdit", permission: "ask" },
 
   // Write to a checklist
   { tool: "Checklist", permission: "allow" },
