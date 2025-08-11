@@ -215,7 +215,7 @@ jobs:
               const newComment = `${botSignature}\n${reviewContent}`;
               
               // Get all comments on the PR
-              const { data: comments } = await github.rest.issues.listComments({
+              const { data: comments } = await github.rest.issues.listComments({ per_page: 100,
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
