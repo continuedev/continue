@@ -86,7 +86,7 @@ export async function runOnboardingFlow(
       const result = await initialize(authConfig, CONFIG_PATH);
       return { ...result, wasOnboarded: false };
     }
-    
+
     // Otherwise return a minimal working configuration
     const result = await initialize(authConfig, undefined);
     return { ...result, wasOnboarded: false };
