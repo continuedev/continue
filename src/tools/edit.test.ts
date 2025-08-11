@@ -2,7 +2,7 @@ import * as fs from "fs";
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { editTool, markFileAsRead } from "./edit.js";
+import { editTool, markFileAsRead, readFilesSet } from "./edit.js";
 
 // Mock the dependencies
 vi.mock("../telemetry/telemetryService.js");
@@ -38,6 +38,7 @@ describe("editTool", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    readFilesSet.clear();
   });
 
   describe("preprocess", () => {

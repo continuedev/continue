@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -6,7 +7,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { readFilesSet } from "./edit.js";
+import { readFilesSet, markFileAsRead } from "./edit.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
@@ -132,6 +133,9 @@ If you want to create a new file, use:
     if (!file_path) {
       throw new Error("file_path is required");
     }
+    if (!path.isAbsolute(file_path)) {
+      throw new Error("file_path must be an absolute path");
+    }
     if (!edits || !Array.isArray(edits) || edits.length === 0) {
       throw new Error(
         "edits array is required and must contain at least one edit",
@@ -159,7 +163,7 @@ If you want to create a new file, use:
 
     if (isCreatingNewFile) {
       // For new file creation, check if parent directory exists
-      const parentDir = file_path.substring(0, file_path.lastIndexOf("/"));
+      const parentDir = path.dirname(file_path);
       if (parentDir && !fs.existsSync(parentDir)) {
         throw new Error(`Parent directory does not exist: ${parentDir}`);
       }
@@ -282,8 +286,3 @@ If you want to create a new file, use:
     }
   },
 };
-
-// Export function to mark file as read (to maintain consistency with edit tool)
-export function markFileAsRead(filePath: string) {
-  readFilesSet.add(filePath);
-}
