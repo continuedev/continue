@@ -1,9 +1,9 @@
 ---
-title: "Build Your Own Context Provider"
-description: "Continue offers several way to provide your custom context to the extension."
+title: "How to Build Your Own Context Provider"
+description: "Learn how to create custom context providers for Continue using HTTP servers, CustomContextProvider API, or VSCode extensions to provide tailored context to your AI assistant"
 ---
 
-## HTTP Context Provider
+## How to Create an HTTP Context Provider
 
 Continue can retrieve context from a custom HTTP server that you create and serve. Add the `@HTTP` context provider to your configuration like this:
 
@@ -46,7 +46,7 @@ The `"options"` property can be used to send additional parameters to your endpo
   where possible.
 </Info>
 
-## Using CustomContextProvider
+## How to Use CustomContextProvider
 
 Custom context providers can be implemented in a `config.ts` placed in your Continue global directory (`~/.continue` for MacOS, `%USERPROFILE%/.continue` for Windows). You can implement the `CustomContextProvider` interface in your `config.ts`
 
@@ -76,7 +76,7 @@ export function modifyConfig(config: Config): Config {  if (!config.contextProvi
 
 This is automatically appended to your configuration.
 
-### Custom Context Providers with Submenu or Query
+### How to Create Custom Context Providers with Submenu or Query
 
 There are 3 types of context providers: "normal", "query", and "submenu". The "normal" type is the default, and is what we've seen so far.
 
@@ -97,7 +97,7 @@ The flow of information in the above example is as follows:
 3. The `id` of the chosen `ContextSubmenuItem` is passed to `getContextItems` as the `query` argument. In this case it is the filepath of the README.
 4. The `getContextItems` function can then use the `query` to retrieve the full contents of the README and format the content before returning the context item which will be included in the prompt.
 
-### Importing outside modules
+### How to Import Outside Modules
 
 To include outside Node modules in your config.ts, run `npm install <module_name>` from the `~/.continue` directory, and then import them in config.ts.
 
@@ -124,7 +124,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 
 - `loadSubmenuItems` (optional): A function that returns a list of `ContextSubmenuItem`s to display in a submenu. It is given access to an `IDE`, the same that is passed to `getContextItems`. .
 
-## Extension API for VSCode
+## How to Use Extension API for VSCode
 
 Continue exposes an API for registering context providers from a 3rd party VSCode extension. This is useful if you have a VSCode extension that provides some additional context that you would like to use in Continue. To use this API, add the following to your `package.json`:
 
