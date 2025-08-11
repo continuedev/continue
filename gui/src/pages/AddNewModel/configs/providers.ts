@@ -55,10 +55,10 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     description: "SAP AI Core",
     icon: "sap.png",
     packages: [
-      models.o3miniAiCore,
+      models.claude4Sonnet,
       models.claude37Sonnet,
       models.gpt41AiCore,
-      models.gpt4
+      models.gpt4oAiCore
     ],
   },
   openai: {

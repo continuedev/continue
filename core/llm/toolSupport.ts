@@ -30,7 +30,6 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "anthropic--claude-3.7",
           "anthropic--claude-4-sonnet",
           "gpt-4o",
-          "o3-mini",
           "gpt-4.1"
         ].some((part) => model.toLowerCase().startsWith(part))
       ) {
