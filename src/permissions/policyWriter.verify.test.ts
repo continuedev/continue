@@ -15,9 +15,9 @@ describe("policyWriter verification", () => {
     expect(generatePolicyRule("Bash", { command: "ls -la" })).toBe("Bash(ls*)");
   });
 
-  it("should handle mixed case tool names", () => {
-    expect(generatePolicyRule("edit", { filepath: "test.txt" })).toBe("Edit");
-    expect(generatePolicyRule("EDIT", { filepath: "test.txt" })).toBe("Edit");
+  it("should use exact tool names without case normalization", () => {
+    expect(generatePolicyRule("edit", { filepath: "test.txt" })).toBe("edit");
+    expect(generatePolicyRule("EDIT", { filepath: "test.txt" })).toBe("EDIT");
     expect(generatePolicyRule("Edit", { filepath: "test.txt" })).toBe("Edit");
   });
 });

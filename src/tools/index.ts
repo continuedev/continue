@@ -4,13 +4,14 @@ import type { ToolPermissionServiceState } from "../services/ToolPermissionServi
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
+import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { formatToolArgument } from "./formatters.js";
 import { listFilesTool } from "./listFiles.js";
+import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
 import {
   type Tool,
@@ -26,8 +27,10 @@ export type { Tool, ToolCall, ToolParameters };
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
+  editTool,
+  multiEditTool,
   writeFileTool,
-  searchAndReplaceInFileTool,
+  // searchAndReplaceInFileTool,
   listFilesTool,
   searchCodeTool,
   runTerminalCommandTool,

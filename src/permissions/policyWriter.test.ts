@@ -28,11 +28,11 @@ describe("policyWriter", () => {
       expect(generatePolicyRule("Bash", { command: "   " })).toBe("Bash");
     });
 
-    it("should handle tool name normalization", () => {
-      expect(generatePolicyRule("bash", { command: "ls" })).toBe("Bash(ls*)");
-      expect(generatePolicyRule("BASH", { command: "pwd" })).toBe("Bash(pwd*)");
-      expect(generatePolicyRule("read", { file_path: "/test" })).toBe("Read");
-      expect(generatePolicyRule("write", { file_path: "/test", content: "test" })).toBe("Write");
+    it("should use exact tool names without normalization", () => {
+      expect(generatePolicyRule("bash", { command: "ls" })).toBe("bash");
+      expect(generatePolicyRule("BASH", { command: "pwd" })).toBe("BASH");
+      expect(generatePolicyRule("read", { file_path: "/test" })).toBe("read");
+      expect(generatePolicyRule("write", { file_path: "/test", content: "test" })).toBe("write");
     });
   });
 });

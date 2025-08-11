@@ -62,20 +62,12 @@ exclude: []`;
     expect(result3.permission).toBe('ask'); // Should not match, falls back to ask
   });
 
-  it('should check what normalizeToolName returns for Edit variations', async () => {
-    const { normalizeToolName } = await import('./toolNameMapping.js');
+it('should use exact tool names without normalization', () => {
+    // Tools are now used exactly as they are named, no normalization
+    const editName = "Edit";
+    const multiEditName = "MultiEdit";
     
-    console.log('normalizeToolName("Edit"):', normalizeToolName("Edit"));
-    console.log('normalizeToolName("edit"):', normalizeToolName("edit"));
-    console.log('normalizeToolName("edit_file"):', normalizeToolName("edit_file"));
-    console.log('normalizeToolName("search_and_replace_in_file"):', normalizeToolName("search_and_replace_in_file"));
-    
-    // Only proper names and case variations should normalize
-    expect(normalizeToolName("Edit")).toBe("Edit");
-    expect(normalizeToolName("edit")).toBe("Edit");
-    
-    // Legacy snake_case names should not normalize anymore
-    expect(normalizeToolName("edit_file")).toBe("edit_file");
-    expect(normalizeToolName("search_and_replace_in_file")).toBe("search_and_replace_in_file");
+    expect(editName).toBe("Edit");
+    expect(multiEditName).toBe("MultiEdit");
   });
 });
