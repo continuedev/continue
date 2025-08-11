@@ -52,24 +52,33 @@ jobs:
 
       - name: Show formatting differences for all files
         run: |
-          echo "Finding files that would be changed by prettier..."
-          # Get list of files that prettier would change
-          UNFORMATTED_FILES=$(npx prettier --check . 2>&1 | grep -E '^\[warn\]' | sed 's/\[warn\] //' || true)
+          echo "Running prettier check to find unformatted files..."
+          # Capture prettier output to a temp file
+          npx prettier --check . > /tmp/prettier_output.txt 2>&1 || true
+          
+          echo "Full prettier output:"
+          cat /tmp/prettier_output.txt
+          echo ""
+          
+          # Extract files that need formatting
+          UNFORMATTED_FILES=$(grep -E '^\[warn\]' /tmp/prettier_output.txt | sed 's/\[warn\] //' || true)
           
           if [ -z "$UNFORMATTED_FILES" ]; then
-            echo "No files need formatting changes."
+            echo "No files found in [warn] messages."
           else
             echo "Files that need formatting:"
             echo "$UNFORMATTED_FILES"
             echo ""
             echo "Showing diffs for each file:"
-            echo "$UNFORMATTED_FILES" | while read -r file; do
+            echo "$UNFORMATTED_FILES" | while IFS= read -r file; do
               if [ -n "$file" ] && [ -f "$file" ]; then
                 echo "======================================"
                 echo "Diff for: $file"
                 echo "======================================"
-                npx prettier "$file" > "/tmp/$(basename "$file").formatted"
-                diff -u "$file" "/tmp/$(basename "$file").formatted" || true
+                # Create formatted version
+                npx prettier "$file" > "/tmp/formatted_$(basename "$file")"
+                # Show diff
+                diff -u "$file" "/tmp/formatted_$(basename "$file")" || true
                 echo ""
               fi
             done
