@@ -17,10 +17,8 @@ The following handshake describes how Agent uses tools:
 6. The model responds, potentially with another tool call and step 2 begins again
 
 <Info>
-  Tool availability varies by mode:
-  - **Chat mode**: No tools included
-  - **Plan mode**: Only read-only tools included
-  - **Agent mode**: All tools included
+  Tool availability varies by mode: - **Chat mode**: No tools included - **Plan
+  mode**: Only read-only tools included - **Agent mode**: All tools included
 </Info>
 
 ## What Built-in Tools Are Available
@@ -30,6 +28,7 @@ Continue includes several built-in tools which provide the model access to IDE f
 ### What Tools Are Available in Plan Mode (Read-Only)
 
 In Plan mode, only these read-only tools are available:
+
 - **Read file** (`read_file`)
 - **Read currently open file** (`read_currently_open_file`)
 - **List directory** (`ls`)

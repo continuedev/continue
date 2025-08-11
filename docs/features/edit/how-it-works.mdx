@@ -5,7 +5,8 @@ description: "Using the highlighted code, the contents of the current file conta
 
 ## How Edit Functionality Works
 
-When you start an edit session, Continue: 
+When you start an edit session, Continue:
+
 1. **Gathers Context**: Uses the highlighted code and the current file contents
 2. **Prompts the Model**: Sends the gathered context and your input instructions to the model
 3. **Applies Changes**: The model response is then streamed directly back to the highlighted range in your code, where we apply a diff formatting to show the proposed changes.

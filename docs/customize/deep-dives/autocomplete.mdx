@@ -86,7 +86,8 @@ Then, add the model to your configuration:
 Once the model has been downloaded, you should begin to see completions in VS Code.
 
 <Note>
-Typically, thinking-type models are not recommended as they generate more slowly and are not suitable for scenarios that require speed. 
+  Typically, thinking-type models are not recommended as they generate more
+  slowly and are not suitable for scenarios that require speed.
 </Note>
 
 However, if you use any thinking-switchable models, you can configure these models for autocomplete functions by turning off the thinking mode.
@@ -94,19 +95,21 @@ However, if you use any thinking-switchable models, you can configure these mode
 For example:
 
 <Tabs>
-  <Tab title="YAML">
+<Tab title="YAML">
+
 ```yaml title="config.yaml"
-  models:
-    - name: Qwen3 without Thinking for Autocomplete
-      provider: ollama
-      model: qwen3:4b   # qwen3 is a thinking-switchable model
-      roles:
-        - autocomplete
-      requestOptions:
-        extraBodyProperties:
-          think: false  # turning off the thinking
-  ```
-  </Tab>
+models:
+  - name: Qwen3 without Thinking for Autocomplete
+    provider: ollama
+    model: qwen3:4b # qwen3 is a thinking-switchable model
+    roles:
+      - autocomplete
+    requestOptions:
+      extraBodyProperties:
+        think: false # turning off the thinking
+```
+
+</Tab>
 </Tabs>
 
 Then, in the continue panel, select this model as the default model for autocomplete.
@@ -212,5 +215,3 @@ Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocompl
 #### Feedback
 
 If you're turning off autocomplete, we'd love to hear how we can improve! Please let us know in our [Discord](https://discord.gg/vapESyrFmJ) or file an issue on GitHub.
-
-
