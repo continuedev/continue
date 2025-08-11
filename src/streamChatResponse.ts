@@ -203,20 +203,6 @@ export async function processStreamingResponse(
 
       logger.debug("Received chunk", { chunkCount, chunk });
 
-      // Track first token time
-      if (
-        firstTokenTime === null &&
-        (chunk.choices[0].delta.content || chunk.choices[0].delta.tool_calls)
-      ) {
-        firstTokenTime = Date.now();
-        telemetryService.recordResponseTime(
-          firstTokenTime - requestStartTime,
-          model.model,
-          "time_to_first_token",
-          (tools?.length || 0) > 0,
-        );
-      }
-
       // Track token usage if available
       if (chunk.usage) {
         inputTokens = chunk.usage.prompt_tokens || 0;
@@ -233,6 +219,20 @@ export async function processStreamingResponse(
       if (!chunk.choices || !chunk.choices[0]) {
         logger.warn("Malformed chunk received - missing choices", { chunk });
         continue;
+      }
+
+      // Track first token time
+      if (
+        firstTokenTime === null &&
+        (chunk.choices[0].delta.content || chunk.choices[0].delta.tool_calls)
+      ) {
+        firstTokenTime = Date.now();
+        telemetryService.recordResponseTime(
+          firstTokenTime - requestStartTime,
+          model.model,
+          "time_to_first_token",
+          (tools?.length || 0) > 0,
+        );
       }
 
       const choice = chunk.choices[0];
