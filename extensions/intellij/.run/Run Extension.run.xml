@@ -10,7 +10,7 @@
             <option name="executionName"/>
             <option name="externalProjectPath" value="$PROJECT_DIR$/extensions/intellij"/>
             <option name="externalSystemIdString" value="GRADLE"/>
-            <option name="scriptParameters" value="-PplatformVersion=2025.1" />
+            <option name="scriptParameters" value="" />
             <option name="taskDescriptions">
                 <list/>
             </option>
