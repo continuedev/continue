@@ -197,8 +197,6 @@ jobs:
                 reviewContent = '⚠️ AI review completed but no review output was generated. Check the action logs for details.';
               }
               
-              const comment = reviewContent;
-              
               // Get PR number
               let prNumber;
               if (context.payload.pull_request) {
@@ -207,19 +205,48 @@ jobs:
                 prNumber = context.payload.workflow_run.pull_requests[0].number;
               }
               
-              if (prNumber) {
+              if (!prNumber) {
+                console.log('Could not determine PR number for commenting');
+                return;
+              }
+
+              // Unique identifier for our bot comments
+              const botSignature = '<!-- continue-cli-review -->';
+              const newComment = `${botSignature}\n${reviewContent}`;
+              
+              // Get all comments on the PR
+              const { data: comments } = await github.rest.issues.listComments({ per_page: 100,
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              
+              // Find existing Continue CLI review comment
+              const existingComment = comments.find(comment => 
+                comment.body.includes(botSignature)
+              );
+              
+              if (existingComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({
+                  comment_id: existingComment.id,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: newComment
+                });
+                console.log(`Successfully updated existing comment #${existingComment.id} on PR #${prNumber}`);
+              } else {
+                // Create new comment
                 await github.rest.issues.createComment({
                   issue_number: prNumber,
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  body: comment
+                  body: newComment
                 });
-                console.log(`Successfully posted comment on PR #${prNumber}`);
-              } else {
-                console.log('Could not determine PR number for commenting');
+                console.log(`Successfully created new comment on PR #${prNumber}`);
               }
             } catch (error) {
-              console.log('Failed to post comment:', error.message);
+              console.log('Failed to post/update comment:', error.message);
               console.log('Error details:', error);
             }
         env:
