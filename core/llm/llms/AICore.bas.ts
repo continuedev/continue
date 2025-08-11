@@ -35,7 +35,7 @@ export class AICore extends BaseLLM {
         }
         // Only in Non BAS environments it may be possible to search for local json file. Otherwise it uses the BAS LLM Proxy.
         // Used for local development or testing purposes but do not fail if it doesn't exist.
-        else if (!process.env["H2O_URL"]) {
+        else if (!isBAS()) {
             this.setupAiCore();
         }
 
@@ -201,9 +201,20 @@ export class AICore extends BaseLLM {
         // Relevant docs:
         // https://sap.github.io/ai-sdk/docs/js/orchestration/chat-completion#custom-destination
         // https://sap.github.io/cloud-sdk/docs/js/features/connectivity/destinations#register-destination 
-        const orchestrationClient = new OrchestrationClient(config, undefined, {
-            destinationName: 'bas-llm'
-        });
+        let orchestrationClient;
+        if (devspace.isBuild()) { // BAS Build Code environment
+            orchestrationClient = new OrchestrationClient(config, undefined, {
+                destinationName: 'bas-llm'
+            });
+        }
+        else if (!isBAS()) { // Local environment
+            orchestrationClient = new OrchestrationClient(config);
+        }
+        else {
+            // TODO: Joule relevant message in this case : https://github.tools.sap/Turing/joule/blob/main/joule/packages/commonChat/src/components/ServiceNotAvailableView.tsx
+            throw new Error("This feature is currently not enabled for you. You must have configured SAP Build Code in your subaccount.");
+        }
+
 
         let response;
         try {
@@ -342,7 +353,7 @@ export class AICore extends BaseLLM {
  * @returns 
  * @returns 
  */
-export function sanitizeToolName(name: string): string {
+function sanitizeToolName(name: string): string {
     // Replace any character not in [a-zA-Z0-9-_] with "-"
     let sanitized = name.replace(/[^a-zA-Z0-9-_]/g, "-");
     // Remove duplicate dashes/underscores, and trim
@@ -356,4 +367,8 @@ export function sanitizeToolName(name: string): string {
     // Fallback if empty 
     if (sanitized.length === 0) sanitized = "tool";
     return sanitized;
+}
+
+function isBAS(): boolean {
+    return process.env["H2O_URL"] !== undefined;
 }
