@@ -11,6 +11,8 @@ import { readFilesSet, markFileAsRead } from "./edit.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
+export { markFileAsRead };
+
 export interface EditOperation {
   old_string: string;
   new_string: string;
