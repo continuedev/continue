@@ -4,6 +4,7 @@ import * as path from "path";
 
 import {
   AssistantUnrolled,
+  PackageIdentifier,
   RegistryClient,
   unrollAssistant,
 } from "@continuedev/config-yaml";
@@ -276,20 +277,23 @@ async function loadDefaultAgent(
 }
 
 /**
- * Loads a local YAML configuration file
+ * Common function to unroll an assistant with consistent configuration
  */
-async function loadConfigYaml(
-  filePath: string,
+async function unrollAssistantWithConfig(
+  packageIdentifier: PackageIdentifier,
   accessToken: string | null,
   organizationId: string | null,
   apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const unrollResult = await unrollAssistant(
-    { filePath, uriType: "file" },
+    packageIdentifier,
     new RegistryClient({
       accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
-      rootPath: dirname(filePath),
+      rootPath:
+        packageIdentifier.uriType === "file"
+          ? dirname(packageIdentifier.filePath)
+          : undefined,
     }),
     {
       currentUserSlug: "",
@@ -303,7 +307,7 @@ async function loadConfigYaml(
 
   const errorDetails = unrollResult.errors;
   if (!unrollResult.config) {
-    throw new Error(`Failed to load config file:\n${errorDetails}`);
+    throw new Error(`Failed to load config:\n${errorDetails}`);
   } else if (errorDetails?.length) {
     const warnings =
       errorDetails?.length > 1
@@ -313,6 +317,23 @@ async function loadConfigYaml(
   }
 
   return unrollResult.config;
+}
+
+/**
+ * Loads a local YAML configuration file
+ */
+async function loadConfigYaml(
+  filePath: string,
+  accessToken: string | null,
+  organizationId: string | null,
+  apiClient: DefaultApiInterface,
+): Promise<AssistantUnrolled> {
+  return await unrollAssistantWithConfig(
+    { filePath, uriType: "file" },
+    accessToken,
+    organizationId,
+    apiClient,
+  );
 }
 
 /**
@@ -327,6 +348,19 @@ async function loadAssistantSlug(
   if (!ownerSlug || !packageSlug) {
     throw new Error(
       `Invalid assistant slug format. Expected "owner/package", got: ${slug}`,
+    );
+  }
+
+  // Unroll locally if not logged in
+  if (!(apiClient as any).configuration.apiKey) {
+    return await unrollAssistantWithConfig(
+      {
+        uriType: "slug",
+        fullSlug: { ownerSlug, packageSlug, versionSlug: "latest" },
+      },
+      null,
+      organizationId,
+      apiClient,
     );
   }
 

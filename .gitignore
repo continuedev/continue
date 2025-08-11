@@ -9,3 +9,5 @@ chat.log
 
 # Local config files (users should not commit their personal configs)
 config.yaml
+
+.continue-debug/
