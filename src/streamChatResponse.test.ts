@@ -337,6 +337,59 @@ describe("processStreamingResponse - content preservation", () => {
       '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
     );
   });
+
+  it("handles malformed chunk with empty choices array without crashing", async () => {
+    // This reproduces the exact bug from the logs:
+    // {"chunk":{"choices":[],"usage":{"completion_tokens":96,"prompt_tokens":711,"total_tokens":807,"prompt_tokens_details":{"cached_tokens":3353}},"created":1754927672408,"id":"","model":"claude-sonnet-4-20250514","object":"chat.completion.chunk"}}
+    const malformedChunk: ChatCompletionChunk = {
+      id: "",
+      object: "chat.completion.chunk",
+      created: 1754927672408,
+      model: "claude-sonnet-4-20250514",
+      choices: [], // Empty choices array - this causes the bug
+      usage: {
+        completion_tokens: 96,
+        prompt_tokens: 711,
+        total_tokens: 807,
+        prompt_tokens_details: {
+          cached_tokens: 3353
+        }
+      }
+    };
+
+    chunks = [
+      malformedChunk, // Put malformed chunk first to trigger the bug more clearly
+      contentChunk("Hello "),
+      contentChunk("world!")
+    ];
+
+    // This should not throw an error: "Cannot read properties of undefined (reading 'delta')"
+    let caughtError: any = null;
+    try {
+      await processStreamingResponse(
+        chatHistory,
+        mockModel,
+        mockLlmApi,
+        mockAbortController
+      );
+    } catch (error) {
+      caughtError = error;
+    }
+
+    // Should NOT throw error about reading 'delta' property
+    expect(caughtError).toBeNull();
+
+    const result = await processStreamingResponse(
+      chatHistory,
+      mockModel,
+      mockLlmApi,
+      mockAbortController
+    );
+
+    expect(result.content).toBe("Hello world!");
+    expect(result.toolCalls.length).toBe(0);
+    expect(result.finalContent).toBe("Hello world!");
+  });
 });
 
 // Tests for preprocessStreamedToolCalls function
