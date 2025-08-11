@@ -451,4 +451,215 @@ describe("sessionSlice streamUpdate", () => {
       expect(newState.history[1].toolCallStates).toHaveLength(1);
     });
   });
+
+  describe("Reasoning Field Support", () => {
+    it("should handle message with reasoning field", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "Based on my analysis, the answer is 42.",
+            reasoning: "I need to calculate the answer to the ultimate question. After considering all factors, 42 seems correct.",
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].message.content).toBe(
+        "Based on my analysis, the answer is 42.",
+      );
+      expect(newState.history[1].reasoning?.text).toBe(
+        "I need to calculate the answer to the ultimate question. After considering all factors, 42 seems correct.",
+      );
+      expect(newState.history[1].reasoning?.startAt).toBeDefined();
+      expect(newState.history[1].reasoning?.endAt).toBeDefined();
+      expect(newState.history[1].reasoning?.active).toBe(false);
+    });
+
+    it("should handle streaming reasoning field", () => {
+      const initialState = createInitialState();
+      
+      // First chunk with reasoning start
+      const action1 = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            reasoning: "Let me think about this step by step...",
+          },
+        ],
+      };
+
+      let newState = sessionSlice.reducer(initialState, action1);
+      
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].reasoning?.text).toBe(
+        "Let me think about this step by step...",
+      );
+      expect(newState.history[1].reasoning?.active).toBe(true);
+      expect(newState.history[1].reasoning?.startAt).toBeDefined();
+      expect(newState.history[1].reasoning?.endAt).toBeUndefined();
+
+      // Second chunk with more reasoning
+      const action2 = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            reasoning: " First, I'll analyze the problem.",
+          },
+        ],
+      };
+
+      newState = sessionSlice.reducer(newState, action2);
+      
+      expect(newState.history[1].reasoning?.text).toBe(
+        "Let me think about this step by step... First, I'll analyze the problem.",
+      );
+      expect(newState.history[1].reasoning?.active).toBe(true);
+
+      // Third chunk with content (reasoning finished)
+      const action3 = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "Here's my final answer.",
+          },
+        ],
+      };
+
+      newState = sessionSlice.reducer(newState, action3);
+      
+      expect(newState.history[1].message.content).toBe("Here's my final answer.");
+      expect(newState.history[1].reasoning?.active).toBe(false);
+      expect(newState.history[1].reasoning?.endAt).toBeDefined();
+    });
+
+    it("should handle reasoning field with tool calls", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            reasoning: "I need to use the search tool to find information about this topic.",
+            toolCalls: [
+              {
+                id: "tool-call-123",
+                type: "function" as const,
+                function: {
+                  name: "search",
+                  arguments: '{"query": "test query"}',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].reasoning?.text).toBe(
+        "I need to use the search tool to find information about this topic.",
+      );
+      expect(newState.history[1].toolCallStates).toHaveLength(1);
+      expect(newState.history[1].toolCallStates?.[0]?.toolCallId).toBe("tool-call-123");
+    });
+
+    it("should handle reasoning field updates correctly", () => {
+      const initialState = createInitialState();
+      
+      // Add an initial assistant message with reasoning
+      initialState.history.push({
+        message: {
+          role: "assistant",
+          content: "",
+          id: "assistant-with-reasoning",
+        },
+        contextItems: [],
+        reasoning: {
+          text: "Initial reasoning",
+          startAt: Date.now(),
+          active: true,
+        },
+      });
+
+      // Update with additional reasoning
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "",
+            reasoning: " and more reasoning content.",
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].reasoning?.text).toBe(
+        "Initial reasoning and more reasoning content.",
+      );
+      expect(newState.history[1].reasoning?.active).toBe(true);
+    });
+
+    it("should not create reasoning if message has no reasoning field", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "Simple response without reasoning.",
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].message.content).toBe(
+        "Simple response without reasoning.",
+      );
+      expect(newState.history[1].reasoning).toBeUndefined();
+    });
+
+    it("should handle reasoning field with empty content", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "Response with empty reasoning.",
+            reasoning: "",
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(2);
+      expect(newState.history[1].message.content).toBe(
+        "Response with empty reasoning.",
+      );
+      // Empty reasoning should still create a reasoning object
+      expect(newState.history[1].reasoning?.text).toBe("");
+      expect(newState.history[1].reasoning?.active).toBe(false);
+    });
+  });
 });

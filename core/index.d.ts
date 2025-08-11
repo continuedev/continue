@@ -397,6 +397,7 @@ export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
+  reasoning?: string;
   usage?: Usage;
 }
 
@@ -485,6 +486,10 @@ interface Reasoning {
   text: string;
   startAt: number;
   endAt?: number;
+  // Flag to track if this reasoning originated from OpenAI's harmony reasoning field
+  // vs <think> tags. OpenAI reasoning ends when content appears without reasoning field,
+  // while <think> tag reasoning only ends with explicit </think> tags.
+  isOpenAIReasoning?: boolean;
 }
 
 export interface ChatHistoryItem {

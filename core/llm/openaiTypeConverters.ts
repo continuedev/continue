@@ -153,18 +153,21 @@ export function toFimBody(
 
 export function fromChatResponse(response: ChatCompletion): ChatMessage {
   const message = response.choices[0].message;
+  const messageWithReasoning = message as typeof message & { reasoning?: string };
   const toolCall = message.tool_calls?.[0];
   if (toolCall) {
     return {
       role: "assistant",
       content: "",
       toolCalls: message.tool_calls,
+      reasoning: messageWithReasoning?.reasoning,
     };
   }
 
   return {
     role: "assistant",
     content: message.content ?? "",
+    reasoning: messageWithReasoning?.reasoning,
   };
 }
 
@@ -172,17 +175,13 @@ export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
   const delta = chunk.choices?.[0]?.delta;
+  const deltaWithReasoning = delta as typeof delta & { reasoning?: string };
 
-  if (delta?.content) {
+  if (delta?.content || delta?.tool_calls || deltaWithReasoning?.reasoning) {
     return {
       role: "assistant",
-      content: delta.content,
-    };
-  } else if (delta?.tool_calls) {
-    return {
-      role: "assistant",
-      content: "",
-      toolCalls: delta?.tool_calls.map((tool_call) => ({
+      content: delta.content || "",
+      toolCalls: delta?.tool_calls?.map((tool_call) => ({
         id: tool_call.id,
         type: tool_call.type,
         function: {
@@ -190,6 +189,7 @@ export function fromChatCompletionChunk(
           arguments: tool_call.function?.arguments,
         },
       })),
+      reasoning: deltaWithReasoning?.reasoning,
     };
   }
 
