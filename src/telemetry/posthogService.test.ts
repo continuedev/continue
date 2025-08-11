@@ -11,9 +11,15 @@ vi.mock("../auth/workos.js", () => ({
   isAuthenticatedConfig: vi.fn(),
 }));
 
-vi.mock("node-machine-id", () => ({
-  machineIdSync: vi.fn(() => "test-machine-id"),
-}));
+vi.mock("node-machine-id", () => {
+  const mockFn = vi.fn(() => "test-machine-id");
+  return {
+    default: {
+      machineIdSync: mockFn,
+    },
+    machineIdSync: mockFn,
+  };
+});
 
 // Import after mocks are set up
 import { loadAuthConfig, isAuthenticatedConfig } from "../auth/workos.js";
