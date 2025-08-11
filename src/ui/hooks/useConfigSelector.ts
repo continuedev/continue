@@ -1,7 +1,7 @@
 import { exec } from "child_process";
-import * as os from "os";
 import * as path from "path";
 
+import { env } from "../../env.js";
 import { services } from "../../services/index.js";
 import { useNavigation } from "../context/NavigationContext.js";
 
@@ -22,7 +22,7 @@ interface UseConfigSelectorProps {
   onChatReset: () => void;
 }
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 export function useConfigSelector({
   onMessage,

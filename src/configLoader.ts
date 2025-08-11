@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
-import * as os from "os";
 import * as path from "path";
 
 import {
@@ -99,11 +98,7 @@ function determineConfigSource(
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
   } else {
     // Unauthenticated: check for default config.yaml, then fallback to default agent
-    const defaultConfigPath = path.join(
-      os.homedir(),
-      ".continue",
-      "config.yaml",
-    );
+    const defaultConfigPath = path.join(env.continueHome, "config.yaml");
     if (fs.existsSync(defaultConfigPath)) {
       return { type: "default-config-yaml" };
     }
@@ -251,7 +246,7 @@ async function loadDefaultConfigYaml(
   organizationId: string | null,
   apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
-  const defaultConfigPath = path.join(os.homedir(), ".continue", "config.yaml");
+  const defaultConfigPath = path.join(env.continueHome, "config.yaml");
   return await loadConfigYaml(
     defaultConfigPath,
     accessToken,
@@ -381,7 +376,7 @@ function getUriFromSource(source: ConfigSource): string | null {
     case "saved-uri":
       return source.uri;
     case "default-config-yaml":
-      return `file://${path.join(os.homedir(), ".continue", "config.yaml")}`;
+      return `file://${path.join(env.continueHome, "config.yaml")}`;
     default:
       return null;
   }
