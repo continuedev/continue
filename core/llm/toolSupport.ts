@@ -63,13 +63,22 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       ) {
         return true;
       }
+
+      // LGAI EXAONE models expose an OpenAI-compatible API with tool
+      // calling support when served via frameworks like vLLM
+      if (lower.includes("exaone")) {
+        return true;
+      }
+
       if (lower.includes("gpt-oss")) {
         return true;
       }
+
       // https://ai.google.dev/gemma/docs/capabilities/function-calling
       if (lower.startsWith("gemma")) {
         return true;
       }
+
       // firworks-ai https://docs.fireworks.ai/guides/function-calling
       if (model.startsWith("accounts/fireworks/models/")) {
         switch (model.substring(26)) {
@@ -179,6 +188,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "firefunction-v2",
           "mistral",
           "devstral",
+          "exaone",
           "gpt-oss",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
@@ -269,6 +279,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "deepseek/deepseek-chat",
         "meta-llama/llama-4",
         "all-hands/openhands-lm-32b",
+        "lgai-exaone/exaone",
       ];
       for (const prefix of supportedPrefixes) {
         if (model.toLowerCase().startsWith(prefix)) {
@@ -339,6 +350,7 @@ export function modelSupportsNativeTools(modelDescription: ModelDescription) {
   if (modelDescription.capabilities?.tools !== undefined) {
     return modelDescription.capabilities.tools;
   }
+
   const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
     return false;

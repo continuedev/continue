@@ -330,6 +330,32 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["nebius"],
     isOpenSource: true,
   },
+  exaone32B: {
+    title: "EXAONE 4.0.1-32B",
+    description:
+      "LG AI Research's 32B model with integrated reasoning and agentic tool use capabilities.",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0.1-32B",
+    params: {
+      title: "EXAONE-4.0.1-32B",
+      model: "LGAI-EXAONE/EXAONE-4.0.1-32B",
+      contextLength: 131072,
+    },
+    providerOptions: ["openai"],
+    isOpenSource: true,
+  },
+  exaone12B: {
+    title: "EXAONE 4.0-1.2B",
+    description:
+      "Compact EXAONE 4.0 model suitable for on-device use while retaining tool calling support.",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B",
+    params: {
+      title: "EXAONE-4.0-1.2B",
+      model: "LGAI-EXAONE/EXAONE-4.0-1.2B",
+      contextLength: 65536,
+    },
+    providerOptions: ["openai"],
+    isOpenSource: true,
+  },
   moonshotChat: {
     title: "Moonshot Chat",
     description: "Moonshot AI provides high-performance large language models",
