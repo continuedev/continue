@@ -51,9 +51,9 @@ class Voyage extends OpenAI {
       data: Array<{ index: number; relevance_score: number }>;
     };
 
-    VoyageRerankSuccessResponseSchema.parse(data);
+    const parsedData = VoyageRerankSuccessResponseSchema.parse(data);
 
-    const results = data.data.sort((a, b) => a.index - b.index);
+    const results = parsedData.data.sort((a, b) => a.index - b.index);
     return results.map((result) => result.relevance_score);
   }
 }
