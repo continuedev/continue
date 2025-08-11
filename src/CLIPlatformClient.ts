@@ -38,8 +38,30 @@ export class CLIPlatformClient implements PlatformClient {
     }
   }
 
+  private findSecretInProcessEnv(fqsn: FQSN): SecretResult | undefined {
+    const secretValue = process.env[fqsn.secretName];
+    if (secretValue) {
+      return {
+        found: true,
+        fqsn,
+        value: secretValue,
+        secretLocation: {
+          secretName: fqsn.secretName,
+          secretType: SecretType.LocalEnv,
+        },
+      };
+    }
+    return undefined;
+  }
+
   private findSecretInLocalEnvFiles(fqsn: FQSN): SecretResult | undefined {
-    // Check in priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
+    // First check process.env (highest priority)
+    const processEnvSecret = this.findSecretInProcessEnv(fqsn);
+    if (processEnvSecret) {
+      return processEnvSecret;
+    }
+
+    // Then check in priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
     const workspaceDir = process.cwd();
     const envPaths = [
       path.join(env.continueHome, ".env"),
