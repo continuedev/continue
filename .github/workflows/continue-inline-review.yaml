@@ -119,6 +119,10 @@ jobs:
           # Run the CLI and capture JSON output
           cat inline_review_prompt.txt | cn --readonly --org continuedev --config continuedev/review-bot -p > inline_review.json
           
+          # Log the output for debugging
+          echo "Continue CLI output:"
+          cat inline_review.json
+          
           # Validate JSON output
           if ! jq empty inline_review.json 2>/dev/null; then
             echo "Invalid JSON output from Continue CLI"
