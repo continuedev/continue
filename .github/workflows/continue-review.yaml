@@ -3,6 +3,8 @@ name: Continue CLI Code Review
 on:
   pull_request:
     types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -14,6 +16,12 @@ jobs:
     name: AI Code Review
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Only run if it's a PR event OR if it's a comment with @continue-review on a PR
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-review'))
 
     steps:
       - name: Checkout Repository
@@ -30,10 +38,17 @@ jobs:
         run: npm install -g @continuedev/cli@1.4.25
 
       - name: Build PR Review Prompt
-        if: github.event.pull_request.draft == false
         run: |
+          # Get PR number based on event type
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            # For issue_comment event on a PR
+            PR_NUMBER="${{ github.event.issue.number }}"
+          fi
+          
           # Get PR diff
-          gh pr diff ${{ github.event.number }} > pr_diff.txt
+          gh pr diff $PR_NUMBER > pr_diff.txt
 
           # Create review prompt
           cat > review_prompt.txt << 'EOF'
@@ -119,7 +134,19 @@ jobs:
                 reviewContent = '⚠️ AI review completed but no review output was generated. Check the action logs for details.';
               }
               
-              const prNumber = context.payload.pull_request.number;
+              // Get PR number based on event type
+              let prNumber;
+              if (context.eventName === 'pull_request') {
+                prNumber = context.payload.pull_request.number;
+              } else {
+                // For issue_comment event
+                prNumber = context.payload.issue.number;
+              }
+
+              // Add a header if triggered by comment
+              if (context.eventName === 'issue_comment') {
+                reviewContent = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewContent}`;
+              }
 
               // Create new comment
               await github.rest.issues.createComment({
