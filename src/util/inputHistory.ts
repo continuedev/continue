@@ -93,8 +93,9 @@ export class InputHistory {
       return this.history[this.currentIndex]?.text || null;
     } else {
       // Return to original input
+      const originalInput = this.originalInput;
       this.resetNavigation();
-      return this.originalInput;
+      return originalInput;
     }
   }
 
