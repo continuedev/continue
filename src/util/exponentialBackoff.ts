@@ -34,7 +34,13 @@ const DEFAULT_OPTIONS: Required<ExponentialBackoffOptions> = {
  * Checks if the error is a network-related error
  */
 function isNetworkError(error: any): boolean {
-  const networkCodes = ["ECONNRESET", "ENOTFOUND", "ETIMEDOUT", "EPIPE", "ECONNREFUSED"];
+  const networkCodes = [
+    "ECONNRESET",
+    "ENOTFOUND",
+    "ETIMEDOUT",
+    "EPIPE",
+    "ECONNREFUSED",
+  ];
   return networkCodes.includes(error.code);
 }
 
@@ -59,14 +65,16 @@ function isServerError(error: any): boolean {
 function isConnectionError(errorMessage: string): boolean {
   const connectionErrorPatterns = [
     "premature close",
-    "premature end", 
+    "premature end",
     "connection reset",
     "socket hang up",
     "aborted",
-    "overloaded"
+    "overloaded",
   ];
-  
-  return connectionErrorPatterns.some(pattern => errorMessage.includes(pattern));
+
+  return connectionErrorPatterns.some((pattern) =>
+    errorMessage.includes(pattern),
+  );
 }
 
 /**
