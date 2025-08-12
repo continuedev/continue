@@ -2,13 +2,13 @@ import { render } from "ink-testing-library";
 import React from "react";
 
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
-import { TUIChat } from "../TUIChat.js";
+import { AppRoot } from "../AppRoot.js";
 
-export type TestMode = 'local' | 'remote';
+export type TestMode = "local" | "remote";
 
 // Dummy test to satisfy Jest
-describe('TUIChat dual mode helper', () => {
-  it('exports helper functions', () => {
+describe("TUIChat dual mode helper", () => {
+  it("exports helper functions", () => {
     expect(testBothModes).toBeDefined();
     expect(renderInMode).toBeDefined();
     expect(testSingleMode).toBeDefined();
@@ -20,8 +20,8 @@ describe('TUIChat dual mode helper', () => {
  * This creates two test suites - one for each mode
  */
 export function testBothModes(
-  name: string, 
-  testFn: (mode: TestMode) => void | Promise<void>
+  name: string,
+  testFn: (mode: TestMode) => void | Promise<void>,
 ) {
   describe(`${name} [LOCAL MODE]`, () => {
     let context: any;
@@ -38,7 +38,7 @@ export function testBothModes(
     });
 
     it("works in local mode", async () => {
-      await testFn('local');
+      await testFn("local");
     });
   });
 
@@ -57,7 +57,7 @@ export function testBothModes(
     });
 
     it("works in remote mode", async () => {
-      await testFn('remote');
+      await testFn("remote");
     });
   });
 }
@@ -67,9 +67,12 @@ export function testBothModes(
  */
 export function renderInMode(mode: TestMode, props?: any) {
   return render(
-    mode === 'remote' 
-      ? React.createElement(TUIChat, { remoteUrl: "http://localhost:3000", ...props })
-      : React.createElement(TUIChat, props)
+    mode === "remote"
+      ? React.createElement(AppRoot, {
+          remoteUrl: "http://localhost:3000",
+          ...props,
+        })
+      : React.createElement(AppRoot, props),
   ) as ReturnType<typeof render>; // Explicit type to avoid TypeScript issues
 }
 
@@ -79,7 +82,7 @@ export function renderInMode(mode: TestMode, props?: any) {
 export function testSingleMode(
   name: string,
   mode: TestMode,
-  testFn: () => void | Promise<void>
+  testFn: () => void | Promise<void>,
 ) {
   describe(`${name} [${mode.toUpperCase()} MODE ONLY]`, () => {
     let context: any;

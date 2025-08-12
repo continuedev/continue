@@ -5,42 +5,58 @@ import { PermissionMode } from "../permissions/types.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
 
-import { TUIChat } from "./TUIChat.js";
+import { AppRoot } from "./AppRoot.js";
 
 export { MarkdownRenderer } from "./MarkdownRenderer.js";
 
-export async function startTUIChat(
-  initialPrompt?: string,
-  resume?: boolean,
-  configPath?: string,
-  additionalRules?: string[],
+interface StartTUIChatOptions {
+  initialPrompt?: string;
+  resume?: boolean;
+  configPath?: string;
+  organizationSlug?: string;
+  additionalRules?: string[];
   toolPermissionOverrides?: {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
-  }
-) {
-  // Initialize services in the background - TUI will show loading states
-  initializeServices({
+  };
+  skipOnboarding?: boolean;
+}
+
+export async function startTUIChat(options: StartTUIChatOptions) {
+  const {
+    initialPrompt,
+    resume,
     configPath,
-    rules: additionalRules,
-    headless: false,
+    organizationSlug,
+    additionalRules,
     toolPermissionOverrides,
-  }).catch((error) => {
-    console.error("Failed to initialize services:", error);
-  });
+    skipOnboarding,
+  } = options;
+  // Initialize services only if not already done (skipOnboarding means already initialized)
+  if (!skipOnboarding) {
+    initializeServices({
+      configPath,
+      organizationSlug,
+      rules: additionalRules,
+      headless: false,
+      toolPermissionOverrides,
+    }).catch((error) => {
+      console.error("Failed to initialize services:", error);
+    });
+  }
 
   // Start the TUI immediately - it will handle loading states
   const { unmount } = render(
     React.createElement(ServiceContainerProvider, {
-      children: React.createElement(TUIChat, {
+      children: React.createElement(AppRoot, {
         configPath,
         initialPrompt,
         resume,
         additionalRules,
-      })
-    })
+      }),
+    }),
   );
 
   // Handle cleanup
@@ -54,16 +70,16 @@ export async function startTUIChat(
 
 export async function startRemoteTUIChat(
   remoteUrl: string,
-  initialPrompt?: string
+  initialPrompt?: string,
 ) {
   // Start the TUI in remote mode - no services needed
   const { unmount } = render(
     React.createElement(ServiceContainerProvider, {
-      children: React.createElement(TUIChat, {
+      children: React.createElement(AppRoot, {
         remoteUrl,
         initialPrompt,
-      })
-    })
+      }),
+    }),
   );
 
   // Handle cleanup

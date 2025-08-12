@@ -1,18 +1,15 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 
-import * as yaml from "yaml";
+import YAML from "yaml";
 
+import { env } from "../env.js";
 import { logger } from "../util/logger.js";
 
-import { normalizeToolName } from "./toolNameMapping.js";
 import { PermissionPolicy, ToolPermissionPolicy } from "./types.js";
 
-export const PERMISSIONS_YAML_PATH = path.join(
-  os.homedir(),
-  ".continue",
-  "permissions.yaml"
+export const PERMISSIONS_YAML_PATH = path.resolve(
+  path.join(env.continueHome, "permissions.yaml"),
 );
 
 export interface PermissionsYamlConfig {
@@ -35,7 +32,7 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
     }
 
     const content = fs.readFileSync(PERMISSIONS_YAML_PATH, "utf-8");
-    const parsed = yaml.parse(content) as PermissionsYamlConfig;
+    const parsed = YAML.parse(content) as PermissionsYamlConfig;
 
     // Validate the structure
     if (parsed && typeof parsed === "object") {
@@ -44,7 +41,7 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
         (key) =>
           validKeys.includes(key) &&
           (!parsed[key as keyof PermissionsYamlConfig] ||
-            Array.isArray(parsed[key as keyof PermissionsYamlConfig]))
+            Array.isArray(parsed[key as keyof PermissionsYamlConfig])),
       );
 
       if (hasValidStructure) {
@@ -79,7 +76,7 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
  */
 export function parseToolPattern(
   pattern: string,
-  permission: PermissionPolicy
+  permission: PermissionPolicy,
 ): ToolPermissionPolicy {
   const match = pattern.match(/^([^(]+)(?:\(([^)]*)\))?$/);
   if (!match) {
@@ -87,7 +84,7 @@ export function parseToolPattern(
   }
 
   const [, toolName, args] = match;
-  const normalizedName = normalizeToolName(toolName.trim());
+  const normalizedName = toolName.trim();
 
   const policy: ToolPermissionPolicy = {
     tool: normalizedName,
@@ -123,7 +120,7 @@ export function parseToolPattern(
  * Converts permissions YAML config to ToolPermissionPolicy array
  */
 export function yamlConfigToPolicies(
-  config: PermissionsYamlConfig
+  config: PermissionsYamlConfig,
 ): ToolPermissionPolicy[] {
   const policies: ToolPermissionPolicy[] = [];
 

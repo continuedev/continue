@@ -22,7 +22,7 @@ interface ToolPermissionSelectorProps {
   onResponse: (
     requestId: string,
     approved: boolean,
-    createPolicy?: boolean
+    createPolicy?: boolean,
   ) => void;
 }
 
@@ -53,7 +53,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       onResponse(
         requestId,
         selectedOption.approved,
-        selectedOption.createPolicy
+        selectedOption.createPolicy,
       );
       return;
     }
@@ -80,7 +80,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       setSelectedIndex(Math.max(0, selectedIndex - 1));
     } else if (key.downArrow) {
       setSelectedIndex(
-        Math.min(PERMISSION_OPTIONS.length - 1, selectedIndex + 1)
+        Math.min(PERMISSION_OPTIONS.length - 1, selectedIndex + 1),
       );
     }
 

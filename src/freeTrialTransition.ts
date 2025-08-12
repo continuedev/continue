@@ -1,6 +1,5 @@
 import { spawn } from "child_process";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
 import chalk from "chalk";
@@ -8,10 +7,13 @@ import open from "open";
 import * as readlineSync from "readline-sync";
 
 import { env } from "./env.js";
-import { isValidAnthropicApiKey, getApiKeyValidationError } from "./util/apiKeyValidation.js";
+import {
+  isValidAnthropicApiKey,
+  getApiKeyValidationError,
+} from "./util/apiKeyValidation.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 /**
  * Creates or updates the local config with Anthropic API key
@@ -23,10 +25,10 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  const existingContent = fs.existsSync(CONFIG_PATH) 
+  const existingContent = fs.existsSync(CONFIG_PATH)
     ? fs.readFileSync(CONFIG_PATH, "utf8")
     : "";
-    
+
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
@@ -38,7 +40,9 @@ async function createOrUpdateConfig(apiKey: string): Promise<void> {
  * 2. Provides two specific options for continuing
  * 3. Returns to the chat without restarting the entire CLI
  */
-export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): Promise<void> {
+export async function handleMaxedOutFreeTrial(
+  onReload?: () => Promise<void>,
+): Promise<void> {
   // Clear the screen but don't show ASCII art - keep it minimal since we're resuming a conversation
   console.clear();
 
@@ -62,16 +66,16 @@ export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): P
       console.log(chalk.green("\n✓ Browser opened successfully!"));
       console.log(
         chalk.dim(
-          "After setting up your models subscription, restart the CLI to continue."
-        )
+          "After setting up your models subscription, restart the CLI to continue.",
+        ),
       );
     } catch {
       console.log(chalk.yellow("\n⚠ Could not open browser automatically"));
       console.log(chalk.white(`Please visit: ${modelsUrl}`));
       console.log(
         chalk.dim(
-          "After setting up your models subscription, restart the CLI to continue."
-        )
+          "After setting up your models subscription, restart the CLI to continue.",
+        ),
       );
     }
 
@@ -84,13 +88,11 @@ export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): P
       chalk.white("\nEnter your Anthropic API key: "),
       {
         hideEchoBack: true,
-      }
+      },
     );
 
     if (!isValidAnthropicApiKey(apiKey)) {
-      console.log(
-        chalk.red(`❌ ${getApiKeyValidationError(apiKey)}`)
-      );
+      console.log(chalk.red(`❌ ${getApiKeyValidationError(apiKey)}`));
       process.exit(1);
     }
 
@@ -98,7 +100,7 @@ export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): P
       await createOrUpdateConfig(apiKey);
       console.log(chalk.green(`✓ API key saved successfully!`));
       console.log(chalk.green("✓ Switching to local configuration..."));
-      
+
       // If a reload callback is provided, use it instead of restarting
       if (onReload) {
         await onReload();
@@ -112,7 +114,9 @@ export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): P
 
   // Fallback: restart the CLI if no reload callback was provided
   console.log(
-    chalk.green("\n🔄 Restarting Continue CLI to resume your conversation...\n")
+    chalk.green(
+      "\n🔄 Restarting Continue CLI to resume your conversation...\n",
+    ),
   );
 
   // Get the path to the current script
@@ -126,7 +130,7 @@ export async function handleMaxedOutFreeTrial(onReload?: () => Promise<void>): P
     {
       stdio: "inherit",
       detached: true,
-    }
+    },
   );
 
   // Unref the child to allow the parent process to exit

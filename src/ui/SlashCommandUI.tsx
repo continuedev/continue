@@ -17,7 +17,6 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   selectedIndex,
   isRemoteMode = false,
 }) => {
-
   // Memoize the slash commands to prevent excessive re-renders
   const allCommands = useMemo(() => {
     if (assistant || isRemoteMode) {

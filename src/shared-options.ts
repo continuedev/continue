@@ -4,8 +4,12 @@ import { Command } from "commander";
 export function addCommonOptions(command: Command): Command {
   return command
     .option(
-      "--config <assistant>",
-      "Configure the assistant (can be a file path or hub slug)"
+      "--config <path>", 
+      "Configuration file for the assistant (can be a file path or hub slug)"
+    )
+    .option(
+      "--org <slug>",
+      "Organization slug to use for this session (supported only in headless mode)",
     )
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
@@ -18,7 +22,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     )
     .option(
       "--allow <tool>",
@@ -28,7 +32,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     )
     .option(
       "--ask <tool>",
@@ -38,7 +42,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     )
     .option(
       "--exclude <tool>",
@@ -48,7 +52,7 @@ export function addCommonOptions(command: Command): Command {
         array.push(value);
         return array;
       },
-      [] as string[]
+      [] as string[],
     );
 }
 
@@ -60,6 +64,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
   // List of options to inherit from parent if not present in subcommand
   const inheritableOptions = [
     "config",
+    "org",
     "readonly",
     "auto",
     "tools",

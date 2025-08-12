@@ -7,6 +7,28 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 import { logger } from "./util/logger.js";
 
+// List of known terminal process names
+const TERMINAL_PROCESSES = [
+  "Terminal",
+  "iTerm",
+  "tmux",
+  "screen",
+  "bash",
+  "zsh",
+  "fish",
+  "kitty",
+  "alacritty",
+  "wt", // Windows Terminal
+  "cmd", // Windows Command Prompt
+  "powershell",
+];
+
+// Check if a process name looks like a terminal
+function isTerminalProcess(comm: string): boolean {
+  if (!comm) return false;
+  return TERMINAL_PROCESSES.some((term) => comm.includes(term));
+}
+
 /**
  * Get the terminal process ID by walking up the process tree
  */
@@ -35,21 +57,7 @@ function getTerminalProcessId(): string | null {
         const [pid, ppid, comm] = processInfo;
 
         // Check if this looks like a terminal process
-        if (
-          comm &&
-          (comm.includes("Terminal") ||
-            comm.includes("iTerm") ||
-            comm.includes("tmux") ||
-            comm.includes("screen") ||
-            comm.includes("bash") ||
-            comm.includes("zsh") ||
-            comm.includes("fish") ||
-            comm.includes("kitty") ||
-            comm.includes("alacritty") ||
-            comm.includes("wt") || // Windows Terminal
-            comm.includes("cmd") || // Windows Command Prompt
-            comm.includes("powershell"))
-        ) {
+        if (isTerminalProcess(comm)) {
           return pid;
         }
 

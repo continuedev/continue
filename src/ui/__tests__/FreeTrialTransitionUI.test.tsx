@@ -9,11 +9,18 @@ vi.mock("open", () => ({
   default: vi.fn()
 }));
 
+// Mock the NavigationContext
+vi.mock("../context/NavigationContext.js", () => ({
+  useNavigation: () => ({
+    navigateTo: vi.fn(),
+    closeCurrentScreen: vi.fn(),
+    isScreenActive: vi.fn(() => false),
+    state: { currentScreen: 'free-trial', screenData: null }
+  })
+}));
+
 describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
-  const mockOnComplete = vi.fn();
-  const mockOnSwitchToLocalConfig = vi.fn();
-  const mockOnFullReload = vi.fn();
-  const mockOnShowConfigSelector = vi.fn();
+  const mockOnReload = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -23,10 +30,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("displays all three options with proper formatting", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -41,10 +45,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("highlights first option by default", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -57,10 +58,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("renders without crashing when all props are provided", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -72,9 +70,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("renders without crashing when onShowConfigSelector is not provided", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
+          onReload={mockOnReload}
           // onShowConfigSelector not provided
         />
       );
@@ -88,10 +84,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("includes proper user instructions", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -103,10 +96,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("shows all options with proper descriptions", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -123,10 +113,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
       expect(() => {
         render(
           <FreeTrialTransitionUI
-            onComplete={mockOnComplete}
-            onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-            onFullReload={mockOnFullReload}
-            onShowConfigSelector={mockOnShowConfigSelector}
+            onReload={mockOnReload}
           />
         );
       }).not.toThrow();
@@ -137,9 +124,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
       expect(() => {
         render(
           <FreeTrialTransitionUI
-            onComplete={mockOnComplete}
-            onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-            onFullReload={mockOnFullReload}
+            onReload={mockOnReload}
           />
         );
       }).not.toThrow();
@@ -150,10 +135,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("renders with proper border styling", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -165,10 +147,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("displays with proper spacing and formatting", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 
@@ -180,10 +159,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("shows selection indicator on first option by default", () => {
       const { lastFrame } = render(
         <FreeTrialTransitionUI
-          onComplete={mockOnComplete}
-          onSwitchToLocalConfig={mockOnSwitchToLocalConfig}
-          onFullReload={mockOnFullReload}
-          onShowConfigSelector={mockOnShowConfigSelector}
+          onReload={mockOnReload}
         />
       );
 

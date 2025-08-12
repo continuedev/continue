@@ -46,9 +46,10 @@ export const runTerminalCommandTool: Tool = {
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
 
-      const TIMEOUT_MS = process.env.NODE_ENV === 'test' && process.env.TEST_TERMINAL_TIMEOUT 
-        ? parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10) 
-        : 30000; // 30 seconds default, configurable for tests
+      const TIMEOUT_MS =
+        process.env.NODE_ENV === "test" && process.env.TEST_TERMINAL_TIMEOUT
+          ? parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10)
+          : 30000; // 30 seconds default, configurable for tests
 
       const resetTimeout = () => {
         if (timeoutId) {
@@ -60,7 +61,8 @@ export const runTerminalCommandTool: Tool = {
           child.kill();
           const output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           resolve(
-            output + `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`
+            output +
+              `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`,
           );
         }, TIMEOUT_MS);
       };
@@ -81,7 +83,7 @@ export const runTerminalCommandTool: Tool = {
       child.on("close", (code) => {
         if (isResolved) return;
         isResolved = true;
-        
+
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
@@ -111,7 +113,7 @@ export const runTerminalCommandTool: Tool = {
       child.on("error", (error) => {
         if (isResolved) return;
         isResolved = true;
-        
+
         if (timeoutId) {
           clearTimeout(timeoutId);
         }

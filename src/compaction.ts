@@ -2,7 +2,8 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 
-import { StreamCallbacks, streamChatResponse } from "./streamChatResponse.js";
+import { streamChatResponse } from "./streamChatResponse.js";
+import { StreamCallbacks } from "./streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 
 export const COMPACTION_MARKER = "[COMPACTED HISTORY]";
@@ -31,7 +32,7 @@ export async function compactChatHistory(
   chatHistory: ChatCompletionMessageParam[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
-  callbacks?: CompactionCallbacks
+  callbacks?: CompactionCallbacks,
 ): Promise<CompactionResult> {
   // Create a prompt to summarize the conversation
   const compactionPrompt: ChatCompletionMessageParam = {
@@ -63,7 +64,7 @@ export async function compactChatHistory(
       model,
       llmApi,
       controller,
-      streamCallbacks
+      streamCallbacks,
     );
 
     // Create the compacted history with a special marker
@@ -103,15 +104,15 @@ export async function compactChatHistory(
  * @returns The index of the compaction message, or null if not found
  */
 export function findCompactionIndex(
-  chatHistory: ChatCompletionMessageParam[]
+  chatHistory: ChatCompletionMessageParam[],
 ): number | null {
   const compactedIndex = chatHistory.findIndex(
     (msg) =>
       msg.role === "assistant" &&
       typeof msg.content === "string" &&
-      msg.content.startsWith(COMPACTION_MARKER)
+      msg.content.startsWith(COMPACTION_MARKER),
   );
-  return compactedIndex !== -1 ? compactedIndex : null;
+  return compactedIndex === -1 ? null : compactedIndex;
 }
 
 /**
@@ -122,7 +123,7 @@ export function findCompactionIndex(
  */
 export function getHistoryForLLM(
   fullHistory: ChatCompletionMessageParam[],
-  compactionIndex: number | null
+  compactionIndex: number | null,
 ): ChatCompletionMessageParam[] {
   if (compactionIndex === null || compactionIndex >= fullHistory.length) {
     return fullHistory;

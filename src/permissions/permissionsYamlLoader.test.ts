@@ -19,7 +19,7 @@ describe("permissionsYamlLoader", () => {
       ]);
     });
 
-    it("should normalize tool names", () => {
+    it("should use exact tool names without normalization", () => {
       const config = {
         allow: ["read", "READ", "Read"],
       };
@@ -27,8 +27,8 @@ describe("permissionsYamlLoader", () => {
       const policies = yamlConfigToPolicies(config);
 
       expect(policies).toEqual([
-        { tool: "Read", permission: "allow" },
-        { tool: "Read", permission: "allow" },
+        { tool: "read", permission: "allow" },
+        { tool: "READ", permission: "allow" },
         { tool: "Read", permission: "allow" },
       ]);
     });
@@ -79,7 +79,7 @@ describe("permissionsYamlLoader", () => {
         { tool: "Fetch", permission: "exclude" },
         { tool: "Exit", permission: "exclude" },
         { tool: "Write", permission: "ask" },
-        { tool: "Bash", permission: "ask" },
+        { tool: "Terminal", permission: "ask" },
         { tool: "Read", permission: "allow" },
         { tool: "List", permission: "allow" },
       ]);
@@ -183,14 +183,14 @@ describe("permissionsYamlLoader", () => {
       expect(() => parseToolPattern("Write(unclosed", "allow")).toThrow("Invalid tool pattern: Write(unclosed");
     });
 
-    it("should normalize tool names in patterns", () => {
+    it("should use exact tool names in patterns", () => {
       const policy = parseToolPattern("write(**/*.ts)", "allow");
       
       expect(policy).toEqual({
-        tool: "Write",
+        tool: "write",
         permission: "allow",
         argumentMatches: {
-          file_path: "**/*.ts"
+          pattern: "**/*.ts"
         }
       });
     });

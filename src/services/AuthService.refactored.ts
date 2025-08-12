@@ -19,7 +19,7 @@ import { AuthServiceState } from "./types.js";
  */
 export class AuthService extends BaseService<AuthServiceState> {
   constructor() {
-    super('AuthService', {
+    super("AuthService", {
       authConfig: null,
       isAuthenticated: false,
     });
@@ -69,7 +69,7 @@ export class AuthService extends BaseService<AuthServiceState> {
       return this.getState();
     } catch (error: any) {
       logger.error("Login failed:", error);
-      this.emit('error', error);
+      this.emit("error", error);
       throw error;
     }
   }
@@ -96,7 +96,7 @@ export class AuthService extends BaseService<AuthServiceState> {
    * Ensure organization is selected, prompting if necessary
    */
   async ensureOrganization(
-    isHeadless: boolean = false
+    isHeadless: boolean = false,
   ): Promise<AuthServiceState> {
     if (!this.currentState.authConfig) {
       throw new Error("Not authenticated - cannot ensure organization");
@@ -109,7 +109,7 @@ export class AuthService extends BaseService<AuthServiceState> {
 
     const updatedConfig = await ensureOrganization(
       this.currentState.authConfig,
-      isHeadless
+      isHeadless,
     );
 
     this.setState({
@@ -129,14 +129,14 @@ export class AuthService extends BaseService<AuthServiceState> {
    * Switch to a different organization
    */
   async switchOrganization(
-    organizationId: string | null
+    organizationId: string | null,
   ): Promise<AuthServiceState> {
     if (
       !this.currentState.authConfig ||
       !("userId" in this.currentState.authConfig)
     ) {
       throw new Error(
-        "Not authenticated with file-based auth - cannot switch organizations"
+        "Not authenticated with file-based auth - cannot switch organizations",
       );
     }
 
@@ -182,7 +182,7 @@ export class AuthService extends BaseService<AuthServiceState> {
       return await listUserOrganizations();
     } catch (error: any) {
       logger.error("Failed to list organizations:", error);
-      this.emit('error', error);
+      this.emit("error", error);
       return null;
     }
   }

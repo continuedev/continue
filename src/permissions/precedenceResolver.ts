@@ -1,9 +1,11 @@
 import { logger } from "../util/logger.js";
 
 import { DEFAULT_TOOL_POLICIES } from "./defaultPolicies.js";
-import { loadPermissionsYaml, yamlConfigToPolicies } from "./permissionsYamlLoader.js";
-import { normalizeToolName } from "./toolNameMapping.js";
-import { ToolPermissionPolicy } from "./types.js";
+import {
+  loadPermissionsYaml,
+  yamlConfigToPolicies,
+} from "./permissionsYamlLoader.js";
+import { type ToolPermissionPolicy } from "./types.js";
 
 export interface PermissionSources {
   /** Command line flags - highest precedence */
@@ -23,15 +25,17 @@ export interface PermissionSources {
 /**
  * Resolves permission policies from all sources according to precedence rules.
  * This function implements the clean precedence logic from the specification:
- * 
+ *
  * 1. Command line flags (highest)
  * 2. Permissions in config.yaml (when implemented)
  * 3. Permissions in ~/.continue/permissions.yaml
  * 4. Default policies (lowest)
- * 
+ *
  * Earlier sources completely override later ones on a per-tool basis.
  */
-export function resolvePermissionPrecedence(sources: PermissionSources): ToolPermissionPolicy[] {
+export function resolvePermissionPrecedence(
+  sources: PermissionSources,
+): ToolPermissionPolicy[] {
   const layers: {
     name: string;
     policies: ToolPermissionPolicy[];
@@ -41,7 +45,7 @@ export function resolvePermissionPrecedence(sources: PermissionSources): ToolPer
   if (sources.useDefaults !== false) {
     layers.push({
       name: "defaults",
-      policies: [...DEFAULT_TOOL_POLICIES]
+      policies: [...DEFAULT_TOOL_POLICIES],
     });
   }
 
@@ -53,7 +57,7 @@ export function resolvePermissionPrecedence(sources: PermissionSources): ToolPer
       if (yamlPolicies.length > 0) {
         layers.push({
           name: "personal-settings",
-          policies: yamlPolicies
+          policies: yamlPolicies,
         });
       }
     }
@@ -63,7 +67,7 @@ export function resolvePermissionPrecedence(sources: PermissionSources): ToolPer
   if (sources.configPermissions) {
     layers.push({
       name: "config",
-      policies: sources.configPermissions
+      policies: sources.configPermissions,
     });
   }
 
@@ -73,7 +77,7 @@ export function resolvePermissionPrecedence(sources: PermissionSources): ToolPer
     if (cliPolicies.length > 0) {
       layers.push({
         name: "cli-flags",
-        policies: cliPolicies
+        policies: cliPolicies,
       });
     }
   }
@@ -82,8 +86,8 @@ export function resolvePermissionPrecedence(sources: PermissionSources): ToolPer
   const combinedPolicies = combineLayersWithPrecedence(layers);
 
   logger.debug("Resolved permission precedence", {
-    layers: layers.map(l => ({ name: l.name, count: l.policies.length })),
-    totalPolicies: combinedPolicies.length
+    layers: layers.map((l) => ({ name: l.name, count: l.policies.length })),
+    totalPolicies: combinedPolicies.length,
   });
 
   return combinedPolicies;
@@ -102,21 +106,21 @@ function commandLineFlagsToPolicies(flags: {
   // Order matters for CLI flags too
   if (flags.exclude) {
     for (const tool of flags.exclude) {
-      const normalizedName = normalizeToolName(tool);
+      const normalizedName = tool;
       policies.push({ tool: normalizedName, permission: "exclude" });
     }
   }
 
   if (flags.ask) {
     for (const tool of flags.ask) {
-      const normalizedName = normalizeToolName(tool);
+      const normalizedName = tool;
       policies.push({ tool: normalizedName, permission: "ask" });
     }
   }
 
   if (flags.allow) {
     for (const tool of flags.allow) {
-      const normalizedName = normalizeToolName(tool);
+      const normalizedName = tool;
       policies.push({ tool: normalizedName, permission: "allow" });
     }
   }
@@ -128,7 +132,9 @@ function commandLineFlagsToPolicies(flags: {
  * Combines permission layers with proper precedence.
  * Higher precedence layers come later in the array and are prepended to the result.
  */
-function combineLayersWithPrecedence(layers: Array<{ name: string; policies: ToolPermissionPolicy[] }>): ToolPermissionPolicy[] {
+function combineLayersWithPrecedence(
+  layers: Array<{ name: string; policies: ToolPermissionPolicy[] }>,
+): ToolPermissionPolicy[] {
   // Start with empty array
   let combined: ToolPermissionPolicy[] = [];
 

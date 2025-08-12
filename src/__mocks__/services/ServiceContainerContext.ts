@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 import { vi } from "vitest";
-import { ServiceContainer } from '../../services/ServiceContainer.js';
+import { ServiceContainer } from "../../services/ServiceContainer.js";
 
 // Create a mock service container
 const mockServiceContainer = {
@@ -18,7 +18,11 @@ const mockServiceContainer = {
   setMaxListeners: vi.fn(),
 } as unknown as ServiceContainer;
 
-export const ServiceContainerProvider = ({ children }: { children: React.ReactNode }) => {
+export const ServiceContainerProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   return React.createElement(React.Fragment, null, children);
 };
 

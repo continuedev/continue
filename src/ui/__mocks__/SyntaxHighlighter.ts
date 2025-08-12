@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export interface SyntaxHighlighterTheme {
   keyword: string;
@@ -9,19 +9,19 @@ export interface SyntaxHighlighterTheme {
 }
 
 export const defaultTheme: SyntaxHighlighterTheme = {
-  keyword: 'blue',
-  string: 'green',
-  comment: 'gray',
-  number: 'yellow',
-  operator: 'cyan',
+  keyword: "blue",
+  string: "green",
+  comment: "gray",
+  number: "yellow",
+  operator: "cyan",
 };
 
 export function highlightCode(code: string): React.ReactNode[] {
   // Mock implementation that just returns the code as plain text
-  return [React.createElement('ink-text', { key: 'mock-code' }, code)];
+  return [React.createElement("ink-text", { key: "mock-code" }, code)];
 }
 
 export function detectLanguage(): string {
   // Mock implementation
-  return 'javascript';
+  return "javascript";
 }

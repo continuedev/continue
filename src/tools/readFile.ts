@@ -1,5 +1,6 @@
 import * as fs from "fs";
 
+import { markFileAsRead } from "./edit.js";
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
 
@@ -33,6 +34,8 @@ export const readFileTool: Tool = {
         return `Error: File does not exist: ${args.filepath}`;
       }
       const content = fs.readFileSync(args.filepath, "utf-8");
+      // Mark this file as read for the edit tool
+      markFileAsRead(args.filepath);
       return `Content of ${args.filepath}:\n${content}`;
     } catch (error) {
       return `Error reading file: ${

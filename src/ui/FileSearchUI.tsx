@@ -95,6 +95,7 @@ const initializeCache = async (): Promise<void> => {
           "**/*.tgz",
           "**/*.rar",
           "**/*.7z",
+          "**/*.next",
         ],
         dot: true,
         absolute: false,
@@ -263,7 +264,7 @@ export async function throttledGlob(
   patterns: string[],
   options: GlobOptionsWithFileTypesFalse,
   batchSize = 100,
-  delay = 20
+  delay = 20,
 ): Promise<string[]> {
   return new Promise<string[]>((resolve, reject) => {
     const allMatches: string[] = [];

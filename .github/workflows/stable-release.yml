@@ -1,0 +1,137 @@
+name: Stable Release
+
+on:
+  schedule:
+    # Run every Monday at 10am UTC (1 hour after beta release)
+    - cron: "0 10 * * 1"
+  workflow_dispatch:
+    inputs:
+      beta_version:
+        description: "Specific beta version to promote (e.g., 1.2.3-beta.20240115)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  stable-release:
+    name: Stable Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          always-auth: true
+
+      - name: Find beta version to promote
+        id: find_beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [[ -n "${{ inputs.beta_version }}" ]]; then
+            # Manual input provided
+            BETA_VERSION="${{ inputs.beta_version }}"
+            echo "Using manually specified beta version: $BETA_VERSION"
+          else
+            # Find beta version that's at least 7 days old
+            SEVEN_DAYS_AGO=$(date -u -d '7 days ago' +%Y%m%d)
+            echo "Looking for beta versions from $SEVEN_DAYS_AGO or earlier"
+            
+            # Get all beta versions from npm
+            BETA_VERSIONS=$(npm view @continuedev/cli versions --json | jq -r '.[] | select(contains("-beta."))' | sort -V)
+            
+            CANDIDATE_VERSION=""
+            for version in $BETA_VERSIONS; do
+              # Extract date from beta version (format: x.y.z-beta.YYYYMMDD)
+              if [[ $version =~ -beta\.([0-9]{8}) ]]; then
+                BETA_DATE="${BASH_REMATCH[1]}"
+                if [[ $BETA_DATE -le $SEVEN_DAYS_AGO ]]; then
+                  CANDIDATE_VERSION=$version
+                fi
+              fi
+            done
+            
+            if [[ -z "$CANDIDATE_VERSION" ]]; then
+              echo "No beta version found that is at least 7 days old"
+              exit 1
+            fi
+            
+            BETA_VERSION=$CANDIDATE_VERSION
+            echo "Selected beta version for promotion: $BETA_VERSION"
+          fi
+
+          # Extract base version (remove -beta.YYYYMMDD suffix)
+          STABLE_VERSION=$(echo "$BETA_VERSION" | sed 's/-beta\.[0-9]\{8\}//')
+
+          echo "beta_version=$BETA_VERSION" >> $GITHUB_OUTPUT
+          echo "stable_version=$STABLE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download and verify beta package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Download the specific beta version
+          npm pack @continuedev/cli@${{ steps.find_beta.outputs.beta_version }}
+
+          # Extract and verify the package
+          PACKAGE_FILE=$(ls continuedev-cli-*.tgz)
+          tar -xzf "$PACKAGE_FILE"
+
+          echo "Beta package contents verified"
+          ls -la package/
+
+      - name: Update package.json for stable release
+        run: |
+          # Copy the beta package contents
+          cp -r package/* .
+
+          # Update version to stable (remove beta suffix)
+          npm version ${{ steps.find_beta.outputs.stable_version }} --no-git-tag-version
+
+      - name: Build (verification step)
+        run: npm run build
+
+      - name: Run tests (verification step)
+        run: npm test
+
+      - name: Publish stable to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --tag latest
+          echo "Published stable version: ${{ steps.find_beta.outputs.stable_version }}"
+
+      - name: Create stable release on GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+        run: |
+          # Create a git tag for the stable release
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v${{ steps.find_beta.outputs.stable_version }}"
+          git push origin "v${{ steps.find_beta.outputs.stable_version }}"
+
+          # Create GitHub release
+          gh release create "v${{ steps.find_beta.outputs.stable_version }}" \
+            --title "Stable Release v${{ steps.find_beta.outputs.stable_version }}" \
+            --notes "Stable release promoted from tested beta version ${{ steps.find_beta.outputs.beta_version }}. This version has been thoroughly tested in beta for at least 7 days." \
+            --latest
+
+      - name: Update GitHub release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+        run: |
+          # Mark the original beta release as superseded
+          gh release edit "v${{ steps.find_beta.outputs.beta_version }}" \
+            --notes "This beta version has been promoted to stable as v${{ steps.find_beta.outputs.stable_version }}."

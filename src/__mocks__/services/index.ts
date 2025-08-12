@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 export const services = {
   auth: {
@@ -12,9 +12,9 @@ export const services = {
 export const reloadService = vi.fn(() => Promise.resolve(undefined));
 
 export const SERVICE_NAMES = {
-  AUTH: 'auth',
-  API_CLIENT: 'apiClient',
-  CONFIG: 'config',
-  MODEL: 'model',
-  MCP: 'mcp',
+  AUTH: "auth",
+  API_CLIENT: "apiClient",
+  CONFIG: "config",
+  MODEL: "model",
+  MCP: "mcp",
 };

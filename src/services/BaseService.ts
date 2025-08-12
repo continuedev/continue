@@ -60,7 +60,7 @@ export abstract class BaseService<TState> extends EventEmitter {
     const previousState = this.currentState;
     this.currentState = { ...this.currentState, ...newState };
     // Only log state updates if not in production to avoid circular reference issues
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       logger.debug(`${this.serviceName} state updated`);
     }
     this.emit("stateChanged", this.currentState, previousState);
@@ -103,7 +103,7 @@ export interface ServiceWithDependencies {
  * Helper to check if a service has dependencies
  */
 export function hasDependencies(
-  service: any
+  service: any,
 ): service is ServiceWithDependencies {
   return !!service && typeof service.getDependencies === "function";
 }

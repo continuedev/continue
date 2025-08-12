@@ -125,7 +125,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
 
       if (!match) {
         throw new Error(
-          `Search content not found in block ${i + 1}:\n${searchContent}`
+          `Search content not found in block ${i + 1}:\n${searchContent}`,
         );
       }
 
@@ -162,7 +162,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       // Get lines for telemetry
       const { added, removed } = calculateLinesOfCodeDiff(
         args.oldContent,
-        args.newContent
+        args.newContent,
       );
       const language = getLanguageFromFilePath(args.filepath);
 
@@ -173,7 +173,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
         telemetryService.recordLinesOfCodeModified(
           "removed",
           removed,
-          language
+          language,
         );
       }
 
@@ -183,7 +183,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
       throw new Error(
         `Error: failed to edit ${args.filepath}:\n ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   },

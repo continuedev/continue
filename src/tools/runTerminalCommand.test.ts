@@ -22,10 +22,18 @@ describe("runTerminalCommandTool", () => {
       expect(result.trim()).toMatch(/^\/.*$/); // Should be an absolute path
     });
 
-    it("should execute ls command and return file listings", async () => {
-      const result = await runTerminalCommandTool.run({ command: "ls -la ." });
-      expect(result).toContain(".");
-      expect(result).toContain("..");
+    it("should execute directory listing command and return file listings", async () => {
+      // Use a cross-platform command that works on both Unix and Windows
+      const command = process.platform === 'win32' ? 'dir' : 'ls -la .';
+      const result = await runTerminalCommandTool.run({ command });
+      
+      // On Windows, look for <DIR> entries, on Unix look for . and ..
+      if (process.platform === 'win32') {
+        expect(result).toContain(".");
+      } else {
+        expect(result).toContain(".");
+        expect(result).toContain("..");
+      }
     });
 
     it("should handle commands with multiple arguments", async () => {

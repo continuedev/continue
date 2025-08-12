@@ -1,10 +1,9 @@
 import { exec } from "child_process";
-import * as os from "os";
 import * as path from "path";
 
-import { useState } from "react";
-
+import { env } from "../../env.js";
 import { services } from "../../services/index.js";
+import { useNavigation } from "../context/NavigationContext.js";
 
 interface ConfigOption {
   id: string;
@@ -23,16 +22,16 @@ interface UseConfigSelectorProps {
   onChatReset: () => void;
 }
 
-const CONFIG_PATH = path.join(os.homedir(), ".continue", "config.yaml");
+const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 export function useConfigSelector({
   onMessage,
   onChatReset,
 }: UseConfigSelectorProps) {
-  const [showConfigSelector, setShowConfigSelector] = useState(false);
+  const { closeCurrentScreen } = useNavigation();
 
   const handleConfigSelect = async (config: ConfigOption) => {
-    setShowConfigSelector(false);
+    closeCurrentScreen();
 
     if (config.type === "create") {
       // Open the web browser to create new assistant
@@ -112,18 +111,7 @@ export function useConfigSelector({
     }
   };
 
-  const handleConfigCancel = () => {
-    setShowConfigSelector(false);
-  };
-
-  const showConfigSelectorUI = () => {
-    setShowConfigSelector(true);
-  };
-
   return {
-    showConfigSelector,
     handleConfigSelect,
-    handleConfigCancel,
-    showConfigSelectorUI,
   };
 }

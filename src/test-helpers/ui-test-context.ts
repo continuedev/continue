@@ -11,14 +11,16 @@ export interface UITestContext {
 /**
  * Creates a test context with common UI mocks for TUI components
  */
-export function createUITestContext(options: {
-  serviceValue?: any;
-  serviceState?: "idle" | "loading" | "ready" | "error";
-  services?: Record<string, any>;
-  allServicesReady?: boolean;
-  chatMessages?: any[];
-  isWaitingForResponse?: boolean;
-} = {}): UITestContext {
+export function createUITestContext(
+  options: {
+    serviceValue?: any;
+    serviceState?: "idle" | "loading" | "ready" | "error";
+    services?: Record<string, any>;
+    allServicesReady?: boolean;
+    chatMessages?: any[];
+    isWaitingForResponse?: boolean;
+  } = {},
+): UITestContext {
   const {
     serviceValue = null,
     serviceState = "idle",

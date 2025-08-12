@@ -110,13 +110,13 @@ class TelemetryService {
                     `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics` ||
                     "http://localhost:4318/v1/metrics",
                   headers: this.parseHeaders(
-                    process.env.OTEL_EXPORTER_OTLP_HEADERS || ""
+                    process.env.OTEL_EXPORTER_OTLP_HEADERS || "",
                   ),
                 }),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000"
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
                 ),
-              })
+              }),
             );
             break;
           case "console":
@@ -124,9 +124,9 @@ class TelemetryService {
               new PeriodicExportingMetricReader({
                 exporter: new ConsoleMetricExporter(),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000"
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
                 ),
-              })
+              }),
             );
             break;
         }
@@ -175,7 +175,7 @@ class TelemetryService {
       {
         description: "Count of CLI sessions started",
         unit: "count",
-      }
+      },
     );
 
     this.linesOfCodeCounter = this.meter.createCounter(
@@ -183,7 +183,7 @@ class TelemetryService {
       {
         description: "Count of lines of code modified",
         unit: "count",
-      }
+      },
     );
 
     this.pullRequestCounter = this.meter.createCounter(
@@ -191,7 +191,7 @@ class TelemetryService {
       {
         description: "Number of pull requests created",
         unit: "count",
-      }
+      },
     );
 
     this.commitCounter = this.meter.createCounter("continue.cli.commit.count", {
@@ -214,7 +214,7 @@ class TelemetryService {
       {
         description: "Count of code editing tool permission decisions",
         unit: "count",
-      }
+      },
     );
 
     this.activeTimeCounter = this.meter.createCounter(
@@ -222,7 +222,7 @@ class TelemetryService {
       {
         description: "Total active time in seconds",
         unit: "s",
-      }
+      },
     );
 
     // Additional Continue CLI specific metrics
@@ -231,7 +231,7 @@ class TelemetryService {
       {
         description: "Authentication attempts",
         unit: "{attempt}",
-      }
+      },
     );
 
     this.mcpConnectionsGauge = this.meter.createObservableGauge(
@@ -239,7 +239,7 @@ class TelemetryService {
       {
         description: "Active MCP connections",
         unit: "{connection}",
-      }
+      },
     );
 
     this.startupTimeHistogram = this.meter.createHistogram(
@@ -247,7 +247,7 @@ class TelemetryService {
       {
         description: "Time from CLI start to ready state",
         unit: "ms",
-      }
+      },
     );
 
     this.responseTimeHistogram = this.meter.createHistogram(
@@ -255,7 +255,7 @@ class TelemetryService {
       {
         description: "LLM response time metrics",
         unit: "ms",
-      }
+      },
     );
   }
 
@@ -265,7 +265,7 @@ class TelemetryService {
   }
 
   private getStandardAttributes(
-    additionalAttributes: Record<string, string> = {}
+    additionalAttributes: Record<string, string> = {},
   ) {
     const attributes: Record<string, string> = { ...additionalAttributes };
 
@@ -319,7 +319,7 @@ class TelemetryService {
   public recordLinesOfCodeModified(
     type: "added" | "removed",
     count: number,
-    language?: string
+    language?: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -352,7 +352,7 @@ class TelemetryService {
   public recordTokenUsage(
     tokens: number,
     type: "input" | "output" | "cacheRead" | "cacheCreation",
-    model: string
+    model: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -362,7 +362,7 @@ class TelemetryService {
   public recordCodeEditDecision(
     tool: string,
     decision: "accept" | "reject",
-    language?: string
+    language?: string,
   ) {
     if (!this.isEnabled()) return;
 
@@ -391,26 +391,26 @@ class TelemetryService {
 
       this.activeTimeCounter.add(
         this.totalActiveTime / 1000,
-        this.getStandardAttributes()
+        this.getStandardAttributes(),
       );
     }
   }
 
   public recordAuthAttempt(
     result: "success" | "failure" | "cancelled",
-    method: "workos" | "token"
+    method: "workos" | "token",
   ) {
     if (!this.isEnabled()) return;
 
     this.authAttemptsCounter.add(
       1,
-      this.getStandardAttributes({ result, method })
+      this.getStandardAttributes({ result, method }),
     );
   }
 
   public recordMCPConnection(
     serverName: string,
-    status: "connected" | "disconnected" | "error"
+    status: "connected" | "disconnected" | "error",
   ) {
     if (!this.isEnabled()) return;
 
@@ -425,7 +425,7 @@ class TelemetryService {
   public recordStartupTime(
     timeMs: number,
     mode?: "tui" | "headless" | "standard",
-    coldStart?: boolean
+    coldStart?: boolean,
   ) {
     if (!this.isEnabled()) return;
 
@@ -440,7 +440,7 @@ class TelemetryService {
     timeMs: number,
     model: string,
     metricType: "time_to_first_token" | "total_response_time",
-    hasTools?: boolean
+    hasTools?: boolean,
   ) {
     if (!this.isEnabled()) return;
 
@@ -471,57 +471,60 @@ class TelemetryService {
     logger.debug("User prompt event", attributes);
   }
 
-  public logToolResult(
-    toolName: string,
-    success: boolean,
-    durationMs: number,
-    error?: string,
-    decision?: "accept" | "reject",
-    source?: string,
-    toolParameters?: string
-  ) {
+  public logToolResult(options: {
+    toolName: string;
+    success: boolean;
+    durationMs: number;
+    error?: string;
+    decision?: "accept" | "reject";
+    source?: string;
+    toolParameters?: string;
+  }) {
     if (!this.isEnabled()) return;
 
     const attributes = this.getStandardAttributes({
       "event.name": "tool_result",
       "event.timestamp": new Date().toISOString(),
-      tool_name: toolName,
-      success: success.toString(),
-      duration_ms: durationMs.toString(),
+      tool_name: options.toolName,
+      success: options.success.toString(),
+      duration_ms: options.durationMs.toString(),
     });
 
-    if (error) attributes.error = error;
-    if (decision) attributes.decision = decision;
-    if (source) attributes.source = source;
-    if (toolParameters) attributes.tool_parameters = toolParameters;
+    if (options.error) attributes.error = options.error;
+    if (options.decision) attributes.decision = options.decision;
+    if (options.source) attributes.source = options.source;
+    if (options.toolParameters)
+      attributes.tool_parameters = options.toolParameters;
 
     // TODO: Implement OTLP logs export
     logger.debug("Tool result event", attributes);
   }
 
-  public logApiRequest(
-    model: string,
-    durationMs: number,
-    success: boolean,
-    error?: string,
-    inputTokens?: number,
-    outputTokens?: number,
-    costUsd?: number
-  ) {
+  public logApiRequest(options: {
+    model: string;
+    durationMs: number;
+    success: boolean;
+    error?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    costUsd?: number;
+  }) {
     if (!this.isEnabled()) return;
 
     const attributes = this.getStandardAttributes({
       "event.name": "api_request",
       "event.timestamp": new Date().toISOString(),
-      model,
-      duration_ms: durationMs.toString(),
-      success: success.toString(),
+      model: options.model,
+      duration_ms: options.durationMs.toString(),
+      success: options.success.toString(),
     });
 
-    if (error) attributes.error = error;
-    if (inputTokens) attributes.input_tokens = inputTokens.toString();
-    if (outputTokens) attributes.output_tokens = outputTokens.toString();
-    if (costUsd) attributes.cost_usd = costUsd.toString();
+    if (options.error) attributes.error = options.error;
+    if (options.inputTokens)
+      attributes.input_tokens = options.inputTokens.toString();
+    if (options.outputTokens)
+      attributes.output_tokens = options.outputTokens.toString();
+    if (options.costUsd) attributes.cost_usd = options.costUsd.toString();
 
     // TODO: Implement OTLP logs export
     logger.debug("API request event", attributes);

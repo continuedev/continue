@@ -1,47 +1,38 @@
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { useApp } from "ink";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { useEffect, useState } from "react";
 
-import { initializeChatHistory } from "../../commands/chat.js";
-import {
-  compactChatHistory,
-  findCompactionIndex,
-  getHistoryForLLM,
-} from "../../compaction.js";
+import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
-import {
-  StreamCallbacks,
-  streamChatResponse,
-} from "../../streamChatResponse.js";
-import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
-import { formatToolCall } from "../../tools/index.js";
-import { ToolCallPreview } from "../../tools/types.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import { shouldAutoCompact } from "../../util/tokenizer.js";
 import { DisplayMessage } from "../types.js";
 
-interface UseChatProps {
-  assistant?: AssistantUnrolled;
-  model?: ModelConfig;
-  llmApi?: BaseLlmApi;
-  initialPrompt?: string;
-  resume?: boolean;
-  additionalRules?: string[];
-  onShowOrgSelector: () => void;
-  onShowConfigSelector: () => void;
-  onShowModelSelector?: () => void;
-  onLoginPrompt?: (promptText: string) => Promise<string>;
-  onReload?: () => Promise<void>;
-  // Remote mode props
-  isRemoteMode?: boolean;
-  remoteUrl?: string;
-}
+import {
+  handleCompactCommand,
+  initChatHistory,
+  processSlashCommandResult,
+  trackUserMessage,
+  handleAutoCompaction,
+  formatMessageWithFiles,
+  handleSpecialCommands,
+} from "./useChat.helpers.js";
+import {
+  handleRemoteMessage,
+  setupRemotePolling,
+} from "./useChat.remote.helpers.js";
+import {
+  createStreamCallbacks,
+  executeStreaming,
+} from "./useChat.stream.helpers.js";
+import {
+  UseChatProps,
+  AttachedFile,
+  ActivePermissionRequest,
+} from "./useChat.types.js";
 
 export function useChat({
   assistant,
@@ -70,8 +61,8 @@ export function useChat({
       // Load previous session if resume flag is used
       // If no session loaded or not resuming, we'll need to add system message
       // We can't make this async, so we'll handle it in the useEffect
-      return resume ? loadSession() ?? [] : [];
-    }
+      return resume ? (loadSession() ?? []) : [];
+    },
   );
 
   const [messages, setMessages] = useState<DisplayMessage[]>(() => {
@@ -91,7 +82,7 @@ export function useChat({
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
-    null
+    null,
   );
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
@@ -99,20 +90,14 @@ export function useChat({
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && loadSession() !== null)
+    isRemoteMode || (resume && loadSession() !== null),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
   const [initialRules] = useState(additionalRules);
-  const [attachedFiles, setAttachedFiles] = useState<
-    Array<{ path: string; content: string }>
-  >([]);
-  const [activePermissionRequest, setActivePermissionRequest] = useState<{
-    toolName: string;
-    toolArgs: any;
-    requestId: string;
-    toolCallPreview?: ToolCallPreview[];
-  } | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [activePermissionRequest, setActivePermissionRequest] =
+    useState<ActivePermissionRequest | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
     // When resuming, check for compaction markers in the loaded history
     if (resume) {
@@ -128,106 +113,14 @@ export function useChat({
   useEffect(() => {
     if (!isRemoteMode || !remoteUrl || process.env.NODE_ENV === "test") return;
 
-    let pollInterval: NodeJS.Timeout | null = null;
-    let isPolling = false;
-    let isMounted = true;
-
-    const pollServerState = async () => {
-      if (isPolling || !isMounted) return; // Prevent overlapping polls and check if still mounted
-      isPolling = true;
-
-      try {
-        const response = await fetch(`${remoteUrl}/state`);
-        if (response.ok && isMounted) {
-          const state = await response.json();
-
-          // Update messages from server
-          if (state.chatHistory) {
-            // Only update if the chat history has actually changed
-            setMessages((prevMessages) => {
-              // Quick length check first
-              if (prevMessages.length !== state.chatHistory.length) {
-                return state.chatHistory;
-              }
-
-              // Deep comparison - check if content actually changed
-              const hasChanged = state.chatHistory.some(
-                (msg: any, index: number) => {
-                  const prevMsg = prevMessages[index];
-                  return (
-                    !prevMsg ||
-                    prevMsg.role !== msg.role ||
-                    prevMsg.content !== msg.content ||
-                    prevMsg.messageType !== msg.messageType ||
-                    prevMsg.toolName !== msg.toolName ||
-                    prevMsg.toolResult !== msg.toolResult
-                  );
-                }
-              );
-
-              // Only update if there are actual changes
-              return hasChanged ? state.chatHistory : prevMessages;
-            });
-
-            // Also update chat history for consistency
-            setChatHistory((prevChatHistory) => {
-              const newChatHistory = state.chatHistory.map((msg: any) => ({
-                role: msg.role,
-                content: msg.content,
-              }));
-
-              // Similar comparison for chat history
-              if (prevChatHistory.length !== newChatHistory.length) {
-                return newChatHistory;
-              }
-
-              const hasChanged = newChatHistory.some(
-                (msg: any, index: number) => {
-                  const prevMsg = prevChatHistory[index];
-                  return (
-                    !prevMsg ||
-                    prevMsg.role !== msg.role ||
-                    prevMsg.content !== msg.content
-                  );
-                }
-              );
-
-              return hasChanged ? newChatHistory : prevChatHistory;
-            });
-          }
-
-          // Update processing state
-          if (isMounted) {
-            setIsWaitingForResponse(state.isProcessing || false);
-            if (state.isProcessing && !responseStartTime) {
-              setResponseStartTime(Date.now());
-            } else if (!state.isProcessing && responseStartTime) {
-              setResponseStartTime(null);
-            }
-          }
-        }
-      } catch (error) {
-        if (isMounted) {
-          logger.error("Failed to poll server state:", error);
-        }
-      } finally {
-        isPolling = false;
-      }
-    };
-
-    // Start polling immediately
-    pollServerState();
-
-    // Set up interval for continuous polling
-    pollInterval = setInterval(pollServerState, 500); // Poll every 500ms
-
-    return () => {
-      isMounted = false;
-      if (pollInterval !== null) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-      }
-    };
+    return setupRemotePolling({
+      remoteUrl,
+      setMessages,
+      setChatHistory,
+      setIsWaitingForResponse,
+      responseStartTime,
+      setResponseStartTime,
+    });
   }, [isRemoteMode, remoteUrl, responseStartTime]);
 
   useEffect(() => {
@@ -238,10 +131,7 @@ export function useChat({
     const initializeHistory = async () => {
       // Only add system message if we don't have any messages yet
       if (chatHistory.length === 0) {
-        const history = await initializeChatHistory({
-          resume,
-          rule: initialRules,
-        });
+        const history = await initChatHistory(resume, initialRules);
         setChatHistory(history);
       }
       setIsChatHistoryInitialized(true);
@@ -267,263 +157,83 @@ export function useChat({
   }, [initialPrompt, isChatHistoryInitialized]);
 
   const handleUserMessage = async (message: string) => {
-    // Special handling for /org command in TUI
-    if (message.trim() === "/org") {
-      posthogService.capture("useSlashCommand", {
-        name: "org",
-      });
-      onShowOrgSelector();
-      return;
-    }
+    // Handle special commands
+    const handled = await handleSpecialCommands({
+      message,
+      isRemoteMode,
+      remoteUrl,
+      onShowOrgSelector,
+      onShowConfigSelector,
+      exit,
+      setMessages,
+    });
 
-    // Special handling for /config command in TUI
-    if (message.trim() === "/config") {
-      posthogService.capture("useSlashCommand", {
-        name: "config",
-      });
-      onShowConfigSelector();
-      return;
-    }
-
-    // Handle /exit command in remote mode
-    if (isRemoteMode && remoteUrl && message.trim() === "/exit") {
-      posthogService.capture("useSlashCommand", {
-        name: "exit",
-      });
-      try {
-        // Send POST request to /exit endpoint
-        const response = await fetch(`${remoteUrl}/exit`, {
-          method: "POST",
-        });
-
-        if (response.ok) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: "Remote environment is shutting down...",
-              messageType: "system" as const,
-            },
-          ]);
-
-          // Exit the local client after a brief delay
-          setTimeout(() => {
-            exit();
-          }, 1000);
-        } else {
-          const text = await response.text();
-          logger.error("Remote shutdown failed:", text);
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: "Failed to shut down remote environment",
-              messageType: "system" as const,
-            },
-          ]);
-        }
-      } catch (error) {
-        logger.error("Failed to send exit request to remote server:", error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            content: "Error: Failed to connect to remote server for shutdown",
-            messageType: "system" as const,
-          },
-        ]);
-      }
-      return;
-    }
+    if (handled) return;
 
     // Handle slash commands (skip in remote mode except for /exit which we handled above)
     if (!isRemoteMode && assistant) {
-      const commandResult = await handleSlashCommands(
-        message,
-        assistant
-      );
+      const commandResult = await handleSlashCommands(message, assistant);
       if (commandResult) {
-        if (commandResult.exit) {
-          exit();
-          return;
-        }
-
-        if (commandResult.openConfigSelector) {
-          onShowConfigSelector();
-          return;
-        }
-
-        if (commandResult.openModelSelector && onShowModelSelector) {
-          onShowModelSelector();
-          return;
-        }
-
-        if (commandResult.clear) {
-          const systemMessage = chatHistory.find(
-            (msg) => msg.role === "system"
-          );
-          const newHistory = systemMessage ? [systemMessage] : [];
-          setChatHistory(newHistory);
-          setMessages([]);
-
-          if (commandResult.output) {
-            const output = commandResult.output;
-            setMessages([
-              {
-                role: "system",
-                content: output,
-                messageType: "system" as const,
-              },
-            ]);
-          }
-          return;
-        }
-
         if (commandResult.compact) {
-          // Handle compact command
-          await handleCompactCommand();
+          await handleCompactCommand({
+            chatHistory,
+            model,
+            llmApi,
+            setChatHistory,
+            setMessages,
+            setCompactionIndex,
+          });
           return;
         }
 
-        if (commandResult.output) {
-          const output = commandResult.output;
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: output,
-              messageType: "system" as const,
-            },
-          ]);
-        }
+        const newInput = processSlashCommandResult({
+          result: commandResult,
+          chatHistory,
+          setChatHistory,
+          setMessages,
+          exit,
+          onShowConfigSelector,
+          onShowModelSelector,
+        });
 
-        if (commandResult.newInput) {
-          message = commandResult.newInput;
+        if (newInput) {
+          message = newInput;
         } else {
           return;
         }
       }
     }
 
-    // Start active time tracking for telemetry
-    telemetryService.startActiveTime();
-
-    // Track user prompt
-    telemetryService.logUserPrompt(message.length, message);
-    posthogService.capture("chat", {
-      model: model?.name,
-      provider: model?.provider,
-    });
+    // Track telemetry
+    trackUserMessage(message, model);
 
     // Add user message to history and display
-    let messageContent = message;
-
+    const messageContent = formatMessageWithFiles(message, attachedFiles);
     if (attachedFiles.length > 0) {
-      const fileContents = attachedFiles
-        .map(
-          (file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`
-        )
-        .join("");
-      messageContent = `${message}${fileContents}`;
       setAttachedFiles([]);
     }
 
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
-      try {
-        const response = await fetch(`${remoteUrl}/message`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ message: messageContent }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: `Error: ${error.error || "Failed to send message"}`,
-              messageType: "system" as const,
-            },
-          ]);
-        }
-        // State will be updated by polling
-      } catch (error) {
-        logger.error("Failed to send message to remote server:", error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            content: `Error: Failed to connect to remote server`,
-            messageType: "system" as const,
-          },
-        ]);
-      }
+      await handleRemoteMessage({
+        remoteUrl,
+        messageContent,
+        setMessages,
+      });
       return;
     }
 
     // Check if auto-compacting is needed BEFORE adding user message
-    let currentCompactionIndex = compactionIndex;
-    let currentChatHistory = chatHistory;
-    
-    if (model && shouldAutoCompact(chatHistory, model)) {
-      logger.info("Auto-compacting triggered in TUI mode");
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: "Approaching context limit. Auto-compacting chat history...",
-          messageType: "system" as const,
-        },
-      ]);
-
-      try {
-        if (!llmApi) {
-          throw new Error("LLM API is not available for auto-compaction");
-        }
-        
-        // Compact the history WITHOUT the current user message
-        const result = await compactChatHistory(chatHistory, model, llmApi);
-
-        // Update local variables immediately
-        currentChatHistory = result.compactedHistory;
-        currentCompactionIndex = result.compactionIndex;
-        
-        // Update state
-        setChatHistory(result.compactedHistory);
-        setCompactionIndex(result.compactionIndex);
-
-        // Save the compacted session
-        saveSession(result.compactedHistory);
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            content: "✓ Chat history auto-compacted successfully.",
-            messageType: "system" as const,
-          },
-        ]);
-      } catch (error: any) {
-        const errorMessage = `Auto-compaction error: ${formatError(error)}`;
-        logger.error(errorMessage);
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "system",
-            content: `Warning: ${errorMessage}. Continuing without compaction...`,
-            messageType: "system" as const,
-          },
-        ]);
-
-        // Continue without compaction on error
-      }
-    }
+    const { currentChatHistory, currentCompactionIndex } =
+      await handleAutoCompaction({
+        chatHistory,
+        model,
+        llmApi,
+        compactionIndex,
+        setMessages,
+        setChatHistory,
+        setCompactionIndex,
+      });
 
     // NOW add user message to history and UI
     const newUserMessage: ChatCompletionMessageParam = {
@@ -546,137 +256,29 @@ export function useChat({
     });
 
     try {
-      let currentStreamingMessage: DisplayMessage | null = null;
-
-      const streamCallbacks: StreamCallbacks = {
-        onContent: (content: string) => {
-          if (!currentStreamingMessage) {
-            currentStreamingMessage = {
-              role: "assistant",
-              content: "",
-              isStreaming: true,
-            };
-          }
-          currentStreamingMessage.content += content;
-        },
-        onContentComplete: (content: string) => {
-          if (currentStreamingMessage) {
-            setMessages((prev) => [
-              ...prev,
-              {
-                role: "assistant",
-                content: content,
-                isStreaming: false,
-              },
-            ]);
-            currentStreamingMessage = null;
-          }
-        },
-        onToolStart: (toolName: string, toolArgs?: any) => {
-          if (currentStreamingMessage && currentStreamingMessage.content) {
-            const messageContent = currentStreamingMessage.content;
-            setMessages((prev) => [
-              ...prev,
-              {
-                role: "assistant",
-                content: messageContent,
-                isStreaming: false,
-              },
-            ]);
-            currentStreamingMessage = null;
-          }
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: formatToolCall(toolName, toolArgs),
-              messageType: "tool-start",
-              toolName,
-            },
-          ]);
-        },
-        onToolResult: (result: string, toolName: string) => {
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            for (let i = newMessages.length - 1; i >= 0; i--) {
-              if (
-                newMessages[i].messageType === "tool-start" &&
-                newMessages[i].toolName === toolName
-              ) {
-                newMessages[i] = {
-                  ...newMessages[i],
-                  messageType: "tool-result",
-                  toolResult: result,
-                };
-                break;
-              }
-            }
-            return newMessages;
-          });
-        },
-        onToolError: (error: string, toolName?: string) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "system",
-              content: error,
-              messageType: "tool-error",
-              toolName,
-            },
-          ]);
-        },
-        onToolPermissionRequest: (
-          toolName: string,
-          toolArgs: any,
-          requestId: string,
-          toolCallPreview?: ToolCallPreview[]
-        ) => {
-          // Set the active permission request to show the selector
-          setActivePermissionRequest({
-            toolName,
-            toolArgs,
-            requestId,
-            toolCallPreview,
-          });
-        },
+      const currentStreamingMessageRef = {
+        current: null as DisplayMessage | null,
       };
+      const streamCallbacks = createStreamCallbacks(
+        { setMessages, setActivePermissionRequest },
+        currentStreamingMessageRef,
+      );
 
-      // Call streamChatResponse with the new history that includes the user message
-      // streamChatResponse modifies the history array in place, so we need to handle this carefully
+      // Execute streaming chat response
+      await executeStreaming({
+        newHistory,
+        model,
+        llmApi,
+        controller,
+        streamCallbacks,
+        currentCompactionIndex,
+      });
 
-      if (model && llmApi) {
-        // Use currentCompactionIndex which has the updated value after potential auto-compaction
-        if (currentCompactionIndex !== null && currentCompactionIndex !== undefined) {
-          // When using compaction, we need to send a subset but capture the full history
-          const historyForLLM = getHistoryForLLM(newHistory, currentCompactionIndex);
-          const originalLength = historyForLLM.length;
-
-          await streamChatResponse(
-            historyForLLM,
-            model,
-            llmApi,
-            controller,
-            streamCallbacks
-          );
-
-          // Append any new messages (assistant/tool) that were added by streamChatResponse
-          const newMessages = historyForLLM.slice(originalLength);
-          newHistory.push(...newMessages);
-        } else {
-          // No compaction - just pass the full history directly
-          await streamChatResponse(
-            newHistory,
-            model,
-            llmApi,
-            controller,
-            streamCallbacks
-          );
-        }
-      }
-
-      if (currentStreamingMessage && (currentStreamingMessage as any).content) {
-        const messageContent = (currentStreamingMessage as any).content;
+      if (
+        currentStreamingMessageRef.current &&
+        currentStreamingMessageRef.current.content
+      ) {
+        const messageContent = currentStreamingMessageRef.current.content;
         setMessages((prev) => [
           ...prev,
           {
@@ -748,107 +350,15 @@ export function useChat({
     }
   };
 
-  const handleCompactCommand = async () => {
-    if (!model || !llmApi) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: "Error: No model configured for compaction",
-          messageType: "system" as const,
-        },
-      ]);
-      return;
-    }
-
-    setIsWaitingForResponse(true);
-    setInputMode(false);
-
-    try {
-      let streamingContent = "";
-
-      const result = await compactChatHistory(chatHistory, model, llmApi, {
-        onStreamContent: (content: string) => {
-          streamingContent += content;
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (
-              lastMessage &&
-              lastMessage.role === "assistant" &&
-              lastMessage.messageType === "compaction" &&
-              lastMessage.isStreaming
-            ) {
-              lastMessage.content = streamingContent;
-            } else {
-              newMessages.push({
-                role: "assistant",
-                content: streamingContent,
-                isStreaming: true,
-                messageType: "compaction",
-              });
-            }
-            return newMessages;
-          });
-        },
-        onStreamComplete: () => {
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage && lastMessage.isStreaming) {
-              lastMessage.isStreaming = false;
-            }
-            return newMessages;
-          });
-        },
-        onError: (error: Error) => {
-          logger.error("Compaction streaming error", error);
-        },
-      });
-
-      // Update state with compacted history
-      setChatHistory(result.compactedHistory);
-      setCompactionIndex(result.compactionIndex);
-
-      // Save the compacted session
-      saveSession(result.compactedHistory);
-
-      // Add success message
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content:
-            "Chat history compacted successfully. Future messages will use the compacted context.",
-          messageType: "system" as const,
-        },
-      ]);
-    } catch (error: any) {
-      const errorMessage = `Compaction error: ${formatError(error)}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: errorMessage,
-          messageType: "system" as const,
-        },
-      ]);
-    } finally {
-      setAbortController(null);
-      setIsWaitingForResponse(false);
-      setInputMode(true);
-    }
-  };
-
   const handleFileAttached = (filePath: string, content: string) => {
     setAttachedFiles((prev) => [...prev, { path: filePath, content }]);
   };
 
   const resetChatHistory = async () => {
-    const newHistory = await initializeChatHistory({
-      resume: false, // Don't resume when resetting
-      rule: additionalRules,
-    });
+    const newHistory = await initChatHistory(
+      false, // Don't resume when resetting
+      additionalRules,
+    );
     setChatHistory(newHistory);
     setMessages([]);
   };
@@ -856,7 +366,7 @@ export function useChat({
   const handleToolPermissionResponse = async (
     requestId: string,
     approved: boolean,
-    createPolicy?: boolean
+    createPolicy?: boolean,
   ) => {
     // Capture the current permission request before clearing it
     const currentRequest = activePermissionRequest;
@@ -873,7 +383,7 @@ export function useChat({
 
         const policyRule = generatePolicyRule(
           currentRequest.toolName,
-          currentRequest.toolArgs
+          currentRequest.toolArgs,
         );
 
         await addPolicyToYaml(policyRule);

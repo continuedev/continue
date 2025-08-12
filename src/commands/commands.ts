@@ -78,7 +78,7 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
  */
 export function getAllSlashCommands(
   assistant: AssistantConfig,
-  options: { isRemoteMode?: boolean } = {}
+  options: { isRemoteMode?: boolean } = {},
 ): SlashCommand[] {
   const { isRemoteMode = false } = options;
 
@@ -105,7 +105,7 @@ export function getAllSlashCommands(
  * Get assistant prompt commands only
  */
 export function getAssistantSlashCommands(
-  assistant: AssistantConfig
+  assistant: AssistantConfig,
 ): SlashCommand[] {
   return (
     assistant?.prompts?.map((prompt) => ({

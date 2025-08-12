@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
-import type { AuthConfig } from '../../auth/workos.js';
+import { vi } from "vitest";
+import type { AuthConfig } from "../../auth/workos.js";
 
 export const isAuthenticated = vi.fn(() => false);
 export const isAuthenticatedConfig = vi.fn(() => false);
@@ -18,10 +18,6 @@ export const getAccessToken = vi.fn(() => null);
 export const getConfigUri = vi.fn(() => null);
 export const getAssistantSlug = vi.fn(() => null);
 export const getLocalConfigPath = vi.fn(() => null);
-export const pathToUri = vi.fn((path: string) => path);
-export const slugToUri = vi.fn((slug: string) => slug);
-export const uriToPath = vi.fn(() => null);
-export const uriToSlug = vi.fn(() => null);
 export const updateConfigUri = vi.fn();
 export const updateModelName = vi.fn();
 export const updateAssistantSlug = vi.fn();

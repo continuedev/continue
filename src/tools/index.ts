@@ -4,13 +4,14 @@ import type { ToolPermissionServiceState } from "../services/ToolPermissionServi
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
+import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { formatToolArgument } from "./formatters.js";
 import { listFilesTool } from "./listFiles.js";
+import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
 import {
   type Tool,
@@ -26,8 +27,10 @@ export type { Tool, ToolCall, ToolParameters };
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
+  editTool,
+  multiEditTool,
   writeFileTool,
-  searchAndReplaceInFileTool,
+  // searchAndReplaceInFileTool,
   listFilesTool,
   searchCodeTool,
   runTerminalCommandTool,
@@ -42,11 +45,11 @@ export const BUILTIN_TOOLS: Tool[] = BASE_BUILTIN_TOOLS;
 // Get dynamic tools based on current state
 function getDynamicTools(): Tool[] {
   const dynamicTools: Tool[] = [];
-  
+
   // Add headless-specific tools if in headless mode
   try {
     const serviceResult = getServiceSync<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS
+      SERVICE_NAMES.TOOL_PERMISSIONS,
     );
     const isHeadless = serviceResult.value?.isHeadless ?? false;
     if (isHeadless) {
@@ -55,7 +58,7 @@ function getDynamicTools(): Tool[] {
   } catch {
     // Service not ready yet, no dynamic tools
   }
-  
+
   return dynamicTools;
 }
 
@@ -71,7 +74,7 @@ export function getToolDisplayName(toolName: string): string {
 }
 
 export function extractToolCalls(
-  response: string
+  response: string,
 ): Array<{ name: string; arguments: Record<string, any> }> {
   const toolCallRegex = /<tool>([\s\S]*?)<\/tool>/g;
   const matches = [...response.matchAll(toolCallRegex)];
@@ -112,7 +115,6 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
 }
 
 export async function getAvailableTools() {
-
   // Load MCP tools
   const mcpTools: Tool[] =
     MCPService.getInstance()
@@ -135,7 +137,7 @@ export async function getAvailableTools() {
 }
 
 export async function executeToolCall(
-  toolCall: PreprocessedToolCall
+  toolCall: PreprocessedToolCall,
 ): Promise<string> {
   const startTime = Date.now();
 
@@ -148,19 +150,16 @@ export async function executeToolCall(
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
     // Preprocessed arg names may be different
     const result = await toolCall.tool.run(
-      toolCall.preprocessResult?.args ?? toolCall.arguments
+      toolCall.preprocessResult?.args ?? toolCall.arguments,
     );
     const duration = Date.now() - startTime;
 
-    telemetryService.logToolResult(
-      toolCall.name,
-      true,
-      duration,
-      undefined, // no error
-      undefined, // no decision
-      undefined, // no source
-      JSON.stringify(toolCall.arguments)
-    );
+    telemetryService.logToolResult({
+      toolName: toolCall.name,
+      success: true,
+      durationMs: duration,
+      toolParameters: JSON.stringify(toolCall.arguments),
+    });
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
@@ -172,15 +171,13 @@ export async function executeToolCall(
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    telemetryService.logToolResult(
-      toolCall.name,
-      false,
-      duration,
-      errorMessage,
-      undefined, // no decision
-      undefined, // no source
-      JSON.stringify(toolCall.arguments)
-    );
+    telemetryService.logToolResult({
+      toolName: toolCall.name,
+      success: false,
+      durationMs: duration,
+      error: errorMessage,
+      toolParameters: JSON.stringify(toolCall.arguments),
+    });
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }
@@ -194,7 +191,7 @@ export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
         toolCall.arguments[paramName] === null)
     ) {
       throw new Error(
-        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`
+        `Required parameter "${paramName}" missing for tool "${toolCall.name}"`,
       );
     }
   }
