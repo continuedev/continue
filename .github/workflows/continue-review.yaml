@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     # Only run if:
     # - It's a PR event from a team member (with write/admin permissions)
-    # - OR it's a comment with @continue-review on a PR (from anyone)
+    # - OR it's a comment with @continue-review on a PR from a team member
     if: |
       (github.event_name == 'pull_request' && 
        (github.event.pull_request.author_association == 'OWNER' || 
@@ -26,7 +26,10 @@ jobs:
         github.event.pull_request.author_association == 'COLLABORATOR')) ||
       (github.event_name == 'issue_comment' && 
        github.event.issue.pull_request && 
-       contains(github.event.comment.body, '@continue-review'))
+       contains(github.event.comment.body, '@continue-review') &&
+       (github.event.comment.author_association == 'OWNER' || 
+        github.event.comment.author_association == 'MEMBER' || 
+        github.event.comment.author_association == 'COLLABORATOR'))
 
     steps:
       - name: Checkout Repository
@@ -108,7 +111,7 @@ jobs:
           echo ""
 
           # Run the CLI with hardcoded assistant and pipe output to code_review.md
-          cat review_prompt.txt | cn --auto --org continuedev --config continuedev/review-bot -p > code_review.md
+          cat review_prompt.txt | cn --readonly --org continuedev --config continuedev/review-bot -p > code_review.md
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 

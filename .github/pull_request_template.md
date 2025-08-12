@@ -4,8 +4,8 @@
 
 ## AI Code Review
 
-- **Team members**: AI review will run automatically when PR is opened or marked ready for review
-- **Community contributors**: Request AI review by commenting `@continue-review` on your PR
+- **Team members only**: AI review runs automatically when PR is opened or marked ready for review
+- Team members can also trigger a review by commenting `@continue-review`
 
 ## Checklist
 
