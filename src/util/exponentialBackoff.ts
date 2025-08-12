@@ -31,46 +31,66 @@ const DEFAULT_OPTIONS: Required<ExponentialBackoffOptions> = {
 };
 
 /**
+ * Checks if the error is a network-related error
+ */
+function isNetworkError(error: any): boolean {
+  const networkCodes = ["ECONNRESET", "ENOTFOUND", "ETIMEDOUT", "EPIPE", "ECONNREFUSED"];
+  return networkCodes.includes(error.code);
+}
+
+/**
+ * Checks if the HTTP status code is retryable
+ */
+function isRetryableHttpStatus(status: number): boolean {
+  // 429 (Too Many Requests), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
+  return status === 429 || status === 502 || status === 503 || status === 504;
+}
+
+/**
+ * Checks if the error type indicates a server issue
+ */
+function isServerError(error: any): boolean {
+  return error.type === "server_error" || error.type === "rate_limit_exceeded";
+}
+
+/**
+ * Checks if the error message indicates a connection issue
+ */
+function isConnectionError(errorMessage: string): boolean {
+  const connectionErrorPatterns = [
+    "premature close",
+    "premature end", 
+    "connection reset",
+    "socket hang up",
+    "aborted",
+    "overloaded"
+  ];
+  
+  return connectionErrorPatterns.some(pattern => errorMessage.includes(pattern));
+}
+
+/**
  * Determines if an error is retryable based on the error type and status code
  */
 function isRetryableError(error: any): boolean {
   // Network errors are retryable
-  if (
-    error.code === "ECONNRESET" ||
-    error.code === "ENOTFOUND" ||
-    error.code === "ETIMEDOUT" ||
-    error.code === "EPIPE" ||
-    error.code === "ECONNREFUSED"
-  ) {
+  if (isNetworkError(error)) {
     return true;
   }
 
   // HTTP status codes that are retryable
-  if (error.status) {
-    const status = error.status;
-    // 429 (Too Many Requests), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
-    return status === 429 || status === 502 || status === 503 || status === 504;
-  }
-
-  // OpenAI specific errors
-  if (error.type === "server_error" || error.type === "rate_limit_exceeded") {
+  if (error.status && isRetryableHttpStatus(error.status)) {
     return true;
   }
 
-  // Anthropic specific errors
-  const lower = error.message?.toLowerCase();
-  if (lower?.includes("overloaded")) {
+  // OpenAI/API specific errors
+  if (isServerError(error)) {
     return true;
   }
 
-  // Check for premature close errors by message content
-  if (
-    lower?.includes("premature close") ||
-    lower?.includes("premature end") ||
-    lower?.includes("connection reset") ||
-    lower?.includes("socket hang up") ||
-    lower?.includes("aborted")
-  ) {
+  // Check for connection issues by message content
+  const errorMessage = error.message?.toLowerCase();
+  if (errorMessage && isConnectionError(errorMessage)) {
     return true;
   }
 
