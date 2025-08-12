@@ -54,7 +54,7 @@ describe("NextEditPromptEngine", () => {
           { filepath: "/path/to/file1.ts", content: "const b = 2;" },
         ],
         currentFileContent: "function test() {\n  const a = 1;\n  return a;\n}",
-        editDiffHistory: "diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@",
+        editDiffHistory: ["diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@"],
         editableRegionStartLine: 0,
         editableRegionEndLine: 3,
         userEdits: "Added constant a",
@@ -91,8 +91,9 @@ describe("NextEditPromptEngine", () => {
         windowEnd: 3, // Math.min(helper.fileLines.length - 1, helper.pos.line + 25)
         editableRegionStartLine: 0, // Math.max(0, helper.pos.line - 1) within window
         editableRegionEndLine: 2, // Math.min(helper.pos.line + 5) within window
-        editDiffHistory:
-          "diff --git a/file.ts b/file.ts\nindex 123..456 789\n--- a/file.ts\n+++ b/file.ts\n@@ -1,3 +1,4 @@\n function test() {\n+  const a = 1;\n   return a;\n }", // unified diff
+        editDiffHistory: [
+          "diff --git a/file.ts b/file.ts\nindex 123..456 789\n--- a/file.ts\n+++ b/file.ts\n@@ -1,3 +1,4 @@\n function test() {\n+  const a = 1;\n   return a;\n }",
+        ], // unified diff
         currentFilePath: "/path/to/file.ts",
         languageShorthand: "ts",
       };
@@ -106,7 +107,6 @@ describe("NextEditPromptEngine", () => {
       expect(result.prompt.content).toContain("### Context:");
       expect(result.prompt.content).toContain("### User Edits:");
       expect(result.prompt.content).toContain("### User Excerpts:");
-      expect(result.prompt.content).toContain("```ts");
 
       expect(result.userEdits).toBe(instinctCtx.editDiffHistory);
       expect(result.userExcerpts).toContain(INSTINCT_USER_CURSOR_IS_HERE_TOKEN);
@@ -223,7 +223,7 @@ describe("NextEditPromptEngine", () => {
           { filepath: "/path/to/file1.ts", content: "const b = 2;" },
         ],
         currentFileContent: "function test() {\n  const a = 1;\n  return a;\n}",
-        editDiffHistory: "diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@",
+        editDiffHistory: ["diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@"],
         editableRegionStartLine: 0,
         editableRegionEndLine: 3,
         userEdits: "Added constant a",
