@@ -33,17 +33,17 @@ jobs:
         run: |
           # Get PR diff
           gh pr diff ${{ github.event.number }} > pr_diff.txt
-          
+
           # Create review prompt
           cat > review_prompt.txt << 'EOF'
           You are conducting a code review for a pull request. Below is the git diff showing all the changes:
 
           EOF
-          
+
           echo "--- PR DIFF START ---" >> review_prompt.txt
           cat pr_diff.txt >> review_prompt.txt
           echo "--- PR DIFF END ---" >> review_prompt.txt
-          
+
           cat >> review_prompt.txt << 'EOF'
 
           Please analyze these changes and provide a comprehensive code review. Consider:
@@ -87,7 +87,7 @@ jobs:
           echo ""
 
           # Run the CLI with hardcoded assistant and pipe output to code_review.md
-          cat review_prompt.txt | cn --auto --config "nate/default-assistant" -p > code_review.md
+          cat review_prompt.txt | cn --auto --org continuedev --config continuedev/review-bot -p > code_review.md
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
 
