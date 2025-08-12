@@ -1529,7 +1529,6 @@ export interface ExperimentalConfig {
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
   enableExperimentalTools?: boolean;
-  onlyUseSystemMessageTools?: boolean;
 
   /**
    * Quick actions are a way to add custom commands to the Code Lens of
@@ -1607,6 +1606,7 @@ export interface JSONModelDescription {
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
+  onlyUseSystemMessageTools?: boolean;
   models: JSONModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
@@ -1638,6 +1638,8 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
+  /** If set to true, use system message tools instead of native tool calling */
+  onlyUseSystemMessageTools?: boolean;
   /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
    * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
@@ -1684,6 +1686,7 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
+  onlyUseSystemMessageTools?: boolean;
   // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1707,6 +1710,7 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
+  onlyUseSystemMessageTools?: boolean;
   // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;

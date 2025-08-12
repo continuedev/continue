@@ -16,8 +16,7 @@ import { RootState } from "../store";
  */
 export function selectUseSystemMessageTools(state: RootState): boolean {
   const selectedModel = selectSelectedChatModel(state);
-  const manualSetting =
-    state.config.config.experimental?.onlyUseSystemMessageTools;
+  const manualSetting = state.config.config.onlyUseSystemMessageTools;
 
   // If no model is selected, fall back to manual setting or default
   if (!selectedModel) {

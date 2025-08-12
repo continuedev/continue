@@ -788,9 +788,8 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          onlyUseSystemMessageTools: false,
+          experimental: {},
         } as any,
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,

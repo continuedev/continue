@@ -13,6 +13,7 @@ export const sharedConfigSchema = z
     allowAnonymousTelemetry: z.boolean(),
     disableIndexing: z.boolean(),
     disableSessionTitles: z.boolean(),
+    onlyUseSystemMessageTools: z.boolean(),
 
     // `experimental` in `ContinueConfig`
     useChromiumForDocsCrawling: z.boolean(),
@@ -20,7 +21,6 @@ export const sharedConfigSchema = z
     promptPath: z.string(),
     useCurrentFileAsContext: z.boolean(),
     enableExperimentalTools: z.boolean(),
-    onlyUseSystemMessageTools: z.boolean(),
     codebaseToolCallingOnly: z.boolean(),
     enableStaticContextualization: z.boolean(),
 
@@ -153,6 +153,10 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.disableSessionTitles !== undefined) {
     configCopy.disableSessionTitles = sharedConfig.disableSessionTitles;
   }
+  if (sharedConfig.onlyUseSystemMessageTools !== undefined) {
+    (configCopy as any).onlyUseSystemMessageTools =
+      sharedConfig.onlyUseSystemMessageTools;
+  }
 
   if (sharedConfig.showSessionTabs !== undefined) {
     configCopy.ui.showSessionTabs = sharedConfig.showSessionTabs;
@@ -180,11 +184,6 @@ export function modifyAnyConfigWithSharedConfig<
   if (sharedConfig.useCurrentFileAsContext !== undefined) {
     configCopy.experimental.useCurrentFileAsContext =
       sharedConfig.useCurrentFileAsContext;
-  }
-
-  if (sharedConfig.onlyUseSystemMessageTools !== undefined) {
-    configCopy.experimental.onlyUseSystemMessageTools =
-      sharedConfig.onlyUseSystemMessageTools;
   }
 
   if (sharedConfig.codebaseToolCallingOnly !== undefined) {

@@ -28,9 +28,7 @@ describe("selectUseSystemMessageTools", () => {
     return {
       config: {
         config: {
-          experimental: {
-            onlyUseSystemMessageTools: manualSetting,
-          },
+          onlyUseSystemMessageTools: manualSetting,
         },
       },
     } as any;
