@@ -1,5 +1,6 @@
 ---
 title: "How to Use Continue CLI (cn)"
+sidebarTitle: "Continue CLI (cn)"
 description: "Learn how to use Continue's command-line interface for context engineering, automated coding tasks, and headless development workflows with customizable models, rules, and tools"
 ---
 
@@ -11,7 +12,7 @@ It provides a battle-tested agent loop so you can simply plug in your model, rul
 
 ![cn](/images/cn-demo.gif)
 
-## How to Get Started with Continue CLI
+## Quick start
 
 <Info>
   Make sure you have [Node.js 18 or higher
@@ -53,19 +54,21 @@ echo "$(git diff) Generate a conventional commit name for the current git change
 
 ## How to Configure Continue CLI
 
-Continue CLI uses the same configuration format as the Continue VS Code extension. This means your existing Continue configuration will work with `cn`.
+`cn` uses [`config.yaml`](/reference), the exact same configuration file as Continue. This means that you can log in to [Continue Hub](/hub/introduction) or use your existing local configuration.
 
-### How to Configure Models
+To switch between configurations, you can use the `/config` slash command in `cn`, or you can start it with the `--config` flag (e.g. `cn --config continuedev/default-agent` or `cn --config ~/.continue/config.yaml`).
 
-Learn how to add custom models [here](./customization/models.mdx). Then, you can use the `/model` slash command to switch between them in `cn`.
+### How to Add Custom Models
+
+Learn how to add custom models [here](/customize/overview). Then, you can use the `/model` slash command to switch between them in `cn`.
 
 ### How to Configure Rules
 
-`cn` supports [rules](./customize/deep-dives/rules.mdx) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from the hub. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
+`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from the hub. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
 
 ### How to Configure Tools
 
-`cn` supports MCP tools, which can be configured in the [same way](./customize/deep-dives/mcp.mdx) as with the Continue IDE extensions.
+`cn` supports MCP tools, which can be configured in the [same way](/customize/deep-dives/mcp) as with the Continue IDE extensions.
 
 #### How to Set Tool Permissions
 
@@ -84,7 +87,7 @@ cn --ask Bash(curl*)
 cn --exclude Fetch
 ```
 
-## How to Troubleshoot Continue CLI
+## Troubleshooting
 
 Run `cn` with the `--verbose` flag to see more detailed logs. These will be output to `~/.continue/logs/cn.log`.
 
