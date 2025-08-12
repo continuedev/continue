@@ -152,15 +152,14 @@ export async function initializeServices(
       const currentState = configService.getState();
       let configPath =
         options.configPath ||
-        (currentState.configPath !== undefined
-          ? currentState.configPath
-          : undefined);
+        (currentState.configPath === undefined
+          ? undefined
+          : currentState.configPath);
 
       // If no config path is available, check for saved config URI in auth config
       if (!configPath) {
-        const { getConfigUri, uriToPath, uriToSlug } = await import(
-          "../auth/workos.js"
-        );
+        const { getConfigUri } = await import("../auth/workos.js");
+        const { uriToPath, uriToSlug } = await import("../auth/uriUtils.js");
         const configUri = getConfigUri(finalAuthState.authConfig);
         if (configUri) {
           const filePath = uriToPath(configUri);

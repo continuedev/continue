@@ -51,7 +51,7 @@ export const ToolPreview: React.FC<ToolPreviewProps> = ({
   let message = `Will call ${getToolDisplayName(toolName)}`;
   const argCount = Object.keys(toolArgs || {}).length;
   if (argCount > 0) {
-    message += ` with ${argCount} argument${argCount !== 1 ? "s" : ""}`;
+    message += ` with ${argCount} argument${argCount === 1 ? "" : "s"}`;
   }
 
   return (

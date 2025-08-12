@@ -1,0 +1,66 @@
+import type { PermissionMode } from "../../permissions/types.js";
+import { logger } from "../../util/logger.js";
+
+// Helper function to handle control keys
+interface ControlKeysOptions {
+  input: string;
+  key: any;
+  exit: () => void;
+  showSlashCommands: boolean;
+  showFileSearch: boolean;
+  cycleModes: () => Promise<PermissionMode>;
+}
+
+export function handleControlKeys(options: ControlKeysOptions): boolean {
+  const { input, key, exit, showSlashCommands, showFileSearch, cycleModes } =
+    options;
+
+  // Handle Ctrl+C and Ctrl+D
+  if (key.ctrl && (input === "c" || input === "d")) {
+    exit();
+    return true;
+  }
+
+  // Handle Shift+Tab to cycle through modes
+  if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
+    cycleModes().catch((error) => {
+      logger.error("Failed to cycle modes:", error);
+    });
+    return true;
+  }
+
+  return false;
+}
+
+// Helper to update text buffer state
+interface TextBufferStateOptions {
+  handled: boolean;
+  textBuffer: any;
+  setInputText: (text: string) => void;
+  setCursorPosition: (pos: number) => void;
+  updateSlashCommandState: (text: string, cursor: number) => void;
+  updateFileSearchState: (text: string, cursor: number) => void;
+  inputHistory: any;
+}
+
+export function updateTextBufferState(options: TextBufferStateOptions) {
+  const {
+    handled,
+    textBuffer,
+    setInputText,
+    setCursorPosition,
+    updateSlashCommandState,
+    updateFileSearchState,
+    inputHistory,
+  } = options;
+
+  if (handled) {
+    const newText = textBuffer.text;
+    const newCursor = textBuffer.cursor;
+    setInputText(newText);
+    setCursorPosition(newCursor);
+    updateSlashCommandState(newText, newCursor);
+    updateFileSearchState(newText, newCursor);
+    inputHistory.resetNavigation();
+  }
+}

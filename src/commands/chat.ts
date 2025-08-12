@@ -118,56 +118,147 @@ export async function initializeChatHistory(
   return chatHistory;
 }
 
-async function processMessage(
-  userInput: string,
+// Helper function to handle manual compaction
+async function handleManualCompaction(
+  chatHistory: ChatCompletionMessageParam[],
+  model: ModelConfig,
+  llmApi: any,
+  isHeadless: boolean,
+): Promise<{ compactionIndex?: number | null } | void> {
+  if (!isHeadless) {
+    console.info(chalk.yellow("Compacting chat history..."));
+  }
+
+  try {
+    const result = await compactChatHistory(chatHistory, model, llmApi);
+
+    // Replace chat history with compacted version
+    chatHistory.length = 0;
+    chatHistory.push(...result.compactedHistory);
+
+    // Save the compacted session
+    saveSession(chatHistory);
+
+    if (isHeadless) {
+      safeStdout(
+        JSON.stringify({
+          status: "success",
+          message: "Chat history compacted",
+          historyLength: chatHistory.length,
+        }) + "\n",
+      );
+    } else {
+      console.info(chalk.green("Chat history compacted successfully."));
+    }
+
+    return { compactionIndex: result.compactionIndex };
+  } catch (error) {
+    const errorMsg = `Compaction error: ${formatError(error)}`;
+    if (isHeadless) {
+      safeStdout(JSON.stringify({ status: "error", message: errorMsg }) + "\n");
+    } else {
+      console.error(chalk.red(errorMsg));
+    }
+    return;
+  }
+}
+
+// Helper function to handle auto-compaction
+async function handleAutoCompaction(
   chatHistory: ChatCompletionMessageParam[],
   model: ModelConfig,
   llmApi: any,
   isHeadless: boolean,
   format?: "json",
-  silent?: boolean,
-  compactionIndex?: number | null,
+): Promise<number | null> {
+  logger.info("Auto-compacting triggered due to context limit");
+
+  if (!isHeadless) {
+    console.info(
+      chalk.yellow(
+        "\nApproaching context limit. Auto-compacting chat history...",
+      ),
+    );
+  } else if (format === "json") {
+    safeStdout(
+      JSON.stringify({
+        status: "info",
+        message: "Auto-compacting triggered",
+        contextUsage:
+          calculateContextUsagePercentage(
+            countChatHistoryTokens(chatHistory),
+            model,
+          ) + "%",
+      }) + "\n",
+    );
+  }
+
+  try {
+    const result = await compactChatHistory(chatHistory, model, llmApi);
+    chatHistory.length = 0;
+    chatHistory.push(...result.compactedHistory);
+    saveSession(chatHistory);
+
+    if (!isHeadless) {
+      console.info(chalk.green("✓ Chat history auto-compacted successfully."));
+    } else if (format === "json") {
+      safeStdout(
+        JSON.stringify({
+          status: "success",
+          message: "Auto-compacted successfully",
+          historyLength: chatHistory.length,
+        }) + "\n",
+      );
+    }
+
+    return result.compactionIndex;
+  } catch (error) {
+    const errorMsg = `Auto-compaction error: ${formatError(error)}`;
+    logger.error(errorMsg);
+
+    if (!isHeadless) {
+      console.error(chalk.red(`Warning: ${errorMsg}`));
+      console.info(chalk.yellow("Continuing without compaction..."));
+    } else if (format === "json") {
+      safeStdout(
+        JSON.stringify({
+          status: "warning",
+          message: "Auto-compaction failed, continuing without compaction",
+        }) + "\n",
+      );
+    }
+    return null;
+  }
+}
+
+interface ProcessMessageOptions {
+  userInput: string;
+  chatHistory: ChatCompletionMessageParam[];
+  model: ModelConfig;
+  llmApi: any;
+  isHeadless: boolean;
+  format?: "json";
+  silent?: boolean;
+  compactionIndex?: number | null;
+}
+
+async function processMessage(
+  options: ProcessMessageOptions,
 ): Promise<{ compactionIndex?: number | null } | void> {
+  const {
+    userInput,
+    chatHistory,
+    model,
+    llmApi,
+    isHeadless,
+    format,
+    silent,
+    compactionIndex: initialCompactionIndex,
+  } = options;
+  let compactionIndex = initialCompactionIndex;
   // Check for slash commands in headless mode
   if (userInput.trim() === "/compact") {
-    if (!isHeadless) {
-      console.info(chalk.yellow("Compacting chat history..."));
-    }
-
-    try {
-      const result = await compactChatHistory(chatHistory, model, llmApi);
-
-      // Replace chat history with compacted version
-      chatHistory.length = 0;
-      chatHistory.push(...result.compactedHistory);
-
-      // Save the compacted session
-      saveSession(chatHistory);
-
-      if (!isHeadless) {
-        console.info(chalk.green("Chat history compacted successfully."));
-      } else {
-        safeStdout(
-          JSON.stringify({
-            status: "success",
-            message: "Chat history compacted",
-            historyLength: chatHistory.length,
-          }) + "\n",
-        );
-      }
-
-      return { compactionIndex: result.compactionIndex };
-    } catch (error) {
-      const errorMsg = `Compaction error: ${formatError(error)}`;
-      if (!isHeadless) {
-        console.error(chalk.red(errorMsg));
-      } else {
-        safeStdout(
-          JSON.stringify({ status: "error", message: errorMsg }) + "\n",
-        );
-      }
-      return;
-    }
+    return handleManualCompaction(chatHistory, model, llmApi, isHeadless);
   }
 
   // Track user prompt
@@ -175,72 +266,15 @@ async function processMessage(
 
   // Check if auto-compacting is needed BEFORE adding user message
   if (shouldAutoCompact(chatHistory, model)) {
-    logger.info("Auto-compacting triggered due to context limit");
-
-    if (!isHeadless) {
-      console.info(
-        chalk.yellow(
-          "\nApproaching context limit. Auto-compacting chat history...",
-        ),
-      );
-    } else if (format === "json") {
-      safeStdout(
-        JSON.stringify({
-          status: "info",
-          message: "Auto-compacting triggered",
-          contextUsage:
-            calculateContextUsagePercentage(
-              countChatHistoryTokens(chatHistory),
-              model,
-            ) + "%",
-        }) + "\n",
-      );
-    }
-
-    try {
-      // Compact the history WITHOUT the current user message
-      const result = await compactChatHistory(chatHistory, model, llmApi);
-
-      // Replace chat history with compacted version
-      chatHistory.length = 0;
-      chatHistory.push(...result.compactedHistory);
-
-      // Save the compacted session
-      saveSession(chatHistory);
-
-      if (!isHeadless) {
-        console.info(
-          chalk.green("✓ Chat history auto-compacted successfully."),
-        );
-      } else if (format === "json") {
-        safeStdout(
-          JSON.stringify({
-            status: "success",
-            message: "Auto-compacted successfully",
-            historyLength: chatHistory.length,
-          }) + "\n",
-        );
-      }
-
-      // Update compaction index
-      compactionIndex = result.compactionIndex;
-    } catch (error) {
-      const errorMsg = `Auto-compaction error: ${formatError(error)}`;
-      logger.error(errorMsg);
-
-      if (!isHeadless) {
-        console.error(chalk.red(`Warning: ${errorMsg}`));
-        console.info(chalk.yellow("Continuing without compaction..."));
-      } else if (format === "json") {
-        safeStdout(
-          JSON.stringify({
-            status: "warning",
-            message: "Auto-compaction failed, continuing without compaction",
-          }) + "\n",
-        );
-      }
-
-      // Continue without compaction on error
+    const newIndex = await handleAutoCompaction(
+      chatHistory,
+      model,
+      llmApi,
+      isHeadless,
+      format,
+    );
+    if (newIndex !== null) {
+      compactionIndex = newIndex;
     }
   }
 
@@ -373,16 +407,16 @@ async function runHeadlessMode(
 
     isFirstMessage = false;
 
-    const result = await processMessage(
+    const result = await processMessage({
       userInput,
       chatHistory,
       model,
       llmApi,
-      true,
-      options.format,
-      options.silent,
+      isHeadless: true,
+      format: options.format,
+      silent: options.silent,
       compactionIndex,
-    );
+    });
 
     // Update compaction index if compaction occurred
     if (result && result.compactionIndex !== undefined) {
@@ -429,15 +463,15 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       console.log(CONTINUE_ASCII_ART);
 
       // Start TUI with skipOnboarding since we already handled it
-      await startTUIChat(
-        prompt,
-        options.resume,
-        options.config,
-        options.org,
-        options.rule,
-        permissionOverrides,
-        true,
-      );
+      await startTUIChat({
+        initialPrompt: prompt,
+        resume: options.resume,
+        configPath: options.config,
+        organizationSlug: options.org,
+        additionalRules: options.rule,
+        toolPermissionOverrides: permissionOverrides,
+        skipOnboarding: true,
+      });
       return;
     }
 
