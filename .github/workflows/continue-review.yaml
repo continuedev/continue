@@ -120,44 +120,16 @@ jobs:
               
               const prNumber = context.payload.pull_request.number;
 
-              // Unique identifier for our bot comments
-              const botSignature = '<!-- continue-cli-review -->';
-              const newComment = `${botSignature}\n${reviewContent}`;
-              
-              // Get all comments on the PR
-              const { data: comments } = await github.rest.issues.listComments({
-                per_page: 100,
+              // Create new comment
+              await github.rest.issues.createComment({
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                body: reviewContent
               });
-              
-              // Find existing Continue CLI review comment
-              const existingComment = comments.find(comment => 
-                comment.body.includes(botSignature)
-              );
-              
-              if (existingComment) {
-                // Update existing comment
-                await github.rest.issues.updateComment({
-                  comment_id: existingComment.id,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: newComment
-                });
-                console.log(`Successfully updated existing comment #${existingComment.id} on PR #${prNumber}`);
-              } else {
-                // Create new comment
-                await github.rest.issues.createComment({
-                  issue_number: prNumber,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: newComment
-                });
-                console.log(`Successfully created new comment on PR #${prNumber}`);
-              }
+              console.log(`Successfully created new comment on PR #${prNumber}`);
             } catch (error) {
-              console.log('Failed to post/update comment:', error.message);
+              console.log('Failed to post comment:', error.message);
               console.log('Error details:', error);
             }
         env:
