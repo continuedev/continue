@@ -56,7 +56,7 @@ jobs:
   #   steps:
   #     # 0. Setup git
   #     - name: Checkout
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v5
 
   #     - name: Set up Git
   #       run: |
@@ -102,7 +102,7 @@ jobs:
     steps:
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.release.tag_name }}
 
@@ -362,7 +362,7 @@ jobs:
     steps:
       # 1. Check-out repository
       - name: Check-out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
@@ -429,7 +429,7 @@ jobs:
     steps:
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Java environment for the next steps
       - name: Setup Java
@@ -482,7 +482,7 @@ jobs:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Java environment for the next steps
       - name: Setup Java
@@ -513,7 +513,7 @@ jobs:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Java environment for the next steps
       - name: Setup Java
