@@ -782,7 +782,6 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          onlyUseSystemMessageTools: false,
           experimental: {},
         } as any,
         lastSelectedModelByRole: {
