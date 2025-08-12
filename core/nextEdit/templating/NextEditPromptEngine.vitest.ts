@@ -3,6 +3,7 @@ import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { AutocompleteSnippetType } from "../../autocomplete/snippets/types";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import { NEXT_EDIT_MODELS } from "../../llm/constants";
 import {
   MERCURY_CURRENT_FILE_CONTENT_CLOSE,
   MERCURY_CURRENT_FILE_CONTENT_OPEN,
@@ -12,13 +13,13 @@ import {
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
   MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
+  MODEL_1_USER_PROMPT_PREFIX,
 } from "../constants";
 import {
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
   renderPrompt,
 } from "./NextEditPromptEngine";
-import { NEXT_EDIT_MODELS } from "../../llm/constants";
 
 describe("NextEditPromptEngine", () => {
   describe("renderPrompt", () => {
@@ -81,15 +82,33 @@ describe("NextEditPromptEngine", () => {
     });
 
     it("should render model-1 prompt correctly", async () => {
-      const result = await renderPrompt(model1Helper, ctx);
+      // Create proper model-1 context structure matching NextEditProvider.ts
+      const model1Ctx = {
+        contextSnippets:
+          "+++++ /path/to/context.ts\nconst contextVar = 'test';",
+        currentFileContent: model1Helper.fileContents,
+        windowStart: 0, // Math.max(0, helper.pos.line - 25)
+        windowEnd: 3, // Math.min(helper.fileLines.length - 1, helper.pos.line + 25)
+        adjustedEditableStart: 0, // Math.max(0, helper.pos.line - 1) within window
+        adjustedEditableEnd: 2, // Math.min(helper.pos.line + 5) within window
+        editDiffHistory:
+          "diff --git a/file.ts b/file.ts\nindex 123..456 789\n--- a/file.ts\n+++ b/file.ts\n@@ -1,3 +1,4 @@\n function test() {\n+  const a = 1;\n   return a;\n }", // unified diff
+        currentFilePath: "/path/to/file.ts",
+        languageShorthand: "ts",
+      };
+
+      const result = await renderPrompt(model1Helper, model1Ctx);
+      console.log(result);
 
       expect(result).toHaveProperty("prompt");
       expect(result.prompt.role).toBe("user");
+      expect(result.prompt.content).toContain(MODEL_1_USER_PROMPT_PREFIX);
+      expect(result.prompt.content).toContain("### Context:");
       expect(result.prompt.content).toContain("### User Edits:");
       expect(result.prompt.content).toContain("### User Excerpts:");
       expect(result.prompt.content).toContain("```ts");
 
-      expect(result.userEdits).toBe(ctx.userEdits);
+      expect(result.userEdits).toBe(model1Ctx.editDiffHistory);
       expect(result.userExcerpts).toContain(MODEL_1_USER_CURSOR_IS_HERE_TOKEN);
     });
 

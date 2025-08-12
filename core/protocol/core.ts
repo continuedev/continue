@@ -90,7 +90,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
-      selectedOrgId: string;
+      selectedOrgId: string | null;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
