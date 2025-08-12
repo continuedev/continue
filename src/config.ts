@@ -23,6 +23,10 @@ export function getLlmApi(
   assistant: AssistantUnrolled,
   authConfig: AuthConfig,
 ): [BaseLlmApi, ModelConfig] {
+  if (!assistant.models || assistant.models.length === 0) {
+    throw new Error("No models found in the configured assistant");
+  }
+
   const model = assistant.models?.find(
     (model) =>
       model?.roles?.includes("chat") || (model && model.roles === undefined),

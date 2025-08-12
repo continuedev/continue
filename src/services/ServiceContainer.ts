@@ -151,7 +151,7 @@ export class ServiceContainer extends EventEmitter {
 
       return value;
     } catch (error: any) {
-      logger.error(`Failed to load service '${serviceName}':`, error);
+      logger.debug(`Failed to load service '${serviceName}':`, error);
       this.setServiceError(serviceName, error);
       throw error;
     }
@@ -252,7 +252,7 @@ export class ServiceContainer extends EventEmitter {
     await Promise.all(
       serviceNames.map((name) =>
         this.load(name).catch((error) => {
-          logger.error(`Failed to initialize service ${name}:`, error);
+          logger.debug(`Failed to initialize service ${name}:`, error);
           // Don't throw - let individual services fail without breaking others
         }),
       ),

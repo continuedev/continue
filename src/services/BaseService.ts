@@ -38,7 +38,7 @@ export abstract class BaseService<TState> extends EventEmitter {
       this.emit("initialized", state);
       return state;
     } catch (error: any) {
-      logger.error(`Failed to initialize ${this.serviceName}:`, error);
+      logger.debug(`Failed to initialize ${this.serviceName}:`, error);
       if (this.listenerCount("error") > 0) {
         this.emit("error", error);
       }
