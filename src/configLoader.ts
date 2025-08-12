@@ -11,6 +11,7 @@ import {
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
+import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
 import {
   AuthConfig,
   getAccessToken,
@@ -18,8 +19,6 @@ import {
   getOrganizationId,
   isEnvironmentAuthConfig,
   updateConfigUri,
-  uriToPath,
-  uriToSlug,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
@@ -94,16 +93,16 @@ function determineConfigSource(
   }
 
   // Priority 3: Default resolution based on auth state
-  if (authConfig !== null) {
-    // Authenticated: try user assistants first
-    return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
-  } else {
+  if (authConfig === null) {
     // Unauthenticated: check for default config.yaml, then fallback to default agent
     const defaultConfigPath = path.join(env.continueHome, "config.yaml");
     if (fs.existsSync(defaultConfigPath)) {
       return { type: "default-config-yaml" };
     }
     return { type: "default-agent" };
+  } else {
+    // Authenticated: try user assistants first
+    return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
   }
 }
 

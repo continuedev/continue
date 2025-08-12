@@ -18,6 +18,69 @@ import { useNavigation } from "./context/NavigationContext.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
+// Helper functions for input handling
+interface ChoiceInputOptions {
+  input: string;
+  key: any;
+  selectedOption: number;
+  setSelectedOption: (option: number) => void;
+  hasOrganizations: boolean;
+  handleOptionSelect: () => void;
+}
+
+function handleChoiceInput(options: ChoiceInputOptions): void {
+  const {
+    input,
+    key,
+    selectedOption,
+    setSelectedOption,
+    hasOrganizations,
+    handleOptionSelect,
+  } = options;
+  if (key.upArrow && selectedOption > 1) {
+    setSelectedOption(selectedOption - 1);
+  } else if (key.downArrow && selectedOption < (hasOrganizations ? 4 : 3)) {
+    setSelectedOption(selectedOption + 1);
+  } else if (input === "1") {
+    setSelectedOption(1);
+  } else if (input === "2") {
+    setSelectedOption(2);
+  } else if (input === "3") {
+    setSelectedOption(3);
+  } else if (input === "4" && hasOrganizations) {
+    setSelectedOption(4);
+  } else if (key.return) {
+    handleOptionSelect();
+  }
+}
+
+interface ApiKeyInputOptions {
+  input: string;
+  key: any;
+  apiKey: string;
+  setApiKey: (key: string) => void;
+  setErrorMessage: (msg: string) => void;
+  handleApiKeySubmit: () => void;
+}
+
+function handleApiKeyInput(options: ApiKeyInputOptions): void {
+  const { input, key, apiKey, setApiKey, setErrorMessage, handleApiKeySubmit } =
+    options;
+  if (key.return) {
+    if (isValidAnthropicApiKey(apiKey)) {
+      handleApiKeySubmit();
+    } else {
+      setErrorMessage(getApiKeyValidationError(apiKey));
+    }
+  } else if (key.backspace || key.delete) {
+    setApiKey(apiKey.slice(0, -1));
+    setErrorMessage("");
+  } else if (input && !key.ctrl && !key.meta) {
+    setApiKey(apiKey + input);
+    setErrorMessage("");
+  }
+}
+
 interface FreeTrialTransitionUIProps {
   onReload: () => void;
 }
@@ -68,35 +131,23 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
 
   useInput((input, key) => {
     if (currentStep === "choice") {
-      if (key.upArrow && selectedOption > 1) {
-        setSelectedOption(selectedOption - 1);
-      } else if (key.downArrow && selectedOption < (hasOrganizations ? 4 : 3)) {
-        setSelectedOption(selectedOption + 1);
-      } else if (input === "1") {
-        setSelectedOption(1);
-      } else if (input === "2") {
-        setSelectedOption(2);
-      } else if (input === "3") {
-        setSelectedOption(3);
-      } else if (input === "4" && hasOrganizations) {
-        setSelectedOption(4);
-      } else if (key.return) {
-        handleOptionSelect();
-      }
+      handleChoiceInput({
+        input,
+        key,
+        selectedOption,
+        setSelectedOption,
+        hasOrganizations: !!hasOrganizations,
+        handleOptionSelect,
+      });
     } else if (currentStep === "enterApiKey") {
-      if (key.return) {
-        if (isValidAnthropicApiKey(apiKey)) {
-          handleApiKeySubmit();
-        } else {
-          setErrorMessage(getApiKeyValidationError(apiKey));
-        }
-      } else if (key.backspace || key.delete) {
-        setApiKey(apiKey.slice(0, -1));
-        setErrorMessage("");
-      } else if (input && !key.ctrl && !key.meta) {
-        setApiKey(apiKey + input);
-        setErrorMessage("");
-      }
+      handleApiKeyInput({
+        input,
+        key,
+        apiKey,
+        setApiKey,
+        setErrorMessage,
+        handleApiKeySubmit,
+      });
     } else if (currentStep === "success" || currentStep === "error") {
       if (key.return) {
         closeCurrentScreen();

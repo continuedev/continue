@@ -20,10 +20,8 @@ import {
   ModelServiceState,
 } from "../services/types.js";
 import { saveSession } from "../session.js";
-import {
-  streamChatResponse,
-  type StreamCallbacks,
-} from "../streamChatResponse.js";
+import { streamChatResponse } from "../streamChatResponse.js";
+import { StreamCallbacks } from "../streamChatResponse.types.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { getToolDisplayName } from "../tools/index.js";

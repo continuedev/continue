@@ -154,15 +154,12 @@ export async function executeToolCall(
     );
     const duration = Date.now() - startTime;
 
-    telemetryService.logToolResult(
-      toolCall.name,
-      true,
-      duration,
-      undefined, // no error
-      undefined, // no decision
-      undefined, // no source
-      JSON.stringify(toolCall.arguments),
-    );
+    telemetryService.logToolResult({
+      toolName: toolCall.name,
+      success: true,
+      durationMs: duration,
+      toolParameters: JSON.stringify(toolCall.arguments),
+    });
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
@@ -174,15 +171,13 @@ export async function executeToolCall(
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    telemetryService.logToolResult(
-      toolCall.name,
-      false,
-      duration,
-      errorMessage,
-      undefined, // no decision
-      undefined, // no source
-      JSON.stringify(toolCall.arguments),
-    );
+    telemetryService.logToolResult({
+      toolName: toolCall.name,
+      success: false,
+      durationMs: duration,
+      error: errorMessage,
+      toolParameters: JSON.stringify(toolCall.arguments),
+    });
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }

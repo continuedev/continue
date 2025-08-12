@@ -48,7 +48,9 @@ export async function addPolicyToYaml(policyRule: string): Promise<void> {
     }
 
     // Add the policy if it doesn't already exist
-    if (!config.allow.includes(policyRule)) {
+    if (config.allow.includes(policyRule)) {
+      logger.debug(`Policy rule already exists: ${policyRule}`);
+    } else {
       config.allow.push(policyRule);
 
       // Write the updated config back to the file
@@ -63,8 +65,6 @@ ${yamlContent}`;
 
       await fs.promises.writeFile(PERMISSIONS_YAML_PATH, finalContent, "utf-8");
       logger.info(`Added policy rule to permissions.yaml: ${policyRule}`);
-    } else {
-      logger.debug(`Policy rule already exists: ${policyRule}`);
     }
   } catch (error) {
     logger.error("Failed to add policy to permissions.yaml", {

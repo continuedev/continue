@@ -49,10 +49,10 @@ describe("UpdateNotification", () => {
 
   afterEach(() => {
     // Restore original NODE_ENV
-    if (originalNodeEnv !== undefined) {
-      process.env.NODE_ENV = originalNodeEnv;
-    } else {
+    if (originalNodeEnv === undefined) {
       delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
     }
   });
 

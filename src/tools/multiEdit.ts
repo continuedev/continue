@@ -29,6 +29,100 @@ function hasFileBeenRead(filePath: string): boolean {
   return readFilesSet.has(filePath);
 }
 
+// Helper functions for multiEdit validation
+function validateMultiEditArgs(args: any): MultiEditArgs {
+  const { file_path, edits } = args as MultiEditArgs;
+
+  if (!file_path) {
+    throw new Error("file_path is required");
+  }
+  if (!path.isAbsolute(file_path)) {
+    throw new Error("file_path must be an absolute path");
+  }
+  if (!edits || !Array.isArray(edits) || edits.length === 0) {
+    throw new Error(
+      "edits array is required and must contain at least one edit",
+    );
+  }
+
+  return { file_path, edits };
+}
+
+function validateEdits(edits: EditOperation[]): void {
+  for (let i = 0; i < edits.length; i++) {
+    const edit = edits[i];
+    if (!edit.old_string && edit.old_string !== "") {
+      throw new Error(`Edit ${i + 1}: old_string is required`);
+    }
+    if (edit.new_string === undefined) {
+      throw new Error(`Edit ${i + 1}: new_string is required`);
+    }
+    if (edit.old_string === edit.new_string) {
+      throw new Error(
+        `Edit ${i + 1}: old_string and new_string must be different`,
+      );
+    }
+  }
+}
+
+function validateFileAccess(
+  file_path: string,
+  isCreatingNewFile: boolean,
+): void {
+  if (isCreatingNewFile) {
+    // For new file creation, check if parent directory exists
+    const parentDir = path.dirname(file_path);
+    if (parentDir && !fs.existsSync(parentDir)) {
+      throw new Error(`Parent directory does not exist: ${parentDir}`);
+    }
+  } else {
+    // For existing files, check if file has been read
+    if (!hasFileBeenRead(file_path)) {
+      throw new Error(
+        `You must use the Read tool to read ${file_path} before editing it.`,
+      );
+    }
+    if (!fs.existsSync(file_path)) {
+      throw new Error(`File ${file_path} does not exist`);
+    }
+  }
+}
+
+function applyEdit(
+  content: string,
+  edit: EditOperation,
+  editIndex: number,
+  isFirstEditOfNewFile: boolean,
+): string {
+  const { old_string, new_string, replace_all = false } = edit;
+
+  // For new file creation, the first edit can have empty old_string
+  if (isFirstEditOfNewFile && old_string === "") {
+    return new_string;
+  }
+
+  // Check if old_string exists in current content
+  if (!content.includes(old_string)) {
+    throw new Error(
+      `Edit ${editIndex + 1}: String not found in file: "${old_string}"`,
+    );
+  }
+
+  if (replace_all) {
+    // Replace all occurrences
+    return content.split(old_string).join(new_string);
+  } else {
+    // Replace only the first occurrence, but check for uniqueness
+    const occurrences = content.split(old_string).length - 1;
+    if (occurrences > 1) {
+      throw new Error(
+        `Edit ${editIndex + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
+      );
+    }
+    return content.replace(old_string, new_string);
+  }
+}
+
 export const multiEditTool: Tool = {
   name: "MultiEdit",
   displayName: "MultiEdit",
@@ -129,60 +223,17 @@ If you want to create a new file, use:
     },
   },
   preprocess: async (args) => {
-    const { file_path, edits } = args as MultiEditArgs;
-
-    // Validate arguments
-    if (!file_path) {
-      throw new Error("file_path is required");
-    }
-    if (!path.isAbsolute(file_path)) {
-      throw new Error("file_path must be an absolute path");
-    }
-    if (!edits || !Array.isArray(edits) || edits.length === 0) {
-      throw new Error(
-        "edits array is required and must contain at least one edit",
-      );
-    }
+    // Validate and extract arguments
+    const { file_path, edits } = validateMultiEditArgs(args);
 
     // Validate each edit operation
-    for (let i = 0; i < edits.length; i++) {
-      const edit = edits[i];
-      if (!edit.old_string && edit.old_string !== "") {
-        throw new Error(`Edit ${i + 1}: old_string is required`);
-      }
-      if (edit.new_string === undefined) {
-        throw new Error(`Edit ${i + 1}: new_string is required`);
-      }
-      if (edit.old_string === edit.new_string) {
-        throw new Error(
-          `Edit ${i + 1}: old_string and new_string must be different`,
-        );
-      }
-    }
+    validateEdits(edits);
 
     // Check if this is creating a new file (first edit has empty old_string)
     const isCreatingNewFile = edits[0].old_string === "";
 
-    if (isCreatingNewFile) {
-      // For new file creation, check if parent directory exists
-      const parentDir = path.dirname(file_path);
-      if (parentDir && !fs.existsSync(parentDir)) {
-        throw new Error(`Parent directory does not exist: ${parentDir}`);
-      }
-      // Don't check if file has been read for new file creation
-    } else {
-      // For existing files, check if file has been read
-      if (!hasFileBeenRead(file_path)) {
-        throw new Error(
-          `You must use the Read tool to read ${file_path} before editing it.`,
-        );
-      }
-
-      // Check if file exists
-      if (!fs.existsSync(file_path)) {
-        throw new Error(`File ${file_path} does not exist`);
-      }
-    }
+    // Validate file access
+    validateFileAccess(file_path, isCreatingNewFile);
 
     // Read current file content (or start with empty for new files)
     let currentContent = "";
@@ -195,35 +246,8 @@ If you want to create a new file, use:
 
     // Apply all edits sequentially
     for (let i = 0; i < edits.length; i++) {
-      const edit = edits[i];
-      const { old_string, new_string, replace_all = false } = edit;
-
-      // For new file creation, the first edit can have empty old_string
-      if (i === 0 && isCreatingNewFile && old_string === "") {
-        newContent = new_string;
-        continue;
-      }
-
-      // Check if old_string exists in current content
-      if (!newContent.includes(old_string)) {
-        throw new Error(
-          `Edit ${i + 1}: String not found in file: "${old_string}"`,
-        );
-      }
-
-      if (replace_all) {
-        // Replace all occurrences
-        newContent = newContent.split(old_string).join(new_string);
-      } else {
-        // Replace only the first occurrence, but check for uniqueness
-        const occurrences = newContent.split(old_string).length - 1;
-        if (occurrences > 1) {
-          throw new Error(
-            `Edit ${i + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
-          );
-        }
-        newContent = newContent.replace(old_string, new_string);
-      }
+      const isFirstEditOfNewFile = i === 0 && isCreatingNewFile;
+      newContent = applyEdit(newContent, edits[i], i, isFirstEditOfNewFile);
     }
 
     // Generate diff for preview

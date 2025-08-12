@@ -471,57 +471,60 @@ class TelemetryService {
     logger.debug("User prompt event", attributes);
   }
 
-  public logToolResult(
-    toolName: string,
-    success: boolean,
-    durationMs: number,
-    error?: string,
-    decision?: "accept" | "reject",
-    source?: string,
-    toolParameters?: string,
-  ) {
+  public logToolResult(options: {
+    toolName: string;
+    success: boolean;
+    durationMs: number;
+    error?: string;
+    decision?: "accept" | "reject";
+    source?: string;
+    toolParameters?: string;
+  }) {
     if (!this.isEnabled()) return;
 
     const attributes = this.getStandardAttributes({
       "event.name": "tool_result",
       "event.timestamp": new Date().toISOString(),
-      tool_name: toolName,
-      success: success.toString(),
-      duration_ms: durationMs.toString(),
+      tool_name: options.toolName,
+      success: options.success.toString(),
+      duration_ms: options.durationMs.toString(),
     });
 
-    if (error) attributes.error = error;
-    if (decision) attributes.decision = decision;
-    if (source) attributes.source = source;
-    if (toolParameters) attributes.tool_parameters = toolParameters;
+    if (options.error) attributes.error = options.error;
+    if (options.decision) attributes.decision = options.decision;
+    if (options.source) attributes.source = options.source;
+    if (options.toolParameters)
+      attributes.tool_parameters = options.toolParameters;
 
     // TODO: Implement OTLP logs export
     logger.debug("Tool result event", attributes);
   }
 
-  public logApiRequest(
-    model: string,
-    durationMs: number,
-    success: boolean,
-    error?: string,
-    inputTokens?: number,
-    outputTokens?: number,
-    costUsd?: number,
-  ) {
+  public logApiRequest(options: {
+    model: string;
+    durationMs: number;
+    success: boolean;
+    error?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    costUsd?: number;
+  }) {
     if (!this.isEnabled()) return;
 
     const attributes = this.getStandardAttributes({
       "event.name": "api_request",
       "event.timestamp": new Date().toISOString(),
-      model,
-      duration_ms: durationMs.toString(),
-      success: success.toString(),
+      model: options.model,
+      duration_ms: options.durationMs.toString(),
+      success: options.success.toString(),
     });
 
-    if (error) attributes.error = error;
-    if (inputTokens) attributes.input_tokens = inputTokens.toString();
-    if (outputTokens) attributes.output_tokens = outputTokens.toString();
-    if (costUsd) attributes.cost_usd = costUsd.toString();
+    if (options.error) attributes.error = options.error;
+    if (options.inputTokens)
+      attributes.input_tokens = options.inputTokens.toString();
+    if (options.outputTokens)
+      attributes.output_tokens = options.outputTokens.toString();
+    if (options.costUsd) attributes.cost_usd = options.costUsd.toString();
 
     // TODO: Implement OTLP logs export
     logger.debug("API request event", attributes);

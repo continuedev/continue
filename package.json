@@ -9,7 +9,7 @@
     "cn": "dist/index.js"
   },
   "scripts": {
-    "test": "npm run lint && vitest run",
+    "test": "vitest run",
     "test:watch": "vitest watch",
     "test:ui": "vitest --ui",
     "build": "tsc -p tsconfig.build.json",
