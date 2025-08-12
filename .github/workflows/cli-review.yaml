@@ -20,7 +20,7 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Install Continue CLI
-        run: npm install -g @continuedev/cli@1.4.21
+        run: npm install -g @continuedev/cli@1.4.25
 
       - name: Run Continue CLI Review
         run: |
