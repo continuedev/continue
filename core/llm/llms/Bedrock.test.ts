@@ -315,44 +315,34 @@ describe("Bedrock", () => {
   });
 
   describe("streaming vs non-streaming behavior", () => {
-    class TestableStreamingBedrock extends Bedrock {
-      public streamingMethodCalled = false;
-      public nonStreamingMethodCalled = false;
-
-      protected async *_streamChatStreaming(
-        messages: ChatMessage[],
-        signal: AbortSignal,
-        options: CompletionOptions,
-      ): AsyncGenerator<ChatMessage> {
-        this.streamingMethodCalled = true;
-        yield { role: "assistant", content: "Streaming response" };
-      }
-
-      protected async *_streamChatNonStreaming(
-        messages: ChatMessage[],
-        signal: AbortSignal,
-        options: CompletionOptions,
-      ): AsyncGenerator<ChatMessage> {
-        this.nonStreamingMethodCalled = true;
-        yield { role: "assistant", content: "Non-streaming response" };
-      }
-    }
-
-    let bedrock: TestableStreamingBedrock;
+    let bedrock: Bedrock;
     const mockAbortSignal = new AbortController().signal;
 
     beforeEach(() => {
-      bedrock = new TestableStreamingBedrock({
+      bedrock = new Bedrock({
         apiKey: "test-key",
         model: "anthropic.claude-3-sonnet-20240229-v1:0",
         region: "us-east-1",
       });
     });
 
-    it("should use streaming method when stream is not false", async () => {
+    it("should route to streaming path when stream is not false", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Hello" } as UserChatMessage,
       ];
+
+      // Mock the private methods by spying on them
+      const streamingMethodSpy = jest
+        .spyOn(bedrock as any, "_streamChatStreaming")
+        .mockImplementation(async function* () {
+          yield { role: "assistant", content: "Streaming response" };
+        });
+
+      const nonStreamingMethodSpy = jest
+        .spyOn(bedrock as any, "_streamChatNonStreaming")
+        .mockImplementation(async function* () {
+          yield { role: "assistant", content: "Non-streaming response" };
+        });
 
       const options: CompletionOptions = {
         model: "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -368,17 +358,33 @@ describe("Bedrock", () => {
         results.push(message);
       }
 
-      expect(bedrock.streamingMethodCalled).toBe(true);
-      expect(bedrock.nonStreamingMethodCalled).toBe(false);
+      expect(streamingMethodSpy).toHaveBeenCalled();
+      expect(nonStreamingMethodSpy).not.toHaveBeenCalled();
       expect(results).toEqual([
         { role: "assistant", content: "Streaming response" },
       ]);
+
+      streamingMethodSpy.mockRestore();
+      nonStreamingMethodSpy.mockRestore();
     });
 
-    it("should use non-streaming method when stream is false", async () => {
+    it("should route to non-streaming path when stream is false", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Hello" } as UserChatMessage,
       ];
+
+      // Mock the private methods by spying on them
+      const streamingMethodSpy = jest
+        .spyOn(bedrock as any, "_streamChatStreaming")
+        .mockImplementation(async function* () {
+          yield { role: "assistant", content: "Streaming response" };
+        });
+
+      const nonStreamingMethodSpy = jest
+        .spyOn(bedrock as any, "_streamChatNonStreaming")
+        .mockImplementation(async function* () {
+          yield { role: "assistant", content: "Non-streaming response" };
+        });
 
       const options: CompletionOptions = {
         model: "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -394,17 +400,33 @@ describe("Bedrock", () => {
         results.push(message);
       }
 
-      expect(bedrock.streamingMethodCalled).toBe(false);
-      expect(bedrock.nonStreamingMethodCalled).toBe(true);
+      expect(streamingMethodSpy).not.toHaveBeenCalled();
+      expect(nonStreamingMethodSpy).toHaveBeenCalled();
       expect(results).toEqual([
         { role: "assistant", content: "Non-streaming response" },
       ]);
+
+      streamingMethodSpy.mockRestore();
+      nonStreamingMethodSpy.mockRestore();
     });
 
-    it("should default to streaming method when stream option is undefined", async () => {
+    it("should default to streaming path when stream option is undefined", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Hello" } as UserChatMessage,
       ];
+
+      // Mock the private methods by spying on them
+      const streamingMethodSpy = jest
+        .spyOn(bedrock as any, "_streamChatStreaming")
+        .mockImplementation(async function* () {
+          yield { role: "assistant", content: "Streaming response" };
+        });
+
+      const nonStreamingMethodSpy = jest
+        .spyOn(bedrock as any, "_streamChatNonStreaming")
+        .mockImplementation(async function* () {
+          yield { role: "assistant", content: "Non-streaming response" };
+        });
 
       const options: CompletionOptions = {
         model: "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -420,12 +442,13 @@ describe("Bedrock", () => {
         results.push(message);
       }
 
-      expect(bedrock.streamingMethodCalled).toBe(true);
-      expect(bedrock.nonStreamingMethodCalled).toBe(false);
+      expect(streamingMethodSpy).toHaveBeenCalled();
+      expect(nonStreamingMethodSpy).not.toHaveBeenCalled();
+
+      streamingMethodSpy.mockRestore();
+      nonStreamingMethodSpy.mockRestore();
     });
   });
-
-  
 
   describe("message conversion", () => {
     let bedrock: TestBedrock;

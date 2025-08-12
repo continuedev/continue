@@ -7,7 +7,7 @@ import {
   ImageFormat,
   InvokeModelCommand,
   Message,
-  ToolConfiguration
+  ToolConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
