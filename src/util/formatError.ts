@@ -51,3 +51,21 @@ export function formatError(error: any): string {
 
   return String(error);
 }
+
+// Anthropic errors are stringfied JSON objects, format them to be more user friendly
+export function formatAnthropicError(error: any): string {
+  const prefix = "Anthropic:";
+
+  if (error instanceof Error) {
+    if (
+      error.message.includes("authentication_error") &&
+      error.message.includes("invalid x-api-key")
+    ) {
+      return `${prefix} Invalid API key`;
+    }
+
+    return `${prefix} ${error.message}`;
+  }
+
+  return `${prefix} ${String(error)}`;
+}

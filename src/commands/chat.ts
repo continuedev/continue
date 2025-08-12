@@ -25,7 +25,7 @@ import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
-import { formatError } from "../util/formatError.js";
+import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import {
   calculateContextUsagePercentage,
@@ -304,7 +304,13 @@ async function processMessage(
     saveSession(chatHistory);
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
-    logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
+
+    if (model.provider === "anthropic") {
+      logger.error(`\n${chalk.red(`Error: ${formatAnthropicError(error)}`)}`);
+    } else {
+      logger.error(`\n${chalk.red(`Error: ${formatError(error)}`)}`);
+    }
+
     sentryService.captureException(error, {
       context: "chat_response",
       isHeadless,

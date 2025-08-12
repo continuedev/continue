@@ -1,4 +1,4 @@
-import { formatError } from './formatError.js';
+import { formatError, formatAnthropicError } from './formatError.js';
 
 describe('formatError', () => {
   it('should format Error objects correctly', () => {
@@ -32,33 +32,33 @@ describe('formatError', () => {
   });
 
   it('should format API errors with status and message', () => {
-    const error = { 
-      status: 404, 
-      error: { message: 'Not found' } 
+    const error = {
+      status: 404,
+      error: { message: 'Not found' }
     };
     // The actual implementation prioritizes nested error.message over status formatting
     expect(formatError(error)).toBe('Not found');
   });
 
   it('should format network errors with code and syscall', () => {
-    const error = { 
-      code: 'ECONNREFUSED', 
-      syscall: 'connect' 
+    const error = {
+      code: 'ECONNREFUSED',
+      syscall: 'connect'
     };
     expect(formatError(error)).toBe('Network error: ECONNREFUSED in connect');
   });
 
   it('should join error arrays', () => {
-    const error = { 
-      errors: ['First error', 'Second error', 'Third error'] 
+    const error = {
+      errors: ['First error', 'Second error', 'Third error']
     };
     expect(formatError(error)).toBe('First error, Second error, Third error');
   });
 
   it('should JSON stringify complex objects', () => {
-    const error = { 
-      code: 'CUSTOM_ERROR', 
-      data: { id: 123, name: 'test' } 
+    const error = {
+      code: 'CUSTOM_ERROR',
+      data: { id: 123, name: 'test' }
     };
     expect(formatError(error)).toBe('{"code":"CUSTOM_ERROR","data":{"id":123,"name":"test"}}');
   });
@@ -66,7 +66,7 @@ describe('formatError', () => {
   it('should handle objects that cannot be JSON stringified', () => {
     const circular: any = { name: 'circular' };
     circular.self = circular;
-    
+
     const result = formatError(circular);
     expect(result).toBe('An error occurred: [object Object]');
   });
@@ -97,7 +97,7 @@ describe('formatError', () => {
   });
 
   it('should prioritize message over other properties', () => {
-    const error = { 
+    const error = {
       message: 'Primary message',
       description: 'Secondary description',
       details: 'Tertiary details'
@@ -106,7 +106,7 @@ describe('formatError', () => {
   });
 
   it('should prioritize error property over details', () => {
-    const error = { 
+    const error = {
       error: 'Nested error',
       details: 'Error details'
     };
@@ -114,21 +114,38 @@ describe('formatError', () => {
   });
 
   it('should handle deeply nested error structures', () => {
-    const error = { 
-      error: { 
-        error: { 
-          message: 'Deep nested error' 
-        } 
-      } 
+    const error = {
+      error: {
+        error: {
+          message: 'Deep nested error'
+        }
+      }
     };
     expect(formatError(error)).toBe('Deep nested error');
   });
 
   it('should format API errors with status only when no nested error message', () => {
-    const error = { 
-      status: 404, 
-      error: { code: 'NOT_FOUND' } 
+    const error = {
+      status: 404,
+      error: { code: 'NOT_FOUND' }
     };
     expect(formatError(error)).toBe('{"code":"NOT_FOUND"}');
+  });
+});
+
+describe('formatAnthropicError', () => {
+  it('should format invalid API key authentication errors', () => {
+    const error = new Error('{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}');
+    expect(formatAnthropicError(error)).toBe('Anthropic: Invalid API key');
+  });
+
+  it('should handle error objects in general', () => {
+    const error = new Error('some error'); // some error we haven't catalogued yet
+    console.log(formatAnthropicError(error))
+    expect(formatAnthropicError(error)).toBe('Anthropic: some error');
+  });
+
+  it('should handle undefined values', () => {
+    expect(formatAnthropicError(undefined)).toBe('Anthropic: undefined');
   });
 });
