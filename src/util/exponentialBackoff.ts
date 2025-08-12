@@ -64,11 +64,13 @@ function isRetryableError(error: any): boolean {
   }
 
   // Check for premature close errors by message content
-  if (lower?.includes("premature close") || 
-      lower?.includes("premature end") ||
-      lower?.includes("connection reset") ||
-      lower?.includes("socket hang up") ||
-      lower?.includes("aborted")) {
+  if (
+    lower?.includes("premature close") ||
+    lower?.includes("premature end") ||
+    lower?.includes("connection reset") ||
+    lower?.includes("socket hang up") ||
+    lower?.includes("aborted")
+  ) {
     return true;
   }
 
