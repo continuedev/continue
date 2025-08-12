@@ -56,7 +56,7 @@ export class CodebaseIndexer {
   // and only need to `await` it for tests.
   public initPromise: Promise<void>;
   private config!: ContinueConfig;
-  private indexingCancellationController: AbortController | undefined;
+  private indexingCancellationController: AbortController;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
 
@@ -97,6 +97,9 @@ export class CodebaseIndexer {
     this.pauseToken = new PauseToken(initialPaused);
 
     this.initPromise = this.init(configHandler);
+
+    this.indexingCancellationController = new AbortController();
+    this.indexingCancellationController.abort(); // initialize and abort so that a new one can be created
   }
 
   // Initialization - load config and attach config listener
@@ -693,7 +696,7 @@ export class CodebaseIndexer {
   }
 
   public async refreshCodebaseIndex(paths: string[]) {
-    if (this.indexingCancellationController) {
+    if (!this.indexingCancellationController.signal.aborted) {
       this.indexingCancellationController.abort();
     }
     const localController = new AbortController();
@@ -735,16 +738,13 @@ export class CodebaseIndexer {
       });
     }
     if (this.indexingCancellationController === localController) {
-      this.indexingCancellationController = undefined;
+      this.indexingCancellationController.abort();
     }
   }
 
   public async refreshCodebaseIndexFiles(files: string[]) {
     // Can be cancelled by codebase index but not vice versa
-    if (
-      this.indexingCancellationController &&
-      !this.indexingCancellationController.signal.aborted
-    ) {
+    if (!this.indexingCancellationController.signal.aborted) {
       return;
     }
     const localController = new AbortController();
@@ -770,7 +770,7 @@ export class CodebaseIndexer {
       });
     }
     if (this.indexingCancellationController === localController) {
-      this.indexingCancellationController = undefined;
+      this.indexingCancellationController.abort();
     }
   }
 
