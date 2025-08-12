@@ -6,6 +6,8 @@ import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
 import { processRule } from "./args.js";
+import { serviceContainer } from "./services/ServiceContainer.js";
+import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
 const { WalkerSync } = pkg;
 
 /**
@@ -95,6 +97,23 @@ ${getDirectoryStructure()}
 ${getGitStatus()}
 </context>`;
 
+async function getConfigYamlRules(): Promise<string[]> {
+  const configState = await serviceContainer.get<ConfigServiceState>(
+    SERVICE_NAMES.CONFIG,
+  );
+  if (configState.config?.rules) {
+    // Extract systemMessage from the config if it exists
+    const rules = configState.config.rules;
+    return rules
+      .map((rule) => {
+        return typeof rule === "string" ? rule : rule?.rule;
+      })
+      .filter((rule): rule is string => !!rule);
+  }
+
+  return [];
+}
+
 /**
  * Load and construct a comprehensive system message with base message and rules section
  * @param rulesSystemMessage - The rules system message from the assistant
@@ -104,7 +123,6 @@ ${getGitStatus()}
  * @returns The comprehensive system message with base message and rules section
  */
 export async function constructSystemMessage(
-  rulesSystemMessage: string,
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
@@ -142,6 +160,9 @@ export async function constructSystemMessage(
     }
   }
 
+  const configYamlRules = await getConfigYamlRules();
+  processedRules.push(...configYamlRules);
+
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
@@ -165,21 +186,16 @@ Example response format:
   }
 
   // Add rules section if we have any rules or agent content
-  if (rulesSystemMessage || agentContent || processedRules.length > 0) {
+  if (agentContent || processedRules.length > 0) {
     systemMessage += '\n\n<context name="userRules">';
 
-    if (rulesSystemMessage) {
-      systemMessage += `\n${rulesSystemMessage}`;
-    }
-
     if (agentContent) {
-      const separator = rulesSystemMessage ? "\n\n" : "\n";
-      systemMessage += `${separator}${agentContent}`;
+      systemMessage += `\n${agentContent}`;
     }
 
     // Add processed rules from --rule flags
     if (processedRules.length > 0) {
-      const separator = rulesSystemMessage || agentContent ? "\n\n" : "\n";
+      const separator = agentContent ? "\n\n" : "\n";
       systemMessage += `${separator}${processedRules.join("\n\n")}`;
     }
 
