@@ -54,7 +54,7 @@ jobs:
             # For issue_comment event on a PR
             PR_NUMBER="${{ github.event.issue.number }}"
           fi
-          
+
           # Get PR diff
           gh pr diff $PR_NUMBER > pr_diff.txt
 
@@ -86,13 +86,27 @@ jobs:
           ## Code Review Summary
 
           ### ✅ Strengths
-          - [List positive aspects]
+          - **[Aspect]**: [Description of what was done well]
 
           ### ⚠️ Issues Found
-          - [List any problems with severity levels]
+
+          Only include the severity subheaders below if you actually found issues at that level:
+
+          #### Critical
+          - **[Issue Title]**: [Description of critical issues that must be fixed before merging]
+
+          #### High
+          - **[Issue Title]**: [Description of high-priority issues that should be fixed]
+
+          #### Medium
+          - **[Issue Title]**: [Description of issues that should be addressed]
+
+          #### Low
+          - **[Issue Title]**: [Description of minor issues or nice-to-have improvements]
+
 
           ### 💡 Suggestions
-          - [List improvement recommendations]
+          - **[Suggestion Title]**: [Description of improvement recommendations]
 
           ### 🚀 Overall Assessment
           [Provide overall recommendation: APPROVE, REQUEST_CHANGES, or COMMENT]
