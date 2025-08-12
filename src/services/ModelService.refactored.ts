@@ -56,17 +56,17 @@ export class ModelService
     const persistedModelName = getModelName(authConfig);
     if (persistedModelName) {
       const modelIndex = this.getModelIndexByName(persistedModelName);
-      if (modelIndex !== -1) {
-        // Use the persisted model
-        const state = await this.switchModel(modelIndex);
-        return state;
-      } else {
+      if (modelIndex === -1) {
         // Model name not found, use default model selection
         const [llmApi, model] = getLlmApi(assistant, authConfig);
         return {
           llmApi,
           model,
         };
+      } else {
+        // Use the persisted model
+        const state = await this.switchModel(modelIndex);
+        return state;
       }
     } else {
       // Use default model selection

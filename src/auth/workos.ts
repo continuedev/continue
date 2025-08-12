@@ -95,30 +95,14 @@ export function getModelName(config: AuthConfig): string | null {
   return config.modelName || null;
 }
 
-/**
- * Utility functions for config URI conversion
- */
-export function pathToUri(path: string): string {
-  return `file://${path}`;
-}
-
-export function slugToUri(slug: string): string {
-  return `slug://${slug}`;
-}
-
-export function uriToPath(uri: string): string | null {
-  if (uri.startsWith("file://")) {
-    return uri.slice(7);
-  }
-  return null;
-}
-
-export function uriToSlug(uri: string): string | null {
-  if (uri.startsWith("slug://")) {
-    return uri.slice(7); // Remove 'slug://' prefix
-  }
-  return null;
-}
+// URI utility functions have been moved to ./uriUtils.ts
+import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
+import {
+  autoSelectOrganization,
+  createUpdatedAuthConfig,
+  handleCliOrgForAuthenticatedConfig,
+  handleCliOrgForEnvironmentAuth,
+} from "./workos.helpers.js";
 
 /**
  * Legacy functions for backward compatibility
@@ -538,38 +522,6 @@ export async function login(): Promise<AuthConfig> {
 }
 
 /**
- * Helper function to resolve organization by slug
- */
-async function resolveOrganizationBySlug(
-  apiClient: ReturnType<typeof getApiClient>,
-  organizationSlug: string,
-): Promise<{ id: string; slug: string }> {
-  const resp = await apiClient.listOrganizations();
-  const organizations = resp.organizations;
-
-  // Find organization by slug (case-insensitive)
-  const matchedOrg = organizations.find(
-    (org) => org?.slug?.toLowerCase() === organizationSlug.toLowerCase(),
-  );
-
-  if (matchedOrg) {
-    return { id: matchedOrg.id, slug: matchedOrg.slug };
-  } else {
-    // Organization not found - show available options
-    const availableSlugs = organizations
-      .map((org) => org?.slug)
-      .filter(Boolean);
-    const availableOptions = ["personal", ...availableSlugs];
-    console.info(
-      chalk.yellow("Available organizations:"),
-      availableOptions.join(", "),
-    );
-
-    throw new Error(`Organization "${organizationSlug}" not found`);
-  }
-}
-
-/**
  * Ensures the user has selected an organization, automatically selecting the first one if available
  */
 export async function ensureOrganization(
@@ -579,30 +531,13 @@ export async function ensureOrganization(
 ): Promise<AuthConfig> {
   // Handle CLI organization slug if provided (undefined means no --org flag or --org personal)
   if (cliOrganizationSlug) {
-    // Only allow --org flag in headless mode
-    if (!isHeadless) {
-      console.error(
-        chalk.red(
-          "The --org flag is only supported in headless mode (with -p/--print flag)",
-        ),
-      );
-      process.exit(1);
-    }
-
     // For environment auth configs
     if (isEnvironmentAuthConfig(authConfig)) {
-      const apiClient = getApiClient(authConfig.accessToken);
-
-      const resolvedOrg = await resolveOrganizationBySlug(
-        apiClient,
+      return handleCliOrgForEnvironmentAuth(
+        authConfig,
         cliOrganizationSlug,
+        isHeadless,
       );
-
-      // Return modified environment auth config with organization ID
-      return {
-        ...authConfig,
-        organizationId: resolvedOrg.id,
-      };
     }
   } else if (isEnvironmentAuthConfig(authConfig)) {
     // No CLI organization slug (or "personal" was specified) - return as-is
@@ -619,19 +554,11 @@ export async function ensureOrganization(
 
   // If a CLI organization slug is provided, try to use it (for authenticated configs)
   if (cliOrganizationSlug) {
-    const apiClient = getApiClient(authenticatedConfig.accessToken);
-
-    const resolvedOrg = await resolveOrganizationBySlug(
-      apiClient,
+    return handleCliOrgForAuthenticatedConfig(
+      authenticatedConfig,
       cliOrganizationSlug,
+      isHeadless,
     );
-
-    const updatedConfig: AuthenticatedConfig = {
-      ...authenticatedConfig,
-      organizationId: resolvedOrg.id,
-    };
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
   }
 
   // If already have organization ID (including null for personal), return as-is
@@ -641,78 +568,13 @@ export async function ensureOrganization(
 
   // In headless mode, default to personal organization if none saved
   if (isHeadless) {
-    const updatedConfig: AuthenticatedConfig = {
-      userId: authenticatedConfig.userId,
-      userEmail: authenticatedConfig.userEmail,
-      accessToken: authenticatedConfig.accessToken,
-      refreshToken: authenticatedConfig.refreshToken,
-      expiresAt: authenticatedConfig.expiresAt,
-      organizationId: null, // Default to personal organization
-      configUri: authenticatedConfig.configUri,
-      modelName: authenticatedConfig.modelName,
-    };
+    const updatedConfig = createUpdatedAuthConfig(authenticatedConfig, null);
     saveAuthConfig(updatedConfig);
     return updatedConfig;
   }
 
   // Need to select organization
-  const apiClient = getApiClient(authenticatedConfig.accessToken);
-
-  try {
-    const resp = await apiClient.listOrganizations();
-    const organizations = resp.organizations;
-
-    if (organizations.length === 0) {
-      const updatedConfig: AuthenticatedConfig = {
-        userId: authenticatedConfig.userId,
-        userEmail: authenticatedConfig.userEmail,
-        accessToken: authenticatedConfig.accessToken,
-        refreshToken: authenticatedConfig.refreshToken,
-        expiresAt: authenticatedConfig.expiresAt,
-        organizationId: null,
-        configUri: authenticatedConfig.configUri,
-        modelName: authenticatedConfig.modelName,
-      };
-      saveAuthConfig(updatedConfig);
-      return updatedConfig;
-    }
-
-    // Automatically select the first organization if available, otherwise use personal
-    const selectedOrg = organizations[0];
-    const selectedOrgId = selectedOrg.id;
-
-    const updatedConfig: AuthenticatedConfig = {
-      userId: authenticatedConfig.userId,
-      userEmail: authenticatedConfig.userEmail,
-      accessToken: authenticatedConfig.accessToken,
-      refreshToken: authenticatedConfig.refreshToken,
-      expiresAt: authenticatedConfig.expiresAt,
-      organizationId: selectedOrgId,
-      configUri: authenticatedConfig.configUri,
-      modelName: authenticatedConfig.modelName,
-    };
-
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  } catch (error: any) {
-    console.error(
-      chalk.red("Error fetching organizations:"),
-      error.response?.data?.message || error.message || error,
-    );
-    console.info(chalk.yellow("Continuing without organization selection."));
-    const updatedConfig: AuthenticatedConfig = {
-      userId: authenticatedConfig.userId,
-      userEmail: authenticatedConfig.userEmail,
-      accessToken: authenticatedConfig.accessToken,
-      refreshToken: authenticatedConfig.refreshToken,
-      expiresAt: authenticatedConfig.expiresAt,
-      organizationId: null,
-      configUri: authenticatedConfig.configUri,
-      modelName: authenticatedConfig.modelName,
-    };
-    saveAuthConfig(updatedConfig);
-    return updatedConfig;
-  }
+  return autoSelectOrganization(authenticatedConfig);
 }
 
 /**

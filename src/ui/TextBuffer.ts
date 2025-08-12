@@ -137,81 +137,69 @@ export class TextBuffer {
     this._cursor = 0;
   }
 
-  handleInput(input: string, key: Key): boolean {
-    // Detect option key combinations through escape sequences
-    const isOptionKey = input.startsWith("\u001b") && input.length > 1;
+  private handleOptionKey(sequence: string): boolean {
+    // Option + backspace (usually \u001b\u0008 or \u001b\u007f)
+    if (sequence === "\u0008" || sequence === "\u007f") {
+      this.deleteWordBackward();
+      return true;
+    }
+    return true; // Consume other option sequences
+  }
 
-    // Handle option key combinations (detected through escape sequences)
-    if (isOptionKey) {
-      const sequence = input.slice(1);
-
-      // Option + backspace (usually \u001b\u0008 or \u001b\u007f)
-      if (sequence === "\u0008" || sequence === "\u007f") {
+  private handleCtrlKey(input: string): boolean {
+    switch (input) {
+      case "a":
+        this.moveToStart();
+        return true;
+      case "e":
+        this.moveToEnd();
+        return true;
+      case "u":
+        // Delete from cursor to start of line
+        this._text = this._text.slice(this._cursor);
+        this._cursor = 0;
+        return true;
+      case "k":
+        // Delete from cursor to end of line
+        this._text = this._text.slice(0, this._cursor);
+        return true;
+      case "w":
         this.deleteWordBackward();
         return true;
-      }
-
-      return true; // Consume other option sequences
+      case "d":
+        this.deleteWordForward();
+        return true;
+      default:
+        return false;
     }
+  }
 
-    // Handle special key combinations based on input character
-    if (key.ctrl) {
-      switch (input) {
-        case "a":
-          this.moveToStart();
-          return true;
-        case "e":
-          this.moveToEnd();
-          return true;
-        case "u":
-          // Delete from cursor to start of line
-          this._text = this._text.slice(this._cursor);
-          this._cursor = 0;
-          return true;
-        case "k":
-          // Delete from cursor to end of line
-          this._text = this._text.slice(0, this._cursor);
-          return true;
-        case "w":
-          this.deleteWordBackward();
-          return true;
-        case "d":
-          this.deleteWordForward();
-          return true;
-      }
+  private handleMetaKey(input: string, key: Key): boolean {
+    if (key.backspace || key.delete) {
+      this.deleteWordBackward();
+      return true;
     }
-
-    // Handle meta key combinations (cmd on Mac)
-    if (key.meta) {
-      if (key.backspace) {
-        this.deleteWordBackward();
-        return true;
-      }
-      if (key.delete) {
-        this.deleteWordBackward();
-        return true;
-      }
-      if (key.leftArrow) {
-        this.moveWordLeft();
-        return true;
-      }
-      if (key.rightArrow) {
-        this.moveWordRight();
-        return true;
-      }
-
-      // Handle option+left/right as characters (on Mac, option+arrow sends character codes)
-      if (input === "b") {
-        this.moveWordLeft();
-        return true;
-      }
-      if (input === "f") {
-        this.moveWordRight();
-        return true;
-      }
+    if (key.leftArrow) {
+      this.moveWordLeft();
+      return true;
     }
+    if (key.rightArrow) {
+      this.moveWordRight();
+      return true;
+    }
+    // Handle option+left/right as characters (on Mac, option+arrow sends character codes)
+    if (input === "b") {
+      this.moveWordLeft();
+      return true;
+    }
+    if (input === "f") {
+      this.moveWordRight();
+      return true;
+    }
+    return false;
+  }
 
-    // Handle arrow keys
+  private handleArrowKeys(key: Key): boolean {
     if (key.leftArrow && !key.meta) {
       this.moveLeft();
       return true;
@@ -220,15 +208,46 @@ export class TextBuffer {
       this.moveRight();
       return true;
     }
+    return false;
+  }
 
-    // Handle backspace/delete
+  private handleDeleteKeys(key: Key): boolean {
     // On Mac, backspace key registers as key.delete, so treat it as backward deletion
-    if (key.delete && !key.meta) {
+    if ((key.delete || key.backspace) && !key.meta) {
       this.deleteBackward();
       return true;
     }
-    if (key.backspace && !key.meta) {
-      this.deleteBackward();
+    return false;
+  }
+
+  handleInput(input: string, key: Key): boolean {
+    // Detect option key combinations through escape sequences
+    const isOptionKey = input.startsWith("\u001b") && input.length > 1;
+
+    // Handle option key combinations (detected through escape sequences)
+    if (isOptionKey) {
+      return this.handleOptionKey(input.slice(1));
+    }
+
+    // Handle special key combinations based on input character
+    if (key.ctrl) {
+      const handled = this.handleCtrlKey(input);
+      if (handled) return true;
+    }
+
+    // Handle meta key combinations (cmd on Mac)
+    if (key.meta) {
+      const handled = this.handleMetaKey(input, key);
+      if (handled) return true;
+    }
+
+    // Handle arrow keys
+    if (this.handleArrowKeys(key)) {
+      return true;
+    }
+
+    // Handle backspace/delete
+    if (this.handleDeleteKeys(key)) {
       return true;
     }
 

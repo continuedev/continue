@@ -23,9 +23,66 @@ export default [
       // Core rules - all as errors
       "max-classes-per-file": ["error", 1],
       "prefer-const": "error",
+      // "class-methods-use-this": [
+      //   "error",
+      //   {
+      //     exceptMethods: [
+      //       "render",
+      //       "shouldComponentUpdate",
+      //       "componentDidMount",
+      //       "componentDidUpdate",
+      //       "componentWillUnmount",
+      //     ],
+      //   },
+      // ],
+      "no-negated-condition": "error",
+      "max-lines": [
+        "error",
+        { max: 500, skipBlankLines: true, skipComments: true },
+      ],
+      complexity: ["error", { max: 20 }],
+      // "max-lines-per-function": [
+      //   "error",
+      //   { max: 150, skipBlankLines: true, skipComments: true },
+      // ],
+      "max-statements": ["error", { max: 50 }],
+      "max-depth": ["error", { max: 4 }],
+      "max-nested-callbacks": ["error", { max: 3 }],
+      "max-params": ["error", { max: 5 }],
+      eqeqeq: "error",
 
       // TypeScript specific rules
-      "@typescript-eslint/no-floating-promises": "off",
+      // "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-explicit-any": "error",
+      // "@typescript-eslint/member-ordering": [
+      //   "error",
+      //   {
+      //     default: [
+      //       // Static fields
+      //       "public-static-field",
+      //       "protected-static-field",
+      //       "private-static-field",
+
+      //       // Instance fields
+      //       "public-instance-field",
+      //       "protected-instance-field",
+      //       "private-instance-field",
+
+      //       // Constructors
+      //       "constructor",
+
+      //       // Static methods
+      //       "public-static-method",
+      //       "protected-static-method",
+      //       "private-static-method",
+
+      //       // Instance methods
+      //       "public-instance-method",
+      //       "protected-instance-method",
+      //       "private-instance-method",
+      //     ],
+      //   },
+      // ],
 
       // Import rules
       "import/order": [
@@ -62,7 +119,7 @@ export default [
         },
       ],
 
-      // Turn off rules that might be too strict
+      // Turn off rules that might be too strict for CLI
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -89,11 +146,29 @@ export default [
   },
   {
     // Test files can have different rules
-    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+    files: [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "**/test-helpers/**/*.ts",
+      "**/test-helpers/**/*.tsx",
+      "**/__tests__/**/*.ts",
+      "**/__tests__/**/*.tsx",
+      "**/__mocks__/**/*.ts",
+      "**/__mocks__/**/*.tsx",
+    ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-floating-promises": "off",
       "unused-imports/no-unused-vars": "off",
       "max-classes-per-file": "off",
+      "max-lines": "off",
+      "max-lines-per-function": "off",
+      "max-statements": "off",
+      complexity: "off",
+      "class-methods-use-this": "off",
+      "max-nested-callbacks": "off",
     },
   },
   {

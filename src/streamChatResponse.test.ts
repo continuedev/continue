@@ -10,8 +10,8 @@ import { toolPermissionManager } from "./permissions/permissionManager.js";
 import {
   preprocessStreamedToolCalls,
   executeStreamedToolCalls,
-  processStreamingResponse,
-} from "./streamChatResponse.js";
+} from "./streamChatResponse.helpers.js";
+import { processStreamingResponse } from "./streamChatResponse.js";
 import { ToolCall } from "./tools/index.js";
 import { readFileTool } from "./tools/readFile.js";
 import { searchCodeTool } from "./tools/searchCode.js";
@@ -144,12 +144,12 @@ describe("processStreamingResponse - content preservation", () => {
       contentChunk("I'll read the README file for you."),
     ];
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     expect(result.content).toBe("I'll read the README file for you.");
     expect(result.toolCalls.length).toBe(1);
@@ -164,12 +164,12 @@ describe("processStreamingResponse - content preservation", () => {
       toolCallChunk("call_123", "search_code", '{"pattern": "test"}'),
     ];
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     expect(result.content).toBe("Let me search for that. ");
     expect(result.toolCalls.length).toBe(1);
@@ -212,12 +212,12 @@ describe("processStreamingResponse - content preservation", () => {
       contentChunk("I'll read the README file for you."),
     ];
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     expect(result.content).toBe("I'll read the README file for you.");
     expect(result.toolCalls.length).toBe(1);
@@ -235,12 +235,12 @@ describe("processStreamingResponse - content preservation", () => {
   it("shows content works fine without tool calls", async () => {
     chunks = [contentChunk("Hello "), contentChunk("world!")];
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     expect(result.content).toBe("Hello world!");
     expect(result.toolCalls.length).toBe(0);
@@ -268,12 +268,12 @@ describe("processStreamingResponse - content preservation", () => {
       ),
     ];
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     // Content is captured correctly
     expect(result.content).toBe(
@@ -318,12 +318,12 @@ describe("processStreamingResponse - content preservation", () => {
       toolCallChunkWithIndex(0, undefined, undefined, 'd"}'),
     ];
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     // Fixed: Both issues are resolved
     // 1. Content is preserved
@@ -366,12 +366,12 @@ describe("processStreamingResponse - content preservation", () => {
     // This should not throw an error: "Cannot read properties of undefined (reading 'delta')"
     let caughtError: any = null;
     try {
-      await processStreamingResponse(
+      await processStreamingResponse({
         chatHistory,
-        mockModel,
-        mockLlmApi,
-        mockAbortController
-      );
+        model: mockModel,
+        llmApi: mockLlmApi,
+        abortController: mockAbortController,
+      });
     } catch (error) {
       caughtError = error;
     }
@@ -379,12 +379,12 @@ describe("processStreamingResponse - content preservation", () => {
     // Should NOT throw error about reading 'delta' property
     expect(caughtError).toBeNull();
 
-    const result = await processStreamingResponse(
+    const result = await processStreamingResponse({
       chatHistory,
-      mockModel,
-      mockLlmApi,
-      mockAbortController
-    );
+      model: mockModel,
+      llmApi: mockLlmApi,
+      abortController: mockAbortController,
+    });
 
     expect(result.content).toBe("Hello world!");
     expect(result.toolCalls.length).toBe(0);

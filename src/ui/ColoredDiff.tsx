@@ -153,6 +153,26 @@ const WordLevelDiffGroup: React.FC<{
   );
 };
 
+// Helper function to process a group of lines
+function processGroup(
+  group: DiffLine[],
+): Array<{ type: "group" | "single"; lines: DiffLine[] }> {
+  if (group.length <= 1) {
+    return [{ type: "single", lines: group }];
+  }
+
+  const delLines = group.filter((l) => l.type === "del");
+  const addLines = group.filter((l) => l.type === "add");
+
+  // Only do word-level diff if we have both deletions and additions
+  if (delLines.length > 0 && addLines.length > 0) {
+    return [{ type: "group", lines: group }];
+  }
+
+  // Single type, treat as individual lines
+  return group.map((l) => ({ type: "single" as const, lines: [l] }));
+}
+
 export const ColoredDiff: React.FC<{ diffContent: string }> = ({
   diffContent,
 }) => {
@@ -183,22 +203,7 @@ export const ColoredDiff: React.FC<{ diffContent: string }> = ({
 
       // If next line is different type or end of array, finalize the group
       if (!nextLine || (nextLine.type !== "add" && nextLine.type !== "del")) {
-        if (currentGroup.length > 1) {
-          const delLines = currentGroup.filter((l) => l.type === "del");
-          const addLines = currentGroup.filter((l) => l.type === "add");
-
-          // Only do word-level diff if we have both deletions and additions
-          if (delLines.length > 0 && addLines.length > 0) {
-            groupedLines.push({ type: "group", lines: currentGroup });
-          } else {
-            // Single type, treat as individual lines
-            currentGroup.forEach((l) =>
-              groupedLines.push({ type: "single", lines: [l] }),
-            );
-          }
-        } else {
-          groupedLines.push({ type: "single", lines: currentGroup });
-        }
+        groupedLines.push(...processGroup(currentGroup));
         currentGroup = [];
       }
     } else {
