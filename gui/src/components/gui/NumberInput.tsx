@@ -51,7 +51,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   return (
-    <div className="border-vsc-input-border bg-vsc-input-background flex flex-row overflow-hidden rounded-md border border-solid">
+    <div className="border-command-border bg-vsc-input-background flex flex-row overflow-hidden rounded-md border border-solid">
       <input
         type="text"
         value={inputValue}
