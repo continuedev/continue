@@ -5,12 +5,6 @@ slug: ../azure
 
 Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
 
-<Info>
-
-For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azure-openai-service-configuration).
-
-</Info>
-
 ## Chat model
 
 We recommend configuring **GPT-4o** as your chat model.
@@ -27,6 +21,7 @@ We recommend configuring **GPT-4o** as your chat model.
       env:
         deployment: <YOUR_DEPLOYMENT_NAME>
         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+        apiVersion: 2023-07-01-preview # Azure API version
   ```
   </Tab>
   <Tab title="JSON">
@@ -48,10 +43,13 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model. 
+We recommend configuring **Codestral** as your autocomplete model.
 
 <Info>
-**Note:** Azure AI Foundry does not provide the FIM (Fill-in-Middle) endpoint required for autocomplete functionality. To use Codestral for autocomplete, deploy it through **Azure Machine Learning Studio** instead, which provides the necessary `/v1/fim/completions` endpoint.
+  **Note:** Azure AI Foundry does not provide the FIM (Fill-in-Middle) endpoint
+  required for autocomplete functionality. To use Codestral for autocomplete,
+  deploy it through **Azure Machine Learning Studio** instead, which provides
+  the necessary `/v1/fim/completions` endpoint.
 </Info>
 
 If you use Azure Machine Learning Studio to deploy Codestral:
@@ -100,6 +98,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
         env:
           deployment: <YOUR_DEPLOYMENT_NAME>
           apiType: azure
+          apiVersion: 2023-07-01-preview
     ```
     </Tab>
     <Tab title="JSON">
@@ -144,7 +143,8 @@ To find this information in _Azure AI Foundry_, first select the model that you 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
 <Info>
-**Important:** When migrating from `config.json` to `config.yaml`, the `apiVersion` parameter must be moved from the top level to the `env` section.
+  **Important:** When migrating from `config.json` to `config.yaml`, the
+  `apiVersion` parameter must be moved from the top level to the `env` section.
 </Info>
 
 <Tabs>
