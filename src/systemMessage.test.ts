@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Use the actual implementation instead of the mocked one
 vi.unmock("./systemMessage.js");

@@ -12,9 +12,11 @@ vi.mock("open", () => ({
 
 // Mock constructSystemMessage to avoid service container issues in tests
 vi.mock("./src/systemMessage.js", () => ({
-  constructSystemMessage: vi.fn().mockResolvedValue(
-    "You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question."
-  )
+  constructSystemMessage: vi
+    .fn()
+    .mockResolvedValue(
+      "You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.",
+    ),
 }));
 
 // Set up global afterEach hook to clear all timers and reset console
