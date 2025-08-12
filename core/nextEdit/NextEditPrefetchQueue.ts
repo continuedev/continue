@@ -59,6 +59,11 @@ export class PrefetchQueue {
       !this.abortController.signal.aborted
     ) {
       const location = this.dequeueUnprocessed();
+      console.log("processing:");
+      console.log(
+        location?.range.start.line + " to " + location?.range.end.line,
+      );
+
       if (!location) break;
 
       try {
@@ -70,12 +75,20 @@ export class PrefetchQueue {
             this.usingFullFileDiff,
           );
 
-        if (!outcome) continue;
+        if (!outcome) {
+          console.log("outcome is undefined");
+          continue;
+        }
 
         this.enqueueProcessed({
           location,
           outcome,
         });
+
+        console.log(
+          "the length of processed queue after processing is:",
+          this.processedQueue.length,
+        );
       } catch (error) {
         if (!this.abortController.signal.aborted) {
           // Handle error
@@ -113,6 +126,16 @@ export class PrefetchQueue {
 
   peekProcessed(): ProcessedItem | undefined {
     return this.processedQueue[0];
+  }
+
+  peekThreeProcessed(): void {
+    const count = Math.min(3, this.processedQueue.length);
+    const firstThree = this.processedQueue.slice(0, count);
+    firstThree.forEach((item, index) => {
+      console.log(
+        `Item ${index + 1}: ${item.location.range.start.line} to ${item.location.range.end.line}`,
+      );
+    });
   }
 
   setPreetchLimit(limit: number): void {

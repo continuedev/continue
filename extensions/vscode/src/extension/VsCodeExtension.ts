@@ -113,7 +113,8 @@ export class VsCodeExtension {
           Date.now() - state.lastDocumentChangeTime;
         if (
           state.isTypingSession &&
-          timeSinceLastDocChange < this.ARBITRARY_TYPING_DELAY
+          timeSinceLastDocChange < this.ARBITRARY_TYPING_DELAY &&
+          !NextEditWindowManager.getInstance().hasAccepted()
         ) {
           console.log("VsCodeExtension: typing in progress, preserving chain");
           return true;
