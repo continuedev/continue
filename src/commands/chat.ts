@@ -103,9 +103,7 @@ export async function initializeChatHistory(
 
   // If no session loaded or not resuming, initialize with system message
   if (chatHistory.length === 0) {
-    const rulesSystemMessage = ""; // TODO //assistant.systemMessage;
     const systemMessage = await constructSystemMessage(
-      rulesSystemMessage,
       options.rule,
       options.format,
       options.headless,
