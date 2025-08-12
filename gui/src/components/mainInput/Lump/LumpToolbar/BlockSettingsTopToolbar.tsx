@@ -1,8 +1,4 @@
-import {
-  ChevronLeftIcon,
-  EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { vscBadgeForeground } from "../../..";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
@@ -89,9 +85,7 @@ function BlockSettingsToolbarIcon(
           />
           <div
             style={{ fontSize }}
-            className={`overflow-hidden transition-all duration-200 ${
-              props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
-            }`}
+            className="ml-1 w-auto opacity-100"
           >
             <span
               className="whitespace-nowrap"
@@ -110,12 +104,7 @@ function BlockSettingsToolbarIcon(
 }
 
 export function BlockSettingsTopToolbar() {
-  const {
-    isToolbarExpanded,
-    toggleToolbar,
-    selectedSection,
-    setSelectedSection,
-  } = useLump();
+  const { selectedSection, setSelectedSection } = useLump();
 
   const configError = useAppSelector((store) => store.config.configError);
   const config = useAppSelector((state) => state.config.config);
@@ -153,13 +142,6 @@ export function BlockSettingsTopToolbar() {
     };
   }, [ideMessenger, isUsingFreeTrial]);
 
-  const handleEllipsisClick = () => {
-    if (isToolbarExpanded) {
-      setSelectedSection(null);
-    }
-    toggleToolbar();
-  };
-
   const visibleSections = sections.filter(
     (section) =>
       section.id !== "error" ||
@@ -169,36 +151,22 @@ export function BlockSettingsTopToolbar() {
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex flex-row">
-        <div className="xs:flex text-description hidden items-center justify-center gap-0.5">
-          <BlockSettingsToolbarIcon
-            className="-ml-1.5"
-            icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-            tooltip={isToolbarExpanded ? "Collapse Toolbar" : "Expand Toolbar"}
-            title=""
-            isSelected={false}
-            onClick={handleEllipsisClick}
-          />
-          <div
-            className={`${isToolbarExpanded ? "w-min" : "w-0"} flex overflow-hidden transition-all duration-200`}
-          >
-            <div className="flex">
-              {visibleSections.map((section) => (
-                <BlockSettingsToolbarIcon
-                  key={section.id}
-                  sectionId={section.id}
-                  icon={section.icon}
-                  tooltip={section.tooltip}
-                  title={section.title}
-                  isSelected={selectedSection === section.id}
-                  onClick={() =>
-                    setSelectedSection(
-                      selectedSection === section.id ? null : section.id,
-                    )
-                  }
-                />
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center justify-center gap-0.5">
+          {visibleSections.map((section) => (
+            <BlockSettingsToolbarIcon
+              key={section.id}
+              sectionId={section.id}
+              icon={section.icon}
+              tooltip={section.tooltip}
+              title={section.title}
+              isSelected={selectedSection === section.id}
+              onClick={() =>
+                setSelectedSection(
+                  selectedSection === section.id ? null : section.id,
+                )
+              }
+            />
+          ))}
         </div>
       </div>
       <div className="flex gap-0.5">

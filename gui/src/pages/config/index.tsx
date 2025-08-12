@@ -1,7 +1,5 @@
 import {
   BoltIcon,
-  BookOpenIcon,
-  ChatBubbleLeftIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
@@ -12,10 +10,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DocsSection from "../../components/mainInput/Lump/sections/docs/DocsSection";
 import MCPSection from "../../components/mainInput/Lump/sections/mcp/MCPSection";
 import { ModelsSection } from "../../components/mainInput/Lump/sections/ModelsSection";
-import { PromptsSection } from "../../components/mainInput/Lump/sections/PromptsSection";
 import { RulesSection } from "../../components/mainInput/Lump/sections/RulesSection";
 import { ToolPoliciesSection } from "../../components/mainInput/Lump/sections/tool-policies/ToolPoliciesSection";
 import { PageHeader } from "../../components/PageHeader";
@@ -68,28 +64,28 @@ function ConfigPage() {
       ),
       icon: <PencilIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     },
-    {
-      id: "docs",
-      label: "Docs",
-      component: (
-        <div className="mt-4">
-          <h3 className="mb-4 mt-0 text-xl">Documentation</h3>
-          <DocsSection />
-        </div>
-      ),
-      icon: <BookOpenIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-    },
-    {
-      id: "prompts",
-      label: "Prompts",
-      component: (
-        <div className="mt-4">
-          <h3 className="mb-4 mt-0 text-xl">Prompts</h3>
-          <PromptsSection />
-        </div>
-      ),
-      icon: <ChatBubbleLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-    },
+    // {
+    //   id: "docs",
+    //   label: "Docs",
+    //   component: (
+    //     <div className="mt-4">
+    //       <h3 className="mb-4 mt-0 text-xl">Documentation</h3>
+    //       <DocsSection />
+    //     </div>
+    //   ),
+    //   icon: <BookOpenIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    // },
+    // {
+    //   id: "prompts",
+    //   label: "Prompts",
+    //   component: (
+    //     <div className="mt-4">
+    //       <h3 className="mb-4 mt-0 text-xl">Prompts</h3>
+    //       <PromptsSection />
+    //     </div>
+    //   ),
+    //   icon: <ChatBubbleLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    // },
     {
       id: "tools",
       label: "Tools",
@@ -142,7 +138,7 @@ function ConfigPage() {
         />
 
         {/* Tab Headers */}
-        <div className="bg-vsc-input-background flex flex-wrap cursor-pointer border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5 justify-center gap-x-2 gap-y-1">
+        <div className="bg-vsc-input-background flex cursor-pointer flex-wrap justify-center gap-x-2 gap-y-1 border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5">
           {tabs.map((tab) => (
             <div
               style={{
