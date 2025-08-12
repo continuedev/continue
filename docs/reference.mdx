@@ -17,6 +17,8 @@ Continue hub assistants are defined using the `config.yaml` specification. Assis
   Guide](/customize/yaml-migration)**.
 </Info>
 
+The complete YAML schema is available in the [Continue repository](https://github.com/continuedev/continue/blob/main/packages/config-yaml/schema/config-yaml-schema.json).
+
 An assistant is made up of:
 
 1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the assistant
@@ -244,6 +246,22 @@ The `models` section defines the language models used in your configuration. Mod
   - `useRecentlyEdited`: If `true`, includes recently edited files in context.
   - `useRecentlyOpened`: If `true`, includes recently opened files in context.
 
+- `env`: Provider-specific environment parameters. These are parameters that were at the model config level in `config.json` but have been moved to a nested `env` section in `config.yaml`:
+
+  - `apiVersion`: API version for Azure OpenAI Service (e.g., `2023-03-15-preview`).
+  - `apiType`: API type specification, typically `azure-openai` or `azure-foundry`.
+  - `deployment`: Deployment name for Azure models.
+  - `deploymentId`: Deployment ID for specific cloud deployments.
+  - `projectId`: Project ID for Google Cloud or other cloud providers.
+  - `region`: Region where the model is hosted (e.g., `us-east-1`, `eu-central-1`).
+  - `profile`: AWS security profile for authorization.
+  - `accessKeyId`: AWS access key ID.
+  - `secretAccessKey`: AWS secret access key.
+  - `modelArn`: AWS ARN for imported models (e.g., for Bedrock).
+  - `aiGatewaySlug`: AI Gateway slug for Cloudflare AI Gateway.
+  - `accountId`: Account ID for various cloud providers.
+  - `useLegacyCompletionsEndpoint`: Boolean to use legacy completions endpoint.
+
 **Example:**
 
 ```yaml title="config.yaml"
@@ -258,6 +276,18 @@ models:
     defaultCompletionOptions:
       temperature: 0.7
       maxTokens: 1500
+  - name: GPT-4o Azure
+    provider: azure
+    model: gpt-4o
+    apiBase: https://just-an-example.openai.azure.com
+    apiKey: <YOUR_AZURE_API_KEY>
+    env:
+      apiVersion: 2023-03-15-preview
+      deployment: gpt-4o-july
+      apiType: azure-openai
+    roles:
+      - chat
+      - edit
   - name: Codestral
     provider: mistral
     model: codestral-latest

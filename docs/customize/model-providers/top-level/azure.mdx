@@ -143,6 +143,10 @@ To find this information in _Azure AI Foundry_, first select the model that you 
 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
+<Info>
+**Important:** When migrating from `config.json` to `config.yaml`, the `apiVersion` parameter must be moved from the top level to the `env` section.
+</Info>
+
 <Tabs>
 	<Tab title="YAML">
     ```yaml title="config.yaml"
