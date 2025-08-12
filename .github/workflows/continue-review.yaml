@@ -2,7 +2,7 @@ name: Continue CLI Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, ready_for_review]
 
 permissions:
   contents: read
@@ -29,6 +29,7 @@ jobs:
         run: npm install -g @continuedev/cli@1.4.25
 
       - name: Build PR Review Prompt
+        if: github.event.pull_request.draft == false
         run: |
           # Get PR diff
           gh pr diff ${{ github.event.number }} > pr_diff.txt
