@@ -1,10 +1,10 @@
 import { Position } from "../..";
 import {
-  MODEL_1_CONTEXT_FILE_TOKEN,
-  MODEL_1_EDITABLE_REGION_END_TOKEN,
-  MODEL_1_EDITABLE_REGION_START_TOKEN,
-  MODEL_1_SNIPPET_TOKEN,
-  MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
+  INSTINCT_CONTEXT_FILE_TOKEN,
+  INSTINCT_EDITABLE_REGION_END_TOKEN,
+  INSTINCT_EDITABLE_REGION_START_TOKEN,
+  INSTINCT_SNIPPET_TOKEN,
+  INSTINCT_USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 import { insertCursorToken } from "./utils";
 
@@ -20,13 +20,13 @@ export function contextSnippetsBlock(contextSnippets: string) {
       const matches = line.match(headerRegex);
       if (matches) {
         const filename = matches[2];
-        acc.push(`${MODEL_1_CONTEXT_FILE_TOKEN}: ${filename}`);
+        acc.push(`${INSTINCT_CONTEXT_FILE_TOKEN}: ${filename}`);
       } else {
         if (
           acc.length > 0 &&
-          acc[acc.length - 1].startsWith(MODEL_1_CONTEXT_FILE_TOKEN) // if header was added just before
+          acc[acc.length - 1].startsWith(INSTINCT_CONTEXT_FILE_TOKEN) // if header was added just before
         ) {
-          acc.push(`${MODEL_1_SNIPPET_TOKEN}`);
+          acc.push(`${INSTINCT_SNIPPET_TOKEN}`);
         }
         acc.push(line);
       }
@@ -49,17 +49,17 @@ export function currentFileContentBlock(
   const insertedCursorLines = insertCursorToken(
     currentFileContentLines,
     cursorPosition,
-    MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
+    INSTINCT_USER_CURSOR_IS_HERE_TOKEN,
   );
 
   const instrumentedLines = [
     ...insertedCursorLines.slice(windowStart, editableRegionStartLine),
-    MODEL_1_EDITABLE_REGION_START_TOKEN,
+    INSTINCT_EDITABLE_REGION_START_TOKEN,
     ...insertedCursorLines.slice(
       editableRegionStartLine,
       editableRegionEndLine + 1,
     ),
-    MODEL_1_EDITABLE_REGION_END_TOKEN,
+    INSTINCT_EDITABLE_REGION_END_TOKEN,
     ...insertedCursorLines.slice(editableRegionEndLine + 1, windowEnd + 1),
   ];
 

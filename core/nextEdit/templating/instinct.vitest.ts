@@ -4,7 +4,7 @@ import {
   contextSnippetsBlock,
   currentFileContentBlock,
   editHistoryBlock,
-} from "./model1";
+} from "./instinct";
 
 describe("contextSnippetsBlock", () => {
   test("should format empty context snippets", () => {
