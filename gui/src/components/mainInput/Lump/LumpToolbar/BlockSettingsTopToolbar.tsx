@@ -1,13 +1,7 @@
 import {
-  BookOpenIcon,
-  ChatBubbleLeftIcon,
   ChevronLeftIcon,
-  CubeIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
-  PencilIcon,
-  Squares2X2Icon,
-  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { vscBadgeForeground } from "../../..";
@@ -19,8 +13,6 @@ import { useFontSize } from "../../../ui/font";
 import HoverItem from "../../InputToolbar/HoverItem";
 import { useLump } from "../LumpContext";
 import { ErrorsSectionTooltip } from "../sections/errors/ErrorsSectionTooltip";
-import { McpSectionTooltip } from "../sections/mcp/MCPTooltip";
-import { ToolsSectionTooltip } from "../sections/tool-policies/ToolPoliciesSectionTooltip";
 
 import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
@@ -45,27 +37,6 @@ interface Section {
 }
 
 const sections: Section[] = [
-  { id: "models", title: "Models", tooltip: "Models", icon: CubeIcon },
-  { id: "rules", title: "Rules", tooltip: "Rules", icon: PencilIcon },
-  { id: "docs", title: "Docs", tooltip: "Docs", icon: BookOpenIcon },
-  {
-    id: "prompts",
-    title: "Prompts",
-    tooltip: "Prompts",
-    icon: ChatBubbleLeftIcon,
-  },
-  {
-    id: "tools",
-    title: "Tools",
-    tooltip: <ToolsSectionTooltip />,
-    icon: WrenchScrewdriverIcon,
-  },
-  {
-    id: "mcp",
-    title: "MCP",
-    tooltip: <McpSectionTooltip />,
-    icon: Squares2X2Icon,
-  },
   {
     id: "error",
     title: "Errors",

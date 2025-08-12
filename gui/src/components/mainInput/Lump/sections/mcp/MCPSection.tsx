@@ -208,7 +208,8 @@ function MCPSection() {
   }, [servers, selectedProfile]);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="mt-4 flex flex-col gap-4">
+      <h3 className="mb-4 mt-0 text-xl">MCP Servers</h3>
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
         {mergedBlocks.map(({ block, blockFromYaml }, idx) => (
           <MCPServerPreview

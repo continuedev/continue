@@ -1,11 +1,23 @@
 import {
   BoltIcon,
+  BookOpenIcon,
+  ChatBubbleLeftIcon,
   CircleStackIcon,
   Cog6ToothIcon,
+  CubeIcon,
+  PencilIcon,
   QuestionMarkCircleIcon,
+  Squares2X2Icon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DocsSection from "../../components/mainInput/Lump/sections/docs/DocsSection";
+import MCPSection from "../../components/mainInput/Lump/sections/mcp/MCPSection";
+import { ModelsSection } from "../../components/mainInput/Lump/sections/ModelsSection";
+import { PromptsSection } from "../../components/mainInput/Lump/sections/PromptsSection";
+import { RulesSection } from "../../components/mainInput/Lump/sections/RulesSection";
+import { ToolPoliciesSection } from "../../components/mainInput/Lump/sections/tool-policies/ToolPoliciesSection";
 import { PageHeader } from "../../components/PageHeader";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { fontSize } from "../../util";
@@ -33,6 +45,69 @@ function ConfigPage() {
       label: "Settings",
       component: <UserSettingsForm />,
       icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    },
+    {
+      id: "models",
+      label: "Models",
+      component: (
+        <div className="mt-4">
+          <h3 className="mb-4 mt-0 text-xl">Models</h3>
+          <ModelsSection />
+        </div>
+      ),
+      icon: <CubeIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    },
+    {
+      id: "rules",
+      label: "Rules",
+      component: (
+        <div className="mt-4">
+          <h3 className="mb-4 mt-0 text-xl">Rules</h3>
+          <RulesSection />
+        </div>
+      ),
+      icon: <PencilIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    },
+    {
+      id: "docs",
+      label: "Docs",
+      component: (
+        <div className="mt-4">
+          <h3 className="mb-4 mt-0 text-xl">Documentation</h3>
+          <DocsSection />
+        </div>
+      ),
+      icon: <BookOpenIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    },
+    {
+      id: "prompts",
+      label: "Prompts",
+      component: (
+        <div className="mt-4">
+          <h3 className="mb-4 mt-0 text-xl">Prompts</h3>
+          <PromptsSection />
+        </div>
+      ),
+      icon: <ChatBubbleLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    },
+    {
+      id: "tools",
+      label: "Tools",
+      component: (
+        <div className="mt-4">
+          <h3 className="mb-4 mt-0 text-xl">Tool Policies</h3>
+          <ToolPoliciesSection />
+        </div>
+      ),
+      icon: (
+        <WrenchScrewdriverIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+      ),
+    },
+    {
+      id: "mcp",
+      label: "MCP",
+      component: <MCPSection />,
+      icon: <Squares2X2Icon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     },
     {
       id: "indexing",
@@ -67,7 +142,7 @@ function ConfigPage() {
         />
 
         {/* Tab Headers */}
-        <div className="bg-vsc-input-background grid cursor-pointer grid-cols-2 border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5 sm:flex sm:justify-center md:gap-x-2">
+        <div className="bg-vsc-input-background flex flex-wrap cursor-pointer border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5 justify-center gap-x-2 gap-y-1">
           {tabs.map((tab) => (
             <div
               style={{
