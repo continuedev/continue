@@ -1,0 +1,239 @@
+name: Continue CLI Inline Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  inline-code-review:
+    name: AI Inline Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only run if:
+    # - It's a PR event from a team member (with write/admin permissions)
+    # - OR it's a comment with @continue-inline-review on a PR from a team member
+    if: >
+      (github.event_name == 'pull_request' && 
+       (github.event.pull_request.author_association == 'OWNER' || 
+        github.event.pull_request.author_association == 'MEMBER' || 
+        github.event.pull_request.author_association == 'COLLABORATOR')) ||
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-inline-review') &&
+       (github.event.comment.author_association == 'OWNER' || 
+        github.event.comment.author_association == 'MEMBER' || 
+        github.event.comment.author_association == 'COLLABORATOR'))
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history for better context
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Continue CLI
+        run: npm install -g @continuedev/cli@latest
+
+      - name: Build Inline Review Prompt
+        run: |
+          # Get PR number based on event type
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            # For issue_comment event on a PR
+            PR_NUMBER="${{ github.event.issue.number }}"
+          fi
+          
+          # Get PR files with line numbers
+          gh api repos/${{ github.repository }}/pulls/$PR_NUMBER/files > pr_files.json
+          
+          # Get PR diff with context
+          gh pr diff $PR_NUMBER --color=never > pr_diff.txt
+          
+          # Create review prompt for inline comments
+          cat > inline_review_prompt.txt << 'EOF'
+          You are conducting a detailed inline code review for a pull request. 
+          
+          Your task is to analyze the code changes and generate specific, actionable review comments for individual lines or small sections of code.
+          
+          Below is the PR diff:
+          
+          EOF
+          
+          cat pr_diff.txt >> inline_review_prompt.txt
+          
+          cat >> inline_review_prompt.txt << 'EOF'
+          
+          Please analyze these changes and provide inline review comments in the following JSON format:
+          
+          {
+            "review_summary": "Overall assessment of the PR",
+            "comments": [
+              {
+                "path": "path/to/file.js",
+                "line": 42,
+                "side": "RIGHT",
+                "body": "Brief, specific comment about this line or section"
+              }
+            ]
+          }
+          
+          Focus on:
+          1. **Critical Issues**: Security vulnerabilities, bugs that will break functionality
+          2. **High Priority**: Performance problems, incorrect logic, missing error handling
+          3. **Medium Priority**: Code style violations, potential edge cases, unclear code
+          4. **Low Priority**: Suggestions for improvement, refactoring opportunities
+          
+          Guidelines for comments:
+          - Be specific and actionable
+          - Reference the exact line number from the diff
+          - Keep comments concise but informative
+          - Suggest concrete improvements when pointing out issues
+          - Only comment on actual problems or important improvements
+          - Use "RIGHT" for new/modified lines, "LEFT" for context about removed lines
+          
+          Important: 
+          - Output ONLY valid JSON, no additional text
+          - Ensure line numbers match the actual diff
+          - Comment on the most important issues first
+          - Limit to maximum 20 most relevant comments
+          EOF
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Run Continue CLI Inline Review
+        run: |
+          echo "Running Continue CLI for inline review..."
+          
+          # Run the CLI and capture JSON output
+          cat inline_review_prompt.txt | cn --readonly --org continuedev --config continuedev/review-bot -p > inline_review.json
+          
+          # Validate JSON output
+          if ! jq empty inline_review.json 2>/dev/null; then
+            echo "Invalid JSON output from Continue CLI"
+            echo "{\"review_summary\": \"Failed to generate review\", \"comments\": []}" > inline_review.json
+          fi
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+      - name: Post Inline Review Comments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              // Read the review output
+              let reviewData;
+              try {
+                const reviewContent = fs.readFileSync('inline_review.json', 'utf8');
+                reviewData = JSON.parse(reviewContent);
+              } catch (parseError) {
+                console.log('Failed to parse review JSON:', parseError);
+                reviewData = {
+                  review_summary: 'AI review completed but failed to parse output',
+                  comments: []
+                };
+              }
+              
+              // Get PR number
+              let prNumber;
+              if (context.eventName === 'pull_request') {
+                prNumber = context.payload.pull_request.number;
+              } else {
+                prNumber = context.payload.issue.number;
+              }
+              
+              // Get the latest commit SHA
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              
+              const commitSha = pr.head.sha;
+              
+              // Prepare review comments
+              const comments = reviewData.comments?.map(comment => ({
+                path: comment.path,
+                line: comment.line || 1,
+                side: comment.side || 'RIGHT',
+                body: comment.body
+              })) || [];
+              
+              // Create the review
+              if (comments.length > 0) {
+                try {
+                  await github.rest.pulls.createReview({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: prNumber,
+                    commit_id: commitSha,
+                    body: reviewData.review_summary || 'AI Code Review',
+                    event: 'COMMENT',
+                    comments: comments
+                  });
+                  console.log(`Successfully created review with ${comments.length} inline comments`);
+                } catch (reviewError) {
+                  console.log('Failed to create review:', reviewError.message);
+                  
+                  // Fallback: post as a regular comment if review creation fails
+                  const fallbackBody = `## AI Code Review\n\n${reviewData.review_summary}\n\n` +
+                    `*Failed to post ${comments.length} inline comments. Please review the changes manually.*`;
+                  
+                  await github.rest.issues.createComment({
+                    issue_number: prNumber,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: fallbackBody
+                  });
+                }
+              } else {
+                // No inline comments, just post the summary
+                await github.rest.issues.createComment({
+                  issue_number: prNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*`
+                });
+              }
+              
+              // Add triggered by note if from comment
+              if (context.eventName === 'issue_comment') {
+                await github.rest.issues.createComment({
+                  issue_number: prNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `*Inline review triggered by @${context.payload.comment.user.login}*`
+                });
+              }
+              
+            } catch (error) {
+              console.log('Failed to post review:', error.message);
+              console.log('Error details:', error);
+            }
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Review Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: inline-review-results
+          path: |
+            inline_review.json
+            inline_review_prompt.txt
+            pr_files.json
+            pr_diff.txt
+          retention-days: 7
