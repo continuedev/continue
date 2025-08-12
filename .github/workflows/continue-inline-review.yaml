@@ -117,7 +117,7 @@ jobs:
           echo "Running Continue CLI for inline review..."
           
           # Run the CLI and capture JSON output
-          cat inline_review_prompt.txt | cn --readonly --org continuedev --config continuedev/review-bot -p > inline_review.json
+          cat inline_review_prompt.txt | cn --readonly --json --org continuedev --config continuedev/review-bot -p > inline_review.json
           
           # Log the output for debugging
           echo "Continue CLI output:"
