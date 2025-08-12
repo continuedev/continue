@@ -572,19 +572,22 @@ export class NextEditProvider {
         helper.pos.line + 25,
       );
 
-      // The editable region is defined as: cursor line - 1 to cursor line + 5 (inclusive).
-      const actualEditableStart = Math.max(
-        0,
-        helper.pos.line - MODEL_WINDOW_SIZES["instinct"].topMargin,
-      );
-      const actualEditableEnd = Math.min(
-        helper.fileLines.length - 1,
-        helper.pos.line + MODEL_WINDOW_SIZES["instinct"].bottomMargin,
-      );
+      // // The editable region is defined as: cursor line - 1 to cursor line + 5 (inclusive).
+      // const actualEditableStart = Math.max(
+      //   0,
+      //   helper.pos.line - MODEL_WINDOW_SIZES["instinct"].topMargin,
+      // );
+      // const actualEditableEnd = Math.min(
+      //   helper.fileLines.length - 1,
+      //   helper.pos.line + MODEL_WINDOW_SIZES["instinct"].bottomMargin,
+      // );
 
       // Ensure editable region boundaries are within the window.
-      const adjustedEditableStart = Math.max(windowStart, actualEditableStart);
-      const adjustedEditableEnd = Math.min(windowEnd, actualEditableEnd);
+      const adjustedEditableStart = Math.max(
+        windowStart,
+        editableRegionStartLine,
+      );
+      const adjustedEditableEnd = Math.min(windowEnd, editableRegionEndLine);
       ctx = {
         contextSnippets: this.autocompleteContext,
         currentFileContent: helper.fileContents,
