@@ -38,7 +38,9 @@ function isRetryableError(error: any): boolean {
   if (
     error.code === "ECONNRESET" ||
     error.code === "ENOTFOUND" ||
-    error.code === "ETIMEDOUT"
+    error.code === "ETIMEDOUT" ||
+    error.code === "EPIPE" ||
+    error.code === "ECONNREFUSED"
   ) {
     return true;
   }
@@ -58,6 +60,15 @@ function isRetryableError(error: any): boolean {
   // Anthropic specific errors
   const lower = error.message?.toLowerCase();
   if (lower?.includes("overloaded")) {
+    return true;
+  }
+
+  // Check for premature close errors by message content
+  if (lower?.includes("premature close") || 
+      lower?.includes("premature end") ||
+      lower?.includes("connection reset") ||
+      lower?.includes("socket hang up") ||
+      lower?.includes("aborted")) {
     return true;
   }
 

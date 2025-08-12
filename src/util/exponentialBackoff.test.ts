@@ -13,7 +13,9 @@ function isRetryableError(error: any): boolean {
   if (
     error.code === "ECONNRESET" ||
     error.code === "ENOTFOUND" ||
-    error.code === "ETIMEDOUT"
+    error.code === "ETIMEDOUT" ||
+    error.code === "EPIPE" ||
+    error.code === "ECONNREFUSED"
   ) {
     return true;
   }
@@ -27,6 +29,21 @@ function isRetryableError(error: any): boolean {
 
   // OpenAI specific errors
   if (error.type === "server_error" || error.type === "rate_limit_exceeded") {
+    return true;
+  }
+
+  // Anthropic specific errors
+  const lower = error.message?.toLowerCase();
+  if (lower?.includes("overloaded")) {
+    return true;
+  }
+
+  // Check for premature close errors by message content
+  if (lower?.includes("premature close") || 
+      lower?.includes("premature end") ||
+      lower?.includes("connection reset") ||
+      lower?.includes("socket hang up") ||
+      lower?.includes("aborted")) {
     return true;
   }
 
@@ -93,6 +110,51 @@ describe("exponentialBackoff utilities", () => {
 
     it("should return true for rate limit errors", () => {
       const error = { type: "rate_limit_exceeded" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for EPIPE errors", () => {
+      const error = { code: "EPIPE" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for ECONNREFUSED errors", () => {
+      const error = { code: "ECONNREFUSED" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for Anthropic overloaded errors", () => {
+      const error = { message: "The service is overloaded" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for premature close errors", () => {
+      const error = { message: "Error: Premature close" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for premature end errors", () => {
+      const error = { message: "Premature end of response" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for connection reset errors", () => {
+      const error = { message: "Connection reset by peer" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for socket hang up errors", () => {
+      const error = { message: "socket hang up" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should return true for aborted connection errors", () => {
+      const error = { message: "Request aborted" };
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it("should handle case insensitive error messages", () => {
+      const error = { message: "PREMATURE CLOSE" };
       expect(isRetryableError(error)).toBe(true);
     });
 
