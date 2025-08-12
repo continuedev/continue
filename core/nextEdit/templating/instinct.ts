@@ -67,56 +67,62 @@ export function currentFileContentBlock(
 }
 
 export function editHistoryBlock(
-  editDiffHistories: string, // unified diffs with Index headers
+  editDiffHistories: string[], // array of unified diffs with Index headers
 ) {
-  if (!editDiffHistories.trim()) {
+  if (!editDiffHistories.length) {
     return "";
   }
 
   const blocks: string[] = [];
 
-  // Split on Index: lines to get the unified diff.
-  const diffSections = editDiffHistories
-    .split(/^Index: /m)
-    .filter((section) => section.trim());
+  for (const editDiffHistory of editDiffHistories) {
+    if (!editDiffHistory.trim()) {
+      continue;
+    }
 
-  for (const section of diffSections) {
-    const lines = section.split("\n");
+    // Split on Index: lines to get the unified diff.
+    const diffSections = editDiffHistory
+      .split(/^Index: /m)
+      .filter((section) => section.trim());
 
-    // Extract filename from the first line (after "Index: " was split off).
-    const filename = lines[0];
+    for (const section of diffSections) {
+      const lines = section.split("\n");
 
-    // Find the start of the actual diff content (skip ---, +++, and === lines).
-    const diffLines = lines
-      .filter(
+      // Extract filename from the first line (after "Index: " was split off).
+      const filename = lines[0];
+
+      // Find the start of the actual diff content (skip ---, +++, and === lines).
+      const diffLines = lines
+        .filter(
+          (line) =>
+            !line.startsWith("---") &&
+            !line.startsWith("+++") &&
+            !line.startsWith("===") &&
+            line.trim() !== "", // remove empty lines from header section
+        )
+        .slice(1); // remove the filename line
+
+      // Only include lines that are actual diff content (@@, +, -, or context lines).
+      const actualDiffContent = diffLines.filter(
         (line) =>
-          !line.startsWith("---") &&
-          !line.startsWith("+++") &&
-          !line.startsWith("===") &&
-          line.trim() !== "", // remove empty lines from header section
-      )
-      .slice(1); // remove the filename line
+          line.startsWith("@@") ||
+          line.startsWith("+") ||
+          line.startsWith("-") ||
+          line.startsWith(" "), // context lines
+      );
 
-    // Only include lines that are actual diff content (@@, +, -, or context lines).
-    const actualDiffContent = diffLines.filter(
-      (line) =>
-        line.startsWith("@@") ||
-        line.startsWith("+") ||
-        line.startsWith("-") ||
-        line.startsWith(" "), // context lines
-    );
+      if (actualDiffContent.length === 0) continue;
 
-    if (actualDiffContent.length === 0) continue;
+      const diffBlock = [
+        `User edited file "${filename}"`,
+        "",
+        "```diff",
+        actualDiffContent.join("\n"),
+        "```",
+      ].join("\n");
 
-    const diffBlock = [
-      `User edited file "${filename}"`,
-      "",
-      "```diff",
-      actualDiffContent.join("\n"),
-      "```",
-    ].join("\n");
-
-    blocks.push(diffBlock);
+      blocks.push(diffBlock);
+    }
   }
 
   return blocks.join("\n");

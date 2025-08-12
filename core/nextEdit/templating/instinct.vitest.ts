@@ -291,7 +291,7 @@ line 3`;
 
 describe("editHistoryBlock", () => {
   test("should format empty edit history", () => {
-    const result = editHistoryBlock("");
+    const result = editHistoryBlock([]);
     expect(result).toBe("");
   });
 
@@ -306,7 +306,7 @@ describe("editHistoryBlock", () => {
 +  console.log("new");
  }`;
 
-    const result = editHistoryBlock(diff);
+    const result = editHistoryBlock([diff]);
     const expected = `User edited file "test.js"
 
 \`\`\`diff
@@ -337,7 +337,45 @@ Index: file2.js
 -let x = "old";
 +let x = "new";`;
 
-    const result = editHistoryBlock(unifiedDiff);
+    const result = editHistoryBlock([unifiedDiff]);
+    const expected = `User edited file "file1.js"
+
+\`\`\`diff
+@@ -1 +1 @@
+-const old = 1;
++const new = 1;
+\`\`\`
+User edited file "file2.js"
+
+\`\`\`diff
+@@ -1 +1 @@
+-let x = "old";
++let x = "new";
+\`\`\``;
+
+    expect(result).toBe(expected);
+  });
+
+  test("should format multiple diff history entries", () => {
+    // Multiple diffs should be concatenated into a single string
+    const unifiedDiffs = [
+      `Index: file1.js
+===================================================================
+--- a/file1.js	2023-01-01 10:00:00.000000000 +0000
++++ b/file1.js	2023-01-01 10:01:00.000000000 +0000
+@@ -1 +1 @@
+-const old = 1;
++const new = 1;`,
+      `Index: file2.js
+===================================================================
+--- a/file2.js	2023-01-01 10:02:00.000000000 +0000
++++ b/file2.js	2023-01-01 10:03:00.000000000 +0000
+@@ -1 +1 @@
+-let x = "old";
++let x = "new";`,
+    ];
+
+    const result = editHistoryBlock(unifiedDiffs);
     const expected = `User edited file "file1.js"
 
 \`\`\`diff
@@ -366,7 +404,7 @@ User edited file "file2.js"
 -export const Button = () => <button>Old</button>;
 +export const Button = () => <button>New</button>;`;
 
-    const result = editHistoryBlock(diff);
+    const result = editHistoryBlock([diff]);
     const expected = `User edited file "src/components/Button/Button.tsx"
 
 \`\`\`diff
@@ -388,7 +426,7 @@ User edited file "file2.js"
 +  return "hello world";
 +}`;
 
-    const result = editHistoryBlock(diff);
+    const result = editHistoryBlock([diff]);
     const expected = `User edited file "newfile.js"
 
 \`\`\`diff
@@ -411,7 +449,7 @@ User edited file "file2.js"
 -  return "goodbye";
 -}`;
 
-    const result = editHistoryBlock(diff);
+    const result = editHistoryBlock([diff]);
     const expected = `User edited file "deletedfile.js"
 
 \`\`\`diff
@@ -431,7 +469,7 @@ User edited file "file2.js"
 -old text
 +new text`;
 
-    const result = editHistoryBlock(diff);
+    const result = editHistoryBlock([diff]);
     const expected = `User edited file "simple.txt"
 
 \`\`\`diff
