@@ -17,6 +17,7 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
+import { PolicySingleton } from "../control-plane/PolicySingleton.js";
 import { logger } from "../util/logger.js";
 import { Telemetry } from "../util/posthog.js";
 import {
@@ -172,20 +173,27 @@ export class ConfigHandler {
     const isSignedIn = await this.controlPlaneClient.isSignedIn();
     if (isSignedIn) {
       try {
-        // TODO use policy returned with org?
-        const policy = await this.controlPlaneClient.getPolicy();
-        const orgDescs = await this.controlPlaneClient.listOrganizations();
-        if (policy?.policy?.allowOtherOrganizations === false) {
-          if (orgDescs.length === 0) {
+        // TODO use policy returned with org, not policy endpoint
+        const policyResponse = await this.controlPlaneClient.getPolicy();
+        PolicySingleton.getInstance().policy = policyResponse;
+        const orgDescriptions =
+          await this.controlPlaneClient.listOrganizations();
+        const orgsWithPolicy = orgDescriptions.map((d) => ({
+          ...d,
+          policy: policyResponse?.policy,
+        }));
+
+        if (policyResponse?.policy?.allowOtherOrgs === false) {
+          if (orgsWithPolicy.length === 0) {
             return { orgs: [] };
           } else {
-            const firstOrg = await this.getNonPersonalHubOrg(orgDescs[0]);
+            const firstOrg = await this.getNonPersonalHubOrg(orgsWithPolicy[0]);
             return { orgs: [firstOrg] };
           }
         }
         const orgs = await Promise.all([
           this.getPersonalHubOrg(),
-          ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+          ...orgsWithPolicy.map((org) => this.getNonPersonalHubOrg(org)),
         ]);
         // TODO make try/catch more granular here, to catch specific org errors
         return { orgs };
@@ -496,10 +504,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [
-          { message: "Current profile not found", fatal: true },
-          ...(injectErrors ?? []),
-        ],
+        errors: injectErrors,
         configLoadInterrupted: true,
       };
     }
@@ -568,7 +573,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [{ message: "Current profile not found", fatal: true }],
+        errors: undefined,
         configLoadInterrupted: true,
       };
     }
@@ -581,7 +586,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [{ message: "Current profile not found", fatal: true }],
+        errors: undefined,
         configLoadInterrupted: true,
       };
     }

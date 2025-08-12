@@ -34,8 +34,7 @@ export const FatalErrorIndicator = () => {
 
   const displayName =
     selectedProfile?.title ??
-    `${selectedProfile?.fullSlug?.ownerSlug}/${selectedProfile?.fullSlug?.packageSlug}` ??
-    "assistant";
+    `${selectedProfile?.fullSlug?.ownerSlug}/${selectedProfile?.fullSlug?.packageSlug}`;
 
   return (
     <Alert type="error" className="mx-2 my-1 px-2">
