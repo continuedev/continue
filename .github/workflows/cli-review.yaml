@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
+
       - name: Install Continue CLI
         run: npm install -g @continuedev/cli@1.4.21
-      
+
       - name: Run Continue CLI Review
         run: |
           echo "Running Continue CLI with hardcoded prompt:"
@@ -31,6 +31,6 @@ jobs:
           echo ""
 
           # Run the CLI with a hardcoded prompt and output text directly
-          echo "Review this pull request and provide feedback on code quality" | cn --config "${{ inputs.assistant }}" -p
+          echo "Review this pull request and provide feedback on code quality" | cn -p --org continuedev
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
