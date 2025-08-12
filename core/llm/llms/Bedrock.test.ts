@@ -7,13 +7,21 @@ import {
 import Bedrock from "./Bedrock.js";
 
 // Mock AWS SDK
+const mockSend = jest.fn();
+const mockMiddlewareStackAdd = jest.fn();
+
 jest.mock("@aws-sdk/client-bedrock-runtime", () => ({
   BedrockRuntimeClient: jest.fn().mockImplementation(() => ({
-    send: jest.fn(),
-    middlewareStack: { add: jest.fn() },
+    send: mockSend,
+    middlewareStack: { add: mockMiddlewareStackAdd },
   })),
   ConverseStreamCommand: jest.fn(),
+  ConverseCommand: jest.fn(),
   InvokeModelCommand: jest.fn(),
+  ConversationRole: {
+    USER: "user",
+    ASSISTANT: "assistant",
+  },
 }));
 
 // Mock credential provider
@@ -90,6 +98,8 @@ class TestBedrock extends Bedrock {
 describe("Bedrock", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSend.mockReset();
+    mockMiddlewareStackAdd.mockReset();
   });
 
   describe("constructor", () => {
@@ -303,6 +313,119 @@ describe("Bedrock", () => {
       );
     });
   });
+
+  describe("streaming vs non-streaming behavior", () => {
+    class TestableStreamingBedrock extends Bedrock {
+      public streamingMethodCalled = false;
+      public nonStreamingMethodCalled = false;
+
+      protected async *_streamChatStreaming(
+        messages: ChatMessage[],
+        signal: AbortSignal,
+        options: CompletionOptions,
+      ): AsyncGenerator<ChatMessage> {
+        this.streamingMethodCalled = true;
+        yield { role: "assistant", content: "Streaming response" };
+      }
+
+      protected async *_streamChatNonStreaming(
+        messages: ChatMessage[],
+        signal: AbortSignal,
+        options: CompletionOptions,
+      ): AsyncGenerator<ChatMessage> {
+        this.nonStreamingMethodCalled = true;
+        yield { role: "assistant", content: "Non-streaming response" };
+      }
+    }
+
+    let bedrock: TestableStreamingBedrock;
+    const mockAbortSignal = new AbortController().signal;
+
+    beforeEach(() => {
+      bedrock = new TestableStreamingBedrock({
+        apiKey: "test-key",
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        region: "us-east-1",
+      });
+    });
+
+    it("should use streaming method when stream is not false", async () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Hello" } as UserChatMessage,
+      ];
+
+      const options: CompletionOptions = {
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        stream: true, // Explicitly set streaming
+      };
+
+      const results = [];
+      for await (const message of bedrock["_streamChat"](
+        messages,
+        mockAbortSignal,
+        options,
+      )) {
+        results.push(message);
+      }
+
+      expect(bedrock.streamingMethodCalled).toBe(true);
+      expect(bedrock.nonStreamingMethodCalled).toBe(false);
+      expect(results).toEqual([
+        { role: "assistant", content: "Streaming response" },
+      ]);
+    });
+
+    it("should use non-streaming method when stream is false", async () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Hello" } as UserChatMessage,
+      ];
+
+      const options: CompletionOptions = {
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        stream: false, // Explicitly set non-streaming
+      };
+
+      const results = [];
+      for await (const message of bedrock["_streamChat"](
+        messages,
+        mockAbortSignal,
+        options,
+      )) {
+        results.push(message);
+      }
+
+      expect(bedrock.streamingMethodCalled).toBe(false);
+      expect(bedrock.nonStreamingMethodCalled).toBe(true);
+      expect(results).toEqual([
+        { role: "assistant", content: "Non-streaming response" },
+      ]);
+    });
+
+    it("should default to streaming method when stream option is undefined", async () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Hello" } as UserChatMessage,
+      ];
+
+      const options: CompletionOptions = {
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        // stream option is undefined, should default to streaming
+      };
+
+      const results = [];
+      for await (const message of bedrock["_streamChat"](
+        messages,
+        mockAbortSignal,
+        options,
+      )) {
+        results.push(message);
+      }
+
+      expect(bedrock.streamingMethodCalled).toBe(true);
+      expect(bedrock.nonStreamingMethodCalled).toBe(false);
+    });
+  });
+
+  
 
   describe("message conversion", () => {
     let bedrock: TestBedrock;
