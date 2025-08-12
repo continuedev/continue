@@ -175,7 +175,12 @@ The `models` section defines the language models used in your configuration. Mod
 
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 
-- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
+
+- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for detailed information. Supported capabilities include:
+  - `tool_use`: Enables function/tool calling support (required for Agent mode)
+  - `image_input`: Enables image upload and processing support
+  
+  Continue automatically detects these capabilities for most models, but you can override this when using custom deployments or if autodetection isn't working correctly.
 
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 
@@ -224,6 +229,21 @@ The `models` section defines the language models used in your configuration. Mod
     - `key`: Path to the client certificate key file.
     - `passphrase`: Optional passphrase for the client certificate key file.
 
+- `autocompleteOptions`: If the model includes role `autocomplete`, these settings apply for tab autocompletion:
+
+  - `disable`: If `true`, disables autocomplete for this model.
+  - `maxPromptTokens`: Maximum number of tokens for the autocomplete prompt.
+  - `debounceDelay`: Delay before triggering autocomplete in milliseconds.
+  - `modelTimeout`: Model timeout for autocomplete requests in milliseconds.
+  - `maxSuffixPercentage`: Maximum percentage of prompt allocated for suffix.
+  - `prefixPercentage`: Percentage of input allocated for prefix.
+  - `template`: Custom template for autocomplete using Mustache syntax. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
+  - `onlyMyCode`: Only includes code within the repository for context.
+  - `useCache`: If `true`, enables caching for completions.
+  - `useImports`: If `true`, includes imports in context.
+  - `useRecentlyEdited`: If `true`, includes recently edited files in context.
+  - `useRecentlyOpened`: If `true`, includes recently opened files in context.
+
 **Example:**
 
 ```yaml title="config.yaml"
@@ -243,6 +263,10 @@ models:
     model: codestral-latest
     roles:
       - autocomplete
+    autocompleteOptions:
+      debounceDelay: 250
+      maxPromptTokens: 1024
+      onlyMyCode: true
   - name: My Model - OpenAI-Compatible
     provider: openai
     apiBase: http://my-endpoint/v1
@@ -452,6 +476,10 @@ models:
     model: starcoder
     roles:
       - autocomplete
+    autocompleteOptions:
+      debounceDelay: 350
+      maxPromptTokens: 1024
+      onlyMyCode: true
     defaultCompletionOptions:
       temperature: 0.3
       stop:
@@ -527,4 +555,8 @@ models:
     useLegacyCompletionsEndpoint: false
     roles:
       - autocomplete
+    autocompleteOptions:
+      debounceDelay: 350
+      maxPromptTokens: 1024
+      onlyMyCode: true
 ```

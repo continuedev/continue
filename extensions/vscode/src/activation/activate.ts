@@ -1,5 +1,3 @@
-import * as path from "path";
-
 import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -58,10 +56,10 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   const yamlMatcher = ".continue/**/*.yaml";
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
 
-  const newPath = path.join(
-    context.extension.extensionUri.fsPath,
+  const newPath = vscode.Uri.joinPath(
+    context.extension.extensionUri,
     "config-yaml-schema.json",
-  );
+  ).toString();
 
   try {
     await yamlConfig.update(

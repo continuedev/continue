@@ -3,6 +3,7 @@ import { AutocompleteCodeSnippet } from "../../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../../autocomplete/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { DataLogger } from "../../data/log";
+import { NextEditProvider } from "../NextEditProvider";
 import { RecentlyEditedRange } from "../types";
 import { getAutocompleteContext } from "./autocompleteContextFetching";
 import { createDiff, DiffFormatType } from "./diffFormatting";
@@ -74,6 +75,8 @@ export const processNextEditData = async ({
     beforeContent,
     modelName,
   );
+
+  NextEditProvider.getInstance().addAutocompleteContext(autocompleteContext);
 
   // console.log(
   //   createDiff(beforeContent, afterContent, filePath, DiffFormatType.Unified),

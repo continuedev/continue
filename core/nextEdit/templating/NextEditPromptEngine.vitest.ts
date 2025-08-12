@@ -3,18 +3,19 @@ import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { AutocompleteSnippetType } from "../../autocomplete/snippets/types";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import { NEXT_EDIT_MODELS } from "../../llm/constants";
 import {
-  CURRENT_FILE_CONTENT_CLOSE,
-  CURRENT_FILE_CONTENT_OPEN,
-  CURSOR,
-  EDIT_DIFF_HISTORY_CLOSE,
-  EDIT_DIFF_HISTORY_OPEN,
-  RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
-  RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
-  USER_CURSOR_IS_HERE_TOKEN,
+  MERCURY_CURRENT_FILE_CONTENT_CLOSE,
+  MERCURY_CURRENT_FILE_CONTENT_OPEN,
+  MERCURY_CURSOR,
+  MERCURY_EDIT_DIFF_HISTORY_CLOSE,
+  MERCURY_EDIT_DIFF_HISTORY_OPEN,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
+  MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
+  MODEL_1_USER_PROMPT_PREFIX,
 } from "../constants";
 import {
-  NextEditModelName,
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
   renderPrompt,
@@ -30,25 +31,19 @@ describe("NextEditPromptEngine", () => {
 
     beforeEach(() => {
       mercuryHelper = {
-        modelName: "inception/mercury-coder-nextedit" as NextEditModelName,
+        modelName: "inception/mercury-coder-nextedit" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
       } as HelperVars;
       model1Helper = {
-        modelName: "continuedev/model-1" as NextEditModelName,
-        fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
-        pos: { line: 1, character: 12 } as Position,
-        lang: { name: "typescript" },
-      } as HelperVars;
-      testHelper = {
-        modelName: "this field is not used" as NextEditModelName,
+        modelName: "continuedev/model-1" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
       } as HelperVars;
       unsupportedHelper = {
-        modelName: "mistral/codestral" as NextEditModelName,
+        modelName: "mistral/codestral" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
@@ -75,38 +70,46 @@ describe("NextEditPromptEngine", () => {
       expect(result.prompt.role).toBe("user");
 
       const content = result.prompt.content;
-      expect(content).toContain(RECENTLY_VIEWED_CODE_SNIPPETS_OPEN);
-      expect(content).toContain(RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE);
-      expect(content).toContain(CURRENT_FILE_CONTENT_OPEN);
-      expect(content).toContain(CURRENT_FILE_CONTENT_CLOSE);
-      expect(content).toContain(EDIT_DIFF_HISTORY_OPEN);
-      expect(content).toContain(EDIT_DIFF_HISTORY_CLOSE);
+      expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN);
+      expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE);
+      expect(content).toContain(MERCURY_CURRENT_FILE_CONTENT_OPEN);
+      expect(content).toContain(MERCURY_CURRENT_FILE_CONTENT_CLOSE);
+      expect(content).toContain(MERCURY_EDIT_DIFF_HISTORY_OPEN);
+      expect(content).toContain(MERCURY_EDIT_DIFF_HISTORY_CLOSE);
 
       expect(result.userEdits).toBe(ctx.editDiffHistory);
-      expect(result.userExcerpts).toContain(CURSOR);
+      expect(result.userExcerpts).toContain(MERCURY_CURSOR);
     });
 
     it("should render model-1 prompt correctly", async () => {
-      const result = await renderPrompt(model1Helper, ctx);
+      // Create proper model-1 context structure matching NextEditProvider.ts
+      const model1Ctx = {
+        contextSnippets:
+          "+++++ /path/to/context.ts\nconst contextVar = 'test';",
+        currentFileContent: model1Helper.fileContents,
+        windowStart: 0, // Math.max(0, helper.pos.line - 25)
+        windowEnd: 3, // Math.min(helper.fileLines.length - 1, helper.pos.line + 25)
+        adjustedEditableStart: 0, // Math.max(0, helper.pos.line - 1) within window
+        adjustedEditableEnd: 2, // Math.min(helper.pos.line + 5) within window
+        editDiffHistory:
+          "diff --git a/file.ts b/file.ts\nindex 123..456 789\n--- a/file.ts\n+++ b/file.ts\n@@ -1,3 +1,4 @@\n function test() {\n+  const a = 1;\n   return a;\n }", // unified diff
+        currentFilePath: "/path/to/file.ts",
+        languageShorthand: "ts",
+      };
+
+      const result = await renderPrompt(model1Helper, model1Ctx);
+      console.log(result);
 
       expect(result).toHaveProperty("prompt");
       expect(result.prompt.role).toBe("user");
+      expect(result.prompt.content).toContain(MODEL_1_USER_PROMPT_PREFIX);
+      expect(result.prompt.content).toContain("### Context:");
       expect(result.prompt.content).toContain("### User Edits:");
       expect(result.prompt.content).toContain("### User Excerpts:");
       expect(result.prompt.content).toContain("```ts");
 
-      expect(result.userEdits).toBe(ctx.userEdits);
-      expect(result.userExcerpts).toContain(USER_CURSOR_IS_HERE_TOKEN);
-    });
-
-    it("should handle 'this field is not used' model name", async () => {
-      const result = await renderPrompt(testHelper, ctx);
-
-      expect(result).toHaveProperty("prompt");
-      expect(result.prompt.role).toBe("user");
-      expect(result.prompt.content).toBe("NEXT_EDIT");
-      expect(result.userEdits).toBe("");
-      expect(result.userExcerpts).toBe(testHelper.fileContents);
+      expect(result.userEdits).toBe(model1Ctx.editDiffHistory);
+      expect(result.userExcerpts).toContain(MODEL_1_USER_CURSOR_IS_HERE_TOKEN);
     });
 
     it("should throw error for unsupported model name", async () => {
@@ -209,7 +212,7 @@ describe("NextEditPromptEngine", () => {
   describe("insertTokens", () => {
     it("should correctly insert cursor and editable region tokens", () => {
       const mercuryHelper = {
-        modelName: "inception/mercury-coder-nextedit" as NextEditModelName,
+        modelName: "inception/mercury-coder-nextedit" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
@@ -229,7 +232,7 @@ describe("NextEditPromptEngine", () => {
       };
 
       return renderPrompt(mercuryHelper, ctx).then((result) => {
-        expect(result.userExcerpts).toContain(CURSOR);
+        expect(result.userExcerpts).toContain(MERCURY_CURSOR);
       });
     });
   });

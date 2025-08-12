@@ -55,6 +55,14 @@ export class AnthropicApi implements BaseLlmApi {
     return cachingStrategy(cleanBody);
   }
 
+  private maxTokensForModel(model: string): number {
+    if (model.includes("haiku")) {
+      return 8192;
+    }
+
+    return 32_000;
+  }
+
   public _convertToCleanAnthropicBody(oaiBody: ChatCompletionCreateParams) {
     let stop = undefined;
     if (oaiBody.stop && Array.isArray(oaiBody.stop)) {
@@ -81,7 +89,7 @@ export class AnthropicApi implements BaseLlmApi {
         : systemMessage,
       top_p: oaiBody.top_p,
       temperature: oaiBody.temperature,
-      max_tokens: oaiBody.max_tokens ?? 4096, // max_tokens is required
+      max_tokens: oaiBody.max_tokens ?? this.maxTokensForModel(oaiBody.model), // max_tokens is required
       model: oaiBody.model,
       stop_sequences: stop,
       stream: oaiBody.stream,

@@ -55,8 +55,6 @@ console.log("[info] Using target: ", target);
 
 const exe = os === "win32" ? ".exe" : "";
 
-const isInGitHubAction = !!process.env.GITHUB_ACTIONS;
-
 const isArmTarget =
   target === "darwin-arm64" ||
   target === "linux-arm64" ||
@@ -85,15 +83,6 @@ void (async () => {
   }
 
   process.chdir(path.join(continueDir, "gui"));
-
-  if (isInGitHubAction) {
-    const guiBuildStart = Date.now();
-    console.log(`[timer] Starting GUI build at ${new Date().toISOString()}`);
-    execCmdSync("npm run build");
-    console.log(
-      `[timer] GUI build completed in ${Date.now() - guiBuildStart}ms`,
-    );
-  }
 
   // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
@@ -140,6 +129,7 @@ void (async () => {
 
   // Then copy over the dist folder to the VSCode extension //
   const vscodeGuiPath = path.join("../extensions/vscode/gui");
+  rimrafSync(vscodeGuiPath);
   fs.mkdirSync(vscodeGuiPath, { recursive: true });
   const vscodeCopyStart = Date.now();
   console.log(`[timer] Starting VSCode copy at ${new Date().toISOString()}`);

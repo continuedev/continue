@@ -18,6 +18,7 @@ import {
   SlashCommandDescWithSource,
   Tool,
 } from "../../";
+import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
@@ -25,6 +26,7 @@ import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
@@ -216,15 +218,39 @@ export default async function doLoadConfig(options: {
       }));
       newConfig.tools.push(...serverTools);
 
+      // Fetch MCP prompt content during config load
       const serverSlashCommands: SlashCommandDescWithSource[] =
-        server.prompts.map((prompt) => ({
-          name: prompt.name,
-          description: prompt.description ?? "MCP Prompt",
-          source: "mcp-prompt",
-          isLegacy: false,
-          mcpServerName: server.name, // Used in client to retrieve prompt
-          mcpArgs: prompt.arguments,
-        }));
+        await Promise.all(
+          server.prompts.map(async (prompt) => {
+            let promptContent: string | undefined;
+
+            try {
+              // Fetch the actual prompt content from the MCP server
+              const mcpPromptResponse = await mcpManager.getPrompt(
+                server.name,
+                prompt.name,
+                {}, // Empty args for now - TODO: handle prompt arguments
+              );
+              promptContent = stringifyMcpPrompt(mcpPromptResponse);
+            } catch (error) {
+              console.warn(
+                `Failed to fetch MCP prompt content for ${prompt.name} from server ${server.name}:`,
+                error,
+              );
+              // Keep promptContent as undefined so the UI can show a fallback
+            }
+
+            return {
+              name: prompt.name,
+              description: prompt.description ?? "MCP Prompt",
+              source: "mcp-prompt",
+              isLegacy: false,
+              prompt: promptContent, // Store the actual prompt content
+              mcpServerName: server.name, // Used in client to retrieve prompt
+              mcpArgs: prompt.arguments,
+            };
+          }),
+        );
       newConfig.slashCommands.push(...serverSlashCommands);
 
       const submenuItems = server.resources
@@ -300,8 +326,18 @@ export default async function doLoadConfig(options: {
     }
   });
 
-  newConfig.allowAnonymousTelemetry =
-    newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
+  if (newConfig.allowAnonymousTelemetry !== false) {
+    if ((await ide.isTelemetryEnabled()) === false) {
+      newConfig.allowAnonymousTelemetry = false;
+    }
+  }
+
+  if (
+    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
+    false
+  ) {
+    newConfig.allowAnonymousTelemetry = false;
+  }
 
   // Setup telemetry only after (and if) we know it is enabled
   await Telemetry.setup(
@@ -333,6 +369,9 @@ export default async function doLoadConfig(options: {
   };
 
   if (newConfig.analytics) {
+    // FIXME before re-enabling TeamAnalytics.setup() populate workspaceId in
+    //   controlPlaneProxyInfo to prevent /proxy/analytics/undefined/capture calls
+    //   where undefined is :workspaceId
     // await TeamAnalytics.setup(
     //   newConfig.analytics,
     //   uniqueId,
