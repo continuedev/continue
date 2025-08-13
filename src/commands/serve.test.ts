@@ -27,11 +27,6 @@ describe("serve command", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
 
     // Mock all required modules at test level with correct relative paths
-    vi.mock("fs", () => ({
-      ...(vi.importActual("fs") as any),
-      existsSync: vi.fn(() => false),
-    }));
-
     vi.mock("../auth/workos.js", () => ({
       loadAuthConfig: vi.fn(() => null),
       ensureOrganization: vi.fn(),
@@ -70,13 +65,6 @@ describe("serve command", () => {
         startActiveTime: vi.fn(),
         stopActiveTime: vi.fn(),
         updateOrganization: vi.fn(),
-      },
-    }));
-
-    vi.mock("../util/logger.js", () => ({
-      default: {
-        error: vi.fn(),
-        debug: vi.fn(),
       },
     }));
 

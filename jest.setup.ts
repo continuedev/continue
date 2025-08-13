@@ -9,7 +9,6 @@ jest.mock("open", () => jest.fn().mockResolvedValue(undefined));
 
 // Mock common modules that cause issues
 jest.mock("./src/logging.js");
-jest.mock("./src/util/logger.js");
 jest.mock("./src/hooks/useService.js");
 jest.mock("./src/auth/workos.js");
 jest.mock("./src/commands/commands.js");

@@ -3,17 +3,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 import { MCPService } from "./mcp.js";
 
-
-// Mock the logger
-vi.mock("./util/logger.js", () => ({
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 // Mock the MCP SDK
 const mockClient = {
   connect: vi.fn(),
@@ -44,16 +33,17 @@ describe("MCPService", () => {
       mcpServers: [
         {
           name: "test-server",
-          command: "echo",
-          args: ["hello"],
+          command: "npx",
+          args: ["-v"],
           env: { TEST: "value" },
         },
       ],
     } as AssistantConfig;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.clearAllMocks();
+    await mcpService.shutdown()
   });
 
   describe("initialization", () => {
@@ -110,10 +100,14 @@ describe("MCPService", () => {
       expect(state.isReady).toBe(true);
     });
 
-    it("should get overall status with no connections", () => {
-      const status = mcpService.getOverallStatus();
-      expect(status.status).toBe("idle");
-      expect(status.hasWarnings).toBe(false);
+    it("should get overall status", async () => {
+      console.log(mcpService.getConnectionInfo())
+      const firstStatus = mcpService.getOverallStatus();
+      expect(firstStatus.status).toBe("connected");
+      expect(firstStatus.hasWarnings).toBe(false);
+      await mcpService.shutdown()
+      const secondStatus = mcpService.getOverallStatus();
+      expect(secondStatus.status).toBe("idle");
     });
   });
 
@@ -169,11 +163,11 @@ describe("MCPService", () => {
   describe("shutdown", () => {
     it("should handle shutdown gracefully", async () => {
       await mcpService.initialize(mockAssistant);
-      await expect(mcpService.shutdown()).resolves.not.toThrow();
+      await mcpService.shutdown()
 
       const state = mcpService.getState();
       expect(state.isReady).toBe(false);
-      expect(state.mcpService).toBeNull();
+      expect(state.mcpService?.getState().connections.filter(c => c.status === "connected")).toHaveLength(0)
     });
 
     it("should handle multiple shutdown calls", async () => {

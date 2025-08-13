@@ -74,28 +74,20 @@ export class MCPService {
       logger.debug("Starting MCP server connections", {
         serverCount: assistant.mcpServers.length,
       });
+    }
+    const connectionPromises = assistant.mcpServers?.map(async (config) => {
+      if (config) {
+        return await this.connectServer(config);
+      }
+    });
 
-      const connectionPromises = assistant.mcpServers.map(async (config) => {
-        if (config) {
-          return await this.connectServer(config);
-        }
-      });
-
-      Promise.all(connectionPromises)
-        .then(() => {
-          if (version === this.initVersion) {
-            this.updateState();
-            logger.debug("All MCP server connections completed");
-          }
-        })
-        .catch(() => {
-          if (version === this.initVersion) {
-            this.updateState();
-          }
-        });
+    await Promise.all(connectionPromises ?? []);
+    if (version === this.initVersion) {
+      this.currentState.isReady = true;
+      logger.debug("All MCP server connections completed");
+      this.updateState();
     }
 
-    this.updateState();
     return this.currentState;
   }
 
@@ -119,7 +111,7 @@ export class MCPService {
         (sum, c) => sum + c.prompts.length,
         0,
       ),
-      isReady: true,
+      isReady: this.currentState.isReady,
     };
 
     // Propagate state changes to the service container so the UI updates
@@ -343,7 +335,7 @@ export class MCPService {
       });
 
       await client.connect(transport, {});
-      client.setLoggingLevel("critical");
+      // client.setLoggingLevel("critical");
 
       connection.client = client;
       connection.status = "connected";
@@ -480,14 +472,7 @@ export class MCPService {
 
     await this.shutdownConnections();
 
-    this.currentState = {
-      mcpService: null,
-      connections: [],
-      toolCount: 0,
-      promptCount: 0,
-      isReady: false,
-    };
-
+    this.currentState.isReady = false;
     this.updateState();
   }
 }
