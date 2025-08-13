@@ -1,0 +1,186 @@
+name: Continue CLI Code Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  code-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only run if:
+    # - It's a PR event from a team member (with write/admin permissions)
+    # - OR it's a comment with @continue-review on a PR from a team member
+    if: |
+      (github.event_name == 'pull_request' && 
+       (github.event.pull_request.author_association == 'OWNER' || 
+        github.event.pull_request.author_association == 'MEMBER' || 
+        github.event.pull_request.author_association == 'COLLABORATOR')) ||
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-review') &&
+       (github.event.comment.author_association == 'OWNER' || 
+        github.event.comment.author_association == 'MEMBER' || 
+        github.event.comment.author_association == 'COLLABORATOR'))
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history for better context
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Continue CLI
+        run: npm install -g @continuedev/cli@1.4.25
+
+      - name: Build PR Review Prompt
+        run: |
+          # Get PR number based on event type
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.number }}"
+          else
+            # For issue_comment event on a PR
+            PR_NUMBER="${{ github.event.issue.number }}"
+          fi
+
+          # Get PR diff
+          gh pr diff $PR_NUMBER > pr_diff.txt
+
+          # Create review prompt
+          cat > review_prompt.txt << 'EOF'
+          You are conducting a code review for a pull request. Below is the git diff showing all the changes:
+
+          EOF
+
+          echo "--- PR DIFF START ---" >> review_prompt.txt
+          cat pr_diff.txt >> review_prompt.txt
+          echo "--- PR DIFF END ---" >> review_prompt.txt
+
+          cat >> review_prompt.txt << 'EOF'
+
+          Please analyze these changes and provide a comprehensive code review. Consider:
+
+          1. **Code Quality**: Are there any bugs, performance issues, or code smells?
+          2. **Best Practices**: Does the code follow established patterns and conventions?
+          3. **Security**: Are there any potential security vulnerabilities?
+          4. **Testing**: Are appropriate tests included or updated?
+          5. **Documentation**: Is documentation adequate for the changes?
+          6. **Architecture**: Do the changes fit well with the existing codebase structure?
+
+          You can use the available tools to explore the codebase and understand context better.
+
+          Format your response as a markdown code review with the following structure:
+
+          ## Code Review Summary
+
+          ### ✅ Strengths
+          - **[Aspect]**: [Description of what was done well]
+
+          ### ⚠️ Issues Found
+
+          Only include the severity subheaders below if you actually found issues at that level:
+
+          #### Critical
+          - **[Issue Title]**: [Description of critical issues that must be fixed before merging]
+
+          #### High
+          - **[Issue Title]**: [Description of high-priority issues that should be fixed]
+
+          #### Medium
+          - **[Issue Title]**: [Description of issues that should be addressed]
+
+          #### Low
+          - **[Issue Title]**: [Description of minor issues or nice-to-have improvements]
+
+
+          ### 💡 Suggestions
+          - **[Suggestion Title]**: [Description of improvement recommendations]
+
+          ### 🚀 Overall Assessment
+          [Provide overall recommendation: APPROVE, REQUEST_CHANGES, or COMMENT]
+
+          Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
+          EOF
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Run Continue CLI Review
+        run: |
+          echo "Running Continue CLI with prompt:"
+          echo "=================================="
+          cat review_prompt.txt
+          echo "=================================="
+          echo ""
+
+          # Run the CLI with hardcoded assistant and pipe output to code_review.md
+          cat review_prompt.txt | cn --readonly --org continuedev --config continuedev/review-bot -p > code_review.md
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+
+      - name: Upload Review Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-review-results
+          path: |
+            code_review.md
+            review_prompt.txt
+            pr_diff.txt
+          retention-days: 30
+
+      - name: Comment PR with Review
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            try {
+              let reviewContent = '';
+              
+              if (fs.existsSync('code_review.md') && fs.statSync('code_review.md').size > 0) {
+                reviewContent = fs.readFileSync('code_review.md', 'utf8');
+              } else {
+                reviewContent = '⚠️ AI review completed but no review output was generated. Check the action logs for details.';
+              }
+              
+              // Get PR number based on event type
+              let prNumber;
+              if (context.eventName === 'pull_request') {
+                prNumber = context.payload.pull_request.number;
+              } else {
+                // For issue_comment event
+                prNumber = context.payload.issue.number;
+              }
+
+              // Add a header if triggered by comment
+              if (context.eventName === 'issue_comment') {
+                reviewContent = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewContent}`;
+              }
+
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: reviewContent
+              });
+              console.log(`Successfully created new comment on PR #${prNumber}`);
+            } catch (error) {
+              console.log('Failed to post comment:', error.message);
+              console.log('Error details:', error);
+            }
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

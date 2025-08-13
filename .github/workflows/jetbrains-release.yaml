@@ -9,10 +9,18 @@ on:
     types: [prereleased]
   workflow_dispatch:
     inputs:
-      publish_build:
-        description: "Whether or not to publish the built extension to the JetBrains marketplace"
+      build_only:
+        description: "If true, only build the extension for the given channels, don't publish"
         required: true
-        default: false
+        default: "true"
+      eap_channel:
+        description: "If true, build/publish the extension to the EAP channel"
+        required: true
+        default: "true"
+      stable_channel:
+        description: "If true, build/publish the extension to the Stable channel"
+        required: true
+        default: "true"
 
 defaults:
   run:
@@ -37,50 +45,50 @@ jobs:
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
 
-  bump-version:
-    runs-on: ubuntu-latest
-    needs:
-      - check_release_name
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      # 0. Setup git
-      - name: Checkout
-        uses: actions/checkout@v4
+  # bump-version:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - check_release_name
+  #   if: github.event_name != 'workflow_dispatch' || github.event.inputs.eap_channel == 'true' || github.event.inputs.stable_channel == 'true'
+  #   permissions:
+  #     contents: write
+  #     pull-requests: write
+  #   steps:
+  #     # 0. Setup git
+  #     - name: Checkout
+  #       uses: actions/checkout@v5
 
-      - name: Set up Git
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+  #     - name: Set up Git
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
 
-      - name: Create PR branch
-        run: |
-          BRANCH_NAME="chore/bump-jetbrains-version-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b $BRANCH_NAME
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+  #     - name: Create PR branch
+  #       run: |
+  #         BRANCH_NAME="chore/bump-jetbrains-version-$(date +%Y%m%d-%H%M%S)"
+  #         git checkout -b $BRANCH_NAME
+  #         echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
-      - name: Bump version in gradle.properties
-        run: |
-          awk '/pluginVersion=/{split($0,a,"="); split(a[2],b,"."); b[3]+=1; printf "%s=%s.%s.%s\n",a[1],b[1],b[2],b[3];next}1' gradle.properties > tmp && mv tmp gradle.properties
-          rm -rf tmp
-          NEW_VERSION=$(grep 'pluginVersion=' gradle.properties | cut -d'=' -f2)
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+  #     - name: Bump version in gradle.properties
+  #       run: |
+  #         awk '/pluginVersion=/{split($0,a,"="); split(a[2],b,"."); b[3]+=1; printf "%s=%s.%s.%s\n",a[1],b[1],b[2],b[3];next}1' gradle.properties > tmp && mv tmp gradle.properties
+  #         rm -rf tmp
+  #         NEW_VERSION=$(grep 'pluginVersion=' gradle.properties | cut -d'=' -f2)
+  #         echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
-          commit-message: "chore: bump jetbrains extension version to ${{ env.NEW_VERSION }}"
-          title: "chore: bump jetbrains extension version to ${{ env.NEW_VERSION }}"
-          body: |
-            Automated PR to bump the JetBrains extension version after successful pre-release publication.
+  #     - name: Create Pull Request
+  #       uses: peter-evans/create-pull-request@v7
+  #       with:
+  #         token: ${{ secrets.CI_GITHUB_TOKEN }}
+  #         commit-message: "chore: bump jetbrains extension version to ${{ env.NEW_VERSION }}"
+  #         title: "chore: bump jetbrains extension version to ${{ env.NEW_VERSION }}"
+  #         body: |
+  #           Automated PR to bump the JetBrains extension version after successful pre-release publication.
 
-            - Bumped version in extensions/intellij/gradle.properties to ${{ env.NEW_VERSION }}
-          branch: ${{ env.BRANCH_NAME }}
-          base: main
-          delete-branch: true
+  #           - Bumped version in extensions/intellij/gradle.properties to ${{ env.NEW_VERSION }}
+  #         branch: ${{ env.BRANCH_NAME }}
+  #         base: main
+  #         delete-branch: true
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
   build:
@@ -94,7 +102,7 @@ jobs:
     steps:
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.release.tag_name }}
 
@@ -223,9 +231,30 @@ jobs:
       #     apple-product-id: dev.continue.continue-binary
       #     options: --options runtime --entitlements entitlements.xml
 
+      # Build the plugin if not publishing
+      - name: Build EAP Plugin (no publish)
+        if: github.event_name != 'release' && github.event.inputs.eap_channel == 'true' && github.event.inputs.build_only == 'true'
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: eap
+        run: ./gradlew buildPlugin --info --stacktrace
+
+      - name: Build Stable Plugin (no publish)
+        if: github.event_name != 'release' && github.event.inputs.stable_channel == 'true' && github.event.inputs.build_only == 'true'
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: default
+        run: ./gradlew buildPlugin --info --stacktrace
+
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
-        if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
+        if: github.event_name == 'release' || (github.event.inputs.eap_channel == 'true' && github.event.inputs.build_only != 'true')
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -235,7 +264,7 @@ jobs:
         run: ./gradlew publishPlugin --info --stacktrace
 
       - name: Publish Stable Plugin
-        if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
+        if: github.event_name == 'release' || (github.event.inputs.stable_channel == 'true' && github.event.inputs.build_only != 'true')
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -333,7 +362,7 @@ jobs:
     steps:
       # 1. Check-out repository
       - name: Check-out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
@@ -400,7 +429,7 @@ jobs:
     steps:
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Java environment for the next steps
       - name: Setup Java
@@ -453,7 +482,7 @@ jobs:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Java environment for the next steps
       - name: Setup Java
@@ -484,7 +513,7 @@ jobs:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Set up Java environment for the next steps
       - name: Setup Java

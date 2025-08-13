@@ -1,11 +1,9 @@
 import Parser from "web-tree-sitter";
 import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
 import { getAst } from "../autocomplete/util/ast";
+import { NEXT_EDIT_MODELS } from "../llm/constants";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker";
-import {
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-} from "./constants";
+import { MODEL_WINDOW_SIZES } from "./constants";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
@@ -60,16 +58,16 @@ function naiveJump(ctx: any): RangeInFile[] | null {
 
 // Sliding splits the file using into sliding window.
 function slidingJump(ctx: any): RangeInFile[] | null {
-  const { fileLines, filepath } = ctx;
-  if (!fileLines || !filepath) {
-    console.warn("Missing required context for naive jump");
+  const { fileLines, filepath, modelName, currentCursorPos } = ctx;
+  if (!fileLines || !filepath || !modelName || !currentCursorPos) {
+    console.warn("Missing required context for sliding jump");
     return null;
   }
 
-  const windowSize =
-    NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN +
-    NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN +
-    1; // 1 for current line;
+  const topMargin = MODEL_WINDOW_SIZES[modelName as NEXT_EDIT_MODELS].topMargin;
+  const bottomMargin =
+    MODEL_WINDOW_SIZES[modelName as NEXT_EDIT_MODELS].bottomMargin;
+  const windowSize = topMargin + bottomMargin + 1; // 1 for current line
 
   if (fileLines.length <= windowSize) {
     return [
@@ -86,29 +84,74 @@ function slidingJump(ctx: any): RangeInFile[] | null {
     ];
   }
 
-  const slidingStep = Math.max(1, Math.floor(windowSize / 2));
   const ranges: RangeInFile[] = [];
+  const cursorLine = currentCursorPos.line;
 
-  for (
-    let startLine = 0;
-    startLine < fileLines.length;
-    startLine += slidingStep
-  ) {
-    const endLine = Math.min(startLine + windowSize - 1, fileLines.length - 1);
+  // Create the first window centered around the cursor position
+  const firstWindowStart = Math.max(0, cursorLine - topMargin);
+  const firstWindowEnd = Math.min(
+    fileLines.length - 1,
+    cursorLine + bottomMargin,
+  );
 
-    ranges.push({
-      filepath,
-      range: {
-        start: { line: startLine, character: 0 },
-        end: {
-          line: endLine,
-          character: fileLines[endLine].length,
-        },
+  ranges.push({
+    filepath,
+    range: {
+      start: { line: firstWindowStart, character: 0 },
+      end: {
+        line: firstWindowEnd,
+        character: fileLines[firstWindowEnd].length,
       },
-    });
+    },
+  });
 
-    if (endLine >= fileLines.length - 1) {
-      break;
+  // Alternating pattern: down once, up once, repeat
+  const slidingStep = Math.max(1, Math.floor(windowSize / 2));
+  let currentStartDown = firstWindowEnd + 1;
+  let currentStartUp = firstWindowStart - slidingStep;
+  while (currentStartDown < fileLines.length || currentStartUp >= 0) {
+    // Go down once
+    if (currentStartDown < fileLines.length) {
+      const windowStart = currentStartDown;
+      const windowEnd = Math.min(
+        windowStart + windowSize - 1,
+        fileLines.length - 1,
+      );
+
+      ranges.push({
+        filepath,
+        range: {
+          start: { line: windowStart, character: 0 },
+          end: {
+            line: windowEnd,
+            character: fileLines[windowEnd].length,
+          },
+        },
+      });
+
+      currentStartDown += slidingStep;
+    }
+
+    // Go up once
+    if (currentStartUp >= 0) {
+      const windowStart = Math.max(0, currentStartUp);
+      const windowEnd = Math.min(
+        windowStart + windowSize - 1,
+        fileLines.length - 1,
+      );
+
+      ranges.push({
+        filepath,
+        range: {
+          start: { line: windowStart, character: 0 },
+          end: {
+            line: windowEnd,
+            character: fileLines[windowEnd].length,
+          },
+        },
+      });
+
+      currentStartUp -= slidingStep;
     }
   }
 
