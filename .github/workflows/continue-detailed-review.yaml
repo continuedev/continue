@@ -97,7 +97,7 @@ jobs:
 
           Guidelines for comments:
           - Be specific and actionable
-          - Reference the exact line number from the file
+          - Reference the exact line number from the diff
           - Keep comments concise but informative
           - Suggest concrete improvements when pointing out issues
           - Only comment on actual problems or important improvements
@@ -105,7 +105,7 @@ jobs:
 
           Important: 
           - Output ONLY valid JSON, no additional text
-          - Line numbers should match the actual line numbers in the files
+          - Ensure line numbers match the actual diff
           - Comment on the most important issues first
           - Limit to maximum 20 most relevant comments
           EOF
