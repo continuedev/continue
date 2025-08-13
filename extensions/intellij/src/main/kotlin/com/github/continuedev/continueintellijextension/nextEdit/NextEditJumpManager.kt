@@ -1,0 +1,440 @@
+package com.github.continuedev.continueintellijextension.nextEdit
+
+import com.github.continuedev.continueintellijextension.listeners.HandlerPriority
+import com.github.continuedev.continueintellijextension.listeners.SelectionChangeManager
+import com.github.continuedev.continueintellijextension.listeners.StateSnapshot
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.editor.event.SelectionEvent
+import com.intellij.openapi.editor.markup.HighlighterLayer
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
+import com.intellij.openapi.editor.markup.RangeHighlighter
+import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.popup.JBPopup
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.util.TextRange
+import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBPanel
+import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.awt.BorderLayout
+import java.awt.Point
+import java.awt.event.ActionEvent
+import java.awt.event.KeyEvent
+import javax.swing.AbstractAction
+import javax.swing.JComponent
+import javax.swing.KeyStroke
+import javax.swing.SwingUtilities
+
+data class CompletionDataForAfterJump(
+    val completionId: String,
+    val outcome: NextEditOutcome,
+    val position: LogicalPosition
+)
+
+@Service(Service.Level.PROJECT)
+class NextEditJumpManager(private val project: Project) {
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+
+    // State management
+    private var jumpState = JumpState()
+
+    // UI components
+    private var jumpPopup: JBPopup? = null
+    private var editorHighlighter: RangeHighlighter? = null
+    private var keyboardShortcutsPanel: JComponent? = null
+
+    // Callbacks
+    private var triggerInlineSuggestCallback: (() -> Unit)? = null
+    private var deleteChainCallback: (() -> Unit)? = null
+
+    private data class JumpState(
+        val inProgress: Boolean = false,
+        val justAccepted: Boolean = false,
+        val jumpPosition: LogicalPosition? = null,
+        val editor: Editor? = null,
+        val oldCursorPosition: LogicalPosition? = null,
+        val completionAfterJump: CompletionDataForAfterJump? = null
+    )
+
+    init {
+        registerSelectionChangeHandler()
+    }
+
+    // Public API
+    fun isJumpInProgress(): Boolean = jumpState.inProgress
+
+    fun setJumpInProgress(jumpInProgress: Boolean) {
+        jumpState = jumpState.copy(inProgress = jumpInProgress)
+    }
+
+    fun wasJumpJustAccepted(): Boolean = jumpState.justAccepted
+
+    fun setTriggerInlineSuggestCallback(callback: () -> Unit) {
+        triggerInlineSuggestCallback = callback
+    }
+
+    fun setDeleteChainCallback(callback: () -> Unit) {
+        deleteChainCallback = callback
+    }
+
+    fun setCompletionAfterJump(completionData: CompletionDataForAfterJump) {
+        jumpState = jumpState.copy(completionAfterJump = completionData)
+    }
+
+    fun clearSavedCompletionAfterJump() {
+        jumpState = jumpState.copy(completionAfterJump = null)
+    }
+
+    fun getSavedCompletionAfterJump(): CompletionDataForAfterJump? = jumpState.completionAfterJump
+
+    // Main entry point
+    suspend fun suggestJump(
+        editor: Editor,
+        currentPosition: LogicalPosition,
+        nextJumpLocation: LogicalPosition,
+        completionContent: String? = null
+    ): Boolean {
+        // Skip if content is identical at jump location
+        if (completionContent != null &&
+            isContentIdentical(editor, nextJumpLocation, completionContent)
+        ) {
+            println("Skipping jump as content is identical at jump location")
+            return false
+        }
+
+        println("Suggesting jump from line ${currentPosition.line} to line ${nextJumpLocation.line}")
+
+        // Update state
+        jumpState = jumpState.copy(
+            inProgress = true,
+            jumpPosition = nextJumpLocation,
+            editor = editor,
+            oldCursorPosition = currentPosition
+        )
+
+        // Show UI
+        showJumpDecoration(editor, nextJumpLocation)
+
+        // Scroll to show jump location
+        editor.scrollingModel.scrollTo(nextJumpLocation, ScrollType.CENTER)
+
+        return true
+    }
+
+    // Private implementation
+    private fun showJumpDecoration(editor: Editor, position: LogicalPosition) {
+        clearJumpDecoration()
+
+        // Add editor highlight
+        val markupModel = editor.markupModel
+        val lineStartOffset = editor.document.getLineStartOffset(position.line)
+        val lineEndOffset = editor.document.getLineEndOffset(position.line)
+
+        editorHighlighter = markupModel.addRangeHighlighter(
+            lineStartOffset,
+            lineEndOffset,
+            HighlighterLayer.SELECTION - 1,
+            TextAttributes().apply {
+                backgroundColor = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
+            },
+            HighlighterTargetArea.LINES_IN_RANGE
+        )
+
+        // Show popup with keyboard shortcuts
+        showJumpPopup(editor, position)
+    }
+
+    private fun showJumpPopup(editor: Editor, position: LogicalPosition) {
+        val popupComponent = createJumpPopupComponent()
+
+        jumpPopup = JBPopupFactory.getInstance()
+            .createComponentPopupBuilder(popupComponent, popupComponent) // Set focus component
+            .setFocusable(true)
+            .setRequestFocus(true)
+            .setResizable(false)
+            .setMovable(false)
+            .setCancelOnClickOutside(false)
+            .setCancelOnWindowDeactivation(false)
+            .setCancelKeyEnabled(false) // Disable default Esc handling to use our custom one
+            .setCancelCallback {
+                rejectJump()
+                true
+            }
+            .createPopup()
+
+        // Show popup and ensure focus
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                val lineEndOffset = editor.document.getLineEndOffset(position.line)
+                val lineEndPoint = editor.offsetToXY(lineEndOffset)
+                val editorComponent = editor.contentComponent
+                val screenPoint = Point(lineEndPoint.x + 20, lineEndPoint.y)
+                SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
+
+                jumpPopup?.showInScreenCoordinates(editorComponent, screenPoint)
+
+                // Force focus after popup is shown
+                ApplicationManager.getApplication().invokeLater {
+                    popupComponent.requestFocusInWindow()
+                    println("DEBUG: Jump popup shown and focus requested")
+                }
+            } catch (e: Exception) {
+                jumpPopup?.showInBestPositionFor(editor)
+                ApplicationManager.getApplication().invokeLater {
+                    popupComponent.requestFocusInWindow()
+                }
+            }
+        }
+    }
+
+    private fun createJumpPopupComponent(): JComponent {
+        val panel = JBPanel<JBPanel<*>>().apply {
+            layout = BorderLayout()
+            border = JBUI.Borders.empty(4, 8)
+            background = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
+        }
+
+        // Create the message label
+        val message = "📍 Press Tab to jump, Esc to cancel"
+        val label = JBLabel(message).apply {
+            foreground = JBColor.foreground()
+            background = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
+            isOpaque = true
+        }
+
+        panel.add(label, BorderLayout.CENTER)
+
+        // Add keyboard shortcuts to the panel
+        addKeyboardShortcuts(panel)
+
+        // Store reference for cleanup
+        keyboardShortcutsPanel = panel
+
+        return panel
+    }
+
+    private fun addKeyboardShortcuts(panel: JComponent) {
+        println("DEBUG: Adding keyboard shortcuts to jump panel")
+
+        // CRITICAL: Disable focus traversal for Tab key
+        panel.setFocusTraversalKeysEnabled(false)
+
+        val inputMap = panel.getInputMap(JComponent.WHEN_FOCUSED)
+        val actionMap = panel.actionMap
+
+        // Add Tab key for accept
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "acceptJump")
+        actionMap.put("acceptJump", object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent?) {
+                println("DEBUG: Accept jump action triggered!")
+                acceptJump()
+            }
+        })
+
+        // Add Esc key for reject
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "rejectJump")
+        actionMap.put("rejectJump", object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent?) {
+                println("DEBUG: Reject jump action triggered!")
+                rejectJump()
+            }
+        })
+
+        panel.isFocusable = true
+
+        // Debug listeners
+        panel.addFocusListener(object : java.awt.event.FocusListener {
+            override fun focusGained(e: java.awt.event.FocusEvent?) {
+                println("DEBUG: Jump panel gained focus")
+            }
+
+            override fun focusLost(e: java.awt.event.FocusEvent?) {
+                println("DEBUG: Jump panel lost focus")
+            }
+        })
+
+        panel.addKeyListener(object : java.awt.event.KeyListener {
+            override fun keyPressed(e: KeyEvent?) {
+                println("DEBUG: Jump panel key pressed: ${e?.keyCode} (Tab = ${KeyEvent.VK_TAB}, Esc = ${KeyEvent.VK_ESCAPE})")
+            }
+
+            override fun keyReleased(e: KeyEvent?) {}
+            override fun keyTyped(e: KeyEvent?) {}
+        })
+
+        panel.addHierarchyListener { e ->
+            if (e.changeFlags and java.awt.event.HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                if (panel.isShowing) {
+                    println("DEBUG: Jump panel is showing, requesting focus")
+                    ApplicationManager.getApplication().invokeLater {
+                        val focusResult = panel.requestFocusInWindow()
+                        println("DEBUG: Jump panel focus request result: $focusResult")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun acceptJump() {
+        val state = jumpState
+        if (!state.inProgress || state.jumpPosition == null || state.editor == null) {
+            println("DEBUG: Cannot accept jump - invalid state")
+            return
+        }
+
+        println("Accepting jump to position: ${state.jumpPosition}")
+
+        // Update state
+        jumpState = jumpState.copy(justAccepted = true)
+
+        ApplicationManager.getApplication().invokeLater {
+            // Move cursor to jump position
+            state.editor.caretModel.moveToLogicalPosition(state.jumpPosition)
+
+            // Clear decorations
+            clearJumpDecoration()
+
+            // Reset accepted state after a brief moment
+            coroutineScope.launch {
+                kotlinx.coroutines.delay(100)
+                jumpState = jumpState.copy(justAccepted = false)
+
+                // Trigger inline suggestion
+                triggerInlineSuggestCallback?.invoke()
+            }
+        }
+    }
+
+    private fun rejectJump() {
+        if (!jumpState.inProgress) {
+            println("DEBUG: Cannot reject jump - not in progress")
+            return
+        }
+
+        println("Rejecting jump - deleting chain")
+
+        // Delete the chain
+        deleteChainCallback?.invoke()
+
+        // Clear state
+        clearJumpState()
+    }
+
+    private fun clearJumpDecoration() {
+        // Clear keyboard shortcuts first
+        keyboardShortcutsPanel?.let { panel ->
+            if (panel is JComponent) {
+                panel.inputMap?.clear()
+                panel.actionMap?.clear()
+            }
+        }
+        keyboardShortcutsPanel = null
+
+        // Cancel popup
+        jumpPopup?.cancel()
+        jumpPopup = null
+
+        // Remove editor highlighter
+        editorHighlighter?.let { highlighter ->
+            jumpState.editor?.markupModel?.removeHighlighter(highlighter)
+            editorHighlighter = null
+        }
+    }
+
+    private fun clearJumpState() {
+        clearJumpDecoration()
+        jumpState = JumpState()
+    }
+
+    private fun isContentIdentical(
+        editor: Editor,
+        jumpLocation: LogicalPosition,
+        completionContent: String
+    ): Boolean {
+        return try {
+            val completionLines = completionContent.split("\n")
+            val document = editor.document
+            val startLine = jumpLocation.line
+            val endLine = minOf(startLine + completionLines.size - 1, document.lineCount - 1)
+
+            // Check if we have enough lines
+            if (endLine - startLine + 1 < completionLines.size) {
+                return false
+            }
+
+            // Compare line by line
+            completionLines.indices.all { i ->
+                val documentLine = startLine + i
+                if (documentLine >= document.lineCount) return@all false
+
+                val lineStartOffset = document.getLineStartOffset(documentLine)
+                val lineEndOffset = document.getLineEndOffset(documentLine)
+                val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset))
+
+                lineText == completionLines[i]
+            }
+        } catch (error: Exception) {
+            println("Error checking content at jump location: $error")
+            false
+        }
+    }
+
+    private fun registerSelectionChangeHandler() {
+        val selectionManager = project.getService(SelectionChangeManager::class.java)
+
+        selectionManager.registerListener(
+            "nextEditJumpManager",
+            { event, state -> handleSelectionChange(event, state) },
+            HandlerPriority.HIGH
+        )
+    }
+
+    private suspend fun handleSelectionChange(
+        event: SelectionEvent,
+        state: StateSnapshot
+    ): Boolean {
+        // Preserve chain during jump operations
+        when {
+            state.jumpInProgress -> {
+                println("Jump in progress, preserving chain")
+
+                // Check if cursor moved away from expected position
+                val currentPos = event.editor.caretModel.logicalPosition
+                val oldPos = jumpState.oldCursorPosition
+                val jumpPos = jumpState.jumpPosition
+
+                // If cursor moved but not to jump position, reject the jump
+                if (oldPos != null && jumpPos != null &&
+                    !currentPos.equals(oldPos) && !currentPos.equals(jumpPos)
+                ) {
+                    println("DEBUG: Cursor moved unexpectedly, rejecting jump")
+                    rejectJump()
+                }
+
+                return true
+            }
+
+            state.jumpJustAccepted -> {
+                println("Jump just accepted, preserving chain")
+                return true
+            }
+
+            else -> return false
+        }
+    }
+
+    fun cleanup() {
+        clearJumpState()
+        triggerInlineSuggestCallback = null
+        deleteChainCallback = null
+    }
+}
