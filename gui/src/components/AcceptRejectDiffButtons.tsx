@@ -5,6 +5,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch } from "../redux/hooks";
 import { cancelToolCall } from "../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../util";
+import { logChatModeEditOutcome } from "../util/editOutcomeLogger";
 import { ToolTip } from "./gui/Tooltip";
 
 export interface AcceptRejectAllButtonsProps {
@@ -24,6 +25,8 @@ export default function AcceptRejectAllButtons({
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
+    const accepted = status === "acceptDiff";
+
     // For reject operations, cancel all tool calls associated with pending apply states
     if (status === "rejectDiff") {
       for (const applyState of pendingApplyStates) {
@@ -35,6 +38,11 @@ export default function AcceptRejectAllButtons({
           );
         }
       }
+    }
+
+    // Log editOutcome data for each apply state before processing
+    for (const applyState of pendingApplyStates) {
+      await logChatModeEditOutcome(applyState, accepted, ideMessenger);
     }
 
     // Process all pending apply states

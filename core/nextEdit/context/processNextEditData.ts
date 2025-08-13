@@ -109,10 +109,20 @@ export const processNextEditData = async ({
   }
 
   if (filenamesAndDiffs.length > 0) {
+    // Load the autocomplete model configuration
+    const { config } = await configHandler.loadConfig();
+    const autocompleteModel = modelNameOrInstance || config?.selectedModelByRole.autocomplete;
+    
     // if there are previous edits, log
     void DataLogger.getInstance().logDevData({
       name: "nextEditWithHistory",
       data: {
+        modelProvider: typeof autocompleteModel === "string" 
+          ? "unknown" 
+          : (autocompleteModel?.underlyingProviderName ?? "unknown"),
+        modelName: typeof autocompleteModel === "string" 
+          ? autocompleteModel 
+          : (autocompleteModel?.title ?? autocompleteModel?.model ?? "unknown"),
         previousEdits: filenamesAndDiffs,
         fileURI: filePath,
         workspaceDirURI: workspaceDir,

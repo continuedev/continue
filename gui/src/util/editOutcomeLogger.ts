@@ -7,7 +7,7 @@ import { store } from "../redux/store";
  */
 function extractModelInfo(toolCallState: ToolCallState): {
   modelProvider: string;
-  modelTitle: string;
+  modelName: string;
 } {
   // Get the conversation history to find the model info
   const history = store.getState().session.history;
@@ -28,7 +28,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
     const modelParts = String(assistantMessage.message.model).split("::");
     return {
       modelProvider: modelParts[0] || "unknown",
-      modelTitle: modelParts[1] || String(assistantMessage.message.model),
+      modelName: modelParts[1] || String(assistantMessage.message.model),
     };
   }
 
@@ -38,7 +38,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
 
   return {
     modelProvider: chatModel?.provider || "unknown",
-    modelTitle: chatModel?.model || "unknown",
+    modelName: chatModel?.model || "unknown",
   };
 }
 
@@ -277,7 +277,7 @@ export function assembleEditOutcomeData(
     streamId: applyState.streamId,
     timestamp: new Date().toISOString(),
     modelProvider: modelInfo.modelProvider,
-    modelTitle: modelInfo.modelTitle,
+    modelName: modelInfo.modelName,
     prompt: promptAndCompletion.prompt,
     completion: promptAndCompletion.completion,
     previousCode: codeChanges.previousCode,
@@ -380,7 +380,7 @@ export async function logChatModeEditOutcome(
       streamId: applyState.streamId,
       timestamp: new Date().toISOString(),
       modelProvider: chatModel?.provider || "unknown",
-      modelTitle: chatModel?.model || "unknown",
+      modelName: chatModel?.model || "unknown",
       prompt: "Chat mode manual apply", // Placeholder for manual applies
       completion: "Code applied via chat", // Placeholder for manual applies
       previousCode: codeChanges.previousCode,

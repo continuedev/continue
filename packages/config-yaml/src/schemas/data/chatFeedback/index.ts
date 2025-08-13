@@ -2,7 +2,8 @@ import { z } from "zod";
 import { baseDevDataAllSchema } from "../base.js";
 
 export const chatFeedbackEventAllSchema = baseDevDataAllSchema.extend({
-  modelTitle: z.string(),
+  modelProvider: z.string(),
+  modelName: z.string(),
   completionOptions: z.object({}),
   prompt: z.string(),
   completion: z.string(),

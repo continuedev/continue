@@ -13,7 +13,7 @@ export const chatInteractionEventSchema_0_2_0 =
     // other
     prompt: true,
     completion: true,
-    modelTitle: true,
+    modelName: true,
     modelProvider: true,
     sessionId: true,
     tools: true,

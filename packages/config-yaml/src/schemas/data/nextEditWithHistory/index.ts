@@ -2,6 +2,8 @@ import { z } from "zod";
 import { baseDevDataAllSchema } from "../base.js";
 
 export const nextEditEventAllSchema = baseDevDataAllSchema.extend({
+  modelProvider: z.string(),
+  modelName: z.string(),
   previousEdits: z.array(
     z.object({
       filename: z.string(),
