@@ -18,6 +18,8 @@ export const nextEditEventSchema_0_2_0 = nextEditEventAllSchema.pick({
   beforeCursorPos: true,
   afterCursorPos: true,
   context: true,
+  modelProvider: true,
+  modelName: true,
 });
 
 export const nextEditEventSchema_0_2_0_noCode = nextEditEventSchema_0_2_0.omit({
