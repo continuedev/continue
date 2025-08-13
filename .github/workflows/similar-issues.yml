@@ -27,6 +27,7 @@ jobs:
           # ref: 'main'
           
           path: deja-view
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
