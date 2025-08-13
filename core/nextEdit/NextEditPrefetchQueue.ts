@@ -2,7 +2,7 @@ import { RangeInFile } from "..";
 import { NextEditProvider } from "./NextEditProvider";
 import { NextEditOutcome } from "./types";
 
-interface ProcessedItem {
+export interface ProcessedItem {
   location: RangeInFile;
   outcome: NextEditOutcome; // Result from the model
 }
