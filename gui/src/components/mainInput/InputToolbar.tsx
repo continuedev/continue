@@ -179,7 +179,13 @@ function InputToolbar(props: InputToolbarProps) {
               className={`hover:underline" hidden transition-colors duration-200 md:flex`}
             >
               <HoverItem
-                className={props.activeKey === "Meta" || props.activeKey === "Control" || props.activeKey === "Alt" ? "underline" : ""}
+                className={
+                  props.activeKey === "Meta" ||
+                  props.activeKey === "Control" ||
+                  props.activeKey === "Alt"
+                    ? "underline"
+                    : ""
+                }
                 onClick={(e) =>
                   props.onEnter?.({
                     useCodebase: false,
@@ -222,7 +228,9 @@ function InputToolbar(props: InputToolbarProps) {
               if (props.onEnter) {
                 props.onEnter({
                   useCodebase: false,
-                  noContext: useActiveFile ? !(isMetaEquivalentKeyPressed(e as any) || e.altKey) : (isMetaEquivalentKeyPressed(e as any) || e.altKey),
+                  noContext: useActiveFile
+                    ? !(isMetaEquivalentKeyPressed(e as any) || e.altKey)
+                    : isMetaEquivalentKeyPressed(e as any) || e.altKey,
                 });
               }
             }}
