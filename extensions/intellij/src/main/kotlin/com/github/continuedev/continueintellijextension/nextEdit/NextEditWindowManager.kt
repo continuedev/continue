@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.listeners.HandlerPriority
 import com.github.continuedev.continueintellijextension.listeners.SelectionChangeManager
 import com.github.continuedev.continueintellijextension.listeners.StateSnapshot
+import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
@@ -11,11 +12,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.event.SelectionEvent
-import com.intellij.openapi.editor.markup.EffectType
-import com.intellij.openapi.editor.markup.HighlighterLayer
-import com.intellij.openapi.editor.markup.HighlighterTargetArea
-import com.intellij.openapi.editor.markup.RangeHighlighter
-import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.openapi.editor.markup.*
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -25,15 +22,9 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
-import java.awt.FlowLayout
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
-import javax.swing.AbstractAction
-import javax.swing.BoxLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JScrollPane
-import javax.swing.KeyStroke
+import javax.swing.*
 
 @Service(Service.Level.PROJECT)
 class NextEditWindowManager(private val project: Project) {
@@ -85,6 +76,7 @@ class NextEditWindowManager(private val project: Project) {
                     editableRegionEndLine,
                     isLineDelete
                 )
+
                 PopupAction.REJECT -> rejectEdit()
             }
         }
@@ -241,6 +233,7 @@ class NextEditWindowManager(private val project: Project) {
                         background = JBColor(0x2D4A2D, 0x2D4A2D) // Darker green
                         foreground = scheme.defaultForeground
                     }
+
                     else -> { // "same" or any other type
                         // Regular unchanged lines
                         background = scheme.defaultBackground
@@ -323,7 +316,9 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     private fun createBasicHighlightedHtml(text: String, font: java.awt.Font): String {
-        if (text.trim().isEmpty()) return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:2px 4px;'>&nbsp;</div></html>"
+        if (text.trim()
+                .isEmpty()
+        ) return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:2px 4px;'>&nbsp;</div></html>"
 
         // Basic syntax highlighting patterns (you can extend this)
         var highlightedText = text
@@ -397,6 +392,7 @@ class NextEditWindowManager(private val project: Project) {
             override fun focusGained(e: java.awt.event.FocusEvent?) {
                 println("DEBUG: Panel gained focus")
             }
+
             override fun focusLost(e: java.awt.event.FocusEvent?) {
                 println("DEBUG: Panel lost focus")
             }
@@ -406,6 +402,7 @@ class NextEditWindowManager(private val project: Project) {
             override fun keyPressed(e: KeyEvent?) {
                 println("DEBUG: Key pressed: ${e?.keyCode} (Tab = ${KeyEvent.VK_TAB})")
             }
+
             override fun keyReleased(e: KeyEvent?) {}
             override fun keyTyped(e: KeyEvent?) {}
         })
@@ -444,9 +441,10 @@ class NextEditWindowManager(private val project: Project) {
                 endOffset,
                 HighlighterLayer.SELECTION - 1,
                 TextAttributes().apply {
-                    backgroundColor = JBColor.RED.brighter()
+                    backgroundColor =
+                        JBColor.namedColor("Editor.DiffDeletedLines.background", JBColor(0xFFE6E6, 0x484A4A))
                     effectType = EffectType.STRIKEOUT
-                    effectColor = JBColor.RED
+                    effectColor = JBColor.namedColor("Editor.DiffDeletedLines.border", JBColor(0xD32F2F, 0xB71C1C))
                 },
                 HighlighterTargetArea.EXACT_RANGE
             )
@@ -481,16 +479,18 @@ class NextEditWindowManager(private val project: Project) {
                     // Characters match - mark as "same"
                     val char = oldChars[i].toString()
 
-                    result.add(DiffChar(
-                        type = "same",
-                        char = char,
-                        oldIndex = oldIndex,
-                        newIndex = newIndex,
-                        oldLineIndex = oldLineIndex,
-                        newLineIndex = newLineIndex,
-                        oldCharIndexInLine = oldCharIndexInLine,
-                        newCharIndexInLine = newCharIndexInLine
-                    ))
+                    result.add(
+                        DiffChar(
+                            type = "same",
+                            char = char,
+                            oldIndex = oldIndex,
+                            newIndex = newIndex,
+                            oldLineIndex = oldLineIndex,
+                            newLineIndex = newLineIndex,
+                            oldCharIndexInLine = oldCharIndexInLine,
+                            newCharIndexInLine = newCharIndexInLine
+                        )
+                    )
 
                     // Update indices
                     oldIndex++
@@ -514,13 +514,15 @@ class NextEditWindowManager(private val project: Project) {
                     // Character exists in old but not in new - mark as "old"
                     val char = oldChars[i].toString()
 
-                    result.add(DiffChar(
-                        type = "old",
-                        char = char,
-                        oldIndex = oldIndex,
-                        oldLineIndex = oldLineIndex,
-                        oldCharIndexInLine = oldCharIndexInLine
-                    ))
+                    result.add(
+                        DiffChar(
+                            type = "old",
+                            char = char,
+                            oldIndex = oldIndex,
+                            oldLineIndex = oldLineIndex,
+                            oldCharIndexInLine = oldCharIndexInLine
+                        )
+                    )
 
                     // Update old indices only
                     oldIndex++
@@ -538,13 +540,15 @@ class NextEditWindowManager(private val project: Project) {
                     // Character exists in new but not in old - mark as "new"
                     val char = newChars[j].toString()
 
-                    result.add(DiffChar(
-                        type = "new",
-                        char = char,
-                        newIndex = newIndex,
-                        newLineIndex = newLineIndex,
-                        newCharIndexInLine = newCharIndexInLine
-                    ))
+                    result.add(
+                        DiffChar(
+                            type = "new",
+                            char = char,
+                            newIndex = newIndex,
+                            newLineIndex = newLineIndex,
+                            newCharIndexInLine = newCharIndexInLine
+                        )
+                    )
 
                     // Update new indices only
                     newIndex++
@@ -672,7 +676,10 @@ class NextEditWindowManager(private val project: Project) {
             }
 
             println("DEBUG: WriteCommandAction completed successfully")
-
+            InlineCompletionUtils.triggerInlineCompletion(
+                editor,
+                project
+            ) { success -> println("invocation: $success") }
         } catch (e: Exception) {
             println("ERROR: Exception in acceptEdit: ${e.message}")
             e.printStackTrace()
