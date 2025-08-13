@@ -82,7 +82,8 @@ jobs:
             "comments": [
               {
                 "path": "path/to/file.js",
-                "position": 42,
+                "line": 42,
+                "side": "RIGHT",
                 "body": "Brief, specific comment about this line or section"
               }
             ]
@@ -96,14 +97,15 @@ jobs:
 
           Guidelines for comments:
           - Be specific and actionable
-          - Reference the exact position in the diff (position is the line number in the diff, not the file)
+          - Reference the exact line number from the file
           - Keep comments concise but informative
           - Suggest concrete improvements when pointing out issues
           - Only comment on actual problems or important improvements
+          - Use "RIGHT" for new/modified lines, "LEFT" for context about removed lines
 
           Important: 
           - Output ONLY valid JSON, no additional text
-          - Position numbers should correspond to lines in the diff output (starting from 1)
+          - Line numbers should match the actual line numbers in the files
           - Comment on the most important issues first
           - Limit to maximum 20 most relevant comments
           EOF
@@ -166,17 +168,18 @@ jobs:
               
               const commitSha = pr.head.sha;
               
-              // Prepare review comments - filter out comments without valid positions
+              // Prepare review comments - filter out comments without required fields
               const allComments = reviewData.comments || [];
-              const validComments = allComments.filter(comment => comment.position && comment.path && comment.body);
+              const validComments = allComments.filter(comment => comment.line && comment.path && comment.body && comment.side);
               
               if (validComments.length < allComments.length) {
-                console.log(`Filtered out ${allComments.length - validComments.length} comments due to missing position, path, or body`);
+                console.log(`Filtered out ${allComments.length - validComments.length} comments due to missing line, path, body, or side`);
               }
               
               const comments = validComments.map(comment => ({
                 path: comment.path,
-                position: comment.position,
+                line: comment.line,
+                side: comment.side,
                 body: comment.body
               }));
               
