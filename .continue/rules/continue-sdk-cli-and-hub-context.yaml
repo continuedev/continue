@@ -29,7 +29,7 @@ rules:
 
       - readline-sync: Provides synchronous CLI user interactions
 
-      - Jest: Used for testing framework
+      - Vitest: Used for testing framework
 
 
       All code should follow established patterns for a Node.js CLI tool

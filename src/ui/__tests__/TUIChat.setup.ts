@@ -54,7 +54,7 @@ export const createProps = (overrides: any = {}) => ({
   ...overrides,
 });
 
-// Add a dummy test to satisfy Jest requirement
+// Add a dummy test to satisfy Vitest requirement
 describe("TUIChat setup", () => {
   test("setup should export required functions", () => {
     expect(createProps).toBeDefined();

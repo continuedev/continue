@@ -6,7 +6,7 @@ import { AppRoot } from "../AppRoot.js";
 
 export type TestMode = "local" | "remote";
 
-// Dummy test to satisfy Jest
+// Dummy test to satisfy Vitest
 describe("TUIChat dual mode helper", () => {
   it("exports helper functions", () => {
     expect(testBothModes).toBeDefined();

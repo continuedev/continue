@@ -54,7 +54,7 @@ export function runTest(
   modes.forEach((testMode) => {
     describe(`[${testMode.toUpperCase()} MODE]`, () => {
       it(name, async () => {
-        // Import mocks from Jest setup
+        // Import mocks from Vitest setup
         const { useServices, useService } = await import(
           "../../hooks/useService.js"
         );

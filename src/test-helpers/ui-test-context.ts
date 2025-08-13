@@ -78,9 +78,6 @@ export function createUITestContext(
     setMaxListeners: vi.fn(),
   };
 
-  // Note: Jest mocks need to be hoisted, so they can't be called inside functions
-  // The actual mocking should be done at the top of test files
-
   const cleanup = () => {
     vi.clearAllMocks();
   };
