@@ -3,7 +3,7 @@ import { baseDevDataAllSchema } from "../base.js";
 
 export const chatInteractionEventAllSchema = baseDevDataAllSchema.extend({
   modelProvider: z.string(),
-  modelTitle: z.string(),
+  modelName: z.string(),
   prompt: z.string(),
   completion: z.string(),
   sessionId: z.string(),

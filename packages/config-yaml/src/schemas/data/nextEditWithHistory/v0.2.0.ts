@@ -10,6 +10,8 @@ export const nextEditEventSchema_0_2_0 = nextEditEventAllSchema.pick({
   schema: true,
 
   // nextedit-specific
+  modelProvider: true,
+  modelName: true,
   previousEdits: true,
   fileURI: true,
   workspaceDirURI: true,

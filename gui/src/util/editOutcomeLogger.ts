@@ -7,7 +7,7 @@ import { store } from "../redux/store";
  */
 function extractModelInfo(toolCallState: ToolCallState): {
   modelProvider: string;
-  modelTitle: string;
+  modelName: string;
 } {
   // Get the conversation history to find the model info
   const history = store.getState().session.history;
@@ -28,7 +28,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
     const modelParts = String(assistantMessage.message.model).split("::");
     return {
       modelProvider: modelParts[0] || "unknown",
-      modelTitle: modelParts[1] || String(assistantMessage.message.model),
+      modelName: modelParts[1] || String(assistantMessage.message.model),
     };
   }
 
@@ -38,7 +38,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
 
   return {
     modelProvider: chatModel?.provider || "unknown",
-    modelTitle: chatModel?.model || "unknown",
+    modelName: chatModel?.model || "unknown",
   };
 }
 
@@ -153,7 +153,7 @@ export function assembleEditOutcomeData(
     streamId: applyState.streamId,
     timestamp: new Date().toISOString(),
     modelProvider: modelInfo.modelProvider,
-    modelTitle: modelInfo.modelTitle,
+    modelName: modelInfo.modelName,
     prompt: promptAndCompletion.prompt,
     completion: promptAndCompletion.completion,
     previousCode: codeChanges.previousCode,
@@ -187,4 +187,90 @@ export async function logAgentModeEditOutcome(
     name: "editOutcome",
     data: editOutcomeData,
   });
+}
+
+/**
+ * Log Chat Mode edit outcome to editOutcome.jsonl
+ */
+export async function logChatModeEditOutcome(
+  applyState: ApplyState,
+  accepted: boolean,
+  ideMessenger: IIdeMessenger,
+): Promise<void> {
+  // For chat mode, we need to find the tool call state from the apply state
+  const history = store.getState().session.history;
+  
+  // Find the tool call associated with this apply state if it exists
+  let toolCallState: ToolCallState | null = null;
+  
+  if (applyState.toolCallId) {
+    // Find the assistant message that contains this tool call
+    const assistantMessage = history.find(
+      (item) =>
+        item.message.role === "assistant" &&
+        item.message.toolCalls?.some((tc) => tc.id === applyState.toolCallId),
+    );
+    
+    if (assistantMessage?.message.role === "assistant" && assistantMessage.message.toolCalls) {
+      const toolCallDelta = assistantMessage.message.toolCalls.find((tc) => tc.id === applyState.toolCallId);
+      if (toolCallDelta && toolCallDelta.id && toolCallDelta.function?.name && toolCallDelta.function?.arguments) {
+        // Convert ToolCallDelta to ToolCall
+        const toolCall = {
+          id: toolCallDelta.id,
+          type: "function" as const,
+          function: {
+            name: toolCallDelta.function.name,
+            arguments: toolCallDelta.function.arguments,
+          },
+        };
+        
+        toolCallState = {
+          toolCallId: applyState.toolCallId,
+          toolCall,
+          status: accepted ? "done" : "canceled",
+          parsedArgs: {},
+        };
+      }
+    }
+  }
+
+  if (toolCallState) {
+    // If we have a tool call, use the same logic as agent mode
+    const editOutcomeData = assembleEditOutcomeData(
+      toolCallState,
+      applyState,
+      accepted,
+    );
+
+    ideMessenger.post("devdata/log", {
+      name: "editOutcome",
+      data: editOutcomeData,
+    });
+  } else {
+    // For manual chat mode interactions without tool calls, create minimal data
+    const codeChanges = extractCodeChanges(applyState);
+    const config = store.getState().config.config;
+    const chatModel = config?.selectedModelByRole?.chat;
+
+    const editOutcomeData = {
+      streamId: applyState.streamId,
+      timestamp: new Date().toISOString(),
+      modelProvider: chatModel?.provider || "unknown",
+      modelName: chatModel?.model || "unknown",
+      prompt: "Chat mode manual apply", // Placeholder for manual applies
+      completion: "Code applied via chat", // Placeholder for manual applies
+      previousCode: codeChanges.previousCode,
+      newCode: codeChanges.newCode,
+      filepath: applyState.filepath || "",
+      previousCodeLines: codeChanges.previousCodeLines,
+      newCodeLines: codeChanges.newCodeLines,
+      lineChange: codeChanges.lineChange,
+      accepted,
+    };
+
+    ideMessenger.post("devdata/log", {
+      name: "editOutcome",
+      data: editOutcomeData,
+    });
+  }
 }
