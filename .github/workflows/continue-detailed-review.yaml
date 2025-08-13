@@ -12,8 +12,8 @@ permissions:
   issues: write
 
 jobs:
-  inline-code-review:
-    name: AI Inline Code Review
+  detailed-code-review:
+    name: Continue Detailed Review
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Only run if:

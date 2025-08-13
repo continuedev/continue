@@ -12,8 +12,8 @@ permissions:
   issues: write
 
 jobs:
-  code-review:
-    name: AI Code Review
+  general-code-review:
+    name: Continue General Review
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Only run if:
