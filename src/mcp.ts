@@ -27,7 +27,9 @@ export class MCPService {
       const connectionPromises = assistant.mcpServers.map((server) =>
         MCPConnection.create(server),
       );
-      const connections = await Promise.all(connectionPromises);
+      const connections = (await Promise.all(connectionPromises)).filter(
+        (item) => item !== undefined,
+      );
       service.connections.push(...connections);
       logger.debug("MCP connections established", {
         connectionCount: connections.length,
