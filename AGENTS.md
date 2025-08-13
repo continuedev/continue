@@ -7,6 +7,7 @@ This file provides guidance to AI coding agents when working with code in this r
 - **Build**: `npm run build` - Compiles TypeScript to JavaScript in dist/
 - **Test**: `npm test` - Runs Jest tests with ESM support
 - **Type Check**: `npm run lint` - Runs TypeScript compiler without emitting files for type checking
+- **Format**: `npm run format` - Runs Prettier with --write flag to check + fix formatting
 - **Start**: `npm start` - Runs the built CLI from dist/index.js
 - **Development**: After building, test locally with `node dist/index.js`
 
@@ -71,3 +72,4 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 ### Important rules
 
 - Whenever you create / update a test, you should run the test to be certain that it passes
+- If you ever create a PR, you should be sure to check the formatting and linting first with `npm run format` and `npm run lint` / `npm run lint:fix`.
