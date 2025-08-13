@@ -1,8 +1,8 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
-import com.github.continuedev.continueintellijextension.proxy.ProxySettings
-import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
+import com.github.continuedev.continueintellijextension.error.ContinueSentryService
+import com.github.continuedev.continueintellijextension.proxy.ProxySettings
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
 import com.github.continuedev.continueintellijextension.utils.getOS
@@ -37,6 +37,7 @@ class ContinueBinaryProcess(
         val proxySettings = ProxySettings.getSettings()
         if (proxySettings.enabled)
             builder.environment() += "HTTP_PROXY" to proxySettings.proxy
+            builder.environment() += "NO_PROXY" to proxySettings.noProxy
         return builder
             .directory(File(path).parentFile)
             .start()
