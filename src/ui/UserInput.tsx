@@ -1,6 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import type { PermissionMode } from "../permissions/types.js";
@@ -44,13 +44,21 @@ const UserInput: React.FC<UserInputProps> = ({
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
 
+  // Stable callback for TextBuffer state changes to prevent race conditions
+  const onStateChange = useCallback(() => {
+    setInputText(textBuffer.text);
+    setCursorPosition(textBuffer.cursor);
+  }, [textBuffer]);
+
   // Set up callback for when TextBuffer state changes (e.g., rapid input finalized)
   React.useEffect(() => {
-    textBuffer.setStateChangeCallback(() => {
-      setInputText(textBuffer.text);
-      setCursorPosition(textBuffer.cursor);
-    });
-  }, [textBuffer]);
+    textBuffer.setStateChangeCallback(onStateChange);
+
+    // Cleanup on unmount: clear any pending timers
+    return () => {
+      textBuffer.clear();
+    };
+  }, [textBuffer, onStateChange]);
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
@@ -522,9 +530,9 @@ const UserInput: React.FC<UserInputProps> = ({
 
               return (
                 <Text key={lineIndex}>
-                  <Text>{beforeCursor}</Text>
+                  {beforeCursor}
                   <Text inverse>{atCursor || " "}</Text>
-                  <Text>{afterCursor}</Text>
+                  {afterCursor}
                 </Text>
               );
             } else {

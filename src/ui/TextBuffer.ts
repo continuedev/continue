@@ -214,6 +214,11 @@ export class TextBuffer {
   private handleBracketedPaste(input: string): boolean {
     // Modern terminals wrap pasted content in escape sequences
     if (input === "\u001b[200~") {
+      // Clear any pending rapid input timer to avoid conflicts
+      if (this._rapidInputTimer) {
+        clearTimeout(this._rapidInputTimer);
+        this._rapidInputTimer = null;
+      }
       this._inPasteMode = true;
       this._pasteBuffer = "";
       return true;
