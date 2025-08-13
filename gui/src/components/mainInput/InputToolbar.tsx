@@ -13,7 +13,7 @@ import { selectUseActiveFile } from "../../redux/selectors";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
 import { exitEdit } from "../../redux/thunks/edit";
-import { getAltKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
@@ -179,7 +179,7 @@ function InputToolbar(props: InputToolbarProps) {
               className={`hover:underline" hidden transition-colors duration-200 md:flex`}
             >
               <HoverItem
-                className={props.activeKey === "Alt" ? "underline" : ""}
+                className={props.activeKey === "Meta" || props.activeKey === "Control" || props.activeKey === "Alt" ? "underline" : ""}
                 onClick={(e) =>
                   props.onEnter?.({
                     useCodebase: false,
@@ -188,14 +188,14 @@ function InputToolbar(props: InputToolbarProps) {
                 }
               >
                 <span data-tooltip-id="add-active-file-context-tooltip">
-                  {getAltKeyLabel()}⏎{" "}
+                  {getMetaKeyLabel()}⏎{" "}
                   {useActiveFile ? "No active file" : "Active file"}
                 </span>
                 <ToolTip id="add-active-file-context-tooltip" place="top-end">
                   {useActiveFile
                     ? "Send Without Active File"
                     : "Send With Active File"}{" "}
-                  ({getAltKeyLabel()}⏎)
+                  ({getMetaKeyLabel()}⏎ or Alt⏎)
                 </ToolTip>
               </HoverItem>
             </div>
@@ -221,8 +221,8 @@ function InputToolbar(props: InputToolbarProps) {
             onClick={async (e) => {
               if (props.onEnter) {
                 props.onEnter({
-                  useCodebase: isMetaEquivalentKeyPressed(e as any),
-                  noContext: useActiveFile ? e.altKey : !e.altKey,
+                  useCodebase: false,
+                  noContext: useActiveFile ? !(isMetaEquivalentKeyPressed(e as any) || e.altKey) : (isMetaEquivalentKeyPressed(e as any) || e.altKey),
                 });
               }
             }}
