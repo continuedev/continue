@@ -3,7 +3,7 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
-import { MCPService } from "../mcp.js";
+import { MCPConnectionInfo, MCPService } from "../mcp.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
 /**
@@ -52,15 +52,7 @@ export interface ModelServiceState {
 
 export interface MCPServiceState {
   mcpService: MCPService | null;
-  connections: Array<{
-    name: string;
-    command: string;
-    status: 'idle' | 'connecting' | 'connected' | 'error';
-    toolCount: number;
-    promptCount: number;
-    error?: Error;
-    warnings: string[];
-  }>;
+  connections: Array<MCPConnectionInfo>;
   toolCount: number;
   promptCount: number;
   isReady: boolean;

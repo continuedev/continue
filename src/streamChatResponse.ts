@@ -9,14 +9,18 @@ import type {
   ChatCompletionToolMessageParam,
 } from "openai/resources.mjs";
 
-import { MCPService } from "./mcp.js";
 import {
   checkToolPermission,
   filterExcludedTools,
   ToolCallRequest,
 } from "./permissions/index.js";
 import { toolPermissionManager } from "./permissions/permissionManager.js";
-import { getServiceSync, SERVICE_NAMES, serviceContainer } from "./services/index.js";
+import {
+  getServiceSync,
+  MCPServiceState,
+  SERVICE_NAMES,
+  serviceContainer,
+} from "./services/index.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
@@ -37,13 +41,18 @@ import { logger } from "./util/logger.js";
 
 dotenv.config();
 
-  export async function getAllTools() {
-    const allBuiltinTools = getAllBuiltinTools();
-    const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
+export async function getAllTools() {
+  const allBuiltinTools = getAllBuiltinTools();
+  const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
 
-    const mcpService = await serviceContainer.get<MCPService>(SERVICE_NAMES.MCP)
-    const mcpTools = mcpService.getTools()
-    const mcpToolNames = mcpTools.map(t => t.name)
+  const mcpState = await serviceContainer.get<MCPServiceState>(
+    SERVICE_NAMES.MCP,
+  );
+  if (!mcpState?.mcpService) {
+    throw new Error("MCP Service not initialized");
+  }
+  const mcpTools = mcpState.mcpService?.getTools() ?? [];
+  const mcpToolNames = mcpTools.map((t) => t.name);
 
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
@@ -107,7 +116,7 @@ dotenv.config();
   );
 
   allTools.push(
-    ...allowedMcpTools.map((tool: any) => ({
+    ...allowedMcpTools.map((tool) => ({
       type: "function" as const,
       function: {
         name: tool.name,

@@ -40,7 +40,7 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.value?.currentMode).toBe('plan');
 
     // Get available tools - this should exclude Bash in plan mode
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // Bash should be excluded in plan mode
@@ -73,7 +73,7 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.value?.currentMode).toBe('normal');
 
     // Get available tools - Bash should be available in normal mode
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // All tools should be available in normal mode
@@ -98,7 +98,7 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.value?.currentMode).toBe('auto');
 
     // Get available tools - all tools should be available in auto mode
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // All tools should be available in auto mode
@@ -125,7 +125,7 @@ describe('getAllTools - Tool Filtering', () => {
       }
     });
 
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // Read should be excluded due to explicit exclude
@@ -149,7 +149,7 @@ describe('getAllTools - Tool Filtering', () => {
       }
     });
 
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // Plan mode should still exclude write tools despite --allow flags

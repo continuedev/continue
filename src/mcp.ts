@@ -1,26 +1,43 @@
 import { type AssistantConfig } from "@continuedev/sdk";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-import { MCPConnection, MCPServerStatus } from "./MCPConnection.js";
-import { MCPServiceState } from "./services/types.js";
-import {logger} from "./util/logger.js";
+import { serviceContainer } from "./services/ServiceContainer.js";
+import { MCPServiceState, SERVICE_NAMES } from "./services/types.js";
+import { getErrorString } from "./util/error.js";
+import { logger } from "./util/logger.js";
 
+export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
 
-export interface MCPConnectionInfo {
-  name: string;
-  command: string;
+type MCPServerConfig = NonNullable<
+  NonNullable<AssistantConfig["mcpServers"]>[number]
+>;
+
+interface ServerConnection {
+  config: MCPServerConfig;
+  client: Client | null;
+  prompts: Awaited<ReturnType<Client["listPrompts"]>>["prompts"];
+  tools: Awaited<ReturnType<Client["listTools"]>>["tools"];
   status: MCPServerStatus;
-  toolCount: number;
-  promptCount: number;
-  error?: Error;
+  error?: string;
   warnings: string[];
 }
 
+export interface MCPConnectionInfo {
+  config: MCPServerConfig;
+  status: MCPServerStatus;
+  toolNames: string[];
+  promptNames: string[];
+  error?: string;
+  warnings: string[];
+}
 
 export class MCPService {
-  private connections: Map<string, MCPConnection> = new Map();
+  private connections: Map<string, ServerConnection> = new Map();
   private currentState: MCPServiceState;
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
+  private initVersion = 0;
 
   constructor() {
     this.currentState = {
@@ -41,64 +58,164 @@ export class MCPService {
    * Initialize the MCP service
    */
   async initialize(assistant: AssistantConfig): Promise<MCPServiceState> {
-    logger.debug("Initializing MCPService");
+    logger.debug("Initializing MCPService", {
+      configName: assistant.name,
+      serverCount: assistant.mcpServers?.length || 0,
+    });
+
+    const version = ++this.initVersion;
+
+    await this.shutdownConnections();
 
     this.assistant = assistant;
     this.connections.clear();
 
-    // Service initialization should not block on server connections
     if (assistant.mcpServers?.length) {
       logger.debug("Starting MCP server connections", {
         serverCount: assistant.mcpServers.length,
       });
 
-      // Initialize all servers simultaneously without blocking
       const connectionPromises = assistant.mcpServers.map(
         async (serverConfig, index) => {
           if (!serverConfig) return;
-
           const serverName = serverConfig.name || `server-${index}`;
+          // Create placeholder connection with connecting state
+          const connection: ServerConnection = {
+            config: serverConfig,
+            client: null,
+            prompts: [],
+            tools: [],
+            status: "connecting",
+            warnings: [],
+          };
+          this.connections.set(serverName, connection);
+          this.updateState();
+
           try {
-            const connection = await MCPConnection.create(
-              serverConfig,
-              serverName
+            if (serverConfig.type && serverConfig.type !== "stdio") {
+              throw new Error(
+                `${serverConfig.type} MCP servers are not yet supported in the Continue CLI`,
+              );
+            }
+            if (!serverConfig.command) {
+              throw new Error("MCP server command is not specified");
+            }
+
+            const client = new Client(
+              { name: "continue-cli-client", version: "1.0.0" },
+              { capabilities: {} },
             );
-            this.connections.set(serverName, connection);
+
+            const env: Record<string, string> = serverConfig.env || {};
+            if (process.env.PATH !== undefined) {
+              env.PATH = process.env.PATH;
+            }
+
+            const transport = new StdioClientTransport({
+              command: serverConfig.command,
+              args: serverConfig.args,
+              env,
+              stderr: "ignore",
+            });
+
+            logger.debug("Connecting to MCP server", {
+              name: serverName,
+              command: serverConfig.command,
+            });
+
+            await client.connect(transport, {});
+
+            // Ignore results from stale initializations
+            if (version !== this.initVersion) {
+              try {
+                await client.close();
+              } catch {}
+              return;
+            }
+
+            connection.client = client;
+            connection.status = "connected";
+
+            const capabilities = client.getServerCapabilities();
+            logger.debug("MCP server capabilities", {
+              name: serverName,
+              hasPrompts: !!capabilities?.prompts,
+              hasTools: !!capabilities?.tools,
+            });
+
+            if (capabilities?.prompts) {
+              try {
+                connection.prompts = (await client.listPrompts()).prompts;
+                logger.debug("Loaded MCP prompts", {
+                  name: serverName,
+                  count: connection.prompts.length,
+                });
+              } catch (error) {
+                const errorMessage = getErrorString(error);
+                connection.warnings.push(
+                  `Failed to load prompts: ${errorMessage}`,
+                );
+                logger.warn("Failed to load MCP prompts", {
+                  name: serverName,
+                  error: errorMessage,
+                });
+              }
+            }
+
+            if (capabilities?.tools) {
+              try {
+                connection.tools = (await client.listTools()).tools;
+                logger.debug("Loaded MCP tools", {
+                  name: serverName,
+                  count: connection.tools.length,
+                });
+              } catch (error) {
+                const errorMessage = getErrorString(error);
+                connection.warnings.push(
+                  `Failed to load tools: ${errorMessage}`,
+                );
+                logger.warn("Failed to load MCP tools", {
+                  name: serverName,
+                  error: errorMessage,
+                });
+              }
+            }
+
             logger.debug("MCP server connected", {
               name: serverName,
               command: serverConfig.command,
             });
-          } catch (error: any) {
+            this.updateState();
+          } catch (error) {
+            if (version !== this.initVersion) {
+              return;
+            }
+            const errorMessage = getErrorString(error);
+            connection.status = "error";
+            connection.error = errorMessage;
             logger.error("MCP server connection failed", {
               name: serverName,
-              error: error.message,
+              error: errorMessage,
             });
-            // Create a failed connection entry
-            const failedConnection = new MCPConnection(
-              null,
-              serverConfig.command || "unknown",
-              serverName
-            );
-            failedConnection.status = "error";
-            failedConnection.error = error;
-            this.connections.set(serverName, failedConnection);
+            this.updateState();
           }
-        }
+        },
       );
 
-      // Don't await - let connections happen in background
       Promise.all(connectionPromises)
         .then(() => {
-          this.updateState();
-          logger.debug("All MCP server connections completed");
+          if (version === this.initVersion) {
+            this.updateState();
+            logger.debug("All MCP server connections completed");
+          }
         })
         .catch(() => {
-          // Individual errors are already handled above
-          this.updateState();
+          if (version === this.initVersion) {
+            this.updateState();
+          }
         });
     }
 
-    // Return immediately with current state
     this.updateState();
     return this.currentState;
   }
@@ -109,7 +226,7 @@ export class MCPService {
   private updateState(): void {
     const connections = Array.from(this.connections.values());
     const connectedConnections = connections.filter(
-      (c) => c.status === "connected"
+      (c) => c.status === "connected",
     );
 
     this.currentState = {
@@ -117,14 +234,21 @@ export class MCPService {
       connections: this.getConnectionInfo(),
       toolCount: connectedConnections.reduce(
         (sum, c) => sum + c.tools.length,
-        0
+        0,
       ),
       promptCount: connectedConnections.reduce(
         (sum, c) => sum + c.prompts.length,
-        0
+        0,
       ),
       isReady: true,
     };
+
+    // Propagate state changes to the service container so the UI updates
+    try {
+      serviceContainer.set(SERVICE_NAMES.MCP, this.currentState);
+    } catch {
+      // In early boot, container may not yet be registered; ignore
+    }
   }
 
   /**
@@ -141,8 +265,6 @@ export class MCPService {
     logger.debug("Updating MCPService");
 
     // Shutdown existing connections
-    await this.shutdownConnections();
-
     return await this.initialize(assistant);
   }
 
@@ -158,11 +280,10 @@ export class MCPService {
    */
   getConnectionInfo(): MCPConnectionInfo[] {
     return Array.from(this.connections.values()).map((connection) => ({
-      name: connection.name,
-      command: connection.command,
+      config: connection.config,
       status: connection.status,
-      toolCount: connection.tools.length,
-      promptCount: connection.prompts.length,
+      toolNames: connection.tools.map((tool) => tool.name),
+      promptNames: connection.prompts.map((prompt) => prompt.name),
       error: connection.error,
       warnings: connection.warnings,
     }));
@@ -203,13 +324,21 @@ export class MCPService {
    * Get MCP service information for display
    */
   getMCPInfo(): {
-    toolCount: number;
-    promptCount: number;
+    toolNames: string[];
+    promptNames: string[];
     connectionCount: number;
   } {
+    const connectedConnections = Array.from(this.connections.values()).filter(
+      (c) => c.status === "connected",
+    );
+
     return {
-      toolCount: this.currentState.toolCount,
-      promptCount: this.currentState.promptCount,
+      toolNames: connectedConnections.flatMap((connection) =>
+        connection.tools.map((tool) => tool.name),
+      ),
+      promptNames: connectedConnections.flatMap((connection) =>
+        connection.prompts.map((prompt) => prompt.name),
+      ),
       connectionCount: this.connections.size,
     };
   }
@@ -259,6 +388,7 @@ export class MCPService {
     logger.debug("Restarting all MCP servers");
     await this.shutdownConnections();
     await this.initialize(this.assistant);
+    this.updateState();
   }
 
   /**
@@ -277,7 +407,7 @@ export class MCPService {
     if (!this.assistant || !this.assistant.mcpServers) return;
 
     const serverConfig = this.assistant.mcpServers.find(
-      (s, index) => s && (s.name || `server-${index}`) === serverName
+      (s, index) => s && (s.name || `server-${index}`) === serverName,
     );
 
     if (!serverConfig) {
@@ -286,30 +416,107 @@ export class MCPService {
 
     logger.debug("Restarting MCP server", { name: serverName });
 
-    // Stop existing connection
     const existingConnection = this.connections.get(serverName);
     if (existingConnection) {
-      await this.shutdownConnection(existingConnection);
+      if (existingConnection.status === "connected") {
+        await this.shutdownConnection(existingConnection);
+      }
+      this.connections.delete(serverName);
     }
 
-    // Start new connection
+    const connection: ServerConnection = {
+      config: serverConfig,
+      client: null,
+      prompts: [],
+      tools: [],
+      status: "connecting",
+      warnings: [],
+    };
+    this.connections.set(serverName, connection);
+    this.updateState();
+
     try {
-      const connection = await MCPConnection.create(serverConfig, serverName);
-      this.connections.set(serverName, connection);
+      if (!serverConfig.command) {
+        throw new Error("MCP server command is not specified");
+      }
+
+      const client = new Client(
+        { name: "continue-cli-client", version: "1.0.0" },
+        { capabilities: {} },
+      );
+
+      const env: Record<string, string> = serverConfig.env || {};
+      if (process.env.PATH !== undefined) {
+        env.PATH = process.env.PATH;
+      }
+
+      const transport = new StdioClientTransport({
+        command: serverConfig.command,
+        args: serverConfig.args,
+        env,
+        stderr: "ignore",
+      });
+
+      logger.debug("Connecting to MCP server", {
+        name: serverName,
+        command: serverConfig.command,
+      });
+
+      await client.connect(transport, {});
+
+      connection.client = client;
+      connection.status = "connected";
+
+      const capabilities = client.getServerCapabilities();
+      logger.debug("MCP server capabilities", {
+        name: serverName,
+        hasPrompts: !!capabilities?.prompts,
+        hasTools: !!capabilities?.tools,
+      });
+
+      if (capabilities?.prompts) {
+        try {
+          connection.prompts = (await client.listPrompts()).prompts;
+          logger.debug("Loaded MCP prompts", {
+            name: serverName,
+            count: connection.prompts.length,
+          });
+        } catch (error) {
+          const errorMessage = getErrorString(error);
+          connection.warnings.push(`Failed to load prompts: ${errorMessage}`);
+          logger.warn("Failed to load MCP prompts", {
+            name: serverName,
+            error: errorMessage,
+          });
+        }
+      }
+
+      if (capabilities?.tools) {
+        try {
+          connection.tools = (await client.listTools()).tools;
+          logger.debug("Loaded MCP tools", {
+            name: serverName,
+            count: connection.tools.length,
+          });
+        } catch (error) {
+          const errorMessage = getErrorString(error);
+          connection.warnings.push(`Failed to load tools: ${errorMessage}`);
+          logger.warn("Failed to load MCP tools", {
+            name: serverName,
+            error: errorMessage,
+          });
+        }
+      }
+
       logger.debug("MCP server restarted successfully", { name: serverName });
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = getErrorString(error);
+      connection.status = "error";
+      connection.error = errorMessage;
       logger.error("Failed to restart MCP server", {
         name: serverName,
-        error: error.message,
+        error: errorMessage,
       });
-      const failedConnection = new MCPConnection(
-        null,
-        serverConfig.command || "unknown",
-        serverName
-      );
-      failedConnection.status = "error";
-      failedConnection.error = error;
-      this.connections.set(serverName, failedConnection);
     }
 
     this.updateState();
@@ -324,10 +531,7 @@ export class MCPService {
     const connection = this.connections.get(serverName);
     if (connection) {
       await this.shutdownConnection(connection);
-      this.connections.delete(serverName);
     }
-
-    this.updateState();
   }
 
   /**
@@ -338,11 +542,10 @@ export class MCPService {
     if (!connection) return null;
 
     return {
-      name: connection.name,
-      command: connection.command,
+      config: connection.config,
       status: connection.status,
-      toolCount: connection.tools.length,
-      promptCount: connection.prompts.length,
+      toolNames: connection.tools.map((tool) => tool.name),
+      promptNames: connection.prompts.map((prompt) => prompt.name),
       error: connection.error,
       warnings: connection.warnings,
     };
@@ -353,25 +556,34 @@ export class MCPService {
    */
   private async shutdownConnections(): Promise<void> {
     const shutdownPromises = Array.from(this.connections.values()).map(
-      (connection) => this.shutdownConnection(connection)
+      (connection) => this.shutdownConnection(connection),
     );
 
     await Promise.all(shutdownPromises);
-    this.connections.clear();
   }
 
   /**
    * Shutdown a single connection
    */
-  private async shutdownConnection(connection: MCPConnection): Promise<void> {
+  private async shutdownConnection(
+    connection: ServerConnection,
+  ): Promise<void> {
     try {
       if (connection.client) {
         await connection.client.close();
       }
-    } catch (error: any) {
+      connection.status = "idle";
+      connection.warnings = [];
+      connection.client = null;
+      connection.tools = [];
+      connection.prompts = [];
+      connection.error = undefined;
+      this.updateState();
+    } catch (error) {
+      const errorMessage = getErrorString(error);
       logger.warn("Error shutting down MCP connection", {
-        name: connection.name,
-        error: error.message,
+        name: connection.config?.name,
+        error: errorMessage,
       });
     }
   }
@@ -394,6 +606,7 @@ export class MCPService {
       promptCount: 0,
       isReady: false,
     };
+
+    this.updateState();
   }
 }
-

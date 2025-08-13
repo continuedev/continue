@@ -13,15 +13,9 @@ Each server configuration should have its own connection and state separated, bu
 Servers should have a status "idle", "connecting", "connected", or "error". Only "connected" servers contribute prompts and tools.
 If a server successfully connects but there is an error retrieving prompts or tools, it should have an array of warning messages that can be accessed in the terminal app.
 When the process exits, all servers should be shut down and disconnected.
+Only MCP servers for the CURRENT config should be loaded
 
-## MCP Status indicator
-
-If any MCP servers are present, a small indicator in the bottom right of TUIChat (next to update/version status) shows a small MCP icon with green/yellow/red dot, with this priority
-
-- loading icon if any servers are connecting
-- red if any servers have errored
-- green if any servers are connected
-- gray if all servers are idle
+- Logs from MCP servers should be routed through the winston logger, not the standard console.log (since this is a terminal app)
 
 ## MCP slash command
 

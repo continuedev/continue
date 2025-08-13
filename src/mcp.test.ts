@@ -1,42 +1,35 @@
 import { AssistantConfig } from "@continuedev/sdk";
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  jest,
-} from "@jest/globals";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 import { MCPService } from "./mcp.js";
 
 
 // Mock the logger
-jest.mock("./src/util/logger", () => ({
-  default: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+vi.mock("./util/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   },
 }));
 
 // Mock the MCP SDK
 const mockClient = {
-  connect: jest.fn(),
-  getServerCapabilities: jest.fn(() => ({ prompts: true, tools: true })),
-  listPrompts: jest.fn(() => Promise.resolve({ prompts: [] })),
-  listTools: jest.fn(() => Promise.resolve({ tools: [] })),
-  callTool: jest.fn(() => Promise.resolve({})),
-  close: jest.fn(() => Promise.resolve()),
+  connect: vi.fn(),
+  getServerCapabilities: vi.fn(() => ({ prompts: true, tools: true })),
+  listPrompts: vi.fn(() => Promise.resolve({ prompts: [] })),
+  listTools: vi.fn(() => Promise.resolve({ tools: [] })),
+  callTool: vi.fn(() => Promise.resolve({})),
+  close: vi.fn(() => Promise.resolve()),
 };
 
-jest.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
-  Client: jest.fn(() => mockClient),
+vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
+  Client: vi.fn(() => mockClient),
 }));
 
-jest.mock("@modelcontextprotocol/sdk/client/stdio.js", () => ({
-  StdioClientTransport: jest.fn(),
+vi.mock("@modelcontextprotocol/sdk/client/stdio.js", () => ({
+  StdioClientTransport: vi.fn(),
 }));
 
 describe("MCPService", () => {
@@ -60,7 +53,7 @@ describe("MCPService", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("initialization", () => {
@@ -101,8 +94,8 @@ describe("MCPService", () => {
 
     it("should provide service info", () => {
       const info = mcpService.getMCPInfo();
-      expect(info).toHaveProperty("toolCount");
-      expect(info).toHaveProperty("promptCount");
+      expect(info).toHaveProperty("toolNames");
+      expect(info).toHaveProperty("promptNames");
       expect(info).toHaveProperty("connectionCount");
     });
 

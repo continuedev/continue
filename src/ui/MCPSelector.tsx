@@ -1,19 +1,46 @@
 import { Box, Text, useInput } from "ink";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
+import { quote } from "shell-quote";
 
 import { useServices } from "../hooks/useService.js";
-import { MCPServiceState } from "../services/types.js";
+import { MCPServiceState, SERVICE_NAMES } from "../services/types.js";
+import { logger } from "../util/logger.js";
+
+// Utility function to get status icon and color based on server connection
+const getServerStatusDisplay = (conn: any) => {
+  let icon = "⚪️"; // note, white circle causes extra blank line bug
+  let color: "green" | "yellow" | "red" | "white" | "dim" = "white";
+  let statusText = conn.status;
+
+  if (conn.status === "connecting") {
+    icon = "🟡";
+    color = "yellow";
+  } else if (conn.status === "error") {
+    icon = "🔴";
+    color = "red";
+  } else if (conn.status === "connected") {
+    if (conn.warnings && conn.warnings.length > 0) {
+      icon = "🟡";
+      color = "yellow";
+      statusText = "connected (with warnings)";
+    } else {
+      icon = "🟢";
+      color = "green";
+    }
+  }
+
+  return { icon, color, statusText };
+};
 
 interface MCPSelectorProps {
   onCancel: () => void;
 }
 
-type MCPMenuState = "main" | "servers" | "server-detail";
+type MCPMenuState = "main" | "server-detail";
 
 interface MCPMenuItem {
   label: string;
   value: string;
-  disabled?: boolean;
 }
 
 export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
@@ -23,63 +50,68 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { services } = useServices<{ mcp: MCPServiceState }>(["mcp"]);
+  const { services } = useServices<{ mcp: MCPServiceState }>([
+    SERVICE_NAMES.MCP,
+  ]);
+  const connections = services.mcp?.connections ?? [];
   const mcpService = services.mcp?.mcpService;
 
-  const connections = useMemo(() => {
-    return services.mcp?.connections ?? [];
-  }, [services.mcp?.connections]);
   const backItem = { label: "Back", value: "back" };
 
   const handleBack = () => {
     if (menuState === "server-detail") {
       setSelectedServer(null);
-      setMenuState("servers");
-    } else if (menuState === "servers") {
       setMenuState("main");
+      setSelectedIndex(0);
     } else {
       onCancel();
     }
-    setSelectedIndex(0);
     setMessage(null);
   };
 
-  // Main menu items
+  // Main menu items (includes servers)
   const getMainMenuItems = (): MCPMenuItem[] => {
     const options: MCPMenuItem[] = [];
 
+    // Add individual servers first
     if (connections.length > 0) {
+      connections.forEach((conn) => {
+        const { icon } = getServerStatusDisplay(conn);
+        const serverInfo = mcpService?.getServerInfo(conn.config.name);
+
+        let serverLabel = `${icon} ${conn.config.name}`;
+
+        // Add tools and prompts count if server is connected
+        if (serverInfo && serverInfo.status === "connected") {
+          const toolsCount = serverInfo.toolNames.length;
+          const promptsCount = serverInfo.promptNames.length;
+
+          const counts = [];
+          if (toolsCount > 0) {
+            counts.push(`🔧${toolsCount}`);
+          }
+          if (promptsCount > 0) {
+            counts.push(`📝${promptsCount}`);
+          }
+
+          if (counts.length > 0) {
+            serverLabel += ` (${counts.join(" ")})`;
+          }
+        }
+
+        options.push({
+          label: serverLabel,
+          value: `server:${conn.config.name}`,
+        });
+      });
+
+      // Add bulk actions
       options.push(
         { label: "🔄 Restart all servers", value: "restart-all" },
         { label: "⏹️  Stop all servers", value: "stop-all" },
-        { label: "👁️  View servers", value: "view-servers" }
       );
     }
-    options.push(backItem);
     return options;
-  };
-
-  // Server list items
-  const getServerItems = (): MCPMenuItem[] => {
-    if (connections.length === 0) {
-      return [backItem];
-    }
-
-    const serverItems = connections.map((conn) => {
-      let statusIcon = "⚪"; // idle
-      if (conn.status === "connecting") statusIcon = "🟡";
-      else if (conn.status === "error") statusIcon = "🔴";
-      else if (conn.status === "connected") {
-        statusIcon = conn.warnings.length > 0 ? "🟡" : "🟢";
-      }
-
-      return {
-        label: `${statusIcon} ${conn.name}`,
-        value: conn.name,
-      };
-    });
-
-    return [...serverItems, { label: "Back", value: "back" }];
   };
 
   // Server detail items
@@ -91,50 +123,74 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
     const items: MCPMenuItem[] = [
       { label: "🔄 Restart server", value: "restart" },
-      { label: "⏹️  Stop server", value: "stop" },
     ];
 
-    // Add warnings if any
-    if (serverInfo.warnings.length > 0) {
-      items.push({ label: "", value: "spacer", disabled: true });
-      items.push({
-        label: "⚠️  Warnings:",
-        value: "warnings-header",
-        disabled: true,
-      });
-      serverInfo.warnings.forEach((warning, index) => {
-        items.push({
-          label: `   ${warning}`,
-          value: `warning-${index}`,
-          disabled: true,
-        });
-      });
+    // Only show stop server if it's connected
+    if (serverInfo.status === "connected") {
+      items.push({ label: "⏹️  Stop server", value: "stop" });
     }
-
-    // Add prompts if any
-    if (serverInfo.promptCount > 0) {
-      items.push({ label: "", value: "spacer2", disabled: true });
-      items.push({
-        label: `📝 Prompts (${serverInfo.promptCount}):`,
-        value: "prompts-header",
-        disabled: true,
-      });
-    }
-
-    // Add tools if any
-    if (serverInfo.toolCount > 0) {
-      items.push({ label: "", value: "spacer3", disabled: true });
-      items.push({
-        label: `🔧 Tools (${serverInfo.toolCount}):`,
-        value: "tools-header",
-        disabled: true,
-      });
-    }
-
-    items.push({ label: "", value: "spacer4", disabled: true });
-    items.push({ label: "Back", value: "back" });
 
     return items;
+  };
+  const getServerInfoDisplay = () => {
+    if (menuState !== "server-detail" || !selectedServer) return null;
+
+    const serverInfo = mcpService?.getServerInfo(selectedServer);
+    if (!serverInfo) return null;
+
+    return (
+      <Box flexDirection="column">
+        {/* Add error if server has error status */}
+        {serverInfo.status === "error" && serverInfo.error && (
+          <Box flexDirection="column" marginBottom={1}>
+            <Text color="red" bold>
+              🚫 Error:
+            </Text>
+            <Text color="red">{serverInfo.error}</Text>
+          </Box>
+        )}
+
+        {/* Add warnings if any */}
+        {serverInfo.warnings.length > 0 && (
+          <Box flexDirection="column" marginBottom={1}>
+            <Text color="yellow" bold>
+              ⚠️ Warnings:
+            </Text>
+            {serverInfo.warnings.map((warning, index) => (
+              <Text key={index} color="yellow">
+                • {warning}
+              </Text>
+            ))}
+          </Box>
+        )}
+
+        {/* Add prompts if any */}
+        {serverInfo.promptNames.length > 0 && (
+          <Box flexDirection="column" marginBottom={1}>
+            <Text color="cyan">
+              📝 Prompts: {serverInfo.promptNames.length}
+            </Text>
+            {serverInfo.promptNames.map((name, index) => (
+              <Text key={index} color="dim">
+                • {name}
+              </Text>
+            ))}
+          </Box>
+        )}
+
+        {/* Add tools if any */}
+        {serverInfo.toolNames.length > 0 && (
+          <Box flexDirection="column" marginBottom={1}>
+            <Text color="cyan">🔧 Tools: {serverInfo.toolNames.length}</Text>
+            {serverInfo.toolNames.map((name, index) => (
+              <Text key={index} color="dim">
+                • {name}
+              </Text>
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   let items: MCPMenuItem[] = [];
@@ -143,17 +199,14 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     case "main":
       items = getMainMenuItems();
       break;
-    case "servers":
-      items = getServerItems();
-      break;
     case "server-detail":
       items = getServerDetailItems();
       break;
   }
 
-  // Filter out disabled items for navigation
-  const navigableItems = items.filter((item) => !item.disabled);
-  const maxIndex = Math.max(0, navigableItems.length - 1);
+  items = [...items, backItem];
+
+  const maxIndex = Math.max(0, items.length - 1);
 
   useInput(async (input, key) => {
     if (isLoading) return;
@@ -164,32 +217,18 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     }
 
     if (key.upArrow) {
-      const currentNavigableIndex = navigableItems.findIndex(
-        (item) => item === items[selectedIndex]
-      );
-      const newNavigableIndex = Math.max(0, currentNavigableIndex - 1);
-      const newIndex = items.findIndex(
-        (item) => item === navigableItems[newNavigableIndex]
-      );
-      setSelectedIndex(newIndex);
+      setSelectedIndex(selectedIndex <= 0 ? maxIndex : selectedIndex - 1);
       return;
     }
 
     if (key.downArrow) {
-      const currentNavigableIndex = navigableItems.findIndex(
-        (item) => item === items[selectedIndex]
-      );
-      const newNavigableIndex = Math.min(maxIndex, currentNavigableIndex + 1);
-      const newIndex = items.findIndex(
-        (item) => item === navigableItems[newNavigableIndex]
-      );
-      setSelectedIndex(newIndex);
+      setSelectedIndex(selectedIndex >= maxIndex ? 0 : selectedIndex + 1);
       return;
     }
 
     if (key.return) {
       const selectedItem = items[selectedIndex];
-      if (!selectedItem || selectedItem.disabled) return;
+      if (!selectedItem) return;
 
       setIsLoading(true);
       setMessage(null);
@@ -198,9 +237,6 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         switch (menuState) {
           case "main":
             await handleMainMenuSelect(selectedItem.value);
-            break;
-          case "servers":
-            handleServerSelect(selectedItem.value);
             break;
           case "server-detail":
             await handleServerAction(selectedItem.value);
@@ -217,18 +253,23 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const handleMainMenuSelect = async (value: string) => {
     if (!mcpService) return;
 
+    if (value.startsWith("server:")) {
+      // Handle server selection
+      const serverName = value.replace("server:", "");
+      setSelectedServer(serverName);
+      setMenuState("server-detail");
+      setSelectedIndex(0);
+      return;
+    }
+
     switch (value) {
       case "restart-all":
         await mcpService.restartAllServers();
-        setMessage("All servers restarted successfully");
+        setMessage("All servers restarted");
         break;
       case "stop-all":
         await mcpService.stopAllServers();
         setMessage("All servers stopped");
-        break;
-      case "view-servers":
-        setMenuState("servers");
-        setSelectedIndex(0);
         break;
       case "back":
         onCancel();
@@ -236,64 +277,57 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     }
   };
 
-  const handleServerSelect = (value: string) => {
-    if (value === "back") {
-      handleBack();
-    } else {
-      setSelectedServer(value);
-      setMenuState("server-detail");
-      setSelectedIndex(0);
-    }
-  };
-
   const handleServerAction = async (action: string) => {
     if (!mcpService || !selectedServer) return;
-
-    switch (action) {
-      case "restart":
-        await mcpService.restartServer(selectedServer);
-        setMessage(`Server "${selectedServer}" restarted successfully`);
-        break;
-      case "stop":
-        await mcpService.stopServer(selectedServer);
-        setMessage(`Server "${selectedServer}" stopped`);
-        break;
-      case "back":
-        handleBack();
-        return;
+    try {
+      switch (action) {
+        case "restart":
+          await mcpService.restartServer(selectedServer);
+          setMessage(`Server "${selectedServer}" restarted`);
+          break;
+        case "stop":
+          await mcpService.stopServer(selectedServer);
+          setMessage(`Server "${selectedServer}" stopped`);
+          break;
+        case "back":
+          handleBack();
+          return;
+      }
+    } catch {
+      logger.error("Error handling MCP action");
     }
   };
 
   const renderHeader = () => {
-    let title = "MCP Servers";
-    let subtitle = "";
-
-    if (menuState === "servers") {
-      title = "MCP Servers";
-    } else if (menuState === "server-detail" && selectedServer) {
-      const serverInfo = mcpService?.getServerInfo(selectedServer);
-      title = `Server: ${selectedServer}`;
-      if (serverInfo) {
-        let statusText = serverInfo.status;
-        if (
-          serverInfo.status === "connected" &&
-          serverInfo.warnings.length > 0
-        ) {
-          statusText += " (with warnings)";
-        }
-        subtitle = `Status: ${statusText} • Command: ${serverInfo.command}`;
-      }
-    }
-
     return (
       <Box flexDirection="column" marginBottom={1}>
         <Text bold color="cyan">
-          {title}
+          {menuState === "server-detail" && selectedServer
+            ? `Server: ${selectedServer}`
+            : "MCP Servers"}
         </Text>
         {connections.length === 0 && (
           <Text color="gray">No servers configured</Text>
         )}
-        {subtitle && <Text color="dim">{subtitle}</Text>}
+        {menuState === "server-detail" &&
+          selectedServer &&
+          (() => {
+            const serverInfo = mcpService?.getServerInfo(selectedServer);
+            if (!serverInfo) return null;
+
+            const { color: statusColor, statusText } =
+              getServerStatusDisplay(serverInfo);
+            const { command, args } = serverInfo.config;
+            let cmd = command ? quote([command, ...(args ?? [])]) : "";
+            cmd = cmd.replace(/\$\{\{.*\}\}/, "(secret)");
+
+            return (
+              <Text color="dim">
+                Status: <Text color={statusColor}>{statusText}</Text>
+                {cmd && ` • Command: ${cmd}`}
+              </Text>
+            );
+          })()}
       </Box>
     );
   };
@@ -316,6 +350,8 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         </Box>
       )}
 
+      {menuState === "server-detail" && getServerInfoDisplay()}
+
       {isLoading ? (
         <Box>
           <Text color="yellow">Working...</Text>
@@ -323,20 +359,18 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
       ) : (
         <Box flexDirection="column">
           {items.map((item, index) => {
-            const isSelected = index === selectedIndex && !item.disabled;
-            const canSelect = !item.disabled;
+            const isSelected = index === selectedIndex;
 
             return (
-              <Box key={`${item.value}-${index}`}>
-                <Text
-                  color={item.disabled ? "dim" : isSelected ? "blue" : "white"}
-                  bold={isSelected}
-                  inverse={isSelected}
-                >
-                  {isSelected && canSelect ? "> " : "  "}
-                  {item.label}
-                </Text>
-              </Box>
+              <Text
+                key={`${item.value}-${index}`}
+                color={isSelected ? "blue" : "white"}
+                bold={isSelected}
+                inverse={isSelected}
+              >
+                {isSelected ? "> " : "  "}
+                {item.label}
+              </Text>
             );
           })}
         </Box>
