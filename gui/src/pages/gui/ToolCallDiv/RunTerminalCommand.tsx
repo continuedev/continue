@@ -117,17 +117,11 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
         <TerminalCollapsibleContainer
           collapsible={processedTerminalContent.isLimited}
           hiddenLinesCount={processedTerminalContent.hiddenLinesCount}
-          className="mt-2"
+          className="-mt-4"
           collapsedContent={
-            <div className="mt-2">
-              <Ansi>{processedTerminalContent.limitedContent}</Ansi>
-            </div>
+            <Ansi>{processedTerminalContent.limitedContent}</Ansi>
           }
-          expandedContent={
-            <div className="mt-2">
-              <Ansi>{processedTerminalContent.fullContent}</Ansi>
-            </div>
-          }
+          expandedContent={<Ansi>{processedTerminalContent.fullContent}</Ansi>}
         />
       )}
 
@@ -142,7 +136,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
               onClick={(e) => {
                 e.preventDefault();
                 // Dispatch the action to move the command to the background
-                dispatch(
+                void dispatch(
                   moveTerminalProcessToBackground({
                     toolCallId: props.toolCallId as string,
                   }),
