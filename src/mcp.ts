@@ -15,10 +15,10 @@ type MCPServerConfig = NonNullable<
 
 interface ServerConnection {
   config: MCPServerConfig;
+  status: MCPServerStatus;
   client: Client | null;
   prompts: Awaited<ReturnType<Client["listPrompts"]>>["prompts"];
   tools: Awaited<ReturnType<Client["listTools"]>>["tools"];
-  status: MCPServerStatus;
   error?: string;
   warnings: string[];
 }
@@ -75,132 +75,11 @@ export class MCPService {
         serverCount: assistant.mcpServers.length,
       });
 
-      const connectionPromises = assistant.mcpServers.map(
-        async (serverConfig, index) => {
-          if (!serverConfig) return;
-          const serverName = serverConfig.name || `server-${index}`;
-          // Create placeholder connection with connecting state
-          const connection: ServerConnection = {
-            config: serverConfig,
-            client: null,
-            prompts: [],
-            tools: [],
-            status: "connecting",
-            warnings: [],
-          };
-          this.connections.set(serverName, connection);
-          this.updateState();
-
-          try {
-            if (serverConfig.type && serverConfig.type !== "stdio") {
-              throw new Error(
-                `${serverConfig.type} MCP servers are not yet supported in the Continue CLI`,
-              );
-            }
-            if (!serverConfig.command) {
-              throw new Error("MCP server command is not specified");
-            }
-
-            const client = new Client(
-              { name: "continue-cli-client", version: "1.0.0" },
-              { capabilities: {} },
-            );
-
-            const env: Record<string, string> = serverConfig.env || {};
-            if (process.env.PATH !== undefined) {
-              env.PATH = process.env.PATH;
-            }
-
-            const transport = new StdioClientTransport({
-              command: serverConfig.command,
-              args: serverConfig.args,
-              env,
-              stderr: "ignore",
-            });
-
-            logger.debug("Connecting to MCP server", {
-              name: serverName,
-              command: serverConfig.command,
-            });
-
-            await client.connect(transport, {});
-
-            // Ignore results from stale initializations
-            if (version !== this.initVersion) {
-              try {
-                await client.close();
-              } catch {}
-              return;
-            }
-
-            connection.client = client;
-            connection.status = "connected";
-
-            const capabilities = client.getServerCapabilities();
-            logger.debug("MCP server capabilities", {
-              name: serverName,
-              hasPrompts: !!capabilities?.prompts,
-              hasTools: !!capabilities?.tools,
-            });
-
-            if (capabilities?.prompts) {
-              try {
-                connection.prompts = (await client.listPrompts()).prompts;
-                logger.debug("Loaded MCP prompts", {
-                  name: serverName,
-                  count: connection.prompts.length,
-                });
-              } catch (error) {
-                const errorMessage = getErrorString(error);
-                connection.warnings.push(
-                  `Failed to load prompts: ${errorMessage}`,
-                );
-                logger.warn("Failed to load MCP prompts", {
-                  name: serverName,
-                  error: errorMessage,
-                });
-              }
-            }
-
-            if (capabilities?.tools) {
-              try {
-                connection.tools = (await client.listTools()).tools;
-                logger.debug("Loaded MCP tools", {
-                  name: serverName,
-                  count: connection.tools.length,
-                });
-              } catch (error) {
-                const errorMessage = getErrorString(error);
-                connection.warnings.push(
-                  `Failed to load tools: ${errorMessage}`,
-                );
-                logger.warn("Failed to load MCP tools", {
-                  name: serverName,
-                  error: errorMessage,
-                });
-              }
-            }
-
-            logger.debug("MCP server connected", {
-              name: serverName,
-              command: serverConfig.command,
-            });
-            this.updateState();
-          } catch (error) {
-            if (version !== this.initVersion) {
-              return;
-            }
-            const errorMessage = getErrorString(error);
-            connection.status = "error";
-            connection.error = errorMessage;
-            logger.error("MCP server connection failed", {
-              name: serverName,
-              error: errorMessage,
-            });
-            this.updateState();
-          }
-        },
-      );
+      const connectionPromises = assistant.mcpServers.map(async (config) => {
+        if (config) {
+          return await this.connectServer(config);
+        }
+      });
 
       Promise.all(connectionPromises)
         .then(() => {
@@ -297,23 +176,15 @@ export class MCPService {
     hasWarnings: boolean;
   } {
     const connections = Array.from(this.connections.values());
-
-    if (connections.length === 0) {
-      return { status: "idle", hasWarnings: false };
-    }
-
-    const hasConnecting = connections.some((c) => c.status === "connecting");
-    const hasError = connections.some((c) => c.status === "error");
-    const hasConnected = connections.some((c) => c.status === "connected");
     const hasWarnings = connections.some((c) => c.warnings.length > 0);
 
-    if (hasConnecting) {
+    if (connections.some((c) => c.status === "connecting")) {
       return { status: "connecting", hasWarnings };
     }
-    if (hasError) {
+    if (connections.some((c) => c.status === "error")) {
       return { status: "error", hasWarnings };
     }
-    if (hasConnected) {
+    if (connections.some((c) => c.status === "connected")) {
       return { status: "connected", hasWarnings };
     }
 
@@ -423,7 +294,10 @@ export class MCPService {
       }
       this.connections.delete(serverName);
     }
+    await this.connectServer(serverConfig);
+  }
 
+  private async connectServer(serverConfig: MCPServerConfig) {
     const connection: ServerConnection = {
       config: serverConfig,
       client: null,
@@ -432,10 +306,16 @@ export class MCPService {
       status: "connecting",
       warnings: [],
     };
+    const serverName = serverConfig.name;
     this.connections.set(serverName, connection);
     this.updateState();
 
     try {
+      if (serverConfig.type && serverConfig.type !== "stdio") {
+        throw new Error(
+          `${serverConfig.type} MCP servers are not yet supported in the Continue CLI`,
+        );
+      }
       if (!serverConfig.command) {
         throw new Error("MCP server command is not specified");
       }
@@ -463,6 +343,7 @@ export class MCPService {
       });
 
       await client.connect(transport, {});
+      client.setLoggingLevel("critical");
 
       connection.client = client;
       connection.status = "connected";

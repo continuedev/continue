@@ -2,7 +2,8 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 
-import { StreamCallbacks, streamChatResponse } from "./streamChatResponse.js";
+import { streamChatResponse } from "./streamChatResponse.js";
+import { StreamCallbacks } from "./streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 
 export const COMPACTION_MARKER = "[COMPACTED HISTORY]";
@@ -111,7 +112,7 @@ export function findCompactionIndex(
       typeof msg.content === "string" &&
       msg.content.startsWith(COMPACTION_MARKER),
   );
-  return compactedIndex !== -1 ? compactedIndex : null;
+  return compactedIndex === -1 ? null : compactedIndex;
 }
 
 /**

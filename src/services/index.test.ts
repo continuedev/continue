@@ -8,6 +8,7 @@ import { initializeServices } from "./index.js";
 // Mock the onboarding module
 vi.mock("../onboarding.js", () => ({
   initializeWithOnboarding: vi.fn().mockResolvedValue({ wasOnboarded: false }),
+  createOrUpdateConfig: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock auth module  

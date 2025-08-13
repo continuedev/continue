@@ -47,6 +47,23 @@ export async function initializeServices(
     wasOnboarded = onboardingResult.wasOnboarded;
   }
 
+  // Handle ANTHROPIC_API_KEY in headless mode when no config path is provided
+  if (
+    options.headless &&
+    !options.configPath &&
+    process.env.ANTHROPIC_API_KEY
+  ) {
+    const { createOrUpdateConfig } = await import("../onboarding.js");
+    const { env } = await import("../env.js");
+    const path = await import("path");
+
+    const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
+    await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
+
+    // Update options to use the created config
+    options.configPath = CONFIG_PATH;
+  }
+
   // Initialize mode service with tool permission overrides
   if (options.toolPermissionOverrides) {
     const overrides = { ...options.toolPermissionOverrides };
@@ -135,15 +152,14 @@ export async function initializeServices(
       const currentState = configService.getState();
       let configPath =
         options.configPath ||
-        (currentState.configPath !== undefined
-          ? currentState.configPath
-          : undefined);
+        (currentState.configPath === undefined
+          ? undefined
+          : currentState.configPath);
 
       // If no config path is available, check for saved config URI in auth config
       if (!configPath) {
-        const { getConfigUri, uriToPath, uriToSlug } = await import(
-          "../auth/workos.js"
-        );
+        const { getConfigUri } = await import("../auth/workos.js");
+        const { uriToPath, uriToSlug } = await import("../auth/uriUtils.js");
         const configUri = getConfigUri(finalAuthState.authConfig);
         if (configUri) {
           const filePath = uriToPath(configUri);
@@ -190,7 +206,6 @@ export async function initializeServices(
       if (!configState.config) {
         throw new Error("Config not available for MCP service");
       }
-
       return mcpService.initialize(configState.config);
     },
     [SERVICE_NAMES.CONFIG], // Depends on config

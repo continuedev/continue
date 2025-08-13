@@ -5,8 +5,7 @@ import {
   loadPermissionsYaml,
   yamlConfigToPolicies,
 } from "./permissionsYamlLoader.js";
-import { normalizeToolName } from "./toolNameMapping.js";
-import { ToolPermissionPolicy } from "./types.js";
+import { type ToolPermissionPolicy } from "./types.js";
 
 export interface PermissionSources {
   /** Command line flags - highest precedence */
@@ -107,21 +106,21 @@ function commandLineFlagsToPolicies(flags: {
   // Order matters for CLI flags too
   if (flags.exclude) {
     for (const tool of flags.exclude) {
-      const normalizedName = normalizeToolName(tool);
+      const normalizedName = tool;
       policies.push({ tool: normalizedName, permission: "exclude" });
     }
   }
 
   if (flags.ask) {
     for (const tool of flags.ask) {
-      const normalizedName = normalizeToolName(tool);
+      const normalizedName = tool;
       policies.push({ tool: normalizedName, permission: "ask" });
     }
   }
 
   if (flags.allow) {
     for (const tool of flags.allow) {
-      const normalizedName = normalizeToolName(tool);
+      const normalizedName = tool;
       policies.push({ tool: normalizedName, permission: "allow" });
     }
   }

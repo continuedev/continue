@@ -115,4 +115,58 @@ describe("serve command", () => {
     // Skip for now to focus on removing top-level mocks
     expect(true).toBe(true);
   });
+
+  it("should pass the --org flag through to initializeServices", async () => {
+    // Import the services module to spy on
+    const servicesModule = await import("../services/index.js");
+    
+    // Create spy on initializeServices
+    const initializeServicesSpy = vi.spyOn(servicesModule, "initializeServices")
+      .mockResolvedValue({
+        config: { models: [] },
+        llmApi: { chat: vi.fn() },
+        model: { name: "test-model" }
+      } as any);
+
+    // Create spy on getService  
+    const getServiceSpy = vi.spyOn(servicesModule, "getService")
+      .mockResolvedValueOnce({
+        config: { name: "test" },
+        llmApi: { chat: vi.fn() },
+        model: { provider: "test", model: "test" }
+      } as any)
+      .mockResolvedValueOnce({
+        config: { name: "test" },
+        llmApi: { chat: vi.fn() },
+        model: { provider: "test", model: "test" }
+      } as any);
+
+    // Import serve after setting up spies
+    const { serve } = await import("./serve.js");
+
+    // Call serve with --org flag
+    const testOptions = {
+      org: "test-organization-slug",
+      timeout: "60",
+      port: "9000"
+    };
+
+    try {
+      await serve("test prompt", testOptions);
+    } catch (error) {
+      // Expected to fail due to incomplete mocking
+    }
+
+    // Check that initializeServices was called with organization option
+    expect(initializeServicesSpy).toHaveBeenCalled();
+    expect(initializeServicesSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationSlug: "test-organization-slug"
+      })
+    );
+
+    // Clean up spies
+    initializeServicesSpy.mockRestore();
+    getServiceSpy.mockRestore();
+  });
 });

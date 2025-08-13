@@ -4,12 +4,14 @@ import * as path from "path";
 
 import {
   AssistantUnrolled,
+  PackageIdentifier,
   RegistryClient,
   unrollAssistant,
 } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
+import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
 import {
   AuthConfig,
   getAccessToken,
@@ -17,8 +19,6 @@ import {
   getOrganizationId,
   isEnvironmentAuthConfig,
   updateConfigUri,
-  uriToPath,
-  uriToSlug,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
@@ -93,16 +93,16 @@ function determineConfigSource(
   }
 
   // Priority 3: Default resolution based on auth state
-  if (authConfig !== null) {
-    // Authenticated: try user assistants first
-    return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
-  } else {
+  if (authConfig === null) {
     // Unauthenticated: check for default config.yaml, then fallback to default agent
     const defaultConfigPath = path.join(env.continueHome, "config.yaml");
     if (fs.existsSync(defaultConfigPath)) {
       return { type: "default-config-yaml" };
     }
     return { type: "default-agent" };
+  } else {
+    // Authenticated: try user assistants first
+    return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
   }
 }
 
@@ -276,20 +276,23 @@ async function loadDefaultAgent(
 }
 
 /**
- * Loads a local YAML configuration file
+ * Common function to unroll an assistant with consistent configuration
  */
-async function loadConfigYaml(
-  filePath: string,
+async function unrollAssistantWithConfig(
+  packageIdentifier: PackageIdentifier,
   accessToken: string | null,
   organizationId: string | null,
   apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   const unrollResult = await unrollAssistant(
-    { filePath, uriType: "file" },
+    packageIdentifier,
     new RegistryClient({
       accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
-      rootPath: dirname(filePath),
+      rootPath:
+        packageIdentifier.uriType === "file"
+          ? dirname(packageIdentifier.filePath)
+          : undefined,
     }),
     {
       currentUserSlug: "",
@@ -303,7 +306,7 @@ async function loadConfigYaml(
 
   const errorDetails = unrollResult.errors;
   if (!unrollResult.config) {
-    throw new Error(`Failed to load config file:\n${errorDetails}`);
+    throw new Error(`Failed to load config:\n${errorDetails}`);
   } else if (errorDetails?.length) {
     const warnings =
       errorDetails?.length > 1
@@ -313,6 +316,23 @@ async function loadConfigYaml(
   }
 
   return unrollResult.config;
+}
+
+/**
+ * Loads a local YAML configuration file
+ */
+async function loadConfigYaml(
+  filePath: string,
+  accessToken: string | null,
+  organizationId: string | null,
+  apiClient: DefaultApiInterface,
+): Promise<AssistantUnrolled> {
+  return await unrollAssistantWithConfig(
+    { filePath, uriType: "file" },
+    accessToken,
+    organizationId,
+    apiClient,
+  );
 }
 
 /**
@@ -327,6 +347,19 @@ async function loadAssistantSlug(
   if (!ownerSlug || !packageSlug) {
     throw new Error(
       `Invalid assistant slug format. Expected "owner/package", got: ${slug}`,
+    );
+  }
+
+  // Unroll locally if not logged in
+  if (!(apiClient as any).configuration.apiKey) {
+    return await unrollAssistantWithConfig(
+      {
+        uriType: "slug",
+        fullSlug: { ownerSlug, packageSlug, versionSlug: "latest" },
+      },
+      null,
+      organizationId,
+      apiClient,
     );
   }
 

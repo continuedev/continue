@@ -20,10 +20,8 @@ import {
   ModelServiceState,
 } from "../services/types.js";
 import { saveSession } from "../session.js";
-import {
-  streamChatResponse,
-  type StreamCallbacks,
-} from "../streamChatResponse.js";
+import { streamChatResponse } from "../streamChatResponse.js";
+import { StreamCallbacks } from "../streamChatResponse.types.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { getToolDisplayName } from "../tools/index.js";
@@ -38,6 +36,7 @@ const execAsync = promisify(exec);
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  org?: string;
 }
 
 interface PendingPermission {
@@ -73,6 +72,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     toolPermissionOverrides: permissionOverrides,
     configPath: options.config,
     rules: options.rule,
+    organizationSlug: options.org,
     headless: true, // Skip onboarding in serve mode
   });
 
@@ -122,7 +122,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Initialize chat history
   const chatHistory: ChatCompletionMessageParam[] = [];
   const systemMessage = await constructSystemMessage(
-    "",
     options.rule,
     undefined,
     true,

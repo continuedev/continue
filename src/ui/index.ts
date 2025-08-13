@@ -9,20 +9,31 @@ import { AppRoot } from "./AppRoot.js";
 
 export { MarkdownRenderer } from "./MarkdownRenderer.js";
 
-export async function startTUIChat(
-  initialPrompt?: string,
-  resume?: boolean,
-  configPath?: string,
-  organizationSlug?: string,
-  additionalRules?: string[],
+interface StartTUIChatOptions {
+  initialPrompt?: string;
+  resume?: boolean;
+  configPath?: string;
+  organizationSlug?: string;
+  additionalRules?: string[];
   toolPermissionOverrides?: {
     allow?: string[];
     ask?: string[];
     exclude?: string[];
     mode?: PermissionMode;
-  },
-  skipOnboarding?: boolean,
-) {
+  };
+  skipOnboarding?: boolean;
+}
+
+export async function startTUIChat(options: StartTUIChatOptions) {
+  const {
+    initialPrompt,
+    resume,
+    configPath,
+    organizationSlug,
+    additionalRules,
+    toolPermissionOverrides,
+    skipOnboarding,
+  } = options;
   // Initialize services only if not already done (skipOnboarding means already initialized)
   if (!skipOnboarding) {
     initializeServices({

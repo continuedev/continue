@@ -7,9 +7,12 @@ import type { PermissionMode } from "../permissions/types.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
-import { logger } from "../util/logger.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
+import {
+  handleControlKeys,
+  updateTextBufferState,
+} from "./hooks/useUserInput.js";
 import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
@@ -92,47 +95,52 @@ const UserInput: React.FC<UserInputProps> = ({
   // Update slash command UI state based on input
   const updateSlashCommandState = (text: string, cursor: number) => {
     // Only show slash commands if slash is the very first character
-    if (text.trimStart().startsWith("/")) {
-      const trimmedText = text.trimStart();
-      const beforeCursor = trimmedText.slice(
-        0,
-        cursor - (text.length - trimmedText.length),
-      );
-
-      // Only show if cursor is after the slash and before any whitespace
-      if (beforeCursor.length > 0 && beforeCursor.startsWith("/")) {
-        const afterSlash = beforeCursor.slice(1);
-
-        if (!afterSlash.includes(" ") && !afterSlash.includes("\n")) {
-          // We're in a slash command context - check if it's a complete command
-          const allCommands = getSlashCommands();
-          const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
-
-          // Hide selector if we have an exact match and there's a space after cursor
-          if (exactMatch) {
-            const restOfText = text.slice(cursor);
-            // Only hide if there's a space or newline immediately after cursor
-            // Don't hide just because we're at the end - user might want to see the suggestion
-            if (restOfText.startsWith(" ") || restOfText.startsWith("\n")) {
-              setShowSlashCommands(false);
-              return;
-            }
-          }
-
-          // Show selector for partial matches
-          setShowSlashCommands(true);
-          setSlashCommandFilter(afterSlash);
-          setSelectedCommandIndex(0);
-          setShowFileSearch(false);
-        } else {
-          setShowSlashCommands(false);
-        }
-      } else {
-        setShowSlashCommands(false);
-      }
-    } else {
+    if (!text.trimStart().startsWith("/")) {
       setShowSlashCommands(false);
+      return;
     }
+
+    const trimmedText = text.trimStart();
+    const beforeCursor = trimmedText.slice(
+      0,
+      cursor - (text.length - trimmedText.length),
+    );
+
+    // Only show if cursor is after the slash and before any whitespace
+    if (beforeCursor.length === 0 || !beforeCursor.startsWith("/")) {
+      setShowSlashCommands(false);
+      return;
+    }
+
+    const afterSlash = beforeCursor.slice(1);
+
+    // Check if we have whitespace in the command
+    if (afterSlash.includes(" ") || afterSlash.includes("\n")) {
+      setShowSlashCommands(false);
+      return;
+    }
+
+    // We're in a slash command context - check if it's a complete command
+    const allCommands = getSlashCommands();
+    const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
+
+    // Hide selector if we have an exact match and there's a space after cursor
+    if (exactMatch) {
+      const restOfText = text.slice(cursor);
+      // Only hide if there's a space or newline immediately after cursor
+      const shouldHide =
+        restOfText.startsWith(" ") || restOfText.startsWith("\n");
+      if (shouldHide) {
+        setShowSlashCommands(false);
+        return;
+      }
+    }
+
+    // Show selector for partial matches
+    setShowSlashCommands(true);
+    setSlashCommandFilter(afterSlash);
+    setSelectedCommandIndex(0);
+    setShowFileSearch(false);
   };
 
   // Update file search UI state based on input
@@ -147,21 +155,21 @@ const UserInput: React.FC<UserInputProps> = ({
     const beforeCursor = text.slice(0, cursor);
     const lastAtIndex = beforeCursor.lastIndexOf("@");
 
-    if (lastAtIndex !== -1) {
+    if (lastAtIndex === -1) {
+      setShowFileSearch(false);
+    } else {
       // Check if there's any whitespace between the last @ and cursor
       const afterAt = beforeCursor.slice(lastAtIndex + 1);
 
-      if (!afterAt.includes(" ") && !afterAt.includes("\n")) {
+      if (afterAt.includes(" ") || afterAt.includes("\n")) {
+        setShowFileSearch(false);
+      } else {
         // We're in a file search context
         setShowFileSearch(true);
         setFileSearchFilter(afterAt);
         setSelectedFileIndex(0);
         setShowSlashCommands(false);
-      } else {
-        setShowFileSearch(false);
       }
-    } else {
-      setShowFileSearch(false);
     }
   };
 
@@ -240,39 +248,163 @@ const UserInput: React.FC<UserInputProps> = ({
     }
   };
 
+  const handleSlashCommandNavigation = (key: any): boolean => {
+    const filteredCommands = getFilteredCommands();
+
+    if (key.upArrow) {
+      setSelectedCommandIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredCommands.length - 1,
+      );
+      return true;
+    }
+
+    if (key.downArrow) {
+      setSelectedCommandIndex((prev) =>
+        prev < filteredCommands.length - 1 ? prev + 1 : 0,
+      );
+      return true;
+    }
+
+    if ((key.return && !key.shift) || key.tab) {
+      if (filteredCommands.length > 0) {
+        selectSlashCommand(filteredCommands[selectedCommandIndex].name);
+      }
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleFileSearchNavigation = (key: any): boolean => {
+    if (key.upArrow) {
+      setSelectedFileIndex((prev) =>
+        prev > 0 ? prev - 1 : Math.max(0, Math.min(currentFiles.length - 1, 9)),
+      );
+      return true;
+    }
+
+    if (key.downArrow) {
+      setSelectedFileIndex((prev) =>
+        prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0,
+      );
+      return true;
+    }
+
+    if ((key.return && !key.shift) || key.tab) {
+      if (currentFiles.length > 0 && selectedFileIndex < currentFiles.length) {
+        selectFile(currentFiles[selectedFileIndex].path);
+      }
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleHistoryNavigation = (key: any): boolean => {
+    if (!showSlashCommands && !showFileSearch) {
+      if (key.upArrow) {
+        const historyEntry = inputHistory.navigateUp(inputText);
+        if (historyEntry !== null) {
+          textBuffer.setText(historyEntry);
+          textBuffer.setCursor(historyEntry.length);
+          setInputText(historyEntry);
+          setCursorPosition(historyEntry.length);
+        }
+        return true;
+      }
+
+      if (key.downArrow) {
+        const historyEntry = inputHistory.navigateDown();
+        if (historyEntry !== null) {
+          textBuffer.setText(historyEntry);
+          textBuffer.setCursor(historyEntry.length);
+          setInputText(historyEntry);
+          setCursorPosition(historyEntry.length);
+        }
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleEnterKey = (key: any): boolean => {
+    if (key.return && !key.shift) {
+      if (textBuffer.text.trim() && !isWaitingForResponse) {
+        const submittedText = textBuffer.text.trim();
+        inputHistory.addEntry(submittedText);
+        onSubmit(submittedText);
+        textBuffer.clear();
+        setInputText("");
+        setCursorPosition(0);
+        setShowSlashCommands(false);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const handleNewLine = (input: string, key: any): boolean => {
+    if (input === "\r" || input === "\\\r") {
+      const handled = textBuffer.handleInput("\n", key);
+      if (handled) {
+        const newText = textBuffer.text;
+        const newCursor = textBuffer.cursor;
+        setInputText(newText);
+        setCursorPosition(newCursor);
+        updateSlashCommandState(newText, newCursor);
+        updateFileSearchState(newText, newCursor);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const handleEscapeKey = (key: any): boolean => {
+    if (!key.escape) return false;
+
+    // Handle escape key to interrupt streaming
+    if (isWaitingForResponse && onInterrupt) {
+      onInterrupt();
+      return true;
+    }
+
+    // Handle escape key to close slash command UI
+    if (showSlashCommands && inputMode) {
+      setShowSlashCommands(false);
+      return true;
+    }
+
+    // Handle escape key to close file search UI
+    if (showFileSearch && inputMode) {
+      setShowFileSearch(false);
+      return true;
+    }
+
+    return false;
+  };
+
   useInput((input, key) => {
     // Don't handle any input when disabled
     if (disabled) {
       return;
     }
-    if (key.ctrl && (input === "c" || input === "d")) {
-      exit();
+
+    // Handle control keys
+    if (
+      handleControlKeys({
+        input,
+        key,
+        exit,
+        showSlashCommands,
+        showFileSearch,
+        cycleModes,
+      })
+    ) {
       return;
     }
 
-    // Handle Shift+Tab to cycle through modes
-    if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
-      cycleModes().catch((error) => {
-        logger.error("Failed to cycle modes:", error);
-      });
-      return;
-    }
-
-    // Handle escape key to interrupt streaming
-    if (key.escape && isWaitingForResponse && onInterrupt) {
-      onInterrupt();
-      return;
-    }
-
-    // Handle escape key to close slash command UI
-    if (key.escape && showSlashCommands && inputMode) {
-      setShowSlashCommands(false);
-      return;
-    }
-
-    // Handle escape key to close file search UI
-    if (key.escape && showFileSearch && inputMode) {
-      setShowFileSearch(false);
+    // Handle escape key variations
+    if (handleEscapeKey(key)) {
       return;
     }
 
@@ -287,127 +419,30 @@ const UserInput: React.FC<UserInputProps> = ({
 
     // Handle slash command navigation
     if (showSlashCommands) {
-      const filteredCommands = getFilteredCommands();
-
-      if (key.upArrow) {
-        setSelectedCommandIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredCommands.length - 1,
-        );
-        return;
-      }
-
-      if (key.downArrow) {
-        setSelectedCommandIndex((prev) =>
-          prev < filteredCommands.length - 1 ? prev + 1 : 0,
-        );
-        return;
-      }
-
-      if (key.return && !key.shift) {
-        if (filteredCommands.length > 0) {
-          selectSlashCommand(filteredCommands[selectedCommandIndex].name);
-        }
-        return;
-      }
-
-      if (key.tab) {
-        if (filteredCommands.length > 0) {
-          selectSlashCommand(filteredCommands[selectedCommandIndex].name);
-        }
+      if (handleSlashCommandNavigation(key)) {
         return;
       }
     }
 
     // Handle file search navigation
     if (showFileSearch) {
-      if (key.upArrow) {
-        setSelectedFileIndex((prev) =>
-          prev > 0
-            ? prev - 1
-            : Math.max(0, Math.min(currentFiles.length - 1, 9)),
-        );
-        return;
-      }
-
-      if (key.downArrow) {
-        setSelectedFileIndex((prev) =>
-          prev < Math.min(currentFiles.length - 1, 9) ? prev + 1 : 0,
-        );
-        return;
-      }
-
-      if (key.return && !key.shift) {
-        if (
-          currentFiles.length > 0 &&
-          selectedFileIndex < currentFiles.length
-        ) {
-          selectFile(currentFiles[selectedFileIndex].path);
-        }
-        return;
-      }
-
-      if (key.tab) {
-        if (
-          currentFiles.length > 0 &&
-          selectedFileIndex < currentFiles.length
-        ) {
-          selectFile(currentFiles[selectedFileIndex].path);
-        }
+      if (handleFileSearchNavigation(key)) {
         return;
       }
     }
 
-    // Handle input history navigation (only when not in slash command or file search mode)
-    if (!showSlashCommands && !showFileSearch) {
-      if (key.upArrow) {
-        const historyEntry = inputHistory.navigateUp(inputText);
-        if (historyEntry !== null) {
-          textBuffer.setText(historyEntry);
-          textBuffer.setCursor(historyEntry.length);
-          setInputText(historyEntry);
-          setCursorPosition(historyEntry.length);
-        }
-        return;
-      }
-
-      if (key.downArrow) {
-        const historyEntry = inputHistory.navigateDown();
-        if (historyEntry !== null) {
-          textBuffer.setText(historyEntry);
-          textBuffer.setCursor(historyEntry.length);
-          setInputText(historyEntry);
-          setCursorPosition(historyEntry.length);
-        }
-        return;
-      }
-    }
-
-    // Handle Enter key (regular enter for submit)
-    if (key.return && !key.shift) {
-      if (textBuffer.text.trim() && !isWaitingForResponse) {
-        const submittedText = textBuffer.text.trim();
-        inputHistory.addEntry(submittedText);
-        onSubmit(submittedText);
-        textBuffer.clear();
-        setInputText("");
-        setCursorPosition(0);
-        setShowSlashCommands(false);
-      }
-      // Note: Enter key is already blocked during streaming by the inputMode check above
+    // Handle input history navigation
+    if (handleHistoryNavigation(key)) {
       return;
     }
 
-    // Handle Shift+Enter (carriage return character) for new line
-    if (input === "\r" || input === "\\\r") {
-      const handled = textBuffer.handleInput("\n", key);
-      if (handled) {
-        const newText = textBuffer.text;
-        const newCursor = textBuffer.cursor;
-        setInputText(newText);
-        setCursorPosition(newCursor);
-        updateSlashCommandState(newText, newCursor);
-        updateFileSearchState(newText, newCursor);
-      }
+    // Handle Enter key
+    if (handleEnterKey(key)) {
+      return;
+    }
+
+    // Handle Shift+Enter (new line)
+    if (handleNewLine(input, key)) {
       return;
     }
 
@@ -415,17 +450,15 @@ const UserInput: React.FC<UserInputProps> = ({
     const handled = textBuffer.handleInput(input, key);
 
     // Update React state to trigger re-render
-    if (handled) {
-      const newText = textBuffer.text;
-      const newCursor = textBuffer.cursor;
-      setInputText(newText);
-      setCursorPosition(newCursor);
-      updateSlashCommandState(newText, newCursor);
-      updateFileSearchState(newText, newCursor);
-
-      // Reset history navigation when user starts typing
-      inputHistory.resetNavigation();
-    }
+    updateTextBufferState({
+      handled,
+      textBuffer,
+      setInputText,
+      setCursorPosition,
+      updateSlashCommandState,
+      updateFileSearchState,
+      inputHistory,
+    });
   });
 
   const renderInputText = () => {

@@ -1,3 +1,4 @@
+import { slugToUri } from "./uriUtils.js";
 import {
   AuthenticatedConfig,
   EnvironmentAuthConfig,
@@ -6,7 +7,6 @@ import {
   getOrganizationId,
   isAuthenticatedConfig,
   isEnvironmentAuthConfig,
-  slugToUri,
 } from "./workos.js";
 
 describe("workos utility functions", () => {

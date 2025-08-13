@@ -8,13 +8,14 @@ import type { ToolPermissionServiceState } from "../services/ToolPermissionServi
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
+import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { formatToolArgument } from "./formatters.js";
 import { listFilesTool } from "./listFiles.js";
+import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { searchAndReplaceInFileTool } from "./searchAndReplace/index.js";
 import { searchCodeTool } from "./searchCode.js";
 import {
   type Tool,
@@ -30,8 +31,10 @@ export type { Tool, ToolCall, ToolParameters };
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
+  editTool,
+  multiEditTool,
   writeFileTool,
-  searchAndReplaceInFileTool,
+  // searchAndReplaceInFileTool,
   listFilesTool,
   searchCodeTool,
   runTerminalCommandTool,
@@ -157,15 +160,12 @@ export async function executeToolCall(
     );
     const duration = Date.now() - startTime;
 
-    telemetryService.logToolResult(
-      toolCall.name,
-      true,
-      duration,
-      undefined, // no error
-      undefined, // no decision
-      undefined, // no source
-      JSON.stringify(toolCall.arguments),
-    );
+    telemetryService.logToolResult({
+      toolName: toolCall.name,
+      success: true,
+      durationMs: duration,
+      toolParameters: JSON.stringify(toolCall.arguments),
+    });
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
@@ -177,15 +177,13 @@ export async function executeToolCall(
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    telemetryService.logToolResult(
-      toolCall.name,
-      false,
-      duration,
-      errorMessage,
-      undefined, // no decision
-      undefined, // no source
-      JSON.stringify(toolCall.arguments),
-    );
+    telemetryService.logToolResult({
+      toolName: toolCall.name,
+      success: false,
+      durationMs: duration,
+      error: errorMessage,
+      toolParameters: JSON.stringify(toolCall.arguments),
+    });
 
     return `Error executing tool "${toolCall.name}": ${errorMessage}`;
   }

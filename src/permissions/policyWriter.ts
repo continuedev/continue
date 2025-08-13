@@ -1,6 +1,6 @@
-import * as fs from "fs";
+import fs from "fs";
 
-import * as yaml from "yaml";
+import YAML from "yaml";
 
 import { logger } from "../util/logger.js";
 
@@ -9,7 +9,6 @@ import {
   PermissionsYamlConfig,
   loadPermissionsYaml,
 } from "./permissionsYamlLoader.js";
-import { normalizeToolName, getDisplayName } from "./toolNameMapping.js";
 
 /**
  * Generates a policy rule for a given tool call
@@ -17,7 +16,7 @@ import { normalizeToolName, getDisplayName } from "./toolNameMapping.js";
  * For Bash tool, generates command-specific patterns like "Bash(ls*)"
  */
 export function generatePolicyRule(toolName: string, toolArgs: any): string {
-  const normalizedName = normalizeToolName(toolName);
+  const normalizedName = toolName;
 
   // For Bash tool, create command-specific policies
   if (normalizedName === "Bash" && toolArgs?.command) {
@@ -32,7 +31,7 @@ export function generatePolicyRule(toolName: string, toolArgs: any): string {
   }
 
   // For all other tools, return the display name
-  return getDisplayName(normalizedName);
+  return normalizedName;
 }
 
 /**
@@ -49,11 +48,13 @@ export async function addPolicyToYaml(policyRule: string): Promise<void> {
     }
 
     // Add the policy if it doesn't already exist
-    if (!config.allow.includes(policyRule)) {
+    if (config.allow.includes(policyRule)) {
+      logger.debug(`Policy rule already exists: ${policyRule}`);
+    } else {
       config.allow.push(policyRule);
 
       // Write the updated config back to the file
-      const yamlContent = yaml.stringify(config);
+      const yamlContent = YAML.stringify(config);
 
       // Add header comment
       const finalContent = `# Continue CLI Permissions Configuration
@@ -64,8 +65,6 @@ ${yamlContent}`;
 
       await fs.promises.writeFile(PERMISSIONS_YAML_PATH, finalContent, "utf-8");
       logger.info(`Added policy rule to permissions.yaml: ${policyRule}`);
-    } else {
-      logger.debug(`Policy rule already exists: ${policyRule}`);
     }
   } catch (error) {
     logger.error("Failed to add policy to permissions.yaml", {

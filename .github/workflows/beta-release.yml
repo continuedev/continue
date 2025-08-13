@@ -51,6 +51,15 @@ jobs:
           DATE_SUFFIX=$(date -u +%Y%m%d)
           BETA_VERSION="${CURRENT_VERSION}-beta.${DATE_SUFFIX}"
 
+          # Check if this version already exists on npm
+          if npm view @continuedev/cli@$BETA_VERSION version --silent >/dev/null 2>&1; then
+            echo "Version $BETA_VERSION already exists, adding timestamp"
+            # Add hour and minute to make it unique
+            TIMESTAMP_SUFFIX=$(date -u +%Y%m%d.%H%M)
+            BETA_VERSION="${CURRENT_VERSION}-beta.${TIMESTAMP_SUFFIX}"
+            echo "Using timestamped version: $BETA_VERSION"
+          fi
+
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "beta_version=$BETA_VERSION" >> $GITHUB_OUTPUT
           echo "date_suffix=$DATE_SUFFIX" >> $GITHUB_OUTPUT
