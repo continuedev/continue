@@ -43,7 +43,7 @@ jobs:
           node-version: 20
 
       - name: Install Continue CLI
-        run: npm install -g @continuedev/cli@latest
+        run: npm install -g @continuedev/cli@1.4.25
 
       - name: Build Inline Review Prompt
         run: |
@@ -54,29 +54,29 @@ jobs:
             # For issue_comment event on a PR
             PR_NUMBER="${{ github.event.issue.number }}"
           fi
-          
+
           # Get PR files with line numbers
           gh api repos/${{ github.repository }}/pulls/$PR_NUMBER/files > pr_files.json
-          
+
           # Get PR diff with context
           gh pr diff $PR_NUMBER --color=never > pr_diff.txt
-          
+
           # Create review prompt for inline comments
           cat > inline_review_prompt.txt << 'EOF'
           You are conducting a detailed inline code review for a pull request. 
-          
+
           Your task is to analyze the code changes and generate specific, actionable review comments for individual lines or small sections of code.
-          
+
           Below is the PR diff:
-          
+
           EOF
-          
+
           cat pr_diff.txt >> inline_review_prompt.txt
-          
+
           cat >> inline_review_prompt.txt << 'EOF'
-          
+
           Please analyze these changes and provide inline review comments in the following JSON format:
-          
+
           {
             "review_summary": "Overall assessment of the PR",
             "comments": [
@@ -88,13 +88,13 @@ jobs:
               }
             ]
           }
-          
+
           Focus on:
           1. **Critical Issues**: Security vulnerabilities, bugs that will break functionality
           2. **High Priority**: Performance problems, incorrect logic, missing error handling
           3. **Medium Priority**: Code style violations, potential edge cases, unclear code
           4. **Low Priority**: Suggestions for improvement, refactoring opportunities
-          
+
           Guidelines for comments:
           - Be specific and actionable
           - Reference the exact line number from the diff
@@ -102,7 +102,7 @@ jobs:
           - Suggest concrete improvements when pointing out issues
           - Only comment on actual problems or important improvements
           - Use "RIGHT" for new/modified lines, "LEFT" for context about removed lines
-          
+
           Important: 
           - Output ONLY valid JSON, no additional text
           - Ensure line numbers match the actual diff
@@ -115,14 +115,14 @@ jobs:
       - name: Run Continue CLI Inline Review
         run: |
           echo "Running Continue CLI for inline review..."
-          
+
           # Run the CLI and capture JSON output
           cat inline_review_prompt.txt | cn --readonly --format json --org continuedev --config continuedev/review-bot -p > inline_review.json
-          
+
           # Log the output for debugging
           echo "Continue CLI output:"
           cat inline_review.json
-          
+
           # Validate JSON output
           if ! jq empty inline_review.json 2>/dev/null; then
             echo "Invalid JSON output from Continue CLI"
@@ -136,7 +136,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             try {
               // Read the review output
               let reviewData;
