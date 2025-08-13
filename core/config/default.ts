@@ -8,17 +8,11 @@ export const defaultContextProvidersVsCode: NonNullable<
   { provider: "diff" },
   { provider: "terminal" },
   { provider: "problems" },
-  { provider: "folder" },
-  { provider: "codebase" },
 ];
 
 export const defaultContextProvidersJetBrains: NonNullable<
   ConfigYaml["context"]
->[number][] = [
-  { provider: "diff" },
-  { provider: "folder" },
-  { provider: "codebase" },
-];
+>[number][] = [{ provider: "diff" }];
 
 export const defaultConfig: ConfigYaml = {
   name: "Local Assistant",
