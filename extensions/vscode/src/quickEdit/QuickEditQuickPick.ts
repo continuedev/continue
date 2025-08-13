@@ -352,9 +352,9 @@ export class QuickEdit {
     label: QuickEditInitialItemLabels | undefined;
     value: string | undefined;
   }> {
-    const modelTitle = await this.getCurModel();
+    const model = await this.getCurModel();
 
-    if (!modelTitle) {
+    if (!model) {
       this.ide.showToast("error", "Please configure a model to use Quick Edit");
       return { label: undefined, value: undefined };
     }

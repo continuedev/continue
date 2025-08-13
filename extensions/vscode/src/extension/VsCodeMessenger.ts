@@ -240,7 +240,7 @@ export class VsCodeMessenger {
           prompt: stripImages(prompt),
           completion: fileAfterEdit ?? "",
           modelProvider: model.underlyingProviderName,
-          modelTitle: model.title ?? "",
+          modelName: model.title ?? "",
           filepath: msg.data.range.filepath,
         },
       });
