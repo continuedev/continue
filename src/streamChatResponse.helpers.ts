@@ -9,11 +9,11 @@ import { StreamCallbacks } from "./streamChatResponse.types.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { calculateTokenCost } from "./telemetry/utils.js";
 import {
+  executeToolCall,
   getAllBuiltinTools,
   getAvailableTools,
   Tool,
   validateToolCallArgsPresent,
-  executeToolCall,
 } from "./tools/index.js";
 import { PreprocessedToolCall, ToolCall } from "./tools/types.js";
 import { logger } from "./util/logger.js";
@@ -99,6 +99,10 @@ export async function requestUserPermission(
   // Request permission using the proper API
   const permissionResult =
     await toolPermissionManager.requestPermission(toolCallRequest);
+
+  // Clean up listener in case the condition above was never met
+  // This is a safety net to ensure no listeners are left behind
+  toolPermissionManager.off("permissionRequested", handlePermissionRequested);
 
   return permissionResult.approved;
 }
