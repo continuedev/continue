@@ -67,6 +67,29 @@ jobs:
 
           Your task is to analyze the code changes and generate specific, actionable review comments for individual lines or small sections of code.
 
+          CRITICAL: Understanding "position" for GitHub PR comments:
+          The "position" field is the line number within the diff, NOT the file line number.
+          
+          Example diff and position counting:
+          ```
+          diff --git a/src/app.js b/src/app.js
+          index abc123..def456 100644
+          --- a/src/app.js
+          +++ b/src/app.js
+          @@ -10,4 +10,6 @@ function example() {        <-- This is the @@ header, not counted
+              console.log("context");                <-- position 1 (first line after @@)
+          -   const old = "remove this";             <-- position 2
+          +   const new = "add this";                <-- position 3  
+          +   const risky = eval(userInput);         <-- position 4 (comment here about security issue!)
+              return result;                          <-- position 5
+          +   console.log("done");                    <-- position 6
+          @@ -20,3 +22,4 @@ function another() {       <-- New @@ header, restart counting!
+              let x = 1;                              <-- position 1 (for this hunk)
+          +   let y = 2;                              <-- position 2 (for this hunk)
+          ```
+          
+          To comment on the risky eval line above, use: {"path": "src/app.js", "position": 4, "body": "Avoid using eval..."}
+
           Below is the PR diff:
 
           EOF
@@ -82,8 +105,7 @@ jobs:
             "comments": [
               {
                 "path": "path/to/file.js",
-                "line": 42,
-                "side": "RIGHT",
+                "position": 4,
                 "body": "Brief, specific comment about this line or section"
               }
             ]
@@ -97,15 +119,17 @@ jobs:
 
           Guidelines for comments:
           - Be specific and actionable
-          - Reference the exact line number from the diff
+          - Count position starting from 1 after each @@ header line
+          - Include ALL lines in count: context lines, additions (+), and deletions (-)
+          - Reset position count to 1 after each new @@ header
           - Keep comments concise but informative
           - Suggest concrete improvements when pointing out issues
           - Only comment on actual problems or important improvements
-          - Use "RIGHT" for new/modified lines, "LEFT" for context about removed lines
 
           Important: 
           - Output ONLY valid JSON, no additional text
-          - Ensure line numbers match the actual diff
+          - Position is counted within the diff, NOT the file line number
+          - Only comment on changed lines (+ or - prefix)
           - Comment on the most important issues first
           - Limit to maximum 20 most relevant comments
           EOF
@@ -170,16 +194,23 @@ jobs:
               
               // Prepare review comments - filter out comments without required fields
               const allComments = reviewData.comments || [];
-              const validComments = allComments.filter(comment => comment.line && comment.path && comment.body && comment.side);
+              const validComments = allComments.filter(comment => 
+                comment.position && 
+                comment.path && 
+                comment.body &&
+                typeof comment.position === 'number' &&
+                comment.position > 0
+              );
               
               if (validComments.length < allComments.length) {
-                console.log(`Filtered out ${allComments.length - validComments.length} comments due to missing line, path, body, or side`);
+                console.log(`Filtered out ${allComments.length - validComments.length} comments due to missing/invalid position, path, or body`);
+                const invalidComments = allComments.filter(c => !validComments.includes(c));
+                console.log('Invalid comments:', JSON.stringify(invalidComments, null, 2));
               }
               
               const comments = validComments.map(comment => ({
                 path: comment.path,
-                line: comment.line,
-                side: comment.side,
+                position: comment.position,
                 body: comment.body
               }));
               
