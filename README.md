@@ -47,7 +47,7 @@ Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Con
 
 ## Edit
 
-[Edit](/features/edit/quick-start) to modify code section without leaving your current file
+[Edit](/features/edit/quick-start) to modify a code section without leaving your current file
 
 ![edit](docs/images/edit.gif)
 
