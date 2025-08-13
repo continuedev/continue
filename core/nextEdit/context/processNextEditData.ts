@@ -61,6 +61,7 @@ export const processNextEditData = async ({
   //   undefined;
 
   const modelName = "Codestral";
+  const modelProvider = "mistral";
   const maxPromptTokens = randomNumberBetween(500, 12000);
 
   const autocompleteContext = await getAutocompleteContext(
@@ -124,6 +125,8 @@ export const processNextEditData = async ({
         beforeCursorPos: cursorPosBeforeEdit,
         afterCursorPos: cursorPosAfterPrevEdit,
         context: autocompleteContext,
+        modelProvider,
+        modelName,
       },
     });
   }
