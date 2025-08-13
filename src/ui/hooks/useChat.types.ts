@@ -59,5 +59,4 @@ export interface SlashCommandResult {
   openModelSelector?: boolean;
   openMcpSelector?: boolean;
   compact?: boolean;
-  model?: string;
 }

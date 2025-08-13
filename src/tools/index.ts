@@ -125,7 +125,7 @@ export async function getAvailableTools() {
   );
   const tools = mcpState.mcpService?.getTools() ?? [];
   const mcpTools: Tool[] =
-    tools.map((t: any) => ({
+    tools.map((t) => ({
       name: t.name,
       displayName: t.name.replace("mcp__", "").replace("ide__", ""),
       description: t.description ?? "",

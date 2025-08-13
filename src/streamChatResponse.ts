@@ -135,16 +135,19 @@ export function getAllTools() {
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
   // Check if the ToolPermissionService is ready
-  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+  const permissionsServiceResult = getServiceSync<ToolPermissionServiceState>(
     SERVICE_NAMES.TOOL_PERMISSIONS,
   );
 
   let allowedToolNames: string[];
-  if (serviceResult.state === "ready" && serviceResult.value) {
+  if (
+    permissionsServiceResult.state === "ready" &&
+    permissionsServiceResult.value
+  ) {
     // Filter out excluded tools based on permissions
     allowedToolNames = filterExcludedTools(
       allToolNames,
-      serviceResult.value.permissions,
+      permissionsServiceResult.value.permissions,
     );
   } else {
     // Service not ready - this is a critical error since tools should only be

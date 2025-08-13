@@ -94,8 +94,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
         </>
       )}
 
-      {/* Decided this is noisy for now */}
-      {/* // MCP Servers
+      {/* MCP Servers */}
       {config.mcpServers?.length && (
         <>
           <Text color="blue">MCP Servers:</Text>
@@ -106,7 +105,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
           ))}
           <Text> </Text>
         </>
-      )} */}
+      )}
     </Box>
   );
 };

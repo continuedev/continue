@@ -108,11 +108,11 @@ describe('getAllTools - Tool Filtering', () => {
     expect(toolNames).toContain('Edit');
   });
 
-  test('should throw error when ToolPermissionService is not initialized', () => {
+  test('should throw error when MCP service is not initialized', () => {
     // Don't initialize services - this should cause getAllTools to throw
     expect(() => {
       getAllTools();
-    }).toThrow('ToolPermissionService not initialized. Services must be initialized before requesting tools.');
+    }).toThrow('MCP Service not initialized');
   });
 
   test('should respect explicit exclude in normal mode', async () => {
