@@ -82,8 +82,7 @@ jobs:
             "comments": [
               {
                 "path": "path/to/file.js",
-                "line": 42,
-                "side": "RIGHT",
+                "position": 42,
                 "body": "Brief, specific comment about this line or section"
               }
             ]
@@ -97,15 +96,14 @@ jobs:
 
           Guidelines for comments:
           - Be specific and actionable
-          - Reference the exact line number from the diff
+          - Reference the exact position in the diff (position is the line number in the diff, not the file)
           - Keep comments concise but informative
           - Suggest concrete improvements when pointing out issues
           - Only comment on actual problems or important improvements
-          - Use "RIGHT" for new/modified lines, "LEFT" for context about removed lines
 
           Important: 
           - Output ONLY valid JSON, no additional text
-          - Ensure line numbers match the actual diff
+          - Position numbers should correspond to lines in the diff output (starting from 1)
           - Comment on the most important issues first
           - Limit to maximum 20 most relevant comments
           EOF
@@ -168,13 +166,19 @@ jobs:
               
               const commitSha = pr.head.sha;
               
-              // Prepare review comments
-              const comments = reviewData.comments?.map(comment => ({
+              // Prepare review comments - filter out comments without valid positions
+              const allComments = reviewData.comments || [];
+              const validComments = allComments.filter(comment => comment.position && comment.path && comment.body);
+              
+              if (validComments.length < allComments.length) {
+                console.log(`Filtered out ${allComments.length - validComments.length} comments due to missing position, path, or body`);
+              }
+              
+              const comments = validComments.map(comment => ({
                 path: comment.path,
-                line: comment.line || 1,
-                side: comment.side || 'RIGHT',
+                position: comment.position,
                 body: comment.body
-              })) || [];
+              }));
               
               // Create the review
               if (comments.length > 0) {
