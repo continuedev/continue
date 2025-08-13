@@ -123,6 +123,7 @@ const StyledMarkdown = styled.div<{
 `;
 
 interface StyledMarkdownPreviewProps {
+  showToolCallStatusIcon?: boolean;
   source?: string;
   className?: string;
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
@@ -300,6 +301,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           return (
             <StepContainerPreToolbar
+              showToolCallStatusIcon={props.showToolCallStatusIcon}
               codeBlockContent={codeBlockContent}
               itemIndex={itemIndexRef.current}
               codeBlockIndex={codeBlockIndex}
@@ -357,6 +359,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
+
   return (
     <StyledMarkdown
       fontSize={getFontSize()}
