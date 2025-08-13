@@ -13,7 +13,7 @@ export const editInteractionEventSchema_0_2_0 =
     // other
     prompt: true,
     completion: true,
-    modelTitle: true,
+    modelName: true,
     modelProvider: true,
     filepath: true,
   });
