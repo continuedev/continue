@@ -108,12 +108,12 @@ describe("mercuryCoderNextEdit", () => {
     it("should return the edit diff history unchanged", () => {
       const diffHistory =
         "diff --git a/file.ts b/file.ts\n==============================\n@@ -1,3 +1,4 @@";
-      const result = editHistoryBlock(diffHistory);
+      const result = editHistoryBlock([diffHistory]);
       expect(result).toBe("@@ -1,3 +1,4 @@");
     });
 
     it("should handle empty diff history", () => {
-      const result = editHistoryBlock("");
+      const result = editHistoryBlock([]);
       expect(result).toBe("");
     });
   });

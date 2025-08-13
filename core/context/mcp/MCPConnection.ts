@@ -1,12 +1,16 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import {
+  SSEClientTransport,
+  SseError,
+} from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 
 import {
+  IDE,
   MCPConnectionStatus,
   MCPOptions,
   MCPPrompt,
@@ -16,6 +20,7 @@ import {
   MCPTool,
 } from "../..";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
+import { getOauthToken } from "./MCPOauth";
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
@@ -30,10 +35,23 @@ const WINDOWS_BATCH_COMMANDS = [
   "bunx",
 ];
 
+function is401Error(error: unknown) {
+  return (
+    (error instanceof SseError && error.code === 401) ||
+    (error instanceof Error && error.message.includes("401")) ||
+    (error instanceof Error && error.message.includes("Unauthorized"))
+  );
+}
+
+export type MCPExtras = {
+  ide: IDE;
+};
+
 class MCPConnection {
   public client: Client;
   public abortController: AbortController;
   public status: MCPConnectionStatus = "not-connected";
+  public isProtectedResource = false;
   public errors: string[] = [];
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
@@ -46,7 +64,10 @@ class MCPConnection {
     stderr: "",
   };
 
-  constructor(public options: MCPOptions) {
+  constructor(
+    public options: MCPOptions,
+    public extras?: MCPExtras,
+  ) {
     // Don't construct transport in constructor to avoid blocking
     this.transport = {} as Transport; // Will be set in connectClient
 
@@ -78,6 +99,7 @@ class MCPConnection {
       resourceTemplates: this.resourceTemplates,
       tools: this.tools,
       status: this.status,
+      isProtectedResource: this.isProtectedResource,
     };
   }
 
@@ -105,6 +127,26 @@ class MCPConnection {
 
     this.abortController.abort();
     this.abortController = new AbortController();
+
+    // currently support oauth for sse transports only
+    if (this.options.transport.type === "sse") {
+      if (!this.options.transport.requestOptions) {
+        this.options.transport.requestOptions = {
+          headers: {},
+        };
+      }
+      const accessToken = await getOauthToken(
+        this.options.transport.url,
+        this.extras?.ide!,
+      );
+      if (accessToken) {
+        this.isProtectedResource = true;
+        this.options.transport.requestOptions.headers = {
+          ...this.options.transport.requestOptions.headers,
+          Authorization: `Bearer ${accessToken}`,
+        };
+      }
+    }
 
     this.connectionPromise = Promise.race([
       // If aborted by a refresh or other, cancel and don't do anything
@@ -242,6 +284,10 @@ class MCPConnection {
             } else {
               errorMessage += "Error: " + error.message;
             }
+          }
+
+          if (is401Error(error)) {
+            this.isProtectedResource = true;
           }
 
           // Include stdio output if available for stdio transport

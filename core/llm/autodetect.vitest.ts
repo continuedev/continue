@@ -245,8 +245,10 @@ describe("modelSupportsNextEdit", () => {
       ).toBe(true);
     });
 
-    it("should return true for model-1", () => {
-      expect(modelSupportsNextEdit(undefined, "model-1", undefined)).toBe(true);
+    it("should return true for instinct", () => {
+      expect(modelSupportsNextEdit(undefined, "instinct", undefined)).toBe(
+        true,
+      );
     });
 
     it("should return true when model contains supported model name as substring", () => {
@@ -269,9 +271,9 @@ describe("modelSupportsNextEdit", () => {
       ).toBe(true);
     });
 
-    it("should return true when title contains model-1", () => {
+    it("should return true when title contains instinct", () => {
       expect(
-        modelSupportsNextEdit(undefined, "some-model", "model-1 deployment"),
+        modelSupportsNextEdit(undefined, "some-model", "instinct deployment"),
       ).toBe(true);
     });
 
@@ -317,7 +319,7 @@ describe("modelSupportsNextEdit", () => {
 
     it("should handle case sensitivity correctly", () => {
       expect(
-        modelSupportsNextEdit(undefined, "MERCURY-CODER-NEXTEDIT", "MODEL-1"),
+        modelSupportsNextEdit(undefined, "MERCURY-CODER-NEXTEDIT", "instinct"),
       ).toBe(true);
     });
 
