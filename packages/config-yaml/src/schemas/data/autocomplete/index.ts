@@ -28,6 +28,7 @@ export const autocompleteEventAllSchema = baseDevDataAllSchema.extend({
   prompt: z.string(),
   completion: z.string(),
   modelProvider: z.string(),
+  modelTitle: z.string(),
   modelName: z.string(),
   cacheHit: z.boolean(),
   filepath: z.string(),

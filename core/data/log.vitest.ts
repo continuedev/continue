@@ -35,6 +35,7 @@ const TEST_AGENT_INTERACTION_EVENT: DevDataLogEvent = {
     completion: "Hello, world!",
     modelProvider: "openai",
     modelTitle: "gpt-4",
+    modelName: "gpt-4",
     sessionId: "1234",
     tools: ["test-tool1"],
   },

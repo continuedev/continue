@@ -6,6 +6,7 @@ import { ChatHistoryItem } from "core";
 import { useContext, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppSelector } from "../redux/hooks";
+import { selectSelectedChatModel } from "../redux/slices/configSlice";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 
 export interface FeedbackButtonsProps {
@@ -16,6 +17,7 @@ export function FeedbackButtons({ item }: FeedbackButtonsProps) {
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
   const sessionId = useAppSelector((store) => store.session.id);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
 
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
@@ -25,6 +27,8 @@ export function FeedbackButtons({ item }: FeedbackButtonsProps) {
           name: "chatFeedback",
           data: {
             ...promptLog,
+            modelName: promptLog.modelTitle || "unknown",
+            modelProvider: selectedChatModel?.underlyingProviderName || "unknown",
             feedback,
             sessionId,
           },

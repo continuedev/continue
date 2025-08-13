@@ -113,6 +113,9 @@ export const processNextEditData = async ({
 
   if (filenamesAndDiffs.length > 0) {
     // if there are previous edits, log
+    const { config } = await configHandler.loadConfig();
+    const selectedTabAutocompleteModel = config?.selectedModelByRole?.autocomplete;
+    
     void DataLogger.getInstance().logDevData({
       name: "nextEditWithHistory",
       data: {
@@ -124,6 +127,9 @@ export const processNextEditData = async ({
         beforeCursorPos: cursorPosBeforeEdit,
         afterCursorPos: cursorPosAfterPrevEdit,
         context: autocompleteContext,
+        modelProvider: selectedTabAutocompleteModel?.underlyingProviderName || "unknown",
+        modelTitle: selectedTabAutocompleteModel?.title || "unknown", 
+        modelName: selectedTabAutocompleteModel?.title || "unknown",
       },
     });
   }
