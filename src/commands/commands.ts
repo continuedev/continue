@@ -50,7 +50,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   {
     name: "mcp",
     description: "Manage MCP server connections",
-    category: "system"
+    category: "system",
   },
   {
     name: "org",
