@@ -117,27 +117,31 @@ describe("serve command", () => {
   });
 
   it("should pass the --org flag through to initializeServices", async () => {
-    // Mock initializeServices to capture the options passed to it
-    const mockInitializeServices = vi.fn(() => Promise.resolve({
-      config: { models: [] },
-      llmApi: { chat: vi.fn() },
-      model: { name: "test-model" }
-    }));
+    // Import the services module to spy on
+    const servicesModule = await import("../services/index.js");
+    
+    // Create spy on initializeServices
+    const initializeServicesSpy = vi.spyOn(servicesModule, "initializeServices")
+      .mockResolvedValue({
+        config: { models: [] },
+        llmApi: { chat: vi.fn() },
+        model: { name: "test-model" }
+      } as any);
 
-    vi.doMock("../services/index.js", () => ({
-      initializeServices: mockInitializeServices,
-      getService: vi.fn(() => Promise.resolve({
+    // Create spy on getService  
+    const getServiceSpy = vi.spyOn(servicesModule, "getService")
+      .mockResolvedValueOnce({
         config: { name: "test" },
         llmApi: { chat: vi.fn() },
-        model: { provider: "test", model: "test" },
-        authConfig: null,
-        isAuthenticated: false,
-        organizationId: undefined
-      })),
-      SERVICE_NAMES: { CONFIG: "CONFIG", MODEL: "MODEL", AUTH: "AUTH" }
-    }));
+        model: { provider: "test", model: "test" }
+      } as any)
+      .mockResolvedValueOnce({
+        config: { name: "test" },
+        llmApi: { chat: vi.fn() },
+        model: { provider: "test", model: "test" }
+      } as any);
 
-    // Import serve after mocking
+    // Import serve after setting up spies
     const { serve } = await import("./serve.js");
 
     // Call serve with --org flag
@@ -154,11 +158,15 @@ describe("serve command", () => {
     }
 
     // Check that initializeServices was called with organization option
-    expect(mockInitializeServices).toHaveBeenCalled();
-    expect(mockInitializeServices).toHaveBeenCalledWith(
+    expect(initializeServicesSpy).toHaveBeenCalled();
+    expect(initializeServicesSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         organizationSlug: "test-organization-slug"
       })
     );
+
+    // Clean up spies
+    initializeServicesSpy.mockRestore();
+    getServiceSpy.mockRestore();
   });
 });
