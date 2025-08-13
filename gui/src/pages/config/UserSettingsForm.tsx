@@ -217,7 +217,7 @@ export function UserSettingsForm() {
                   disableSessionTitles: !disableSessionTitles,
                 })
               }
-              text="Enable Session Titles"
+              text="Generate Session Titles"
             />
             <ToggleSwitch
               isToggled={!displayRawMarkdown}
