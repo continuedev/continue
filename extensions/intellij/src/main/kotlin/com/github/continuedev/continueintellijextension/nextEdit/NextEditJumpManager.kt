@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.nextEdit
 import com.github.continuedev.continueintellijextension.listeners.HandlerPriority
 import com.github.continuedev.continueintellijextension.listeners.SelectionChangeManager
 import com.github.continuedev.continueintellijextension.listeners.StateSnapshot
+import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
@@ -121,13 +122,32 @@ class NextEditJumpManager(private val project: Project) {
             oldCursorPosition = currentPosition
         )
 
-        // Show UI
-        showJumpDecoration(editor, nextJumpLocation)
+        // Show UI - ensure this runs on EDT
+        return try {
+            var result = false
+            ApplicationManager.getApplication().invokeAndWait {
+                try {
+                    showJumpDecoration(editor, nextJumpLocation)
 
-        // Scroll to show jump location
-        editor.scrollingModel.scrollTo(nextJumpLocation, ScrollType.CENTER)
+                    // Scroll to show jump location
+                    editor.scrollingModel.scrollTo(nextJumpLocation, ScrollType.CENTER)
 
-        return true
+                    result = true
+                    println("DEBUG: suggestJump completed successfully")
+                } catch (e: Exception) {
+                    println("DEBUG: Error in suggestJump UI operations: $e")
+                    // Reset state on error
+                    jumpState = jumpState.copy(inProgress = false)
+                    result = false
+                }
+            }
+            result
+        } catch (e: Exception) {
+            println("DEBUG: Error in suggestJump invokeAndWait: $e")
+            // Reset state on error
+            jumpState = jumpState.copy(inProgress = false)
+            false
+        }
     }
 
     // Private implementation
@@ -154,7 +174,7 @@ class NextEditJumpManager(private val project: Project) {
     }
 
     private fun showJumpPopup(editor: Editor, position: LogicalPosition) {
-        val popupComponent = createJumpPopupComponent()
+        val popupComponent = createJumpPopupComponent(editor)
 
         jumpPopup = JBPopupFactory.getInstance()
             .createComponentPopupBuilder(popupComponent, popupComponent) // Set focus component
@@ -166,7 +186,10 @@ class NextEditJumpManager(private val project: Project) {
             .setCancelOnWindowDeactivation(false)
             .setCancelKeyEnabled(false) // Disable default Esc handling to use our custom one
             .setCancelCallback {
-                rejectJump()
+                // Only reject jump if we're still in progress and not just accepted
+                if (jumpState.inProgress && !jumpState.justAccepted) {
+                    rejectJump()
+                }
                 true
             }
             .createPopup()
@@ -196,7 +219,7 @@ class NextEditJumpManager(private val project: Project) {
         }
     }
 
-    private fun createJumpPopupComponent(): JComponent {
+    private fun createJumpPopupComponent(editor: Editor): JComponent {
         val panel = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
             border = JBUI.Borders.empty(4, 8)
@@ -214,7 +237,7 @@ class NextEditJumpManager(private val project: Project) {
         panel.add(label, BorderLayout.CENTER)
 
         // Add keyboard shortcuts to the panel
-        addKeyboardShortcuts(panel)
+        addKeyboardShortcuts(panel, editor)
 
         // Store reference for cleanup
         keyboardShortcutsPanel = panel
@@ -222,7 +245,7 @@ class NextEditJumpManager(private val project: Project) {
         return panel
     }
 
-    private fun addKeyboardShortcuts(panel: JComponent) {
+    private fun addKeyboardShortcuts(panel: JComponent, editor: Editor) {
         println("DEBUG: Adding keyboard shortcuts to jump panel")
 
         // CRITICAL: Disable focus traversal for Tab key
@@ -236,7 +259,7 @@ class NextEditJumpManager(private val project: Project) {
         actionMap.put("acceptJump", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent?) {
                 println("DEBUG: Accept jump action triggered!")
-                acceptJump()
+                acceptJump(editor)
             }
         })
 
@@ -284,24 +307,26 @@ class NextEditJumpManager(private val project: Project) {
         }
     }
 
-    private fun acceptJump() {
+    private fun acceptJump(editor: Editor) {
         val state = jumpState
         if (!state.inProgress || state.jumpPosition == null || state.editor == null) {
-            println("DEBUG: Cannot accept jump - invalid state")
+            println("DEBUG: Cannot accept jump - invalid state: ${!state.inProgress} ${state.jumpPosition == null} ${state.editor == null}")
             return
         }
 
         println("Accepting jump to position: ${state.jumpPosition}")
 
-        // Update state
+        // Update state BEFORE clearing decorations to prevent cancel callback from triggering reject
         jumpState = jumpState.copy(justAccepted = true)
 
         ApplicationManager.getApplication().invokeLater {
             // Move cursor to jump position
             state.editor.caretModel.moveToLogicalPosition(state.jumpPosition)
 
-            // Clear decorations
+            // Clear decorations (this will cancel popup, but won't trigger reject due to state check)
             clearJumpDecoration()
+
+            InlineCompletionUtils.triggerInlineCompletion(editor, project) { success -> "success: $success" }
 
             // Reset accepted state after a brief moment
             coroutineScope.launch {
