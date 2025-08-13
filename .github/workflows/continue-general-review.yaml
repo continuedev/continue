@@ -1,4 +1,4 @@
-name: Continue CLI Code Review
+name: Continue General Review
 
 on:
   pull_request:
@@ -12,13 +12,13 @@ permissions:
   issues: write
 
 jobs:
-  code-review:
-    name: AI Code Review
+  general-code-review:
+    name: Continue General Review
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Only run if:
     # - It's a PR event from a team member (with write/admin permissions)
-    # - OR it's a comment with @continue-review on a PR from a team member
+    # - OR it's a comment with @continue-general-review on a PR from a team member
     if: |
       (github.event_name == 'pull_request' && 
        (github.event.pull_request.author_association == 'OWNER' || 
@@ -26,14 +26,14 @@ jobs:
         github.event.pull_request.author_association == 'COLLABORATOR')) ||
       (github.event_name == 'issue_comment' && 
        github.event.issue.pull_request && 
-       contains(github.event.comment.body, '@continue-review') &&
+       contains(github.event.comment.body, '@continue-general-review') &&
        (github.event.comment.author_association == 'OWNER' || 
         github.event.comment.author_association == 'MEMBER' || 
         github.event.comment.author_association == 'COLLABORATOR'))
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0 # Fetch full history for better context
 
