@@ -61,40 +61,57 @@ jobs:
           # Get PR diff with context
           gh pr diff $PR_NUMBER --color=never > pr_diff.txt
 
+          # Annotate diff with position numbers for easy reference
+          awk '
+          /^@@/ { 
+            pos = 0
+            print
+            next
+          }
+          /^diff --git/ || /^index / || /^--- / || /^\+\+\+ / {
+            print
+            next
+          }
+          { 
+            pos++
+            printf "[POS:%d] %s\n", pos, $0
+          }
+          ' pr_diff.txt > pr_diff_annotated.txt
+
           # Create review prompt for inline comments
           cat > inline_review_prompt.txt << 'EOF'
           You are conducting a detailed inline code review for a pull request. 
 
           Your task is to analyze the code changes and generate specific, actionable review comments for individual lines or small sections of code.
 
-          CRITICAL: Understanding "position" for GitHub PR comments:
-          The "position" field is the line number within the diff, NOT the file line number.
+          IMPORTANT: The diff below has been annotated with [POS:N] markers showing the exact position for each line.
           
-          Example diff and position counting:
+          Example of how to use the position markers:
           ```
           diff --git a/src/app.js b/src/app.js
           index abc123..def456 100644
           --- a/src/app.js
           +++ b/src/app.js
-          @@ -10,4 +10,6 @@ function example() {        <-- This is the @@ header, not counted
-              console.log("context");                <-- position 1 (first line after @@)
-          -   const old = "remove this";             <-- position 2
-          +   const new = "add this";                <-- position 3  
-          +   const risky = eval(userInput);         <-- position 4 (comment here about security issue!)
-              return result;                          <-- position 5
-          +   console.log("done");                    <-- position 6
-          @@ -20,3 +22,4 @@ function another() {       <-- New @@ header, restart counting!
-              let x = 1;                              <-- position 1 (for this hunk)
-          +   let y = 2;                              <-- position 2 (for this hunk)
+          @@ -10,4 +10,6 @@ function example() {
+          [POS:1]     console.log("context");
+          [POS:2] -   const old = "remove this";
+          [POS:3] +   const new = "add this";
+          [POS:4] +   const risky = eval(userInput);    <-- To comment here, use position: 4
+          [POS:5]     return result;
+          [POS:6] +   console.log("done");
+          @@ -20,3 +22,4 @@ function another() {
+          [POS:1]     let x = 1;
+          [POS:2] +   let y = 2;                         <-- To comment here, use position: 2
           ```
           
-          To comment on the risky eval line above, use: {"path": "src/app.js", "position": 4, "body": "Avoid using eval..."}
+          To comment on a line, simply use the number from its [POS:N] marker as the position value.
+          For example: {"path": "src/app.js", "position": 4, "body": "Avoid using eval with user input"}
 
-          Below is the PR diff:
+          Below is the annotated PR diff:
 
           EOF
 
-          cat pr_diff.txt >> inline_review_prompt.txt
+          cat pr_diff_annotated.txt >> inline_review_prompt.txt
 
           cat >> inline_review_prompt.txt << 'EOF'
 
@@ -119,17 +136,15 @@ jobs:
 
           Guidelines for comments:
           - Be specific and actionable
-          - Count position starting from 1 after each @@ header line
-          - Include ALL lines in count: context lines, additions (+), and deletions (-)
-          - Reset position count to 1 after each new @@ header
+          - Use the [POS:N] number shown in the diff as the position value
           - Keep comments concise but informative
           - Suggest concrete improvements when pointing out issues
           - Only comment on actual problems or important improvements
 
           Important: 
           - Output ONLY valid JSON, no additional text
-          - Position is counted within the diff, NOT the file line number
-          - Only comment on changed lines (+ or - prefix)
+          - Use the exact number from [POS:N] markers as the position
+          - Only comment on changed lines (lines with + or - prefix)
           - Comment on the most important issues first
           - Limit to maximum 20 most relevant comments
           EOF
@@ -139,6 +154,13 @@ jobs:
       - name: Run Continue CLI Inline Review
         run: |
           echo "Running Continue CLI for inline review..."
+          
+          # Log the prompt for debugging
+          echo "===== START REVIEW PROMPT ====="
+          head -n 50 inline_review_prompt.txt
+          echo "... [diff content] ..."
+          tail -n 20 inline_review_prompt.txt
+          echo "===== END REVIEW PROMPT ====="
 
           # Run the CLI and capture JSON output
           cat inline_review_prompt.txt | cn --readonly --format json --org continuedev --config continuedev/review-bot -p > inline_review_raw.json
@@ -152,54 +174,9 @@ jobs:
             echo "Invalid JSON output from Continue CLI"
             echo "{\"review_summary\": \"Failed to generate review\", \"comments\": []}" > inline_review.json
           else
-            # Second pass: Fix positions using Continue CLI
-            echo "Running second pass to fix comment positions..."
-            
-            # Create position fixing prompt
-            cat > fix_positions_prompt.txt << 'EOF'
-          You are a position calculator for GitHub PR review comments. Your ONLY job is to calculate the correct position values for inline comments.
-
-          Here is the PR diff with line numbers added for reference:
-          EOF
-            
-            # Add line numbers to the diff for clarity
-            cat pr_diff.txt | nl -ba -v 1 >> fix_positions_prompt.txt
-            
-            cat >> fix_positions_prompt.txt << 'EOF'
-
-          Here are the review comments that need position fixing:
-          EOF
-            
-            cat inline_review_raw.json >> fix_positions_prompt.txt
-            
-            cat >> fix_positions_prompt.txt << 'EOF'
-
-          For each comment, find the exact line in the numbered diff above and return the CORRECT position.
-          Remember: Position is the line number in the diff (the number shown at the start of each line above).
-
-          Return ONLY valid JSON in this exact format:
-          {
-            "review_summary": [copy the original review_summary],
-            "comments": [
-              {
-                "path": [original path],
-                "position": [the line number from the numbered diff above],
-                "body": [original body]
-              }
-            ]
-          }
-
-          Important:
-          - Use the line numbers shown in the numbered diff above
-          - Only include comments where you can find the exact matching line
-          - If you cannot find a good match for a comment, skip it
-          - Output ONLY valid JSON
-          EOF
-            
-            # Run the position fixer
-            cat fix_positions_prompt.txt | cn --readonly --format json --org continuedev --config continuedev/review-bot -p > inline_review.json
-            
-            echo "Fixed positions output:"
+            # Use the output directly since positions are already correct
+            cp inline_review_raw.json inline_review.json
+            echo "Review output:"
             cat inline_review.json
           fi
         env:
@@ -326,8 +303,8 @@ jobs:
           path: |
             inline_review_raw.json
             inline_review.json
-            fix_positions_prompt.txt
             inline_review_prompt.txt
             pr_files.json
             pr_diff.txt
+            pr_diff_annotated.txt
           retention-days: 7
