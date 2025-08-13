@@ -201,7 +201,7 @@ function InputToolbar(props: InputToolbarProps) {
                   {useActiveFile
                     ? "Send Without Active File"
                     : "Send With Active File"}{" "}
-                  ({getMetaKeyLabel()}⏎ or Alt⏎)
+                  ({getMetaKeyLabel()}⏎)
                 </ToolTip>
               </HoverItem>
             </div>
