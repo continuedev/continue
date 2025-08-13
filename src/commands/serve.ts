@@ -36,6 +36,7 @@ const execAsync = promisify(exec);
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  org?: string;
 }
 
 interface PendingPermission {
@@ -71,6 +72,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     toolPermissionOverrides: permissionOverrides,
     configPath: options.config,
     rules: options.rule,
+    organizationSlug: options.org,
     headless: true, // Skip onboarding in serve mode
   });
 

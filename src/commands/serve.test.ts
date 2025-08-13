@@ -115,4 +115,50 @@ describe("serve command", () => {
     // Skip for now to focus on removing top-level mocks
     expect(true).toBe(true);
   });
+
+  it("should pass the --org flag through to initializeServices", async () => {
+    // Mock initializeServices to capture the options passed to it
+    const mockInitializeServices = vi.fn(() => Promise.resolve({
+      config: { models: [] },
+      llmApi: { chat: vi.fn() },
+      model: { name: "test-model" }
+    }));
+
+    vi.doMock("../services/index.js", () => ({
+      initializeServices: mockInitializeServices,
+      getService: vi.fn(() => Promise.resolve({
+        config: { name: "test" },
+        llmApi: { chat: vi.fn() },
+        model: { provider: "test", model: "test" },
+        authConfig: null,
+        isAuthenticated: false,
+        organizationId: undefined
+      })),
+      SERVICE_NAMES: { CONFIG: "CONFIG", MODEL: "MODEL", AUTH: "AUTH" }
+    }));
+
+    // Import serve after mocking
+    const { serve } = await import("./serve.js");
+
+    // Call serve with --org flag
+    const testOptions = {
+      org: "test-organization-slug",
+      timeout: "60",
+      port: "9000"
+    };
+
+    try {
+      await serve("test prompt", testOptions);
+    } catch (error) {
+      // Expected to fail due to incomplete mocking
+    }
+
+    // Check that initializeServices was called with organization option
+    expect(mockInitializeServices).toHaveBeenCalled();
+    expect(mockInitializeServices).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationSlug: "test-organization-slug"
+      })
+    );
+  });
 });
