@@ -141,16 +141,66 @@ jobs:
           echo "Running Continue CLI for inline review..."
 
           # Run the CLI and capture JSON output
-          cat inline_review_prompt.txt | cn --readonly --format json --org continuedev --config continuedev/review-bot -p > inline_review.json
+          cat inline_review_prompt.txt | cn --readonly --format json --org continuedev --config continuedev/review-bot -p > inline_review_raw.json
 
           # Log the output for debugging
-          echo "Continue CLI output:"
-          cat inline_review.json
+          echo "Initial Continue CLI output:"
+          cat inline_review_raw.json
 
           # Validate JSON output
-          if ! jq empty inline_review.json 2>/dev/null; then
+          if ! jq empty inline_review_raw.json 2>/dev/null; then
             echo "Invalid JSON output from Continue CLI"
             echo "{\"review_summary\": \"Failed to generate review\", \"comments\": []}" > inline_review.json
+          else
+            # Second pass: Fix positions using Continue CLI
+            echo "Running second pass to fix comment positions..."
+            
+            # Create position fixing prompt
+            cat > fix_positions_prompt.txt << 'EOF'
+          You are a position calculator for GitHub PR review comments. Your ONLY job is to calculate the correct position values for inline comments.
+
+          Here is the PR diff with line numbers added for reference:
+          EOF
+            
+            # Add line numbers to the diff for clarity
+            cat pr_diff.txt | nl -ba -v 1 >> fix_positions_prompt.txt
+            
+            cat >> fix_positions_prompt.txt << 'EOF'
+
+          Here are the review comments that need position fixing:
+          EOF
+            
+            cat inline_review_raw.json >> fix_positions_prompt.txt
+            
+            cat >> fix_positions_prompt.txt << 'EOF'
+
+          For each comment, find the exact line in the numbered diff above and return the CORRECT position.
+          Remember: Position is the line number in the diff (the number shown at the start of each line above).
+
+          Return ONLY valid JSON in this exact format:
+          {
+            "review_summary": [copy the original review_summary],
+            "comments": [
+              {
+                "path": [original path],
+                "position": [the line number from the numbered diff above],
+                "body": [original body]
+              }
+            ]
+          }
+
+          Important:
+          - Use the line numbers shown in the numbered diff above
+          - Only include comments where you can find the exact matching line
+          - If you cannot find a good match for a comment, skip it
+          - Output ONLY valid JSON
+          EOF
+            
+            # Run the position fixer
+            cat fix_positions_prompt.txt | cn --readonly --format json --org continuedev --config continuedev/review-bot -p > inline_review.json
+            
+            echo "Fixed positions output:"
+            cat inline_review.json
           fi
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
@@ -274,7 +324,9 @@ jobs:
         with:
           name: inline-review-results
           path: |
+            inline_review_raw.json
             inline_review.json
+            fix_positions_prompt.txt
             inline_review_prompt.txt
             pr_files.json
             pr_diff.txt
