@@ -43,6 +43,14 @@ const UserInput: React.FC<UserInputProps> = ({
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
+
+  // Set up callback for when TextBuffer state changes (e.g., rapid input finalized)
+  React.useEffect(() => {
+    textBuffer.setStateChangeCallback(() => {
+      setInputText(textBuffer.text);
+      setCursorPosition(textBuffer.cursor);
+    });
+  }, [textBuffer]);
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
@@ -330,6 +338,8 @@ const UserInput: React.FC<UserInputProps> = ({
   const handleEnterKey = (key: any): boolean => {
     if (key.return && !key.shift) {
       if (textBuffer.text.trim() && !isWaitingForResponse) {
+        // Expand all paste blocks before submitting
+        textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
         inputHistory.addEntry(submittedText);
         onSubmit(submittedText);
@@ -512,9 +522,9 @@ const UserInput: React.FC<UserInputProps> = ({
 
               return (
                 <Text key={lineIndex}>
-                  {beforeCursor}
+                  <Text>{beforeCursor}</Text>
                   <Text inverse>{atCursor || " "}</Text>
-                  {afterCursor}
+                  <Text>{afterCursor}</Text>
                 </Text>
               );
             } else {

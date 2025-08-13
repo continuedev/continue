@@ -1,8 +1,20 @@
 import { Key } from "ink";
 
+export const COLLAPSE_SIZE = 800; // Characters threshold for collapsing pasted content
+export const RAPID_INPUT_THRESHOLD = 200; // Minimum characters to trigger rapid input detection
+
 export class TextBuffer {
   private _text: string = "";
   private _cursor: number = 0;
+  private _pasteBuffer: string = "";
+  private _inPasteMode: boolean = false;
+  private _rapidInputBuffer: string = "";
+  private _rapidInputStartPos: number = 0;
+  private _lastInputTime: number = 0;
+  private _rapidInputTimer: NodeJS.Timeout | null = null;
+  private _onStateChange?: () => void;
+  private _pasteMap = new Map<string, string>(); // placeholder -> original content
+  private _pasteCounter: number = 0;
 
   constructor(initialText: string = "") {
     this._text = initialText;
@@ -135,6 +147,172 @@ export class TextBuffer {
   clear(): void {
     this._text = "";
     this._cursor = 0;
+    this._pasteMap.clear();
+    this._pasteCounter = 0;
+    this._pasteBuffer = "";
+    this._inPasteMode = false;
+    this._rapidInputBuffer = "";
+    this._rapidInputStartPos = 0;
+    this._lastInputTime = 0;
+    if (this._rapidInputTimer) {
+      clearTimeout(this._rapidInputTimer);
+      this._rapidInputTimer = null;
+    }
+  }
+
+  isInPasteMode(): boolean {
+    return this._inPasteMode;
+  }
+
+  isInRapidInputMode(): boolean {
+    return this._rapidInputBuffer.length > 0;
+  }
+
+  setStateChangeCallback(callback: () => void): void {
+    this._onStateChange = callback;
+  }
+
+  // Called on Enter to expand full pasted content before submission
+  expandAllPasteBlocks(): void {
+    for (const [placeholder, originalContent] of this._pasteMap.entries()) {
+      const regex = new RegExp(this.escapeRegex(placeholder), "g");
+      // Normalize line endings to prevent terminal display issues
+      const normalizedContent = originalContent
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n");
+      this._text = this._text.replace(regex, normalizedContent);
+    }
+    this._pasteMap.clear();
+  }
+
+  // Test helper: forces immediate finalization without waiting for timers
+  flushPendingInput(): void {
+    if (this._rapidInputTimer) {
+      clearTimeout(this._rapidInputTimer);
+      this._rapidInputTimer = null;
+      this.finalizeRapidInput();
+    }
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // Creates placeholder for single line or multi-line pastes
+  private createPlaceholder(originalText: string): string {
+    this._pasteCounter++;
+    const lineCount = originalText.split(/\r\n|\r|\n/).length;
+
+    if (lineCount === 1) {
+      return `[Paste #${this._pasteCounter}]`;
+    } else {
+      return `[Paste #${this._pasteCounter}, ${lineCount} lines]`;
+    }
+  }
+
+  // Handles bracketed paste: \e[200~ (start) and \e[201~ (end) sequences
+  private handleBracketedPaste(input: string): boolean {
+    // Modern terminals wrap pasted content in escape sequences
+    if (input === "\u001b[200~") {
+      this._inPasteMode = true;
+      this._pasteBuffer = "";
+      return true;
+    }
+
+    if (input === "\u001b[201~") {
+      this._inPasteMode = false;
+
+      if (this._pasteBuffer.length > COLLAPSE_SIZE) {
+        const placeholder = this.createPlaceholder(this._pasteBuffer);
+        this._pasteMap.set(placeholder, this._pasteBuffer);
+        this.insertText(placeholder);
+      } else {
+        this.insertText(this._pasteBuffer);
+      }
+
+      this._pasteBuffer = "";
+      return true;
+    }
+
+    return false;
+  }
+
+  // Fallback paste detection: detects rapid chunks by timing and size RAPID_INPUT_THRESHOLD
+  private handleRapidInput(input: string): boolean {
+    const now = Date.now();
+    const timeSinceLastInput = now - this._lastInputTime;
+
+    // If we're already in rapid input mode and this comes quickly, add to buffer
+    if (this._rapidInputBuffer.length > 0 && timeSinceLastInput < 100) {
+      this._rapidInputBuffer += input;
+      this._lastInputTime = now;
+
+      if (this._rapidInputTimer) {
+        clearTimeout(this._rapidInputTimer);
+      }
+
+      // Reset timer: 200ms pause indicates end of paste
+      this._rapidInputTimer = setTimeout(() => {
+        this.finalizeRapidInput();
+      }, 200);
+
+      return true;
+    }
+
+    // Fallback paste detection: some terminals send large pastes as rapid chunks
+    // instead of using bracketed paste mode. We detect this by timing between inputs.
+    if (
+      input.length > RAPID_INPUT_THRESHOLD ||
+      (input.length > 50 && this._rapidInputBuffer.length === 0)
+    ) {
+      this._rapidInputStartPos = this._cursor;
+
+      // Accumulate chunks without inserting to avoid visual flicker
+      this._rapidInputBuffer = input;
+      this._lastInputTime = now;
+
+      if (this._rapidInputTimer) {
+        clearTimeout(this._rapidInputTimer);
+      }
+
+      // 200ms pause indicates end of paste
+      this._rapidInputTimer = setTimeout(() => {
+        this.finalizeRapidInput();
+      }, 200);
+
+      return true; // Consume input without inserting until finalized
+    }
+
+    this._lastInputTime = now;
+    return false;
+  }
+
+  // Called after rapid input timer expires to collapse or insert buffered content
+  private finalizeRapidInput(): void {
+    if (this._rapidInputBuffer.length > COLLAPSE_SIZE) {
+      const placeholder = this.createPlaceholder(this._rapidInputBuffer);
+      this._pasteMap.set(placeholder, this._rapidInputBuffer);
+
+      this._text =
+        this._text.slice(0, this._rapidInputStartPos) +
+        placeholder +
+        this._text.slice(this._rapidInputStartPos);
+      this._cursor = this._rapidInputStartPos + placeholder.length;
+
+      if (this._onStateChange) {
+        this._onStateChange();
+      }
+    } else {
+      this.insertText(this._rapidInputBuffer);
+
+      if (this._onStateChange) {
+        this._onStateChange();
+      }
+    }
+
+    this._rapidInputBuffer = "";
+    this._rapidInputStartPos = 0;
+    this._rapidInputTimer = null;
   }
 
   private handleOptionKey(sequence: string): boolean {
@@ -221,6 +399,18 @@ export class TextBuffer {
   }
 
   handleInput(input: string, key: Key): boolean {
+    // Handle bracketed paste sequences first
+    if (this.handleBracketedPaste(input)) {
+      return true;
+    }
+
+    // If we're in paste mode, accumulate the pasted content but DON'T insert it yet
+    if (this._inPasteMode) {
+      this._pasteBuffer += input;
+      // Don't insert text during paste mode - wait until paste ends
+      return true;
+    }
+
     // Detect option key combinations through escape sequences
     const isOptionKey = input.startsWith("\u001b") && input.length > 1;
 
@@ -251,8 +441,31 @@ export class TextBuffer {
       return true;
     }
 
-    // Handle regular character input (including paste - multi-character input)
     if (input && input.length >= 1 && !key.ctrl && !key.meta && !isOptionKey) {
+      // Direct paste detection: single large input - but delay insertion to catch split pastes
+      if (input.length > COLLAPSE_SIZE && this._rapidInputBuffer.length === 0) {
+        // Start rapid input mode immediately to delay placeholder creation
+        this._rapidInputStartPos = this._cursor;
+        this._rapidInputBuffer = input;
+        this._lastInputTime = Date.now();
+
+        if (this._rapidInputTimer) {
+          clearTimeout(this._rapidInputTimer);
+        }
+
+        // Wait 250ms to see if more content comes (split paste)
+        this._rapidInputTimer = setTimeout(() => {
+          this.finalizeRapidInput();
+        }, 250);
+
+        return true;
+      }
+
+      // Fallback: detect chunked paste operations
+      if (this.handleRapidInput(input)) {
+        return true;
+      }
+
       this.insertText(input);
       return true;
     }
