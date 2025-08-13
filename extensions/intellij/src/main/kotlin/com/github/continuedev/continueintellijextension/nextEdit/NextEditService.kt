@@ -3,8 +3,10 @@ package com.github.continuedev.continueintellijextension.nextEdit
 import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.intellij.codeInsight.inline.completion.InlineCompletionRequest
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -21,10 +23,20 @@ interface NextEditService {
         withChain: Boolean = false,
         usingFullFileDiff: Boolean = true
     ): NextEditOutcome?
+
+    suspend fun handleCase1(
+        request: InlineCompletionRequest,
+        editor: Editor,
+        currCursorPos: Pair<Int, Int>,
+        lastUuid: String?
+    ): NextEditOutcome?
+
+    suspend fun handleCase2(): NextEditOutcome?
+    suspend fun handleCase3(editor: Editor, currentCursorPos: Pair<Int, Int>): NextEditOutcome?
     fun startChain()
     fun deleteChain()
-    fun chainExists(): Boolean
-    fun getNextInChain(): NextEditItem?
+    suspend fun chainExists(): Boolean
+    suspend fun getNextInChain(): ProcessedItem?
     fun markDisplayed(completionId: String, outcome: NextEditOutcome)
     fun acceptEdit(completionId: String)
     fun rejectEdit(completionId: String)
@@ -32,12 +44,110 @@ interface NextEditService {
 
 @Service(Service.Level.PROJECT)
 class ContinueNextEditService(private val project: Project) : NextEditService {
-
-    private var currentChain: NextEditChain? = null
     private val displayedCompletions = mutableMapOf<String, NextEditOutcome>()
 
     private val coreMessenger: CoreMessenger?
         get() = project.service<ContinuePluginService>().coreMessenger
+
+    // Case 1: Typing (chain does not exist).
+    override suspend fun handleCase1(
+        request: InlineCompletionRequest,
+        editor: Editor,
+        currCursorPos: Pair<Int, Int>,
+        lastUuid: String?
+    ): NextEditOutcome? {
+        println("Case 1: Typing (chain does not exist)")
+
+        // Start a new chain
+        startChain()
+
+        val nextEditOutcome = this.getNextEditSuggestion(
+            lastUuid!!,
+            editor.virtualFile.url,
+            currCursorPos.first,
+            currCursorPos.second
+        )
+
+        // TODO: Check once and if null, invoke inline completion trigger once more
+
+        return nextEditOutcome
+    }
+
+    // Case 2: Jumping (chain exists, jump was taken).
+    override suspend fun handleCase2(): NextEditOutcome? {
+        println("Case 2: Jumping (chain exists, jump was taken)")
+
+        val jumpManager = project.service<NextEditJumpManager>()
+
+        // Reset jump state
+        jumpManager.setJumpInProgress(false)
+
+        // Use the saved completion from JumpManager instead of making new request
+        val savedCompletion = jumpManager.getSavedCompletionAfterJump()
+        if (savedCompletion != null) {
+            val (_, outcome) = savedCompletion
+            jumpManager.clearSavedCompletionAfterJump()
+            return outcome
+        } else {
+            // This technically should not happen according to the TypeScript comment
+            println("Error: No saved completion found after jump was taken")
+            return null
+        }
+    }
+
+    // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
+    override suspend fun handleCase3(editor: Editor, currentCursorPos: Pair<Int, Int>): NextEditOutcome? {
+        println("Case 3: Accepting next edit outcome (chain exists, jump is not taken)")
+
+        val jumpManager = project.service<NextEditJumpManager>()
+
+        // Try suggesting jump for each location in the chain
+        var isJumpSuggested = false
+
+        while (chainExists() && !isJumpSuggested) {
+            val nextItemInChain = getNextInChain()
+            if (nextItemInChain == null) {
+                println("No more items in chain")
+                break
+            }
+
+            val nextLocation = nextItemInChain.location
+            val outcome = nextItemInChain.outcome
+
+            val currentPosition = LogicalPosition(currentCursorPos.first, currentCursorPos.second)
+            val nextPosition = LogicalPosition(nextLocation.range.start.line, nextLocation.range.start.character)
+
+            isJumpSuggested = jumpManager.suggestJump(
+                editor,
+                currentPosition,
+                nextPosition,
+                outcome.completion
+            )
+
+            if (isJumpSuggested) {
+                // Store completion to be rendered after a jump
+                jumpManager.setCompletionAfterJump(
+                    CompletionDataForAfterJump(
+                        completionId = outcome.completionId,
+                        outcome = outcome,
+                        position = nextPosition
+                    )
+                )
+
+                // Don't display anything yet.
+                // This will be handled in Case 2.
+                return null
+            }
+        }
+
+        if (!isJumpSuggested) {
+            println("No suitable jump location found after trying all positions")
+            deleteChain()
+            return null
+        }
+
+        return null
+    }
 
     override suspend fun getNextEditSuggestion(
         completionId: String,
@@ -72,19 +182,32 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
     }
 
     override fun startChain() {
-        currentChain = NextEditChain()
+        // Remove local chain creation
         coreMessenger?.request("nextEdit/startChain", emptyMap<String, Any>(), null) {}
     }
 
     override fun deleteChain() {
-        currentChain = null
+        // Remove local chain deletion
         coreMessenger?.request("nextEdit/deleteChain", emptyMap<String, Any>(), null) {}
     }
 
-    override fun chainExists(): Boolean = currentChain != null
+    override suspend fun chainExists(): Boolean {
+        return suspendCancellableCoroutine { continuation ->
+            coreMessenger?.request("nextEdit/isChainAlive", emptyMap<String, Any>(), null) { response ->
+                val exists = parseChainExistsResponse(response)
+                continuation.resume(exists)
+            }
+        }
+    }
 
-    override fun getNextInChain(): NextEditItem? {
-        return currentChain?.getNext()
+    override suspend fun getNextInChain(): ProcessedItem? {
+        return suspendCancellableCoroutine { continuation ->
+            coreMessenger?.request("nextEdit/queue/dequeueProcessed", emptyMap<String, Any>(), null) { response ->
+                val processedItem = parseProcessedItem(response)
+//                val nextEditItem = processedItem?.let { convertToNextEditItem(it) }
+                continuation.resume(processedItem)
+            }
+        }
     }
 
     override fun markDisplayed(completionId: String, outcome: NextEditOutcome) {
@@ -107,6 +230,15 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
             val responseMap = response as? Map<String, Any> ?: return null
             val contentMap = responseMap["content"] as? Map<String, Any> ?: return null
 
+            parseNextEditOutcomeFromMap(contentMap)
+        } catch (e: Exception) {
+            println("Error parsing Next Edit outcome: ${e.message}")
+            null
+        }
+    }
+
+    private fun parseNextEditOutcomeFromMap(contentMap: Map<String, Any>): NextEditOutcome? {
+        return try {
             // Extract position data
             val cursorPos = contentMap["cursorPosition"] as? Map<String, Any>
             val cursorPosition = if (cursorPos != null) {
@@ -183,20 +315,66 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
                 diffLines = diffLines
             )
         } catch (e: Exception) {
-            println("Error parsing Next Edit outcome: ${e.message}")
+            println("Error parsing NextEditOutcome from map: ${e.message}")
             null
         }
     }
+
+    private fun parseProcessedItem(response: Any?): ProcessedItem? {
+        return try {
+            val responseMap = response as? Map<String, Any> ?: return null
+            val content = responseMap["content"] as Map<String, Any> ?: return null
+
+            // Parse location (RangeInFile)
+            val locationMap = content["location"] as? Map<String, Any> ?: return null
+            val filepath = locationMap["filepath"] as? String ?: return null
+
+            val rangeMap = locationMap["range"] as? Map<String, Any> ?: return null
+            val startMap = rangeMap["start"] as? Map<String, Any> ?: return null
+            val endMap = rangeMap["end"] as? Map<String, Any> ?: return null
+
+            val startPosition = Position(
+                line = (startMap["line"] as? Number)?.toInt() ?: 0,
+                character = (startMap["character"] as? Number)?.toInt() ?: 0
+            )
+
+            val endPosition = Position(
+                line = (endMap["line"] as? Number)?.toInt() ?: 0,
+                character = (endMap["character"] as? Number)?.toInt() ?: 0
+            )
+
+            val range = com.github.continuedev.continueintellijextension.Range(startPosition, endPosition)
+            val location = com.github.continuedev.continueintellijextension.RangeInFile(filepath, range)
+
+            // Parse outcome (NextEditOutcome) - reuse existing logic from parseNextEditOutcome
+            val outcomeData = content["outcome"] as? Map<String, Any> ?: return null
+            val outcome = parseNextEditOutcomeFromMap(outcomeData) ?: return null
+
+            ProcessedItem(location, outcome)
+        } catch (e: Exception) {
+            println("Error parsing ProcessedItem: ${e.message}")
+            null
+        }
+    }
+
+    private fun parseChainExistsResponse(response: Any?): Boolean {
+        return try {
+            val responseMap = response as? Map<String, Any> ?: return false
+            val content = responseMap["content"] ?: return false
+            content as? Boolean ?: false
+        } catch (e: Exception) {
+            println("Error parsing chain exists response: ${e.message}")
+            false
+        }
+    }
+
+    private fun convertToNextEditItem(processedItem: ProcessedItem): NextEditItem {
+        // Convert ProcessedItem from core to NextEditItem for JetBrains
+        // Implementation depends on ProcessedItem structure
+        TODO("Implement conversion from ProcessedItem to NextEditItem")
+    }
 }
 
-data class NextEditChain(
-    private val items: MutableList<NextEditItem> = mutableListOf()
-) {
-    fun getNext(): NextEditItem? = items.removeFirstOrNull()
-    fun add(item: NextEditItem) = items.add(item)
-    fun isEmpty(): Boolean = items.isEmpty()
-    fun size(): Int = items.size
-}
 
 data class NextEditItem(
     val outcome: NextEditOutcome,
