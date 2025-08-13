@@ -76,6 +76,7 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { getUriPathBasename } from "./util/uri";
+import { PrefetchQueue } from "./nextEdit/NextEditPrefetchQueue";
 
 const hasRulesFiles = (uris: string[]): boolean => {
   for (const uri of uris) {
@@ -578,17 +579,79 @@ export class Core {
     // Next Edit
     on("nextEdit/predict", async (msg) => {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
-        msg.data,
+        msg.data.input,
         undefined,
-        { withChain: false, usingFullFileDiff: true },
+        {
+          withChain: msg.data.options?.withChain ?? false,
+          usingFullFileDiff: msg.data.options?.usingFullFileDiff ?? true,
+        },
       );
-      return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
+      return outcome;
+      // ? [outcome.completion, outcome.originalEditableRange]
     });
     on("nextEdit/accept", async (msg) => {
+      console.log("nextEdit/accept");
       this.nextEditProvider.accept(msg.data.completionId);
     });
     on("nextEdit/reject", async (msg) => {
+      console.log("nextEdit/reject");
       this.nextEditProvider.reject(msg.data.completionId);
+    });
+    on("nextEdit/startChain", async (msg) => {
+      console.log("nextEdit/startChain");
+      NextEditProvider.getInstance().startChain();
+      return;
+    });
+
+    on("nextEdit/deleteChain", async (msg) => {
+      console.log("nextEdit/deleteChain");
+      await NextEditProvider.getInstance().deleteChain();
+      return;
+    });
+
+    on("nextEdit/isChainAlive", async (msg) => {
+      console.log("nextEdit/isChainAlive");
+      return NextEditProvider.getInstance().chainExists();
+    });
+
+    on("nextEdit/queue/getProcessedCount", async (msg) => {
+      console.log("nextEdit/queue/getProcessedCount");
+      const queue = PrefetchQueue.getInstance();
+      console.log(queue.processedCount);
+      return queue.processedCount;
+    });
+
+    on("nextEdit/queue/dequeueProcessed", async (msg) => {
+      console.log("nextEdit/queue/dequeueProcessed");
+      const queue = PrefetchQueue.getInstance();
+      return queue.dequeueProcessed() || null;
+    });
+
+    on("nextEdit/queue/processOne", async (msg) => {
+      console.log("nextEdit/queue/processOne");
+      const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;
+      const queue = PrefetchQueue.getInstance();
+
+      await queue.process({
+        ...ctx,
+        recentlyVisitedRanges,
+        recentlyEditedRanges,
+      });
+      return;
+    });
+
+    on("nextEdit/queue/clear", async (msg) => {
+      console.log("nextEdit/queue/clear");
+      const queue = PrefetchQueue.getInstance();
+      queue.clear();
+      return;
+    });
+
+    on("nextEdit/queue/abort", async (msg) => {
+      console.log("nextEdit/queue/abort");
+      const queue = PrefetchQueue.getInstance();
+      queue.abort();
+      return;
     });
 
     on("streamDiffLines", async (msg) => {
