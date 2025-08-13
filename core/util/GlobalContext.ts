@@ -48,6 +48,48 @@ export type GlobalContextType = {
  * A way to persist global state
  */
 export class GlobalContext {
+  /**
+   * Salvages security-sensitive values from a corrupted global context.
+   * This ensures that important settings like telemetry preferences are preserved.
+   */
+  private salvageGlobalContext(
+    corruptedData: string,
+  ): Partial<GlobalContextType> {
+    const salvaged: Partial<GlobalContextType> = {};
+
+    try {
+      // Attempt to extract individual values that might be salvageable
+      const lines = corruptedData.split("\n");
+      for (const line of lines) {
+        // Look for sharedConfig object that might contain allowAnonymousTelemetry
+        if (line.includes('"sharedConfig"')) {
+          try {
+            // Try to extract the sharedConfig value
+            const match = line.match(/"sharedConfig"\s*:\s*({[^}]*})/);
+            if (match) {
+              const sharedConfigStr = match[1];
+              const sharedConfigObj = JSON.parse(sharedConfigStr);
+              if (
+                typeof sharedConfigObj.allowAnonymousTelemetry === "boolean"
+              ) {
+                salvaged.sharedConfig = {
+                  allowAnonymousTelemetry:
+                    sharedConfigObj.allowAnonymousTelemetry,
+                };
+              }
+            }
+          } catch {
+            // Continue trying other salvage methods
+          }
+        }
+      }
+    } catch {
+      // If salvage fails, return empty object - better to lose data than crash
+    }
+
+    return salvaged;
+  }
+
   update<T extends keyof GlobalContextType>(
     key: T,
     value: GlobalContextType[T],
@@ -72,8 +114,12 @@ export class GlobalContext {
         parsed = JSON.parse(data);
       } catch (e: any) {
         console.warn(
-          `Error updating global context, deleting corrupted file: ${e}`,
+          `Error updating global context, attempting to salvage security-sensitive values: ${e}`,
         );
+
+        // Attempt to salvage security-sensitive values before deleting
+        const salvaged = this.salvageGlobalContext(data);
+
         // Delete the corrupted file and recreate it fresh
         try {
           fs.unlinkSync(filepath);
@@ -82,17 +128,14 @@ export class GlobalContext {
             `Error deleting corrupted global context file: ${deleteError}`,
           );
         }
-        // Recreate the file with just the new value
-        fs.writeFileSync(
-          filepath,
-          JSON.stringify(
-            {
-              [key]: value,
-            },
-            null,
-            2,
-          ),
-        );
+
+        // Recreate the file with salvaged values plus the new value
+        const newData = {
+          ...salvaged,
+          [key]: value,
+        };
+
+        fs.writeFileSync(filepath, JSON.stringify(newData, null, 2));
         return;
       }
 
