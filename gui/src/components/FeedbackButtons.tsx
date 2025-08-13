@@ -21,10 +21,13 @@ export function FeedbackButtons({ item }: FeedbackButtonsProps) {
     setFeedback(feedback);
     if (item.promptLogs?.length) {
       for (const promptLog of item.promptLogs) {
+        const { modelTitle, ...logData } = promptLog;
         ideMessenger.post("devdata/log", {
           name: "chatFeedback",
           data: {
-            ...promptLog,
+            ...logData,
+            modelProvider: "unknown",
+            modelName: modelTitle,
             feedback,
             sessionId,
           },
