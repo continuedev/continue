@@ -87,6 +87,12 @@ function ConfigPage() {
     //   icon: <ChatBubbleLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     // },
     {
+      id: "mcp",
+      label: "MCP",
+      component: <MCPSection />,
+      icon: <Squares2X2Icon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+    },
+    {
       id: "tools",
       label: "Tools",
       component: (
@@ -98,12 +104,6 @@ function ConfigPage() {
       icon: (
         <WrenchScrewdriverIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
       ),
-    },
-    {
-      id: "mcp",
-      label: "MCP",
-      component: <MCPSection />,
-      icon: <Squares2X2Icon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
     },
     {
       id: "indexing",

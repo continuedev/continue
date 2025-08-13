@@ -1,10 +1,14 @@
 import { ModelRole } from "@continuedev/config-yaml";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
 import { useAuth } from "../../../../context/Auth";
+import { AddModelForm } from "../../../../forms/AddModelForm";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { setDialogMessage, setShowDialog } from "../../../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../../../redux/thunks/updateSelectedModelByRole";
 import { isJetBrains } from "../../../../util";
+import { BaseIconButton } from "./BaseIconButton";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
@@ -27,9 +31,25 @@ export function ModelsSection() {
     );
   }
 
+  function handleAddModel(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddModelForm
+          onDone={() => {
+            dispatch(setShowDialog(false));
+          }}
+        />,
+      ),
+    );
+  }
+
   return (
     <div>
-      <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-[auto_1fr]">
+      <div className="grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-[auto_1fr]">
         <ModelRoleSelector
           displayName="Chat"
           description="Used in the chat interface"
@@ -82,6 +102,16 @@ export function ModelsSection() {
           setupURL="https://docs.continue.dev/customize/model-roles/reranking"
         />
       </div>
+      
+      {selectedProfile?.profileType === "local" && (
+        <div className="mt-2">
+          <BaseIconButton
+            icon={PlusIcon}
+            text="Add Model"
+            onClick={handleAddModel}
+          />
+        </div>
+      )}
     </div>
   );
 }
