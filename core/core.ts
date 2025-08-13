@@ -61,6 +61,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -418,6 +419,19 @@ export class Core {
         description: prompt.description,
       };
     });
+    on("mcp/startAuthentication", async (msg) => {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      MCPManagerSingleton.getInstance().setStatus(msg.data, "authenticating");
+      const status = await performAuth(msg.data, this.ide);
+      if (status === "AUTHORIZED") {
+        await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      }
+    });
+    on("mcp/removeAuthentication", async (msg) => {
+      removeMCPAuth(msg.data, this.ide);
+      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);

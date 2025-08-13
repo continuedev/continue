@@ -26,6 +26,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MCPServerStatus,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -130,6 +131,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+
   "mcp/reloadServer": [
     {
       id: string;
@@ -147,6 +149,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       description: string | undefined;
     },
   ];
+  "mcp/startAuthentication": [MCPServerStatus, void];
+  "mcp/removeAuthentication": [MCPServerStatus, void];
+
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
