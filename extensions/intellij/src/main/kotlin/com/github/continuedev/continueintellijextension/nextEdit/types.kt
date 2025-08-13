@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.Position
+import com.github.continuedev.continueintellijextension.RangeInFile
 
 //data class NextEditOutcome(
 //    val completion: String,
@@ -66,3 +67,8 @@ enum class DiffLineType {
     OLD,
     SAME
 }
+
+data class ProcessedItem(
+    val location: RangeInFile,
+    val outcome: NextEditOutcome
+)
