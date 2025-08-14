@@ -2,14 +2,17 @@ package com.github.continuedev.continueintellijextension.`continue`.file
 
 import com.github.continuedev.continueintellijextension.FileStats
 import com.github.continuedev.continueintellijextension.FileType
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import kotlin.math.min
 
 
 class FileUtils(
@@ -48,7 +51,10 @@ class FileUtils(
     fun readFile(fileUri: String, maxLength: Int = 100_000): String {
         val found = findFile(fileUri)
             ?: return ""
-        val text = VfsUtil.loadText(found, maxLength)
+        val text = runReadAction {
+            // note: document (if exists) is more up-to-date than VFS
+            readDocument(found, maxLength) ?: VfsUtil.loadText(found, maxLength)
+        }
         return normalizeLineEndings(text)
     }
 
@@ -79,6 +85,13 @@ class FileUtils(
         val normalizedAuthority = normalizeWindowsAuthority(noParams)
         return VirtualFileManager.getInstance()
             .refreshAndFindFileByUrl(normalizedAuthority)
+    }
+
+    private fun readDocument(file: VirtualFile, maxLength: Int): String? {
+        val document = FileDocumentManager.getInstance().getDocument(file)
+            ?: return ""
+        val length = min(document.textLength, maxLength)
+        return document.getText(TextRange(0, length))
     }
 
     private fun normalizeLineEndings(text: String) =
