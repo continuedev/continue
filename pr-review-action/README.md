@@ -36,7 +36,7 @@ jobs:
 
 The action automatically handles authorization checks and only runs for:
 - PRs opened or marked ready by team members (OWNER, MEMBER, COLLABORATOR)
-- Comments containing `@continue-review` from team members
+- Comments containing `@continue-general-review` from team members
 
 ## Inputs
 
@@ -77,7 +77,7 @@ The action can be triggered in two ways:
 - When a PR is marked as "ready for review" by a team member
 
 ### Manual Trigger
-Team members can trigger a review by commenting `@continue-review` on any pull request.
+Team members can trigger a review by commenting `@continue-general-review` on any pull request.
 
 ## Versioning
 
