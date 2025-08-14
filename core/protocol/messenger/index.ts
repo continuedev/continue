@@ -92,7 +92,6 @@ export class InProcessMessenger<
     } catch (error) {
       // Capture message handling errors to Sentry
       Logger.error(error, {
-        context: "message_invoke",
         messageType: String(messageType),
         messageId: msg.messageId,
       });
@@ -144,7 +143,6 @@ export class InProcessMessenger<
     } catch (error) {
       // Capture message handling errors to Sentry
       Logger.error(error, {
-        context: "message_request",
         messageType: String(messageType),
         messageId,
       });
@@ -182,7 +180,6 @@ export class InProcessMessenger<
     } catch (error) {
       // Capture message handling errors to Sentry
       Logger.error(error, {
-        context: "message_external_request",
         messageType: String(messageType),
         messageId,
       });

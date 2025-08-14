@@ -49,7 +49,7 @@ export function anonymizeStackTrace(frames: any[]): any[] {
     filename: frame.filename
       ? anonymizeFilePath(frame.filename)
       : frame.filename,
-    abs_path: "", // Always clear absolute paths like Rasa
+    abs_path: "",
     // Remove local variables and source code context
     vars: undefined,
     pre_context: undefined,
@@ -77,7 +77,8 @@ export function anonymizeUserInfo(user: any): any {
  */
 export function anonymizeSentryEvent(event: ErrorEvent): any | null {
   try {
-    const anonymized = { ...event };
+    // Deep copy to avoid mutating the original event
+    const anonymized = structuredClone(event);
 
     // Clean exception stack traces
     if (anonymized.exception?.values) {

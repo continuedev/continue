@@ -14,6 +14,9 @@ import { isPrerelease } from "../util/index";
 import { isContinueTeamMember } from "../util/isContinueTeamMember";
 import { getLocalStorage } from "../util/localStorage";
 
+const SAMPLE_REATE = 0.1;
+const TRACES_SAMPLE_RATE = 0.25;
+
 const TelemetryProviders = ({ children }: PropsWithChildren) => {
   const allowAnonymousTelemetry = useAppSelector(
     (store) => store?.config?.config?.allowAnonymousTelemetry,
@@ -49,8 +52,8 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
         ],
 
         // For basic error tracking, a lower sample rate should be fine
-        sampleRate: 0.1,
-        tracesSampleRate: 0.25,
+        sampleRate: SAMPLE_REATE,
+        tracesSampleRate: TRACES_SAMPLE_RATE,
 
         // Privacy-conscious default
         sendDefaultPii: false,

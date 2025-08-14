@@ -126,7 +126,6 @@ export class CodebaseIndexer {
     } catch (error) {
       // Capture indexer system failures to Sentry
       Logger.error(error, {
-        context: "indexer_clear_sqlite",
         filepath: sqliteFilepath,
       });
       console.error(`Error deleting ${sqliteFilepath} folder: ${error}`);
@@ -137,7 +136,6 @@ export class CodebaseIndexer {
     } catch (error) {
       // Capture indexer system failures to Sentry
       Logger.error(error, {
-        context: "indexer_clear_lancedb",
         folderPath: lanceDbFolder,
       });
       console.error(`Error deleting ${lanceDbFolder}: ${error}`);

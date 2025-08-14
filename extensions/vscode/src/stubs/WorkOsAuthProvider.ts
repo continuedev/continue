@@ -286,7 +286,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     } catch (error: any) {
       // Capture token refresh retry errors to Sentry
       Logger.error(error, {
-        context: "workOS_token_refresh_retry",
         attempt,
         errorMessage: error.message,
         isAuthError:
