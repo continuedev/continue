@@ -41,8 +41,8 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
       {/* Agent name */}
-      <Text bold color="yellow">
-        Agent: {config.name}
+      <Text color="blue">
+        Agent: <Text color="white">{config.name}</Text>
       </Text>
 
       {/* Model */}
@@ -64,12 +64,14 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
       {/* Slash commands */}
       <Text color="blue">Slash commands:</Text>
-      {allCommands.map((command, index) => (
-        <Text key={index}>
-          - <Text color="white">/{command.name}</Text>:{" "}
-          <Text color="gray">{command.description}</Text>
-        </Text>
-      ))}
+      {allCommands
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((command, index) => (
+          <Text key={index}>
+            - <Text color="white">/{command.name}</Text>:{" "}
+            <Text color="gray">{command.description}</Text>
+          </Text>
+        ))}
 
       {/* MCP prompts */}
       {mcpPrompts.map((prompt, index) => (
