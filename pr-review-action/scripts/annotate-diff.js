@@ -33,7 +33,8 @@ function annotateDiff(diffContent) {
         line.startsWith('new file') ||
         line.startsWith('deleted file') ||
         line.startsWith('old mode') ||
-        line.startsWith('new mode')) {
+        line.startsWith('new mode') ||
+        line.startsWith('Binary files')) {
       output.push(line);
       continue;
     }
@@ -48,9 +49,12 @@ function annotateDiff(diffContent) {
       continue;
     }
     
-    // Skip "no newline" marker
+    // Handle "no newline" marker - it counts as a position but isn't annotated
     if (line.startsWith('\\ No newline')) {
-      output.push(line);
+      if (inHunk) {
+        githubPos++; // GitHub counts this as a position
+      }
+      output.push(line); // Don't annotate it
       continue;
     }
     

@@ -155,11 +155,14 @@ index abc123..def456 100644
     const result = annotateDiff(diff);
     expect(result).toContain('[POS:1]  line1');
     expect(result).toContain('[POS:2] -old line');
+    // Position 3 is the first "No newline" marker (not annotated but counted)
     expect(result).toContain('\\ No newline at end of file');
-    expect(result).toContain('[POS:3] +new line');
+    expect(result).toContain('[POS:4] +new line'); // Position 4 due to "No newline" at position 3
+    // Position 5 is the second "No newline" marker (not annotated but counted)
     expect(result).toContain('\\ No newline at end of file');
-    // No newline markers should not get position numbers
-    expect(result).not.toContain('[POS:4] \\');
+    // No newline markers should not get [POS:N] annotations
+    expect(result).not.toContain('[POS:3] \\');
+    expect(result).not.toContain('[POS:5] \\');
   });
 
   test('handles file mode changes', () => {
@@ -186,6 +189,123 @@ index abc123..def456 100644
     const diff = '';
     const result = annotateDiff(diff);
     expect(result).toBe('');
+  });
+
+  test('handles binary files - modified', () => {
+    const diff = `diff --git a/image.png b/image.png
+index abc123..def456 100644
+Binary files a/image.png and b/image.png differ`;
+
+    const result = annotateDiff(diff);
+    expect(result).toContain('diff --git a/image.png b/image.png');
+    expect(result).toContain('Binary files a/image.png and b/image.png differ');
+    // Binary files line should not be annotated
+    expect(result).not.toContain('[POS:');
+  });
+
+  test('handles binary files - added', () => {
+    const diff = `diff --git a/newimage.png b/newimage.png
+new file mode 100644
+index 0000000..abc123
+Binary files /dev/null and b/newimage.png differ`;
+
+    const result = annotateDiff(diff);
+    expect(result).toContain('diff --git a/newimage.png b/newimage.png');
+    expect(result).toContain('new file mode 100644');
+    expect(result).toContain('Binary files /dev/null and b/newimage.png differ');
+    // Binary files line should not be annotated
+    expect(result).not.toContain('[POS:');
+  });
+
+  test('handles binary files - deleted', () => {
+    const diff = `diff --git a/oldimage.png b/oldimage.png
+deleted file mode 100644
+index abc123..0000000
+Binary files a/oldimage.png and /dev/null differ`;
+
+    const result = annotateDiff(diff);
+    expect(result).toContain('diff --git a/oldimage.png b/oldimage.png');
+    expect(result).toContain('deleted file mode 100644');
+    expect(result).toContain('Binary files a/oldimage.png and /dev/null differ');
+    // Binary files line should not be annotated
+    expect(result).not.toContain('[POS:');
+  });
+
+  test('handles mixed text and binary files', () => {
+    const diff = `diff --git a/text.js b/text.js
+index abc123..def456 100644
+--- a/text.js
++++ b/text.js
+@@ -1,2 +1,2 @@
+ line1
+-old
++new
+diff --git a/image.png b/image.png
+index 111111..222222 100644
+Binary files a/image.png and b/image.png differ
+diff --git a/another.js b/another.js
+index 333333..444444 100644
+--- a/another.js
++++ b/another.js
+@@ -1,1 +1,1 @@
+-foo
++bar`;
+
+    const result = annotateDiff(diff);
+    
+    // First file (text)
+    expect(result).toContain('[POS:1]  line1');
+    expect(result).toContain('[POS:2] -old');
+    expect(result).toContain('[POS:3] +new');
+    
+    // Second file (binary) - no positions
+    expect(result).toContain('Binary files a/image.png and b/image.png differ');
+    
+    // Third file (text) - positions reset
+    const lastFileSection = result.split('diff --git a/another.js')[1];
+    expect(lastFileSection).toContain('[POS:1] -foo');
+    expect(lastFileSection).toContain('[POS:2] +bar');
+  });
+
+  test('multiple no newline markers accumulate positions', () => {
+    const diff = `diff --git a/file.js b/file.js
+index abc123..def456 100644
+--- a/file.js
++++ b/file.js
+@@ -1,3 +1,3 @@
+ line1
+-old1
+\\ No newline at end of file
++new1
+\\ No newline at end of file
+@@ -10,3 +10,3 @@
+ line10
+-old2
+\\ No newline at end of file
++new2
+\\ No newline at end of file`;
+
+    const result = annotateDiff(diff);
+    
+    // First hunk
+    expect(result).toContain('[POS:1]  line1');
+    expect(result).toContain('[POS:2] -old1');
+    // Position 3 is the first "No newline" marker
+    expect(result).toContain('[POS:4] +new1');
+    // Position 5 is the second "No newline" marker
+    
+    // Second hunk (starts at position 7 = 5 + 1 for between hunks + 1)
+    expect(result).toContain('[POS:7]  line10');
+    expect(result).toContain('[POS:8] -old2');
+    // Position 9 is the third "No newline" marker
+    expect(result).toContain('[POS:10] +new2');
+    // Position 11 is the fourth "No newline" marker
+    
+    // Verify "No newline" markers are not annotated
+    expect(result).not.toContain('[POS:3] \\');
+    expect(result).not.toContain('[POS:5] \\');
+    expect(result).not.toContain('[POS:9] \\');
+    expect(result).not.toContain('[POS:11] \\');
   });
 
   test('complex multi-file, multi-hunk diff', () => {
