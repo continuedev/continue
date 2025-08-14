@@ -4,6 +4,7 @@ import {
   ConfigResult,
   FQSN,
   FullSlug,
+  Policy,
   SecretResult,
   SecretType,
 } from "@continuedev/config-yaml";
@@ -15,6 +16,11 @@ import { Logger } from "../util/Logger.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
+
+export interface PolicyResponse {
+  orgSlug?: string;
+  policy?: Policy;
+}
 
 export interface ControlPlaneWorkspace {
   id: string;
@@ -222,6 +228,21 @@ export class ControlPlaneClient {
         context: "control_plane_list_assistant_slugs",
         organizationId,
       });
+      return null;
+    }
+  }
+
+  public async getPolicy(): Promise<PolicyResponse | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request(`ide/policy`, {
+        method: "GET",
+      });
+      return (await resp.json()) as PolicyResponse;
+    } catch (e) {
       return null;
     }
   }

@@ -1,6 +1,5 @@
 import { ConfigDependentToolParams, GetTool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
 
 export interface RequestRuleArgs {
   name: string;
@@ -60,9 +59,9 @@ export const requestRuleTool: GetTool = ({ rules }) => ({
       },
     },
   },
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.RequestRule,
-    getRequestRuleSystemMessageDescription(rules),
-    [["name", "rule_name"]],
-  ),
+  systemMessageDescription: {
+    prefix: getRequestRuleSystemMessageDescription(rules),
+    exampleArgs: [["name", "rule_name"]],
+  },
+  defaultToolPolicy: "disabled",
 });

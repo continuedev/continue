@@ -1,7 +1,7 @@
 import { Position } from "../..";
 import {
-  EDITABLE_REGION_END_TOKEN,
-  EDITABLE_REGION_START_TOKEN,
+  INSTINCT_EDITABLE_REGION_END_TOKEN,
+  INSTINCT_EDITABLE_REGION_START_TOKEN,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "../constants";
@@ -53,9 +53,9 @@ export function insertEditableRegionTokensWithStaticRange(
 
   const instrumentedLines = [
     ...lines.slice(0, editableRegionStart),
-    EDITABLE_REGION_START_TOKEN,
+    INSTINCT_EDITABLE_REGION_START_TOKEN,
     ...lines.slice(editableRegionStart, editableRegionEnd + 1),
-    EDITABLE_REGION_END_TOKEN,
+    INSTINCT_EDITABLE_REGION_END_TOKEN,
     ...lines.slice(editableRegionEnd + 1),
   ];
 

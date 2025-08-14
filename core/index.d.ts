@@ -455,6 +455,7 @@ export type FileSymbolMap = Record<string, SymbolWithRange[]>;
 
 export interface PromptLog {
   modelTitle: string;
+  modelProvider: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -1069,6 +1070,11 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
+export type ToolPolicy =
+  | "allowedWithPermission"
+  | "allowedWithoutPermission"
+  | "disabled";
+
 export interface Tool {
   type: "function";
   function: {
@@ -1088,7 +1094,11 @@ export interface Tool {
   faviconUrl?: string;
   group: string;
   originalFunctionName?: string;
-  systemMessageDescription?: string;
+  systemMessageDescription?: {
+    prefix: string;
+    exampleArgs?: Array<[string, string | number]>;
+  };
+  defaultToolPolicy?: ToolPolicy;
 }
 
 interface ToolChoice {
@@ -1132,6 +1142,7 @@ export interface BaseCompletionOptions {
 export interface ModelCapability {
   uploadImage?: boolean;
   tools?: boolean;
+  nextEdit?: boolean;
 }
 
 export interface ModelDescription {
@@ -1268,6 +1279,7 @@ export type MCPConnectionStatus =
   | "connecting"
   | "connected"
   | "error"
+  | "authenticating"
   | "not-connected";
 
 export type MCPPromptArgs = {
@@ -1313,6 +1325,7 @@ export interface MCPTool {
 export interface MCPServerStatus extends MCPOptions {
   status: MCPConnectionStatus;
   errors: string[];
+  isProtectedResource: boolean;
 
   prompts: MCPPrompt[];
   tools: MCPTool[];

@@ -461,6 +461,7 @@ describe("streamResponseThunk", () => {
         prompt: "Hello",
         completion: "Hi there!",
         modelProvider: "anthropic",
+        modelName: "Claude 3.5 Sonnet",
         modelTitle: "Claude 3.5 Sonnet",
         sessionId: "session-123",
       },

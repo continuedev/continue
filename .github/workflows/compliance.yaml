@@ -40,7 +40,7 @@ jobs:
           fi
 
       - name: Add PR title guidance comment
-        if: steps.pr-title-check.outputs.valid == 'false'
+        if: always() && steps.pr-title-check.outputs.valid == 'false'
         uses: actions/github-script@v7
         with:
           script: |
@@ -88,6 +88,9 @@ jobs:
                 ].join('\n')
               });
             }
+      - name: Ensure job always succeeds
+        if: always()
+        run: echo "✅ Conventional commits check completed (warning only)"
 
   security-audit:
     name: Security Audit
@@ -98,7 +101,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -131,7 +134,7 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check required files
         run: |

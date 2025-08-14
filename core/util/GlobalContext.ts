@@ -9,6 +9,10 @@ import {
   SharedConfigSchema,
 } from "../config/sharedConfig";
 
+import {
+  OAuthClientInformationFull,
+  OAuthTokens,
+} from "@modelcontextprotocol/sdk/shared/auth.js";
 import { getGlobalContextFilePath } from "./paths";
 
 export type GlobalContextModelSelections = Partial<
@@ -39,6 +43,14 @@ export type GlobalContextType = {
   isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
   failedDocs: SiteIndexingConfig[];
+  mcpOauthStorage: Record<
+    string,
+    {
+      clientInformation?: OAuthClientInformationFull;
+      tokens?: OAuthTokens;
+      codeVerifier?: string;
+    }
+  >;
   shownDeprecatedProviderWarnings: {
     [providerTitle: string]: boolean;
   };

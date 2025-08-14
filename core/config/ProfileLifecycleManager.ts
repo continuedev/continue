@@ -2,6 +2,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   FullSlug,
+  Policy,
 } from "@continuedev/config-yaml";
 
 import {
@@ -31,6 +32,7 @@ export interface OrganizationDescription {
   iconUrl: string;
   name: string;
   slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
+  policy?: Policy;
 }
 
 export type OrgWithProfiles = OrganizationDescription & {

@@ -2,25 +2,30 @@ import Handlebars from "handlebars";
 import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import { NEXT_EDIT_MODELS } from "../../llm/constants";
 import {
-  CURRENT_FILE_CONTENT_CLOSE,
-  CURRENT_FILE_CONTENT_OPEN,
-  CURSOR,
-  EDIT_DIFF_HISTORY_CLOSE,
-  EDIT_DIFF_HISTORY_OPEN,
-  RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
-  RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
-  USER_CURSOR_IS_HERE_TOKEN,
+  INSTINCT_USER_PROMPT_PREFIX,
+  MERCURY_CURRENT_FILE_CONTENT_CLOSE,
+  MERCURY_CURRENT_FILE_CONTENT_OPEN,
+  MERCURY_EDIT_DIFF_HISTORY_CLOSE,
+  MERCURY_EDIT_DIFF_HISTORY_OPEN,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
 } from "../constants";
 import {
+  InstinctTemplateVars,
   MercuryTemplateVars,
-  Model1TemplateVars,
   NextEditTemplate,
   PromptMetadata,
   SystemPrompt,
   TemplateVars,
   UserPrompt,
 } from "../types";
+import {
+  contextSnippetsBlock,
+  currentFileContentBlock as instinctCurrentFileContentBlock,
+  editHistoryBlock as instinctEditHistoryBlock,
+} from "./instinct";
 import {
   currentFileContentBlock,
   editHistoryBlock,
@@ -33,26 +38,17 @@ import {
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
-export type NextEditModelName =
-  | "mercury-coder-nextedit"
-  | "model-1"
-  | "this field is not used";
-
-const NEXT_EDIT_MODEL_TEMPLATES: Record<NextEditModelName, NextEditTemplate> = {
+const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
   "mercury-coder-nextedit": {
-    template: `${RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${CURRENT_FILE_CONTENT_CLOSE}\n\n${EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at [CURRENT FILE PATH].\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
+    template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at {{{currentFilePath}}}.\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
   },
-  "model-1": {
-    template:
-      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
-  },
-  "this field is not used": {
-    template: "NEXT_EDIT",
+  instinct: {
+    template: `${INSTINCT_USER_PROMPT_PREFIX}\n\n### Context:\n{{{contextSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpts:\n{{{currentFilePath}}}\n\n{{{currentFileContent}}}\`\`\`\n### Response:`,
   },
 };
 
 function templateRendererOfModel(
-  modelName: NextEditModelName,
+  modelName: NEXT_EDIT_MODELS,
 ): TemplateRenderer {
   let template = NEXT_EDIT_MODEL_TEMPLATES[modelName];
   if (!template) {
@@ -70,18 +66,7 @@ export async function renderPrompt(
   helper: HelperVars,
   ctx: any,
 ): Promise<PromptMetadata> {
-  let modelName = helper.modelName as NextEditModelName;
-
-  if (modelName === "this field is not used") {
-    return {
-      prompt: {
-        role: "user",
-        content: "NEXT_EDIT",
-      },
-      userEdits: "",
-      userExcerpts: helper.fileContents,
-    };
-  }
+  let modelName = helper.modelName as NEXT_EDIT_MODELS;
 
   // Validate that the modelName is actually a supported model.
   if (!Object.keys(NEXT_EDIT_MODEL_TEMPLATES).includes(modelName)) {
@@ -91,7 +76,7 @@ export async function renderPrompt(
     );
 
     if (matchingModel) {
-      modelName = matchingModel as NextEditModelName;
+      modelName = matchingModel as NEXT_EDIT_MODELS;
     } else {
       throw new Error(
         `${helper.modelName} is not yet supported for next edit.`,
@@ -108,11 +93,11 @@ export async function renderPrompt(
     case "mercury-coder-nextedit": {
       userEdits = ctx.editDiffHistory;
 
-      editedCodeWithTokens = insertTokens(
-        helper.fileContents.split("\n"),
-        helper.pos,
-        CURSOR,
-      );
+      // editedCodeWithTokens = insertTokens(
+      //   helper.fileContents.split("\n"),
+      //   helper.pos,
+      //   MERCURY_CURSOR,
+      // );
 
       const mercuryCtx: MercuryTemplateVars = {
         recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
@@ -125,28 +110,42 @@ export async function renderPrompt(
           helper.pos,
         ),
         editDiffHistory: editHistoryBlock(ctx.editDiffHistory),
+        currentFilePath: ctx.currentFilePath,
       };
 
       tv = mercuryCtx;
 
+      editedCodeWithTokens = mercuryCtx.currentFileContent;
+
       break;
     }
-    case "model-1": {
-      userEdits = ctx.userEdits;
+    case "instinct": {
+      userEdits = ctx.editDiffHistory;
 
-      editedCodeWithTokens = insertTokens(
-        helper.fileContents.split("\n"),
-        helper.pos,
-        USER_CURSOR_IS_HERE_TOKEN,
-      );
+      // editedCodeWithTokens = insertTokens(
+      //   helper.fileContents.split("\n"),
+      //   helper.pos,
+      //   INSTINCT_USER_CURSOR_IS_HERE_TOKEN,
+      // );
 
-      const model1Ctx: Model1TemplateVars = {
-        userEdits: ctx.userEdits,
+      const instinctCtx: InstinctTemplateVars = {
+        contextSnippets: contextSnippetsBlock(ctx.contextSnippets),
+        currentFileContent: instinctCurrentFileContentBlock(
+          ctx.currentFileContent,
+          ctx.windowStart,
+          ctx.windowEnd,
+          ctx.editableRegionStartLine,
+          ctx.editableRegionEndLine,
+          helper.pos,
+        ),
+        editDiffHistory: instinctEditHistoryBlock(ctx.editDiffHistory),
+        currentFilePath: ctx.currentFilePath,
         languageShorthand: ctx.languageShorthand,
-        userExcerpts: ctx.userExcerpts,
       };
 
-      tv = model1Ctx;
+      tv = instinctCtx;
+
+      editedCodeWithTokens = instinctCtx.currentFileContent;
 
       break;
     }

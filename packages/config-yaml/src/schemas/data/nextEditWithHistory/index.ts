@@ -15,4 +15,7 @@ export const nextEditEventAllSchema = baseDevDataAllSchema.extend({
   beforeCursorPos: z.object({ line: z.number(), character: z.number() }),
   afterCursorPos: z.object({ line: z.number(), character: z.number() }),
   context: z.string(),
+  modelProvider: z.string(),
+  modelName: z.string(),
+  modelTitle: z.string(),
 });
