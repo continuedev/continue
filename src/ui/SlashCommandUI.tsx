@@ -46,10 +46,6 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       return a.name.localeCompare(b.name);
     });
 
-  // Find the longest command name for alignment
-  const maxCommandLength = Math.max(
-    ...filteredCommands.map((cmd) => cmd.name.length),
-  );
   if (filteredCommands.length === 0) {
     return (
       <Box paddingX={1} marginX={1} marginBottom={1}>
@@ -63,6 +59,10 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       {filteredCommands.map((command, index) => {
         const isSelected = index === selectedIndex;
 
+        // Find the longest command name to vertically align command descriptions
+        const maxCommandLength = Math.max(
+          ...filteredCommands.map((cmd) => cmd.name.length),
+        );
         const paddedCommandName = `/${command.name}`.padEnd(
           maxCommandLength + 1,
         );

@@ -47,7 +47,8 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
       {/* Model */}
       <Text color="blue">
-        <Text bold>Model:</Text> <Text color="white">{model.name.split("/").pop()}</Text>
+        <Text bold>Model:</Text>{" "}
+        <Text color="white">{model.name.split("/").pop()}</Text>
       </Text>
 
       <Text> </Text>
@@ -61,7 +62,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
           <Text> </Text>
         </>
       )}
-
 
       {/* MCP prompts */}
       {mcpPrompts.length > 0 && (
@@ -92,7 +92,9 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {/* MCP Servers */}
       {config.mcpServers?.length && (
         <>
-          <Text bold color="blue">MCP Servers:</Text>
+          <Text bold color="blue">
+            MCP Servers:
+          </Text>
           {config.mcpServers.map((server: any, index: number) => (
             <Text key={index}>
               - <Text color="white">{server?.name}</Text>

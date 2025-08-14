@@ -29,7 +29,12 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             message.toolResult?.startsWith("Permission denied") ||
             message.toolResult?.startsWith("Error");
           return (
-            <Box key={index} marginLeft={1} marginBottom={1} flexDirection="column">
+            <Box
+              key={index}
+              marginLeft={1}
+              marginBottom={1}
+              flexDirection="column"
+            >
               <Box>
                 <Text color={isFailure ? "red" : "green"}>●</Text>
                 <Text> {message.content}</Text>
