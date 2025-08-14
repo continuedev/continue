@@ -28,6 +28,7 @@ import { getToolDisplayName } from "../tools/index.js";
 import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
@@ -61,6 +62,16 @@ interface ServerState {
 }
 
 export async function serve(prompt?: string, options: ServeOptions = {}) {
+  // Check if prompt should come from stdin instead of parameter
+  let actualPrompt = prompt;
+  if (!prompt) {
+    // Try to read from stdin (for piped input like: cat file | cn serve)
+    const stdinInput = readStdinSync();
+    if (stdinInput) {
+      actualPrompt = stdinInput;
+    }
+  }
+
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
@@ -332,9 +343,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     );
 
     // If initial prompt provided, queue it for processing
-    if (prompt) {
+    if (actualPrompt) {
       console.log(chalk.dim("\nProcessing initial prompt..."));
-      state.messageQueue.push(prompt);
+      state.messageQueue.push(actualPrompt);
       processMessages(state, llmApi);
     }
   });
