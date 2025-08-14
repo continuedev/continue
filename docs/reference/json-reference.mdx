@@ -18,9 +18,9 @@ Below are details for each property that can be set in `config.json`. The config
 
 **All properties at all levels are optional unless explicitly marked required**
 
-### `models`
+## `models`
 
-Your **chat** models are defined here, which are used for [Chat](/features/chat/how-it-works), [Edit](/features/edit/how-it-works) and [VS Code actions](/customization/overview#vscode-actions).
+Your **chat** models are defined here, which are used for [Chat](/features/chat/how-it-works), [Edit](/features/edit/how-it-works) and [VS Code actions](/customize/overview#vscode-actions).
 
 Each model has specific configuration options tailored to its provider and functionality, which can be seen as suggestions while editing the json.
 
@@ -85,7 +85,7 @@ config.json
 }
 ```
 
-### `tabAutocompleteModel`
+## `tabAutocompleteModel`
 
 Specifies the model or models for tab autocompletion, defaulting to an Ollama instance. This property uses the same format as `models`. Can be an array of models or an object for one model.
 
@@ -137,7 +137,7 @@ config.json
 }
 ```
 
-### `embeddingsProvider`
+## `embeddingsProvider`
 
 Embeddings model settings - the model used for @Codebase and @docs.
 
@@ -172,7 +172,7 @@ config.json
 }
 ```
 
-### `completionOptions`
+## `completionOptions`
 
 Parameters that control the behavior of text generation and completion settings. Top-level `completionOptions` apply to all models, _unless overridden at the model level_.
 
@@ -202,7 +202,7 @@ config.json
 { "completionOptions": { "stream": false, "temperature": 0.5 } }
 ```
 
-### `requestOptions`
+## `requestOptions`
 
 Default HTTP request options that apply to all models and context providers, unless overridden at the model level.
 
@@ -261,7 +261,7 @@ config.json
 }
 ```
 
-### `docs`
+## `docs`
 
 List of documentation sites to index.
 
@@ -282,7 +282,7 @@ config.json
 "docs": [    {    "title": "Continue",    "startUrl": "https://docs.continue.dev/intro",    "faviconUrl": "https://docs.continue.dev/favicon.ico",  }]
 ```
 
-### `slashCommands`
+## `slashCommands`
 
 Custom commands initiated by typing "/" in the sidebar. Commands include predefined functionality or may be user-defined.
 
@@ -295,7 +295,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 The following commands are built-in and can be added to `config.json` to make them visible:
 
-#### `/share`
+### `/share`
 
 Generate a shareable markdown transcript of your current chat history.
 
@@ -315,7 +315,7 @@ config.json
 
 Use the `outputDir` parameter to specify where you want to the markdown file to be saved.
 
-#### `/cmd`
+### `/cmd`
 
 Generate a shell command from natural language and (only in VS Code) automatically paste it into the terminal.
 
@@ -329,7 +329,7 @@ config.json
 }
 ```
 
-#### `/commit`
+### `/commit`
 
 Shows the LLM your current git diff and asks it to generate a commit message.
 
@@ -346,7 +346,7 @@ config.json
 }
 ```
 
-#### `/http`
+### `/http`
 
 Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup. The endpoint should return a sequence of string updates, which will be streamed to the Continue sidebar. See our basic [FastAPI example](https://github.com/continuedev/continue/blob/74002369a5e435735b83278fb965e004ae38a97d/core/context/providers/context_provider_server.py#L34-L45) for reference.
 
@@ -364,7 +364,7 @@ config.json
 }
 ```
 
-#### `/issue`
+### `/issue`
 
 Describe the issue you'd like to generate, and Continue will turn into a well-formatted title and body, then give you a link to the draft so you can submit. Make sure to set the URL of the repository you want to generate issues for.
 
@@ -382,7 +382,7 @@ config.json
 }
 ```
 
-#### `/onboard`
+### `/onboard`
 
 The onboard slash command helps to familiarize yourself with a new project by analyzing the project structure, READMEs, and dependency files. It identifies key folders, explains their purpose, and highlights popular packages used. Additionally, it offers insights into the project's architecture.
 
@@ -463,15 +463,15 @@ config.json
 }
 ```
 
-### `userToken`
+## `userToken`
 
 An optional token that identifies the user, primarily for authenticated services.
 
-### `systemMessage`
+## `systemMessage`
 
 Defines a system message that appears before every response from the language model, providing guidance or context.
 
-### `experimental`
+## `experimental`
 
 Several experimental config parameters are available, as described below:
 
@@ -498,7 +498,7 @@ Several experimental config parameters are available, as described below:
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
 
-- `modelContextProtocolServers`: See [Model Context Protocol](/customization/mcp-tools)
+- `modelContextProtocolServers`: See [Model Context Protocol](/customize/deep-dives/mcp)
 
 Example
 
@@ -531,7 +531,7 @@ config.json
 }
 ```
 
-### Fully deprecated settings
+## Fully deprecated settings
 
 Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](/customize/settings). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
 
