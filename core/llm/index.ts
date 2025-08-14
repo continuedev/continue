@@ -779,6 +779,7 @@ export abstract class BaseLLM implements ILLM {
 
     return {
       modelTitle: this.title ?? completionOptions.model,
+      modelProvider: this.underlyingProviderName,
       prompt,
       completion,
       completionOptions,
@@ -1094,6 +1095,7 @@ export abstract class BaseLLM implements ILLM {
 
     return {
       modelTitle: this.title ?? completionOptions.model,
+      modelProvider: this.underlyingProviderName,
       prompt,
       completion,
       completionOptions,

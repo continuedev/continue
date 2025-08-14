@@ -8,6 +8,7 @@ import { store } from "../redux/store";
 function extractModelInfo(toolCallState: ToolCallState): {
   modelProvider: string;
   modelName: string;
+  modelTitle: string;
 } {
   // Get the conversation history to find the model info
   const history = store.getState().session.history;
@@ -29,6 +30,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
     return {
       modelProvider: modelParts[0] || "unknown",
       modelName: modelParts[1] || String(assistantMessage.message.model),
+      modelTitle: modelParts[1] || String(assistantMessage.message.model),
     };
   }
 
@@ -39,6 +41,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
   return {
     modelProvider: chatModel?.provider || "unknown",
     modelName: chatModel?.model || "unknown",
+    modelTitle: chatModel?.model || "unknown",
   };
 }
 

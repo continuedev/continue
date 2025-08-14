@@ -14,6 +14,7 @@ export const editInteractionEventSchema_0_2_0 =
     prompt: true,
     completion: true,
     modelName: true,
+    modelTitle: true,
     modelProvider: true,
     filepath: true,
   });

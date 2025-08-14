@@ -14,6 +14,7 @@ export const chatInteractionEventSchema_0_2_0 =
     prompt: true,
     completion: true,
     modelName: true,
+    modelTitle: true,
     modelProvider: true,
     sessionId: true,
     tools: true,

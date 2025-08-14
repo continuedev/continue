@@ -17,4 +17,5 @@ export const nextEditEventAllSchema = baseDevDataAllSchema.extend({
   context: z.string(),
   modelProvider: z.string(),
   modelName: z.string(),
+  modelTitle: z.string(),
 });

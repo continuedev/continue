@@ -13,6 +13,7 @@ export const editOutcomeEventSchema_0_2_0 = editOutcomeEventAllSchema.pick({
   prompt: true,
   completion: true,
   modelName: true,
+  modelTitle: true,
   modelProvider: true,
   accepted: true,
   previousCode: true,

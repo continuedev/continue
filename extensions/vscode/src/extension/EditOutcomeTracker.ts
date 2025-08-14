@@ -7,6 +7,7 @@ export interface PendingEditData {
   timestamp: string;
   modelProvider: string;
   modelName: string;
+  modelTitle: string;
   prompt: string;
   completion: string;
   previousCode: string;
@@ -57,6 +58,7 @@ class EditOutcomeTracker {
       data: {
         modelProvider: pendingEdit.modelProvider,
         modelName: pendingEdit.modelName,
+        modelTitle: pendingEdit.modelName,
         prompt: pendingEdit.prompt,
         completion: pendingEdit.completion,
         previousCode: pendingEdit.previousCode,

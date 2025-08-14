@@ -1,7 +1,6 @@
 import { chatFeedbackEventAllSchema } from "./index.js";
 
 export const chatFeedbackEventSchema_0_1_0 = chatFeedbackEventAllSchema.pick({
-  modelProvider: true,
   modelName: true,
   completionOptions: true,
   prompt: true,

@@ -537,6 +537,7 @@ export class VerticalDiffManager {
       timestamp: new Date().toISOString(),
       modelProvider: model.underlyingProviderName,
       modelName: model.title ?? "",
+      modelTitle: model.title ?? "",
       prompt: stripImages(prompt),
       completion: newCode,
       previousCode,

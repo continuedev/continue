@@ -127,6 +127,7 @@ export const processNextEditData = async ({
         context: autocompleteContext,
         modelProvider,
         modelName,
+        modelTitle: modelName,
       },
     });
   }

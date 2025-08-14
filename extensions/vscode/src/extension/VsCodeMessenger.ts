@@ -30,6 +30,7 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { VsCodeExtension } from "./VsCodeExtension";
 
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
@@ -241,6 +242,7 @@ export class VsCodeMessenger {
           completion: fileAfterEdit ?? "",
           modelProvider: model.underlyingProviderName,
           modelName: model.title ?? "",
+          modelTitle: model.title ?? "",
           filepath: msg.data.range.filepath,
         },
       });

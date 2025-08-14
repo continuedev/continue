@@ -3,7 +3,6 @@ import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -27,9 +26,9 @@ import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTo
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -275,6 +274,7 @@ export const streamNormalInput = createAsyncThunk<
             completion: next.value.completion,
             modelProvider: selectedChatModel.underlyingProviderName,
             modelName: selectedChatModel.title,
+            modelTitle: selectedChatModel.title,
             sessionId: state.session.id,
             ...(!!activeTools.length && {
               tools: activeTools.map((tool) => tool.function.name),
