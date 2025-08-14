@@ -117,7 +117,9 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
         <TerminalCollapsibleContainer
           collapsible={processedTerminalContent.isLimited}
           hiddenLinesCount={processedTerminalContent.hiddenLinesCount}
-          className="-mt-4"
+          className={
+            processedTerminalContent.hiddenLinesCount === 0 ? "-mt-3" : "-mt-5"
+          }
           collapsedContent={
             <Ansi>{processedTerminalContent.limitedContent}</Ansi>
           }
