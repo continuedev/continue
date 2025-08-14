@@ -72,13 +72,13 @@ import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
 import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
+import { PrefetchQueue } from "./nextEdit/NextEditPrefetchQueue";
 import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { Logger } from "./util/Logger.js";
 import { getUriPathBasename } from "./util/uri";
-import { PrefetchQueue } from "./nextEdit/NextEditPrefetchQueue";
 
 const hasRulesFiles = (uris: string[]): boolean => {
   for (const uri of uris) {
@@ -168,7 +168,7 @@ export class Core {
         const mcpProviderNames = Array.from(mcpManager.connections.keys()).map(
           (mcpId) => `mcp-${mcpId}`,
         );
-        
+
         if (mcpProviderNames.length > 0) {
           this.messenger.send("refreshSubmenuItems", {
             providers: mcpProviderNames,
@@ -176,34 +176,35 @@ export class Core {
         }
       };
 
-    this.configHandler.onConfigUpdate((result) => {
-      void (async () => {
-        const serializedResult = await this.configHandler.getSerializedConfig();
-        this.messenger.send("configUpdate", {
-          result: serializedResult,
-          profileId:
-            this.configHandler.currentProfile?.profileDescription.id || null,
-          organizations: this.configHandler.getSerializedOrgs(),
-          selectedOrgId: this.configHandler.currentOrg?.id ?? null,
-        });
-
-        // update additional submenu context providers registered via VSCode API
-        const additionalProviders =
-          this.configHandler.getAdditionalSubmenuContextProviders();
-        if (additionalProviders.length > 0) {
-          this.messenger.send("refreshSubmenuItems", {
-            providers: additionalProviders,
+      this.configHandler.onConfigUpdate((result) => {
+        void (async () => {
+          const serializedResult =
+            await this.configHandler.getSerializedConfig();
+          this.messenger.send("configUpdate", {
+            result: serializedResult,
+            profileId:
+              this.configHandler.currentProfile?.profileDescription.id || null,
+            organizations: this.configHandler.getSerializedOrgs(),
+            selectedOrgId: this.configHandler.currentOrg?.id ?? null,
           });
-        }
-      })();
-    });
 
-    this.codeBaseIndexer = new CodebaseIndexer(
-      this.configHandler,
-      this.ide,
-      this.messenger,
-      this.globalContext.get("indexingPaused"),
-    );
+          // update additional submenu context providers registered via VSCode API
+          const additionalProviders =
+            this.configHandler.getAdditionalSubmenuContextProviders();
+          if (additionalProviders.length > 0) {
+            this.messenger.send("refreshSubmenuItems", {
+              providers: additionalProviders,
+            });
+          }
+        })();
+      });
+
+      this.codeBaseIndexer = new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+        this.globalContext.get("indexingPaused"),
+      );
 
       // Dev Data Logger
       const dataLogger = DataLogger.getInstance();
