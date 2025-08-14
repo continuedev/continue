@@ -39,9 +39,13 @@ export class TextBuffer {
   }
 
   insertText(text: string): void {
+    // Normalize line endings to prevent terminal display issues
+    const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     this._text =
-      this._text.slice(0, this._cursor) + text + this._text.slice(this._cursor);
-    this._cursor += text.length;
+      this._text.slice(0, this._cursor) +
+      normalizedText +
+      this._text.slice(this._cursor);
+    this._cursor += normalizedText.length;
   }
 
   deleteCharAt(position: number): void {
@@ -268,7 +272,7 @@ export class TextBuffer {
     // instead of using bracketed paste mode. We detect this by timing between inputs.
     if (
       input.length > RAPID_INPUT_THRESHOLD ||
-      (input.length > 50 && this._rapidInputBuffer.length === 0)
+      (input.length >= 50 && this._rapidInputBuffer.length === 0)
     ) {
       this._rapidInputStartPos = this._cursor;
 
