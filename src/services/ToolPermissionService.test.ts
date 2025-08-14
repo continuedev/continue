@@ -343,4 +343,56 @@ describe("ToolPermissionService", () => {
       ]);
     });
   });
+
+  describe("reloadPermissions", () => {
+    test("should reload permissions from files in normal mode", async () => {
+      const mockPolicies = [
+        { tool: "Edit", permission: "allow" as const },
+        { tool: "Write", permission: "ask" as const },
+      ];
+      
+      // Mock the precedence resolver to return fresh policies
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockReturnValue(mockPolicies);
+      
+      const service = new ToolPermissionService();
+      service.initializeSync({ mode: "normal" });
+      
+      // Verify initial state
+      expect(service.getPermissions().policies).toEqual(mockPolicies);
+      
+      // Simulate new policies being added to the file
+      const newMockPolicies = [
+        ...mockPolicies,
+        { tool: "Read", permission: "allow" as const },
+      ];
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockReturnValue(newMockPolicies);
+      
+      // Reload permissions
+      await service.reloadPermissions();
+      
+      // Verify policies were reloaded
+      expect(service.getPermissions().policies).toEqual(newMockPolicies);
+      expect(precedenceResolver.resolvePermissionPrecedence).toHaveBeenCalledWith({
+        personalSettings: true,
+        useDefaults: true,
+      });
+    });
+    
+    test("should skip reload in non-normal modes", async () => {
+      const service = new ToolPermissionService();
+      service.initializeSync({ mode: "plan" });
+      
+      const initialPolicies = service.getPermissions().policies;
+      
+      // Clear the mock call count
+      vi.mocked(precedenceResolver.resolvePermissionPrecedence).mockClear();
+      
+      // Try to reload
+      await service.reloadPermissions();
+      
+      // Verify no reload happened
+      expect(service.getPermissions().policies).toEqual(initialPolicies);
+      expect(precedenceResolver.resolvePermissionPrecedence).not.toHaveBeenCalled();
+    });
+  });
 });

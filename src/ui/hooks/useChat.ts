@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
+import { services } from "../../services/index.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
@@ -388,11 +389,15 @@ export function useChat({
         );
 
         await addPolicyToYaml(policyRule);
-
         logger.debug(`Policy created: ${policyRule}`);
+
+        // Reload permissions to pick up the new policy without requiring restart
+        await services.mode.getToolPermissionService().reloadPermissions();
       } catch (error) {
-        logger.error("Failed to create policy", { error });
-        // Continue with the approval even if policy creation fails
+        logger.error("Failed to create policy or reload permissions", {
+          error,
+        });
+        // Continue with the approval even if policy creation/reload fails
       }
     }
 
