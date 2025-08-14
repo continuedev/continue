@@ -23,7 +23,7 @@ class AddLicenseKey : AnAction() {
         val messenger = e.project?.service<ContinuePluginService>()?.coreMessenger
             ?: return
         messenger.request("mdm/setLicenseKey", mapOf("licenseKey" to dialog.licenseKey), null) { response ->
-            val isValid = response.castNestedOrNull<Boolean>("content")!!
+            val isValid = response.castNestedOrNull<Boolean>("content") ?: false
             val notification = if (isValid)
                 createSuccessAction()
             else
