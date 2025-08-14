@@ -7,6 +7,14 @@ export interface SelectorOption {
   displaySuffix?: string;
 }
 
+const boxStyles: React.ComponentProps<typeof Box> = {
+  flexDirection: "column",
+  paddingX: 2,
+  paddingY: 1,
+  borderStyle: "round",
+  borderColor: "blue",
+};
+
 interface SelectorProps<T extends SelectorOption> {
   title: string;
   options: T[];
@@ -52,21 +60,17 @@ export function Selector<T extends SelectorOption>({
       return;
     }
 
+    // loop back to the first option after the last option, and vice versa
     if (key.upArrow) {
-      onNavigate(Math.max(0, selectedIndex - 1));
+      onNavigate(selectedIndex === 0 ? options.length - 1 : selectedIndex - 1);
     } else if (key.downArrow) {
-      onNavigate(Math.min(options.length - 1, selectedIndex + 1));
+      onNavigate(selectedIndex === options.length - 1 ? 0 : selectedIndex + 1);
     }
   });
 
   if (loading) {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="blue"
-      >
+      <Box {...boxStyles}>
         <Text color="blue" bold>
           {title}
         </Text>
@@ -80,12 +84,7 @@ export function Selector<T extends SelectorOption>({
 
   if (error) {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="red"
-      >
+      <Box {...boxStyles}>
         <Text color="red" bold>
           Error
         </Text>
@@ -97,31 +96,30 @@ export function Selector<T extends SelectorOption>({
     );
   }
 
-  // Transform options for ink-ui Select
-  const selectOptions = options.map((option) => {
-    const displayName = option.name + (option.displaySuffix || "");
-
-    return {
-      label: displayName,
-      value: option.id,
-    };
-  });
-
-  // Handle selection change from ink-ui Select
-  const handleChange = (value: string) => {
-    const selectedOption = options.find((option) => option.id === value);
-    if (selectedOption) {
-      onSelect(selectedOption);
-    }
-  };
+  const defaultRenderOption = (
+    option: T,
+    isSelected: boolean,
+    isCurrent: boolean,
+  ) => (
+    <>
+      <Text
+        color={isSelected ? "blue" : (isCurrent ? "green" : "white")}
+        bold={isSelected}
+      >
+        {isSelected ? "→ " : "  "}
+        {option.name}
+        {option.displaySuffix || ""}
+      </Text>
+      {isCurrent && (
+        <Text bold color="green">
+          {" ✔"}
+        </Text>
+      )}
+    </>
+  );
 
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="blue"
-    >
+    <Box {...boxStyles}>
       <Text color="blue" bold>
         {title}
       </Text>
