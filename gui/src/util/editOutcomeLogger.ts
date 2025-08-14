@@ -154,6 +154,7 @@ export function assembleEditOutcomeData(
     timestamp: new Date().toISOString(),
     modelProvider: modelInfo.modelProvider,
     modelName: modelInfo.modelName,
+    modelTitle: modelInfo.modelName,
     prompt: promptAndCompletion.prompt,
     completion: promptAndCompletion.completion,
     previousCode: codeChanges.previousCode,
