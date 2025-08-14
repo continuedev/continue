@@ -1,4 +1,5 @@
 import { type AssistantConfig } from "@continuedev/sdk";
+import chalk from "chalk";
 
 import {
   isAuthenticated,
@@ -78,9 +79,10 @@ async function handleHelp(args: string[], assistant: AssistantConfig) {
   const helpMessage = [
     "Slash commands:",
     ...allCommands
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map(
         (cmd) =>
-          `- /${cmd.name}: ${cmd.description}`,
+          `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
       ),
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
