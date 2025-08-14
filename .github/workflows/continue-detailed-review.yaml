@@ -59,22 +59,8 @@ jobs:
           # Get PR diff with context
           gh pr diff $PR_NUMBER --color=never > pr_diff.txt
 
-          # Annotate diff with position numbers for easy reference
-          awk '
-          /^@@/ { 
-            pos = 0
-            print
-            next
-          }
-          /^diff --git/ || /^index / || /^--- / || /^\+\+\+ / {
-            print
-            next
-          }
-          { 
-            pos++
-            printf "[POS:%d] %s\n", pos, $0
-          }
-          ' pr_diff.txt > pr_diff_annotated.txt
+          # Annotate diff with GitHub API positions
+          node ${{ github.workspace }}/pr-review-action/scripts/annotate-diff.js pr_diff.txt > pr_diff_annotated.txt
 
           # Create review prompt for inline comments
           cat > inline_review_prompt.txt << 'EOF'
@@ -172,7 +158,7 @@ jobs:
             echo "Invalid JSON output from Continue CLI"
             echo "{\"review_summary\": \"Failed to generate review\", \"comments\": []}" > inline_review.json
           else
-            # Use the output directly since positions are already correct
+            # Positions are already correct from our annotation
             cp inline_review_raw.json inline_review.json
             echo "Review output:"
             cat inline_review.json
@@ -302,7 +288,6 @@ jobs:
             inline_review_raw.json
             inline_review.json
             inline_review_prompt.txt
-            pr_files.json
             pr_diff.txt
             pr_diff_annotated.txt
           retention-days: 7
