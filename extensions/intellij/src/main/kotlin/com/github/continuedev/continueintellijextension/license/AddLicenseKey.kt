@@ -11,19 +11,20 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.ui.DialogWrapper
 
 class AddLicenseKey : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val dialog = AddLicenseKeyDialog(e.project)
         dialog.show()
-        if (dialog.exitCode != 0)
+        if (dialog.exitCode != DialogWrapper.OK_EXIT_CODE)
             return
         val messenger = e.project?.service<ContinuePluginService>()?.coreMessenger
             ?: return
         messenger.request("mdm/setLicenseKey", mapOf("licenseKey" to dialog.licenseKey), null) { response ->
             val isValid = response.castNestedOrNull<Boolean>("content")!!
-            val notification = if (!isValid)
+            val notification = if (isValid)
                 createSuccessAction()
             else
                 createErrorAction()
