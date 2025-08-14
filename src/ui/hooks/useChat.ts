@@ -12,13 +12,13 @@ import { logger } from "../../util/logger.js";
 import { DisplayMessage } from "../types.js";
 
 import {
+  formatMessageWithFiles,
+  handleAutoCompaction,
   handleCompactCommand,
+  handleSpecialCommands,
   initChatHistory,
   processSlashCommandResult,
   trackUserMessage,
-  handleAutoCompaction,
-  formatMessageWithFiles,
-  handleSpecialCommands,
 } from "./useChat.helpers.js";
 import {
   handleRemoteMessage,
@@ -29,9 +29,9 @@ import {
   executeStreaming,
 } from "./useChat.stream.helpers.js";
 import {
-  UseChatProps,
-  AttachedFile,
   ActivePermissionRequest,
+  AttachedFile,
+  UseChatProps,
 } from "./useChat.types.js";
 
 export function useChat({
@@ -367,6 +367,7 @@ export function useChat({
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
+    stopStream?: boolean,
   ) => {
     // Capture the current permission request before clearing it
     const currentRequest = activePermissionRequest;
@@ -402,6 +403,23 @@ export function useChat({
       toolPermissionManager.approveRequest(requestId);
     } else {
       toolPermissionManager.rejectRequest(requestId);
+
+      // If this is a "stop stream" rejection, abort the current request
+      if (stopStream && abortController && isWaitingForResponse) {
+        abortController.abort();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content:
+              "[Tool canceled - please tell Continue what to do differently]",
+            messageType: "system" as const,
+          },
+        ]);
+        setIsWaitingForResponse(false);
+        setResponseStartTime(null);
+        setInputMode(true);
+      }
     }
   };
 
