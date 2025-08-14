@@ -330,6 +330,32 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["nebius"],
     isOpenSource: true,
   },
+  exaone32B: {
+    title: "EXAONE 4.0.1-32B",
+    description:
+      "LG AI Research's 32B model with integrated reasoning and agentic tool use capabilities.",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0.1-32B",
+    params: {
+      title: "EXAONE-4.0.1-32B",
+      model: "LGAI-EXAONE/EXAONE-4.0.1-32B",
+      contextLength: 131072,
+    },
+    providerOptions: ["openai"],
+    isOpenSource: true,
+  },
+  exaone12B: {
+    title: "EXAONE 4.0-1.2B",
+    description:
+      "Compact EXAONE 4.0 model suitable for on-device use while retaining tool calling support.",
+    refUrl: "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B",
+    params: {
+      title: "EXAONE-4.0-1.2B",
+      model: "LGAI-EXAONE/EXAONE-4.0-1.2B",
+      contextLength: 65536,
+    },
+    providerOptions: ["openai"],
+    isOpenSource: true,
+  },
   moonshotChat: {
     title: "Moonshot Chat",
     description: "Moonshot AI provides high-performance large language models",
@@ -653,7 +679,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "granite-code",
       contextLength: 20_000,
       title: "Granite Code",
-      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
     },
     providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
     icon: "ibm.png",
@@ -1128,8 +1153,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-4o",
       contextLength: 128_000,
       title: "GPT-4o",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["openai", "askSage"],
     icon: "openai.png",
@@ -1143,8 +1166,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-4o-mini",
       contextLength: 128_000,
       title: "GPT-4o mini",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["openai", "askSage"],
     icon: "openai.png",
@@ -1398,8 +1419,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt4-gov",
       contextLength: 128_000,
       title: "GPT-4 gov",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1413,8 +1432,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-4o-gov",
       contextLength: 128_000,
       title: "GPT-4o-gov",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1427,8 +1444,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-gov",
       contextLength: 8096,
       title: "GPT-3.5-Turbo gov",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1442,8 +1457,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-4o-mini-gov",
       contextLength: 128_000,
       title: "GPT-4o-mini gov",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1483,8 +1496,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-o1",
       contextLength: 128_000,
       title: "GPT-o1",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1498,8 +1509,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-o1-mini",
       contextLength: 128_000,
       title: "GPT-o1-mini",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1513,8 +1522,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-o3-mini",
       contextLength: 200_000,
       title: "GPT-o3-mini",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1528,8 +1535,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "aws-bedrock-claude-35-sonnet-gov",
       contextLength: 200_000,
       title: "Claude 3.5 Sonnet gov",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "anthropic.png",

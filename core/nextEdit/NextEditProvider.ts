@@ -35,10 +35,10 @@ import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import { replaceEscapedCharacters } from "../util/text.js";
 import {
+  INSTINCT_SYSTEM_PROMPT,
   MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_SYSTEM_PROMPT,
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+  MODEL_WINDOW_SIZES,
 } from "./constants.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import {
@@ -82,7 +82,8 @@ export class NextEditProvider {
   private loggingService: NextEditLoggingService;
   private contextRetrievalService: ContextRetrievalService;
   private endpointType: "default" | "fineTuned";
-  private diffContext: string = "";
+  private diffContext: string[] = [];
+  private autocompleteContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
   private currentEditChainId: string | null = null;
   private previousRequest: AutocompleteInput | null = null;
@@ -134,7 +135,14 @@ export class NextEditProvider {
   }
 
   public addDiffToContext(diff: string): void {
-    this.diffContext = diff;
+    this.diffContext.push(diff);
+    if (this.diffContext.length > 5) {
+      this.diffContext.shift();
+    }
+  }
+
+  public addAutocompleteContext(ctx: string): void {
+    this.autocompleteContext = ctx;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -384,16 +392,20 @@ export class NextEditProvider {
       this.ide.getWorkspaceDirs(),
     ]);
 
+    const modelName = helper.modelName.includes("mercury-coder-nextedit")
+      ? "mercury-coder-nextedit"
+      : "instinct";
+
     const { editableRegionStartLine, editableRegionEndLine } =
       opts?.usingFullFileDiff
         ? this._calculateOptimalEditableRegion(helper, "tokenizer")
         : {
             editableRegionStartLine: Math.max(
-              helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+              helper.pos.line - MODEL_WINDOW_SIZES[modelName].topMargin,
               0,
             ),
             editableRegionEndLine: Math.min(
-              helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+              helper.pos.line + MODEL_WINDOW_SIZES[modelName].bottomMargin,
               helper.fileLines.length - 1,
             ),
           };
@@ -552,11 +564,40 @@ export class NextEditProvider {
         editDiffHistory: this.diffContext,
         currentFilePath: helper.filepath,
       };
-    } else if (modelName.includes("model-1")) {
+    } else if (modelName.includes("instinct")) {
+      // Calculate the window around the cursor position (25 lines above and below).
+      const windowStart = Math.max(0, helper.pos.line - 25);
+      const windowEnd = Math.min(
+        helper.fileLines.length - 1,
+        helper.pos.line + 25,
+      );
+
+      // // The editable region is defined as: cursor line - 1 to cursor line + 5 (inclusive).
+      // const actualEditableStart = Math.max(
+      //   0,
+      //   helper.pos.line - MODEL_WINDOW_SIZES["instinct"].topMargin,
+      // );
+      // const actualEditableEnd = Math.min(
+      //   helper.fileLines.length - 1,
+      //   helper.pos.line + MODEL_WINDOW_SIZES["instinct"].bottomMargin,
+      // );
+
+      // Ensure editable region boundaries are within the window.
+      const adjustedEditableStart = Math.max(
+        windowStart,
+        editableRegionStartLine,
+      );
+      const adjustedEditableEnd = Math.min(windowEnd, editableRegionEndLine);
       ctx = {
-        userEdits: historyDiff ?? this.diffContext,
+        contextSnippets: this.autocompleteContext,
+        currentFileContent: helper.fileContents,
+        windowStart,
+        windowEnd,
+        editableRegionStartLine: adjustedEditableStart,
+        editableRegionEndLine: adjustedEditableEnd,
+        editDiffHistory: this.diffContext,
+        currentFilePath: helper.filepath,
         languageShorthand: helper.lang.name,
-        userExcerpts: helper.fileContents,
       };
     } else {
       ctx = {};
@@ -567,7 +608,9 @@ export class NextEditProvider {
 
     const systemPrompt: Prompt = {
       role: "system",
-      content: MERCURY_SYSTEM_PROMPT,
+      content: modelName.includes("mercury-coder-nextedit")
+        ? MERCURY_SYSTEM_PROMPT
+        : INSTINCT_SYSTEM_PROMPT,
     };
 
     return [systemPrompt, promptMetadata.prompt];
@@ -635,6 +678,8 @@ export class NextEditProvider {
     if (!llm) return undefined;
 
     const msg: ChatMessage = await llm.chat(prompts, token);
+    console.log("message");
+    console.log(msg.content);
 
     if (typeof msg.content !== "string") {
       return undefined;
@@ -646,16 +691,17 @@ export class NextEditProvider {
       ? replaceEscapedCharacters(
           msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
         ).replace(/\n$/, "")
-      : "";
+      : replaceEscapedCharacters(msg.content);
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       return await this._handlePartialFileDiff(
+        // we could use fillFileDiff
         helper,
+        editableRegionStartLine,
+        editableRegionEndLine,
         startTime,
         llm,
         nextCompletion,
-        editableRegionStartLine,
-        editableRegionEndLine,
       );
     } else {
       return await this._handleFullFileDiff(
@@ -671,11 +717,11 @@ export class NextEditProvider {
 
   private async _handlePartialFileDiff(
     helper: HelperVars,
+    editableRegionStartLine: number,
+    editableRegionEndLine: number,
     startTime: number,
     llm: ILLM,
     nextCompletion: string,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
   ): Promise<NextEditOutcome | undefined> {
     const oldEditRangeSlice = helper.fileContents
       .split("\n")
@@ -985,6 +1031,7 @@ export class NextEditProvider {
     try {
       const previousOutcome = this.getPreviousCompletion();
       if (!previousOutcome) {
+        console.log("previousOutcome is undefined");
         return undefined;
       }
 
@@ -995,6 +1042,7 @@ export class NextEditProvider {
         ctx,
       );
       if (!input) {
+        console.log("input is undefined");
         return undefined;
       }
 

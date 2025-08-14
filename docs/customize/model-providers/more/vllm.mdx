@@ -1,5 +1,6 @@
 ---
 title: "vLLM"
+description: "Configure vLLM's high-performance inference library with Continue for chat, autocomplete, and embeddings, including setup instructions for Llama3.1, Qwen2.5-Coder, and Nomic Embed models"
 ---
 
 vLLM is an open-source library for fast LLM inference which typically is used to serve multiple users at the same time. It can also be used to run a large model on multiple GPU:s (e.g. when it doesn´t fit in a single GPU). Run their OpenAI-compatible server using `vllm serve`. See their [server documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and the [engine arguments documentation](https://docs.vllm.ai/en/latest/usage/engine_args.html).
@@ -101,6 +102,6 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
 
 Continue automatically handles vLLM's response format (which uses `results` instead of `data`).
 
-[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
+[Click here](../../model-roles/reranking) to see a list of reranking model providers.
 
-The continue implementation uses [OpenAI](../top-level/openai.mdx) under the hood. [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)
+The continue implementation uses [OpenAI](../top-level/openai) under the hood. [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)
