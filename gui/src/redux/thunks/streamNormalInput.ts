@@ -273,6 +273,7 @@ export const streamNormalInput = createAsyncThunk<
             prompt: next.value.prompt,
             completion: next.value.completion,
             modelProvider: selectedChatModel.underlyingProviderName,
+            modelName: selectedChatModel.title,
             modelTitle: selectedChatModel.title,
             sessionId: state.session.id,
             ...(!!activeTools.length && {

@@ -40,6 +40,7 @@ export async function* llmStreamChat(
   // Log to return in case of error
   const errorPromptLog = {
     modelTitle: model?.title ?? model?.model,
+    modelProvider: model?.underlyingProviderName ?? "unknown",
     completion: "",
     prompt: "",
     completionOptions: {
