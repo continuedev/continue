@@ -138,7 +138,7 @@ export function Selector<T extends SelectorOption>({
       </Box>
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Use ↑/↓ to navigate, Enter to select, Escape to cancel
+          ↑/↓ to navigate, Enter to select, Escape to cancel
         </Text>
       </Box>
     </Box>
