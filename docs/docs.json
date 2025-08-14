@@ -87,7 +87,7 @@
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": ["troubleshooting", "faqs"]
+            "pages": ["faqs", "troubleshooting"]
           }
         ]
       },
