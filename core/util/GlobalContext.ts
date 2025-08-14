@@ -58,29 +58,20 @@ export class GlobalContext {
     const salvaged: Partial<GlobalContextType> = {};
 
     try {
-      // Attempt to extract individual values that might be salvageable
-      const lines = corruptedData.split("\n");
-      for (const line of lines) {
-        // Look for sharedConfig object that might contain allowAnonymousTelemetry
-        if (line.includes('"sharedConfig"')) {
-          try {
-            // Try to extract the sharedConfig value
-            const match = line.match(/"sharedConfig"\s*:\s*({[^}]*})/);
-            if (match) {
-              const sharedConfigStr = match[1];
-              const sharedConfigObj = JSON.parse(sharedConfigStr);
-              if (
-                typeof sharedConfigObj.allowAnonymousTelemetry === "boolean"
-              ) {
-                salvaged.sharedConfig = {
-                  allowAnonymousTelemetry:
-                    sharedConfigObj.allowAnonymousTelemetry,
-                };
-              }
-            }
-          } catch {
-            // Continue trying other salvage methods
+      // Try to extract the sharedConfig value using regex and then use the existing salvage function
+      const match = corruptedData.match(/"sharedConfig"\s*:\s*({[^}]*})/);
+      if (match) {
+        try {
+          const sharedConfigStr = match[1];
+          const sharedConfigObj = JSON.parse(sharedConfigStr);
+          const salvagedSharedConfig = salvageSharedConfig(sharedConfigObj);
+          
+          // Only set sharedConfig if we actually salvaged something
+          if (Object.keys(salvagedSharedConfig).length > 0) {
+            salvaged.sharedConfig = salvagedSharedConfig;
           }
+        } catch {
+          // If parsing fails, continue without salvaging
         }
       }
     } catch {
