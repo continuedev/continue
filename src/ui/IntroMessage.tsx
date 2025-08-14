@@ -42,18 +42,17 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
     <Box flexDirection="column" paddingX={1} paddingY={1}>
       {/* Agent name */}
       <Text color="blue">
-        Agent: <Text color="white">{config.name}</Text>
+        <Text bold>Agent:</Text> <Text color="white">{config.name}</Text>
       </Text>
 
       {/* Model */}
       <Text color="blue">
-        Model: <Text color="white">{model.name.split("/").pop()}</Text>
+        <Text bold>Model:</Text> <Text color="white">{model.name.split("/").pop()}</Text>
       </Text>
 
       {/* Model capability warning */}
       {!modelCapable && (
         <>
-          <Text> </Text>
           <ModelCapabilityWarning
             modelName={model.name.split("/").pop() || model.name}
           />

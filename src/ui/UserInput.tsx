@@ -469,10 +469,10 @@ const UserInput: React.FC<UserInputProps> = ({
       return (
         <>
           {(inputMode || isWaitingForResponse) && (
-            <Text color="gray">▋{placeholderText}</Text>
+            <Text italic color="gray">▋{placeholderText}</Text>
           )}
           {!inputMode && !isWaitingForResponse && (
-            <Text color="gray">{placeholderText}</Text>
+            <Text italic color="gray">{placeholderText}</Text>
           )}
         </>
       );
