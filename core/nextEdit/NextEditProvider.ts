@@ -775,11 +775,10 @@ export class NextEditProvider {
     const diffLines = myersDiff(fileSlice, nextCompletion);
     const diffGroups = groupDiffLines(diffLines, editableRegionStartLine, 5);
     const currentLine = helper.pos.line;
-    let cursorLocalDiffGroup: DiffGroup | undefined;
     const prefetchQueue = PrefetchQueue.getInstance();
 
     // Process diff groups and find the one containing the cursor
-    await this._processDiffGroups(
+    const cursorLocalDiffGroup = await this._processDiffGroups(
       diffGroups,
       currentLine,
       helper,
