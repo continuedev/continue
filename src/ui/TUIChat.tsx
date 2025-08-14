@@ -262,6 +262,7 @@ interface ScreenContentProps {
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
+    stopStream?: boolean,
   ) => void;
   handleUserMessage: (message: string) => void;
   isWaitingForResponse: boolean;
