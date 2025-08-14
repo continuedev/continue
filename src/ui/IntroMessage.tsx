@@ -62,26 +62,18 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
       <Text> </Text>
 
-      {/* Slash commands */}
-      <Text color="blue">Slash commands:</Text>
-      {allCommands
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((command, index) => (
-          <Text key={index}>
-            - <Text color="white">/{command.name}</Text>:{" "}
-            <Text color="gray">{command.description}</Text>
-          </Text>
-        ))}
-
       {/* MCP prompts */}
-      {mcpPrompts.map((prompt, index) => (
-        <Text key={`mcp-${index}`}>
-          - <Text color="white">/{prompt.name}</Text>:{" "}
-          <Text color="gray">{prompt.description}</Text>
-        </Text>
-      ))}
-
-      <Text> </Text>
+      {mcpPrompts.length > 0 && (
+        <>
+          {mcpPrompts.map((prompt, index) => (
+            <Text key={`mcp-${index}`}>
+              - <Text color="white">/{prompt.name}</Text>:{" "}
+              <Text color="gray">{prompt.description}</Text>
+            </Text>
+          ))}
+          <Text> </Text>
+        </>
+      )}
 
       {/* Rules */}
       {allRules.length > 0 && (
