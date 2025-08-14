@@ -9,15 +9,15 @@ test("readFileHead validates input arguments", () => {
 
   // Test missing arguments
   expect(() => getNumberArg({}, "lines")).toThrow(
-    "Argument `lines` is required (type number)"
+    "Argument `lines` is required (type number)",
   );
 
   // Test invalid arguments
   expect(() => getNumberArg({ lines: "not-a-number" }, "lines")).toThrow(
-    "Argument `lines` must be a valid number"
+    "Argument `lines` must be a valid number",
   );
   expect(() => getNumberArg({ lines: true }, "lines")).toThrow(
-    "Argument `lines` must be a valid number"
+    "Argument `lines` must be a valid number",
   );
 });
 

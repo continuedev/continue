@@ -88,8 +88,6 @@ test("readFileHeadImpl validates lines parameter", async () => {
   ).rejects.toThrow("lines must be 1 or greater");
 });
 
-
-
 test("readFileHead handles file not found errors", async () => {
   const { resolveRelativePathInDir } = await import("../../util/ideUtils");
 

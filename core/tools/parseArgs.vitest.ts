@@ -5,7 +5,7 @@ import {
   getNumberArg,
   getOptionalStringArg,
   getStringArg,
-  safeParseToolCallArgs
+  safeParseToolCallArgs,
 } from "./parseArgs";
 
 describe("safeParseToolCallArgs", () => {

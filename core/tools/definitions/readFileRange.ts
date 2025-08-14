@@ -4,9 +4,12 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 export const readFileRangeTool: Tool = {
   type: "function",
   displayTitle: "Read File Range",
-  wouldLikeTo: "read lines {{{ startLine }}}-{{{ endLine }}} of {{{ filepath }}}",
-  isCurrently: "reading lines {{{ startLine }}}-{{{ endLine }}} of {{{ filepath }}}",
-  hasAlready: "viewed lines {{{ startLine }}}-{{{ endLine }}} of {{{ filepath }}}",
+  wouldLikeTo:
+    "read lines {{{ startLine }}}-{{{ endLine }}} of {{{ filepath }}}",
+  isCurrently:
+    "reading lines {{{ startLine }}}-{{{ endLine }}} of {{{ filepath }}}",
+  hasAlready:
+    "viewed lines {{{ startLine }}}-{{{ endLine }}} of {{{ filepath }}}",
   readonly: true,
   isInstant: true,
   group: BUILT_IN_GROUP_NAME,
