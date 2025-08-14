@@ -21,6 +21,9 @@ runs:
 
     - name: Check Authorization
       shell: bash
+      env:
+        # Only move the dangerous check to env to prevent shell injection
+        HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-general-review') }}
       run: |
         # Check if this action should run based on event type and user permissions
         SHOULD_RUN="false"
@@ -35,7 +38,7 @@ runs:
           fi
         elif [ "${{ github.event_name }}" = "issue_comment" ]; then
           # Check if it's a PR comment with the trigger phrase
-          if [ "${{ github.event.issue.pull_request }}" != "" ] && [[ "${{ github.event.comment.body }}" == *"@continue-general-review"* ]]; then
+          if [ "${{ github.event.issue.pull_request }}" != "" ] && [ "$HAS_TRIGGER_PHRASE" = "true" ]; then
             COMMENTER_ASSOC="${{ github.event.comment.author_association }}"
             if [ "$COMMENTER_ASSOC" = "OWNER" ] || [ "$COMMENTER_ASSOC" = "MEMBER" ] || [ "$COMMENTER_ASSOC" = "COLLABORATOR" ]; then
               SHOULD_RUN="true"
