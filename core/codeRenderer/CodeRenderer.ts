@@ -171,7 +171,8 @@ export class CodeRenderer {
     currLineOffsetFromTop: number,
     newDiffLines: DiffLine[],
   ): Promise<string> {
-    const lines = code.split("\n");
+    const escapedCode = escapeForSVG(code);
+    const lines = escapedCode.split("\n");
     const newDiffLineMap = new Set();
 
     if (newDiffLines) {
