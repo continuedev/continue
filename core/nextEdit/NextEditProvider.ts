@@ -60,6 +60,7 @@ import {
   PromptMetadata,
   RecentlyEditedRange,
 } from "./types.js";
+import { isWhitespaceOnlyDeletion } from "./utils.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -826,6 +827,12 @@ export class NextEditProvider {
     console.log(diffGroups);
 
     for (const group of diffGroups) {
+      // Don't worry about whitespace only deletions -- let formatters handle this.
+      // This often gets in the way of good edits.
+      if (isWhitespaceOnlyDeletion(group.lines)) {
+        continue;
+      }
+
       if (currentLine >= group.startLine && currentLine <= group.endLine) {
         cursorGroup = group;
       } else {
