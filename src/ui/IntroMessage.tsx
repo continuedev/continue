@@ -3,7 +3,6 @@ import { Box, Text } from "ink";
 import React from "react";
 
 import { parseArgs } from "../args.js";
-import { getAllSlashCommands } from "../commands/commands.js";
 import { MCPService } from "../mcp.js";
 import { isModelCapable } from "../utils/modelCapability.js";
 
@@ -22,8 +21,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 }) => {
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
-  // Get all slash commands from central definition
-  const allCommands = getAllSlashCommands(config);
 
   // Show all rules in a single section
   const args = parseArgs();
