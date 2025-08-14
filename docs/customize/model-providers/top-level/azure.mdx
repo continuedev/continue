@@ -29,6 +29,7 @@ We recommend configuring **GPT-4o** as your chat model.
       env:
         deployment: <YOUR_DEPLOYMENT_NAME>
         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+        apiVersion: 2023-07-01-preview # Azure API version
   ```
   </Tab>
   <Tab title="JSON">
@@ -105,6 +106,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
         env:
           deployment: <YOUR_DEPLOYMENT_NAME>
           apiType: azure
+          apiVersion: 2023-07-01-preview
     ```
     </Tab>
     <Tab title="JSON">
