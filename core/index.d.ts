@@ -455,6 +455,7 @@ export type FileSymbolMap = Record<string, SymbolWithRange[]>;
 
 export interface PromptLog {
   modelTitle: string;
+  modelProvider: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
