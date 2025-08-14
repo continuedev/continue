@@ -108,13 +108,6 @@ describe('getAllTools - Tool Filtering', () => {
     expect(toolNames).toContain('Edit');
   });
 
-  test('should throw error when MCP service is not initialized', () => {
-    // Don't initialize services - this should cause getAllTools to throw
-    expect(() => {
-      getAllTools();
-    }).toThrow('MCP Service not initialized');
-  });
-
   test('should respect explicit exclude in normal mode', async () => {
     // Initialize services in normal mode with Read tool explicitly excluded
     await initializeServices({

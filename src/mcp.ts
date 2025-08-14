@@ -81,14 +81,15 @@ export class MCPService {
       }
     });
 
-    const connections = await Promise.all(connectionPromises ?? []);
-    if (version === this.initVersion) {
-      this.currentState.isReady = true;
-      logger.debug("MCP connections established", {
-        connectionCount: connections.length,
-      });
-      this.updateState();
-    }
+    Promise.all(connectionPromises ?? []).then((connections) => {
+      if (version === this.initVersion) {
+        this.currentState.isReady = true;
+        logger.debug("MCP connections established", {
+          connectionCount: connections.length,
+        });
+        this.updateState();
+      }
+    });
 
     return this.currentState;
   }

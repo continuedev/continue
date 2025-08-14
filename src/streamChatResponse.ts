@@ -12,6 +12,7 @@ import {
   getServiceSync,
   MCPServiceState,
   SERVICE_NAMES,
+  serviceContainer,
 } from "./services/index.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import {
@@ -119,17 +120,19 @@ async function handleToolCalls(
   return false;
 }
 
-export function getAllTools() {
+export async function getAllTools() {
   // Get all available tool names
   const allBuiltinTools = getAllBuiltinTools();
   const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
 
-  const mcpState = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
+  const mcpState = await serviceContainer.get<MCPServiceState>(
+    SERVICE_NAMES.MCP,
+  );
 
-  if (!mcpState?.value?.mcpService) {
+  if (!mcpState?.mcpService) {
     throw new Error("MCP Service not initialized");
   }
-  const mcpTools = mcpState.value?.mcpService?.getTools() ?? [];
+  const mcpTools = mcpState?.mcpService?.getTools() ?? [];
   const mcpToolNames = mcpTools.map((t) => t.name);
 
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
