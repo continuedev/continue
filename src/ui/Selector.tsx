@@ -103,7 +103,7 @@ export function Selector<T extends SelectorOption>({
   ) => (
     <>
       <Text
-        color={isSelected ? "blue" : (isCurrent ? "green" : "white")}
+        color={isSelected ? "blue" : isCurrent ? "green" : "white"}
         bold={isSelected}
       >
         {isSelected ? "→ " : "  "}

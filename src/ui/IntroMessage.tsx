@@ -21,7 +21,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 }) => {
   const mcpPrompts = mcpService.getPrompts() ?? [];
 
-
   // Show all rules in a single section
   const args = parseArgs();
   const commandLineRules = args.rules || [];
