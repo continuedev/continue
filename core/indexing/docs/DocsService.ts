@@ -432,7 +432,6 @@ export default class DocsService {
     }
   }
 
-
   // eslint-disable-next-line max-statements
   async indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
@@ -453,7 +452,6 @@ export default class DocsService {
       console.warn("@docs indexAndAdd: no embeddings provider found");
       return;
     }
-
 
     const startedWithEmbedder = provider.embeddingId;
 
@@ -745,7 +743,6 @@ export default class DocsService {
     }
   }
 
-
   // Retrieve docs embeds based on user input
   async retrieveChunksFromQuery(
     query: string,
@@ -857,7 +854,6 @@ export default class DocsService {
     } catch (e: any) {
       console.warn("Error retrieving chunks from LanceDB", e);
     }
-
 
     return docs.map(this.lanceDBRowToChunk);
   }
