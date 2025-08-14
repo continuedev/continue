@@ -28,7 +28,9 @@ export class MCPConnection {
     }
 
     if (!config?.command) {
-      throw new Error("MCP server command is not specified");
+      const name = config?.name ?? config?.url ?? "server";
+      logger.error(`MCP command missing for ${name}`);
+      return;
     }
 
     const transport = new StdioClientTransport({
