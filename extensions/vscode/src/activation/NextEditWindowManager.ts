@@ -9,6 +9,7 @@ import { myersCharDiff } from "core/diff/myers";
 import { getOffsetPositionAtLastNewLine } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
+import { isWhitespaceOnlyDeletion } from "core/nextEdit/utils";
 import { getThemeString } from "../util/getTheme";
 import {
   HandlerPriority,
@@ -276,6 +277,12 @@ export class NextEditWindowManager {
     diffLines: DiffLine[],
   ) {
     if (!this.shouldRenderTip(editor.document.uri)) {
+      return;
+    }
+
+    // Don't worry about whitespace only deletions -- let formatters handle this.
+    // This often gets in the way of good edits.
+    if (newEditRangeSlice === "" && isWhitespaceOnlyDeletion(diffLines)) {
       return;
     }
 
