@@ -1030,6 +1030,10 @@
       "destination": "/faqs#code-server"
     },
     {
+      "source": "/troubleshooting#changes-to-assistants-not-showing-in-vs-code",
+      "destination": "/faqs#changes-to-assistants-not-showing-in-vs-code"
+    },
+    {
       "source": "/troubleshooting#i-installed-continue-but-dont-see-the-sidebar-window",
       "destination": "/faqs#i-installed-continue-but-dont-see-the-sidebar-window"
     },

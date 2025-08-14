@@ -40,6 +40,16 @@ If you are using VS Code and require requests to be made through a proxy, you ar
 
 Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
 
+## Changes to assistants not showing in VS Code
+
+If you've made changes to assistants (adding, modifying, or removing them) but the changes aren't appearing in the Continue extension in VS Code, try reloading the VS Code window:
+
+1. Open the command palette (`cmd/ctrl` + `shift` + `P`)
+2. Type "Reload Window"
+3. Select the reload option
+
+This will restart VS Code and reload all extensions, which should make your assistant changes visible.
+
 ## I installed Continue, but don't see the sidebar window
 
 By default the Continue window is on the left side of VS Code, but it can be dragged to right side as well, which we recommend in our tutorial. In the situation where you have previously installed Continue and moved it to the right side, it may still be there. You can reveal Continue either by using cmd/ctrl+L or by clicking the button in the top right of VS Code to open the right sidebar.
