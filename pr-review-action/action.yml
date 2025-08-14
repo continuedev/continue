@@ -65,6 +65,8 @@ runs:
     - name: Build PR Review Prompt
       if: env.SHOULD_RUN == 'true'
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         # Get PR number based on event type
         if [ "${{ github.event_name }}" = "pull_request" ]; then
