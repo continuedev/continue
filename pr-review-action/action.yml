@@ -141,6 +141,10 @@ runs:
     - name: Run Continue CLI Review
       if: env.SHOULD_RUN == 'true'
       shell: bash
+      env:
+        CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
+        CONTINUE_ORG: ${{ inputs.continue-org }}
+        CONTINUE_CONFIG: ${{ inputs.continue-config }}
       run: |
         echo "Running Continue CLI with prompt:"
         echo "=================================="
@@ -148,10 +152,19 @@ runs:
         echo "=================================="
         echo ""
 
-        # Run the CLI with provided config
-        cat review_prompt.txt | cn --readonly --org ${{ inputs.continue-org }} --config ${{ inputs.continue-config }} -p > code_review.md
-      env:
-        CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
+        # Validate inputs to prevent command injection
+        if [[ ! "$CONTINUE_ORG" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+          echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
+          exit 1
+        fi
+        
+        if [[ ! "$CONTINUE_CONFIG" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
+          echo "Error: Invalid config path. Must contain only alphanumeric characters, hyphens, underscores, and forward slashes."
+          exit 1
+        fi
+
+        # Run the CLI with validated config
+        cat review_prompt.txt | cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p > code_review.md
 
     - name: Upload Review Results
       if: env.SHOULD_RUN == 'true' && always()
