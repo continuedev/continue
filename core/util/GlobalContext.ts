@@ -48,7 +48,6 @@ export type GlobalContextType = {
  * A way to persist global state
  */
 export class GlobalContext {
-
   update<T extends keyof GlobalContextType>(
     key: T,
     value: GlobalContextType[T],
