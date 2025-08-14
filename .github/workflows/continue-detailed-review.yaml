@@ -61,6 +61,11 @@ jobs:
 
           # Annotate diff with GitHub API positions
           node ${{ github.workspace }}/pr-review-action/scripts/annotate-diff.js pr_diff.txt > pr_diff_annotated.txt
+          
+          # Debug: Show sample of annotated diff
+          echo "=== SAMPLE OF ANNOTATED DIFF ==="
+          head -100 pr_diff_annotated.txt | grep -E "^\[POS:|^@@|^diff --git" || head -50 pr_diff_annotated.txt
+          echo "=== END SAMPLE ==="
 
           # Create review prompt for inline comments
           cat > inline_review_prompt.txt << 'EOF'
@@ -224,6 +229,12 @@ jobs:
                 position: comment.position,
                 body: comment.body
               }));
+              
+              // Debug: Log the positions we're trying to use
+              console.log('Attempting to post comments with positions:');
+              comments.forEach(c => {
+                console.log(`  ${c.path}: position ${c.position}`);
+              });
               
               // Create the review
               if (comments.length > 0) {

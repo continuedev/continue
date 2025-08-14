@@ -16,9 +16,16 @@ function annotateDiff(diffContent) {
   let inHunk = false;
   
   for (const line of lines) {
-    // Pass through git headers unchanged
-    if (line.startsWith('diff --git') || 
-        line.startsWith('index ') ||
+    // Handle new file - reset position counter
+    if (line.startsWith('diff --git')) {
+      githubPos = 0;
+      inHunk = false;
+      output.push(line);
+      continue;
+    }
+    
+    // Pass through other git headers unchanged
+    if (line.startsWith('index ') ||
         line.startsWith('---') ||
         line.startsWith('+++') ||
         line.startsWith('rename ') ||
