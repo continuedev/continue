@@ -72,15 +72,21 @@ test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
   expect(result2[0].description).toBe("test.txt (lines 5-100)");
 
   // Verify that IDE methods were called with correct 0-based ranges
-  expect(mockIdeOutOfBounds.readRangeInFile).toHaveBeenCalledWith("file:///test.txt", {
-    start: { line: 99, character: 0 }, // 100 - 1
-    end: { line: 104, character: Number.MAX_SAFE_INTEGER }, // 105 - 1
-  });
+  expect(mockIdeOutOfBounds.readRangeInFile).toHaveBeenCalledWith(
+    "file:///test.txt",
+    {
+      start: { line: 99, character: 0 }, // 100 - 1
+      end: { line: 104, character: Number.MAX_SAFE_INTEGER }, // 105 - 1
+    },
+  );
 
-  expect(mockIdePartialRange.readRangeInFile).toHaveBeenCalledWith("file:///test.txt", {
-    start: { line: 4, character: 0 }, // 5 - 1  
-    end: { line: 99, character: Number.MAX_SAFE_INTEGER }, // 100 - 1
-  });
+  expect(mockIdePartialRange.readRangeInFile).toHaveBeenCalledWith(
+    "file:///test.txt",
+    {
+      start: { line: 4, character: 0 }, // 5 - 1
+      end: { line: 99, character: Number.MAX_SAFE_INTEGER }, // 100 - 1
+    },
+  );
 });
 
 test("readFileRangeImpl validates line number constraints", async () => {
@@ -147,7 +153,9 @@ test("readFileRangeImpl validates line number constraints", async () => {
       },
       mockExtras,
     ),
-  ).rejects.toThrow("endLine (5) must be greater than or equal to startLine (10)");
+  ).rejects.toThrow(
+    "endLine (5) must be greater than or equal to startLine (10)",
+  );
 });
 
 test("readFileRangeImpl handles normal ranges correctly", async () => {
@@ -194,5 +202,3 @@ test("readFileRangeImpl handles normal ranges correctly", async () => {
     end: { line: 3, character: Number.MAX_SAFE_INTEGER }, // 4 - 1
   });
 });
-
-

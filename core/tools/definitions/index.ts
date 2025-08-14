@@ -17,4 +17,3 @@ export { searchWebTool } from "./searchWeb";
 export { viewDiffTool } from "./viewDiff";
 export { viewRepoMapTool } from "./viewRepoMap";
 export { viewSubdirectoryTool } from "./viewSubdirectory";
-
