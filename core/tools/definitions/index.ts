@@ -8,6 +8,8 @@ export { grepSearchTool } from "./grepSearch";
 export { lsTool } from "./ls";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";
+export { readFileHeadTool } from "./readFileHead";
+export { readFileRangeTool } from "./readFileRange";
 export { requestRuleTool } from "./requestRule";
 export { runTerminalCommandTool } from "./runTerminalCommand";
 export { searchAndReplaceInFileTool } from "./searchAndReplaceInFile";
@@ -15,3 +17,4 @@ export { searchWebTool } from "./searchWeb";
 export { viewDiffTool } from "./viewDiff";
 export { viewRepoMapTool } from "./viewRepoMap";
 export { viewSubdirectoryTool } from "./viewSubdirectory";
+
