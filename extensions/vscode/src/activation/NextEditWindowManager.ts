@@ -674,12 +674,6 @@ export class NextEditWindowManager {
       SVG_CONFIG.getTipWidth(originalCode) -
       SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]);
 
-    // console.log(marginLeft);
-    // console.log(SVG_CONFIG.getTipWidth(originalCode));
-    // console.log(
-    //   SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]),
-    // );
-    // console.log(originalCode.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
       before: {
         contentIconPath: uri,
