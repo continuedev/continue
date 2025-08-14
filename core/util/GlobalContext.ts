@@ -1,6 +1,10 @@
 import fs from "node:fs";
 
 import { ModelRole } from "@continuedev/config-yaml";
+import {
+  OAuthClientInformationFull,
+  OAuthTokens,
+} from "@modelcontextprotocol/sdk/shared/auth.js";
 
 import { SiteIndexingConfig } from "..";
 import {
@@ -41,6 +45,13 @@ export type GlobalContextType = {
   failedDocs: SiteIndexingConfig[];
   shownDeprecatedProviderWarnings: {
     [providerTitle: string]: boolean;
+  };
+  mcpOauthStorage: {
+    [serverUrl: string]: {
+      clientInformation?: OAuthClientInformationFull;
+      tokens?: OAuthTokens;
+      codeVerifier?: string;
+    };
   };
 };
 
