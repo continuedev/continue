@@ -16,6 +16,11 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch full history for better context
+
     - name: Check Authorization
       shell: bash
       run: |

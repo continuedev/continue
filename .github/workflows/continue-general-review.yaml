@@ -17,13 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch full history for better context
-
       - name: Run Continue PR Review Action
-        uses: ./pr-review-action # Using local action since we're in the same repo
+        uses: continuedev/continue/pr-review-action@main
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: 'continuedev'

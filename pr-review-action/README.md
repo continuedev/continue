@@ -24,9 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: continuedev/continue/pr-review-action@v1
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
@@ -104,9 +101,6 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: continuedev/continue/pr-review-action@v1
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
@@ -116,7 +110,7 @@ jobs:
 
 ## How It Works
 
-1. The action checks out your repository code
+1. The action automatically checks out your repository code
 2. Installs the Continue CLI (v1.4.25)
 3. Fetches the PR diff using GitHub CLI
 4. Generates a comprehensive review prompt
