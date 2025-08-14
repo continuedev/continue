@@ -23,6 +23,7 @@ async function dudLLMCall(llm: ILLM, messages: ChatMessage[]) {
         model: "",
       },
       modelTitle: "",
+      modelProvider: "",
       prompt: "",
     });
     abortController.abort();

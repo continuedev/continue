@@ -17,6 +17,7 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes.js";
 import { getControlPlaneEnv } from "../control-plane/env.js";
+import { PolicySingleton } from "../control-plane/PolicySingleton.js";
 import { logger } from "../util/logger.js";
 import { Telemetry } from "../util/posthog.js";
 import {
@@ -45,7 +46,7 @@ export class ConfigHandler {
 
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
-  currentOrg: OrgWithProfiles;
+  currentOrg: OrgWithProfiles | null;
   totalConfigReloads: number = 0;
 
   public isInitialized: Promise<void>;
@@ -83,16 +84,9 @@ export class ConfigHandler {
       this.ide,
     );
 
-    // Just to be safe, always force a default personal org with local profile manager
-    this.currentProfile = this.globalLocalProfileManager;
-    const personalOrg: OrgWithProfiles = {
-      currentProfile: this.globalLocalProfileManager,
-      profiles: [this.globalLocalProfileManager],
-      ...this.PERSONAL_ORG_DESC,
-    };
-
-    this.currentOrg = personalOrg;
-    this.organizations = [personalOrg];
+    this.currentOrg = null;
+    this.currentProfile = null;
+    this.organizations = [];
 
     this.initter = new EventEmitter();
     this.isInitialized = new Promise((resolve) => {
@@ -132,10 +126,10 @@ export class ConfigHandler {
       const firstNonPersonal = orgs.find(
         (org) => org.id !== this.PERSONAL_ORG_DESC.id,
       );
-      const fallback = firstNonPersonal ?? orgs[0];
-      // note, ignoring case of zero orgs since should never happen
+      const fallback: OrgWithProfiles | null =
+        firstNonPersonal ?? orgs[0] ?? null;
 
-      let selectedOrg: OrgWithProfiles;
+      let selectedOrg: OrgWithProfiles | null;
       if (currentSelection) {
         const match = orgs.find((org) => org.id === currentSelection);
         if (match) {
@@ -153,12 +147,12 @@ export class ConfigHandler {
 
       this.globalContext.update("lastSelectedOrgIdForWorkspace", {
         ...selectedOrgs,
-        [workspaceId]: selectedOrg.id,
+        [workspaceId]: selectedOrg?.id,
       });
 
       this.organizations = orgs;
       this.currentOrg = selectedOrg;
-      this.currentProfile = selectedOrg.currentProfile;
+      this.currentProfile = selectedOrg?.currentProfile;
 
       await this.reloadConfig(reason, errors);
     } catch (e) {
@@ -179,10 +173,27 @@ export class ConfigHandler {
     const isSignedIn = await this.controlPlaneClient.isSignedIn();
     if (isSignedIn) {
       try {
-        const orgDescs = await this.controlPlaneClient.listOrganizations();
+        // TODO use policy returned with org, not policy endpoint
+        const policyResponse = await this.controlPlaneClient.getPolicy();
+        PolicySingleton.getInstance().policy = policyResponse;
+        const orgDescriptions =
+          await this.controlPlaneClient.listOrganizations();
+        const orgsWithPolicy = orgDescriptions.map((d) => ({
+          ...d,
+          policy: policyResponse?.policy,
+        }));
+
+        if (policyResponse?.policy?.allowOtherOrgs === false) {
+          if (orgsWithPolicy.length === 0) {
+            return { orgs: [] };
+          } else {
+            const firstOrg = await this.getNonPersonalHubOrg(orgsWithPolicy[0]);
+            return { orgs: [firstOrg] };
+          }
+        }
         const orgs = await Promise.all([
           this.getPersonalHubOrg(),
-          ...orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+          ...orgsWithPolicy.map((org) => this.getNonPersonalHubOrg(org)),
         ]);
         // TODO make try/catch more granular here, to catch specific org errors
         return { orgs };
@@ -426,7 +437,7 @@ export class ConfigHandler {
 
   // Org id: check id validity, save selection, switch and reload
   async setSelectedOrgId(orgId: string, profileId?: string) {
-    if (orgId === this.currentOrg.id) {
+    if (orgId === this.currentOrg?.id) {
       return;
     }
     const org = this.organizations.find((org) => org.id === orgId);
@@ -454,6 +465,9 @@ export class ConfigHandler {
 
   // Profile id: check id validity, save selection, switch and reload
   async setSelectedProfileId(profileId: string) {
+    if (!this.currentOrg) {
+      throw new Error(`No org selected`);
+    }
     if (
       this.currentProfile &&
       profileId === this.currentProfile.profileDescription.id
@@ -490,10 +504,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [
-          { message: "Current profile not found", fatal: true },
-          ...(injectErrors ?? []),
-        ],
+        errors: injectErrors,
         configLoadInterrupted: true,
       };
     }
@@ -562,7 +573,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [{ message: "Current profile not found", fatal: true }],
+        errors: undefined,
         configLoadInterrupted: true,
       };
     }
@@ -575,7 +586,7 @@ export class ConfigHandler {
     if (!this.currentProfile) {
       return {
         config: undefined,
-        errors: [{ message: "Current profile not found", fatal: true }],
+        errors: undefined,
         configLoadInterrupted: true,
       };
     }
@@ -598,11 +609,15 @@ export class ConfigHandler {
     if (!openProfileId) {
       return;
     }
-    const profile = this.currentOrg.profiles.find(
+    const profile = this.currentOrg?.profiles.find(
       (p) => p.profileDescription.id === openProfileId,
     );
+    if (!profile) {
+      console.error(`Profile ${profileId} not found`);
+      return;
+    }
 
-    if (profile?.profileDescription.profileType === "local") {
+    if (profile.profileDescription.profileType === "local") {
       const configFile = element?.sourceFile ?? profile.profileDescription.uri;
       await this.ide.openFile(configFile);
     } else {

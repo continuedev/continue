@@ -1,9 +1,9 @@
 ---
 title: "Using Ollama with Continue: A Developer's Guide"
-description: "This comprehensive guide will walk you through setting up Ollama with Continue for powerful local AI development. Ollama allows you to run large language models locally on your machine, providing privacy, control, and offline capabilities for AI-assisted coding."
+description: "Complete guide to setting up Ollama with Continue for local AI development. Learn installation, configuration, model selection, performance optimization, and troubleshooting for privacy-focused offline coding assistance"
 ---
 
-## Prerequisites
+## What Are the Prerequisites for Using Ollama
 
 Before getting started, ensure your system meets these requirements:
 
@@ -12,9 +12,9 @@ Before getting started, ensure your system meets these requirements:
 - Storage: At least 10GB free space
 - Continue extension installed
 
-## Installation Steps
+## How to Install Ollama - Step-by-Step
 
-### Step 1: Install Ollama
+### Step 1: How to Install Ollama
 
 Choose the installation method for your operating system:
 
@@ -29,7 +29,7 @@ curl -fsSL https://ollama.ai/install.sh | sh
 # Download from ollama.ai
 ```
 
-### Step 2: Download Models
+### Step 2: How to Download Models
 
 After installing Ollama, download the models you want to use. Here are some popular options:
 
@@ -40,11 +40,11 @@ ollama pull qwen2.5-coder:1.5b-base
 ollama pull nomic-embed-text:latest
 ```
 
-## Configuration
+## How to Configure Ollama with Continue
 
 Configure Continue to work with your local Ollama instance:
 
-### Continue Configuration
+### How to Set Up Continue Configuration
 
 ```yaml
 models:
@@ -70,9 +70,9 @@ models:
       - embed
 ```
 
-You can update `apiBase` with the IP address of a remote machine serving Ollama. 
+You can update `apiBase` with the IP address of a remote machine serving Ollama.
 
-### Advanced Settings
+### How to Configure Advanced Settings
 
 For optimal performance, consider these advanced configuration options:
 
@@ -81,9 +81,9 @@ For optimal performance, consider these advanced configuration options:
 - Custom model parameters
 - Performance tuning
 
-## Best Practices
+## What Are the Best Practices for Ollama
 
-### Model Selection
+### How to Choose the Right Model
 
 Choose models based on your specific needs:
 
@@ -91,7 +91,7 @@ Choose models based on your specific needs:
 2. **Chat**: Llama2 or Mistral
 3. **Specialized Tasks**: Domain-specific models
 
-### Performance Optimization
+### How to Optimize Performance
 
 To get the best performance from Ollama:
 
@@ -100,25 +100,25 @@ To get the best performance from Ollama:
 - Use appropriate model sizes
 - Enable GPU acceleration when available
 
-## Troubleshooting
+## How to Troubleshoot Ollama Issues
 
-### Common Issues
+### What Are Common Issues
 
 Here are solutions to common problems you might encounter:
 
-#### Connection Problems
+#### How to Fix Connection Problems
 
 - Check Ollama service status
 - Verify port availability
 - Review firewall settings
 
-#### Performance Issues
+#### How to Resolve Performance Issues
 
 - Insufficient RAM
 - Model too large for system
 - GPU compatibility
 
-### Solutions
+### How to Apply Solutions
 
 Try these solutions in order:
 
@@ -127,15 +127,15 @@ Try these solutions in order:
 3. Update to latest version
 4. Check system requirements
 
-## Example Workflows
+## What Are Example Workflows with Ollama
 
-### Code Generation
+### How to Use Ollama for Code Generation
 
 ```
 # Example: Generate a FastAPI endpointdef create_user_endpoint():    # Continue will help generate the implementation    pass
 ```
 
-### Code Review
+### How to Use Ollama for Code Review
 
 Use Continue with Ollama to:
 

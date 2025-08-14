@@ -50,12 +50,15 @@ export function currentFileContentBlock(
 }
 
 export function editHistoryBlock(
-  editDiffHistory: string, // could be a singe large unified diff
+  editDiffHistory: string[], // could be a singe large unified diff
 ) {
   // diffHistory is made from createDiff.
   // This uses createPatch from npm diff library, which includes an index line and a separator.
   // We get rid of these first two lines.
-  return editDiffHistory.split("\n").slice(2).join("\n");
+  return editDiffHistory
+    .map((diff) => diff.split("\n").slice(2).join("\n"))
+    .join("\n");
+  // return editDiffHistory.split("\n").slice(2).join("\n");
 }
 
 function mercuryNextEditTemplateBuilder(

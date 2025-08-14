@@ -118,7 +118,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         </div>
 
         <div
-          className={`flex w-8 flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:text-list-active-foreground cursor-pointer hover:brightness-125"}`}
+          className={`flex w-8 select-none flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:text-list-active-foreground cursor-pointer hover:brightness-125"}`}
           data-testid={`tool-policy-item-${props.tool.function.name}`}
           data-tooltip-id={disabled ? disabledTooltipId : undefined}
           onClick={

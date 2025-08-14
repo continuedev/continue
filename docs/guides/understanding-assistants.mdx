@@ -1,15 +1,17 @@
 ---
-title: "Understanding Assistants: Hub vs Local Configuration"
-description: "Master the two approaches to configuring AI assistants in Continue - choosing the right path for your development workflow"
+title: "How to Understand Assistants: Hub vs Local Configuration"
+description: "Learn how to choose between cloud-managed Hub assistants and local configuration for AI development assistance in Continue, including setup, management, and best practices for each approach"
 ---
 
 Every developer has unique needs when it comes to AI assistance. Some prefer the convenience of cloud-managed configurations, while others need the control and privacy of local setups. Continue offers both paths, and this guide will help you choose the right one for your workflow.
 
-## The Two Paths to AI Assistance
+## What Are the Two Paths to AI Assistance?
+
+Continue provides two distinct ways to configure your AI assistant:
 
 Think of Continue's configuration options like choosing between a managed service and self-hosting. Both get you to the same destination—powerful AI assistance in your IDE—but the journey and control level differ significantly.
 
-### Accessing Your Assistant Configuration
+### How to Access Your Assistant Configuration
 
 Before we dive into the specifics, let's understand how to access your configuration:
 
@@ -21,13 +23,14 @@ Before we dive into the specifics, let's understand how to access your configura
 
 ![configure an assistant](/images/configure-continue.png)
 
-## Hub Assistants: The Managed Experience
+## What Are Hub Assistants: The Managed Experience
 
 Hub Assistants represent the "it just works" philosophy. When you [sign in to Continue Hub](https://auth.continue.dev/), you gain access to a curated ecosystem of pre-configured assistants that sync seamlessly across all your development environments.
 
-### Why Choose Hub Assistants?
+### Why Should You Choose Hub Assistants?
 
 **The Power of Simplicity**
+
 - **Instant Setup**: Browse the [assistant marketplace](https://hub.continue.dev/explore/assistants) and add any assistant to your account with a single click
 - **Web-Based Management**: Configure models, add secrets, and customize settings through an intuitive web interface—no JSON editing required
 - **Automatic Synchronization**: Make a change on the hub, and it reflects immediately across all your IDE instances
@@ -35,7 +38,7 @@ Hub Assistants represent the "it just works" philosophy. When you [sign in to Co
 
 ![nextjs assistant](/images/nextjs-assistant.png)
 
-### Getting Started with Hub Assistants
+### How to Get Started with Hub Assistants
 
 The journey from zero to AI-powered coding takes just four steps:
 
@@ -46,31 +49,34 @@ The journey from zero to AI-powered coding takes just four steps:
 
 Pro tip: Hub Assistants are perfect for teams. Create a custom assistant with your team's coding standards, preferred models, and context sources, then share it with a simple link.
 
-### Managing Hub Assistants
+### How to Manage Hub Assistants
 
 All Hub Assistant management happens through [the Hub](https://hub.continue.dev). For detailed customization, see our guide on [Editing an Assistant](/hub/assistants/edit-an-assistant).
 
-## Local Assistants: The Power User's Choice
+## What Are Local Assistants: The Power User's Choice
 
 Local Assistants put you in the driver's seat. Using a `config.yaml` file, you have complete control over every aspect of your AI assistant's behavior, with all configuration stored directly on your machine.
 
-### Why Choose Local Assistants?
+### Why Should You Choose Local Assistants?
 
 **Complete Control and Privacy**
+
 - **Your Data, Your Rules**: All configuration stays on your machine—perfect for air-gapped environments or strict data policies
 - **Version Control Integration**: Check your `config.yaml` into git alongside your code, ensuring reproducible environments
 - **Offline Capability**: Once configured, no internet connection needed (assuming you're using local models)
 - **Unlimited Customization**: Access every configuration option, experimental feature, and advanced setting
 
-### Setting Up Local Assistants
+### How to Set Up Local Assistants
 
 Local configuration lives in a single YAML file in your home directory:
 
 **File Locations:**
+
 - macOS/Linux: `~/.continue/config.yaml`
 - Windows: `%USERPROFILE%\.continue\config.yaml`
 
 **Quick Access Method:**
+
 1. Open the assistants dropdown in your IDE
 2. Click the gear icon next to "Local Assistant"
 3. The `config.yaml` file opens in your editor
@@ -85,24 +91,27 @@ The first time you use Continue, it generates a `config.yaml` with sensible defa
 
 For the complete configuration reference, see our [config.yaml documentation](/reference).
 
-## Making the Right Choice
+## How to Make the Right Choice
 
 The decision between Hub and Local assistants often comes down to your specific needs and constraints. Here's a framework to help you decide:
 
 ### Choose Hub Assistants When You:
 
 **Value Convenience Over Control**
+
 - Want to start coding with AI assistance in under 60 seconds
 - Prefer visual interfaces over editing configuration files
 - Need to switch between multiple machines frequently
 - Work in a team that needs standardized AI assistance
 
 **Need Advanced Collaboration**
+
 - Want to share custom assistants with teammates
 - Need centralized API key management
 - Require quick updates across your entire organization
 
 **Are Getting Started**
+
 - New to AI-powered development
 - Want to experiment with different models and configurations
 - Prefer guided setup experiences
@@ -110,21 +119,24 @@ The decision between Hub and Local assistants often comes down to your specific 
 ### Choose Local Assistants When You:
 
 **Require Maximum Control**
+
 - Need to version control your exact configuration
 - Want to customize every aspect of the AI behavior
 - Require reproducible development environments
 
 **Have Privacy Requirements**
+
 - Work with sensitive code that requires air-gapped environments
 - Need to ensure all configuration data stays local
 - Have strict compliance requirements about data storage
 
 **Are a Power User**
+
 - Comfortable editing YAML/JSON files
 - Want access to experimental features
 - Need to integrate with local tools and scripts
 
-## The Hybrid Approach
+## How to Use the Hybrid Approach
 
 Here's a secret: you don't have to choose just one. Many developers use both approaches:
 
@@ -154,22 +166,26 @@ You can switch between them seamlessly using the assistant selector in your IDE.
 ### Hub Assistant Issues
 
 **Changes Not Reflecting?**
+
 - Click "Reload config" in your IDE
 - Check your internet connection
 - Ensure you're signed in to the correct account
 
 **Assistant Not Available?**
+
 - Verify it's added to your account on the hub
 - Check if it requires specific API keys
 
 ### Local Assistant Issues
 
 **Config Not Loading?**
+
 - Verify file location matches your OS
 - Check YAML syntax (Continue will show errors)
 - Ensure file permissions allow reading
 
 **Autocomplete Not Working?**
+
 - Update to the latest Continue version
 - Check that you're editing the correct file
 

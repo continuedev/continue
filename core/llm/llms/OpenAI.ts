@@ -36,12 +36,12 @@ function isChatOnlyModel(model: string): boolean {
   return model.startsWith("gpt") || model.startsWith("o");
 }
 
-const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
+const formatMessageForO1OrGpt5 = (messages: ChatCompletionMessageParam[]) => {
   return messages?.map((message: any) => {
     if (message?.role === "system") {
       return {
         ...message,
-        role: "user",
+        role: "developer",
       };
     }
 
@@ -77,8 +77,8 @@ class OpenAI extends BaseLLM {
     return model;
   }
 
-  public isOSeriesModel(model?: string): boolean {
-    return !!model && !!model.match(/^o[0-9]+/);
+  public isOSeriesOrGpt5Model(model?: string): boolean {
+    return !!model && (!!model.match(/^o[0-9]+/) || model.includes("gpt-5"));
   }
 
   private isFireworksAiModel(model?: string): boolean {
@@ -139,13 +139,13 @@ class OpenAI extends BaseLLM {
     finalOptions.stop = options.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
-    if (this.isOSeriesModel(options.model)) {
+    if (this.isOSeriesOrGpt5Model(options.model)) {
       // a) use max_completion_tokens instead of max_tokens
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
 
       // b) don't support system message
-      finalOptions.messages = formatMessageForO1(finalOptions.messages);
+      finalOptions.messages = formatMessageForO1OrGpt5(finalOptions.messages);
     }
 
     if (options.model === "o1") {
@@ -241,13 +241,13 @@ class OpenAI extends BaseLLM {
     body.stop = body.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
-    if (this.isOSeriesModel(body.model)) {
+    if (this.isOSeriesOrGpt5Model(body.model)) {
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
 
       // b) don't support system message
-      body.messages = formatMessageForO1(body.messages);
+      body.messages = formatMessageForO1OrGpt5(body.messages);
     }
 
     if (body.model === "o1") {

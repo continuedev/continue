@@ -1,29 +1,27 @@
 package com.github.continuedev.continueintellijextension.listeners
 
 import ToolTipComponent
-import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
-import com.intellij.openapi.project.DumbAware
-import com.intellij.openapi.util.TextRange
-import kotlinx.coroutines.CoroutineScope
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.ex.util.EditorUtil
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.util.TextRange
+import kotlinx.coroutines.CoroutineScope
 
 class ContinuePluginSelectionListener(
     coroutineScope: CoroutineScope,
 ) : SelectionListener, DumbAware {
-    private val debouncer = Debouncer(100, coroutineScope)
+    private val debouncer = Debouncer(200, coroutineScope)
     private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
     private var lastActiveEditor: Editor? = null
 
@@ -228,5 +226,3 @@ class ContinuePluginSelectionListener(
         editor.contentComponent.repaint()
     }
 }
-
-

@@ -536,6 +536,7 @@ export class VerticalDiffManager {
       streamId: EDIT_MODE_STREAM_ID,
       timestamp: new Date().toISOString(),
       modelProvider: model.underlyingProviderName,
+      modelName: model.title ?? "",
       modelTitle: model.title ?? "",
       prompt: stripImages(prompt),
       completion: newCode,

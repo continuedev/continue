@@ -102,6 +102,7 @@
                 "group": "Model Providers",
                 "icon": "server",
                 "pages": [
+                  "customize/model-providers/overview",
                   {
                     "group": "Popular Providers",
                     "pages": [
@@ -1008,6 +1009,10 @@
     {
       "source": "/customization/overview#documentation-context",
       "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/customize/model-providers",
+      "destination": "/customize/model-providers/overview"
     }
   ]
 }

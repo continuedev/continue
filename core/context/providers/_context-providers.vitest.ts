@@ -36,6 +36,7 @@ async function getContextProviderExtras(
     llmLogger,
     Promise.resolve(undefined),
   );
+  await configHandler.isInitialized;
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("Config not found");
@@ -54,7 +55,7 @@ async function getContextProviderExtras(
   };
 }
 
-describe.skip("Should successfully run all context providers", () => {
+describe("Should successfully run all context providers", () => {
   afterAll(() => {
     tearDownTestDir();
   });

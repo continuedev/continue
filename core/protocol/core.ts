@@ -26,6 +26,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MCPServerStatus,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -48,6 +49,8 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
+import { NextEditOutcome } from "../nextEdit/types";
+import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -90,7 +93,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
-      selectedOrgId: string;
+      selectedOrgId: string | null;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
@@ -128,6 +131,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+
   "mcp/reloadServer": [
     {
       id: string;
@@ -145,6 +149,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       description: string | undefined;
     },
   ];
+  "mcp/startAuthentication": [MCPServerStatus, void];
+  "mcp/removeAuthentication": [MCPServerStatus, void];
+
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
@@ -153,9 +160,44 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
-  "nextEdit/predict": [AutocompleteInput, string[]];
+  "nextEdit/predict": [
+    {
+      input: AutocompleteInput;
+      options?: {
+        withChain?: boolean;
+        usingFullFileDiff?: boolean;
+      };
+    },
+    NextEditOutcome | undefined,
+  ];
   "nextEdit/reject": [{ completionId: string }, void];
   "nextEdit/accept": [{ completionId: string }, void];
+  "nextEdit/startChain": [undefined, void];
+  "nextEdit/deleteChain": [undefined, void];
+  "nextEdit/isChainAlive": [undefined, boolean];
+  "nextEdit/queue/getProcessedCount": [undefined, number];
+  "nextEdit/queue/dequeueProcessed": [undefined, ProcessedItem | null];
+  "nextEdit/queue/processOne": [
+    {
+      ctx: {
+        completionId: string;
+        manuallyPassFileContents?: string;
+        manuallyPassPrefix?: string;
+        selectedCompletionInfo?: {
+          text: string;
+          range: Range;
+        };
+        isUntitledFile: boolean;
+        recentlyVisitedRanges: AutocompleteCodeSnippet[];
+        recentlyEditedRanges: RecentlyEditedRange[];
+      };
+      recentlyVisitedRanges: AutocompleteCodeSnippet[];
+      recentlyEditedRanges: RecentlyEditedRange[];
+    },
+    void,
+  ];
+  "nextEdit/queue/clear": [undefined, void];
+  "nextEdit/queue/abort": [undefined, void];
   "llm/complete": [
     {
       prompt: string;

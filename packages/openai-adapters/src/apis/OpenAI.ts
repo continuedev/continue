@@ -38,7 +38,7 @@ export class OpenAIApi implements BaseLlmApi {
     // o-series models - only apply for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     if (isOfficialOpenAIAPI) {
-      if (body.model.startsWith("o")) {
+      if (body.model.startsWith("o") || body.model.includes("gpt-5")) {
         // a) use max_completion_tokens instead of max_tokens
         body.max_completion_tokens = body.max_tokens;
         body.max_tokens = undefined;

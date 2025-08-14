@@ -20,6 +20,7 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
+import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import { setLocalStorage } from "../../util/localStorage";
 import { ContinueFeaturesMenu } from "./ContinueFeaturesMenu";
 
@@ -28,6 +29,8 @@ export function UserSettingsForm() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
+  const currentOrg = useAppSelector(selectCurrentOrg);
+
   const [showExperimental, setShowExperimental] = useState(false);
   const { session } = useAuth();
 
@@ -133,6 +136,9 @@ export function UserSettingsForm() {
     "@continue.dev",
   );
 
+  const disableTelemetryToggle =
+    currentOrg?.policy?.allowAnonymousTelemetry === false;
+
   return (
     <div className="flex flex-col">
       {/* {selectedProfile && isLocalProfile(selectedProfile) ? (
@@ -225,6 +231,7 @@ export function UserSettingsForm() {
 
             <ToggleSwitch
               isToggled={allowAnonymousTelemetry}
+              disabled={disableTelemetryToggle}
               onToggle={() =>
                 handleUpdate({
                   allowAnonymousTelemetry: !allowAnonymousTelemetry,

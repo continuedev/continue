@@ -109,7 +109,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       title: configResult.config?.name ?? `${ownerSlug}/${packageSlug}`,
       errors: configResult.errors,
       iconUrl: iconUrl,
-      uri: `${controlPlaneEnv}${ownerSlug}/${packageSlug}`,
+      uri: `${controlPlaneEnv.APP_URL}${ownerSlug}/${packageSlug}`,
       rawYaml,
     };
 

@@ -26,6 +26,7 @@ import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
@@ -325,8 +326,18 @@ export default async function doLoadConfig(options: {
     }
   });
 
-  newConfig.allowAnonymousTelemetry =
-    newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
+  if (newConfig.allowAnonymousTelemetry !== false) {
+    if ((await ide.isTelemetryEnabled()) === false) {
+      newConfig.allowAnonymousTelemetry = false;
+    }
+  }
+
+  if (
+    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
+    false
+  ) {
+    newConfig.allowAnonymousTelemetry = false;
+  }
 
   // Setup telemetry only after (and if) we know it is enabled
   await Telemetry.setup(

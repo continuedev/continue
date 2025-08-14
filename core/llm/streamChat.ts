@@ -40,6 +40,7 @@ export async function* llmStreamChat(
   // Log to return in case of error
   const errorPromptLog = {
     modelTitle: model?.title ?? model?.model,
+    modelProvider: model?.underlyingProviderName ?? "unknown",
     completion: "",
     prompt: "",
     completionOptions: {
@@ -48,114 +49,136 @@ export async function* llmStreamChat(
     },
   };
 
-  if (legacySlashCommandData) {
-    const { command, contextItems, historyIndex, input, selectedCode } =
-      legacySlashCommandData;
-    const slashCommand = config.slashCommands?.find(
-      (sc) => sc.name === command.name,
-    );
-    if (!slashCommand) {
-      throw new Error(`Unknown slash command ${command.name}`);
-    }
-    void Telemetry.capture(
-      "useSlashCommand",
-      {
-        name: command.name,
-      },
-      true,
-    );
-    if (!slashCommand.run) {
-      console.error(
-        `Slash command ${command.name} (${command.source}) has no run function`,
+  try {
+    if (legacySlashCommandData) {
+      const { command, contextItems, historyIndex, input, selectedCode } =
+        legacySlashCommandData;
+      const slashCommand = config.slashCommands?.find(
+        (sc) => sc.name === command.name,
       );
-      throw new Error(`Slash command not found`);
-    }
-
-    const gen = slashCommand.run({
-      input,
-      history: messages,
-      llm: model,
-      contextItems,
-      params: command.params,
-      ide,
-      addContextItem: (item) => {
-        void messenger.request("addContextItem", {
-          item,
-          historyIndex,
-        });
-      },
-      selectedCode,
-      config,
-      fetch: (url, init) =>
-        fetchwithRequestOptions(
-          url,
-          {
-            ...init,
-            signal: abortController.signal,
-          },
-          config.requestOptions,
-        ),
-      completionOptions,
-      abortController,
-    });
-    let next = await gen.next();
-    while (!next.done) {
-      if (abortController.signal.aborted) {
-        next = await gen.return(errorPromptLog);
-        break;
+      if (!slashCommand) {
+        throw new Error(`Unknown slash command ${command.name}`);
       }
-      if (next.value) {
-        yield {
-          role: "assistant",
-          content: next.value,
-        };
-      }
-      next = await gen.next();
-    }
-    if (!next.done) {
-      throw new Error("Will never happen");
-    }
-
-    return next.value;
-  } else {
-    const gen = model.streamChat(
-      messages,
-      abortController.signal,
-      completionOptions,
-      messageOptions,
-    );
-    let next = await gen.next();
-    while (!next.done) {
-      if (abortController.signal.aborted) {
-        next = await gen.return(errorPromptLog);
-        break;
+      void Telemetry.capture(
+        "useSlashCommand",
+        {
+          name: command.name,
+        },
+        true,
+      );
+      if (!slashCommand.run) {
+        console.error(
+          `Slash command ${command.name} (${command.source}) has no run function`,
+        );
+        throw new Error(`Slash command not found`);
       }
 
-      const chunk = next.value;
+      const gen = slashCommand.run({
+        input,
+        history: messages,
+        llm: model,
+        contextItems,
+        params: command.params,
+        ide,
+        addContextItem: (item) => {
+          void messenger.request("addContextItem", {
+            item,
+            historyIndex,
+          });
+        },
+        selectedCode,
+        config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(
+            url,
+            {
+              ...init,
+              signal: abortController.signal,
+            },
+            config.requestOptions,
+          ),
+        completionOptions,
+        abortController,
+      });
+      let next = await gen.next();
+      while (!next.done) {
+        if (abortController.signal.aborted) {
+          next = await gen.return(errorPromptLog);
+          break;
+        }
+        if (next.value) {
+          yield {
+            role: "assistant",
+            content: next.value,
+          };
+        }
+        next = await gen.next();
+      }
+      if (!next.done) {
+        throw new Error("Will never happen");
+      }
 
-      yield chunk;
-      next = await gen.next();
+      return next.value;
+    } else {
+      const gen = model.streamChat(
+        messages,
+        abortController.signal,
+        completionOptions,
+        messageOptions,
+      );
+      let next = await gen.next();
+      while (!next.done) {
+        if (abortController.signal.aborted) {
+          next = await gen.return(errorPromptLog);
+          break;
+        }
+
+        const chunk = next.value;
+
+        yield chunk;
+        next = await gen.next();
+      }
+      if (config.experimental?.readResponseTTS && "completion" in next.value) {
+        void TTS.read(next.value?.completion);
+      }
+
+      void Telemetry.capture(
+        "chat",
+        {
+          model: model.model,
+          provider: model.providerName,
+        },
+        true,
+      );
+
+      void checkForFreeTrialExceeded(configHandler, messenger);
+
+      if (!next.done) {
+        throw new Error("Will never happen");
+      }
+
+      return next.value;
     }
-    if (config.experimental?.readResponseTTS && "completion" in next.value) {
-      void TTS.read(next.value?.completion);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.toLowerCase().includes("premature close")
+    ) {
+      void Telemetry.capture(
+        "stream_premature_close_error",
+        {
+          model: model.model,
+          provider: model.providerName,
+          errorMessage: error.message,
+          context: legacySlashCommandData ? "slash_command" : "regular_chat",
+          ...(legacySlashCommandData && {
+            command: legacySlashCommandData.command.name,
+          }),
+        },
+        false,
+      );
     }
-
-    void Telemetry.capture(
-      "chat",
-      {
-        model: model.model,
-        provider: model.providerName,
-      },
-      true,
-    );
-
-    void checkForFreeTrialExceeded(configHandler, messenger);
-
-    if (!next.done) {
-      throw new Error("Will never happen");
-    }
-
-    return next.value;
+    throw error;
   }
 }
 

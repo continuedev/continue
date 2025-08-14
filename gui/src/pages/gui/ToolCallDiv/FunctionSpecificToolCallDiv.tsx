@@ -38,8 +38,11 @@ function FunctionSpecificToolCallDiv({
           ? args.diffs.join("\n\n---\n\n")
           : args.diffs
         : "";
+
       return (
         <EditFile
+          showToolCallStatusIcon={true}
+          status={toolCallState.status}
           relativeFilePath={args?.filepath ?? ""}
           changes={changes}
           toolCallId={toolCall.id}

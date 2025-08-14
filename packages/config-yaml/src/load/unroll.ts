@@ -20,6 +20,7 @@ import {
   Rule,
 } from "../schemas/index.js";
 import { ConfigResult, ConfigValidationError } from "../validation.js";
+import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 import {
   packageIdentifierToShorthandSlug,
   useProxyForUnrenderedSecrets,
@@ -306,6 +307,13 @@ export async function unrollBlocks(
 ): Promise<ConfigResult<AssistantUnrolled>> {
   const errors: ConfigValidationError[] = [];
 
+  function injectDuplicationError(errorMsg: string) {
+    errors.push({
+      fatal: false,
+      message: errorMsg,
+    });
+  }
+
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
     version: assistant.version,
@@ -484,7 +492,7 @@ export async function unrollBlocks(
         const injectedResults = await Promise.all(injectedBlockPromises);
         const injectedErrors: ConfigValidationError[] = [];
         const injectedBlocks: {
-          blockType: string;
+          blockType: BlockType;
           resolvedBlock: any;
           source?: string;
         }[] = [];
@@ -521,16 +529,27 @@ export async function unrollBlocks(
   errors.push(...rulesResult.errors);
   errors.push(...injectedResult.errors);
 
+  const detector = new BlockDuplicationDetector();
+
   // Assign section results
   for (const sectionResult of sectionResults) {
     if (sectionResult.blocks) {
-      unrolledAssistant[sectionResult.section] = sectionResult.blocks;
+      unrolledAssistant[sectionResult.section] = sectionResult.blocks.filter(
+        (block) =>
+          !detector.isDuplicated(
+            block,
+            sectionResult.section,
+            injectDuplicationError,
+          ),
+      );
     }
   }
 
   // Assign rules result
   if (rulesResult.rules) {
-    unrolledAssistant.rules = rulesResult.rules;
+    unrolledAssistant.rules = rulesResult.rules.filter(
+      (rule) => !detector.isDuplicated(rule, "rules", injectDuplicationError),
+    );
   }
 
   // Add injected blocks
@@ -539,16 +558,20 @@ export async function unrollBlocks(
     resolvedBlock,
     source,
   } of injectedResult.injectedBlocks) {
-    const key = blockType as BlockType;
+    const key = blockType;
     if (!unrolledAssistant[key]) {
       unrolledAssistant[key] = [];
     }
-    const blocksWithSourceFiles = injectLocalSourceFile(
+
+    const filteredBlocks = injectLocalSourceFile(
       key,
       resolvedBlock,
       source,
+    ).filter(
+      (block: any) =>
+        !detector.isDuplicated(block, blockType, injectDuplicationError),
     );
-    unrolledAssistant[key]?.push(...blocksWithSourceFiles);
+    unrolledAssistant[key]?.push(...filteredBlocks);
   }
 
   const configResult: ConfigResult<AssistantUnrolled> = {
