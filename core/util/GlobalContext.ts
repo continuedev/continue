@@ -48,38 +48,6 @@ export type GlobalContextType = {
  * A way to persist global state
  */
 export class GlobalContext {
-  /**
-   * Salvages security-sensitive values from a corrupted global context.
-   * This ensures that important settings like telemetry preferences are preserved.
-   */
-  private salvageGlobalContext(
-    corruptedData: string,
-  ): Partial<GlobalContextType> {
-    const salvaged: Partial<GlobalContextType> = {};
-
-    try {
-      // Try to extract the sharedConfig value using regex and then use the existing salvage function
-      const match = corruptedData.match(/"sharedConfig"\s*:\s*({[^}]*})/);
-      if (match) {
-        try {
-          const sharedConfigStr = match[1];
-          const sharedConfigObj = JSON.parse(sharedConfigStr);
-          const salvagedSharedConfig = salvageSharedConfig(sharedConfigObj);
-          
-          // Only set sharedConfig if we actually salvaged something
-          if (Object.keys(salvagedSharedConfig).length > 0) {
-            salvaged.sharedConfig = salvagedSharedConfig;
-          }
-        } catch {
-          // If parsing fails, continue without salvaging
-        }
-      }
-    } catch {
-      // If salvage fails, return empty object - better to lose data than crash
-    }
-
-    return salvaged;
-  }
 
   update<T extends keyof GlobalContextType>(
     key: T,
@@ -109,7 +77,20 @@ export class GlobalContext {
         );
 
         // Attempt to salvage security-sensitive values before deleting
-        const salvaged = this.salvageGlobalContext(data);
+        let salvaged: Partial<GlobalContextType> = {};
+        try {
+          // Try to partially parse the corrupted data to extract sharedConfig
+          const match = data.match(/"sharedConfig"\s*:\s*({[^}]*})/);
+          if (match) {
+            const sharedConfigObj = JSON.parse(match[1]);
+            const salvagedSharedConfig = salvageSharedConfig(sharedConfigObj);
+            if (Object.keys(salvagedSharedConfig).length > 0) {
+              salvaged.sharedConfig = salvagedSharedConfig;
+            }
+          }
+        } catch {
+          // If salvage fails, continue with empty salvaged object
+        }
 
         // Delete the corrupted file and recreate it fresh
         try {
