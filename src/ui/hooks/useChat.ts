@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
+import { services } from "../../services/index.js";
 import { loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
@@ -12,13 +13,13 @@ import { logger } from "../../util/logger.js";
 import { DisplayMessage } from "../types.js";
 
 import {
+  formatMessageWithFiles,
+  handleAutoCompaction,
   handleCompactCommand,
+  handleSpecialCommands,
   initChatHistory,
   processSlashCommandResult,
   trackUserMessage,
-  handleAutoCompaction,
-  formatMessageWithFiles,
-  handleSpecialCommands,
 } from "./useChat.helpers.js";
 import {
   handleRemoteMessage,
@@ -29,9 +30,9 @@ import {
   executeStreaming,
 } from "./useChat.stream.helpers.js";
 import {
-  UseChatProps,
-  AttachedFile,
   ActivePermissionRequest,
+  AttachedFile,
+  UseChatProps,
 } from "./useChat.types.js";
 
 export function useChat({
@@ -369,6 +370,7 @@ export function useChat({
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
+    stopStream?: boolean,
   ) => {
     // Capture the current permission request before clearing it
     const currentRequest = activePermissionRequest;
@@ -389,11 +391,15 @@ export function useChat({
         );
 
         await addPolicyToYaml(policyRule);
-
         logger.debug(`Policy created: ${policyRule}`);
+
+        // Reload permissions to pick up the new policy without requiring restart
+        await services.mode.getToolPermissionService().reloadPermissions();
       } catch (error) {
-        logger.error("Failed to create policy", { error });
-        // Continue with the approval even if policy creation fails
+        logger.error("Failed to create policy or reload permissions", {
+          error,
+        });
+        // Continue with the approval even if policy creation/reload fails
       }
     }
 
@@ -404,6 +410,23 @@ export function useChat({
       toolPermissionManager.approveRequest(requestId);
     } else {
       toolPermissionManager.rejectRequest(requestId);
+
+      // If this is a "stop stream" rejection, abort the current request
+      if (stopStream && abortController && isWaitingForResponse) {
+        abortController.abort();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content:
+              "[Tool canceled - please tell Continue what to do differently]",
+            messageType: "system" as const,
+          },
+        ]);
+        setIsWaitingForResponse(false);
+        setResponseStartTime(null);
+        setInputMode(true);
+      }
     }
   };
 

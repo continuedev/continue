@@ -1,6 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
 import type { PermissionMode } from "../permissions/types.js";
@@ -43,6 +43,22 @@ const UserInput: React.FC<UserInputProps> = ({
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
+
+  // Stable callback for TextBuffer state changes to prevent race conditions
+  const onStateChange = useCallback(() => {
+    setInputText(textBuffer.text);
+    setCursorPosition(textBuffer.cursor);
+  }, [textBuffer]);
+
+  // Set up callback for when TextBuffer state changes (e.g., rapid input finalized)
+  React.useEffect(() => {
+    textBuffer.setStateChangeCallback(onStateChange);
+
+    // Cleanup on unmount: clear any pending timers
+    return () => {
+      textBuffer.clear();
+    };
+  }, [textBuffer, onStateChange]);
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
@@ -330,6 +346,8 @@ const UserInput: React.FC<UserInputProps> = ({
   const handleEnterKey = (key: any): boolean => {
     if (key.return && !key.shift) {
       if (textBuffer.text.trim() && !isWaitingForResponse) {
+        // Expand all paste blocks before submitting
+        textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
         inputHistory.addEntry(submittedText);
         onSubmit(submittedText);

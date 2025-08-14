@@ -12,6 +12,7 @@ interface PermissionOption {
   color: string;
   approved: boolean;
   createPolicy?: boolean;
+  stopStream?: boolean;
 }
 
 interface ToolPermissionSelectorProps {
@@ -23,6 +24,7 @@ interface ToolPermissionSelectorProps {
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
+    stopStream?: boolean,
   ) => void;
 }
 
@@ -35,7 +37,13 @@ const PERMISSION_OPTIONS: PermissionOption[] = [
     approved: true,
     createPolicy: true,
   },
-  { id: "deny", name: "Cancel", color: "red", approved: false },
+  {
+    id: "deny_stop",
+    name: "No, and tell Continue what to do differently",
+    color: "yellow",
+    approved: false,
+    stopStream: true,
+  },
 ];
 
 export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
@@ -54,25 +62,26 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
         requestId,
         selectedOption.approved,
         selectedOption.createPolicy,
+        selectedOption.stopStream,
       );
       return;
     }
 
     // Tab to continue (approve)
     if (key.tab && !key.shift) {
-      onResponse(requestId, true, false);
+      onResponse(requestId, true, false, false);
       return;
     }
 
     // Shift+Tab to continue with policy creation
     if (key.tab && key.shift) {
-      onResponse(requestId, true, true);
+      onResponse(requestId, true, true, false);
       return;
     }
 
-    // Escape to reject (deny)
+    // Escape to reject with stop stream
     if (key.escape) {
-      onResponse(requestId, false, false);
+      onResponse(requestId, false, false, true);
       return;
     }
 
@@ -86,9 +95,9 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 
     // Also support y/n for quick responses
     if (input === "y" || input === "Y") {
-      onResponse(requestId, true, false);
+      onResponse(requestId, true, false, false);
     } else if (input === "n" || input === "N") {
-      onResponse(requestId, false, false);
+      onResponse(requestId, false, false, true);
     }
   });
 
@@ -121,7 +130,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
           let shortcut = "";
           if (option.id === "approve") shortcut = "(tab)";
           else if (option.id === "approve_policy") shortcut = "(shift+tab)";
-          else if (option.id === "deny") shortcut = "(esc)";
+          else if (option.id === "deny_stop") shortcut = "(esc)";
 
           return (
             <Box key={option.id} marginTop={index === 0 ? 1 : 0}>

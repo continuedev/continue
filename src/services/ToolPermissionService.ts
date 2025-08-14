@@ -259,6 +259,55 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   }
 
   /**
+   * Reload permissions from configuration files
+   * Useful after policy changes to update the in-memory permissions
+   */
+  async reloadPermissions(): Promise<void> {
+    // Only reload if we're in normal mode - other modes have absolute overrides
+    if (this.currentState.currentMode !== "normal") {
+      logger.debug("Skipping permission reload in non-normal mode");
+      return;
+    }
+
+    logger.debug("Reloading permissions from configuration files");
+
+    // Reload permissions from files
+    const freshPolicies = resolvePermissionPrecedence({
+      personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
+      useDefaults: true,
+    });
+
+    // Generate mode-specific policies (should be empty for normal mode)
+    const modePolicies = this.generateModePolicies();
+
+    // Combine mode policies with freshly loaded user policies
+    const allPolicies = [...modePolicies, ...freshPolicies];
+
+    this.setState({
+      permissions: { policies: allPolicies },
+      modePolicyCount: modePolicies.length,
+    });
+
+    logger.debug(
+      `Reloaded permissions: ${freshPolicies.length} user policies, ${modePolicies.length} mode policies`,
+    );
+
+    // Update the service container with the new state
+    // Import here to avoid circular dependencies
+    try {
+      const { serviceContainer } = await import("./ServiceContainer.js");
+      const { SERVICE_NAMES } = await import("./types.js");
+      serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, this.getState());
+      logger.debug("Updated service container with reloaded permissions");
+    } catch (error) {
+      logger.error(
+        "Failed to update service container after permission reload",
+        { error },
+      );
+    }
+  }
+
+  /**
    * Override isReady to always return true since we initialize synchronously
    */
   override isReady(): boolean {

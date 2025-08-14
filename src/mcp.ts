@@ -81,10 +81,12 @@ export class MCPService {
       }
     });
 
-    await Promise.all(connectionPromises ?? []);
+    const connections = await Promise.all(connectionPromises ?? []);
     if (version === this.initVersion) {
       this.currentState.isReady = true;
-      logger.debug("All MCP server connections completed");
+      logger.debug("MCP connections established", {
+        connectionCount: connections.length,
+      });
       this.updateState();
     }
 
