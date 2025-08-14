@@ -34,8 +34,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0 # Fetch full history for better context
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -85,7 +83,7 @@ jobs:
           Your task is to analyze the code changes and generate specific, actionable review comments for individual lines or small sections of code.
 
           IMPORTANT: The diff below has been annotated with [POS:N] markers showing the exact position for each line.
-          
+
           Example of how to use the position markers:
           ```
           diff --git a/src/app.js b/src/app.js
@@ -103,7 +101,7 @@ jobs:
           [POS:1]     let x = 1;
           [POS:2] +   let y = 2;                         <-- To comment here, use position: 2
           ```
-          
+
           To comment on a line, simply use the number from its [POS:N] marker as the position value.
           For example: {"path": "src/app.js", "position": 4, "body": "Avoid using eval with user input"}
 
@@ -154,7 +152,7 @@ jobs:
       - name: Run Continue CLI Inline Review
         run: |
           echo "Running Continue CLI for inline review..."
-          
+
           # Log the prompt for debugging
           echo "===== START REVIEW PROMPT ====="
           head -n 50 inline_review_prompt.txt
