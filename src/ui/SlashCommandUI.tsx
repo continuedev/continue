@@ -47,7 +47,9 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     });
 
   // Find the longest command name for alignment
-  const maxCommandLength = Math.max(...filteredCommands.map(cmd => cmd.name.length));
+  const maxCommandLength = Math.max(
+    ...filteredCommands.map((cmd) => cmd.name.length),
+  );
   if (filteredCommands.length === 0) {
     return (
       <Box paddingX={1} marginX={1} marginBottom={1}>
@@ -61,14 +63,18 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       {filteredCommands.map((command, index) => {
         const isSelected = index === selectedIndex;
 
-        const paddedCommandName = `/${command.name}`.padEnd(maxCommandLength + 1);
+        const paddedCommandName = `/${command.name}`.padEnd(
+          maxCommandLength + 1,
+        );
 
         return (
           <Box key={command.name}>
             <Text color={isSelected ? "blue" : "white"} bold={isSelected}>
-              {"  "}{paddedCommandName}
+              {"  "}
+              {paddedCommandName}
               <Text color={isSelected ? "blue" : "gray"}>
-                {"   "}{command.description}
+                {"   "}
+                {command.description}
               </Text>
             </Text>
           </Box>

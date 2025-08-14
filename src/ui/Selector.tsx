@@ -70,7 +70,10 @@ export function Selector<T extends SelectorOption>({
         <Text color="blue" bold>
           {title}
         </Text>
-        <Text color="gray">{loadingMessage}</Text>
+        <Text> </Text>
+        <Text italic color="gray">
+          {loadingMessage}
+        </Text>
       </Box>
     );
   }
@@ -94,22 +97,23 @@ export function Selector<T extends SelectorOption>({
     );
   }
 
-  const defaultRenderOption = (
-    option: T,
-    isSelected: boolean,
-    isCurrent: boolean,
-  ) => (
-    <Text
-      color={isSelected ? "blue" : "white"}
-      bold={isSelected}
-      inverse={isSelected}
-    >
-      {isSelected ? "> " : "  "}
-      {option.name}
-      {option.displaySuffix || ""}
-      {isCurrent ? " (current)" : ""}
-    </Text>
-  );
+  // Transform options for ink-ui Select
+  const selectOptions = options.map((option) => {
+    const displayName = option.name + (option.displaySuffix || "");
+
+    return {
+      label: displayName,
+      value: option.id,
+    };
+  });
+
+  // Handle selection change from ink-ui Select
+  const handleChange = (value: string) => {
+    const selectedOption = options.find((option) => option.id === value);
+    if (selectedOption) {
+      onSelect(selectedOption);
+    }
+  };
 
   return (
     <Box
