@@ -15,12 +15,12 @@ The default mode that follows configured permission policies from `permissions.y
 
 ### `plan`
 
-Planning mode that **completely overrides all user permissions** to enforce read-only access. This mode absolutely prevents any write operations, file modifications, or command execution, regardless of user configuration.
+Planning mode that **completely overrides all user permissions** to enforce read-only access with command execution. This mode prevents file modifications but allows command execution for analysis, regardless of user configuration.
 
 - **Command-line flag:** `--readonly` (for backward compatibility)
 - **UI Indicator:** `[plan]` shown in blue
 - **Current directory:** Hidden to save space and focus on analysis
-- **Permission override:** **Absolute** - excludes all write tools (Write, Edit, Bash, etc.) and allows only read tools (Read, Grep, LS, etc.)
+- **Permission override:** **Absolute** - excludes write tools (Write, Edit, etc.) and allows read tools (Read, Grep, LS, etc.) and Bash for command execution
 - **User config ignored:** Any user `--allow` flags for write tools are overridden
 
 ### `auto`
@@ -80,5 +80,5 @@ Modes are implemented through the permission system:
 ### Mode-Specific Behaviors
 
 - **normal**: No mode policies applied, uses existing user configuration; shows current directory
-- **plan**: **Absolute override** - excludes all write tools (Write, Edit, Bash), allows only read tools (Read, Grep, LS); hides current directory
+- **plan**: **Absolute override** - excludes write tools (Write, Edit), allows read tools (Read, Grep, LS) and Bash; hides current directory
 - **auto**: **Absolute override** - allows all tools with `*: allow` policy; hides current directory

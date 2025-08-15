@@ -25,7 +25,7 @@ describe('getAllTools - Tool Filtering', () => {
     });
   });
 
-  test('should exclude Bash tool in plan mode after service initialization', async () => {
+  test('should allow Bash tool in plan mode after service initialization', async () => {
     // Initialize services in plan mode (simulating `cn -p`)
     await initializeServices({
       headless: true,
@@ -39,12 +39,12 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.state).toBe('ready');
     expect(serviceResult.value?.currentMode).toBe('plan');
 
-    // Get available tools - this should exclude Bash in plan mode
+    // Get available tools - this should include Bash in plan mode
     const tools = getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
-    // Bash should be excluded in plan mode
-    expect(toolNames).not.toContain('Bash');
+    // Bash should be allowed in plan mode
+    expect(toolNames).toContain('Bash');
     
     // Read-only tools should still be available
     expect(toolNames).toContain('Read');
@@ -145,7 +145,7 @@ describe('getAllTools - Tool Filtering', () => {
       headless: true,
       toolPermissionOverrides: {
         mode: 'plan',
-        allow: ['Write', 'Bash'] // These should be ignored in plan mode
+        allow: ['Write', 'Edit'] // These should be ignored in plan mode
       }
     });
 
@@ -155,8 +155,10 @@ describe('getAllTools - Tool Filtering', () => {
     // Plan mode should still exclude write tools despite --allow flags
     // This tests that plan mode policies have absolute precedence
     expect(toolNames).not.toContain('Write');
-    expect(toolNames).not.toContain('Bash');
     expect(toolNames).not.toContain('Edit');
+    
+    // Bash should be available in plan mode
+    expect(toolNames).toContain('Bash');
     
     // Read-only tools should be available
     expect(toolNames).toContain('Read');

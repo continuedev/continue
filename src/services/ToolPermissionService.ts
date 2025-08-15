@@ -36,15 +36,15 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   private generateModePolicies(): ToolPermissionPolicy[] {
     switch (this.currentState.currentMode) {
       case "plan":
-        // Plan mode: Complete override - exclude all write operations, allow only reads
+        // Plan mode: Complete override - exclude all write operations, allow only reads and bash
         return [
           // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
-          { tool: "Bash", permission: "exclude" },
-          // Allow all read tools
+          // Allow all read tools and bash
+          { tool: "Bash", permission: "allow" },
           { tool: "Read", permission: "allow" },
           { tool: "List", permission: "allow" },
           { tool: "Search", permission: "allow" },
