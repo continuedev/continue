@@ -273,7 +273,23 @@ runs:
               console.log('Invalid comments:', JSON.stringify(invalidComments, null, 2));
             }
             
-            const comments = validComments.map(comment => ({
+            // Deduplicate comments based on path + position + body
+            const uniqueComments = [];
+            const seen = new Set();
+            
+            for (const comment of validComments) {
+              const key = `${comment.path}:${comment.position}:${comment.body}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                uniqueComments.push(comment);
+              }
+            }
+            
+            if (uniqueComments.length < validComments.length) {
+              console.log(`Filtered out ${validComments.length - uniqueComments.length} duplicate comments (same path + position + body)`);
+            }
+            
+            const comments = uniqueComments.map(comment => ({
               path: comment.path,
               position: comment.position,
               body: comment.body
