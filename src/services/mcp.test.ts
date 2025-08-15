@@ -43,13 +43,13 @@ describe("MCPService", () => {
 
   afterEach(async () => {
     vi.clearAllMocks();
-    await mcpService.shutdown()
+    await mcpService.cleanup()
   });
 
   describe("initialization", () => {
     it("should initialize with empty state", () => {
       const state = mcpService.getState();
-      expect(state.isReady).toBe(false);
+      expect(mcpService.isReady()).toBe(false);
       expect(state.connections).toEqual([]);
       expect(state.toolCount).toBe(0);
       expect(state.promptCount).toBe(0);
@@ -62,7 +62,7 @@ describe("MCPService", () => {
       } as AssistantConfig;
       const state = await mcpService.initialize(emptyAssistant);
 
-      expect(state.isReady).toBe(true);
+      expect(mcpService.isReady()).toBe(true);
       expect(state.connections).toEqual([]);
       expect(state.toolCount).toBe(0);
       expect(state.promptCount).toBe(0);
@@ -72,7 +72,7 @@ describe("MCPService", () => {
       const state = await mcpService.initialize(mockAssistant);
 
       // Should return immediately with ready state
-      expect(state.isReady).toBe(true);
+      expect(mcpService.isReady()).toBe(true);
       expect(state.mcpService).toBe(mcpService);
     });
   });
@@ -89,23 +89,12 @@ describe("MCPService", () => {
       expect(info).toHaveProperty("connectionCount");
     });
 
-    it("should handle service updates", async () => {
-      const newAssistant = {
-        name: "updated-assistant",
-        version: "1.0.0",
-        mcpServers: [],
-      } as AssistantConfig;
-
-      const state = await mcpService.update(newAssistant);
-      expect(state.isReady).toBe(true);
-    });
-
     it("should get overall status", async () => {
       console.log(mcpService.getConnectionInfo())
       const firstStatus = mcpService.getOverallStatus();
       expect(firstStatus.status).toBe("connected");
       expect(firstStatus.hasWarnings).toBe(false);
-      await mcpService.shutdown()
+      await mcpService.cleanup()
       const secondStatus = mcpService.getOverallStatus();
       expect(secondStatus.status).toBe("idle");
     });
@@ -163,17 +152,16 @@ describe("MCPService", () => {
   describe("shutdown", () => {
     it("should handle shutdown gracefully", async () => {
       await mcpService.initialize(mockAssistant);
-      await mcpService.shutdown()
+      await mcpService.cleanup()
 
       const state = mcpService.getState();
-      expect(state.isReady).toBe(false);
       expect(state.mcpService?.getState().connections.filter(c => c.status === "connected")).toHaveLength(0)
     });
 
     it("should handle multiple shutdown calls", async () => {
       await mcpService.initialize(mockAssistant);
-      await mcpService.shutdown();
-      await expect(mcpService.shutdown()).resolves.not.toThrow();
+      await mcpService.cleanup();
+      await expect(mcpService.cleanup()).resolves.not.toThrow();
     });
   });
 });

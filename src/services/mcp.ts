@@ -6,7 +6,6 @@ import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { serviceContainer } from "./ServiceContainer.js";
 import { MCPServiceState, SERVICE_NAMES } from "./types.js";
 
 export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
@@ -51,13 +50,12 @@ export class MCPService
       connections: [],
       toolCount: 0,
       promptCount: 0,
-      isReady: false,
     });
 
     // Register shutdown handler
-    process.on("exit", () => this.shutdown());
-    process.on("SIGINT", () => this.shutdown());
-    process.on("SIGTERM", () => this.shutdown());
+    process.on("exit", () => this.cleanup());
+    process.on("SIGINT", () => this.cleanup());
+    process.on("SIGTERM", () => this.cleanup());
   }
 
   /**
@@ -72,7 +70,6 @@ export class MCPService
       serverCount: assistant.mcpServers?.length || 0,
     });
 
-    console.log("MCP INITIALIZATION: SHUTTING DOWN CONNS");
     await this.shutdownConnections();
 
     this.assistant = assistant;
@@ -89,7 +86,6 @@ export class MCPService
       }
     });
 
-    console.log("MCP INITIALIZATION: CONNECTING");
     const connectionInit = Promise.all(connectionPromises ?? []).then(
       (connections) => {
         logger.debug("MCP connections established", {
@@ -98,13 +94,9 @@ export class MCPService
       },
     );
     if (waitForConnections) {
-      console.log("MCP INITIALIZATION: WAITING FOR CONNS");
       await connectionInit;
     }
-    this.currentState.isReady = true;
-    console.log("MCP INITIALIZATION: UPDATING STATE");
     this.updateState();
-    console.log("MCP INITIALIZATION: DONE");
 
     return this.currentState;
   }
@@ -118,7 +110,7 @@ export class MCPService
       (c) => c.status === "connected",
     );
 
-    this.currentState = {
+    this.setState({
       mcpService: this,
       connections: this.getConnectionInfo(),
       toolCount: connectedConnections.reduce(
@@ -129,15 +121,7 @@ export class MCPService
         (sum, c) => sum + c.prompts.length,
         0,
       ),
-      isReady: this.currentState.isReady,
-    };
-
-    // Propagate state changes to the service container so the UI updates
-    try {
-      serviceContainer.set(SERVICE_NAMES.MCP, this.currentState);
-    } catch {
-      // In early boot, container may not yet be registered; ignore
-    }
+    });
   }
 
   /**
@@ -145,22 +129,6 @@ export class MCPService
    */
   getState(): MCPServiceState {
     return { ...this.currentState };
-  }
-
-  /**
-   * Update the MCP service with a new assistant config
-   */
-  async update(assistant: AssistantConfig): Promise<MCPServiceState> {
-    logger.debug("Updating MCPService config");
-    // Shutdown existing connections
-    return await this.initialize(assistant);
-  }
-
-  /**
-   * Check if the MCP service is ready
-   */
-  isReady(): boolean {
-    return this.currentState.isReady;
   }
 
   /**
@@ -478,18 +446,13 @@ export class MCPService
     }
   }
 
-  /**
-   * Shutdown the entire service
-   */
-  public async shutdown(): Promise<void> {
+  public async cleanup(): Promise<void> {
     if (this.isShuttingDown) return;
-
     this.isShuttingDown = true;
+
+    this.removeAllListeners();
     logger.debug("Shutting down MCPService");
-
     await this.shutdownConnections();
-
-    this.currentState.isReady = false;
     this.updateState();
   }
 }

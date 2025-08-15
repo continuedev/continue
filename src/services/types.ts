@@ -56,8 +56,6 @@ export interface MCPServiceState {
   connections: Array<MCPConnectionInfo>;
   toolCount: number;
   promptCount: number;
-  isReady: boolean;
-  error?: Error;
 }
 
 export interface ApiClientServiceState {
