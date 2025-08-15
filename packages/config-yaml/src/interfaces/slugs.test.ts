@@ -144,7 +144,7 @@ describe("PackageIdentifier", () => {
 
     expect(decoded).toEqual({
       uriType: "file" as const,
-      filePath: "/path/to/package.yaml",
+      fileUri: "/path/to/package.yaml",
     });
   });
 
