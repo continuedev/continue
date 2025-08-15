@@ -9,6 +9,7 @@ import {
   SelectionChangeManager,
 } from "./SelectionChangeManager";
 
+// Instead of getters that execute immediately, use methods or lazy properties
 const SVG_CONFIG = {
   stroke: "#999998",
   strokeWidth: 1,
@@ -19,35 +20,43 @@ const SVG_CONFIG = {
   debounceDelay: 500,
   label: "📍 Press Tab to jump, Esc to cancel",
 
-  get fontSize() {
+  // Convert getters to methods that are called when needed
+  getFontSize(): number {
     return Math.ceil(
       (vscode.workspace.getConfiguration("editor").get<number>("fontSize") ??
         14) * 0.8,
     );
   },
-  get fontFamily() {
+
+  getFontFamily(): string {
     return (
       vscode.workspace.getConfiguration("editor").get<string>("fontFamily") ||
       "helvetica"
     );
   },
-  get paddingX() {
+
+  getPaddingX(): number {
     return Math.ceil(this.getEstimatedTextWidth(" "));
   },
-  get gap() {
-    return this.fontSize * 0.5;
+
+  getGap(): number {
+    return this.getFontSize() * 0.5;
   },
-  get tipWidth() {
-    return this.getEstimatedTextWidth(this.label) + this.paddingX;
+
+  getTipWidth(): number {
+    return this.getEstimatedTextWidth(this.label) + this.getPaddingX();
   },
-  get tipHeight() {
-    return this.fontSize;
+
+  getTipHeight(): number {
+    return this.getFontSize();
   },
-  get textY() {
-    return (this.tipHeight + this.fontSize) / 2;
+
+  getTextY(): number {
+    return (this.getTipHeight() + this.getFontSize()) / 2;
   },
+
   getEstimatedTextWidth(text: string): number {
-    return text.length * this.fontSize * 0.6;
+    return text.length * this.getFontSize() * 0.6;
   },
 } as const;
 
@@ -115,15 +124,15 @@ export class JumpManager {
     // }
 
     const baseTextConfig = {
-      y: SVG_CONFIG.textY,
-      "font-family": SVG_CONFIG.fontFamily,
-      "font-size": SVG_CONFIG.fontSize,
+      y: SVG_CONFIG.getTextY(),
+      "font-family": SVG_CONFIG.getFontFamily(),
+      "font-size": SVG_CONFIG.getFontSize(),
     };
 
     try {
       const svgContent = svgBuilder
-        .width(SVG_CONFIG.tipWidth)
-        .height(SVG_CONFIG.tipHeight)
+        .width(SVG_CONFIG.getTipWidth())
+        .height(SVG_CONFIG.getTipHeight())
         .text(
           {
             ...baseTextConfig,
@@ -156,11 +165,11 @@ export class JumpManager {
     return vscode.window.createTextEditorDecorationType({
       after: {
         contentIconPath: this._jumpIcon,
-        border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${SVG_CONFIG.tipHeight}px ${backgroundColour};
+        border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${SVG_CONFIG.getTipHeight()}px ${backgroundColour};
                   border-radius: ${SVG_CONFIG.radius}px;
                   filter: ${SVG_CONFIG.filter}`,
         margin: `0 0 0 ${SVG_CONFIG.leftMargin}px`,
-        width: `${SVG_CONFIG.tipWidth}px`,
+        width: `${SVG_CONFIG.getTipWidth()}px`,
       },
     });
   }
