@@ -9,14 +9,14 @@ This repository provides two GitHub Actions for different review styles:
 ### 1. General Review Action
 Provides high-level PR assessment with overall feedback and recommendations.
 
-- **Path:** `continuedev/continue/actions/general-review@v1`
+- **Path:** `continuedev/continue/actions/general-review@<commit-sha>`
 - **Trigger:** `@continue-general-review`
 - **Output:** Summary comment with strengths, issues, and recommendations
 
 ### 2. Detailed Review Action
 Provides line-by-line inline comments on specific code changes.
 
-- **Path:** `continuedev/continue/actions/detailed-review@v1`
+- **Path:** `continuedev/continue/actions/detailed-review@<commit-sha>`
 - **Trigger:** `@continue-detailed-review`
 - **Output:** Inline review comments on specific lines of code
 
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: continuedev/continue/actions/general-review@v1
+      - uses: continuedev/continue/actions/general-review@<commit-sha>
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: 'your-org-name'
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: continuedev/continue/actions/detailed-review@v1
+      - uses: continuedev/continue/actions/detailed-review@<commit-sha>
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: 'your-org-name'
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: continuedev/continue/actions/general-review@v1
+      - uses: continuedev/continue/actions/general-review@<commit-sha>
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: 'your-org-name'
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: continuedev/continue/actions/detailed-review@v1
+      - uses: continuedev/continue/actions/detailed-review@<commit-sha>
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: 'your-org-name'
@@ -193,11 +193,16 @@ The detailed review provides:
 
 ## Versioning
 
-This action follows semantic versioning. We recommend using the major version tag for automatic updates:
+We recommend using a specific commit SHA for stability and predictability:
 
-- `@v1` - Automatically uses the latest v1.x.x release (recommended)
-- `@v1.0.0` - Pins to a specific version
-- `@main` - Uses the latest code from the main branch (not recommended for production)
+- `@<commit-sha>` - Pins to a specific commit for maximum stability (recommended)
+- `@main` - Uses the latest code from the main branch (for bleeding edge)
+- `@v1` - Uses a version tag when available
+
+Example:
+```yaml
+uses: continuedev/continue/actions/general-review@17fe39cc4f1760838ce4428aad0a984af13f8266
+```
 
 ## Troubleshooting
 
