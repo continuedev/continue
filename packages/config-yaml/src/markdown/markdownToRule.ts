@@ -79,9 +79,8 @@ function getGlobPattern(
   }
   let dir = path.dirname(id.fileUri);
 
-  // Make a new util in uri.ts that checks if there is a string match
-  // on a given dirname path
-  // getDirFromUriPath
+  // TODO: This is likely causing bugs for Windows users.
+  // We can't access `core/util/uri.ts` from this package though.
   if (dir.includes(".continue")) {
     return globs;
   }

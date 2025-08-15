@@ -23,7 +23,7 @@ export async function unrollLocalYamlBlocks(
     const unrollResult = await unrollAssistantFromContent(
       {
         uriType: "file",
-        filePath: "",
+        fileUri: "",
       },
       "name: FILLER\nschema: v1\nversion: 0.0.1",
       registryClient,
