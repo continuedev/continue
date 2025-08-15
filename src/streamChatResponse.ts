@@ -127,9 +127,7 @@ export async function getAllTools() {
 
   let mcpTools: MCPTool[] = [];
   let mcpToolNames: string[] = [];
-  const mcpServiceResult = getServiceSync<MCPServiceState>(
-    SERVICE_NAMES.TOOL_PERMISSIONS,
-  );
+  const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
   if (mcpServiceResult.state === "ready") {
     mcpTools = mcpServiceResult?.value?.tools ?? [];
     mcpToolNames = mcpTools.map((t) => t.name);
