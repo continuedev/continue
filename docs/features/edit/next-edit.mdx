@@ -4,8 +4,9 @@ description: "Learn how Continue's Next Edit feature predicts and suggests your 
 ---
 
 <Warning>
-  Next Edit is currently an experimental feature. It requires specialized models
-  and is not yet available for general use.
+  Next Edit is currently an experimental feature. It requires Mercury Coder Next
+  Edit model configured in your Continue autocomplete settings and is not yet
+  available for JetBrains use.
 </Warning>
 
 ## What is Next Edit?
@@ -68,9 +69,19 @@ Next Edit activates automatically when:
 
 Next Edit requires:
 
-- Compatible AI models (`mercury-coder-nextedit`)
+- Compatible AI models (Mercury Coder Next Edit)
 - Continue development team access
 - VS Code (JetBrains support coming soon)
+
+<Note>
+  To use Next Edit, you must have the Mercury Coder Next Edit model configured
+  in your Continue autocomplete model settings. This model is specifically
+  designed for next edit predictions.
+  <img
+    src="/images/features/edit/assets/images/mercury-coder-next-edit.png"
+    alt="Next Edit Model Setup"
+  />
+</Note>
 
 ### Using Next Edit Predictions
 
