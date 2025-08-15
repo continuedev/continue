@@ -96,14 +96,10 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const commentBody = `👋 Thanks for mentioning @continuedev, @${{ github.event.comment.user.login }}! 
-
-            I've started a remote session to help with your request:
+            const commentBody = `I've started a remote session to help with your request:
             > ${{ github.event.comment.body }}
 
-            **🔗 Remote Session:** ${{ steps.remote-session.outputs.session_url }}
-
-            The AI assistant is now working on your request and will make any necessary changes to this PR. You can follow the progress in the remote session link above.`;
+            **🔗 Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
