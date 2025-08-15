@@ -4,6 +4,7 @@ import node_machine_id from "node-machine-id";
 import type { PostHog as PostHogType } from "posthog-node";
 
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
+import { logger } from "../util/logger.js";
 
 export class PosthogService {
   private os: string | undefined;
@@ -52,12 +53,12 @@ export class PosthogService {
   }
 
   async capture(event: string, properties: { [key: string]: any }) {
-    const client = await this.getClient();
-    if (!client) {
-      return;
-    }
-
     try {
+      const client = await this.getClient();
+      if (!client) {
+        return;
+      }
+
       const augmentedProperties = {
         ...properties,
         os: this.os,
@@ -74,13 +75,19 @@ export class PosthogService {
 
       client?.capture(payload);
     } catch (e) {
-      console.error(`Failed to capture event: ${e}`);
+      logger.debug(`Failed to capture telemetry event '${event}': ${e}`);
     }
   }
 
   async shutdown() {
-    const client = await this.getClient();
-    client?.shutdown();
+    try {
+      const client = await this.getClient();
+      if (client) {
+        await client.shutdown();
+      }
+    } catch (e) {
+      logger.debug(`Failed to shutdown PostHog client: ${e}`);
+    }
   }
 }
 
