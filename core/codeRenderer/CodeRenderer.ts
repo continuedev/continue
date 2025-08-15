@@ -320,29 +320,46 @@ export class CodeRenderer {
         const y = index * options.lineHeight;
         const isFirst = index === 0;
         const isLast = index === lines.length - 1;
+        const isSingleLine = isFirst && isLast;
         const radius = 10;
+
+        // Handle single line case (both first and last)
+        if (isSingleLine) {
+          return `<path d="M ${radius} ${y}
+         L ${options.dimensions.width - radius} ${y}
+         Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
+         L ${options.dimensions.width} ${y + options.lineHeight - radius}
+         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width - radius} ${y + options.lineHeight}
+         L ${radius} ${y + options.lineHeight}
+         Q ${0} ${y + options.lineHeight} ${0} ${y + options.lineHeight - radius}
+         L ${0} ${y + radius}
+         Q ${0} ${y} ${radius} ${y}
+         Z"
+      fill="${bgColor}" />`;
+        }
+
         // SVG notes:
         // By default SVGs have anti-aliasing on.
         // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
         // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
         return isFirst
           ? `<path d="M ${0} ${y + options.lineHeight}
-             L ${0} ${y + radius}
-             Q ${0} ${y} ${radius} ${y}
-             L ${options.dimensions.width - radius} ${y}
-             Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
-             L ${options.dimensions.width} ${y + options.lineHeight}
-             Z"
-          fill="${bgColor}" />`
+         L ${0} ${y + radius}
+         Q ${0} ${y} ${radius} ${y}
+         L ${options.dimensions.width - radius} ${y}
+         Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
+         L ${options.dimensions.width} ${y + options.lineHeight}
+         Z"
+      fill="${bgColor}" />`
           : isLast
             ? `<path d="M ${0} ${y}
-             L ${0} ${y + options.lineHeight - radius}
-             Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
-             L ${options.dimensions.width - radius} ${y + options.lineHeight}
-             Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
-             L ${options.dimensions.width} ${y}
-             Z"
-          fill="${bgColor}" />`
+         L ${0} ${y + options.lineHeight - radius}
+         Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
+         L ${options.dimensions.width - radius} ${y + options.lineHeight}
+         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
+         L ${options.dimensions.width} ${y}
+         Z"
+      fill="${bgColor}" />`
             : `<rect x="0" y="${y}" width="100%" height="${options.lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
       })
       .join("\n");
