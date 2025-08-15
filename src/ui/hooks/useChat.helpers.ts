@@ -125,6 +125,7 @@ interface ProcessSlashCommandResultOptions {
   exit: () => void;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
+  onShowMCPSelector?: () => void;
 }
 
 /**
@@ -138,9 +139,15 @@ export function processSlashCommandResult({
   exit,
   onShowConfigSelector,
   onShowModelSelector,
+  onShowMCPSelector,
 }: ProcessSlashCommandResultOptions): string | null {
   if (result.exit) {
     exit();
+    return null;
+  }
+
+  if (result.openMcpSelector) {
+    onShowMCPSelector?.();
     return null;
   }
 

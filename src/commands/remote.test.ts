@@ -8,7 +8,6 @@ vi.mock("../env.js");
 vi.mock("../telemetry/telemetryService.js");
 vi.mock("../ui/index.js");
 vi.mock("../util/git.js");
-vi.mock("../util/logger.js");
 
 const mockWorkos = vi.mocked(
   await import("../auth/workos.js")

@@ -17,7 +17,7 @@ import {
 } from "./auth/workos.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
-import { MCPService } from "./mcp.js";
+import { MCPService } from "./services/MCPService.js";
 
 export function getLlmApi(
   assistant: AssistantUnrolled,
@@ -99,7 +99,8 @@ export async function initialize(
   const result = await loadConfiguration(authConfig, configPath, apiClient);
   const config = result.config;
   const [llmApi, model] = getLlmApi(config, authConfig);
-  const mcpService = await MCPService.create(config);
+  const mcpService = new MCPService();
+  await mcpService.initialize(config, false);
 
   return { config, llmApi, model, mcpService, apiClient };
 }

@@ -30,6 +30,7 @@ import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import { LoadingAnimation } from "./LoadingAnimation.js";
+import { MCPSelector } from "./MCPSelector.js";
 import { ModelSelector } from "./ModelSelector.js";
 import { OrganizationSelector } from "./OrganizationSelector.js";
 import type { SelectorOption } from "./Selector.js";
@@ -340,6 +341,10 @@ const ScreenContent: React.FC<ScreenContentProps> = ({
     );
   }
 
+  if (isScreenActive("mcp")) {
+    return <MCPSelector onCancel={closeCurrentScreen} />;
+  }
+
   // Model selector
   if (isScreenActive("model")) {
     return (
@@ -472,6 +477,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowOrgSelector: () => navigateTo("organization"),
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
+    onShowMCPSelector: () => navigateTo("mcp"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration

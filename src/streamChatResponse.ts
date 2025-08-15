@@ -7,9 +7,13 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { MCPService } from "./mcp.js";
 import { filterExcludedTools } from "./permissions/index.js";
-import { getServiceSync, SERVICE_NAMES } from "./services/index.js";
+import {
+  getServiceSync,
+  MCPServiceState,
+  MCPTool,
+  SERVICE_NAMES,
+} from "./services/index.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import {
   processChunkContent,
@@ -116,27 +120,38 @@ async function handleToolCalls(
   return false;
 }
 
-export function getAllTools() {
+export async function getAllTools() {
   // Get all available tool names
   const allBuiltinTools = getAllBuiltinTools();
   const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
-  const mcpToolNames =
-    MCPService.getInstance()
-      ?.getTools()
-      .map((tool) => tool.name) ?? [];
+
+  let mcpTools: MCPTool[] = [];
+  let mcpToolNames: string[] = [];
+  const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
+  if (mcpServiceResult.state === "ready") {
+    mcpTools = mcpServiceResult?.value?.tools ?? [];
+    mcpToolNames = mcpTools.map((t) => t.name);
+  } else {
+    // MCP is lazy
+    // throw new Error("MCP Service not initialized");
+  }
+
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 
   // Check if the ToolPermissionService is ready
-  const serviceResult = getServiceSync<ToolPermissionServiceState>(
+  const permissionsServiceResult = getServiceSync<ToolPermissionServiceState>(
     SERVICE_NAMES.TOOL_PERMISSIONS,
   );
 
   let allowedToolNames: string[];
-  if (serviceResult.state === "ready" && serviceResult.value) {
+  if (
+    permissionsServiceResult.state === "ready" &&
+    permissionsServiceResult.value
+  ) {
     // Filter out excluded tools based on permissions
     allowedToolNames = filterExcludedTools(
       allToolNames,
-      serviceResult.value.permissions,
+      permissionsServiceResult.value.permissions,
     );
   } else {
     // Service not ready - this is a critical error since tools should only be
@@ -181,7 +196,6 @@ export function getAllTools() {
   }));
 
   // Add filtered MCP tools
-  const mcpTools = MCPService.getInstance()?.getTools() ?? [];
   const allowedMcpTools = mcpTools.filter((tool) =>
     allowedToolNamesSet.has(tool.name),
   );
@@ -446,7 +460,7 @@ export async function streamChatResponse(
     SERVICE_NAMES.TOOL_PERMISSIONS,
   );
   const isHeadless = serviceResult.value?.isHeadless ?? false;
-  const tools = getAllTools();
+  const tools = await getAllTools();
 
   logger.debug("Tools prepared", {
     toolCount: tools.length,
