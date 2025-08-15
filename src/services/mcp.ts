@@ -72,7 +72,6 @@ export class MCPService
       configName: assistant.name,
       serverCount: assistant.mcpServers?.length || 0,
     });
-    console.log("INITIALIZING MCP", JSON.stringify(assistant));
 
     await this.shutdownConnections();
 

@@ -8,21 +8,9 @@ import { getAllTools } from './streamChatResponse.js';
 describe('getAllTools - Tool Filtering', () => {
   beforeEach(() => {
     // Clean up service container state before each test
-    const services = [
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      SERVICE_NAMES.AUTH,
-      SERVICE_NAMES.API_CLIENT,
-      SERVICE_NAMES.CONFIG,
-      SERVICE_NAMES.MODEL,
-      SERVICE_NAMES.MCP
-    ];
-    
-    services.forEach(service => {
-      // Reset service state
-      (serviceContainer as any).services.delete(service);
-      (serviceContainer as any).factories.delete(service);
-      (serviceContainer as any).dependencies.delete(service);
-    });
+    serviceContainer.removeAllListeners()
+    Object.values(SERVICE_NAMES).forEach(name => {
+    })
   });
 
   test('should exclude Bash tool in plan mode after service initialization', async () => {
