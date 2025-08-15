@@ -1,16 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { createMockStore } from "../../../../../util/test/mockStore";
 import { IndexedPagesTooltip } from "./IndexedPagesTooltip";
-
-const mockIdeMessenger = {
-  post: vi.fn(),
-  request: vi.fn(),
-  respond: vi.fn(),
-  streamRequest: vi.fn(),
-  llmStreamChat: vi.fn(),
-  ide: {} as any,
-};
 
 describe("IndexedPagesTooltip", () => {
   const defaultProps = {
@@ -23,12 +16,20 @@ describe("IndexedPagesTooltip", () => {
     baseUrl: "https://example.com",
   };
 
-  const renderComponent = (props = {}) => {
-    return render(
-      <IdeMessengerContext.Provider value={mockIdeMessenger}>
-        <IndexedPagesTooltip {...defaultProps} {...props} />
-      </IdeMessengerContext.Provider>,
-    );
+  const renderComponent = (props = {}, storeState = {}) => {
+    const { mockIdeMessenger, ...store } = createMockStore(storeState);
+
+    return {
+      ...render(
+        <Provider store={store}>
+          <IdeMessengerContext.Provider value={mockIdeMessenger}>
+            <IndexedPagesTooltip {...defaultProps} {...props} />
+          </IdeMessengerContext.Provider>
+        </Provider>,
+      ),
+      mockIdeMessenger,
+      store,
+    };
   };
 
   beforeEach(() => {
@@ -82,7 +83,7 @@ describe("IndexedPagesTooltip", () => {
   });
 
   it("opens URL when page is clicked", () => {
-    renderComponent();
+    const { mockIdeMessenger } = renderComponent();
 
     const pageLink = screen.getByText("/page1");
     fireEvent.click(pageLink);
@@ -94,7 +95,7 @@ describe("IndexedPagesTooltip", () => {
   });
 
   it("opens each page URL correctly when clicked", () => {
-    renderComponent();
+    const { mockIdeMessenger } = renderComponent();
 
     // Click on different pages
     fireEvent.click(screen.getByText("/page2"));
