@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - test-workflow-fix
   workflow_dispatch:
     inputs:
       test_pr_number:
