@@ -66,6 +66,7 @@ export class MCPService {
       serverCount: assistant.mcpServers?.length || 0,
     });
 
+    console.log("MCP INITIALIZATION: SHUTTING DOWN CONNS");
     await this.shutdownConnections();
 
     this.assistant = assistant;
@@ -82,6 +83,7 @@ export class MCPService {
       }
     });
 
+    console.log("MCP INITIALIZATION: CONNECTING");
     const connectionInit = Promise.all(connectionPromises ?? []).then(
       (connections) => {
         logger.debug("MCP connections established", {
@@ -90,9 +92,11 @@ export class MCPService {
       },
     );
     if (waitForConnections) {
+      console.log("MCP INITIALIZATION: WAITING FOR CONNS");
       await connectionInit;
     }
     this.currentState.isReady = true;
+    console.log("MCP INITIALIZATION: UPDATING STATE");
     this.updateState();
 
     return this.currentState;

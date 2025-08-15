@@ -222,7 +222,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     }
 
     if (key.downArrow) {
-      setSelectedIndex(selectedIndex >= maxIndex ? 0 : selectedIndex + 1);
+      setSelectedIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
       return;
     }
 
