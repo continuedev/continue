@@ -33,6 +33,12 @@ export interface MCPConnectionInfo {
   warnings: string[];
 }
 
+export const EMPTY_MCP_STATE: MCPServiceState = {
+  mcpService: null,
+  connections: [],
+  toolCount: 0,
+  promptCount: 0,
+};
 export class MCPService
   extends BaseService<MCPServiceState>
   implements ServiceWithDependencies
@@ -46,10 +52,7 @@ export class MCPService
   }
   constructor() {
     super("MCPService", {
-      mcpService: null,
-      connections: [],
-      toolCount: 0,
-      promptCount: 0,
+      ...EMPTY_MCP_STATE,
     });
 
     // Register shutdown handler
