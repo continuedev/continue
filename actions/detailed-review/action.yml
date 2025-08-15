@@ -91,7 +91,7 @@ runs:
         gh pr diff $PR_NUMBER --color=never > pr_diff.txt
 
         # Annotate diff with GitHub API positions
-        node ${{ github.action_path }}/../scripts/annotate-diff.js pr_diff.txt > pr_diff_annotated.txt
+        node ${{ github.action_path }}/annotate-diff.js pr_diff.txt > pr_diff_annotated.txt
         
         # Debug: Show sample of annotated diff
         echo "=== SAMPLE OF ANNOTATED DIFF ==="
