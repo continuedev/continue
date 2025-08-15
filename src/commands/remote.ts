@@ -17,6 +17,19 @@ export async function remote(
 ) {
   // If --url is provided, connect directly to that URL
   if (options.url) {
+    if (options.start) {
+      // In start mode, output connection details as JSON and exit
+      console.log(
+        JSON.stringify({
+          status: "success",
+          message: "Remote environment connection details",
+          url: options.url,
+          mode: "direct_url",
+        }),
+      );
+      return;
+    }
+
     console.info(
       chalk.white(`Connecting to remote environment at: ${options.url}`),
     );
@@ -72,15 +85,15 @@ export async function remote(
     const result = await response.json();
 
     if (options.start) {
-      // In print mode, output connection details as JSON and exit
+      // In start mode, output connection details as JSON and exit
       console.log(
         JSON.stringify({
           status: "success",
           message: "Remote development environment created successfully",
-          url: `${env.appUrl}/agents/${result.id}`,
+          url: result.url,
+          port: result.port,
           name: requestBody.name,
-          containerUrl: result.url,
-          containerPort: result.port,
+          mode: "new_environment",
         }),
       );
       return;
