@@ -32,7 +32,7 @@ export class CodebaseRulesCache {
     );
     const rule = markdownToRule(content, {
       uriType: "file",
-      filePath: relativePathOrBasename,
+      fileUri: relativePathOrBasename,
     });
     const ruleWithSource: RuleWithSource = {
       ...rule,
@@ -81,7 +81,7 @@ export async function loadCodebaseRules(ide: IDE): Promise<{
         );
         const rule = markdownToRule(content, {
           uriType: "file",
-          filePath: relativePathOrBasename,
+          fileUri: relativePathOrBasename,
         });
 
         rules.push({

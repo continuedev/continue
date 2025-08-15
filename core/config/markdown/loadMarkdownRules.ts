@@ -36,7 +36,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
         );
         const rule = markdownToRule(file.content, {
           uriType: "file",
-          filePath: relativePathOrBasename,
+          fileUri: relativePathOrBasename,
         });
         rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
       } catch (e) {

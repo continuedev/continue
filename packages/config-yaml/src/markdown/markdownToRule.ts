@@ -77,7 +77,7 @@ function getGlobPattern(
   if (id.uriType !== "file") {
     return globs;
   }
-  let dir = path.dirname(id.uriPath);
+  let dir = path.dirname(id.fileUri);
 
   // Make a new util in uri.ts that checks if there is a string match
   // on a given dirname path
@@ -116,6 +116,6 @@ export function markdownToRule(
     regex: frontmatter.regex,
     description: frontmatter.description,
     alwaysApply: frontmatter.alwaysApply,
-    sourceFile: id.uriType === "file" ? id.uriPath : undefined,
+    sourceFile: id.uriType === "file" ? id.fileUri : undefined,
   };
 }
