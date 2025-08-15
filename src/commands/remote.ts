@@ -1,10 +1,6 @@
 import chalk from "chalk";
 
-import {
-  getAccessToken,
-  isAuthenticatedConfig,
-  loadAuthConfig,
-} from "../auth/workos.js";
+import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
 import { env } from "../env.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
@@ -50,7 +46,8 @@ export async function remote(
   try {
     const authConfig = loadAuthConfig();
 
-    if (!isAuthenticatedConfig(authConfig)) {
+    // Check if we have any valid authentication (file-based or environment variable)
+    if (!authConfig || !getAccessToken(authConfig)) {
       console.error(
         chalk.red("Not authenticated. Please run 'cn login' first."),
       );
