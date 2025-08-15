@@ -6,8 +6,20 @@ on:
     - cron: "0 10 * * 1"
   workflow_dispatch:
     inputs:
+      release_type:
+        description: "Release type"
+        required: true
+        type: choice
+        options:
+          - "promote-beta"
+          - "direct-stable"
+        default: "promote-beta"
       beta_version:
-        description: "Specific beta version to promote (e.g., 1.2.3-beta.20240115)"
+        description: "Specific beta version to promote (required if release_type is 'promote-beta')"
+        required: false
+        type: string
+      stable_version:
+        description: "Version for direct stable release (e.g., 1.2.3) - required if release_type is 'direct-stable'"
         required: false
         type: string
 
@@ -34,7 +46,26 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           always-auth: true
 
+      - name: Validate inputs
+        run: |
+          RELEASE_TYPE="${{ inputs.release_type || 'promote-beta' }}"
+          echo "Release type: $RELEASE_TYPE"
+          
+          if [[ "$RELEASE_TYPE" == "direct-stable" ]]; then
+            if [[ -z "${{ inputs.stable_version }}" ]]; then
+              echo "Error: stable_version is required for direct-stable release type"
+              exit 1
+            fi
+            echo "Direct stable release version: ${{ inputs.stable_version }}"
+          elif [[ "$RELEASE_TYPE" == "promote-beta" ]]; then
+            echo "Beta promotion release (beta_version: ${{ inputs.beta_version }})"
+          else
+            echo "Error: Invalid release type: $RELEASE_TYPE"
+            exit 1
+          fi
+
       - name: Find beta version to promote
+        if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         id: find_beta
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -77,7 +108,14 @@ jobs:
           echo "beta_version=$BETA_VERSION" >> $GITHUB_OUTPUT
           echo "stable_version=$STABLE_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Set version for direct stable release
+        if: ${{ inputs.release_type == 'direct-stable' }}
+        id: direct_stable
+        run: |
+          echo "stable_version=${{ inputs.stable_version }}" >> $GITHUB_OUTPUT
+
       - name: Download and verify beta package
+        if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -91,7 +129,8 @@ jobs:
           echo "Beta package contents verified"
           ls -la package/
 
-      - name: Update package.json for stable release
+      - name: Prepare package for beta promotion
+        if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         run: |
           # Copy the beta package contents
           cp -r package/* .
@@ -99,18 +138,40 @@ jobs:
           # Update version to stable (remove beta suffix)
           npm version ${{ steps.find_beta.outputs.stable_version }} --no-git-tag-version
 
+      - name: Prepare package for direct stable release
+        if: ${{ inputs.release_type == 'direct-stable' }}
+        run: |
+          # Install dependencies for direct build
+          npm ci
+          
+          # Update version to the specified stable version
+          npm version ${{ inputs.stable_version }} --no-git-tag-version
+
       - name: Build (verification step)
         run: npm run build
 
       - name: Run tests (verification step)
         run: npm test
 
+      - name: Set final version
+        id: final_version
+        run: |
+          if [[ "${{ inputs.release_type || 'promote-beta' }}" == "direct-stable" ]]; then
+            STABLE_VERSION="${{ steps.direct_stable.outputs.stable_version }}"
+            RELEASE_NOTES="Direct stable release from main branch. Version $STABLE_VERSION built and published directly from the latest main branch."
+          else
+            STABLE_VERSION="${{ steps.find_beta.outputs.stable_version }}"
+            RELEASE_NOTES="Stable release promoted from tested beta version ${{ steps.find_beta.outputs.beta_version }}. This version has been thoroughly tested in beta for at least 7 days."
+          fi
+          echo "stable_version=$STABLE_VERSION" >> $GITHUB_OUTPUT
+          echo "release_notes=$RELEASE_NOTES" >> $GITHUB_OUTPUT
+
       - name: Publish stable to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           npm publish --tag latest
-          echo "Published stable version: ${{ steps.find_beta.outputs.stable_version }}"
+          echo "Published stable version: ${{ steps.final_version.outputs.stable_version }}"
 
       - name: Create stable release on GitHub
         env:
@@ -119,19 +180,20 @@ jobs:
           # Create a git tag for the stable release
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag "v${{ steps.find_beta.outputs.stable_version }}"
-          git push origin "v${{ steps.find_beta.outputs.stable_version }}"
+          git tag "v${{ steps.final_version.outputs.stable_version }}"
+          git push origin "v${{ steps.final_version.outputs.stable_version }}"
 
           # Create GitHub release
-          gh release create "v${{ steps.find_beta.outputs.stable_version }}" \
-            --title "Stable Release v${{ steps.find_beta.outputs.stable_version }}" \
-            --notes "Stable release promoted from tested beta version ${{ steps.find_beta.outputs.beta_version }}. This version has been thoroughly tested in beta for at least 7 days." \
+          gh release create "v${{ steps.final_version.outputs.stable_version }}" \
+            --title "Stable Release v${{ steps.final_version.outputs.stable_version }}" \
+            --notes "${{ steps.final_version.outputs.release_notes }}" \
             --latest
 
-      - name: Update GitHub release notes
+      - name: Update GitHub release notes for beta promotion
+        if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
         run: |
           # Mark the original beta release as superseded
           gh release edit "v${{ steps.find_beta.outputs.beta_version }}" \
-            --notes "This beta version has been promoted to stable as v${{ steps.find_beta.outputs.stable_version }}."
+            --notes "This beta version has been promoted to stable as v${{ steps.final_version.outputs.stable_version }}."
