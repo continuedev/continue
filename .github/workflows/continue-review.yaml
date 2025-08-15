@@ -93,16 +93,13 @@ jobs:
 
           ## Code Review Summary
 
-          ### ✅ Strengths
-          - [List positive aspects]
-
-          ### ⚠️ Issues Found
+          ### Issues Found
           - [List any problems with severity levels]
 
-          ### 💡 Suggestions
+          ### Suggestions
           - [List improvement recommendations]
 
-          ### 🚀 Overall Assessment
+          ### Overall Assessment
           [Provide overall recommendation: APPROVE, REQUEST_CHANGES, or COMMENT]
 
           Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.

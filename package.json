@@ -63,6 +63,7 @@
     "express": "^5.1.0",
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",
+    "gradient-string": "^3.0.0",
     "ignore-walk": "^7.0.0",
     "ink": "^6.1.0",
     "jszip": "^3.10.1",

@@ -19,7 +19,7 @@ describe("TUIChat - @ File Search Tests", () => {
     // The @ might be in the input line or in a file search UI
     const hasAtSymbol = frame.includes("@") || frame.includes("◉ @");
     expect(hasAtSymbol).toBe(true);
-    
+
     // Mode-specific UI
     if (mode === 'remote') {
       expect(frame).toContain("Remote Mode");
@@ -42,12 +42,12 @@ describe("TUIChat - @ File Search Tests", () => {
 
     // Should show the typed text
     expect(frame).toContain("@READ");
-    
+
     // Navigation hints only show in local mode
     if (mode === 'local') {
-      expect(frame).toContain("Use ↑/↓ to navigate");
+      expect(frame).toContain("↑/↓ to navigate");
     }
-    
+
     // Mode-specific checks
     if (mode === 'remote') {
       expect(frame).toContain("Remote Mode");
@@ -70,7 +70,7 @@ describe("TUIChat - @ File Search Tests", () => {
     // Should handle multiple @ without crashing
     expect(frame).toBeDefined();
     expect(frame).toContain("@@test");
-    
+
     // Mode-specific UI elements
     if (mode === 'remote') {
       expect(frame).toContain("Remote Mode");
@@ -93,10 +93,10 @@ describe("TUIChat - @ File Search Tests", () => {
     // Should not crash and show something
     expect(frame).toBeDefined();
     expect(frame.length).toBeGreaterThan(0);
-    
+
     // Navigation hints only show in local mode
     if (mode === 'local') {
-      expect(frame).toContain("Use ↑/↓ to navigate");
+      expect(frame).toContain("↑/↓ to navigate");
     }
   });
 });
