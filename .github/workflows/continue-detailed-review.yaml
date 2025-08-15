@@ -131,7 +131,8 @@ jobs:
           - Only comment on actual problems or important improvements
 
           Important: 
-          - Output ONLY valid JSON, no additional text
+          - Output ONLY valid JSON, no markdown code blocks or backticks
+          - Start your response with { and end with }
           - Use the exact number from [POS:N] markers as the position
           - Only comment on changed lines (lines with + or - prefix)
           - Comment on the most important issues first
