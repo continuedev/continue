@@ -324,18 +324,18 @@ jobs:
         uses: actions/cache@v4
         id: pr-review-cache
         with:
-          path: pr-review-action/scripts/node_modules
-          key: ${{ runner.os }}-pr-review-action-${{ hashFiles('pr-review-action/scripts/package.json') }}
+          path: actions/detailed-review/node_modules
+          key: ${{ runner.os }}-pr-review-action-${{ hashFiles('actions/detailed-review/package.json') }}
 
       - name: Install dependencies
         if: steps.pr-review-cache.outputs.cache-hit != 'true'
         run: |
-          cd pr-review-action/scripts
+          cd actions/detailed-review
           npm install
 
       - name: Run tests
         run: |
-          cd pr-review-action/scripts
+          cd actions/detailed-review
           npm test
 
   # so that creators of new jobs can add them to this list
