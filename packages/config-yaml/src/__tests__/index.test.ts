@@ -93,9 +93,11 @@ describe("E2E Scenarios", () => {
   const registry: Registry = {
     getContent: async function (id: PackageIdentifier): Promise<string> {
       const slug = packageIdentifierToShorthandSlug(id);
-      return fs
-        .readFileSync(`./src/__tests__/packages/${slug}.yaml`)
-        .toString();
+      const filePath =
+        id.uriType === "slug"
+          ? `./src/__tests__/packages/${slug}.yaml`
+          : id.fileUri;
+      return fs.readFileSync(filePath).toString();
     },
   };
 
@@ -240,6 +242,10 @@ describe("E2E Scenarios", () => {
               versionSlug: "latest",
             },
           },
+          {
+            uriType: "file",
+            fileUri: "./src/__tests__/local-files/rules.yaml",
+          },
         ],
       },
     );
@@ -255,7 +261,75 @@ describe("E2E Scenarios", () => {
     );
 
     // Check the injected doc block was added
-    expect(config?.rules?.[2]).toBe("Be kind");
+    const errors = unrolledConfig.errors;
+
+    // Check the injected doc block was added
+    expect(
+      typeof config?.rules?.[2] !== "string" &&
+        config?.rules?.[2]?.rule === "Be humble",
+    );
+
+    // Check if we receive one error that is caused by duplicate rules
+    expect(errors?.length).toBe(1);
+    expect(errors?.[0].message.includes("Duplicate rules detected"));
+  });
+
+  it("duplicate detection should happen in the assistant config first and then the intected blocks", async () => {
+    const unrolledConfig = await unrollAssistant(
+      {
+        uriType: "file",
+        fileUri: "./src/__tests__/local-files/duplicate-test-assistant.yaml",
+      },
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+        // Add injected blocks
+        injectBlocks: [
+          {
+            uriType: "file",
+            fileUri: "./src/__tests__/local-files/rules.yaml",
+          },
+          {
+            uriType: "file",
+            fileUri: "./src/__tests__/local-files/mcpServer.yaml",
+          },
+          {
+            uriType: "file",
+            fileUri: "./src/__tests__/local-files/prompt.yaml",
+          },
+        ],
+      },
+    );
+
+    const config = unrolledConfig.config;
+    const errors = unrolledConfig.errors;
+
+    // Check if all the duplicate blocks get removed
+    expect(config?.models?.length).toBe(1);
+    expect(config?.context?.length).toBe(1);
+    expect(config?.mcpServers?.length).toBe(1);
+    expect(config?.rules?.length).toBe(1);
+    expect(config?.prompts?.length).toBe(1);
+    expect(config?.docs?.length).toBe(1);
+
+    // Check if there are 8 duplication detected
+    expect(errors?.length).toBe(8);
+
+    // Beginning of the assistant config duplication check
+    expect(
+      errors?.[0].message.includes("Duplicate models named gpt-5 detected"),
+    ).toBe(true);
+    // Beginning of the injected blocks duplication check
+    expect(errors?.[4].message.includes("Duplicate rules detected")).toBe(true);
+    expect(
+      errors?.[6].message.includes(
+        "Duplicate mcpServers named Browser search detected",
+      ),
+    ).toBe(true);
   });
 
   it.skip("should prioritize org over user / package secrets", () => {});
