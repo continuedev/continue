@@ -288,7 +288,7 @@ runs:
                   repo: context.repo.repo,
                   pull_number: prNumber,
                   commit_id: commitSha,
-                  body: reviewData.review_summary || 'AI Code Review',
+                  body: `${reviewData.review_summary || 'AI Code Review'}\n\n---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`,
                   event: 'COMMENT',
                   comments: comments
                 });
@@ -298,7 +298,8 @@ runs:
                 
                 // Fallback: post as a regular comment if review creation fails
                 const fallbackBody = `## AI Code Review\n\n${reviewData.review_summary}\n\n` +
-                  `*Failed to post ${comments.length} inline comments. Please review the changes manually.*`;
+                  `*Failed to post ${comments.length} inline comments. Please review the changes manually.*\n\n` +
+                  `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
                 
                 await github.rest.issues.createComment({
                   issue_number: prNumber,
@@ -313,7 +314,8 @@ runs:
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*`
+                body: `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*\n\n` +
+                  `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`
               });
             }
             

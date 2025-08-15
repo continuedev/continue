@@ -207,6 +207,9 @@ runs:
               reviewContent = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewContent}`;
             }
 
+            // Add instructions for re-review
+            reviewContent += '\n\n---\n*💡 To request a new review, comment `@continue-general-review`*';
+
             // Create new comment
             await github.rest.issues.createComment({
               issue_number: prNumber,
