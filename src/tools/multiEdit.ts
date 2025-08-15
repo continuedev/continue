@@ -310,7 +310,11 @@ If you want to create a new file, use:
       }
 
       // Generate diff for result display
-      const diff = generateDiff(args.originalContent, args.newContent, args.file_path);
+      const diff = generateDiff(
+        args.originalContent,
+        args.newContent,
+        args.file_path,
+      );
 
       const action = args.isCreatingNewFile ? "created" : "edited";
       return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}\nDiff:\n${diff}`;

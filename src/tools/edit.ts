@@ -179,7 +179,11 @@ parameter is useful if you want to rename a variable for instance.`,
       }
 
       // Generate diff for result display
-      const diff = generateDiff(args.oldContent, args.newContent, args.file_path);
+      const diff = generateDiff(
+        args.oldContent,
+        args.newContent,
+        args.file_path,
+      );
 
       return `Successfully edited ${args.file_path}\nDiff:\n${diff}`;
     } catch (error) {

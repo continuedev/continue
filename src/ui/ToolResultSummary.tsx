@@ -58,8 +58,8 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
               {toolName === "Edit"
                 ? " File edited successfully"
                 : toolName === "MultiEdit"
-                ? " File edited successfully"
-                : " File written successfully"}
+                  ? " File edited successfully"
+                  : " File written successfully"}
             </Text>
           </Box>
           <ColoredDiff diffContent={diffSection} />
