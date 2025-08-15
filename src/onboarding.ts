@@ -11,7 +11,7 @@ import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { env } from "./env.js";
-import { MCPService } from "./mcp.js";
+import { MCPService } from "./services/mcp.js";
 import {
   getApiKeyValidationError,
   isValidAnthropicApiKey,

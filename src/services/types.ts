@@ -3,8 +3,9 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
-import { MCPConnectionInfo, MCPService } from "../mcp.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
+
+import { MCPConnectionInfo, MCPService } from "./mcp.js";
 
 /**
  * Service lifecycle states

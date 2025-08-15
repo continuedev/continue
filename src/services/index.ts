@@ -1,11 +1,11 @@
 import { loadAuthConfig } from "../auth/workos.js";
-import { MCPService } from "../mcp.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import { logger } from "../util/logger.js";
 
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
+import { MCPService } from "./mcp.js";
 import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { serviceContainer } from "./ServiceContainer.js";
@@ -206,7 +206,7 @@ export async function initializeServices(
       if (!configState.config) {
         throw new Error("Config not available for MCP service");
       }
-      return mcpService.initialize(configState.config);
+      return mcpService.initialize(configState.config, options.headless);
     },
     [SERVICE_NAMES.CONFIG], // Depends on config
   );

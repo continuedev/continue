@@ -2,7 +2,7 @@ import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Static } from "ink";
 import React from "react";
 
-import type { MCPService } from "../../mcp.js";
+import type { MCPService } from "../../services/mcp.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
 import type { DisplayMessage } from "../types.js";

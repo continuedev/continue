@@ -17,7 +17,7 @@ import {
 } from "./auth/workos.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
-import { MCPService } from "./mcp.js";
+import { MCPService } from "./services/mcp.js";
 
 export function getLlmApi(
   assistant: AssistantUnrolled,

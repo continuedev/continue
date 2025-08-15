@@ -2,10 +2,11 @@ import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-import { serviceContainer } from "./services/ServiceContainer.js";
-import { MCPServiceState, SERVICE_NAMES } from "./services/types.js";
-import { getErrorString } from "./util/error.js";
-import { logger } from "./util/logger.js";
+import { getErrorString } from "../util/error.js";
+import { logger } from "../util/logger.js";
+
+import { serviceContainer } from "./ServiceContainer.js";
+import { MCPServiceState, SERVICE_NAMES } from "./types.js";
 
 export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
 
@@ -37,7 +38,6 @@ export class MCPService {
   private currentState: MCPServiceState;
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
-  private initVersion = 0;
 
   constructor() {
     this.currentState = {
@@ -57,13 +57,14 @@ export class MCPService {
   /**
    * Initialize the MCP service
    */
-  async initialize(assistant: AssistantConfig): Promise<MCPServiceState> {
+  async initialize(
+    assistant: AssistantConfig,
+    waitForConnections = false,
+  ): Promise<MCPServiceState> {
     logger.debug("Initializing MCPService", {
       configName: assistant.name,
       serverCount: assistant.mcpServers?.length || 0,
     });
-
-    const version = ++this.initVersion;
 
     await this.shutdownConnections();
 
@@ -81,15 +82,18 @@ export class MCPService {
       }
     });
 
-    Promise.all(connectionPromises ?? []).then((connections) => {
-      if (version === this.initVersion) {
-        this.currentState.isReady = true;
+    const connectionInit = Promise.all(connectionPromises ?? []).then(
+      (connections) => {
         logger.debug("MCP connections established", {
           connectionCount: connections.length,
         });
-        this.updateState();
-      }
-    });
+      },
+    );
+    if (waitForConnections) {
+      await connectionInit;
+    }
+    this.currentState.isReady = true;
+    this.updateState();
 
     return this.currentState;
   }

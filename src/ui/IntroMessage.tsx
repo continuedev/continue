@@ -4,7 +4,7 @@ import React from "react";
 
 import { parseArgs } from "../args.js";
 import { getAllSlashCommands } from "../commands/commands.js";
-import { MCPService } from "../mcp.js";
+import { MCPService } from "../services/mcp.js";
 import { isModelCapable } from "../utils/modelCapability.js";
 
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
