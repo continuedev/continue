@@ -49,7 +49,6 @@ export async function remote(
     const accessToken = getAccessToken(authConfig);
 
     const requestBody: any = {
-      cUserId: authConfig.userId,
       repoUrl: getRepoUrl(),
       name: `devbox-${Date.now()}`,
       prompt: prompt,
