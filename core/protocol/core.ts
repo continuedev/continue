@@ -49,9 +49,9 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
-import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
-import { NextEditOutcome } from "../nextEdit/types";
 import { HubToolsAccess } from "../tools/utils/hubToolsAccess";
+import { NextEditOutcome } from "../nextEdit/types";
+import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 
 export enum OnboardingModes {
   API_KEY = "API Key",

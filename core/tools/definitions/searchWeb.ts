@@ -27,7 +27,7 @@ export const searchWebTool: Tool = {
   },
   defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: {
-    prefix: `To search the web, use the ${BuiltInToolNames.SearchWeb} tool with a natural language query. **This tool requires a paid Continue Hub account.** For example, to search for the current weather, you would respond with:`,
+    prefix: `To search the web, use the ${BuiltInToolNames.SearchWeb} tool with a natural language query. For example, to search for the current weather, you would respond with:`,
     exampleArgs: [["query", "What is the current weather in San Francisco?"]],
   },
 };
