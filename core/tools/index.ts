@@ -26,7 +26,7 @@ export const getConfigDependentToolDefinitions = (
   toolDefinitions.searchAndReplaceInFileTool,
   // Keep edit file tool available for models that need it
   toolDefinitions.editFileTool,
-  // Web search is only available for signed-in users (free trial and paid subscribers)
+  // Web search is only available for signed-in users
   ...(params.isSignedIn ? [toolDefinitions.searchWebTool] : []),
   ...(params.enableExperimentalTools
     ? [
