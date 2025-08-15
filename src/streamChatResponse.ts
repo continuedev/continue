@@ -11,9 +11,9 @@ import { filterExcludedTools } from "./permissions/index.js";
 import {
   getServiceSync,
   MCPServiceState,
+  MCPTool,
   SERVICE_NAMES,
 } from "./services/index.js";
-import { MCPTool } from "./services/MCPService.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import {
   processChunkContent,
@@ -131,8 +131,7 @@ export async function getAllTools() {
     SERVICE_NAMES.TOOL_PERMISSIONS,
   );
   if (mcpServiceResult.state === "ready") {
-    mcpTools = mcpServiceResult?.value?.mcpService?.getTools() ?? [];
-
+    mcpTools = mcpServiceResult?.value?.tools ?? [];
     mcpToolNames = mcpTools.map((t) => t.name);
   } else {
     // MCP is lazy

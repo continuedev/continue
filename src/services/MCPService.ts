@@ -6,39 +6,25 @@ import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
-import { MCPServiceState, SERVICE_NAMES } from "./types.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import {
+  MCPConnectionInfo,
+  MCPServiceState,
+  SERVICE_NAMES,
+  MCPServerConfig,
+} from "./types.js";
 
-export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
-export type MCPTool = Awaited<ReturnType<Client["listTools"]>>["tools"][number];
-type MCPServerConfig = NonNullable<
-  NonNullable<AssistantConfig["mcpServers"]>[number]
->;
-
-interface ServerConnection {
-  config: MCPServerConfig;
-  status: MCPServerStatus;
+interface ServerConnection extends MCPConnectionInfo {
   client: Client | null;
-  prompts: Awaited<ReturnType<Client["listPrompts"]>>["prompts"];
-  tools: MCPTool[];
-  error?: string;
-  warnings: string[];
-}
-
-export interface MCPConnectionInfo {
-  config: MCPServerConfig;
-  status: MCPServerStatus;
-  toolNames: string[];
-  promptNames: string[];
-  error?: string;
-  warnings: string[];
 }
 
 export const EMPTY_MCP_STATE: MCPServiceState = {
   mcpService: null,
   connections: [],
-  toolCount: 0,
-  promptCount: 0,
+  tools: [],
+  prompts: [],
 };
+
 export class MCPService
   extends BaseService<MCPServiceState>
   implements ServiceWithDependencies
@@ -94,12 +80,14 @@ export class MCPService
         logger.debug("MCP connections established", {
           connectionCount: connections.length,
         });
+        this.updateState();
       },
     );
     if (waitForConnections) {
       await connectionInit;
+    } else {
+      this.updateState();
     }
-    this.updateState();
 
     return this.currentState;
   }
@@ -107,24 +95,24 @@ export class MCPService
   /**
    * Update internal state based on current connections
    */
-  private updateState(): void {
-    const connections = Array.from(this.connections.values());
-    const connectedConnections = connections.filter(
+  private updateState() {
+    const connections: MCPConnectionInfo[] = Array.from(
+      this.connections.values(),
+    ).map(({ client: _, ...rest }) => rest);
+    const connectedServers = connections.filter(
       (c) => c.status === "connected",
     );
+    const tools = connectedServers.flatMap((s) => s.tools);
+    const prompts = connectedServers.flatMap((s) => s.prompts);
 
-    this.setState({
+    const newState: MCPServiceState = {
       mcpService: this,
-      connections: this.getConnectionInfo(),
-      toolCount: connectedConnections.reduce(
-        (sum, c) => sum + c.tools.length,
-        0,
-      ),
-      promptCount: connectedConnections.reduce(
-        (sum, c) => sum + c.prompts.length,
-        0,
-      ),
-    });
+      connections,
+      tools,
+      prompts,
+    };
+    this.setState(newState);
+    serviceContainer.set(SERVICE_NAMES.MCP, newState);
   }
 
   /**
@@ -132,20 +120,6 @@ export class MCPService
    */
   getState(): MCPServiceState {
     return { ...this.currentState };
-  }
-
-  /**
-   * Get connection information for display
-   */
-  getConnectionInfo(): MCPConnectionInfo[] {
-    return Array.from(this.connections.values()).map((connection) => ({
-      config: connection.config,
-      status: connection.status,
-      toolNames: connection.tools.map((tool) => tool.name),
-      promptNames: connection.prompts.map((prompt) => prompt.name),
-      error: connection.error,
-      warnings: connection.warnings,
-    }));
   }
 
   /**
@@ -169,47 +143,6 @@ export class MCPService
     }
 
     return { status: "idle", hasWarnings };
-  }
-
-  /**
-   * Get MCP service information for display
-   */
-  getMCPInfo(): {
-    toolNames: string[];
-    promptNames: string[];
-    connectionCount: number;
-  } {
-    const connectedConnections = Array.from(this.connections.values()).filter(
-      (c) => c.status === "connected",
-    );
-
-    return {
-      toolNames: connectedConnections.flatMap((connection) =>
-        connection.tools.map((tool) => tool.name),
-      ),
-      promptNames: connectedConnections.flatMap((connection) =>
-        connection.prompts.map((prompt) => prompt.name),
-      ),
-      connectionCount: this.connections.size,
-    };
-  }
-
-  /**
-   * Get all prompts from connected servers only
-   */
-  public getPrompts() {
-    return Array.from(this.connections.values())
-      .filter((connection) => connection.status === "connected")
-      .flatMap((connection) => connection.prompts);
-  }
-
-  /**
-   * Get all tools from connected servers only
-   */
-  public getTools() {
-    return Array.from(this.connections.values())
-      .filter((connection) => connection.status === "connected")
-      .flatMap((connection) => connection.tools);
   }
 
   /**
@@ -239,16 +172,6 @@ export class MCPService
     logger.debug("Restarting all MCP servers");
     await this.shutdownConnections();
     await this.initialize(this.assistant);
-    this.updateState();
-  }
-
-  /**
-   * Stop all servers
-   */
-  public async stopAllServers(): Promise<void> {
-    logger.debug("Stopping all MCP servers");
-    await this.shutdownConnections();
-    this.updateState();
   }
 
   /**
@@ -323,10 +246,10 @@ export class MCPService
       });
 
       await client.connect(transport, {});
-      // client.setLoggingLevel("critical");
 
       connection.client = client;
       connection.status = "connected";
+      this.updateState();
 
       const capabilities = client.getServerCapabilities();
       logger.debug("MCP server capabilities", {
@@ -396,31 +319,14 @@ export class MCPService
   }
 
   /**
-   * Get a specific server connection info
-   */
-  public getServerInfo(serverName: string): MCPConnectionInfo | null {
-    const connection = this.connections.get(serverName);
-    if (!connection) return null;
-
-    return {
-      config: connection.config,
-      status: connection.status,
-      toolNames: connection.tools.map((tool) => tool.name),
-      promptNames: connection.prompts.map((prompt) => prompt.name),
-      error: connection.error,
-      warnings: connection.warnings,
-    };
-  }
-
-  /**
    * Shutdown all connections
    */
-  private async shutdownConnections(): Promise<void> {
+  public async shutdownConnections(): Promise<void> {
     const shutdownPromises = Array.from(this.connections.values()).map(
       (connection) => this.shutdownConnection(connection),
     );
-
     await Promise.all(shutdownPromises);
+    this.updateState();
   }
 
   /**
@@ -456,6 +362,5 @@ export class MCPService
     this.removeAllListeners();
     logger.debug("Shutting down MCPService");
     await this.shutdownConnections();
-    this.updateState();
   }
 }

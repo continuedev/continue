@@ -20,7 +20,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   model,
   mcpService,
 }) => {
-  const mcpPrompts = mcpService.getPrompts() ?? [];
+  const mcpPrompts = mcpService.getState().prompts ?? [];
 
   // Get all slash commands from central definition
   const allCommands = getAllSlashCommands(config);

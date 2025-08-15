@@ -77,14 +77,13 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
     if (connections.length > 0) {
       connections.forEach((conn) => {
         const { icon } = getServerStatusDisplay(conn);
-        const serverInfo = mcpService?.getServerInfo(conn.config.name);
 
         let serverLabel = `${icon} ${conn.config.name}`;
 
         // Add tools and prompts count if server is connected
-        if (serverInfo && serverInfo.status === "connected") {
-          const toolsCount = serverInfo.toolNames.length;
-          const promptsCount = serverInfo.promptNames.length;
+        if (conn.status === "connected") {
+          const toolsCount = conn.tools.length;
+          const promptsCount = conn.prompts.length;
 
           const counts = [];
           if (toolsCount > 0) {
@@ -118,7 +117,9 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const getServerDetailItems = (): MCPMenuItem[] => {
     if (!selectedServer) return [];
 
-    const serverInfo = mcpService?.getServerInfo(selectedServer);
+    const serverInfo = connections.find(
+      (conn) => conn.config.name === selectedServer,
+    );
     if (!serverInfo) return [];
 
     const items: MCPMenuItem[] = [
@@ -135,7 +136,9 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const getServerInfoDisplay = () => {
     if (menuState !== "server-detail" || !selectedServer) return null;
 
-    const serverInfo = mcpService?.getServerInfo(selectedServer);
+    const serverInfo = connections.find(
+      (conn) => conn.config.name === selectedServer,
+    );
     if (!serverInfo) return null;
 
     return (
@@ -165,26 +168,24 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         )}
 
         {/* Add prompts if any */}
-        {serverInfo.promptNames.length > 0 && (
+        {serverInfo.prompts.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
-            <Text color="cyan">
-              📝 Prompts: {serverInfo.promptNames.length}
-            </Text>
-            {serverInfo.promptNames.map((name, index) => (
+            <Text color="cyan">📝 Prompts: {serverInfo.prompts.length}</Text>
+            {serverInfo.prompts.map((prompt, index) => (
               <Text key={index} color="dim">
-                • {name}
+                • {prompt.name}
               </Text>
             ))}
           </Box>
         )}
 
         {/* Add tools if any */}
-        {serverInfo.toolNames.length > 0 && (
+        {serverInfo.tools.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
-            <Text color="cyan">🔧 Tools: {serverInfo.toolNames.length}</Text>
-            {serverInfo.toolNames.map((name, index) => (
+            <Text color="cyan">🔧 Tools: {serverInfo.tools.length}</Text>
+            {serverInfo.tools.map((tool, index) => (
               <Text key={index} color="dim">
-                • {name}
+                • {tool.name}
               </Text>
             ))}
           </Box>
@@ -268,7 +269,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         setMessage("All servers restarted");
         break;
       case "stop-all":
-        await mcpService.stopAllServers();
+        await mcpService.shutdownConnections();
         setMessage("All servers stopped");
         break;
       case "back":
@@ -312,7 +313,9 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         {menuState === "server-detail" &&
           selectedServer &&
           (() => {
-            const serverInfo = mcpService?.getServerInfo(selectedServer);
+            const serverInfo = connections.find(
+              (conn) => conn.config.name === selectedServer,
+            );
             if (!serverInfo) return null;
 
             const { color: statusColor, statusText } =

@@ -1,11 +1,13 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { AssistantConfig } from "@continuedev/sdk";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
-import { MCPConnectionInfo, MCPService } from "./MCPService.js";
+import { MCPService } from "./MCPService.js";
 
 /**
  * Service lifecycle states
@@ -51,11 +53,29 @@ export interface ModelServiceState {
   model: ModelConfig | null;
 }
 
+export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
+export type MCPTool = Awaited<ReturnType<Client["listTools"]>>["tools"][number];
+export type MCPPrompt = Awaited<
+  ReturnType<Client["listPrompts"]>
+>["prompts"][number];
+export type MCPServerConfig = NonNullable<
+  NonNullable<AssistantConfig["mcpServers"]>[number]
+>;
+
+export interface MCPConnectionInfo {
+  config: MCPServerConfig;
+  status: MCPServerStatus;
+  tools: MCPTool[];
+  prompts: MCPPrompt[];
+  error?: string;
+  warnings: string[];
+}
+
 export interface MCPServiceState {
   mcpService: MCPService | null;
   connections: Array<MCPConnectionInfo>;
-  toolCount: number;
-  promptCount: number;
+  tools: MCPTool[];
+  prompts: MCPPrompt[];
 }
 
 export interface ApiClientServiceState {

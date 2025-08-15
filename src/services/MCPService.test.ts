@@ -51,8 +51,8 @@ describe("MCPService", () => {
       const state = mcpService.getState();
       expect(mcpService.isReady()).toBe(false);
       expect(state.connections).toEqual([]);
-      expect(state.toolCount).toBe(0);
-      expect(state.promptCount).toBe(0);
+      expect(state.tools.length).toBe(0);
+      expect(state.prompts.length).toBe(0);
     });
 
     it("should initialize with no servers", async () => {
@@ -64,8 +64,8 @@ describe("MCPService", () => {
 
       expect(mcpService.isReady()).toBe(true);
       expect(state.connections).toEqual([]);
-      expect(state.toolCount).toBe(0);
-      expect(state.promptCount).toBe(0);
+      expect(state.tools.length).toBe(0);
+      expect(state.prompts.length).toBe(0);
     });
 
     it("should initialize and return immediately even with server configs", async () => {
@@ -82,15 +82,7 @@ describe("MCPService", () => {
       await mcpService.initialize(mockAssistant);
     });
 
-    it("should provide service info", () => {
-      const info = mcpService.getMCPInfo();
-      expect(info).toHaveProperty("toolNames");
-      expect(info).toHaveProperty("promptNames");
-      expect(info).toHaveProperty("connectionCount");
-    });
-
     it("should get overall status", async () => {
-      console.log(mcpService.getConnectionInfo())
       const firstStatus = mcpService.getOverallStatus();
       expect(firstStatus.status).toBe("connected");
       expect(firstStatus.hasWarnings).toBe(false);
@@ -110,7 +102,7 @@ describe("MCPService", () => {
     });
 
     it("should handle stop all servers", async () => {
-      await expect(mcpService.stopAllServers()).resolves.not.toThrow();
+      await expect(mcpService.shutdownConnections()).resolves.not.toThrow();
     });
 
     it("should handle server not found error", async () => {
@@ -123,10 +115,6 @@ describe("MCPService", () => {
       await expect(mcpService.stopServer("test-server")).resolves.not.toThrow();
     });
 
-    it("should return null for nonexistent server info", () => {
-      const info = mcpService.getServerInfo("nonexistent");
-      expect(info).toBeNull();
-    });
   });
 
   describe("tools and prompts", () => {
@@ -135,11 +123,8 @@ describe("MCPService", () => {
     });
 
     it("should return empty arrays for tools and prompts initially", () => {
-      const tools = mcpService.getTools();
-      const prompts = mcpService.getPrompts();
-
-      expect(Array.isArray(tools)).toBe(true);
-      expect(Array.isArray(prompts)).toBe(true);
+      expect(Array.isArray(mcpService.getState().tools)).toBe(true);
+      expect(Array.isArray(mcpService.getState().tools)).toBe(true);
     });
 
     it("should throw error for unknown tool", async () => {

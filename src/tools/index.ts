@@ -123,7 +123,7 @@ export async function getAvailableTools() {
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
   );
-  const tools = mcpState.mcpService?.getTools() ?? [];
+  const tools = mcpState.tools ?? [];
   const mcpTools: Tool[] =
     tools.map((t) => ({
       name: t.name,
