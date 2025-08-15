@@ -160,6 +160,10 @@ program
     "--idempotency-key <key>",
     "Idempotency key for session management - allows resuming existing sessions",
   )
+  .option(
+    "-s, --start",
+    "Create remote environment and print connection details without starting TUI",
+  )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
   });

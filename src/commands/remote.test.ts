@@ -26,10 +26,12 @@ global.fetch = mockFetch as any;
 // Mock console methods
 const mockConsoleInfo = vi.fn();
 const mockConsoleError = vi.fn();
+const mockConsoleLog = vi.fn();
 global.console = {
   ...global.console,
   info: mockConsoleInfo,
   error: mockConsoleError,
+  log: mockConsoleLog,
 };
 
 describe("remote command", () => {
@@ -138,7 +140,6 @@ describe("remote command", () => {
     const requestBody = JSON.parse(fetchCall[1].body);
     
     expect(requestBody).toEqual({
-      cUserId: "test-user-id",
       repoUrl: "https://github.com/user/test-repo.git",
       name: expect.stringMatching(/^devbox-\d+$/),
       prompt: "test prompt",
@@ -167,5 +168,80 @@ describe("remote command", () => {
     
     expect(requestBody.repoUrl).toBe("https://github.com/myorg/myrepo.git");
     expect(requestBody.idempotencyKey).toBe("github-actions-key");
+  });
+
+  describe("start mode (-s / --start flag)", () => {
+    it("should output JSON and exit without starting TUI when using --start with direct URL", async () => {
+      const testUrl = "ws://test-url.com";
+      
+      await remote("test prompt", { url: testUrl, start: true });
+      
+      // Should not start TUI
+      expect(mockStartRemoteTUIChat.startRemoteTUIChat).not.toHaveBeenCalled();
+      
+      // Should not make POST request
+      expect(mockFetch).not.toHaveBeenCalled();
+      
+      // Should output JSON
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        JSON.stringify({
+          status: "success",
+          message: "Remote environment connection details",
+          url: testUrl,
+          mode: "direct_url"
+        })
+      );
+    });
+
+    it("should create remote environment, output JSON, and exit without starting TUI when using --start", async () => {
+      await remote("test prompt", { start: true });
+      
+      // Should make POST request to create environment
+      expect(mockFetch).toHaveBeenCalledWith(
+        new URL("agents/devboxes", mockEnv.env.apiBase),
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer test-token",
+          },
+        })
+      );
+      
+      // Should not start TUI
+      expect(mockStartRemoteTUIChat.startRemoteTUIChat).not.toHaveBeenCalled();
+      
+      // Should output JSON with environment details
+      const consoleLogCall = mockConsoleLog.mock.calls[0][0];
+      const outputJson = JSON.parse(consoleLogCall);
+      
+      expect(outputJson).toEqual({
+        status: "success",
+        message: "Remote development environment created successfully",
+        url: "ws://test-url.com",
+        port: 8080,
+        name: expect.stringMatching(/^devbox-\d+$/),
+        mode: "new_environment"
+      });
+    });
+
+    it("should work with start mode and idempotency key", async () => {
+      const testIdempotencyKey = "start-mode-key";
+      
+      await remote("test prompt", { start: true, idempotencyKey: testIdempotencyKey });
+      
+      // Should include idempotency key in request
+      const fetchCall = mockFetch.mock.calls[0];
+      const requestBody = JSON.parse(fetchCall[1].body);
+      expect(requestBody.idempotencyKey).toBe(testIdempotencyKey);
+      
+      // Should not start TUI
+      expect(mockStartRemoteTUIChat.startRemoteTUIChat).not.toHaveBeenCalled();
+      
+      // Should output JSON
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        expect.stringContaining('"status":"success"')
+      );
+    });
   });
 });
