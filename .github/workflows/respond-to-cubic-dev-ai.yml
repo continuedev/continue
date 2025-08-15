@@ -72,7 +72,7 @@ jobs:
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          # Create the prompt for the remote session
+          # Create the prompt for remote session
           PROMPT="Please help with the following request from @${{ github.event.comment.user.login }} on PR #${{ github.event.issue.number }}:
 
           ${{ github.event.comment.body }}
