@@ -60,11 +60,27 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install dependencies and build CLI
+      - name: Cache build output
         if: steps.check-mention.outputs.contains_mention == 'true'
+        id: cache-build
+        uses: actions/cache@v4
+        with:
+          path: |
+            dist/
+            node_modules/
+          key: ${{ runner.os }}-build-${{ hashFiles('package-lock.json', 'src/**/*', 'tsconfig*.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Install dependencies and build CLI
+        if: steps.check-mention.outputs.contains_mention == 'true' && steps.cache-build.outputs.cache-hit != 'true'
         run: |
           npm ci
           npm run build
+
+      - name: Install dependencies only (cache hit)
+        if: steps.check-mention.outputs.contains_mention == 'true' && steps.cache-build.outputs.cache-hit == 'true'
+        run: npm ci --prefer-offline
 
       - name: Start remote session
         if: steps.check-mention.outputs.contains_mention == 'true'
