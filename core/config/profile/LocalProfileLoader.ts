@@ -65,8 +65,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       orgScopeId: null,
       packageIdentifier: {
         uriType: "file",
-        filePath:
-          this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
+        fileUri: this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
       },
     });
 

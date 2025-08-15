@@ -10,6 +10,7 @@ import {
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
+import { Logger } from "../util/Logger.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { Telemetry } from "../util/posthog.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
@@ -126,12 +127,20 @@ export class CodebaseIndexer {
     try {
       await fs.unlink(sqliteFilepath);
     } catch (error) {
+      // Capture indexer system failures to Sentry
+      Logger.error(error, {
+        filepath: sqliteFilepath,
+      });
       console.error(`Error deleting ${sqliteFilepath} folder: ${error}`);
     }
 
     try {
       await fs.rm(lanceDbFolder, { recursive: true, force: true });
     } catch (error) {
+      // Capture indexer system failures to Sentry
+      Logger.error(error, {
+        folderPath: lanceDbFolder,
+      });
       console.error(`Error deleting ${lanceDbFolder}: ${error}`);
     }
   }

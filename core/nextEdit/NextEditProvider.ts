@@ -33,7 +33,6 @@ import { myersDiff } from "../diff/myers.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
-import { replaceEscapedCharacters } from "../util/text.js";
 import {
   INSTINCT_SYSTEM_PROMPT,
   MERCURY_CODE_TO_EDIT_OPEN,
@@ -60,6 +59,7 @@ import {
   PromptMetadata,
   RecentlyEditedRange,
 } from "./types.js";
+import { isWhitespaceOnlyDeletion } from "./utils.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -685,13 +685,17 @@ export class NextEditProvider {
       return undefined;
     }
 
-    const nextCompletion = msg.content.split(
-      `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
-    )[1]
-      ? replaceEscapedCharacters(
-          msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
-        ).replace(/\n$/, "")
-      : replaceEscapedCharacters(msg.content);
+    // const nextCompletion = msg.content.split(
+    //   `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
+    // )[1]
+    //   ? replaceEscapedCharacters(
+    //       msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
+    //     ).replace(/\n$/, "")
+    //   : replaceEscapedCharacters(msg.content);
+    const nextCompletion =
+      msg.content
+        .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
+        .replace(/\n$/, "") ?? msg.content;
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       return await this._handlePartialFileDiff(
@@ -773,13 +777,16 @@ export class NextEditProvider {
       .slice(editableRegionStartLine, editableRegionEndLine + 1)
       .join("\n");
     const diffLines = myersDiff(fileSlice, nextCompletion);
-    const diffGroups = groupDiffLines(diffLines, editableRegionStartLine, 5);
+    const diffGroups = groupDiffLines(
+      diffLines,
+      editableRegionStartLine,
+      5,
+    ).filter((group) => !isWhitespaceOnlyDeletion(group.lines));
     const currentLine = helper.pos.line;
-    let cursorLocalDiffGroup: DiffGroup | undefined;
     const prefetchQueue = PrefetchQueue.getInstance();
 
     // Process diff groups and find the one containing the cursor
-    await this._processDiffGroups(
+    const cursorLocalDiffGroup = await this._processDiffGroups(
       diffGroups,
       currentLine,
       helper,
@@ -798,16 +805,16 @@ export class NextEditProvider {
         helper.input.completionId,
         true,
       );
-    } else if (diffGroups.length > 0) {
-      // Fallback to first diff group if cursor's group not found
-      return await this._createOutcomeFromDiffGroup(
-        diffGroups[0],
-        helper,
-        startTime,
-        llm,
-        helper.input.completionId,
-        false,
-      );
+      // } else if (diffGroups.length > 0) {
+      //   // Fallback to first diff group if cursor's group not found
+      //   return await this._createOutcomeFromDiffGroup(
+      //     diffGroups[0],
+      //     helper,
+      //     startTime,
+      //     llm,
+      //     helper.input.completionId,
+      //     false,
+      //   );
     }
 
     return undefined;

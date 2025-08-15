@@ -36,6 +36,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
+import { SentryLogger } from "../../util/sentry/SentryLogger";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
@@ -60,6 +61,11 @@ async function loadRules(ide: IDE) {
     await loadMarkdownRules(ide);
   rules.unshift(...markdownRules);
   errors.push(...markdownRulesErrors);
+
+  // Add colocated rules from CodebaseRulesCache
+  const codebaseRulesCache = CodebaseRulesCache.getInstance();
+  rules.unshift(...codebaseRulesCache.rules);
+  errors.push(...codebaseRulesCache.errors);
 
   return { rules, errors };
 }
@@ -180,11 +186,6 @@ export default async function doLoadConfig(options: {
       }
     }
   });
-
-  // Add rules from colocated rules.md files in the codebase
-  const codebaseRulesCache = CodebaseRulesCache.getInstance();
-  newConfig.rules.unshift(...codebaseRulesCache.rules);
-  errors.push(...codebaseRulesCache.errors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
@@ -344,6 +345,24 @@ export default async function doLoadConfig(options: {
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
     ideInfo,
+  );
+
+  // Setup Sentry logger with same telemetry settings
+  // TODO: Remove Continue team member check once Sentry is ready for all users
+  let userEmail: string | undefined;
+  try {
+    // Access the session info to get user email for Continue team member check
+    const sessionInfo = await (controlPlaneClient as any).sessionInfoPromise;
+    userEmail = sessionInfo?.account?.id;
+  } catch (error) {
+    // Ignore errors getting session info, will default to no Sentry
+  }
+
+  await SentryLogger.setup(
+    newConfig.allowAnonymousTelemetry ?? false,
+    await ide.getUniqueId(),
+    ideInfo,
+    userEmail,
   );
 
   // TODO: pass config to pre-load non-system TTS models

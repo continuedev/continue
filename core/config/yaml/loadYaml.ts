@@ -72,7 +72,7 @@ async function loadConfigYaml(options: {
     );
     return localBlocks.map((b) => ({
       uriType: "file" as const,
-      filePath: b.path,
+      fileUri: b.path,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -87,7 +87,7 @@ async function loadConfigYaml(options: {
   const getRegistryClient = async () => {
     const rootPath =
       packageIdentifier.uriType === "file"
-        ? dirname(getCleanUriPath(packageIdentifier.filePath))
+        ? dirname(getCleanUriPath(packageIdentifier.fileUri))
         : undefined;
     return new RegistryClient({
       accessToken: await controlPlaneClient.getAccessToken(),
@@ -428,6 +428,7 @@ async function configYamlToContinueConfig(options: {
       timeout: server.connectionTimeout,
     })),
     false,
+    { ide },
   );
 
   return { config: continueConfig, errors: localErrors };
