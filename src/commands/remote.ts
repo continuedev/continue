@@ -13,7 +13,7 @@ import { logger } from "../util/logger.js";
 
 export async function remote(
   prompt: string | undefined,
-  options: { url?: string; idempotencyKey?: string } = {},
+  options: { url?: string; idempotencyKey?: string; start?: boolean } = {},
 ) {
   // If --url is provided, connect directly to that URL
   if (options.url) {
@@ -33,8 +33,6 @@ export async function remote(
     }
     return;
   }
-
-  console.info(chalk.white("Setting up remote development environment..."));
 
   try {
     const authConfig = loadAuthConfig();
@@ -72,6 +70,21 @@ export async function remote(
     }
 
     const result = await response.json();
+
+    if (options.start) {
+      // In print mode, output connection details as JSON and exit
+      console.log(
+        JSON.stringify({
+          status: "success",
+          message: "Remote development environment created successfully",
+          url: `${env.appUrl}/agents/${result.id}`,
+          name: requestBody.name,
+          containerUrl: result.url,
+          containerPort: result.port,
+        }),
+      );
+      return;
+    }
 
     console.info(
       chalk.green("✅ Remote development environment created successfully!"),
