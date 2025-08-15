@@ -12,8 +12,8 @@ import {
   getServiceSync,
   MCPServiceState,
   SERVICE_NAMES,
-  serviceContainer,
 } from "./services/index.js";
+import { MCPTool } from "./services/MCPService.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import {
   processChunkContent,
@@ -125,15 +125,19 @@ export async function getAllTools() {
   const allBuiltinTools = getAllBuiltinTools();
   const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
 
-  const mcpState = await serviceContainer.get<MCPServiceState>(
-    SERVICE_NAMES.MCP,
+  let mcpTools: MCPTool[] = [];
+  let mcpToolNames: string[] = [];
+  const mcpServiceResult = getServiceSync<MCPServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
   );
+  if (mcpServiceResult.state === "ready") {
+    mcpTools = mcpServiceResult?.value?.mcpService?.getTools() ?? [];
 
-  if (!mcpState?.mcpService) {
-    throw new Error("MCP Service not initialized");
+    mcpToolNames = mcpTools.map((t) => t.name);
+  } else {
+    // MCP is lazy
+    // throw new Error("MCP Service not initialized");
   }
-  const mcpTools = mcpState?.mcpService?.getTools() ?? [];
-  const mcpToolNames = mcpTools.map((t) => t.name);
 
   const allToolNames = [...builtinToolNames, ...mcpToolNames];
 

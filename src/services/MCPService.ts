@@ -9,7 +9,7 @@ import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { MCPServiceState, SERVICE_NAMES } from "./types.js";
 
 export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
-
+export type MCPTool = Awaited<ReturnType<Client["listTools"]>>["tools"][number];
 type MCPServerConfig = NonNullable<
   NonNullable<AssistantConfig["mcpServers"]>[number]
 >;
@@ -19,7 +19,7 @@ interface ServerConnection {
   status: MCPServerStatus;
   client: Client | null;
   prompts: Awaited<ReturnType<Client["listPrompts"]>>["prompts"];
-  tools: Awaited<ReturnType<Client["listTools"]>>["tools"];
+  tools: MCPTool[];
   error?: string;
   warnings: string[];
 }

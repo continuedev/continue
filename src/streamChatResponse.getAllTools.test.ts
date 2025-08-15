@@ -1,19 +1,8 @@
 import { describe, test, expect } from 'vitest';
 
-import { initializeServices, getServiceSync, SERVICE_NAMES, MCPServiceState } from './services/index.js'
+import { initializeServices, getServiceSync, SERVICE_NAMES } from './services/index.js'
 import type { ToolPermissionServiceState } from './services/ToolPermissionService.js';
 import { getAllTools } from './streamChatResponse.js';
-
-vi.mock('../configLoader.js', () => ({
-  loadConfiguration: vi.fn().mockResolvedValue({
-    config: { 
-      name: 'test-config',
-      models: [],
-      mcpServers: []
-    },
-    source: { type: 'default-agent' }
-  })
-}));
 
 describe('getAllTools - Tool Filtering', () => {
   test('should exclude Bash tool in plan mode after service initialization', async () => {
@@ -26,8 +15,6 @@ describe('getAllTools - Tool Filtering', () => {
     });
 
     // Verify service is ready
-    const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
-    expect(mcpServiceResult.state).toBe('ready');
     const serviceResult = getServiceSync<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS);
     expect(serviceResult.state).toBe('ready');
     expect(serviceResult.value?.currentMode).toBe('plan');
