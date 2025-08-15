@@ -203,22 +203,16 @@ runs:
         echo "Initial Continue CLI output:"
         cat inline_review_raw.json
 
-        # Validate JSON output
+        # Validate JSON output and use it directly
         if ! jq empty inline_review_raw.json 2>/dev/null; then
-          echo "Invalid JSON output from Continue CLI"
-          echo "{\"review_summary\": \"Failed to generate review\", \"comments\": []}" > inline_review.json
-        else
-          # Check if response is wrapped
-          if jq -e '.response' inline_review_raw.json > /dev/null 2>&1; then
-            # Extract JSON from wrapped response
-            jq -r '.response' inline_review_raw.json | sed 's/^```json//' | sed 's/```$//' > inline_review.json
-          else
-            # Use as-is if not wrapped
-            cp inline_review_raw.json inline_review.json
-          fi
-          echo "Review output:"
-          cat inline_review.json
+          echo "Error: Invalid JSON output from Continue CLI"
+          exit 1
         fi
+        
+        # Use the JSON output directly
+        cp inline_review_raw.json inline_review.json
+        echo "Review output:"
+        cat inline_review.json
 
     - name: Post Inline Review Comments
       if: env.SKIP_REVIEW != 'true'
