@@ -280,17 +280,6 @@ export class JumpManager {
       );
     }
 
-    // Scroll to show the jump location.
-    editor.revealRange(
-      new vscode.Range(decorationLine, 0, decorationLine, 0),
-      vscode.TextEditorRevealType.InCenter,
-    );
-
-    // Clean up after timeout if no jump has been made.
-    // setTimeout(() => {
-    //   this._jumpInProgress = false;
-    // }, 10000);
-
     return true;
   }
 
@@ -366,6 +355,12 @@ export class JumpManager {
       async () => {
         if (this._jumpDecorationVisible) {
           this._jumpAccepted = true;
+
+          // Scroll to show the jump location.
+          editor.revealRange(
+            new vscode.Range(jumpPosition.line, 0, jumpPosition.line, 0),
+            vscode.TextEditorRevealType.InCenter,
+          );
 
           // Move cursor to the jump position.
           editor.selection = new vscode.Selection(jumpPosition, jumpPosition);
