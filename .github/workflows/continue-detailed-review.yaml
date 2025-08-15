@@ -16,6 +16,21 @@ jobs:
     name: Continue Detailed Review
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Only run if:
+    # - It's a PR event from a team member (with write/admin permissions)
+    # - OR it's a comment with @continue-detailed-review on a PR from a team member
+    if: >
+      (github.event_name == 'pull_request' && 
+       (github.event.pull_request.author_association == 'OWNER' || 
+        github.event.pull_request.author_association == 'MEMBER' || 
+        github.event.pull_request.author_association == 'COLLABORATOR')) ||
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-detailed-review') &&
+       (github.event.comment.author_association == 'OWNER' || 
+        github.event.comment.author_association == 'MEMBER' || 
+        github.event.comment.author_association == 'COLLABORATOR'))
+
     steps:
       - name: Run Detailed PR Review
         uses: continuedev/continue/pr-review-action/detailed-review@tomasz/con-3480
