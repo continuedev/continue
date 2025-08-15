@@ -19,17 +19,19 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.awt.BorderLayout
-import java.awt.Point
+import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
+import java.awt.geom.RoundRectangle2D
 import javax.swing.AbstractAction
 import javax.swing.JComponent
 import javax.swing.KeyStroke
 import javax.swing.SwingUtilities
+import javax.swing.border.AbstractBorder
 
 data class CompletionDataForAfterJump(
     val completionId: String,
@@ -191,16 +193,15 @@ class NextEditJumpManager(private val project: Project) {
         val popupComponent = createJumpPopupComponent(editor)
 
         jumpPopup = JBPopupFactory.getInstance()
-            .createComponentPopupBuilder(popupComponent, popupComponent) // Set focus component
+            .createComponentPopupBuilder(popupComponent, popupComponent)
             .setFocusable(true)
             .setRequestFocus(true)
             .setResizable(false)
             .setMovable(false)
             .setCancelOnClickOutside(false)
             .setCancelOnWindowDeactivation(false)
-            .setCancelKeyEnabled(false) // Disable default Esc handling to use our custom one
+            .setCancelKeyEnabled(false)
             .setCancelCallback {
-                // Only reject jump if we're still in progress and not just accepted
                 if (jumpState.inProgress && !jumpState.justAccepted) {
                     rejectJump()
                 }
@@ -214,10 +215,51 @@ class NextEditJumpManager(private val project: Project) {
                 val lineEndOffset = editor.document.getLineEndOffset(position.line)
                 val lineEndPoint = editor.offsetToXY(lineEndOffset)
                 val editorComponent = editor.contentComponent
-                val screenPoint = Point(lineEndPoint.x + 20, lineEndPoint.y)
+
+                // Calculate the vertical center of the line
+                val lineHeight = editor.lineHeight
+                val lineCenterY = lineEndPoint.y + (lineHeight / 2)
+
+                // Get the popup's preferred size to calculate its center
+                val popupSize = popupComponent.preferredSize
+                val popupCenterY = popupSize.height / 2
+
+                // Position the popup so its center aligns with the line's center
+                val adjustedY = lineCenterY - popupCenterY
+
+                val screenPoint = Point(lineEndPoint.x + 20, adjustedY)
                 SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
 
                 jumpPopup?.showInScreenCoordinates(editorComponent, screenPoint)
+
+                val content = jumpPopup?.content
+                if (content is JComponent) {
+                    // Remove default border and add custom rounded border
+                    content.border = object : AbstractBorder() {
+                        override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+                            val g2 = g.create() as Graphics2D
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+                            val arc = 6f
+                            // g2.color = JBColor.border()
+                            g2.color = Color(0x999998)
+                            g2.stroke = BasicStroke(1f)
+                            g2.draw(
+                                RoundRectangle2D.Float(
+                                    x.toFloat(),
+                                    y.toFloat(),
+                                    width.toFloat() - 1f,
+                                    height.toFloat() - 1f,
+                                    arc,
+                                    arc
+                                )
+                            )
+                            g2.dispose()
+                        }
+
+                        override fun getBorderInsets(c: Component): Insets = JBUI.insets(1)
+                    }
+                }
 
                 // Force focus after popup is shown
                 ApplicationManager.getApplication().invokeLater {
@@ -234,10 +276,36 @@ class NextEditJumpManager(private val project: Project) {
     }
 
     private fun createJumpPopupComponent(editor: Editor): JComponent {
-        val panel = JBPanel<JBPanel<*>>().apply {
+        val panel = object : JBPanel<JBPanel<*>>() {
+            private val arc = 6f
+
+            init {
+                isOpaque = false
+                background = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
+            }
+
+            override fun paintComponent(g: Graphics) {
+                val g2 = g.create() as Graphics2D
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+                val width = width.toFloat()
+                val height = height.toFloat()
+
+                // Draw background with rounded corners
+                g2.color = background
+                g2.fill(RoundRectangle2D.Float(0f, 0f, width, height, arc, arc))
+
+                // Draw border with the SAME dimensions as the background
+                g2.color = JBColor.border()
+                g2.stroke = BasicStroke(1f)
+                g2.draw(RoundRectangle2D.Float(0f, 0f, width, height, arc, arc))
+
+                g2.dispose()
+                super.paintComponent(g)
+            }
+        }.apply {
             layout = BorderLayout()
-            border = JBUI.Borders.empty(4, 8)
-            background = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
+            border = JBUI.Borders.empty(2, 4)
         }
 
         // Create the message label
@@ -246,6 +314,7 @@ class NextEditJumpManager(private val project: Project) {
             foreground = JBColor.foreground()
             background = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
             isOpaque = true
+            font = UIUtil.getLabelFont()
         }
 
         panel.add(label, BorderLayout.CENTER)
