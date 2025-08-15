@@ -63,7 +63,7 @@ describe("git utilities - GitHub Actions detection", () => {
       // Since we can't easily mock git commands, we'll rely on the fact that
       // GitHub Actions detection should take priority and return immediately
       const result = getGitHubActionsRepoUrl();
-      expect(result).toBe("https:/github.com/owner/repo");
+      expect(result).toBe("https://github.com/owner/repo");
     });
 
     it("should work with GitHub Enterprise Server", () => {
