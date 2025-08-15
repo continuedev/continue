@@ -1,5 +1,9 @@
-import { MCPService } from "../mcp.js";
-import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import {
+  getServiceSync,
+  MCPServiceState,
+  SERVICE_NAMES,
+  serviceContainer,
+} from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
@@ -116,21 +120,23 @@ function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
 
 export async function getAvailableTools() {
   // Load MCP tools
+  const mcpState = await serviceContainer.get<MCPServiceState>(
+    SERVICE_NAMES.MCP,
+  );
+  const tools = mcpState.tools ?? [];
   const mcpTools: Tool[] =
-    MCPService.getInstance()
-      ?.getTools()
-      .map((t) => ({
-        name: t.name,
-        displayName: t.name.replace("mcp__", "").replace("ide__", ""),
-        description: t.description ?? "",
-        parameters: convertInputSchemaToParameters(t.inputSchema),
-        readonly: undefined, // MCP tools don't have readonly property
-        isBuiltIn: false,
-        run: async (args: any) => {
-          const result = await MCPService.getInstance()?.runTool(t.name, args);
-          return JSON.stringify(result?.content) ?? "";
-        },
-      })) || [];
+    tools.map((t) => ({
+      name: t.name,
+      displayName: t.name.replace("mcp__", "").replace("ide__", ""),
+      description: t.description ?? "",
+      parameters: convertInputSchemaToParameters(t.inputSchema),
+      readonly: undefined, // MCP tools don't have readonly property
+      isBuiltIn: false,
+      run: async (args: any) => {
+        const result = await mcpState.mcpService?.runTool(t.name, args);
+        return JSON.stringify(result?.content) ?? "";
+      },
+    })) || [];
 
   const allTools: Tool[] = [...getAllBuiltinTools(), ...mcpTools];
   return allTools;

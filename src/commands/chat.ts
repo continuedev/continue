@@ -12,8 +12,6 @@ import {
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
-// initializeWithOnboarding is now handled internally by initializeServices
-// import { initializeWithOnboarding } from "../onboarding.js";
 import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";

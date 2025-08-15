@@ -38,10 +38,12 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(frame).toContain("Would you like to continue?");
     expect(frame).toContain("Continue");
     expect(frame).toContain("Continue + don't ask again");
-    expect(frame).toContain("Cancel");
+    expect(frame).toContain("No, and tell Continue what to do differently");
     expect(frame).toContain("(tab)");
     expect(frame).toContain("(shift+tab)");
     expect(frame).toContain("(esc)");
+    // Verify old Cancel option is not shown
+    expect(frame).not.toContain("Cancel");
   });
 
   it("handles keyboard shortcuts for permission approval and rejection", async () => {
@@ -69,6 +71,7 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-123",
       true,
+      false,
       false
     );
   });
@@ -97,7 +100,8 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-456",
       false,
-      false
+      false,
+      true
     );
   });
 
@@ -125,7 +129,8 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-789",
       false,
-      false
+      false,
+      true
     );
   });
 
@@ -156,6 +161,7 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-123",
       true,
+      undefined,
       undefined
     );
   });
@@ -185,7 +191,103 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-policy",
       true,
-      true
+      true,
+      false
+    );
+  });
+
+  it("shows the new 'No, and tell Continue what to do differently' option in the UI", async () => {
+    const handleResponse = vi.fn();
+
+    const { lastFrame } = render(
+      <ToolPermissionSelector
+        toolName="Edit"
+        toolArgs={{
+          file_path: "/path/to/test.txt",
+          old_string: "old content",
+          new_string: "new content",
+        }}
+        requestId="test-request-stop"
+        onResponse={handleResponse}
+      />
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Verify the new option exists in the rendered output
+    const frame = lastFrame();
+    expect(frame).toContain("No, and tell Continue what to do differently");
+    
+    // Verify all 3 options are present
+    expect(frame).toContain("Continue");
+    expect(frame).toContain("Continue + don't ask again");
+    expect(frame).toContain("No, and tell Continue what to do differently");
+    // Verify old Cancel option is not shown
+    expect(frame).not.toContain("Cancel");
+  });
+
+  it("triggers stop stream when escape key is pressed", async () => {
+    // This test ensures the actual ToolPermissionSelector component correctly handles the escape key
+    const handleResponse = vi.fn();
+
+    const { stdin } = render(
+      <ToolPermissionSelector
+        toolName="Edit"
+        toolArgs={{
+          file_path: "/path/to/test.txt",
+          old_string: "old content",
+          new_string: "new content",
+        }}
+        requestId="test-request-escape"
+        onResponse={handleResponse}
+      />
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Press escape key to trigger the "No, and tell Continue what to do differently" option
+    stdin.write("\x1b"); // ESC key
+
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Verify the escape key triggers the stopStream behavior
+    expect(handleResponse).toHaveBeenCalledWith(
+      "test-request-escape",
+      false,        // approved = false (rejection)
+      false,        // createPolicy = false
+      true          // stopStream = true (this is the new behavior)
+    );
+  });
+
+  it("triggers stop stream when 'n' key is pressed", async () => {
+    // This test ensures the 'n' key also triggers the new stop stream behavior
+    const handleResponse = vi.fn();
+
+    const { stdin } = render(
+      <ToolPermissionSelector
+        toolName="Write"
+        toolArgs={{
+          file_path: "/path/to/new-file.txt",
+          content: "New content",
+        }}
+        requestId="test-request-n-key"
+        onResponse={handleResponse}
+      />
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Press 'n' key to trigger the "No, and tell Continue what to do differently" option
+    stdin.write("n");
+
+    await vi.advanceTimersByTimeAsync(50);
+
+    // Verify the 'n' key triggers the stopStream behavior
+    expect(handleResponse).toHaveBeenCalledWith(
+      "test-request-n-key",
+      false,        // approved = false (rejection)
+      false,        // createPolicy = false
+      true          // stopStream = true (this is the new behavior)
     );
   });
 

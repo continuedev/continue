@@ -9,13 +9,7 @@ import {
 import { getAllSlashCommands } from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { posthogService } from "./telemetry/posthogService.js";
-
-interface SlashCommandResult {
-  exit?: boolean;
-  output?: string;
-  model?: boolean;
-  compact?: boolean;
-}
+import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 
 // Helper function to handle org list command
 async function handleOrgList(services: any): Promise<SlashCommandResult> {
@@ -72,16 +66,18 @@ async function handleOrgSwitch(
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
-) => Promise<any> | any;
+) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(args: string[], assistant: AssistantConfig) {
   const allCommands = getAllSlashCommands(assistant);
   const helpMessage = [
-    chalk.cyan("Slash commands:"),
-    ...allCommands.map(
-      (cmd) =>
-        `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
-    ),
+    "Slash commands:",
+    ...allCommands
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(
+        (cmd) =>
+          `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
+      ),
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
@@ -197,6 +193,10 @@ const commandHandlers: Record<string, CommandHandler> = {
     posthogService.capture("useSlashCommand", { name: "compact" });
     return { compact: true };
   },
+  mcp: () => {
+    posthogService.capture("useSlashCommand", { name: "mcp" });
+    return { openMcpSelector: true };
+  },
   org: handleOrg,
 };
 
@@ -210,6 +210,7 @@ export async function handleSlashCommands(
   clear?: boolean;
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
+  openMCPSelector?: boolean;
   compact?: boolean;
 } | null> {
   // Only trigger slash commands if slash is the very first character

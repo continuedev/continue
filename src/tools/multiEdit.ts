@@ -7,7 +7,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { readFilesSet, markFileAsRead } from "./edit.js";
+import { markFileAsRead, readFilesSet } from "./edit.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
@@ -30,14 +30,15 @@ function hasFileBeenRead(filePath: string): boolean {
 }
 
 // Helper functions for multiEdit validation
-function validateMultiEditArgs(args: any): MultiEditArgs {
+function validateMultiEditArgs(args: any): {
+  original_path: string;
+  file_path: string;
+  edits: EditOperation[];
+} {
   const { file_path, edits } = args as MultiEditArgs;
 
   if (!file_path) {
     throw new Error("file_path is required");
-  }
-  if (!path.isAbsolute(file_path)) {
-    throw new Error("file_path must be an absolute path");
   }
   if (!edits || !Array.isArray(edits) || edits.length === 0) {
     throw new Error(
@@ -45,7 +46,12 @@ function validateMultiEditArgs(args: any): MultiEditArgs {
     );
   }
 
-  return { file_path, edits };
+  // Convert relative paths to absolute paths
+  const absolutePath = path.isAbsolute(file_path)
+    ? file_path
+    : path.resolve(process.cwd(), file_path);
+
+  return { original_path: file_path, file_path: absolutePath, edits };
 }
 
 function validateEdits(edits: EditOperation[]): void {
@@ -66,6 +72,7 @@ function validateEdits(edits: EditOperation[]): void {
 }
 
 function validateFileAccess(
+  original_path: string,
   file_path: string,
   isCreatingNewFile: boolean,
 ): void {
@@ -77,9 +84,10 @@ function validateFileAccess(
     }
   } else {
     // For existing files, check if file has been read
-    if (!hasFileBeenRead(file_path)) {
+    // Check with the original path first, then with absolute path
+    if (!hasFileBeenRead(original_path) && !hasFileBeenRead(file_path)) {
       throw new Error(
-        `You must use the Read tool to read ${file_path} before editing it.`,
+        `You must use the Read tool to read ${original_path} before editing it.`,
       );
     }
     if (!fs.existsSync(file_path)) {
@@ -220,11 +228,14 @@ If you want to create a new file, use:
       description:
         "Array of edit operations to perform sequentially on the file",
       required: true,
+      items: {
+        type: "object",
+      },
     },
   },
   preprocess: async (args) => {
     // Validate and extract arguments
-    const { file_path, edits } = validateMultiEditArgs(args);
+    const { original_path, file_path, edits } = validateMultiEditArgs(args);
 
     // Validate each edit operation
     validateEdits(edits);
@@ -233,7 +244,7 @@ If you want to create a new file, use:
     const isCreatingNewFile = edits[0].old_string === "";
 
     // Validate file access
-    validateFileAccess(file_path, isCreatingNewFile);
+    validateFileAccess(original_path, file_path, isCreatingNewFile);
 
     // Read current file content (or start with empty for new files)
     let currentContent = "";
@@ -301,8 +312,15 @@ If you want to create a new file, use:
         );
       }
 
+      // Generate diff for result display
+      const diff = generateDiff(
+        args.originalContent,
+        args.newContent,
+        args.file_path,
+      );
+
       const action = args.isCreatingNewFile ? "created" : "edited";
-      return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}`;
+      return `Successfully ${action} ${args.file_path} with ${args.editCount} edit${args.editCount === 1 ? "" : "s"}\nDiff:\n${diff}`;
     } catch (error) {
       throw new Error(
         `Error: failed to edit ${args.file_path}: ${

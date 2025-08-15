@@ -30,6 +30,7 @@ import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useModelSelector } from "./hooks/useModelSelector.js";
 import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import { LoadingAnimation } from "./LoadingAnimation.js";
+import { MCPSelector } from "./MCPSelector.js";
 import { ModelSelector } from "./ModelSelector.js";
 import { OrganizationSelector } from "./OrganizationSelector.js";
 import type { SelectorOption } from "./Selector.js";
@@ -211,7 +212,7 @@ const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   closeCurrentScreen,
 }) => (
   <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-    <Box flexDirection="row" alignItems="center">
+    <Box marginLeft={2} flexDirection="row" alignItems="center">
       {currentMode === "normal" && (
         <>
           <Text color="dim" wrap="truncate-start">
@@ -262,6 +263,7 @@ interface ScreenContentProps {
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
+    stopStream?: boolean,
   ) => void;
   handleUserMessage: (message: string) => void;
   isWaitingForResponse: boolean;
@@ -337,6 +339,10 @@ const ScreenContent: React.FC<ScreenContentProps> = ({
         onCancel={closeCurrentScreen}
       />
     );
+  }
+
+  if (isScreenActive("mcp")) {
+    return <MCPSelector onCancel={closeCurrentScreen} />;
   }
 
   // Model selector
@@ -471,6 +477,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowOrgSelector: () => navigateTo("organization"),
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
+    onShowMCPSelector: () => navigateTo("mcp"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration

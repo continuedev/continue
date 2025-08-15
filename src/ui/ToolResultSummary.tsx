@@ -43,9 +43,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     );
   }
 
-  // Handle Write/Edit with diff specially
+  // Handle Write/Edit/MultiEdit with diff specially
   if (
-    (toolName === "Write" || toolName === "Edit") &&
+    (toolName === "Write" || toolName === "Edit" || toolName === "MultiEdit") &&
     content.includes("Diff:\n")
   ) {
     const diffSection = content.split("Diff:\n")[1];
@@ -57,7 +57,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             <Text color="green">
               {toolName === "Edit"
                 ? " File edited successfully"
-                : " File written successfully"}
+                : toolName === "MultiEdit"
+                  ? " File edited successfully"
+                  : " File written successfully"}
             </Text>
           </Box>
           <ColoredDiff diffContent={diffSection} />
@@ -145,6 +147,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
           : "File updated successfully";
 
       case "Edit":
+        return "File edited successfully";
+
+      case "MultiEdit":
         return "File edited successfully";
 
       case "List":

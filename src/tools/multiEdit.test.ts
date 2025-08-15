@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
@@ -326,7 +327,7 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath} with 1 edit`);
+      expect(result).toBe(`Successfully edited ${testFilePath} with 1 edit\nDiff:\nmocked diff`);
       expect(fs.writeFileSync).toHaveBeenCalledWith(testFilePath, newContent, "utf-8");
     });
 
@@ -341,7 +342,7 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath} with 3 edits`);
+      expect(result).toBe(`Successfully edited ${testFilePath} with 3 edits\nDiff:\nmocked diff`);
     });
 
     it("should return correct message for new file creation", async () => {
@@ -355,7 +356,7 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully created /tmp/new-file.txt with 1 edit`);
+      expect(result).toBe(`Successfully created /tmp/new-file.txt with 1 edit\nDiff:\nmocked diff`);
     });
 
     it("should throw error if file write fails", async () => {
@@ -374,6 +375,116 @@ describe("multiEditTool", () => {
       await expect(multiEditTool.run(args)).rejects.toThrow(
         `Error: failed to edit ${testFilePath}: Write failed`
       );
+    });
+  });
+
+  describe("relative path handling", () => {
+    it("should convert relative paths to absolute paths", async () => {
+      const relativePath = "test-file.txt";
+      const absolutePath = path.resolve(process.cwd(), relativePath);
+      markFileAsRead(absolutePath);
+
+      const args = {
+        file_path: relativePath,
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: "Hi there",
+          },
+        ],
+      };
+
+      const result = await multiEditTool.preprocess!(args);
+
+      expect(result.args.file_path).toBe(absolutePath);
+      expect(result.args.newContent).toBe("Hi there\nThis is a test file\nGoodbye world");
+    });
+
+    it("should handle relative paths with subdirectories", async () => {
+      const relativePath = "src/components/test.js";
+      const absolutePath = path.resolve(process.cwd(), relativePath);
+      markFileAsRead(absolutePath);
+
+      const args = {
+        file_path: relativePath,
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: "Hi there",
+          },
+        ],
+      };
+
+      const result = await multiEditTool.preprocess!(args);
+
+      expect(result.args.file_path).toBe(absolutePath);
+    });
+
+    it("should handle relative paths with ../ patterns", async () => {
+      const relativePath = "../test-file.txt";
+      const absolutePath = path.resolve(process.cwd(), relativePath);
+      markFileAsRead(absolutePath);
+
+      const args = {
+        file_path: relativePath,
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: "Hi there",
+          },
+        ],
+      };
+
+      const result = await multiEditTool.preprocess!(args);
+
+      expect(result.args.file_path).toBe(absolutePath);
+    });
+
+    it("should leave absolute paths unchanged", async () => {
+      const absolutePath = "/tmp/absolute-file.txt";
+      markFileAsRead(absolutePath);
+
+      const args = {
+        file_path: absolutePath,
+        edits: [
+          {
+            old_string: "Hello world",
+            new_string: "Hi there",
+          },
+        ],
+      };
+
+      const result = await multiEditTool.preprocess!(args);
+
+      expect(result.args.file_path).toBe(absolutePath);
+    });
+
+    it("should handle relative path for new file creation", async () => {
+      const relativePath = "new-file.txt";
+      const absolutePath = path.resolve(process.cwd(), relativePath);
+      
+      vi.mocked(fs.existsSync).mockImplementation((path) => {
+        // Parent directory (cwd) exists, but file doesn't
+        if (path === process.cwd()) return true;
+        if (path === absolutePath) return false;
+        return true;
+      });
+
+      const args = {
+        file_path: relativePath,
+        edits: [
+          {
+            old_string: "",
+            new_string: "New file content",
+          },
+        ],
+      };
+
+      const result = await multiEditTool.preprocess!(args);
+
+      expect(result.args.file_path).toBe(absolutePath);
+      expect(result.args.newContent).toBe("New file content");
+      expect(result.args.isCreatingNewFile).toBe(true);
     });
   });
 

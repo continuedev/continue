@@ -23,7 +23,7 @@ describe("TUIChat - Tool Display Tests", () => {
       <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
-    
+
     expect(frame).toBeDefined();
     expect(frame).toContain("Ask anything");
   });
@@ -33,7 +33,7 @@ describe("TUIChat - Tool Display Tests", () => {
       <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
-    
+
     // Should render normally even without tools
     expect(frame).toBeDefined();
     expect(frame).toContain("Remote Mode");
@@ -46,11 +46,11 @@ describe("TUIChat - Tool Display Tests", () => {
 
     // Type a message that might trigger tool use
     stdin.write("Use a tool to help me");
-    
+
     await new Promise((resolve) => setTimeout(resolve, 50));
-    
+
     const frame = lastFrame();
-    
+
     // UI should remain stable
     expect(frame).toBeDefined();
     if (frame) {
@@ -68,24 +68,24 @@ describe("TUIChat - Tool Display Tests", () => {
 
     // Type / to see commands
     stdin.write("/");
-    
+
     // Wait longer for slash command menu
     await new Promise((resolve) => setTimeout(resolve, 200));
-    
+
     const frame = lastFrame();
-    
+
     // Should show slash command character
     expect(frame).toContain("/");
-    
+
     // The slash command menu might show different UI states
     // On Windows, the timing might be different
     const hasSlashCommandIndicator = frame ? (
-      frame.includes("Use ↑/↓ to navigate") ||
+      frame.includes("↑/↓ to navigate") ||
       frame.includes("/exit") ||
       frame.includes("◉ /") ||
       frame.includes("/ for slash commands")
     ) : false;
-    
+
     expect(hasSlashCommandIndicator).toBe(true);
   });
 });

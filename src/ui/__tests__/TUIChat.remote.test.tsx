@@ -23,7 +23,7 @@ describe("TUIChat - Remote Server Tests", () => {
       <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
-    
+
     expect(frame).toBeDefined();
     expect(frame).toContain("Remote Mode");
     expect(frame).toContain("Ask anything");
@@ -34,7 +34,7 @@ describe("TUIChat - Remote Server Tests", () => {
       <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
-    
+
     // Should show remote mode in the UI
     expect(frame).toContain("◉ Remote Mode");
   });
@@ -44,10 +44,10 @@ describe("TUIChat - Remote Server Tests", () => {
       <AppRoot remoteUrl="http://localhost:3000" />
     );
     const frame = lastFrame();
-    
+
     // Should not show loading services message
     expect(frame).not.toContain("Loading services");
-    
+
     // Should go directly to chat UI
     expect(frame).toContain("Ask anything");
   });
@@ -57,7 +57,7 @@ describe("TUIChat - Remote Server Tests", () => {
       <AppRoot remoteUrl="https://api.example.com:8080" />
     );
     const frame = lastFrame();
-    
+
     // Should still work with different URLs
     expect(frame).toBeDefined();
     expect(frame).toContain("Remote Mode");
@@ -78,19 +78,19 @@ describe("TUIChat - Remote Server Tests", () => {
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     const frame = lastFrame();
-    
+
     // Should show slash character at minimum
     expect(frame).toContain("/");
-    
+
     // The slash command menu might show /exit or navigation instructions
     // Different timing might show different states
     const hasSlashCommandUI = frame ? (
-      frame.includes("/exit") || 
-      frame.includes("Use ↑/↓ to navigate") ||
+      frame.includes("/exit") ||
+      frame.includes("↑/↓ to navigate") ||
       frame.includes("◉ /") ||
       frame.includes("/ for slash commands") // Placeholder text is also valid
     ) : false;
-    
+
     expect(hasSlashCommandUI).toBe(true);
   });
 });

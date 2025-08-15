@@ -11,7 +11,7 @@ import { processRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { env } from "./env.js";
-import { MCPService } from "./mcp.js";
+import { MCPService } from "./services/MCPService.js";
 import {
   getApiKeyValidationError,
   isValidAnthropicApiKey,
@@ -59,7 +59,7 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
 
-export async function runOnboardingFlow(
+async function runOnboardingFlow(
   configPath: string | undefined,
   authConfig: AuthConfig,
 ): Promise<OnboardingResult> {

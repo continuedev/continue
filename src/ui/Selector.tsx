@@ -7,6 +7,14 @@ export interface SelectorOption {
   displaySuffix?: string;
 }
 
+const boxStyles: React.ComponentProps<typeof Box> = {
+  flexDirection: "column",
+  paddingX: 2,
+  paddingY: 1,
+  borderStyle: "round",
+  borderColor: "blue",
+};
+
 interface SelectorProps<T extends SelectorOption> {
   title: string;
   options: T[];
@@ -52,37 +60,31 @@ export function Selector<T extends SelectorOption>({
       return;
     }
 
+    // loop back to the first option after the last option, and vice versa
     if (key.upArrow) {
-      onNavigate(Math.max(0, selectedIndex - 1));
+      onNavigate(selectedIndex === 0 ? options.length - 1 : selectedIndex - 1);
     } else if (key.downArrow) {
-      onNavigate(Math.min(options.length - 1, selectedIndex + 1));
+      onNavigate(selectedIndex === options.length - 1 ? 0 : selectedIndex + 1);
     }
   });
 
   if (loading) {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="blue"
-      >
+      <Box {...boxStyles}>
         <Text color="blue" bold>
           {title}
         </Text>
-        <Text color="gray">{loadingMessage}</Text>
+        <Text> </Text>
+        <Text italic color="gray">
+          {loadingMessage}
+        </Text>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box
-        flexDirection="column"
-        padding={1}
-        borderStyle="round"
-        borderColor="red"
-      >
+      <Box {...boxStyles}>
         <Text color="red" bold>
           Error
         </Text>
@@ -99,25 +101,25 @@ export function Selector<T extends SelectorOption>({
     isSelected: boolean,
     isCurrent: boolean,
   ) => (
-    <Text
-      color={isSelected ? "blue" : "white"}
-      bold={isSelected}
-      inverse={isSelected}
-    >
-      {isSelected ? "> " : "  "}
-      {option.name}
-      {option.displaySuffix || ""}
-      {isCurrent ? " (current)" : ""}
-    </Text>
+    <>
+      <Text
+        color={isSelected ? "blue" : isCurrent ? "green" : "white"}
+        bold={isSelected}
+      >
+        {isSelected ? "→ " : "  "}
+        {option.name}
+        {option.displaySuffix || ""}
+      </Text>
+      {isCurrent && (
+        <Text bold color="green">
+          {" ✔"}
+        </Text>
+      )}
+    </>
   );
 
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="blue"
-    >
+    <Box {...boxStyles}>
       <Text color="blue" bold>
         {title}
       </Text>
@@ -134,7 +136,7 @@ export function Selector<T extends SelectorOption>({
       </Box>
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Use ↑/↓ to navigate, Enter to select, Escape to cancel
+          ↑/↓ to navigate, Enter to select, Escape to cancel
         </Text>
       </Box>
     </Box>

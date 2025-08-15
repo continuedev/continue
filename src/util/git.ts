@@ -83,5 +83,6 @@ export function getRepoUrl(): string {
 
   // Try to get the remote URL from git
   const remoteUrl = getGitRemoteUrl();
-  return remoteUrl || process.cwd();
+  const url = remoteUrl || process.cwd();
+  return url.endsWith(".git") ? url.slice(0, -4) : url;
 }

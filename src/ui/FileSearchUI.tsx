@@ -251,7 +251,7 @@ const FileSearchUI: React.FC<FileSearchUIProps> = ({
 
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Use ↑/↓ to navigate, Enter to select, Tab to complete
+          ↑/↓ to navigate, Enter to select, Tab to complete
         </Text>
       </Box>
     </Box>

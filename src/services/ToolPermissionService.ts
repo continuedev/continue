@@ -36,15 +36,15 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
   private generateModePolicies(): ToolPermissionPolicy[] {
     switch (this.currentState.currentMode) {
       case "plan":
-        // Plan mode: Complete override - exclude all write operations, allow only reads
+        // Plan mode: Complete override - exclude all write operations, allow only reads and bash
         return [
           // Exclude all write tools with absolute priority
           { tool: "Write", permission: "exclude" },
           { tool: "Edit", permission: "exclude" },
           { tool: "MultiEdit", permission: "exclude" },
           { tool: "NotebookEdit", permission: "exclude" },
-          { tool: "Bash", permission: "exclude" },
-          // Allow all read tools
+          // Allow all read tools and bash
+          { tool: "Bash", permission: "allow" },
           { tool: "Read", permission: "allow" },
           { tool: "List", permission: "allow" },
           { tool: "Search", permission: "allow" },
@@ -256,6 +256,55 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
    */
   isHeadless(): boolean {
     return this.currentState.isHeadless;
+  }
+
+  /**
+   * Reload permissions from configuration files
+   * Useful after policy changes to update the in-memory permissions
+   */
+  async reloadPermissions(): Promise<void> {
+    // Only reload if we're in normal mode - other modes have absolute overrides
+    if (this.currentState.currentMode !== "normal") {
+      logger.debug("Skipping permission reload in non-normal mode");
+      return;
+    }
+
+    logger.debug("Reloading permissions from configuration files");
+
+    // Reload permissions from files
+    const freshPolicies = resolvePermissionPrecedence({
+      personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
+      useDefaults: true,
+    });
+
+    // Generate mode-specific policies (should be empty for normal mode)
+    const modePolicies = this.generateModePolicies();
+
+    // Combine mode policies with freshly loaded user policies
+    const allPolicies = [...modePolicies, ...freshPolicies];
+
+    this.setState({
+      permissions: { policies: allPolicies },
+      modePolicyCount: modePolicies.length,
+    });
+
+    logger.debug(
+      `Reloaded permissions: ${freshPolicies.length} user policies, ${modePolicies.length} mode policies`,
+    );
+
+    // Update the service container with the new state
+    // Import here to avoid circular dependencies
+    try {
+      const { serviceContainer } = await import("./ServiceContainer.js");
+      const { SERVICE_NAMES } = await import("./types.js");
+      serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, this.getState());
+      logger.debug("Updated service container with reloaded permissions");
+    } catch (error) {
+      logger.error(
+        "Failed to update service container after permission reload",
+        { error },
+      );
+    }
   }
 
   /**

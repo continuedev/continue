@@ -37,11 +37,12 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
 
     await vi.advanceTimersByTimeAsync(50);
 
-    // Verify that the tool was rejected
+    // Verify that the tool was rejected with stop stream
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-123",
       false, // approved = false
-      false  // createPolicy = false
+      false, // createPolicy = false
+      true   // stopStream = true
     );
   });
 
@@ -67,11 +68,12 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
 
     await vi.advanceTimersByTimeAsync(50);
 
-    // Verify rejection
+    // Verify rejection with stop stream
     expect(handleResponse).toHaveBeenCalledWith(
       "dangerous-request",
       false, // rejected
-      false
+      false, // createPolicy = false
+      true   // stopStream = true
     );
   });
 

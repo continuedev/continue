@@ -19,7 +19,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       switch (message.messageType) {
         case "tool-start":
           return (
-            <Box key={index} marginBottom={1}>
+            <Box key={index} marginLeft={1} marginBottom={1}>
               <Text color="white">○ {message.content}</Text>
             </Box>
           );
@@ -29,7 +29,12 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             message.toolResult?.startsWith("Permission denied") ||
             message.toolResult?.startsWith("Error");
           return (
-            <Box key={index} marginBottom={1} flexDirection="column">
+            <Box
+              key={index}
+              marginLeft={1}
+              marginBottom={1}
+              flexDirection="column"
+            >
               <Box>
                 <Text color={isFailure ? "red" : "green"}>●</Text>
                 <Text> {message.content}</Text>
@@ -45,7 +50,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
         case "tool-error":
           return (
-            <Box key={index} marginBottom={1}>
+            <Box key={index} marginLeft={1} marginBottom={1}>
               <Text color="red" bold>
                 ✗{" "}
               </Text>
@@ -55,7 +60,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
         default:
           return (
-            <Box key={index} marginBottom={1}>
+            <Box key={index} marginLeft={1} marginBottom={1}>
               <Text color="gray" italic>
                 {message.content}
               </Text>
@@ -69,6 +74,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       return (
         <Box
           key={index}
+          marginLeft={1}
           marginBottom={1}
           borderStyle="single"
           borderBottom={false}
@@ -80,7 +86,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     }
 
     return (
-      <Box key={index} marginBottom={1}>
+      <Box key={index} marginLeft={1} marginBottom={1}>
         <Text color={isUser ? "green" : "magenta"}>●</Text>
         <Text> </Text>
         {isUser ? (
