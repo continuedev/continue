@@ -59,7 +59,7 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
   fs.writeFileSync(CONFIG_PATH, updatedContent);
 }
 
-export async function runOnboardingFlow(
+async function runOnboardingFlow(
   configPath: string | undefined,
   authConfig: AuthConfig,
 ): Promise<OnboardingResult> {

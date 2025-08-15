@@ -42,13 +42,6 @@ describe("serve command", () => {
           model: { name: "test-model" },
         })
       ),
-      runOnboardingFlow: vi.fn(() =>
-        Promise.resolve({
-          config: { models: [] },
-          llmApi: { chat: vi.fn() },
-          model: { name: "test-model" },
-        })
-      ),
     }));
 
     vi.mock("../session.js", () => ({
