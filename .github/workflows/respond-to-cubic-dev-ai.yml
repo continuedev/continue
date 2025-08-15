@@ -43,7 +43,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number
             });
-            
+
             core.setOutput('head_ref', pr.head.ref);
             core.setOutput('head_sha', pr.head.sha);
             return pr;
@@ -57,8 +57,8 @@ jobs:
         if: steps.check-mention.outputs.contains_mention == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies and build CLI
         if: steps.check-mention.outputs.contains_mention == 'true'
@@ -78,19 +78,19 @@ jobs:
           ${{ github.event.comment.body }}
 
           Please analyze the current PR, understand the request, implement the necessary changes, and commit them to this branch."
-          
+
           # Start remote session and capture JSON output
           SESSION_OUTPUT=$(node dist/index.js remote -s "$PROMPT")
           echo "Raw session output: $SESSION_OUTPUT"
-          
+
           # Extract URL from JSON output
           SESSION_URL=$(echo "$SESSION_OUTPUT" | jq -r '.url // empty')
-          
+
           if [ -z "$SESSION_URL" ] || [ "$SESSION_URL" = "null" ]; then
             echo "Failed to extract session URL from output: $SESSION_OUTPUT"
             exit 1
           fi
-          
+
           echo "session_url=$SESSION_URL" >> $GITHUB_OUTPUT
           echo "✅ Started remote session: $SESSION_URL"
 
