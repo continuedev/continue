@@ -3,7 +3,7 @@ import { Box, Text } from "ink";
 import React from "react";
 
 import { parseArgs } from "../args.js";
-import { MCPService } from "../mcp.js";
+import { MCPService } from "../services/MCPService.js";
 import { isModelCapable } from "../utils/modelCapability.js";
 
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
@@ -19,7 +19,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   model,
   mcpService,
 }) => {
-  const mcpPrompts = mcpService.getPrompts() ?? [];
+  const mcpPrompts = mcpService.getState().prompts ?? [];
 
   // Show all rules in a single section
   const args = parseArgs();

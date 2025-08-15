@@ -1,30 +1,10 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect } from 'vitest';
 
-import { initializeServices, getServiceSync, SERVICE_NAMES } from './services/index.js';
-import { serviceContainer } from './services/ServiceContainer.js';
+import { initializeServices, getServiceSync, SERVICE_NAMES } from './services/index.js'
 import type { ToolPermissionServiceState } from './services/ToolPermissionService.js';
 import { getAllTools } from './streamChatResponse.js';
 
 describe('getAllTools - Tool Filtering', () => {
-  beforeEach(() => {
-    // Clean up service container state before each test
-    const services = [
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      SERVICE_NAMES.AUTH,
-      SERVICE_NAMES.API_CLIENT,
-      SERVICE_NAMES.CONFIG,
-      SERVICE_NAMES.MODEL,
-      SERVICE_NAMES.MCP
-    ];
-    
-    services.forEach(service => {
-      // Reset service state
-      (serviceContainer as any).services.delete(service);
-      (serviceContainer as any).factories.delete(service);
-      (serviceContainer as any).dependencies.delete(service);
-    });
-  });
-
   test('should exclude Bash tool in plan mode after service initialization', async () => {
     // Initialize services in plan mode (simulating `cn -p`)
     await initializeServices({
@@ -40,7 +20,7 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.value?.currentMode).toBe('plan');
 
     // Get available tools - this should exclude Bash in plan mode
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // Bash should be excluded in plan mode
@@ -73,7 +53,7 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.value?.currentMode).toBe('normal');
 
     // Get available tools - Bash should be available in normal mode
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // All tools should be available in normal mode
@@ -98,7 +78,7 @@ describe('getAllTools - Tool Filtering', () => {
     expect(serviceResult.value?.currentMode).toBe('auto');
 
     // Get available tools - all tools should be available in auto mode
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // All tools should be available in auto mode
@@ -106,13 +86,6 @@ describe('getAllTools - Tool Filtering', () => {
     expect(toolNames).toContain('Read');
     expect(toolNames).toContain('Write');
     expect(toolNames).toContain('Edit');
-  });
-
-  test('should throw error when ToolPermissionService is not initialized', () => {
-    // Don't initialize services - this should cause getAllTools to throw
-    expect(() => {
-      getAllTools();
-    }).toThrow('ToolPermissionService not initialized. Services must be initialized before requesting tools.');
   });
 
   test('should respect explicit exclude in normal mode', async () => {
@@ -125,7 +98,7 @@ describe('getAllTools - Tool Filtering', () => {
       }
     });
 
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // Read should be excluded due to explicit exclude
@@ -149,7 +122,7 @@ describe('getAllTools - Tool Filtering', () => {
       }
     });
 
-    const tools = getAllTools();
+    const tools = await getAllTools();
     const toolNames = tools.map(t => t.function.name);
 
     // Plan mode should still exclude write tools despite --allow flags

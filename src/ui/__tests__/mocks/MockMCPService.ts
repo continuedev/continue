@@ -1,21 +1,38 @@
+import { EMPTY_MCP_STATE, MCPService } from "../../../services/MCPService.js";
+
 // Mock MCP Service
-export class MockMCPService {
-  connections = [];
-  assistant = {} as any;
+export class MockMCPService extends MCPService {
+  constructor() {
+    super();
+  }
   getTools() {
     return [];
   }
   getPrompts() {
     return [];
   }
+  async restartAllServers() {}
   async runTool() {
-    return { result: "Mock result" };
+    return {};
   }
-  async executeToolCall() {
-    return { result: "Mock result" };
+  getServerInfo() {
+    return {
+      config: {
+        name: "example",
+      },
+      toolNames: [],
+      promptNames: [],
+      warnings: [],
+      status: "connected" as const,
+    };
   }
-  async close() {}
-  isInitialized() {
-    return true;
+
+  async doInitialize() {
+    return { ...EMPTY_MCP_STATE };
   }
+
+  async stopServer() {}
+  async restartServer() {}
+
+  async cleanup() {}
 }

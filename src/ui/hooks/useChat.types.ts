@@ -13,6 +13,7 @@ export interface UseChatProps {
   additionalRules?: string[];
   onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
+  onShowMCPSelector: () => void;
   onShowModelSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
@@ -56,5 +57,6 @@ export interface SlashCommandResult {
   clear?: boolean;
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
+  openMcpSelector?: boolean;
   compact?: boolean;
 }

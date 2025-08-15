@@ -45,6 +45,7 @@ export function useChat({
   onShowOrgSelector,
   onShowConfigSelector,
   onShowModelSelector,
+  onShowMCPSelector,
   onLoginPrompt: _onLoginPrompt,
   isRemoteMode = false,
   remoteUrl,
@@ -195,6 +196,7 @@ export function useChat({
           exit,
           onShowConfigSelector,
           onShowModelSelector,
+          onShowMCPSelector,
         });
 
         if (newInput) {

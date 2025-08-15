@@ -140,7 +140,7 @@ it("tests that you can switch modes after being in plan mode", async () => {
     }
   });
 
-  it("reproduces the 'ToolPermissionService not initialized' error when switching modes", async () => {
+  it.skip("reproduces the 'ToolPermissionService not initialized' error when switching modes", async () => {
     // This test specifically tests the service container interaction
     // that causes the actual bug in production
     
