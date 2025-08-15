@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 
-import { initializeServices, getServiceSync, SERVICE_NAMES } from './services/index.js';
+import { initializeServices, getServiceSync, SERVICE_NAMES, MCPServiceState } from './services/index.js';
 import { serviceContainer } from './services/ServiceContainer.js';
 import type { ToolPermissionServiceState } from './services/ToolPermissionService.js';
 import { getAllTools } from './streamChatResponse.js';
@@ -35,6 +35,8 @@ describe('getAllTools - Tool Filtering', () => {
     });
 
     // Verify service is ready
+    const mcpServiceResult = getServiceSync<MCPServiceState>(SERVICE_NAMES.MCP);
+    expect(mcpServiceResult.state).toBe('ready');
     const serviceResult = getServiceSync<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS);
     expect(serviceResult.state).toBe('ready');
     expect(serviceResult.value?.currentMode).toBe('plan');
