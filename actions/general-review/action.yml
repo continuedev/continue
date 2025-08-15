@@ -164,7 +164,7 @@ runs:
         fi
 
         # Run the CLI with validated config
-        cat review_prompt.txt | cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p > code_review.md
+        cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md
 
     - name: Upload Review Results
       if: env.SHOULD_RUN == 'true' && always()
