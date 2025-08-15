@@ -58,7 +58,7 @@ export function getGitHubActionsRepoUrl(): string | null {
   // GITHUB_SERVER_URL defaults to https://github.com but can be different for GitHub Enterprise
   const serverUrl = process.env.GITHUB_SERVER_URL || "https://github.com";
 
-  return `${serverUrl}/${githubRepository}.git`;
+  return `${serverUrl}/${githubRepository}`;
 }
 
 /**
