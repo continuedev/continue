@@ -43,7 +43,7 @@ describe("git utilities - GitHub Actions detection", () => {
       process.env.GITHUB_ACTIONS = "true";
       process.env.GITHUB_REPOSITORY = "owner/repo";
       
-      expect(getGitHubActionsRepoUrl()).toBe("https://github.com/owner/repo.git");
+      expect(getGitHubActionsRepoUrl()).toBe("https://github.com/owner/repo");
     });
 
     it("should return GitHub URL with custom server", () => {
@@ -51,7 +51,7 @@ describe("git utilities - GitHub Actions detection", () => {
       process.env.GITHUB_REPOSITORY = "owner/repo";
       process.env.GITHUB_SERVER_URL = "https://github.enterprise.com";
       
-      expect(getGitHubActionsRepoUrl()).toBe("https://github.enterprise.com/owner/repo.git");
+      expect(getGitHubActionsRepoUrl()).toBe("https://github.enterprise.com/owner/repo");
     });
   });
 
@@ -63,7 +63,7 @@ describe("git utilities - GitHub Actions detection", () => {
       // Since we can't easily mock git commands, we'll rely on the fact that
       // GitHub Actions detection should take priority and return immediately
       const result = getGitHubActionsRepoUrl();
-      expect(result).toBe("https://github.com/owner/repo.git");
+      expect(result).toBe("https:/github.com/owner/repo");
     });
 
     it("should work with GitHub Enterprise Server", () => {
@@ -72,7 +72,7 @@ describe("git utilities - GitHub Actions detection", () => {
       process.env.GITHUB_SERVER_URL = "https://git.company.com";
       
       const result = getGitHubActionsRepoUrl();
-      expect(result).toBe("https://git.company.com/enterprise/repo.git");
+      expect(result).toBe("https://git.company.com/enterprise/repo");
     });
   });
 });
