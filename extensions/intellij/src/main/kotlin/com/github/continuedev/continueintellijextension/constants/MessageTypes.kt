@@ -140,6 +140,7 @@ class MessageTypes {
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
+            "tools/checkHubAccess",
             "controlPlane/openUrl",
             "isItemTooBig",
             "process/markAsBackgrounded",

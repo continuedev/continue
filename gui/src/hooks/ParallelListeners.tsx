@@ -4,7 +4,11 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { FromCoreProtocol } from "core/protocol";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
+import {
+  setConfigLoading,
+  setConfigResult,
+  setHubToolsAccess,
+} from "../redux/slices/configSlice";
 import {
   setLastNonEditSessionEmpty,
   updateEditStateApplyState,
@@ -97,8 +101,24 @@ function ParallelListeners() {
       ) {
         dispatch(setHasReasoningEnabled(true));
       }
+
+      // Check hub tools access when config updates
+      try {
+        const hubAccess = await ideMessenger.request(
+          "tools/checkHubAccess",
+          undefined,
+        );
+        if (hubAccess.status === "success") {
+          dispatch(setHubToolsAccess(hubAccess.content.hasAccess));
+        } else {
+          dispatch(setHubToolsAccess(false));
+        }
+      } catch (error) {
+        console.error("Failed to check hub tools access:", error);
+        dispatch(setHubToolsAccess(false));
+      }
     },
-    [dispatch, hasDoneInitialConfigLoad],
+    [dispatch, hasDoneInitialConfigLoad, ideMessenger],
   );
 
   // Load config from the IDE

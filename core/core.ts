@@ -22,6 +22,7 @@ import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
+import { checkHubToolsAccess } from "./tools/utils/hubToolsAccess";
 import { ChatDescriber } from "./util/chatDescriber";
 import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
@@ -995,6 +996,10 @@ export class Core {
     on("tools/call", async ({ data: { toolCall } }) =>
       this.handleToolCall(toolCall),
     );
+
+    on("tools/checkHubAccess", async () => {
+      return await checkHubToolsAccess(this.configHandler);
+    });
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);

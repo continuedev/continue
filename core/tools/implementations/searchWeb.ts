@@ -5,6 +5,8 @@ import { getStringArg } from "../parseArgs";
 const DEFAULT_WEB_SEARCH_CHAR_LIMIT = 8000;
 
 export const searchWebImpl: ToolImpl = async (args, extras) => {
+  // Note: This tool is gated at the UI level through the HUB_TOOLS_GROUP_NAME group.
+  // Only users with paid Continue Hub accounts will have access to this tool.
   const query = getStringArg(args, "query");
 
   const webResults = await fetchSearchResults(query, 5, extras.fetch);

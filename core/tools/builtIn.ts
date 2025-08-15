@@ -20,7 +20,8 @@ export enum BuiltInToolNames {
   ViewSubdirectory = "view_subdirectory",
 }
 
-export const BUILT_IN_GROUP_NAME = "Built-In";
+export const BUILT_IN_GROUP_NAME = "builtin";
+export const HUB_TOOLS_GROUP_NAME = "hub";
 
 export const CLIENT_TOOLS_IMPLS = [
   BuiltInToolNames.EditExistingFile,

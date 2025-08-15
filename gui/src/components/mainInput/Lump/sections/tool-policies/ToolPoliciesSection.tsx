@@ -1,4 +1,5 @@
 import { MessageModes, Tool } from "core";
+import { HUB_TOOLS_GROUP_NAME } from "core/tools/builtIn";
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../../../redux/slices/uiSlice";
@@ -13,6 +14,7 @@ export const ToolPoliciesSection = () => {
   const toolGroupSettings = useAppSelector(
     (store) => store.ui.toolGroupSettings,
   );
+  const hubToolsAccess = useAppSelector((store) => store.config.hubToolsAccess);
   const dispatch = useAppDispatch();
 
   const toolsByGroup = useMemo(() => {
@@ -71,28 +73,49 @@ export const ToolPoliciesSection = () => {
         </span>
       )}
       {toolsByGroup.map(([groupName, tools]) => {
+        const isHubGroup = groupName === HUB_TOOLS_GROUP_NAME;
+        const hasHubAccess = isHubGroup ? hubToolsAccess : true;
         const isGroupEnabled =
-          !allToolsOff && toolGroupSettings[groupName] !== "exclude";
+          !allToolsOff &&
+          toolGroupSettings[groupName] !== "exclude" &&
+          hasHubAccess;
+        const isGroupDisabled = allToolsOff || (isHubGroup && !hasHubAccess);
+
+        const displayName = isHubGroup ? "Hub Tools" : groupName;
+
         return (
           <div key={groupName} className="mt-2 flex flex-col pr-1">
             <div className="flex flex-row items-center justify-between px-1">
-              <h3
-                className="m-0 p-0 font-bold"
-                style={{
-                  fontSize: fontSize(-2),
-                }}
-              >
-                {groupName}
-              </h3>
-              <ToggleSwitch
-                isToggled={isGroupEnabled}
-                onToggle={() => dispatch(toggleToolGroupSetting(groupName))}
-                text=""
-                size={10}
-                disabled={allToolsOff}
-              />
+              <div className="flex flex-col">
+                <h3
+                  className={`m-0 p-0 font-bold ${
+                    isGroupDisabled ? "text-gray-500" : ""
+                  }`}
+                  style={{
+                    fontSize: fontSize(-2),
+                  }}
+                >
+                  {displayName}
+                </h3>
+                {isHubGroup && !hasHubAccess && (
+                  <span className="mt-1 text-xs text-gray-400">
+                    Requires a Continue Hub account
+                  </span>
+                )}
+              </div>
+              {/* Only show toggle switch for non-hub tools */}
+              {!isHubGroup && (
+                <ToggleSwitch
+                  isToggled={isGroupEnabled}
+                  onToggle={() => dispatch(toggleToolGroupSetting(groupName))}
+                  text=""
+                  size={10}
+                  disabled={isGroupDisabled}
+                />
+              )}
             </div>
             <div className={`relative flex flex-col p-1`}>
+              {/* Always show tools, but indicate availability for hub tools */}
               {tools.map((tool) => (
                 <ToolPolicyItem
                   key={tool.uri + tool.function.name}

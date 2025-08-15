@@ -49,8 +49,9 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
-import { NextEditOutcome } from "../nextEdit/types";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
+import { NextEditOutcome } from "../nextEdit/types";
+import { HubToolsAccess } from "../tools/utils/hubToolsAccess";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -291,6 +292,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { toolCall: ToolCall },
     { contextItems: ContextItem[]; errorMessage?: string },
   ];
+  "tools/checkHubAccess": [undefined, HubToolsAccess];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];

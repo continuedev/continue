@@ -7,6 +7,7 @@ export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
   config: BrowserSerializedContinueConfig;
   loading: boolean;
+  hubToolsAccess: boolean;
 };
 
 export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
@@ -40,6 +41,7 @@ const initialState: ConfigState = {
   configError: undefined,
   config: EMPTY_CONFIG,
   loading: false,
+  hubToolsAccess: false,
 };
 
 export const configSlice = createSlice({
@@ -79,6 +81,12 @@ export const configSlice = createSlice({
     setConfigLoading: (state, { payload: loading }: PayloadAction<boolean>) => {
       state.loading = loading;
     },
+    setHubToolsAccess: (
+      state,
+      { payload: hasAccess }: PayloadAction<boolean>,
+    ) => {
+      state.hubToolsAccess = hasAccess;
+    },
   },
   selectors: {
     selectSelectedChatModelContextLength: (state): number => {
@@ -96,8 +104,12 @@ export const configSlice = createSlice({
   },
 });
 
-export const { updateConfig, setConfigResult, setConfigLoading } =
-  configSlice.actions;
+export const {
+  updateConfig,
+  setConfigResult,
+  setConfigLoading,
+  setHubToolsAccess,
+} = configSlice.actions;
 
 export const {
   selectSelectedChatModelContextLength,
