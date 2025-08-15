@@ -62,6 +62,11 @@ async function loadRules(ide: IDE) {
   rules.unshift(...markdownRules);
   errors.push(...markdownRulesErrors);
 
+  // Add colocated rules from CodebaseRulesCache
+  const codebaseRulesCache = CodebaseRulesCache.getInstance();
+  rules.unshift(...codebaseRulesCache.rules);
+  errors.push(...codebaseRulesCache.errors);
+
   return { rules, errors };
 }
 export default async function doLoadConfig(options: {
@@ -181,11 +186,6 @@ export default async function doLoadConfig(options: {
       }
     }
   });
-
-  // Add rules from colocated rules.md files in the codebase
-  const codebaseRulesCache = CodebaseRulesCache.getInstance();
-  newConfig.rules.unshift(...codebaseRulesCache.rules);
-  errors.push(...codebaseRulesCache.errors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
