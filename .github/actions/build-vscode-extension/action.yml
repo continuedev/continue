@@ -106,6 +106,8 @@ runs:
       run: |
         cd gui
         npm run build --max-old-space-size=4096
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
 
     - name: Prepackage the extension
       shell: bash
