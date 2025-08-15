@@ -98,6 +98,7 @@ export class MCPService {
     this.currentState.isReady = true;
     console.log("MCP INITIALIZATION: UPDATING STATE");
     this.updateState();
+    console.log("MCP INITIALIZATION: DONE");
 
     return this.currentState;
   }
