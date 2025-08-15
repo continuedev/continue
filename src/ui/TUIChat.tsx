@@ -211,7 +211,7 @@ const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   closeCurrentScreen,
 }) => (
   <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-    <Box flexDirection="row" alignItems="center">
+    <Box marginLeft={2} flexDirection="row" alignItems="center">
       {currentMode === "normal" && (
         <>
           <Text color="dim" wrap="truncate-start">

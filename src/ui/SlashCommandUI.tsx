@@ -45,6 +45,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
 
       return a.name.localeCompare(b.name);
     });
+
   if (filteredCommands.length === 0) {
     return (
       <Box paddingX={1} marginX={1} marginBottom={1}>
@@ -58,12 +59,23 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       {filteredCommands.map((command, index) => {
         const isSelected = index === selectedIndex;
 
+        // Find the longest command name to vertically align command descriptions
+        const maxCommandLength = Math.max(
+          ...filteredCommands.map((cmd) => cmd.name.length),
+        );
+        const paddedCommandName = `/${command.name}`.padEnd(
+          maxCommandLength + 1,
+        );
+
         return (
           <Box key={command.name}>
-            <Text color="white" bold={isSelected}>
+            <Text color={isSelected ? "blue" : "white"} bold={isSelected}>
               {"  "}
-              <Text color="green">/{command.name}</Text>
-              <Text color="gray"> - {command.description}</Text>
+              {paddedCommandName}
+              <Text color={isSelected ? "blue" : "gray"}>
+                {"   "}
+                {command.description}
+              </Text>
             </Text>
           </Box>
         );
@@ -71,7 +83,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
 
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Use ↑/↓ to navigate, Enter to select, Tab to complete
+          ↑/↓ to navigate, Enter to select, Tab to complete
         </Text>
       </Box>
     </Box>

@@ -9,11 +9,11 @@ const ModelCapabilityWarning: React.FC<ModelCapabilityWarningProps> = ({
   modelName,
 }) => {
   return (
-    <Box flexDirection="column" paddingX={1}>
+    <Box flexDirection="column" paddingX={0}>
       <Box flexDirection="row" alignItems="center">
-        <Text color="yellow">⚠️ </Text>
-        <Text color="yellow" bold>
-          Model Capability Warning
+        <Text bold color="white">
+          {/* spaces in brackets to prevent prettier from fixing to 1 space */}
+          ⚠️{"  "}Model Capability Warning
         </Text>
       </Box>
       <Text color="gray">

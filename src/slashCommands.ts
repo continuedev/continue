@@ -77,11 +77,13 @@ type CommandHandler = (
 async function handleHelp(args: string[], assistant: AssistantConfig) {
   const allCommands = getAllSlashCommands(assistant);
   const helpMessage = [
-    chalk.cyan("Slash commands:"),
-    ...allCommands.map(
-      (cmd) =>
-        `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
-    ),
+    "Slash commands:",
+    ...allCommands
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(
+        (cmd) =>
+          `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
+      ),
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
