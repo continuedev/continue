@@ -1,15 +1,12 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
-import com.github.continuedev.continueintellijextension.listeners.HandlerPriority
-import com.github.continuedev.continueintellijextension.listeners.SelectionChangeManager
-import com.github.continuedev.continueintellijextension.listeners.StateSnapshot
+import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerManager
 import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.ScrollType
-import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
@@ -48,6 +45,9 @@ class NextEditJumpManager(private val project: Project) {
     // State management
     private var jumpState = JumpState()
 
+    // Handler management
+    private var jumpHandler: NextEditJumpHandler? = null
+
     // UI components
     private var jumpPopup: JBPopup? = null
     private var editorHighlighter: RangeHighlighter? = null
@@ -67,7 +67,7 @@ class NextEditJumpManager(private val project: Project) {
     )
 
     init {
-        registerSelectionChangeHandler()
+//        registerSelectionChangeHandler()
     }
 
     // Public API
@@ -97,6 +97,15 @@ class NextEditJumpManager(private val project: Project) {
 
     fun getSavedCompletionAfterJump(): CompletionDataForAfterJump? = jumpState.completionAfterJump
 
+    fun getJumpPosition(): LogicalPosition? = jumpState.jumpPosition
+
+    fun getOriginalPosition(): LogicalPosition? = jumpState.oldCursorPosition
+
+    fun abortJump() {
+        // Public method that delegates to the existing private rejectJump logic
+        rejectJump()
+    }
+
     // Main entry point
     suspend fun suggestJump(
         editor: Editor,
@@ -121,6 +130,11 @@ class NextEditJumpManager(private val project: Project) {
             editor = editor,
             oldCursorPosition = currentPosition
         )
+
+        // Register active handler to track cursor movements during jump
+        jumpHandler = NextEditJumpHandler(project, this)
+        val activeHandlerManager = project.getService(ActiveHandlerManager::class.java)
+        activeHandlerManager.setActiveHandler(jumpHandler!!)
 
         // Show UI - ensure this runs on EDT
         return try {
@@ -333,6 +347,9 @@ class NextEditJumpManager(private val project: Project) {
                 kotlinx.coroutines.delay(100)
                 jumpState = jumpState.copy(justAccepted = false)
 
+                // Clear the active handler after jump is complete
+                clearActiveHandler()
+
                 // Trigger inline suggestion
                 triggerInlineSuggestCallback?.invoke()
             }
@@ -352,6 +369,9 @@ class NextEditJumpManager(private val project: Project) {
 
         // Clear state
         clearJumpState()
+
+        // Clear handler when rejecting
+        clearActiveHandler()
     }
 
     private fun clearJumpDecoration() {
@@ -413,53 +433,62 @@ class NextEditJumpManager(private val project: Project) {
         }
     }
 
-    private fun registerSelectionChangeHandler() {
-        val selectionManager = project.getService(SelectionChangeManager::class.java)
-
-        selectionManager.registerListener(
-            "nextEditJumpManager",
-            { event, state -> handleSelectionChange(event, state) },
-            HandlerPriority.HIGH
-        )
-    }
-
-    private suspend fun handleSelectionChange(
-        event: SelectionEvent,
-        state: StateSnapshot
-    ): Boolean {
-        // Preserve chain during jump operations
-        when {
-            state.jumpInProgress -> {
-                println("Jump in progress, preserving chain")
-
-                // Check if cursor moved away from expected position
-                val currentPos = event.editor.caretModel.logicalPosition
-                val oldPos = jumpState.oldCursorPosition
-                val jumpPos = jumpState.jumpPosition
-
-                // If cursor moved but not to jump position, reject the jump
-                if (oldPos != null && jumpPos != null &&
-                    !currentPos.equals(oldPos) && !currentPos.equals(jumpPos)
-                ) {
-                    println("DEBUG: Cursor moved unexpectedly, rejecting jump")
-                    rejectJump()
-                }
-
-                return true
-            }
-
-            state.jumpJustAccepted -> {
-                println("Jump just accepted, preserving chain")
-                return true
-            }
-
-            else -> return false
-        }
-    }
+//    private fun registerSelectionChangeHandler() {
+//        val selectionManager = project.getService(SelectionChangeManager::class.java)
+//
+//        selectionManager.registerListener(
+//            "nextEditJumpManager",
+//            { event, state -> handleSelectionChange(event, state) },
+//            HandlerPriority.HIGH
+//        )
+//    }
+//
+//    private suspend fun handleSelectionChange(
+//        event: SelectionEvent,
+//        state: StateSnapshot
+//    ): Boolean {
+//        // Preserve chain during jump operations
+//        when {
+//            state.jumpInProgress -> {
+//                println("Jump in progress, preserving chain")
+//
+//                // Check if cursor moved away from expected position
+//                val currentPos = event.editor.caretModel.logicalPosition
+//                val oldPos = jumpState.oldCursorPosition
+//                val jumpPos = jumpState.jumpPosition
+//
+//                // If cursor moved but not to jump position, reject the jump
+//                if (oldPos != null && jumpPos != null &&
+//                    !currentPos.equals(oldPos) && !currentPos.equals(jumpPos)
+//                ) {
+//                    println("DEBUG: Cursor moved unexpectedly, rejecting jump")
+//                    rejectJump()
+//                }
+//
+//                return true
+//            }
+//
+//            state.jumpJustAccepted -> {
+//                println("Jump just accepted, preserving chain")
+//                return true
+//            }
+//
+//            else -> return false
+//        }
+//    }
 
     fun cleanup() {
         clearJumpState()
         triggerInlineSuggestCallback = null
         deleteChainCallback = null
+    }
+
+    private fun clearActiveHandler() {
+        jumpHandler?.let { handler ->
+            val activeHandlerManager = project.getService(ActiveHandlerManager::class.java)
+            activeHandlerManager.clearActiveHandler()
+            handler.dispose()
+        }
+        jumpHandler = null
     }
 }

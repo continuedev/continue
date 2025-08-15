@@ -1,17 +1,15 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.Position
-import com.github.continuedev.continueintellijextension.listeners.HandlerPriority
-import com.github.continuedev.continueintellijextension.listeners.SelectionChangeManager
-import com.github.continuedev.continueintellijextension.listeners.StateSnapshot
+import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerManager
 import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
-import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.markup.*
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
@@ -33,6 +31,9 @@ class NextEditWindowManager(private val project: Project) {
     private var isAccepted = false
     private var currentCompletionId: String? = null
 
+    // Handler management
+    private var windowHandler: NextEditWindowHandler? = null
+
     suspend fun showNextEditWindow(
         editor: Editor,
         currCursorPos: Position,
@@ -53,6 +54,12 @@ class NextEditWindowManager(private val project: Project) {
 
         // Clear existing decorations first
         hideAllNextEditWindows()
+
+        // Register active handler for this window
+        val cursorPosition = LogicalPosition(currCursorPos.line, currCursorPos.character)
+        windowHandler = NextEditWindowHandler(project, this, cursorPosition)
+        val activeHandlerManager = project.getService(ActiveHandlerManager::class.java)
+        activeHandlerManager.setActiveHandler(windowHandler!!)
 
         // Determine if this is a line deletion case
         val isLineDelete = determineIfLineDelete(
@@ -600,6 +607,10 @@ class NextEditWindowManager(private val project: Project) {
         println("  isLineDelete: $isLineDelete")
 
         isAccepted = true
+
+        // Clear handler before making document changes that move cursor
+        clearActiveHandler()
+
         hideAllNextEditWindows()
 
         try {
@@ -695,6 +706,8 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     private fun rejectEdit() {
+        clearActiveHandler()
+
         hideAllNextEditWindows()
 
         // Log rejection and delete chain (placeholder)
@@ -719,6 +732,8 @@ class NextEditWindowManager(private val project: Project) {
         // Clear all deletion decorations without tracking editors
         clearAllDeletionDecorations()
         deletionHighlighters = emptyList()
+
+        clearActiveHandler() // TODO: might be redundant
     }
 
     private fun clearAllDeletionDecorations() {
@@ -730,6 +745,15 @@ class NextEditWindowManager(private val project: Project) {
                 // Highlighter might already be disposed, ignore
             }
         }
+    }
+
+    private fun clearActiveHandler() {
+        windowHandler?.let { handler ->
+            val activeHandlerManager = project.getService(ActiveHandlerManager::class.java)
+            activeHandlerManager.clearActiveHandler()
+            handler.dispose()
+        }
+        windowHandler = null
     }
 
     fun hasAccepted(): Boolean = isAccepted
@@ -747,30 +771,30 @@ class NextEditWindowManager(private val project: Project) {
         currentCompletionId = null
     }
 
-    fun registerSelectionChangeHandler() {
-        val selectionManager = project.getService(SelectionChangeManager::class.java)
-
-        selectionManager.registerListener(
-            "nextEditWindowManager",
-            { event, state ->
-                handleSelectionChange(event, state)
-            },
-            HandlerPriority.HIGH
-        )
-    }
-
-    private suspend fun handleSelectionChange(
-        event: SelectionEvent,
-        state: StateSnapshot
-    ): Boolean {
-        // If window was just accepted, preserve the chain
-        if (state.nextEditWindowAccepted) {
-            println("Next edit window accepted, preserving chain")
-            return true
-        }
-
-        return false
-    }
+//    fun registerSelectionChangeHandler() {
+//        val selectionManager = project.getService(SelectionChangeManager::class.java)
+//
+//        selectionManager.registerListener(
+//            "nextEditWindowManager",
+//            { event, state ->
+//                handleSelectionChange(event, state)
+//            },
+//            HandlerPriority.HIGH
+//        )
+//    }
+//
+//    private suspend fun handleSelectionChange(
+//        event: SelectionEvent,
+//        state: StateSnapshot
+//    ): Boolean {
+//        // If window was just accepted, preserve the chain
+//        if (state.nextEditWindowAccepted) {
+//            println("Next edit window accepted, preserving chain")
+//            return true
+//        }
+//
+//        return false
+//    }
 }
 
 enum class PopupAction {
