@@ -56,7 +56,8 @@
                   "features/edit/how-it-works",
                   "features/edit/model-setup",
                   "features/edit/how-to-customize",
-                  "features/edit/context-selection"
+                  "features/edit/context-selection",
+                  "features/edit/next-edit"
                 ]
               },
               {
