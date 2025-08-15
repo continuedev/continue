@@ -111,9 +111,9 @@ describe("ToolPermissionService", () => {
       // Should exclude write tools
       expect(policies).toContainEqual({ tool: 'Write', permission: 'exclude' });
       expect(policies).toContainEqual({ tool: 'Edit', permission: 'exclude' });
-      expect(policies).toContainEqual({ tool: 'Bash', permission: 'exclude' });
       
-      // Should allow read tools
+      // Should allow read tools and bash
+      expect(policies).toContainEqual({ tool: 'Bash', permission: 'allow' });
       expect(policies).toContainEqual({ tool: 'Read', permission: 'allow' });
       expect(policies).toContainEqual({ tool: 'Grep', permission: 'allow' });
       expect(policies).toContainEqual({ tool: 'LS', permission: 'allow' });

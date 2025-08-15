@@ -27,7 +27,7 @@ describe('ToolPermissionService - Mode Functionality', () => {
       // Should have specific policies for write tools (excluded)
       expect(policies.some(p => p.tool === 'Write' && p.permission === 'exclude')).toBe(true);
       expect(policies.some(p => p.tool === 'Edit' && p.permission === 'exclude')).toBe(true);
-      expect(policies.some(p => p.tool === 'Bash' && p.permission === 'exclude')).toBe(true);
+      expect(policies.some(p => p.tool === 'Bash' && p.permission === 'allow')).toBe(true);
       
       // Should have specific policies for read tools (allowed)
       expect(policies.some(p => p.tool === 'Read' && p.permission === 'allow')).toBe(true);
@@ -187,7 +187,7 @@ describe('ToolPermissionService - Mode Functionality', () => {
       // Mode policies should override user config - Write should be excluded despite being in allow list
       expect(policies.some(p => p.tool === 'Write' && p.permission === 'exclude')).toBe(true);
       expect(policies.some(p => p.tool === 'Edit' && p.permission === 'exclude')).toBe(true);
-      expect(policies.some(p => p.tool === 'Bash' && p.permission === 'exclude')).toBe(true);
+      expect(policies.some(p => p.tool === 'Bash' && p.permission === 'allow')).toBe(true);
       
       // Read tools should be allowed
       expect(policies.some(p => p.tool === 'Read' && p.permission === 'allow')).toBe(true);

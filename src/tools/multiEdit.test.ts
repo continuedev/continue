@@ -327,7 +327,7 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath} with 1 edit`);
+      expect(result).toBe(`Successfully edited ${testFilePath} with 1 edit\nDiff:\nmocked diff`);
       expect(fs.writeFileSync).toHaveBeenCalledWith(testFilePath, newContent, "utf-8");
     });
 
@@ -342,7 +342,7 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath} with 3 edits`);
+      expect(result).toBe(`Successfully edited ${testFilePath} with 3 edits\nDiff:\nmocked diff`);
     });
 
     it("should return correct message for new file creation", async () => {
@@ -356,7 +356,7 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully created /tmp/new-file.txt with 1 edit`);
+      expect(result).toBe(`Successfully created /tmp/new-file.txt with 1 edit\nDiff:\nmocked diff`);
     });
 
     it("should throw error if file write fails", async () => {

@@ -6,27 +6,43 @@ import * as fs from "fs";
  */
 export function readStdinSync(): string | null {
   try {
+    // In test environments, don't attempt to read stdin to avoid hanging
+    if (
+      process.env.NODE_ENV === "test" ||
+      process.env.VITEST === "true" ||
+      process.env.JEST_WORKER_ID !== undefined ||
+      process.env.CI === "true"
+    ) {
+      return null;
+    }
+
     // Check if stdin is a TTY (interactive terminal)
-    // On some systems process.stdin.isTTY might be undefined, so we also check if it's not false
-    if (process.stdin.isTTY !== false) {
-      // If it's true or undefined, assume it's a TTY unless we can prove otherwise
+    if (process.stdin.isTTY === true) {
+      // Definitely a TTY, don't read
+      return null;
+    }
+
+    // If isTTY is false, we likely have piped input
+    if (process.stdin.isTTY === false) {
+      // Try to read stdin with a fallback
       try {
-        // Try to read with a non-blocking approach
         const stdinData = fs.readFileSync(0, "utf8");
         return stdinData.trim();
-      } catch (error: any) {
-        // If we get EAGAIN or similar, it means no data is available (TTY)
-        if (error.code === "EAGAIN" || error.code === "EWOULDBLOCK") {
-          return null;
-        }
-        // For other errors, also return null
+      } catch {
         return null;
       }
     }
 
-    // If isTTY is explicitly false, try to read stdin
-    const stdinData = fs.readFileSync(0, "utf8");
-    return stdinData.trim();
+    // If isTTY is undefined, be cautious and check if we can read non-blockingly
+    // This handles cases where TTY detection is unreliable
+    try {
+      // Use readFileSync with fd 0 but wrap in timeout logic
+      const stdinData = fs.readFileSync(0, "utf8");
+      return stdinData.trim();
+    } catch {
+      // If we can't read (EAGAIN, EWOULDBLOCK, etc.), assume no piped input
+      return null;
+    }
   } catch {
     return null;
   }

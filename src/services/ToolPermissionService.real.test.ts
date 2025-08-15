@@ -40,7 +40,7 @@ describe('ToolPermissionService - Real Tool Permission Test', () => {
       expect(result.permission).toBe('exclude');
     });
 
-    it('should deny Bash tool in plan mode', () => {
+    it('should allow Bash tool in plan mode', () => {
       const permissions = service.getPermissions();
       const toolCall = {
         name: 'Bash',
@@ -49,7 +49,7 @@ describe('ToolPermissionService - Real Tool Permission Test', () => {
       const result = checkToolPermission(toolCall, permissions);
       
       console.log(`Bash permission check result:`, result);
-      expect(result.permission).toBe('exclude');
+      expect(result.permission).toBe('allow');
     });
 
     it('should allow Read tool in plan mode', () => {

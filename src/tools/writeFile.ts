@@ -139,7 +139,10 @@ export const writeFileTool: Tool = {
           );
         }
 
-        return `Successfully wrote to file: ${args.filepath}`;
+        // Generate diff for result display
+        const diff = generateDiff(oldContent, args.content, args.filepath);
+
+        return `Successfully wrote to file: ${args.filepath}\nDiff:\n${diff}`;
       } else {
         // New file creation - count all lines as added
         const lineCount = args.content.split("\n").length;
