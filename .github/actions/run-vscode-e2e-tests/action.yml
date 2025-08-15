@@ -1,0 +1,99 @@
+name: 'Run VS Code E2E Tests'
+description: 'Runs VS Code E2E tests with test matrix generation and execution'
+inputs:
+  github-token:
+    description: 'GitHub token for accessing private repositories'
+    required: true
+  ci-github-token:
+    description: 'CI GitHub token for accessing private repositories'
+    required: true
+  ssh_key:
+    description: 'SSH key for SSH tests'
+    required: false
+  ssh_host:
+    description: 'SSH host for SSH tests'
+    required: false
+  is_fork:
+    description: 'Whether this is running on a fork'
+    required: false
+    default: 'false'
+outputs:
+  test_file_matrix:
+    description: 'Matrix of test files to run'
+    value: ${{ steps.get-test-file-matrix.outputs.test_file_matrix }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - name: Cache npm
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-cache-matrix-${{ hashFiles('core/package-lock.json', 'extensions/vscode/package-lock.json') }}
+
+    - name: Cache packages node_modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/*/node_modules
+        key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
+
+    - name: Cache core node modules
+      uses: actions/cache@v4
+      with:
+        path: core/node_modules
+        key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+    - name: Cache vscode extension node modules
+      uses: actions/cache@v4
+      id: vscode-cache
+      with:
+        path: extensions/vscode/node_modules
+        key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+    - name: Build packages and get test files
+      id: get-test-file-matrix
+      shell: bash
+      run: |
+        node ./scripts/build-packages.js
+        cd extensions/vscode
+        npm ci
+        npm run e2e:compile
+        if [[ "${{ inputs.is_fork }}" == "true" ]]; then
+          # Exclude SSH tests for forks
+          FILES=$(ls -1 e2e/_output/tests/*.test.js | grep -v "SSH" | jq -R . | jq -s .)
+        else
+          # Include all tests for non-forks
+          FILES=$(ls -1 e2e/_output/tests/*.test.js | jq -R . | jq -s .)
+        fi
+        echo "test_file_matrix<<EOF" >> $GITHUB_OUTPUT
+        echo "$FILES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+      env:
+        # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+        GITHUB_TOKEN: ${{ inputs.ci-github-token }}
+
+    - name: Debug Outputs
+      shell: bash
+      run: |
+        echo "Test files: ${{ steps.get-test-file-matrix.outputs.test_file_matrix }}"
+
+    - name: Build VS Code extension
+      uses: ./.github/actions/build-vscode-extension
+      with:
+        platform: linux
+        arch: x64
+        npm_config_arch: x64
+        pre-release: false
+        commit-sha: ${{ github.sha }}
+        github-token: ${{ inputs.github-token }}
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: vscode-extension-build-Linux
+        path: extensions/vscode/build
