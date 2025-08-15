@@ -4,7 +4,7 @@ name: Main Branch Build
 on:
   push:
     branches:
-      - main
+      - pe/fix-oneper
   workflow_dispatch:
     inputs:
       test_pr_number:
@@ -30,7 +30,7 @@ jobs:
           # Get PR number for the current commit using GitHub API
           COMMIT_SHA=$(git rev-parse HEAD)
           echo "Getting PR for commit: $COMMIT_SHA"
-          
+
           PR_NUMBER=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls" \
             | jq -r '.[0].number // empty')
