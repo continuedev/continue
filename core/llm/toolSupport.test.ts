@@ -280,6 +280,15 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("openrouter", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["openrouter"];
+
+    it("should return false for moonshotai/kimi-k2:free model", () => {
+      // This fixes issue #6619
+      expect(supportsFn("moonshotai/kimi-k2:free")).toBe(false);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["continue-proxy"]("")).toBe(false);
