@@ -4,7 +4,7 @@ name: Main Branch Build
 on:
   push:
     branches:
-      - pe/fix-oneper
+      - main
   workflow_dispatch:
     inputs:
       test_pr_number:
