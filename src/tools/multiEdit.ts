@@ -228,6 +228,9 @@ If you want to create a new file, use:
       description:
         "Array of edit operations to perform sequentially on the file",
       required: true,
+      items: {
+        type: "object",
+      },
     },
   },
   preprocess: async (args) => {
