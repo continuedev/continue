@@ -9,7 +9,12 @@ import { logger } from "../util/logger.js";
 
 export async function remote(
   prompt: string | undefined,
-  options: { url?: string; idempotencyKey?: string; start?: boolean } = {},
+  options: {
+    url?: string;
+    idempotencyKey?: string;
+    start?: boolean;
+    branch?: string;
+  } = {},
 ) {
   // If --url is provided, connect directly to that URL
   if (options.url) {
@@ -63,6 +68,11 @@ export async function remote(
       idempotencyKey: options.idempotencyKey,
     };
 
+    // Add branchName to request body if branch option is provided
+    if (options.branch) {
+      requestBody.branchName = options.branch;
+    }
+
     const response = await fetch(new URL("agents/devboxes", env.apiBase), {
       method: "POST",
       headers: {
@@ -87,8 +97,9 @@ export async function remote(
         JSON.stringify({
           status: "success",
           message: "Remote development environment created successfully",
-          url: result.url,
-          port: result.port,
+          url: `${env.appUrl}/agents/${result.id}`,
+          containerUrl: result.url,
+          containerPort: result.port,
           name: requestBody.name,
           mode: "new_environment",
         }),

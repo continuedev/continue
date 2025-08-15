@@ -68,6 +68,7 @@ describe("remote command", () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
+        id: "test-agent-id",
         url: "ws://test-url.com",
         port: 8080,
       }),
@@ -131,6 +132,24 @@ describe("remote command", () => {
     );
   });
 
+  it("should ignore --start flag when --url is provided without --start", async () => {
+    const testUrl = "ws://direct-url.com";
+    
+    await remote("test prompt", { url: testUrl });
+    
+    // Should not make POST request when connecting directly to URL
+    expect(mockFetch).not.toHaveBeenCalled();
+    
+    // Should connect directly to the provided URL and start TUI
+    expect(mockStartRemoteTUIChat.startRemoteTUIChat).toHaveBeenCalledWith(
+      testUrl,
+      "test prompt"
+    );
+    
+    // Should not output JSON
+    expect(mockConsoleLog).not.toHaveBeenCalled();
+  });
+
   it("should handle proper request body structure with all fields", async () => {
     const testIdempotencyKey = "structured-test-key";
     
@@ -168,6 +187,61 @@ describe("remote command", () => {
     
     expect(requestBody.repoUrl).toBe("https://github.com/myorg/myrepo.git");
     expect(requestBody.idempotencyKey).toBe("github-actions-key");
+  });
+
+  it("should include branchName in request body when branch option is provided", async () => {
+    const testBranch = "feature/new-feature";
+    
+    await remote("test prompt", { branch: testBranch });
+    
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL("agents/devboxes", mockEnv.env.apiBase),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: expect.stringContaining(`"branchName":"${testBranch}"`),
+      })
+    );
+  });
+
+  it("should not include branchName in request body when branch option is not provided", async () => {
+    await remote("test prompt", {});
+    
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL("agents/devboxes", mockEnv.env.apiBase),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: expect.not.stringContaining("branchName"),
+      })
+    );
+  });
+
+  it("should handle proper request body structure with branch field", async () => {
+    const testBranch = "main";
+    const testIdempotencyKey = "test-with-branch";
+    
+    await remote("test prompt", { 
+      branch: testBranch, 
+      idempotencyKey: testIdempotencyKey 
+    });
+    
+    const fetchCall = mockFetch.mock.calls[0];
+    const requestBody = JSON.parse(fetchCall[1].body);
+    
+    expect(requestBody).toEqual({
+      repoUrl: "https://github.com/user/test-repo.git",
+      name: expect.stringMatching(/^devbox-\d+$/),
+      prompt: "test prompt",
+      idempotencyKey: testIdempotencyKey,
+      branchName: testBranch,
+    });
   });
 
   describe("start mode (-s / --start flag)", () => {
@@ -218,8 +292,9 @@ describe("remote command", () => {
       expect(outputJson).toEqual({
         status: "success",
         message: "Remote development environment created successfully",
-        url: "ws://test-url.com",
-        port: 8080,
+        url: "https://test.example.com/agents/test-agent-id",
+        containerUrl: "ws://test-url.com",
+        containerPort: 8080,
         name: expect.stringMatching(/^devbox-\d+$/),
         mode: "new_environment"
       });

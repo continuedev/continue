@@ -164,6 +164,10 @@ program
     "-s, --start",
     "Create remote environment and print connection details without starting TUI",
   )
+  .option(
+    "--branch <branch>",
+    "Specify the git branch name to use in the remote environment",
+  )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
   });
