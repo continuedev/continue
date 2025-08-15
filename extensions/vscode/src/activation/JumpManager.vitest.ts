@@ -346,8 +346,32 @@ describe("JumpManager", () => {
 
       // Should create decoration
       expect(vscode.window.createTextEditorDecorationType).toHaveBeenCalled();
-      // Should reveal range
-      expect(vscode.window.activeTextEditor!.revealRange).toHaveBeenCalled();
+      // Should not reveal range
+      expect(
+        vscode.window.activeTextEditor!.revealRange,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("should call revealRange when jump is accepted", async () => {
+      const currentPosition = new vscode.Position(1, 0);
+      const nextJumpLocation = new vscode.Position(8, 0); // Outside visible range
+
+      await jumpManager.suggestJump(currentPosition, nextJumpLocation);
+
+      // Find the acceptJump command handler.
+      const commandArgs = vi
+        .mocked(vscode.commands.registerCommand)
+        .mock.calls.find((call: any) => call[0] === "continue.acceptJump");
+      expect(commandArgs).toBeDefined();
+      const acceptJumpHandler = commandArgs![1];
+
+      await acceptJumpHandler();
+
+      // Should reveal the jump location range after jumping.
+      expect(vscode.window.activeTextEditor!.revealRange).toHaveBeenCalledWith(
+        new vscode.Range(nextJumpLocation.line, 0, nextJumpLocation.line, 0),
+        vscode.TextEditorRevealType.InCenter,
+      );
     });
   });
 
