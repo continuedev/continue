@@ -79,9 +79,8 @@ export const ToolPoliciesSection = () => {
           !allToolsOff &&
           toolGroupSettings[groupName] !== "exclude" &&
           hasHubAccess;
-        const isGroupDisabled = allToolsOff || (isHubGroup && !hasHubAccess);
 
-        const displayName = isHubGroup ? "Hub Tools" : groupName;
+        const isGroupDisabled = allToolsOff || (isHubGroup && !hasHubAccess);
 
         return (
           <div key={groupName} className="mt-2 flex flex-col pr-1">
@@ -95,7 +94,7 @@ export const ToolPoliciesSection = () => {
                     fontSize: fontSize(-2),
                   }}
                 >
-                  {displayName}
+                  {groupName}
                 </h3>
                 {isHubGroup && !hasHubAccess && (
                   <span className="mt-1 text-xs text-gray-400">
@@ -103,8 +102,8 @@ export const ToolPoliciesSection = () => {
                   </span>
                 )}
               </div>
-              {/* Only show toggle switch for non-hub tools */}
-              {!isHubGroup && (
+              {/* Show toggle switch for non-hub tools, and for hub tools when user has access */}
+              {(!isHubGroup || hasHubAccess) && (
                 <ToggleSwitch
                   isToggled={isGroupEnabled}
                   onToggle={() => dispatch(toggleToolGroupSetting(groupName))}

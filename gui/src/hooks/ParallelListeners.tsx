@@ -61,6 +61,23 @@ function ParallelListeners() {
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
 
+  const checkHubToolsAccess = useCallback(async () => {
+    try {
+      const hubAccess = await ideMessenger.request(
+        "tools/checkHubAccess",
+        undefined,
+      );
+      if (hubAccess.status === "success") {
+        dispatch(setHubToolsAccess(hubAccess.content.hasAccess));
+      } else {
+        dispatch(setHubToolsAccess(false));
+      }
+    } catch (error) {
+      console.error("Failed to check hub tools access:", error);
+      dispatch(setHubToolsAccess(false));
+    }
+  }, [ideMessenger, dispatch]);
+
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
       const {
@@ -103,22 +120,9 @@ function ParallelListeners() {
       }
 
       // Check hub tools access when config updates
-      try {
-        const hubAccess = await ideMessenger.request(
-          "tools/checkHubAccess",
-          undefined,
-        );
-        if (hubAccess.status === "success") {
-          dispatch(setHubToolsAccess(hubAccess.content.hasAccess));
-        } else {
-          dispatch(setHubToolsAccess(false));
-        }
-      } catch (error) {
-        console.error("Failed to check hub tools access:", error);
-        dispatch(setHubToolsAccess(false));
-      }
+      await checkHubToolsAccess();
     },
-    [dispatch, hasDoneInitialConfigLoad, ideMessenger],
+    [dispatch, hasDoneInitialConfigLoad, checkHubToolsAccess],
   );
 
   // Load config from the IDE
@@ -162,6 +166,20 @@ function ParallelListeners() {
       await handleConfigUpdate(false, update);
     },
     [handleConfigUpdate],
+  );
+
+  // Check hub tools access when session info changes.
+  // This is needed because checkHubToolsAccess() depends on both:
+  // 1. configHandler.controlPlaneClient.isSignedIn() (session info)
+  // 2. usesFreeTrialApiKey(config) (config info)
+  // Session changes don't always trigger config reloads, so we need this
+  // to catch cases where sign-in status changes but config stays the same.
+  useWebviewListener(
+    "sessionUpdate",
+    async () => {
+      await checkHubToolsAccess();
+    },
+    [checkHubToolsAccess],
   );
 
   useEffect(() => {
