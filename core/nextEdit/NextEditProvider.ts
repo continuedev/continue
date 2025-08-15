@@ -33,7 +33,6 @@ import { myersDiff } from "../diff/myers.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
-import { replaceEscapedCharacters } from "../util/text.js";
 import {
   INSTINCT_SYSTEM_PROMPT,
   MERCURY_CODE_TO_EDIT_OPEN,
@@ -686,13 +685,17 @@ export class NextEditProvider {
       return undefined;
     }
 
-    const nextCompletion = msg.content.split(
-      `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
-    )[1]
-      ? replaceEscapedCharacters(
-          msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
-        ).replace(/\n$/, "")
-      : replaceEscapedCharacters(msg.content);
+    // const nextCompletion = msg.content.split(
+    //   `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
+    // )[1]
+    //   ? replaceEscapedCharacters(
+    //       msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
+    //     ).replace(/\n$/, "")
+    //   : replaceEscapedCharacters(msg.content);
+    const nextCompletion =
+      msg.content
+        .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
+        .replace(/\n$/, "") ?? msg.content;
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       return await this._handlePartialFileDiff(
@@ -774,7 +777,11 @@ export class NextEditProvider {
       .slice(editableRegionStartLine, editableRegionEndLine + 1)
       .join("\n");
     const diffLines = myersDiff(fileSlice, nextCompletion);
-    const diffGroups = groupDiffLines(diffLines, editableRegionStartLine, 5);
+    const diffGroups = groupDiffLines(
+      diffLines,
+      editableRegionStartLine,
+      5,
+    ).filter((group) => !isWhitespaceOnlyDeletion(group.lines));
     const currentLine = helper.pos.line;
     const prefetchQueue = PrefetchQueue.getInstance();
 
@@ -798,16 +805,16 @@ export class NextEditProvider {
         helper.input.completionId,
         true,
       );
-    } else if (diffGroups.length > 0) {
-      // Fallback to first diff group if cursor's group not found
-      return await this._createOutcomeFromDiffGroup(
-        diffGroups[0],
-        helper,
-        startTime,
-        llm,
-        helper.input.completionId,
-        false,
-      );
+      // } else if (diffGroups.length > 0) {
+      //   // Fallback to first diff group if cursor's group not found
+      //   return await this._createOutcomeFromDiffGroup(
+      //     diffGroups[0],
+      //     helper,
+      //     startTime,
+      //     llm,
+      //     helper.input.completionId,
+      //     false,
+      //   );
     }
 
     return undefined;
@@ -827,12 +834,6 @@ export class NextEditProvider {
     console.log(diffGroups);
 
     for (const group of diffGroups) {
-      // Don't worry about whitespace only deletions -- let formatters handle this.
-      // This often gets in the way of good edits.
-      if (isWhitespaceOnlyDeletion(group.lines)) {
-        continue;
-      }
-
       if (currentLine >= group.startLine && currentLine <= group.endLine) {
         cursorGroup = group;
       } else {
