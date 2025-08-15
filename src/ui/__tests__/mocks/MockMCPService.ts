@@ -1,4 +1,4 @@
-import { EMPTY_MCP_STATE, MCPService } from "../../../services/mcp.js";
+import { EMPTY_MCP_STATE, MCPService } from "../../../services/MCPService.js";
 
 // Mock MCP Service
 export class MockMCPService extends MCPService {

@@ -1,18 +1,21 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect } from 'vitest';
 
-import { initializeServices, getServiceSync, SERVICE_NAMES, MCPServiceState } from './services/index.js';
-import { serviceContainer } from './services/ServiceContainer.js';
+import { initializeServices, getServiceSync, SERVICE_NAMES, MCPServiceState } from './services/index.js'
 import type { ToolPermissionServiceState } from './services/ToolPermissionService.js';
 import { getAllTools } from './streamChatResponse.js';
 
-describe('getAllTools - Tool Filtering', () => {
-  beforeEach(() => {
-    // Clean up service container state before each test
-    serviceContainer.removeAllListeners()
-    Object.values(SERVICE_NAMES).forEach(name => {
-    })
-  });
+vi.mock('../configLoader.js', () => ({
+  loadConfiguration: vi.fn().mockResolvedValue({
+    config: { 
+      name: 'test-config',
+      models: [],
+      mcpServers: []
+    },
+    source: { type: 'default-agent' }
+  })
+}));
 
+describe('getAllTools - Tool Filtering', () => {
   test('should exclude Bash tool in plan mode after service initialization', async () => {
     // Initialize services in plan mode (simulating `cn -p`)
     await initializeServices({

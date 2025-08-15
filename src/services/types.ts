@@ -5,7 +5,7 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { AuthConfig } from "../auth/workos.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
-import { MCPConnectionInfo, MCPService } from "./mcp.js";
+import { MCPConnectionInfo, MCPService } from "./MCPService.js";
 
 /**
  * Service lifecycle states

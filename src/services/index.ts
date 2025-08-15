@@ -5,7 +5,7 @@ import { logger } from "../util/logger.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
-import { MCPService } from "./mcp.js";
+import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { serviceContainer } from "./ServiceContainer.js";
