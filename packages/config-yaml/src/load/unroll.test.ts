@@ -5,7 +5,7 @@ describe("parseMarkdownRuleOrAssistantUnrolled tests", () => {
   it("parses valid YAML content as AssistantUnrolled", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
-      filePath: "./foo/bar.yaml",
+      uriPath: "./foo/bar.yaml",
     };
     const yamlContent = `
 name: Test Assistant
@@ -26,7 +26,7 @@ models:
   it("parses markdown rule content as AssistantUnrolled", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
-      filePath: "./foo/bar.md",
+      uriPath: "./foo/bar.md",
     };
     const markdownContent = `
 ---
@@ -55,7 +55,7 @@ This is the rule
   it("throws error for invalid content in yaml file", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
-      filePath: "./foo/bar.yaml",
+      uriPath: "./foo/bar.yaml",
     };
     const invalidContent = `
 name: Test Assistant
@@ -74,7 +74,7 @@ model: # should be models
   it("Every non-YAML file is a rule", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
-      filePath: "./foo/bar",
+      uriPath: "./foo/bar",
     };
     const dubiousContent = `This is not \nproper #YAML#`;
     const result = parseMarkdownRuleOrAssistantUnrolled(dubiousContent, mockId);

@@ -96,7 +96,7 @@ describe("E2E Scenarios", () => {
       const filePath =
         id.uriType === "slug"
           ? `./src/__tests__/packages/${slug}.yaml`
-          : id.filePath;
+          : id.uriPath;
       return fs.readFileSync(filePath).toString();
     },
   };
@@ -244,7 +244,7 @@ describe("E2E Scenarios", () => {
           },
           {
             uriType: "file",
-            filePath: "./src/__tests__/local-files/rules.yaml",
+            uriPath: "./src/__tests__/local-files/rules.yaml",
           },
         ],
       },
@@ -276,7 +276,7 @@ describe("E2E Scenarios", () => {
     const unrolledConfig = await unrollAssistant(
       {
         uriType: "file",
-        filePath: "./src/__tests__/local-files/duplicate-test-assistant.yaml",
+        uriPath: "./src/__tests__/local-files/duplicate-test-assistant.yaml",
       },
       registry,
       {
@@ -289,15 +289,15 @@ describe("E2E Scenarios", () => {
         injectBlocks: [
           {
             uriType: "file",
-            filePath: "./src/__tests__/local-files/rules.yaml",
+            uriPath: "./src/__tests__/local-files/rules.yaml",
           },
           {
             uriType: "file",
-            filePath: "./src/__tests__/local-files/mcpServer.yaml",
+            uriPath: "./src/__tests__/local-files/mcpServer.yaml",
           },
           {
             uriType: "file",
-            filePath: "./src/__tests__/local-files/prompt.yaml",
+            uriPath: "./src/__tests__/local-files/prompt.yaml",
           },
         ],
       },

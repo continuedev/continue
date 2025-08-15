@@ -465,14 +465,14 @@ export async function unrollBlocks(
               resolvedBlock,
               source:
                 injectBlock.uriType === "file"
-                  ? injectBlock.filePath
+                  ? injectBlock.uriPath
                   : undefined,
               error: null,
             };
           } catch (err) {
             let msg = "";
             if (injectBlock.uriType === "file") {
-              msg = `${(err as Error).message}.\n> ${injectBlock.filePath}`;
+              msg = `${(err as Error).message}.\n> ${injectBlock.uriPath}`;
             } else {
               msg = `${(err as Error).message}.\n> ${injectBlock.fullSlug}`;
             }
@@ -669,7 +669,7 @@ function parseYamlOrMarkdownRule<T>(
   } catch (yamlError) {
     if (
       id.uriType === "file" &&
-      [".yaml", ".yml"].some((ext) => id.filePath.endsWith(ext))
+      [".yaml", ".yml"].some((ext) => id.uriPath.endsWith(ext))
     ) {
       throw yamlError;
     }
