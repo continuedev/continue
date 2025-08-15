@@ -219,7 +219,7 @@ We recommend using a specific commit SHA for stability and predictability:
 Example:
 
 ```yaml
-uses: continuedev/continue/actions/general-review@17fe39cc4f1760838ce4428aad0a984af13f8266
+uses: continuedev/continue/actions/general-review@381ef1c2d1d79495bf12d3db2b6a0bf4b93c62ff
 ```
 
 ## Troubleshooting
