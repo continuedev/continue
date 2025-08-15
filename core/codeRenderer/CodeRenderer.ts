@@ -243,7 +243,10 @@ export class CodeRenderer {
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${options.dimensions.width}" height="${options.dimensions.height}" shape-rendering="crispEdges">
+    const lines = code.split("\n");
+    const actualHeight = lines.length * options.lineHeight;
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${options.dimensions.width}" height="${actualHeight}" shape-rendering="crispEdges">
     <style>
       :root {
         --purple: rgb(112, 114, 209);
@@ -252,7 +255,7 @@ export class CodeRenderer {
       }
     </style>
     <g>
-    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${options.dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${actualHeight}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
       ${lineBackgrounds}
       ${guts}
     </g>
