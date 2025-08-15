@@ -5,6 +5,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
+import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { MCPServiceState, SERVICE_NAMES } from "./types.js";
 
@@ -33,20 +34,25 @@ export interface MCPConnectionInfo {
   warnings: string[];
 }
 
-export class MCPService {
+export class MCPService
+  extends BaseService<MCPServiceState>
+  implements ServiceWithDependencies
+{
   private connections: Map<string, ServerConnection> = new Map();
-  private currentState: MCPServiceState;
   private assistant: AssistantConfig | null = null;
   private isShuttingDown = false;
 
+  getDependencies(): string[] {
+    return [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT, SERVICE_NAMES.CONFIG];
+  }
   constructor() {
-    this.currentState = {
+    super("MCPService", {
       mcpService: null,
       connections: [],
       toolCount: 0,
       promptCount: 0,
       isReady: false,
-    };
+    });
 
     // Register shutdown handler
     process.on("exit", () => this.shutdown());
@@ -57,7 +63,7 @@ export class MCPService {
   /**
    * Initialize the MCP service
    */
-  async initialize(
+  async doInitialize(
     assistant: AssistantConfig,
     waitForConnections = false,
   ): Promise<MCPServiceState> {
@@ -145,8 +151,7 @@ export class MCPService {
    * Update the MCP service with a new assistant config
    */
   async update(assistant: AssistantConfig): Promise<MCPServiceState> {
-    logger.debug("Updating MCPService");
-
+    logger.debug("Updating MCPService config");
     // Shutdown existing connections
     return await this.initialize(assistant);
   }
