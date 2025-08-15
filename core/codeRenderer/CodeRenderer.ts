@@ -20,7 +20,7 @@ import {
   Highlighter,
 } from "shiki";
 import { DiffLine } from "..";
-import { escapeForSVG, kebabOfStr } from "../util/text";
+import { escapeForSVG, kebabOfThemeStr } from "../util/text";
 
 interface CodeRendererOptions {
   themesDir?: string;
@@ -70,28 +70,29 @@ export class CodeRenderer {
 
   public async setTheme(themeName: string): Promise<void> {
     if (
-      this.themeExists(kebabOfStr(themeName)) ||
+      this.themeExists(kebabOfThemeStr(themeName)) ||
       themeName === "Default Dark Modern"
     ) {
       this.currentTheme =
         themeName === "Default Dark Modern"
           ? "dark-plus"
-          : kebabOfStr(themeName);
-
-      this.highlighter = await getSingletonHighlighter({
-        langs: ["typescript"],
-        themes: [this.currentTheme],
-      });
-
-      const th = this.highlighter.getTheme(this.currentTheme);
-
-      this.editorBackground = th.bg;
-      this.editorForeground = th.fg;
-      this.editorLineHighlight =
-        th.colors!["editor.lineHighlightBackground"] ?? "#000000";
+          : kebabOfThemeStr(themeName);
     } else {
+      // Fallback to default theme for unsupported themes.
       this.currentTheme = "dark-plus";
     }
+
+    // Always initialize the highlighter with the current theme.
+    this.highlighter = await getSingletonHighlighter({
+      langs: ["typescript"],
+      themes: [this.currentTheme],
+    });
+
+    const th = this.highlighter.getTheme(this.currentTheme);
+    this.editorBackground = th.bg;
+    this.editorForeground = th.fg;
+    this.editorLineHighlight =
+      th.colors!["editor.lineHighlightBackground"] ?? "#000000";
   }
 
   async init(): Promise<void> {}
