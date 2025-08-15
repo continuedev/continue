@@ -304,12 +304,19 @@ runs:
             // Create the review
             if (comments.length > 0) {
               try {
+                let reviewBody = `${reviewData.review_summary || 'AI Code Review'}\n\n---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+                
+                // Add triggered by note if from comment
+                if (context.eventName === 'issue_comment') {
+                  reviewBody = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewBody}`;
+                }
+                
                 await github.rest.pulls.createReview({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: prNumber,
                   commit_id: commitSha,
-                  body: `${reviewData.review_summary || 'AI Code Review'}\n\n---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`,
+                  body: reviewBody,
                   event: 'COMMENT',
                   comments: comments
                 });
@@ -331,22 +338,19 @@ runs:
               }
             } else {
               // No inline comments, just post the summary
+              let summaryBody = `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*\n\n` +
+                `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+              
+              // Add triggered by note if from comment
+              if (context.eventName === 'issue_comment') {
+                summaryBody = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${summaryBody}`;
+              }
+              
               await github.rest.issues.createComment({
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*\n\n` +
-                  `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`
-              });
-            }
-            
-            // Add triggered by note if from comment
-            if (context.eventName === 'issue_comment') {
-              await github.rest.issues.createComment({
-                issue_number: prNumber,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `*Inline review triggered by @${context.payload.comment.user.login}*`
+                body: summaryBody
               });
             }
             
