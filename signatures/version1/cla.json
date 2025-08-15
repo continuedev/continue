@@ -1295,6 +1295,14 @@
       "created_at": "2025-08-15T05:35:58Z",
       "repoId": 644686905,
       "pullRequestNo": 7168
+    },
+    {
+      "name": "u-yuta",
+      "id": 19236568,
+      "comment_id": 3191404965,
+      "created_at": "2025-08-15T12:35:49Z",
+      "repoId": 644686905,
+      "pullRequestNo": 7172
     }
   ]
 }
