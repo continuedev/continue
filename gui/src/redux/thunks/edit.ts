@@ -58,10 +58,14 @@ export const streamEditThunk = createAsyncThunk<
           stripImages(content),
         ].join("\n\n");
 
+        console.log("DEBUG");
+
         const response = await extra.ideMessenger.request("edit/sendPrompt", {
           prompt,
           range: codeToEdit[0] as RangeInFileWithContents,
         });
+
+        throw new Error("DEBUG"); // TODO: remove
 
         dispatch(setInactive());
 
