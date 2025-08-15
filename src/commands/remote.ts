@@ -6,6 +6,7 @@ import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
 import { getRepoUrl } from "../util/git.js";
 import { logger } from "../util/logger.js";
+import { readStdinSync } from "../util/stdin.js";
 
 export async function remote(
   prompt: string | undefined,
@@ -16,6 +17,22 @@ export async function remote(
     branch?: string;
   } = {},
 ) {
+  // Check if prompt should come from stdin instead of parameter
+  let actualPrompt = prompt;
+  if (prompt) {
+    // If prompt is provided, still check for stdin and combine them
+    const stdinInput = readStdinSync();
+    if (stdinInput) {
+      // Combine stdin and prompt argument - stdin comes first in XML block
+      actualPrompt = `<stdin>\n${stdinInput}\n</stdin>\n\n${prompt}`;
+    }
+  } else {
+    // Try to read from stdin (for piped input like: echo "hello" | cn remote -s)
+    const stdinInput = readStdinSync();
+    if (stdinInput) {
+      actualPrompt = stdinInput;
+    }
+  }
   // If --url is provided, connect directly to that URL
   if (options.url) {
     if (options.start) {
@@ -41,7 +58,7 @@ export async function remote(
 
     try {
       // Start the TUI in remote mode
-      await startRemoteTUIChat(options.url, prompt);
+      await startRemoteTUIChat(options.url, actualPrompt);
     } finally {
       telemetryService.stopActiveTime();
     }
@@ -64,7 +81,7 @@ export async function remote(
     const requestBody: any = {
       repoUrl: getRepoUrl(),
       name: `devbox-${Date.now()}`,
-      prompt: prompt,
+      prompt: actualPrompt,
       idempotencyKey: options.idempotencyKey,
     };
 
@@ -123,7 +140,7 @@ export async function remote(
 
       try {
         // Start the TUI in remote mode (prompt is optional)
-        await startRemoteTUIChat(remoteUrl, prompt);
+        await startRemoteTUIChat(remoteUrl, actualPrompt);
       } finally {
         telemetryService.stopActiveTime();
       }

@@ -170,7 +170,7 @@ describe("editTool", () => {
 
       const result = await editTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath}`);
+      expect(result).toBe(`Successfully edited ${testFilePath}\nDiff:\nmocked diff`);
       expect(fs.writeFileSync).toHaveBeenCalledWith(testFilePath, newContent, "utf-8");
     });
 
