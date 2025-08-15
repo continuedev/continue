@@ -58,29 +58,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
-      - name: Cache build output
+      - name: Install Continue CLI globally
         if: steps.check-mention.outputs.contains_mention == 'true'
-        id: cache-build
-        uses: actions/cache@v4
-        with:
-          path: |
-            dist/
-            node_modules/
-          key: ${{ runner.os }}-build-${{ hashFiles('package-lock.json', 'src/**/*', 'tsconfig*.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-
-      - name: Install dependencies and build CLI
-        if: steps.check-mention.outputs.contains_mention == 'true' && steps.cache-build.outputs.cache-hit != 'true'
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install dependencies only (cache hit)
-        if: steps.check-mention.outputs.contains_mention == 'true' && steps.cache-build.outputs.cache-hit == 'true'
-        run: npm ci --prefer-offline
+        run: npm i -g @continuedev/cli
 
       - name: Start remote session
         if: steps.check-mention.outputs.contains_mention == 'true'
@@ -96,7 +77,7 @@ jobs:
           Please analyze the current PR, understand the request, implement the necessary changes, and commit them to this branch."
 
           # Start remote session and capture JSON output
-          SESSION_OUTPUT=$(node dist/index.js remote -s "$PROMPT")
+          SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --branch ${{ steps.pr-info.outputs.head_ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output
