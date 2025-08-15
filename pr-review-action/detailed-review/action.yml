@@ -197,7 +197,7 @@ runs:
         echo "===== END REVIEW PROMPT ====="
 
         # Run the CLI and capture JSON output
-        cat inline_review_prompt.txt | cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p > inline_review_raw.json
+        cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p "$(cat inline_review_prompt.txt)" > inline_review_raw.json
 
         # Log the output for debugging
         echo "Initial Continue CLI output:"
