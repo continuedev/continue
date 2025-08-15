@@ -50,7 +50,7 @@ jobs:
         run: |
           RELEASE_TYPE="${{ inputs.release_type || 'promote-beta' }}"
           echo "Release type: $RELEASE_TYPE"
-          
+
           if [[ "$RELEASE_TYPE" == "direct-stable" ]]; then
             if [[ -z "${{ inputs.stable_version }}" ]]; then
               echo "Error: stable_version is required for direct-stable release type"
@@ -143,7 +143,7 @@ jobs:
         run: |
           # Install dependencies for direct build
           npm ci
-          
+
           # Update version to the specified stable version
           npm version ${{ inputs.stable_version }} --no-git-tag-version
 
