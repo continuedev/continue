@@ -5,6 +5,7 @@ import com.intellij.util.net.HttpConfigurable
 data class ProxySettings(
     val enabled: Boolean,
     val proxy: String,
+    val noProxy: String,
 ) {
 
     companion object {
@@ -12,7 +13,8 @@ data class ProxySettings(
             val settings = HttpConfigurable.getInstance()
             return ProxySettings(
                 enabled = settings.USE_HTTP_PROXY,
-                proxy = "${settings.PROXY_HOST}:${settings.PROXY_PORT}"
+                proxy = "${settings.PROXY_HOST}:${settings.PROXY_PORT}",
+                noProxy = settings.PROXY_EXCEPTIONS,
             )
         }
     }
