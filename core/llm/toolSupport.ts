@@ -329,7 +329,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     novita: (model) => {
       const lower = model.toLowerCase();
-      
+
       // Exact match models
       const exactMatches = [
         "deepseek/deepseek-r1-0528",
@@ -341,23 +341,20 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "zai-org/glm-4.5",
         "moonshotai/kimi-k2-instruct",
       ];
-      
+
       if (exactMatches.includes(lower)) {
         return true;
       }
-      
+
       // Prefix match models
-      const prefixMatches = [
-        "qwen/qwen3",
-        "openai/gpt-oss",
-      ];
-      
+      const prefixMatches = ["qwen/qwen3", "openai/gpt-oss"];
+
       for (const prefix of prefixMatches) {
         if (lower.startsWith(prefix)) {
           return true;
         }
       }
-      
+
       return false;
     },
   };
