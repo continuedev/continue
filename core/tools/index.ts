@@ -11,7 +11,6 @@ const getBaseToolDefinitions = () => [
   toolDefinitions.createNewFileTool,
   toolDefinitions.runTerminalCommandTool,
   toolDefinitions.globSearchTool,
-  toolDefinitions.searchWebTool,
   toolDefinitions.viewDiffTool,
   toolDefinitions.readCurrentlyOpenFileTool,
   toolDefinitions.lsTool,
@@ -27,6 +26,8 @@ export const getConfigDependentToolDefinitions = (
   toolDefinitions.searchAndReplaceInFileTool,
   // Keep edit file tool available for models that need it
   toolDefinitions.editFileTool,
+  // Web search is only available for signed-in users
+  ...(params.isSignedIn ? [toolDefinitions.searchWebTool] : []),
   ...(params.enableExperimentalTools
     ? [
         toolDefinitions.viewRepoMapTool,
