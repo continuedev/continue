@@ -19,10 +19,12 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
-import java.awt.BorderLayout
+import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
+import java.awt.geom.RoundRectangle2D
 import javax.swing.*
+import javax.swing.border.AbstractBorder
 
 @Service(Service.Level.PROJECT)
 class NextEditWindowManager(private val project: Project) {
@@ -131,14 +133,14 @@ class NextEditWindowManager(private val project: Project) {
         val popupComponent = createNextEditPopupComponent(code, diffLines, onAction)
 
         val popup = JBPopupFactory.getInstance()
-            .createComponentPopupBuilder(popupComponent, popupComponent) // Set focus component
+            .createComponentPopupBuilder(popupComponent, popupComponent)
             .setFocusable(true)
             .setRequestFocus(true)
             .setResizable(false)
             .setMovable(false)
             .setCancelOnClickOutside(false)
             .setCancelOnWindowDeactivation(false)
-            .setCancelKeyEnabled(false) // Disable default Esc handling to use our custom one
+            .setCancelKeyEnabled(false)
             .setCancelCallback {
                 onAction(PopupAction.REJECT)
                 true
@@ -157,6 +159,34 @@ class NextEditWindowManager(private val project: Project) {
                 javax.swing.SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
 
                 popup.showInScreenCoordinates(editorComponent, screenPoint)
+
+                // Add ONLY the popup content border with rounded corners
+                val content = popup.content
+                if (content is JComponent) {
+                    content.border = object : AbstractBorder() {
+                        override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+                            val g2 = g.create() as Graphics2D
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+                            val arc = 6f
+                            g2.color = Color(0x999998)
+                            g2.stroke = BasicStroke(1f)
+                            g2.draw(
+                                RoundRectangle2D.Float(
+                                    x.toFloat(),
+                                    y.toFloat(),
+                                    width.toFloat() - 1f,
+                                    height.toFloat() - 1f,
+                                    arc,
+                                    arc
+                                )
+                            )
+                            g2.dispose()
+                        }
+
+                        override fun getBorderInsets(c: Component): Insets = JBUI.insets(1)
+                    }
+                }
 
                 // Force focus after popup is shown
                 ApplicationManager.getApplication().invokeLater {
@@ -179,8 +209,10 @@ class NextEditWindowManager(private val project: Project) {
     ): JComponent {
         val panel = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
-            border = JBUI.Borders.empty(8)
+//            border = JBUI.Borders.empty(8, 12)
+            border = null
             background = EditorColorsManager.getInstance().globalScheme.defaultBackground
+            // No custom paintComponent - just use regular panel
         }
 
         // Create syntax-highlighted code display
@@ -192,6 +224,7 @@ class NextEditWindowManager(private val project: Project) {
 
         return panel
     }
+
 
     private fun createCodeDisplayPanel(code: String, diffLines: List<DiffLine>): JComponent {
         val scheme = EditorColorsManager.getInstance().globalScheme
@@ -210,10 +243,13 @@ class NextEditWindowManager(private val project: Project) {
         val panel = JBPanel<JBPanel<*>>().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             background = scheme.defaultBackground
-            border = JBUI.Borders.compound(
-                JBUI.Borders.customLine(JBColor.border()),
-                JBUI.Borders.empty(4)
-            )
+//            border = JBUI.Borders.compound(
+//                JBUI.Borders.customLine(JBColor.border()),
+//                JBUI.Borders.empty()
+//            )
+//            border =
+//                JBUI.Borders.customLine(JBColor.border()) // Remove the compound border entirely, just keep the line
+            border = null
         }
 
         var maxWidth = 0
@@ -270,11 +306,12 @@ class NextEditWindowManager(private val project: Project) {
         val borderInsets = panel.border?.getBorderInsets(panel) ?: java.awt.Insets(0, 0, 0, 0)
 
         // Use the actual measured max width plus some padding
-        val contentWidth = maxWidth + borderInsets.left + borderInsets.right + 24 // More padding for HTML rendering
-
+//        val contentWidth = maxWidth + borderInsets.left + borderInsets.right + 24 // More padding for HTML rendering
+        val contentWidth = maxWidth
         // Calculate height based on actual label heights
         val totalLabelHeight = labels.sumOf { it.preferredSize.height }
-        val contentHeight = totalLabelHeight + borderInsets.top + borderInsets.bottom + 16
+//        val contentHeight = totalLabelHeight + borderInsets.top + borderInsets.bottom
+        val contentHeight = totalLabelHeight
 
         // Set reasonable bounds for the popup with generous sizing
 //        val maxPopupWidth = 1200  // Increased to accommodate longer lines
@@ -290,6 +327,10 @@ class NextEditWindowManager(private val project: Project) {
         return JScrollPane(panel).apply {
             border = null
             preferredSize = java.awt.Dimension(finalWidth, finalHeight)
+
+            // Remove any default margins/padding from JScrollPane
+            viewport.border = null
+            viewportBorder = null
 
             // Only show scrollbars when actually needed
             horizontalScrollBarPolicy = if (contentWidth > finalWidth) {
@@ -362,7 +403,7 @@ class NextEditWindowManager(private val project: Project) {
         )
 
         // Use div instead of pre for better control over spacing
-        return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:2px 4px; white-space:nowrap;'>$highlightedText</div></html>"
+        return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:0; white-space:nowrap;'>$highlightedText</div></html>"
     }
 
     private fun addKeyboardShortcuts(panel: JComponent, onAction: (PopupAction) -> Unit) {
