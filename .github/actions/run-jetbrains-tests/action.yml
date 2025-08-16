@@ -121,7 +121,7 @@ runs:
       run: |
         cd extensions/intellij
         export DISPLAY=:99.0
-        ./gradlew test
+        ./gradlew test --info --stacktrace
 
     - name: Move video
       if: ${{ failure() }}
