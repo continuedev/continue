@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 
+import { Logger } from "../../util/Logger.js";
 import type { IProtocol } from "../index";
 
 export interface Message<T = any> {
@@ -85,7 +86,19 @@ export class InProcessMessenger<
       data,
       messageId: messageId ?? uuidv4(),
     };
-    return listener(msg);
+
+    try {
+      return listener(msg);
+    } catch (error) {
+      // Capture message handling errors to Sentry
+      Logger.error(error, {
+        messageType: String(messageType),
+        messageId: msg.messageId,
+      });
+
+      // Re-throw the original error
+      throw error;
+    }
   }
 
   send<T extends keyof FromProtocol>(
@@ -119,12 +132,24 @@ export class InProcessMessenger<
     if (!listener) {
       throw new Error(`No handler for message type "${String(messageType)}"`);
     }
-    const response = await listener({
-      messageType: messageType as string,
-      data,
-      messageId,
-    });
-    return response;
+
+    try {
+      const response = await listener({
+        messageType: messageType as string,
+        data,
+        messageId,
+      });
+      return response;
+    } catch (error) {
+      // Capture message handling errors to Sentry
+      Logger.error(error, {
+        messageType: String(messageType),
+        messageId,
+      });
+
+      // Re-throw the original error
+      throw error;
+    }
   }
 
   externalOn<T extends keyof FromProtocol>(
@@ -144,11 +169,23 @@ export class InProcessMessenger<
     if (!listener) {
       throw new Error(`No handler for message type "${String(messageType)}"`);
     }
-    const response = listener({
-      messageType: messageType as string,
-      data,
-      messageId,
-    });
-    return Promise.resolve(response);
+
+    try {
+      const response = listener({
+        messageType: messageType as string,
+        data,
+        messageId,
+      });
+      return Promise.resolve(response);
+    } catch (error) {
+      // Capture message handling errors to Sentry
+      Logger.error(error, {
+        messageType: String(messageType),
+        messageId,
+      });
+
+      // Re-throw the original error
+      throw error;
+    }
   }
 }

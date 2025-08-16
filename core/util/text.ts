@@ -44,3 +44,10 @@ export function kebabOfStr(str: string): string {
     .replace(/[\s_]+/g, "-") // replace spaces and underscores with hyphens
     .toLowerCase();
 }
+
+export function kebabOfThemeStr(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-") // replace spaces and underscores with hyphens
+    .replace(/\(|\)/g, ""); // remove parentheses
+}

@@ -90,7 +90,7 @@ export interface NextEditTemplate {
 
 export interface TemplateVars {}
 
-export interface Model1TemplateVars extends TemplateVars {
+export interface InstinctTemplateVars extends TemplateVars {
   contextSnippets: string;
   currentFileContent: string;
   editDiffHistory: string; // could be a singe large unified diff

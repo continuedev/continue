@@ -1,14 +1,27 @@
+import { NEXT_EDIT_MODELS } from "../llm/constants";
+
 export const IS_NEXT_EDIT_ACTIVE = false;
 export const NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN = 0;
 export const NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN = 5;
 
+export const MODEL_WINDOW_SIZES: Record<
+  NEXT_EDIT_MODELS,
+  { topMargin: number; bottomMargin: number }
+> = {
+  "mercury-coder-nextedit": {
+    topMargin: 0,
+    bottomMargin: 5,
+  }, // mercury coder nextedit uses full file diff, so this should be unnecessary
+  instinct: { topMargin: 1, bottomMargin: 5 },
+};
+
 // Model 1-specific tokens.
-export const MODEL_1_USER_CURSOR_IS_HERE_TOKEN = "<|user_cursor_is_here|>";
-export const MODEL_1_EDITABLE_REGION_START_TOKEN = "<|editable_region_start|>";
-export const MODEL_1_EDITABLE_REGION_END_TOKEN = "<|editable_region_end|>";
-export const MODEL_1_CONTEXT_FILE_TOKEN = "<|context_file|>";
-export const MODEL_1_SNIPPET_TOKEN = "<|snippet|>";
-export const MODEL_1_SYSTEM_PROMPT = `You are Instinct, an intelligent next-edit predictor developed by Continue.dev. Your role as an AI assistant is to help developers complete their code tasks by predicting the next edit that they will make within the section of code marked by <|editable_region_start|> and <|editable_region_end|> tags.
+export const INSTINCT_USER_CURSOR_IS_HERE_TOKEN = "<|user_cursor_is_here|>";
+export const INSTINCT_EDITABLE_REGION_START_TOKEN = "<|editable_region_start|>";
+export const INSTINCT_EDITABLE_REGION_END_TOKEN = "<|editable_region_end|>";
+export const INSTINCT_CONTEXT_FILE_TOKEN = "<|context_file|>";
+export const INSTINCT_SNIPPET_TOKEN = "<|snippet|>";
+export const INSTINCT_SYSTEM_PROMPT = `You are Instinct, an intelligent next-edit predictor developed by Continue.dev. Your role as an AI assistant is to help developers complete their code tasks by predicting the next edit that they will make within the section of code marked by <|editable_region_start|> and <|editable_region_end|> tags.
 
 You have access to the following information to help you make informed suggestions:
 
@@ -31,7 +44,7 @@ Your task is to predict and complete the changes the developer would have made n
 - Provide only the revised code within the tags. Do not include the tags in your output.
 - Ensure that you do not output duplicate code that exists outside of these tags.
 - Avoid undoing or reverting the developer's last change unless there are obvious typos or errors.`;
-export const MODEL_1_USER_PROMPT_PREFIX =
+export const INSTINCT_USER_PROMPT_PREFIX =
   "Reference the user excerpt, user edits, and the snippets to understand the developer's intent. Update the editable region of the user excerpt by predicting and completing the changes they would have made next. This may be a deletion, addition, or modification of code.";
 
 // Mercury Coder Next Edit-specific tokens.

@@ -669,17 +669,9 @@ export class NextEditWindowManager {
     const offsetFromTop =
       (position.line - editableRegionStartLine) * SVG_CONFIG.lineHeight;
 
-    // Set the margin-left so that it's never covering code inside the editable region.
-    const marginLeft =
-      SVG_CONFIG.getTipWidth(originalCode) -
-      SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]);
+    // Position the decoration with minimal left margin since it's already at line end
+    const marginLeft = SVG_CONFIG.paddingX; // Use consistent padding instead of complex calculation
 
-    // console.log(marginLeft);
-    // console.log(SVG_CONFIG.getTipWidth(originalCode));
-    // console.log(
-    //   SVG_CONFIG.getTipWidth(originalCode.split("\n")[currLineOffsetFromTop]),
-    // );
-    // console.log(originalCode.split("\n")[currLineOffsetFromTop]);
     return vscode.window.createTextEditorDecorationType({
       before: {
         contentIconPath: uri,
@@ -770,12 +762,16 @@ export class NextEditWindowManager {
   ): vscode.Position {
     // Create a position that's offset spaces to the right of the cursor.
 
+    // const line = editor.document.lineAt(position.line);
+    // const offsetChar = Math.min(
+    //   position.character + SVG_CONFIG.cursorOffset,
+    //   line.text.length,
+    // );
+    // return new vscode.Position(position.line, offsetChar);
+
+    // Place decoration at the end of the current line
     const line = editor.document.lineAt(position.line);
-    const offsetChar = Math.min(
-      position.character + SVG_CONFIG.cursorOffset,
-      line.text.length,
-    );
-    return new vscode.Position(position.line, offsetChar);
+    return new vscode.Position(position.line, line.text.length);
   }
 
   /**
