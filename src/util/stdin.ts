@@ -7,12 +7,17 @@ import * as fs from "fs";
 export function readStdinSync(): string | null {
   try {
     // In test environments, don't attempt to read stdin to avoid hanging
+    // But allow CI environments to read stdin when it's clearly piped
     if (
       process.env.NODE_ENV === "test" ||
       process.env.VITEST === "true" ||
-      process.env.JEST_WORKER_ID !== undefined ||
-      process.env.CI === "true"
+      process.env.JEST_WORKER_ID !== undefined
     ) {
+      return null;
+    }
+
+    // Special handling for CI environments - allow reading if stdin is clearly not a TTY
+    if (process.env.CI === "true" && process.stdin.isTTY === true) {
       return null;
     }
 
