@@ -93,11 +93,6 @@ describe("PosthogService Error Handling", () => {
     // Verify getClient was called but would return undefined due to disabled state
     expect(getClientSpy).toHaveBeenCalled();
 
-    // Yes, this is a real scenario - enterprise environments commonly have:
-    // - SSL certificate issues
-    // - Corporate firewalls blocking telemetry endpoints
-    // - Network connectivity issues to external services
-    // The test verifies that telemetry failures don't crash the CLI
     // Restore environment
     if (originalEnv === undefined) {
       delete process.env.CONTINUE_CLI_ENABLE_TELEMETRY;
