@@ -24,7 +24,7 @@ class AddLicenseKeyDialog(project: Project?) : DialogWrapper(project) {
                 textField().bindText(::licenseKey)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .focused()
-                    .validation {
+                    .validationOnApply {
                         if (it.text.isBlank())
                             ValidationInfo("License key cannot be empty")
                         else
