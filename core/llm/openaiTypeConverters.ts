@@ -12,7 +12,7 @@ import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
 
 export function toChatMessage(
   message: ChatMessage,
-): ChatCompletionMessageParam {
+): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
     return {
       role: "tool",
@@ -25,6 +25,9 @@ export function toChatMessage(
       role: "system",
       content: message.content,
     };
+  }
+  if (message.role === "thinking") {
+    return null;
   }
 
   if (message.role === "assistant") {
@@ -87,7 +90,9 @@ export function toChatBody(
   options: CompletionOptions,
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
-    messages: messages.map(toChatMessage),
+    messages: messages
+      .map(toChatMessage)
+      .filter((m) => m !== null) as ChatCompletionMessageParam[],
     model: options.model,
     max_tokens: options.maxTokens,
     temperature: options.temperature,
@@ -190,6 +195,11 @@ export function fromChatCompletionChunk(
           arguments: tool_call.function?.arguments,
         },
       })),
+    };
+  } else if ((delta as any)?.reasoning_content || (delta as any)?.reasoning) {
+    return {
+      role: "thinking",
+      content: (delta as any)?.reasoning_content || (delta as any)?.reasoning,
     };
   }
 
