@@ -199,6 +199,7 @@ export function handleStreamingToolCallUpdates(
   }
 }
 
+
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
@@ -606,42 +607,106 @@ export const sessionSlice = createSlice({
             lastMessage = lastItem.message;
           }
 
-          // Add to the existing message
-          if (messageContent) {
-            if (messageContent.includes("<think>")) {
+          // Convert OpenAI reasoning field to <think> tag format for unified handling
+          let processedMessageContent = messageContent;
+          let isOpenAIReasoning = false;
+          
+          if (message.role === "assistant" && "reasoning" in message) {
+            const reasoning = (message as AssistantChatMessage).reasoning;
+            if (reasoning !== undefined) {
+              isOpenAIReasoning = true;
+              if (messageContent) {
+                // Both reasoning and content - format as <think>reasoning</think>content
+                processedMessageContent = `<think>${reasoning}</think>${messageContent}`;
+              } else if (lastItem.reasoning?.active) {
+                // Already have active reasoning, just append the new reasoning content
+                processedMessageContent = reasoning;
+              } else {
+                // First reasoning chunk - format as <think>reasoning (still active)
+                // Mark this reasoning as OpenAI-originated
+                processedMessageContent = `<think>${reasoning}`;
+                // Store a marker that this reasoning came from OpenAI reasoning field
+                if (lastItem.reasoning) {
+                  (lastItem.reasoning as typeof lastItem.reasoning & {isOpenAIReasoning: boolean}).isOpenAIReasoning = true;
+                }
+              }
+            }
+          }
+
+          // Add to the existing message using the processed content
+          if (processedMessageContent) {
+            if (processedMessageContent.includes("<think>") && processedMessageContent.includes("</think>")) {
+              // Single message with complete reasoning - handle both parts
+              const thinkMatch = processedMessageContent.match(/<think>(.*?)<\/think>(.*)/s);
+              if (thinkMatch) {
+                lastItem.reasoning = {
+                  startAt: Date.now(),
+                  active: false,
+                  endAt: Date.now(),
+                  text: thinkMatch[1].trim(),
+                };
+                const afterThink = thinkMatch[2];
+                if (afterThink.trim().length > 0) {
+                  lastMessage.content += afterThink.trimStart();
+                }
+              }
+            } else if (processedMessageContent.includes("<think>")) {
               lastItem.reasoning = {
                 startAt: Date.now(),
                 active: true,
-                text: messageContent.replace("<think>", "").trim(),
+                text: processedMessageContent.replace("<think>", "").trim(),
+                isOpenAIReasoning: isOpenAIReasoning,
               };
+            } else if (processedMessageContent === "</think>") {
+              // Handle exact </think> message
+              lastItem.reasoning!.active = false;
+              lastItem.reasoning!.endAt = Date.now();
             } else if (
               lastItem.reasoning?.active &&
-              messageContent.includes("</think>")
+              processedMessageContent.includes("</think>")
             ) {
               const [reasoningEnd, answerStart] =
-                messageContent.split("</think>");
+                processedMessageContent.split("</think>");
               lastItem.reasoning.text += reasoningEnd.trimEnd();
               lastItem.reasoning.active = false;
               lastItem.reasoning.endAt = Date.now();
               lastMessage.content += answerStart.trimStart();
             } else if (lastItem.reasoning?.active) {
+              // Check if this is OpenAI reasoning ending (content without reasoning field)
               if (
-                lastItem.reasoning.text.length > 0 ||
-                messageContent.trim().length > 0
+                lastItem.reasoning.isOpenAIReasoning &&
+                message.role === "assistant" && 
+                messageContent && 
+                !("reasoning" in message) &&
+                !processedMessageContent.includes("<think>") &&
+                !processedMessageContent.includes("</think>")
               ) {
-                lastItem.reasoning.text += messageContent;
+                // This is OpenAI reasoning ending with content - end reasoning and add content
+                lastItem.reasoning.active = false;
+                lastItem.reasoning.endAt = Date.now();
+                lastMessage.content += processedMessageContent;
+              } else {
+                // Continue adding to active reasoning text (for <think> tags or continued OpenAI reasoning)
+                if (
+                  lastItem.reasoning.text.length > 0 ||
+                  processedMessageContent.trim().length > 0
+                ) {
+                  lastItem.reasoning.text += processedMessageContent;
+                }
               }
             } else {
               // Note this only works because new message above
               // was already rendered from parts to string
               if (
                 lastMessage.content.length > 0 ||
-                messageContent.trim().length > 0
+                processedMessageContent.trim().length > 0
               ) {
-                lastMessage.content += messageContent;
+                lastMessage.content += processedMessageContent;
               }
             }
-          } else if (message.role === "thinking" && message.signature) {
+          }
+
+          if (message.role === "thinking" && message.signature) {
             if (lastMessage.role === "thinking") {
               lastMessage.signature = message.signature;
             }

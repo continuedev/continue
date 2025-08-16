@@ -332,6 +332,7 @@ declare global {
     role: "assistant";
     content: MessageContent;
     toolCalls?: ToolCallDelta[];
+    reasoning?: string;
   }
   
   export interface SystemChatMessage {
