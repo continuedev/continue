@@ -11,7 +11,8 @@ export function readStdinSync(): string | null {
     if (
       process.env.NODE_ENV === "test" ||
       process.env.VITEST === "true" ||
-      process.env.JEST_WORKER_ID !== undefined
+      process.env.JEST_WORKER_ID !== undefined ||
+      process.env.CONTINUE_CLI_TEST === "true"
     ) {
       return null;
     }
