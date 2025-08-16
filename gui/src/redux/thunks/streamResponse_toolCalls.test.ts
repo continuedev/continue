@@ -130,9 +130,7 @@ function setupTest() {
           rerank: null,
           embed: null,
         },
-        experimental: {
-          onlyUseSystemMessageTools: false,
-        },
+        experimental: {},
       } as any,
       lastSelectedModelByRole: {
         chat: mockClaudeModel.title,
@@ -203,9 +201,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         } as any,
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -703,9 +699,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         },
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -788,9 +782,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         } as any,
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -1329,9 +1321,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         },
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -1414,9 +1404,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         } as any,
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -1963,9 +1951,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         },
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -2048,9 +2034,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         } as any,
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,
@@ -2906,9 +2890,7 @@ describe("streamResponseThunk - tool calls", () => {
             rerank: null,
             embed: null,
           },
-          experimental: {
-            onlyUseSystemMessageTools: false,
-          },
+          experimental: {},
         },
         lastSelectedModelByRole: {
           chat: mockClaudeModel.title,

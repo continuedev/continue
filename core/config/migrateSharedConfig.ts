@@ -130,6 +130,15 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
         effected = true;
       }
 
+      const { onlyUseSystemMessageTools, ...withoutOnlyUseSystemMessageTools } =
+        migratedExperimental as any;
+      if (onlyUseSystemMessageTools !== undefined) {
+        shareConfigUpdates.onlyUseSystemMessageTools =
+          onlyUseSystemMessageTools;
+        migratedExperimental = withoutOnlyUseSystemMessageTools;
+        effected = true;
+      }
+
       if (Object.keys(migratedExperimental).length > 0) {
         config = {
           ...withoutExperimental,
