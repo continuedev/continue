@@ -3,7 +3,7 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Tool } from "core";
-import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
+import { BUILT_IN_GROUP_NAME, HUB_TOOLS_GROUP_NAME } from "core/tools/builtIn";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Tooltip } from "react-tooltip";
@@ -28,6 +28,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
   );
   const [isExpanded, setIsExpanded] = useState(false);
   const mode = useAppSelector((state) => state.session.mode);
+  const hubToolsAccess = useAppSelector((store) => store.config.hubToolsAccess);
 
   useEffect(() => {
     if (!policy) {
@@ -47,8 +48,12 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
 
   const fontSize = useFontSize(-2);
 
+  const isHubTool = props.tool.group === HUB_TOOLS_GROUP_NAME;
+  const hubToolDisabled = isHubTool && !hubToolsAccess;
+
   const disabled =
     !props.isGroupEnabled ||
+    hubToolDisabled ||
     (mode === "plan" &&
       props.tool.group === BUILT_IN_GROUP_NAME &&
       !props.tool.readonly);
@@ -158,9 +163,11 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
         <Tooltip id={disabledTooltipId}>
           {mode === "chat"
             ? "Tool disabled in chat mode"
-            : !props.isGroupEnabled
-              ? "Group is turned off"
-              : "Tool disabled in plan mode"}
+            : hubToolDisabled
+              ? "Requires paid Continue Hub account"
+              : !props.isGroupEnabled
+                ? "Group is turned off"
+                : "Tool disabled in plan mode"}
         </Tooltip>
       </div>
       <div
