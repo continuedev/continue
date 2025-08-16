@@ -9,14 +9,15 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorColorsManager
-import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.markup.*
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import java.awt.*
@@ -130,7 +131,7 @@ class NextEditWindowManager(private val project: Project) {
         diffLines: List<DiffLine>,
         onAction: (PopupAction) -> Unit
     ) {
-        val popupComponent = createNextEditPopupComponent(code, diffLines, onAction)
+        val popupComponent = createNextEditPopupComponent(editor, code, diffLines, onAction)
 
         val popup = JBPopupFactory.getInstance()
             .createComponentPopupBuilder(popupComponent, popupComponent)
@@ -203,6 +204,7 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     private fun createNextEditPopupComponent(
+        editor: Editor,
         code: String,
         diffLines: List<DiffLine>,
         onAction: (PopupAction) -> Unit
@@ -216,7 +218,7 @@ class NextEditWindowManager(private val project: Project) {
         }
 
         // Create syntax-highlighted code display
-        val codePanel = createCodeDisplayPanel(code, diffLines)
+        val codePanel = createCodeDisplayPanel(editor, code, diffLines)
         panel.add(codePanel, BorderLayout.CENTER)
 
         // Add keyboard shortcuts
@@ -225,142 +227,315 @@ class NextEditWindowManager(private val project: Project) {
         return panel
     }
 
+    private fun getActualFontSizeFromEditor(editor: Editor): Int {
+        try {
+            val component = editor.contentComponent
+            val font = component.font
+            val graphics = component.graphics
 
-    private fun createCodeDisplayPanel(code: String, diffLines: List<DiffLine>): JComponent {
-        val scheme = EditorColorsManager.getInstance().globalScheme
+            if (graphics != null) {
+                val fontMetrics = graphics.getFontMetrics(font)
+                val height = fontMetrics.height
+                val ascent = fontMetrics.ascent
 
-        // Use the editor's actual font settings
-        val editorFont = scheme.getFont(EditorFontType.PLAIN)
-        val fontSize = scheme.editorFontSize
-        val actualFont = editorFont.deriveFont(fontSize.toFloat())
+                // Check for DPI scaling
+                val scale = JBUI.scale(1f)
+                println("DEBUG: UI scale factor: $scale")
+                println("DEBUG: FontMetrics - height: $height, ascent: $ascent")
+                println("DEBUG: Font size from font object: ${font.size}")
 
-        // Get line spacing from editor settings
-        val lineSpacing = scheme.lineSpacing
-        val fontMetrics = java.awt.Toolkit.getDefaultToolkit().getFontMetrics(actualFont)
-        val baseLineHeight = fontMetrics.height
-        val actualLineHeight = (baseLineHeight * lineSpacing).toInt()
-
-        val panel = JBPanel<JBPanel<*>>().apply {
-            layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            background = scheme.defaultBackground
-//            border = JBUI.Borders.compound(
-//                JBUI.Borders.customLine(JBColor.border()),
-//                JBUI.Borders.empty()
-//            )
-//            border =
-//                JBUI.Borders.customLine(JBColor.border()) // Remove the compound border entirely, just keep the line
-            border = null
-        }
-
-        var maxWidth = 0
-
-        // Filter out old lines and process only new and same lines from diffLines
-        val visibleDiffLines = diffLines.filter { it.type != "old" }
-
-        // Create all labels first to measure them properly
-        val labels = mutableListOf<JBLabel>()
-
-        visibleDiffLines.forEach { diffLine ->
-            val displayText = diffLine.line.ifEmpty { " " }
-
-            // Create HTML content for basic syntax highlighting
-            val htmlContent = createBasicHighlightedHtml(displayText, actualFont)
-
-            val label = JBLabel(htmlContent).apply {
-                font = actualFont
-                isOpaque = true
-
-                when (diffLine.type) {
-                    "new" -> {
-                        // Highlight new additions
-                        background = JBColor(0x2D4A2D, 0x2D4A2D) // Darker green
-                        foreground = scheme.defaultForeground
-                    }
-
-                    else -> { // "same" or any other type
-                        // Regular unchanged lines
-                        background = scheme.defaultBackground
-                        foreground = scheme.defaultForeground
-                    }
+                // Adjust for DPI scaling
+                val adjustedFontSize = if (scale > 1f) {
+                    (font.size / scale).toInt()
+                } else {
+                    font.size
                 }
 
-                // Match editor's text rendering
-                alignmentX = JComponent.LEFT_ALIGNMENT
+                println("DEBUG: Adjusted font size: $adjustedFontSize")
+
+                return adjustedFontSize
             }
 
-            // Let the label calculate its own preferred size based on HTML content
-            val labelPreferredSize = label.preferredSize
-            maxWidth = maxOf(maxWidth, labelPreferredSize.width)
-
-            // Set consistent height based on editor line height, but allow for HTML rendering
-            val adjustedLineHeight = maxOf(actualLineHeight, labelPreferredSize.height)
-            label.preferredSize = java.awt.Dimension(labelPreferredSize.width, adjustedLineHeight)
-            label.maximumSize = java.awt.Dimension(Int.MAX_VALUE, adjustedLineHeight)
-
-            labels.add(label)
-            panel.add(label)
+        } catch (e: Exception) {
+            println("DEBUG: Error getting font size: ${e.message}")
         }
 
-        // Calculate dimensions based on actual label measurements
-        val visibleLineCount = visibleDiffLines.size
-        val borderInsets = panel.border?.getBorderInsets(panel) ?: java.awt.Insets(0, 0, 0, 0)
+        return 13
+    }
 
-        // Use the actual measured max width plus some padding
-//        val contentWidth = maxWidth + borderInsets.left + borderInsets.right + 24 // More padding for HTML rendering
-        val contentWidth = maxWidth
-        // Calculate height based on actual label heights
-        val totalLabelHeight = labels.sumOf { it.preferredSize.height }
-//        val contentHeight = totalLabelHeight + borderInsets.top + borderInsets.bottom
-        val contentHeight = totalLabelHeight
+    private fun createCodeDisplayPanel(editor: Editor, code: String, diffLines: List<DiffLine>): JComponent {
+        println("DEBUG: createCodeDisplayPanel - START")
 
-        // Set reasonable bounds for the popup with generous sizing
-//        val maxPopupWidth = 1200  // Increased to accommodate longer lines
-//        val maxPopupHeight = 800  // Increased to show more content
-//        val minPopupWidth = 500   // Increased minimum width
-//        val minPopupHeight = maxOf(actualLineHeight * 2, 100) // Minimum 2 lines
+        try {
+            val scheme = EditorColorsManager.getInstance().globalScheme
+            val editorFont = editor.colorsScheme.getFont(com.intellij.openapi.editor.colors.EditorFontType.PLAIN)
 
-//        val finalWidth = minOf(maxPopupWidth, maxOf(minPopupWidth, contentWidth))
-//        val finalHeight = minOf(maxPopupHeight, maxOf(minPopupHeight, contentHeight))
-        val finalWidth = contentWidth
-        val finalHeight = contentHeight
+            // Get the actual font size accounting for DPI scaling
+            val actualFontSize = getActualFontSizeFromEditor(editor)
+            val fontFamily = editorFont.family
 
-        return JScrollPane(panel).apply {
-            border = null
-            preferredSize = java.awt.Dimension(finalWidth, finalHeight)
+            // Also get the line height from editor for consistent spacing
+            val editorLineHeight = editor.lineHeight
+            val uiScale = JBUI.scale(1f)
+//            val adjustedLineHeight = if (uiScale > 1f) (editorLineHeight / uiScale).toInt() else editorLineHeight
 
-            // Remove any default margins/padding from JScrollPane
-            viewport.border = null
-            viewportBorder = null
+            val adjustedLineHeight = actualFontSize
 
-            // Only show scrollbars when actually needed
-            horizontalScrollBarPolicy = if (contentWidth > finalWidth) {
-                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
-            } else {
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+            println("DEBUG: Using font size: $actualFontSize")
+            println("DEBUG: Editor line height: $editorLineHeight, adjusted: $adjustedLineHeight")
+            println("DEBUG: UI scale: $uiScale")
+
+            // Get file type for proper syntax highlighting
+            val fileType = getCurrentFileType(editor)
+
+            // Create panel with proper layout
+            val panel = JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                background = scheme.defaultBackground
+                border = null
+                isOpaque = true
             }
 
-            verticalScrollBarPolicy = if (contentHeight > finalHeight) {
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+            val visibleLines = diffLines.filter { it.type != "old" }
+            val linesToDisplay = if (visibleLines.isEmpty()) {
+                if (code.isNotEmpty()) {
+                    code.split("\n").map { DiffLine(type = "new", line = it) }
+                } else {
+                    listOf(DiffLine(type = "new", line = " "))
+                }
             } else {
-                JScrollPane.VERTICAL_SCROLLBAR_NEVER
+                visibleLines
             }
 
-            // Use editor's background color
-            viewport.background = scheme.defaultBackground
-            background = scheme.defaultBackground
+            var maxWidth = 200
 
-            // Smooth scrolling like in editor
-            viewport.scrollMode = javax.swing.JViewport.BACKINGSTORE_SCROLL_MODE
+            // Create syntax-highlighted labels for each line
+            linesToDisplay.forEach { diffLine ->
+                val displayText = if (diffLine.line.isEmpty()) " " else diffLine.line
 
-            // Match editor's scroll unit - use actual line height from labels
-            val averageLineHeight = if (labels.isNotEmpty()) {
-                labels.sumOf { it.preferredSize.height } / labels.size
-            } else {
-                actualLineHeight
+                val backgroundColor = when (diffLine.type) {
+                    "new" -> JBColor(0x2D4A2D, 0x2D4A2D)
+                    "same" -> scheme.defaultBackground
+                    else -> scheme.defaultBackground
+                }
+
+                val highlightedHtml = createSyntaxHighlightedHtml(
+                    displayText,
+                    fileType,
+                    scheme,
+                    fontFamily,
+                    actualFontSize,
+                    adjustedLineHeight, // Pass the adjusted line height
+                    backgroundColor
+                )
+
+                val label = JLabel(highlightedHtml).apply {
+                    background = backgroundColor
+                    isOpaque = true
+                    border = JBUI.Borders.empty(1, 6)
+                    alignmentX = Component.LEFT_ALIGNMENT
+
+                    // Create font with correct size
+                    font = Font(fontFamily, editorFont.style, actualFontSize)
+                }
+
+                maxWidth = maxOf(maxWidth, label.preferredSize.width + 12)
+                panel.add(label)
             }
-            verticalScrollBar.unitIncrement = averageLineHeight
-            horizontalScrollBar.unitIncrement = fontMetrics.charWidth(' ') * 4
+
+            panel.revalidate()
+            val contentHeight = maxOf(panel.preferredSize.height, 20)
+
+            return JScrollPane(panel).apply {
+                border = null
+                preferredSize = Dimension(maxWidth, contentHeight)
+                minimumSize = Dimension(200, 20)
+                maximumSize = Dimension(800, 300)
+                horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+                verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+                viewport.background = scheme.defaultBackground
+                background = scheme.defaultBackground
+            }
+
+        } catch (e: Exception) {
+            println("ERROR: createCodeDisplayPanel failed: ${e.message}")
+            e.printStackTrace()
+            return JLabel("Code preview unavailable").apply {
+                border = JBUI.Borders.empty(10)
+            }
         }
+    }
+
+    private fun createSyntaxHighlightedHtml(
+        text: String,
+        fileType: FileType,
+        scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
+        fontFamily: String,
+        fontSize: Int,
+        lineHeight: Int,
+        backgroundColor: Color
+    ): String {
+        // Convert background color to hex
+        val backgroundHex =
+            String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
+
+        println("DEBUG: HTML font - Family: $fontFamily, Size: ${fontSize}px, LineHeight: ${lineHeight}px")
+
+        if (text.trim().isEmpty()) {
+            return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
+                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; background-color:$backgroundHex;'>&nbsp;</div>" +
+                    "</body></html>"
+        }
+
+        try {
+            // Get the syntax highlighter for the file type
+            val syntaxHighlighter =
+                com.intellij.openapi.fileTypes.SyntaxHighlighterFactory.getSyntaxHighlighter(fileType, project, null)
+                    ?: return createBasicHtml(
+                        text,
+                        fontFamily,
+                        fontSize,
+                        lineHeight,
+                        scheme,
+                        backgroundColor
+                    ) // Updated call
+
+            val lexer = syntaxHighlighter.highlightingLexer
+            lexer.start(text)
+
+            val highlightedText = StringBuilder()
+            var lastOffset = 0
+
+            while (lexer.tokenType != null) {
+                val tokenStart = lexer.tokenStart
+                val tokenEnd = lexer.tokenEnd
+                val tokenType = lexer.tokenType
+                val tokenText = text.substring(tokenStart, tokenEnd)
+
+                // Add any text between tokens
+                if (tokenStart > lastOffset) {
+                    val defaultColor = scheme.defaultForeground
+                    val defaultColorHex =
+                        String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
+                    highlightedText.append(
+                        "<span style='color:$defaultColorHex'>${
+                            escapeHtml(
+                                text.substring(
+                                    lastOffset,
+                                    tokenStart
+                                )
+                            )
+                        }</span>"
+                    )
+                }
+
+                // Get TextAttributesKey from the syntax highlighter
+                val textAttributesKeys = syntaxHighlighter.getTokenHighlights(tokenType)
+
+                if (textAttributesKeys.isNotEmpty()) {
+                    // Use the first (most specific) attributes key
+                    val textAttributes = scheme.getAttributes(textAttributesKeys[0])
+                    val color = textAttributes?.foregroundColor ?: scheme.defaultForeground
+
+                    val colorHex = String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+
+                    var styledToken = "<span style='color:$colorHex"
+
+                    // Add font style if needed
+                    if (textAttributes != null && textAttributes.fontType != 0) {
+                        if (textAttributes.fontType and Font.BOLD != 0) {
+                            styledToken += "; font-weight:bold"
+                        }
+                        if (textAttributes.fontType and Font.ITALIC != 0) {
+                            styledToken += "; font-style:italic"
+                        }
+                    }
+
+                    styledToken += "'>${escapeHtml(tokenText)}</span>"
+                    highlightedText.append(styledToken)
+                } else {
+                    // No specific highlighting, use default color
+                    val defaultColor = scheme.defaultForeground
+                    val defaultColorHex =
+                        String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
+                    highlightedText.append("<span style='color:$defaultColorHex'>${escapeHtml(tokenText)}</span>")
+                }
+
+                lastOffset = tokenEnd
+                lexer.advance()
+            }
+
+            // Add any remaining text
+            if (lastOffset < text.length) {
+                val defaultColor = scheme.defaultForeground
+                val defaultColorHex =
+                    String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
+                highlightedText.append("<span style='color:$defaultColorHex'>${escapeHtml(text.substring(lastOffset))}</span>")
+            }
+
+            val toReturn = "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
+                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; background-color:$backgroundHex;'>$highlightedText</div>" +
+                    "</body></html>"
+            return toReturn
+
+        } catch (e: Exception) {
+            println("DEBUG: Syntax highlighting failed: ${e.message}")
+            return createBasicHtml(text, fontFamily, fontSize, lineHeight, scheme, backgroundColor) // Updated call
+        }
+    }
+
+    private fun createBasicHtml(
+        text: String,
+        fontFamily: String,
+        fontSize: Int,
+        lineHeight: Int, // Added lineHeight parameter
+        scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
+        backgroundColor: Color
+    ): String {
+        val foregroundColor = scheme.defaultForeground
+        val foregroundHex =
+            String.format("#%02x%02x%02x", foregroundColor.red, foregroundColor.green, foregroundColor.blue)
+        val backgroundHex =
+            String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
+
+        return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
+                "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; color:$foregroundHex; background-color:$backgroundHex;'>${
+                    escapeHtml(
+                        text
+                    )
+                }</div>" +
+                "</body></html>"
+    }
+
+    private fun escapeHtml(text: String): String {
+        return text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#x27;")
+            .replace(" ", "&nbsp;")
+            .replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
+    }
+
+    // Then update getCurrentFileType to use it
+    private fun getCurrentFileType(editor: Editor): FileType {
+        // Method 1: Use the current editor's virtual file (most reliable)
+        val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+        virtualFile?.let { file ->
+            return file.fileType
+        }
+
+        // Method 2: Try to get from FileEditorManager
+        val fileEditorManager = com.intellij.openapi.fileEditor.FileEditorManager.getInstance(project)
+        val currentFile = fileEditorManager.selectedFiles.firstOrNull()
+
+        currentFile?.let { file ->
+            return file.fileType
+        }
+
+        // Method 3: Fallback to plain text
+        return FileTypeManager.getInstance().getFileTypeByExtension("txt")
     }
 
     private fun createBasicHighlightedHtml(text: String, font: java.awt.Font): String {
