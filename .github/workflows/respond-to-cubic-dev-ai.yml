@@ -170,7 +170,7 @@ jobs:
           # Debug output
           echo "PROMPT content:"
           cat /tmp/prompt.txt
-          
+
           # Start remote session and capture JSON output
           echo "Starting cn with prompt..."
           SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --branch ${{ github.event.pull_request.head.ref }})
@@ -195,7 +195,7 @@ jobs:
             const line = ${{ github.event.comment.line || 'null' }};
             const originalLine = ${{ github.event.comment.original_line || 'null' }};
             const lineDisplay = line || originalLine || 'N/A';
-            
+
             const commentBody = `I've started a remote session to help with your code review comment:
             > ${{ github.event.comment.body }}
 
