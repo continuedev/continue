@@ -46,7 +46,8 @@
                   "features/autocomplete/how-it-works",
                   "features/autocomplete/model-setup",
                   "features/autocomplete/how-to-customize",
-                  "features/autocomplete/context-selection"
+                  "features/autocomplete/context-selection",
+                  "features/autocomplete/next-edit"
                 ]
               },
               {
