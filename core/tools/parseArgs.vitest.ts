@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ToolCallDelta } from "..";
 import {
   getBooleanArg,
+  getNumberArg,
   getOptionalStringArg,
   getStringArg,
   safeParseToolCallArgs,
@@ -243,6 +244,89 @@ describe("getBooleanArg", () => {
     );
     expect(() => getBooleanArg(undefined, "flag", true)).toThrowError(
       "Argument `flag` is required (type boolean)",
+    );
+  });
+});
+
+describe("getNumberArg", () => {
+  it("should return number argument when valid", () => {
+    const args = { count: 42 };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(42);
+  });
+
+  it("should parse string numbers", () => {
+    const args = { count: "42" };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(42);
+  });
+
+  it("should floor decimal numbers", () => {
+    const args = { count: 42.7 };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(42);
+  });
+
+  it("should parse and floor string decimal numbers", () => {
+    const args = { count: "42.7" };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(42);
+  });
+
+  it("should throw error when argument is missing", () => {
+    const args = { otherArg: 42 };
+    expect(() => getNumberArg(args, "count")).toThrowError(
+      "Argument `count` is required (type number)",
+    );
+  });
+
+  it("should throw error when argument is not a number", () => {
+    const argsString = { count: "not-a-number" };
+    const argsBoolean = { count: true };
+    const argsObject = { count: {} };
+
+    expect(() => getNumberArg(argsString, "count")).toThrowError(
+      "Argument `count` must be a valid number",
+    );
+    expect(() => getNumberArg(argsBoolean, "count")).toThrowError(
+      "Argument `count` must be a valid number",
+    );
+    expect(() => getNumberArg(argsObject, "count")).toThrowError(
+      "Argument `count` must be a valid number",
+    );
+  });
+
+  it("should throw error when argument is NaN", () => {
+    const args = { count: NaN };
+    expect(() => getNumberArg(args, "count")).toThrowError(
+      "Argument `count` must be a valid number",
+    );
+  });
+
+  it("should handle negative numbers", () => {
+    const args = { count: -5 };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(-5);
+  });
+
+  it("should handle negative string numbers", () => {
+    const args = { count: "-10" };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(-10);
+  });
+
+  it("should handle zero", () => {
+    const args = { count: 0 };
+    const result = getNumberArg(args, "count");
+    expect(result).toBe(0);
+  });
+
+  it("should handle null or undefined args", () => {
+    expect(() => getNumberArg(null, "count")).toThrowError(
+      "Argument `count` is required (type number)",
+    );
+    expect(() => getNumberArg(undefined, "count")).toThrowError(
+      "Argument `count` is required (type number)",
     );
   });
 });
