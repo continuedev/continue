@@ -166,6 +166,7 @@ jobs:
           Please analyze the specific file and line mentioned, understand the review feedback, implement the necessary changes, and commit them to this branch."
 
           # Start remote session and capture JSON output
+          echo "Starting cn with prompt: $PROMPT"
           SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --branch ${{ github.event.pull_request.head.ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
