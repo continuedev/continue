@@ -86,7 +86,7 @@ export class ApplyManager {
     } finally {
       await this.webviewProtocol.request("updateApplyState", {
         streamId,
-        status: "closed",
+        status: "done",
         toolCallId,
       });
     }
