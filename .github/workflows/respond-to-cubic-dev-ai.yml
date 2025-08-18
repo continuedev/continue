@@ -192,16 +192,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const line = ${{ github.event.comment.line || 'null' }};
-            const originalLine = ${{ github.event.comment.original_line || 'null' }};
-            const lineDisplay = line || originalLine || 'N/A';
-
             const commentBody = `I've started a remote session to help with your code review comment:
             > ${{ github.event.comment.body }}
 
             **📁 File:** \`${{ github.event.comment.path }}\`
-            **📍 Line:** ${lineDisplay}
-            **🔗 Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
+            ** Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
 
             const commentParams = {
               owner: context.repo.owner,
@@ -209,15 +204,9 @@ jobs:
               pull_number: ${{ github.event.pull_request.number }},
               body: commentBody,
               commit_id: '${{ github.event.pull_request.head.sha }}',
-              path: '${{ github.event.comment.path }}'
+              path: '${{ github.event.comment.path }}',
+              in_reply_to: ${{ github.event.comment.id }}
             };
-
-            // Add line parameter only if it exists and is not null
-            if (line !== null) {
-              commentParams.line = line;
-            } else if (originalLine !== null) {
-              commentParams.original_line = originalLine;
-            }
 
             await github.rest.pulls.createReviewComment(commentParams);
 
