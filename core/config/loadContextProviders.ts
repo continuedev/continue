@@ -6,6 +6,7 @@ import { IContextProvider } from "..";
 import { contextProviderClassFromName } from "../context/providers";
 import CurrentFileContextProvider from "../context/providers/CurrentFileContextProvider";
 import DiffContextProvider from "../context/providers/DiffContextProvider";
+import DocsContextProvider from "../context/providers/DocsContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import ProblemsContextProvider from "../context/providers/ProblemsContextProvider";
 import RulesContextProvider from "../context/providers/RulesContextProvider";
@@ -16,12 +17,11 @@ import TerminalContextProvider from "../context/providers/TerminalContextProvide
     - default providers will always be loaded, using config params if present
     - other providers will be loaded if configured
 
-    Note:
-    - MCPContextProvider is added in doLoadConfig if any resources are present
-    - DocsContextProvider is added in doLoadConfig if docs configs are present and it hasn't been added yet
+    NOTE the MCPContextProvider is added in doLoadConfig if any resources are present
 */
 export function loadConfigContextProviders(
   configContext: AssistantUnrolledNonNullable["context"],
+  hasDocs: boolean,
 ): {
   providers: IContextProvider[];
   errors: ConfigValidationError[];
@@ -66,6 +66,10 @@ export function loadConfigContextProviders(
     ) {
       providers.push(defaultProvider);
     }
+  }
+
+  if (hasDocs && !providers?.some((cp) => cp.description.title === "docs")) {
+    providers.push(new DocsContextProvider({}));
   }
 
   return {

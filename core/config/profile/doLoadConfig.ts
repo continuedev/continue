@@ -21,7 +21,6 @@ import {
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
-import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
@@ -157,14 +156,6 @@ export default async function doLoadConfig(options: {
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
-
-  // Add docs provider if there are docs and no provider
-  if (
-    newConfig.docs?.length &&
-    !newConfig.contextProviders?.some((cp) => cp.description.title === "docs")
-  ) {
-    newConfig.contextProviders.push(new DocsContextProvider({}));
-  }
 
   const proxyContextProvider = newConfig.contextProviders?.find(
     (cp) => cp.description.title === "continue-proxy",

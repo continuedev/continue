@@ -392,6 +392,7 @@ async function intermediateToFinalConfig({
           provider: cp.name,
           params: cp.params,
         })),
+      !!config.docs?.length,
     );
 
   for (const cp of config.contextProviders ?? []) {
