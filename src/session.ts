@@ -243,3 +243,107 @@ export function hasSession(): boolean {
   const sessionFilePath = getSessionFilePath();
   return fs.existsSync(sessionFilePath);
 }
+
+/**
+ * Session metadata for listing sessions
+ */
+export interface SessionMetadata {
+  id: string;              // Session ID from filename
+  path: string;            // Full file path
+  timestamp: Date;         // Last modified or session timestamp
+  messageCount: number;    // Total messages in session
+  firstUserMessage?: string; // Preview of first user input
+}
+
+/**
+ * Get metadata from a session file
+ */
+function getSessionMetadata(filePath: string): SessionMetadata | null {
+  try {
+    const fileName = path.basename(filePath, '.json');
+    const stats = fs.statSync(filePath);
+    const sessionData = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    
+    const chatHistory = sessionData.chatHistory || [];
+    const messageCount = chatHistory.length;
+    
+    // Find the first user message
+    let firstUserMessage: string | undefined;
+    for (let i = 0; i < chatHistory.length; i++) {
+      if (chatHistory[i].role === 'user') {
+        firstUserMessage = chatHistory[i].content;
+        break;
+      }
+    }
+    
+    // Use session timestamp if available, otherwise file modification time
+    const timestamp = sessionData.timestamp 
+      ? new Date(sessionData.timestamp)
+      : stats.mtime;
+    
+    return {
+      id: fileName,
+      path: filePath,
+      timestamp,
+      messageCount,
+      firstUserMessage,
+    };
+  } catch (error) {
+    logger.error(`Error reading session file ${filePath}:`, error);
+    return null;
+  }
+}
+
+/**
+ * List all available sessions with metadata
+ */
+export function listSessions(limit: number = 10): SessionMetadata[] {
+  try {
+    const sessionDir = getSessionDir();
+    
+    if (!fs.existsSync(sessionDir)) {
+      return [];
+    }
+    
+    const files = fs.readdirSync(sessionDir)
+      .filter(file => file.endsWith('.json'))
+      .map(file => path.join(sessionDir, file));
+    
+    const sessions: SessionMetadata[] = [];
+    
+    for (const filePath of files) {
+      const metadata = getSessionMetadata(filePath);
+      if (metadata) {
+        sessions.push(metadata);
+      }
+    }
+    
+    // Sort by timestamp (most recent first) and limit results
+    return sessions
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  } catch (error) {
+    logger.error("Error listing sessions:", error);
+    return [];
+  }
+}
+
+/**
+ * Load chat history from a specific session file
+ */
+export function loadSessionById(sessionId: string): ChatCompletionMessageParam[] | null {
+  try {
+    const sessionDir = getSessionDir();
+    const sessionFilePath = path.join(sessionDir, `${sessionId}.json`);
+    
+    if (!fs.existsSync(sessionFilePath)) {
+      return null;
+    }
+    
+    const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
+    return sessionData.chatHistory || null;
+  } catch (error) {
+    logger.error("Error loading session by ID:", error);
+    return null;
+  }
+}
