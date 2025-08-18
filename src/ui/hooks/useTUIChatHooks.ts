@@ -7,7 +7,6 @@ import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 
 import { useConfigSelector } from "./useConfigSelector.js";
 import { useModelSelector } from "./useModelSelector.js";
-import { useOrganizationSelector } from "./useOrganizationSelector.js";
 
 // Helper function to get repo URL text
 export function getRepoUrlText(remoteUrl?: string): string {
@@ -112,20 +111,9 @@ export function useSelectors(
   setMessages: React.Dispatch<React.SetStateAction<any[]>>,
   resetChatHistory: () => void,
 ): {
-  handleOrganizationSelect: (
-    organizationId: string | null,
-    organizationName: string,
-  ) => Promise<void>;
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
 } {
-  const { handleOrganizationSelect } = useOrganizationSelector({
-    onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
-    },
-    onChatReset: resetChatHistory,
-  });
-
   const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
@@ -141,7 +129,6 @@ export function useSelectors(
   });
 
   return {
-    handleOrganizationSelect,
     handleConfigSelect,
     handleModelSelect,
   };
