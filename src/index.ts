@@ -155,8 +155,8 @@ program
   .description("List recent chat sessions and select one to resume")
   .option("--json", "Output in JSON format")
   .action(async (options) => {
-    await listSessionsCommand({ 
-      format: options.json ? "json" : undefined
+    await listSessionsCommand({
+      format: options.json ? "json" : undefined,
     });
   });
 

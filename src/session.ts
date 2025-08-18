@@ -248,10 +248,10 @@ export function hasSession(): boolean {
  * Session metadata for listing sessions
  */
 export interface SessionMetadata {
-  id: string;              // Session ID from filename
-  path: string;            // Full file path
-  timestamp: Date;         // Last modified or session timestamp
-  messageCount: number;    // Total messages in session
+  id: string; // Session ID from filename
+  path: string; // Full file path
+  timestamp: Date; // Last modified or session timestamp
+  messageCount: number; // Total messages in session
   firstUserMessage?: string; // Preview of first user input
 }
 
@@ -260,27 +260,27 @@ export interface SessionMetadata {
  */
 function getSessionMetadata(filePath: string): SessionMetadata | null {
   try {
-    const fileName = path.basename(filePath, '.json');
+    const fileName = path.basename(filePath, ".json");
     const stats = fs.statSync(filePath);
     const sessionData = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    
+
     const chatHistory = sessionData.chatHistory || [];
     const messageCount = chatHistory.length;
-    
+
     // Find the first user message
     let firstUserMessage: string | undefined;
     for (let i = 0; i < chatHistory.length; i++) {
-      if (chatHistory[i].role === 'user') {
+      if (chatHistory[i].role === "user") {
         firstUserMessage = chatHistory[i].content;
         break;
       }
     }
-    
+
     // Use session timestamp if available, otherwise file modification time
-    const timestamp = sessionData.timestamp 
+    const timestamp = sessionData.timestamp
       ? new Date(sessionData.timestamp)
       : stats.mtime;
-    
+
     return {
       id: fileName,
       path: filePath,
@@ -300,24 +300,25 @@ function getSessionMetadata(filePath: string): SessionMetadata | null {
 export function listSessions(limit: number = 10): SessionMetadata[] {
   try {
     const sessionDir = getSessionDir();
-    
+
     if (!fs.existsSync(sessionDir)) {
       return [];
     }
-    
-    const files = fs.readdirSync(sessionDir)
-      .filter(file => file.endsWith('.json'))
-      .map(file => path.join(sessionDir, file));
-    
+
+    const files = fs
+      .readdirSync(sessionDir)
+      .filter((file) => file.endsWith(".json"))
+      .map((file) => path.join(sessionDir, file));
+
     const sessions: SessionMetadata[] = [];
-    
+
     for (const filePath of files) {
       const metadata = getSessionMetadata(filePath);
       if (metadata) {
         sessions.push(metadata);
       }
     }
-    
+
     // Sort by timestamp (most recent first) and limit results
     return sessions
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
@@ -331,15 +332,17 @@ export function listSessions(limit: number = 10): SessionMetadata[] {
 /**
  * Load chat history from a specific session file
  */
-export function loadSessionById(sessionId: string): ChatCompletionMessageParam[] | null {
+export function loadSessionById(
+  sessionId: string,
+): ChatCompletionMessageParam[] | null {
   try {
     const sessionDir = getSessionDir();
     const sessionFilePath = path.join(sessionDir, `${sessionId}.json`);
-    
+
     if (!fs.existsSync(sessionFilePath)) {
       return null;
     }
-    
+
     const sessionData = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
     return sessionData.chatHistory || null;
   } catch (error) {
