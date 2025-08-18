@@ -11,7 +11,7 @@ import { ModeIndicator } from "./ModeIndicator.js";
 
 interface BottomStatusBarProps {
   currentMode: PermissionMode;
-  repoURlText: string;
+  repoURLText: string;
   isRemoteMode: boolean;
   services: any;
   navState: any;
@@ -22,7 +22,7 @@ interface BottomStatusBarProps {
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   currentMode,
-  repoURlText,
+  repoURLText,
   isRemoteMode,
   services,
   navState,
@@ -35,7 +35,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
       {currentMode === "normal" && (
         <React.Fragment>
           <Text key="repo-url" color="dim" wrap="truncate-start">
-            {repoURlText}
+            {repoURLText}
           </Text>
           <Text key="repo-separator"> </Text>
         </React.Fragment>

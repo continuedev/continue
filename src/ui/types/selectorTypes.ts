@@ -1,8 +1,8 @@
 // Type definitions for selectors - compatible with existing hook interfaces
 
-export interface ConfigOption {
-  id: string;
-  name: string;
+import type { SelectorOption } from "../Selector.js";
+
+export interface ConfigOption extends SelectorOption {
   type: "local" | "assistant" | "create";
   slug?: string;
 }
