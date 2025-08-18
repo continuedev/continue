@@ -146,6 +146,114 @@ Most Continue features will work normally, including autocomplete and chat. Howe
 
 For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
 
+## Ollama Issues
+
+### Unable to connect to local Ollama instance
+
+If you're getting "Unable to connect to local Ollama instance" errors:
+
+1. **Verify Ollama is running**: Check http://localhost:11434 in your browser - you should see "Ollama is running"
+2. **Start Ollama properly**: Use `ollama serve` (not just `ollama run model-name`)
+3. **Check your config**: Ensure your `config.yaml` has the correct setup:
+
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    model: llama3:latest
+```
+
+### Connection failed to remote Ollama (EHOSTUNREACH/ECONNREFUSED)
+
+When connecting to Ollama on another machine:
+
+1. **Configure Ollama to listen on all interfaces**:
+   - Set environment variable: `OLLAMA_HOST=0.0.0.0:11434`
+   - For systemd: Edit `/etc/systemd/system/ollama.service` and add under `[Service]`:
+     ```
+     Environment="OLLAMA_HOST=0.0.0.0:11434"
+     Environment="OLLAMA_ORIGINS=*"
+     ```
+   - Restart Ollama: `sudo systemctl restart ollama`
+
+2. **Update your Continue config**:
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://192.168.1.136:11434  # Use your server's IP
+    model: llama3:latest
+```
+
+3. **Check firewall settings**: Ensure port 11434 is open on the server
+
+### Ollama not working in WSL
+
+For WSL users having connection issues:
+
+#### Windows 11 22H2+ (Recommended)
+Create or edit `%UserProfile%\.wslconfig`:
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+Then restart WSL: `wsl --shutdown`
+
+#### Older Windows/WSL versions
+In PowerShell (as Administrator):
+```powershell
+# Add firewall rules
+New-NetFireWallRule -DisplayName 'WSL Ollama' -Direction Inbound -LocalPort 11434 -Action Allow -Protocol TCP
+New-NetFireWallRule -DisplayName 'WSL Ollama' -Direction Outbound -LocalPort 11434 -Action Allow -Protocol TCP
+
+# Get WSL IP (run 'ip addr' in WSL to find eth0 IP)
+# Then add port proxy (replace <WSL_IP> with your actual IP)
+netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 connectport=11434 connectaddress=<WSL_IP>
+```
+
+### Docker container can't connect to host Ollama
+
+When running Continue or other tools in Docker that need to connect to Ollama on the host:
+
+**Windows/Mac**: Use `host.docker.internal`:
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://host.docker.internal:11434
+    model: llama3:latest
+```
+
+**Linux**: Use the Docker bridge IP (usually `172.17.0.1`):
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://172.17.0.1:11434
+    model: llama3:latest
+```
+
+**Docker run command**: Add host mapping:
+```bash
+docker run -d --add-host=host.docker.internal:host-gateway ...
+```
+
+### Parse errors with remote Ollama
+
+If you're getting parse errors with remote Ollama:
+
+1. **Verify the model is installed on the remote**:
+   ```bash
+   OLLAMA_HOST=192.168.1.136:11434 ollama list
+   ```
+   
+2. **Install missing models**:
+   ```bash
+   OLLAMA_HOST=192.168.1.136:11434 ollama pull llama3
+   ```
+
+3. **Check URL format**: Ensure you're using `http://` not `https://` for local network addresses
+
 ## How do I reset the state of the extension?
 
 Continue stores its data in the `~/.continue` directory (`%USERPROFILE%\.continue` on Windows).
