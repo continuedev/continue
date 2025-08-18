@@ -148,6 +148,8 @@ For more details about this requirement, see the [LanceDB issue #2195](https://g
 
 ## Ollama Issues
 
+For a comprehensive guide on setting up and troubleshooting Ollama, see the [Ollama Guide](/guides/ollama-guide).
+
 ### Unable to connect to local Ollama instance
 
 If you're getting "Unable to connect to local Ollama instance" errors:
@@ -253,6 +255,66 @@ If you're getting parse errors with remote Ollama:
    ```
 
 3. **Check URL format**: Ensure you're using `http://` not `https://` for local network addresses
+
+## Local Assistant
+
+### Managing Local Secrets and Environment Variables
+
+For running Continue completely offline without internet access, see the [Running Continue Without Internet guide](/guides/running-continue-without-internet).
+
+Continue supports multiple methods for managing secrets locally, searched in this order:
+
+1. **Workspace `.env` files**: Place a `.env` file in your workspace root directory
+2. **Workspace Continue folder**: Place a `.env` file in `<workspace-root>/.continue/.env`  
+3. **Global `.env` file**: Place a `.env` file in `~/.continue/.env` for user-wide secrets
+4. **Process environment variables**: Use standard system environment variables
+
+#### Creating `.env` files
+
+Create a `.env` file in one of these locations:
+- **Per-workspace**: `<workspace-root>/.env` or `<workspace-root>/.continue/.env`
+- **Global**: `~/.continue/.env`
+
+Example `.env` file:
+```
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+CUSTOM_API_URL=https://api.example.com
+```
+
+#### Using secrets in config.yaml
+
+Reference your local secrets using the `secrets` namespace:
+```yaml
+models:
+  - provider: openai
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+```
+
+#### Hub-managed secrets
+
+For centralized team secret management, use `${{ inputs.SECRET_NAME }}` syntax in your config.yaml and manage them at [https://hub.continue.dev/settings/secrets](https://hub.continue.dev/settings/secrets):
+```yaml
+models:
+  - provider: openai
+    apiKey: ${{ inputs.OPENAI_API_KEY }}
+```
+
+#### Important notes
+
+- **Never commit `.env` files** to version control - add them to `.gitignore`
+- The `.env` file uses standard dotenv format (KEY=value, no quotes needed)
+- Secrets are loaded when Continue starts, so restart your IDE after changes
+- Local `.env` files take precedence over Hub secrets when both exist
+
+#### Troubleshooting secrets
+
+If your API keys aren't being recognized:
+1. Check the `.env` file is in the correct location
+2. Ensure there are no quotes around values in the `.env` file
+3. Restart your IDE after adding/changing secrets
+4. Verify the variable name matches exactly (case-sensitive)
+5. Check that your `.env` file has proper line endings (LF, not CRLF on Windows)
 
 ## How do I reset the state of the extension?
 
