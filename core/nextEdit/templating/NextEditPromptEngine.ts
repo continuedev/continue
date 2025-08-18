@@ -144,7 +144,6 @@ export async function renderPrompt(
       };
 
       tv = instinctCtx;
-      console.log(tv);
 
       editedCodeWithTokens = instinctCtx.currentFileContent;
 
