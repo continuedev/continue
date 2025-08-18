@@ -316,6 +316,64 @@ If your API keys aren't being recognized:
 4. Verify the variable name matches exactly (case-sensitive)
 5. Check that your `.env` file has proper line endings (LF, not CRLF on Windows)
 
+### Using Model Addons Locally
+
+You can leverage model addons from the Continue Hub in your local assistant configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
+
+#### Requirements
+
+- You must be logged in to Continue
+- Internet connection is required (model addons are fetched from the hub)
+
+#### Usage
+
+In your local `config.yaml`, reference model addons using the format `provider/model-name`:
+
+```yaml
+name: My Local Assistant
+version: 0.0.1
+schema: v1
+models:
+  - uses: ollama/llama3.1-8b
+  - uses: anthropic/claude-3.5-sonnet
+  - uses: openai/gpt-4
+```
+
+#### With local configuration
+
+You can combine hub model addons with local models:
+
+```yaml
+name: My Local Assistant
+version: 0.0.1
+schema: v1
+models:
+  # Hub model addon
+  - uses: anthropic/claude-3.5-sonnet
+  
+  # Local model configuration
+  - name: Local Ollama
+    provider: ollama
+    model: codellama:latest
+    apiBase: http://localhost:11434
+```
+
+#### Override addon settings
+
+You can override specific settings from the model addon:
+
+```yaml
+models:
+  - uses: ollama/llama3.1-8b
+    override:
+      apiBase: http://192.168.1.100:11434  # Use remote Ollama server
+      roles:
+        - chat
+        - autocomplete
+```
+
+This feature allows you to maintain consistent model configurations across teams while still allowing local customization when needed.
+
 ## How do I reset the state of the extension?
 
 Continue stores its data in the `~/.continue` directory (`%USERPROFILE%\.continue` on Windows).
