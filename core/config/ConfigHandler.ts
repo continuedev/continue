@@ -262,7 +262,7 @@ export class ConfigHandler {
     org: OrganizationDescription,
   ): Promise<OrgWithProfiles> {
     const localProfiles = await this.getLocalProfiles({
-      includeGlobal: false,
+      includeGlobal: true,
       includeWorkspace: true,
     });
     const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
