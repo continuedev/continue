@@ -24,7 +24,7 @@ describe('Slash Commands Integration', () => {
       expect(commandNames).toContain('login');
       expect(commandNames).toContain('logout');
       expect(commandNames).toContain('whoami');
-      expect(commandNames).toContain('org');
+
       expect(commandNames).toContain('model');
       expect(commandNames).toContain('config');
     });
@@ -39,7 +39,7 @@ describe('Slash Commands Integration', () => {
     it('should categorize system commands correctly', () => {
       const commands = getAllSlashCommands(mockAssistant);
       const systemCommands = commands.filter(cmd => 
-        ['help', 'clear', 'exit', 'login', 'logout', 'whoami', 'org', 'model', 'config'].includes(cmd.name)
+        ['help', 'clear', 'exit', 'login', 'logout', 'whoami', 'model', 'config'].includes(cmd.name)
       );
       
       systemCommands.forEach(cmd => {

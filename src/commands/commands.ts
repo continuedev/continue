@@ -44,7 +44,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
   {
     name: "config",
-    description: "Switch configuration",
+    description: "Switch configuration or organization",
     category: "system",
   },
   {
@@ -52,11 +52,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "Manage MCP server connections",
     category: "system",
   },
-  {
-    name: "org",
-    description: "Switch organization",
-    category: "system",
-  },
+
   {
     name: "compact",
     description: "Summarize chat history into a compact form",

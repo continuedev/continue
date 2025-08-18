@@ -2,7 +2,8 @@ import { exec } from "child_process";
 import * as path from "path";
 
 import { env } from "../../env.js";
-import { services } from "../../services/index.js";
+import { services, reloadService } from "../../services/index.js";
+import { SERVICE_NAMES } from "../../services/types.js";
 import { useNavigation } from "../context/NavigationContext.js";
 
 interface ConfigOption {
@@ -10,6 +11,7 @@ interface ConfigOption {
   name: string;
   type: "local" | "assistant" | "create";
   slug?: string;
+  organizationId?: string | null;
 }
 
 interface UseConfigSelectorProps {
@@ -77,6 +79,12 @@ export function useConfigSelector({
         messageType: "system" as const,
       });
 
+      // First, check if we need to switch organizations
+      const currentAuthState = services.auth.getState();
+      const currentOrgId = currentAuthState.authConfig
+        ? (currentAuthState.authConfig.organizationId ?? null)
+        : null;
+
       let targetConfigPath: string | undefined;
 
       if (config.type === "local") {
@@ -85,9 +93,25 @@ export function useConfigSelector({
         targetConfigPath = config.slug;
       }
 
-      // Use the ConfigService's reactive updateConfigPath method
-      // This will automatically update state and trigger dependent service reloads
-      await services.config.updateConfigPath(targetConfigPath);
+      // If we need to switch organizations, we'll handle both org + config switching
+      // using a different approach to avoid duplicate reloads
+      if (config.organizationId !== currentOrgId) {
+        onMessage({
+          role: "system",
+          content: `Switching to organization for ${config.name}...`,
+          messageType: "system" as const,
+        });
+
+        // Switch organization first
+        await services.auth.switchOrganization(config.organizationId ?? null);
+
+        // Update config path THEN reload services once
+        // This avoids the double reload issue
+        await services.config.updateConfigPath(targetConfigPath);
+      } else {
+        // Only config path is changing, no organization switch needed
+        await services.config.updateConfigPath(targetConfigPath);
+      }
 
       // Reset chat history
       onChatReset();

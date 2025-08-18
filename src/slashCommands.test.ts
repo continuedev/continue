@@ -73,55 +73,7 @@ describe("handleSlashCommands", () => {
       expect(reloadService).not.toHaveBeenCalledWith(SERVICE_NAMES.CONFIG);
     });
 
-    test.skip("org switch command should trigger automatic cascade reload via auth service", async () => {
-      const newOrgState: AuthServiceState = {
-        authConfig: { userEmail: "test@example.com" } as any,
-        isAuthenticated: true,
-        organizationId: "new-org",
-      };
-      (services.auth.switchOrganization as any).mockResolvedValue(newOrgState);
-      (reloadService as any).mockResolvedValue(undefined);
 
-      const result = await handleSlashCommands("/org test-org", mockAssistant);
-
-      expect(result).not.toBeNull();
-      expect(result?.output).toContain(
-        "Switched to organization: test-org. All services updated automatically."
-      );
-
-      // Verify organization switch was called
-      expect(services.auth.switchOrganization).toHaveBeenCalledWith("test-org");
-
-      // Verify automatic cascade reload was triggered - only auth service reload needed
-      expect(reloadService).toHaveBeenCalledTimes(1);
-      expect(reloadService).toHaveBeenCalledWith(SERVICE_NAMES.AUTH);
-
-      // Verify manual service reloads are NOT called
-      expect(reloadService).not.toHaveBeenCalledWith(SERVICE_NAMES.CONFIG);
-      expect(reloadService).not.toHaveBeenCalledWith(SERVICE_NAMES.MODEL);
-      expect(reloadService).not.toHaveBeenCalledWith(SERVICE_NAMES.MCP);
-    });
-
-    test.skip("org list command should not trigger any reloads", async () => {
-      const mockOrgs = [
-        { id: "org1", name: "Organization 1" },
-        { id: "org2", name: "Organization 2" },
-      ];
-
-      (services.auth.getAvailableOrganizations as any).mockResolvedValue(
-        mockOrgs
-      );
-
-      const result = await handleSlashCommands("/org list", mockAssistant);
-
-      expect(result).not.toBeNull();
-      expect(result?.output).toContain("Available organizations:");
-      expect(result?.output).toContain("org1: Organization 1");
-      expect(result?.output).toContain("org2: Organization 2");
-
-      // Verify NO reload was triggered
-      expect(reloadService).not.toHaveBeenCalled();
-    });
 
     test.skip("login failure should not trigger any reloads", async () => {
       const loginError = new Error("Login failed");
@@ -136,23 +88,7 @@ describe("handleSlashCommands", () => {
       expect(reloadService).not.toHaveBeenCalled();
     });
 
-    test.skip("org switch failure should not trigger any reloads", async () => {
-      const switchError = new Error("Organization switch failed");
-      (services.auth.switchOrganization as any).mockRejectedValue(switchError);
 
-      const result = await handleSlashCommands(
-        "/org invalid-org",
-        mockAssistant
-      );
-
-      expect(result).not.toBeNull();
-      expect(result?.output).toContain(
-        "Failed to switch organization: Organization switch failed"
-      );
-
-      // Verify NO reload was triggered on failure
-      expect(reloadService).not.toHaveBeenCalled();
-    });
   });
 
   describe("Other Commands (unchanged behavior)", () => {
@@ -204,6 +140,13 @@ describe("handleSlashCommands", () => {
 
       expect(result).not.toBeNull();
       expect(result?.output).toBe("Unknown command: unknown");
+    });
+
+    test("/org command should no longer exist (now merged into /config)", async () => {
+      const result = await handleSlashCommands("/org list", mockAssistant);
+
+      expect(result).not.toBeNull();
+      expect(result?.output).toBe("Unknown command: org");
     });
   });
 });

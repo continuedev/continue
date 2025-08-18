@@ -28,11 +28,9 @@ import { useChat } from "./hooks/useChat.js";
 import { useConfigSelector } from "./hooks/useConfigSelector.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import { useModelSelector } from "./hooks/useModelSelector.js";
-import { useOrganizationSelector } from "./hooks/useOrganizationSelector.js";
 import { LoadingAnimation } from "./LoadingAnimation.js";
 import { MCPSelector } from "./MCPSelector.js";
 import { ModelSelector } from "./ModelSelector.js";
-import { OrganizationSelector } from "./OrganizationSelector.js";
 import type { SelectorOption } from "./Selector.js";
 import { Timer } from "./Timer.js";
 import { UpdateNotification } from "./UpdateNotification.js";
@@ -152,13 +150,6 @@ function useSelectors(
   setMessages: React.Dispatch<React.SetStateAction<any[]>>,
   resetChatHistory: () => void,
 ) {
-  const { handleOrganizationSelect } = useOrganizationSelector({
-    onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
-    },
-    onChatReset: resetChatHistory,
-  });
-
   const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
@@ -174,7 +165,6 @@ function useSelectors(
   });
 
   return {
-    handleOrganizationSelect,
     handleConfigSelect,
     handleModelSelect,
   };
@@ -250,10 +240,6 @@ interface ScreenContentProps {
   navState: any;
   services: any;
   handleLoginTokenSubmit: (token: string) => void;
-  handleOrganizationSelect: (
-    organizationId: string | null,
-    organizationName: string,
-  ) => Promise<void>;
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
   handleReload: () => Promise<void>;
@@ -279,7 +265,6 @@ const ScreenContent: React.FC<ScreenContentProps> = ({
   navState,
   services,
   handleLoginTokenSubmit,
-  handleOrganizationSelect,
   handleConfigSelect,
   handleModelSelect,
   handleReload,
@@ -321,17 +306,7 @@ const ScreenContent: React.FC<ScreenContentProps> = ({
     );
   }
 
-  // Organization selector
-  if (isScreenActive("organization")) {
-    return (
-      <OrganizationSelector
-        onSelect={handleOrganizationSelect}
-        onCancel={closeCurrentScreen}
-      />
-    );
-  }
-
-  // Config selector
+  // Config selector (now includes organization switching)
   if (isScreenActive("config")) {
     return (
       <ConfigSelector
@@ -474,7 +449,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
-    onShowOrgSelector: () => navigateTo("organization"),
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
@@ -487,7 +461,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { renderMessage } = useMessageRenderer();
 
-  const { handleOrganizationSelect, handleConfigSelect, handleModelSelect } =
+  const { handleConfigSelect, handleModelSelect } =
     useSelectors(configPath, setMessages, resetChatHistory);
 
   // Determine if input should be disabled
@@ -540,7 +514,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           navState={navState}
           services={services}
           handleLoginTokenSubmit={handleLoginTokenSubmit}
-          handleOrganizationSelect={handleOrganizationSelect}
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleReload={handleReload}
