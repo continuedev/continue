@@ -33,8 +33,6 @@ export async function initChatHistory(
   return history;
 }
 
-
-
 /**
  * Handle /config command
  */

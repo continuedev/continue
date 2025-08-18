@@ -11,8 +11,6 @@ import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 
-
-
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
@@ -97,8 +95,6 @@ function handleWhoami() {
     };
   }
 }
-
-
 
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,

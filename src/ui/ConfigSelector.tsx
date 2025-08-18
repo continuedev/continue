@@ -67,7 +67,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
             const organizations = await listUserOrganizations();
             const allOrgs = [
               { id: null, name: "Personal" }, // Personal organization
-              ...(organizations || [])
+              ...(organizations || []),
             ];
 
             // Fetch assistants for each organization
@@ -81,7 +81,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
                 return assistants.map((assistant) => {
                   const displayName = `[${org.name}] ${assistant.ownerSlug}/${assistant.packageSlug}`;
                   // Create unique ID that includes org info to avoid conflicts
-                  const uniqueId = `${org.id || 'personal'}-${assistant.packageSlug}`;
+                  const uniqueId = `${org.id || "personal"}-${assistant.packageSlug}`;
                   return {
                     id: uniqueId,
                     name: displayName,
@@ -91,7 +91,10 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
                   };
                 });
               } catch (err) {
-                console.error(`Failed to load assistants for org ${org.name}:`, err);
+                console.error(
+                  `Failed to load assistants for org ${org.name}:`,
+                  err,
+                );
                 return [];
               }
             });
@@ -118,9 +121,10 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
           // Find the matching config by slug and organization
           const packageSlug = assistantSlug.split("/")[1];
           const matchingConfig = options.find(
-            (opt) => opt.type === "assistant" && 
-            opt.slug === assistantSlug &&
-            opt.organizationId === currentOrganizationId
+            (opt) =>
+              opt.type === "assistant" &&
+              opt.slug === assistantSlug &&
+              opt.organizationId === currentOrganizationId,
           );
           currentId = matchingConfig?.id || null;
         } else if (fs.existsSync(CONFIG_PATH)) {

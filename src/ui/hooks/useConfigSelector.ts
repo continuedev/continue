@@ -2,8 +2,7 @@ import { exec } from "child_process";
 import * as path from "path";
 
 import { env } from "../../env.js";
-import { services, reloadService } from "../../services/index.js";
-import { SERVICE_NAMES } from "../../services/types.js";
+import { services } from "../../services/index.js";
 import { useNavigation } from "../context/NavigationContext.js";
 
 interface ConfigOption {
