@@ -98,10 +98,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const commentBody = `I've started a remote session to help with your request:
-            > ${{ github.event.comment.body }}
-
-            **🔗 Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
+            const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
+            > ${{ github.event.comment.body }}`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -192,11 +190,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const commentBody = `I've started a remote session to help with your code review comment:
-            > ${{ github.event.comment.body }}
-
-            **📁 File:** \`${{ github.event.comment.path }}\`
-            ** Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
+            const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
+            > ${{ github.event.comment.body }}`;
 
             const commentParams = {
               owner: context.repo.owner,
