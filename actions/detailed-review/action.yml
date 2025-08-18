@@ -1,24 +1,24 @@
-name: 'Continue Detailed PR Review'
-description: 'Automated inline code review for pull requests using Continue CLI'
-author: 'Continue Dev, Inc.'
+name: "Continue Detailed PR Review"
+description: "Automated inline code review for pull requests using Continue CLI"
+author: "Continue Dev, Inc."
 
 inputs:
   continue-api-key:
-    description: 'API key for Continue service'
+    description: "API key for Continue service"
     required: true
   continue-org:
-    description: 'Organization for Continue config'
+    description: "Organization for Continue config"
     required: true
   continue-config:
     description: 'Config path to use (e.g., "myorg/review-bot")'
     required: true
   use_github_app:
-    description: 'Use Continue Agent GitHub App for bot identity (requires app installation)'
-    default: 'true'
+    description: "Use Continue Agent GitHub App for bot identity (requires app installation)"
+    default: "true"
     required: false
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Generate Continue Agent App Token
       if: inputs.use_github_app == 'true'
@@ -85,8 +85,13 @@ runs:
         HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-detailed-review') }}
       run: |
         # Check if this action should run based on event type and user permissions
+        # TODO: Future improvement - consolidate into a single action that responds to 
+        # @continue-agent mentions with smart heuristics to determine review type:
+        # - "@continue-agent" or "@continue-agent review" -> general review
+        # - "@continue-agent detailed" or similar keywords -> detailed review
+        # This would provide a more natural bot interaction similar to Claude or GitHub Copilot
         SHOULD_RUN="false"
-        
+
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           # Check if PR is a draft
           if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
@@ -115,12 +120,12 @@ runs:
         else
           echo "::notice::Skipping review - Event type ${{ github.event_name }} is not supported"
         fi
-        
+
         if [ "$SHOULD_RUN" != "true" ]; then
           echo "SKIP_REVIEW=true" >> $GITHUB_ENV
           exit 0
         fi
-        
+
         echo "SKIP_REVIEW=false" >> $GITHUB_ENV
 
     - name: Setup Node.js
@@ -154,7 +159,7 @@ runs:
 
         # Annotate diff with GitHub API positions
         node ${{ github.action_path }}/annotate-diff.js pr_diff.txt > pr_diff_annotated.txt
-        
+
         # Debug: Show sample of annotated diff
         echo "=== SAMPLE OF ANNOTATED DIFF ==="
         head -100 pr_diff_annotated.txt | grep -E "^\[POS:|^@@|^diff --git" || head -50 pr_diff_annotated.txt
@@ -245,7 +250,7 @@ runs:
           echo "Error: continue-org input is required"
           exit 1
         fi
-        
+
         if [ -z "${{ inputs.continue-config }}" ]; then
           echo "Error: continue-config input is required"
           exit 1
@@ -270,7 +275,7 @@ runs:
           echo "Error: Invalid JSON output from Continue CLI"
           exit 1
         fi
-        
+
         # Use the JSON output directly
         cp inline_review_raw.json inline_review.json
         echo "Review output:"

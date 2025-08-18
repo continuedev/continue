@@ -4,7 +4,7 @@ on:
     types: [opened, ready_for_review]
   issue_comment:
     types: [created]
-  workflow_dispatch:  # Allow manual testing
+  workflow_dispatch: # Allow manual testing
 
 permissions:
   contents: read
@@ -38,7 +38,7 @@ jobs:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "test-org"
           continue-config: "test-org/review-bot"
-          use_github_app: false  # Explicitly disable app authentication
+          use_github_app: false # Explicitly disable app authentication
 
   # Test detailed review with app
   test-detailed-with-app:

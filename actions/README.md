@@ -119,12 +119,12 @@ jobs:
 
 Both actions accept the same inputs:
 
-| Input              | Description                                              | Required | Default |
-| ------------------ | -------------------------------------------------------- | -------- | ------- |
-| `continue-api-key` | API key for Continue service                            | Yes      | -       |
-| `continue-org`     | Organization for Continue config                        | Yes      | -       |
-| `continue-config`  | Config path (e.g., "myorg/review-bot")                  | Yes      | -       |
-| `use_github_app`   | Use Continue Agent GitHub App for bot identity          | No       | `true`  |
+| Input              | Description                                    | Required | Default |
+| ------------------ | ---------------------------------------------- | -------- | ------- |
+| `continue-api-key` | API key for Continue service                   | Yes      | -       |
+| `continue-org`     | Organization for Continue config               | Yes      | -       |
+| `continue-config`  | Config path (e.g., "myorg/review-bot")         | Yes      | -       |
+| `use_github_app`   | Use Continue Agent GitHub App for bot identity | No       | `true`  |
 
 ## Setup Requirements
 
@@ -147,7 +147,7 @@ To enable reviews with the `continue-agent[bot]` identity instead of `github-act
 1. **Install the app**: Visit https://github.com/apps/continue-agent
 2. **Grant repository access**: Select the repositories where you want to use Continue reviews
 3. **Configure secrets and variables**:
-   - Add a **repository secret**: `CONTINUE_APP_PRIVATE_KEY` 
+   - Add a **repository secret**: `CONTINUE_APP_PRIVATE_KEY`
      - This should contain your GitHub App's private key (the entire .pem file content)
    - Add a **repository variable**: `CONTINUE_APP_ID`
      - This should contain your GitHub App's ID
@@ -162,7 +162,7 @@ If you prefer to use the standard `github-actions[bot]` identity, add this to yo
     continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
     continue-org: "your-org-name"
     continue-config: "your-org-name/review-bot"
-    use_github_app: false  # Disable GitHub App integration
+    use_github_app: false # Disable GitHub App integration
 ```
 
 #### Benefits of Using the GitHub App
