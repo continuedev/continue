@@ -106,7 +106,7 @@ describe("NextEditPromptEngine", () => {
       expect(result.prompt.content).toContain(INSTINCT_USER_PROMPT_PREFIX);
       expect(result.prompt.content).toContain("### Context:");
       expect(result.prompt.content).toContain("### User Edits:");
-      expect(result.prompt.content).toContain("### User Excerpts:");
+      expect(result.prompt.content).toContain("### User Excerpt:");
 
       expect(result.userEdits).toBe(instinctCtx.editDiffHistory);
       expect(result.userExcerpts).toContain(INSTINCT_USER_CURSOR_IS_HERE_TOKEN);
