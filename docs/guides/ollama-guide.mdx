@@ -225,11 +225,11 @@ ollama pull model-name:tag  # e.g., deepseek-r1:32b
 
 #### Model Tag Mismatches
 
-**Problem**: `ollama run deepseek-r1` installs `:latest` but hub block expects `:32b`
+**Problem**: `ollama pull deepseek-r1` installs `:latest` but hub block expects `:32b`
 **Solution**: Always pull with the exact tag:
 ```bash
 # Wrong - pulls :latest
-ollama run deepseek-r1
+ollama pull deepseek-r1
 
 # Right - pulls specific version
 ollama pull deepseek-r1:32b
