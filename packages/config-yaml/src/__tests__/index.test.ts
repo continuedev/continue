@@ -130,7 +130,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant",
+          packageSlug: "agent",
           versionSlug: "latest",
         },
       },
