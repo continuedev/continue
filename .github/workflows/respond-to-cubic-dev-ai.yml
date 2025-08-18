@@ -203,24 +203,14 @@ jobs:
             **📍 Line:** ${lineDisplay}
             **🔗 Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
 
-            const commentParams = {
+            // For review comments, we need to reply in the existing thread
+            // Use the simpler approach of creating a regular issue comment instead
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: ${{ github.event.pull_request.number }},
-              body: commentBody,
-              commit_id: '${{ github.event.pull_request.head.sha }}',
-              path: '${{ github.event.comment.path }}',
-              in_reply_to: ${{ github.event.comment.id }}
-            };
-
-            // Add line parameter only if it exists and is not null
-            if (line !== null) {
-              commentParams.line = line;
-            } else if (originalLine !== null) {
-              commentParams.original_line = originalLine;
-            }
-
-            await github.rest.pulls.createReviewComment(commentParams);
+              issue_number: ${{ github.event.pull_request.number }},
+              body: commentBody
+            });
 
       - name: Log session details
         if: steps.check-mention.outputs.contains_mention == 'true'
