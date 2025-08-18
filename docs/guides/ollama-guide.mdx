@@ -86,16 +86,17 @@ schema: v1
 models:
   - uses: ollama/deepseek-r1-32b
   - uses: ollama/qwen2.5-coder-7b
-  - uses: ollama/mistral
+  - uses: ollama/gpt-oss-20b
 ```
 
 <Warning>
-**Important**: When using hub blocks like `ollama/deepseek-r1-32b`, you must first pull the exact model locally:
+**Important**: Hub blocks only provide configuration - you still need to pull the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue to use `model: deepseek-r1:32b`, but the actual model must be installed:
 ```bash
-# The hub block name must match the pulled model
-ollama pull deepseek-r1:32b  # For ollama/deepseek-r1-32b hub block
+# Check what the hub block expects (view on hub.continue.dev)
+# Then pull that exact model tag locally
+ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
 ```
-If the model isn't pulled, you'll get: `Error: 404 model "deepseek-r1:32b" not found, try pulling it first`
+If the model isn't installed, Ollama will return: `404 model "deepseek-r1:32b" not found, try pulling it first`
 </Warning>
 
 ### Method 2: Manual Configuration
@@ -166,6 +167,7 @@ models:
 <Warning>
 **Known Issue**: Some models like DeepSeek R1 may show "Agent mode is not supported" or "does not support tools" even with capabilities configured. This is a known limitation where the model's actual tool support differs from its advertised capabilities.
 </Warning>
+
 
 #### If Agent Mode Shows "Not Supported"
 
