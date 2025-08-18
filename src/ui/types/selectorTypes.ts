@@ -1,4 +1,6 @@
-// Type definitions for selectors - compatible with existing hook interfaces
+/**
+ * Type definitions for selectors - compatible with existing hook interfaces
+ */
 
 export interface ConfigOption {
   id: string;
