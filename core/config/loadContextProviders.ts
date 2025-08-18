@@ -50,10 +50,10 @@ export function loadConfigContextProviders(
 
   // Add from defaults if not found in config
   const DEFAULT_PROVIDERS: IContextProvider[] = [
-    new TerminalContextProvider({}),
-    new DiffContextProvider({}),
     new FileContextProvider({}),
     new CurrentFileContextProvider({}),
+    new DiffContextProvider({}),
+    new TerminalContextProvider({}),
     new ProblemsContextProvider({}),
     new RulesContextProvider({}),
   ];
