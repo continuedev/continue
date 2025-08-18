@@ -201,9 +201,9 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div className="flex flex-col gap-2">
         {session && selectedProfile && !isLocalProfile(selectedProfile) && (
           <div className="flex flex-col gap-1">
-            <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+            <span>{`If your hub secret values may have changed, refresh your agents`}</span>
             <SecondaryButton onClick={handleRefreshProfiles}>
-              Refresh assistant secrets
+              Refresh agent secrets
             </SecondaryButton>
           </div>
         )}
