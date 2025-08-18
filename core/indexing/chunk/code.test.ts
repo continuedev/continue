@@ -1,5 +1,5 @@
 import { ChunkWithoutID } from "../..";
-import { countTokensAsync } from "../../llm/countTokens";
+import { cleanupAsyncEncoders, countTokensAsync } from "../../llm/countTokens";
 import { codeChunker } from "./code";
 
 async function genToArr<T>(generator: AsyncGenerator<T>): Promise<T[]> {
@@ -85,6 +85,8 @@ async function collectContents(
 }
 
 describe("codeChunker function definition", () => {
+  afterAll(async () => await cleanupAsyncEncoders());
+
   test("class methods never exceed maxChunkSize", async () => {
     const body = Array.from(
       { length: 200 },
