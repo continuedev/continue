@@ -24,16 +24,14 @@
       ],
       "preLaunchTask": "watch-logs"
     },
-
-    {
+ {
       "name": "Debug Tests",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--runInBand", "--no-cache"],
+      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "args": ["--run", "--no-cache"],
       "env": {
-        "NODE_ENV": "test",
-        "NODE_OPTIONS": "--experimental-vm-modules"
+        "NODE_ENV": "test"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

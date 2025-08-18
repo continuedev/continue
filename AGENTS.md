@@ -5,7 +5,7 @@ This file provides guidance to AI coding agents when working with code in this r
 ## Development Commands
 
 - **Build**: `npm run build` - Compiles TypeScript to JavaScript in dist/
-- **Test**: `npm test` - Runs Jest tests with ESM support
+- **Test**: `npm test` - Runs Vitest tests with ESM support
 - **Type Check**: `npm run lint` - Runs TypeScript compiler without emitting files for type checking
 - **Format**: `npm run format` - Runs Prettier with --write flag to check + fix formatting
 - **Start**: `npm start` - Runs the built CLI from dist/index.js
@@ -54,8 +54,8 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 
 ### Testing Setup
 
-- Uses Jest with TypeScript and ESM support
-- Configuration in `jest.config.mjs`
+- Uses Vitest with TypeScript and ESM support
+- Configuration in `vitest.config.ts`
 - Tests should be written with `.test.ts` extension
 - No existing test files found - tests should be added when writing new functionality
 - Run tests using `npm run test path/or/pattern`

@@ -44,7 +44,7 @@ describe("E2E: Resume Flag", () => {
     expect(firstResult.stdout).toContain("Hello! Nice to meet you.");
 
     // Verify that a session file was created
-    const sessionDir = path.join(context.testDir, ".continue-cli", "sessions");
+    const sessionDir = path.join(context.testDir, ".continue", "cli-sessions");
     const sessionFiles = await fs.readdir(sessionDir);
     expect(sessionFiles).toHaveLength(1);
 
@@ -131,7 +131,7 @@ describe("E2E: Resume Flag", () => {
     expect(firstResult.stdout).toContain("First response");
     
     // Verify the first session was saved correctly
-    const sessionDir = path.join(context.testDir, ".continue-cli", "sessions");
+    const sessionDir = path.join(context.testDir, ".continue", "cli-sessions");
     let sessionFiles = await fs.readdir(sessionDir);
     expect(sessionFiles).toHaveLength(1);
     

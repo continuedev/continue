@@ -15,7 +15,7 @@ This document provides an overview of the different testing strategies used in t
 - Testing business logic components
 - Testing error handling and edge cases
 
-**Framework**: Jest with TypeScript support
+**Framework**: Vitest with TypeScript support
 
 **Examples**:
 
@@ -54,7 +54,7 @@ This document provides an overview of the different testing strategies used in t
 - Testing component state changes
 - Testing message display and formatting
 
-**Framework**: Jest + Ink Testing Library + React Testing utilities
+**Framework**: Vitest + Ink Testing Library + React Testing utilities
 
 **Examples**:
 
@@ -112,7 +112,7 @@ This document provides an overview of the different testing strategies used in t
 
 ## Configuration
 
-**Jest Configuration**: [`jest.config.mjs`](../jest.config.mjs)
+**Vitest Configuration**: [`vitest.config.ts`](../vitest.config.ts)
 
 - TypeScript support with ES modules
 - React/Ink component testing setup
@@ -125,14 +125,14 @@ This document provides an overview of the different testing strategies used in t
 # Run all tests with linting
 npm test
 
-# Run tests in watch mode (Jest only)
-npx jest --watch
+# Run tests in watch mode
+npx vitest --watch
 
 # Run specific test file
-npx jest src/util/formatError.test.ts
+npx vitest src/util/formatError.test.ts
 
 # Run tests with coverage
-npx jest --coverage
+npx vitest --coverage
 ```
 
 ## Best Practices

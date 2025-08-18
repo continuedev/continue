@@ -29,6 +29,12 @@ The CLI automatically saves your chat history for each terminal session. You can
 ```bash
 # Resume the last session in this terminal
 cn --resume
+
+# List recent sessions and choose one to resume
+cn ls
+
+# List sessions in JSON format (for scripting)
+cn ls --json
 ```
 
 ## Command Line Options
@@ -37,3 +43,18 @@ cn --resume
 - `--config <path>`: Specify agent configuration path
 - `--resume`: Resume the last session for this terminal
 - `<prompt>`: Optional prompt to start with
+
+## Commands
+
+- `cn`: Start an interactive chat session
+- `cn ls`: List recent sessions with TUI selector to choose one to resume
+- `cn login`: Authenticate with Continue
+- `cn logout`: Sign out of current session
+- `cn remote`: Launch a remote instance
+- `cn serve`: Start HTTP server mode
+
+### Session Listing (`cn ls`)
+
+Shows recent sessions, limited by screen height to ensure it fits on your terminal.
+
+- `--json`: Output in JSON format for scripting (always shows 10 sessions)

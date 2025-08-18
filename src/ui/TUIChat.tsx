@@ -1,9 +1,7 @@
 import { Box, Text } from "ink";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 
 import { useServices } from "../hooks/useService.js";
-import type { PermissionMode } from "../permissions/types.js";
-import { modeService } from "../services/ModeService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -11,164 +9,24 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { getGitRemoteUrl, isGitRepo } from "../util/git.js";
 
-import { ModeIndicator } from "./components/ModeIndicator.js";
+import { BottomStatusBar } from "./components/BottomStatusBar.js";
+import { ScreenContent } from "./components/ScreenContent.js";
 import { StaticChatContent } from "./components/StaticChatContent.js";
-import { ToolPermissionSelector } from "./components/ToolPermissionSelector.js";
-import { ConfigSelector } from "./ConfigSelector.js";
-import {
-  useNavigation,
-  type NavigationScreen,
-} from "./context/NavigationContext.js";
+import { useNavigation } from "./context/NavigationContext.js";
 import { startFileIndexing } from "./FileSearchUI.js";
-import { FreeTrialStatus } from "./FreeTrialStatus.js";
-import { FreeTrialTransitionUI } from "./FreeTrialTransitionUI.js";
 import { useChat } from "./hooks/useChat.js";
-import { useConfigSelector } from "./hooks/useConfigSelector.js";
+import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
-import { useModelSelector } from "./hooks/useModelSelector.js";
+import {
+  getRepoUrlText,
+  useCurrentMode,
+  useIntroMessage,
+  useLoginHandlers,
+  useSelectors,
+} from "./hooks/useTUIChatHooks.js";
 import { LoadingAnimation } from "./LoadingAnimation.js";
-import { MCPSelector } from "./MCPSelector.js";
-import { ModelSelector } from "./ModelSelector.js";
-import type { SelectorOption } from "./Selector.js";
 import { Timer } from "./Timer.js";
-import { UpdateNotification } from "./UpdateNotification.js";
-import { UserInput } from "./UserInput.js";
-
-// Type definitions for selectors
-interface ConfigOption extends SelectorOption {
-  type: "local" | "assistant" | "create";
-  slug?: string;
-}
-
-interface ModelOption extends SelectorOption {
-  index: number;
-  provider: string;
-}
-
-// Helper function to get repo URL text
-function getRepoUrlText(remoteUrl?: string): string {
-  let url = remoteUrl ?? "";
-  if (!url) {
-    const isGit = isGitRepo();
-    if (isGit) {
-      const gitUrl = getGitRemoteUrl();
-      if (gitUrl) {
-        url = gitUrl;
-      }
-    }
-  }
-  if (!url) {
-    url = process.cwd();
-  }
-
-  url = url.replace(/\.git$/, "");
-  url = url.replace(/^(https|http):\/\/.*?\//, "");
-  return url;
-}
-
-// Custom hook for intro message
-function useIntroMessage(
-  isRemoteMode: boolean,
-  services: any,
-  allServicesReady: boolean,
-) {
-  const [showIntroMessage, setShowIntroMessage] = useState(false);
-
-  useEffect(() => {
-    const shouldShow =
-      !isRemoteMode &&
-      allServicesReady &&
-      !!services.config?.config &&
-      !!services.model?.model &&
-      !!services.mcp?.mcpService;
-
-    setShowIntroMessage(shouldShow);
-  }, [
-    isRemoteMode,
-    allServicesReady,
-    services.config?.config,
-    services.model?.model,
-    services.mcp?.mcpService,
-  ]);
-
-  return [showIntroMessage, setShowIntroMessage] as const;
-}
-
-// Custom hook for login handling
-function useLoginHandlers(
-  navigateTo: any,
-  navState: any,
-  closeCurrentScreen: () => void,
-) {
-  const handleLoginPrompt = useCallback(
-    (promptText: string): Promise<string> => {
-      return new Promise((resolve) => {
-        navigateTo("login", { text: promptText, resolve });
-      });
-    },
-    [navigateTo],
-  );
-
-  const handleLoginTokenSubmit = useCallback(
-    (token: string) => {
-      if (navState.screenData?.resolve) {
-        navState.screenData.resolve(token);
-        closeCurrentScreen();
-      }
-    },
-    [navState.screenData, closeCurrentScreen],
-  );
-
-  return { handleLoginPrompt, handleLoginTokenSubmit };
-}
-
-// Custom hook for mode tracking
-function useCurrentMode() {
-  const [currentMode, setCurrentMode] = useState<PermissionMode>(
-    modeService.getCurrentMode(),
-  );
-
-  useEffect(() => {
-    const handleModeChange = (newMode: PermissionMode) => {
-      setCurrentMode(newMode);
-    };
-
-    modeService.on("modeChanged", handleModeChange);
-    return () => {
-      modeService.off("modeChanged", handleModeChange);
-    };
-  }, []);
-
-  return currentMode;
-}
-
-// Custom hook to combine all selector logic
-function useSelectors(
-  configPath: string | undefined,
-  setMessages: React.Dispatch<React.SetStateAction<any[]>>,
-  resetChatHistory: () => void,
-) {
-  const { handleConfigSelect } = useConfigSelector({
-    configPath,
-    onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
-    },
-    onChatReset: resetChatHistory,
-  });
-
-  const { handleModelSelect } = useModelSelector({
-    onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
-    },
-  });
-
-  return {
-    handleConfigSelect,
-    handleModelSelect,
-  };
-}
 
 interface TUIChatProps {
   // Remote mode props
@@ -180,190 +38,6 @@ interface TUIChatProps {
   resume?: boolean;
   additionalRules?: string[];
 }
-
-// Bottom status bar component
-interface BottomStatusBarProps {
-  currentMode: PermissionMode;
-  repoURlText: string;
-  isRemoteMode: boolean;
-  services: any;
-  navState: any;
-  navigateTo: (screen: NavigationScreen, data?: any) => void;
-  closeCurrentScreen: () => void;
-}
-
-const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
-  currentMode,
-  repoURlText,
-  isRemoteMode,
-  services,
-  navState,
-  navigateTo,
-  closeCurrentScreen,
-}) => (
-  <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-    <Box marginLeft={2} flexDirection="row" alignItems="center">
-      {currentMode === "normal" && (
-        <>
-          <Text color="dim" wrap="truncate-start">
-            {repoURlText}
-          </Text>
-          <Text> </Text>
-        </>
-      )}
-      <ModeIndicator />
-    </Box>
-    <Box>
-      {!isRemoteMode && services.model?.model && (
-        <FreeTrialStatus
-          apiClient={services.apiClient?.apiClient || undefined}
-          model={services.model.model}
-          onTransitionStateChange={(shouldShow) => {
-            if (shouldShow && navState.currentScreen === "chat") {
-              navigateTo("free-trial");
-            } else if (!shouldShow && navState.currentScreen === "free-trial") {
-              closeCurrentScreen();
-            }
-          }}
-        />
-      )}
-    </Box>
-    <Box marginRight={2} marginLeft={2}>
-      <UpdateNotification isRemoteMode={isRemoteMode} />
-    </Box>
-  </Box>
-);
-
-// Component to handle all screen-specific rendering
-interface ScreenContentProps {
-  isScreenActive: (screen: NavigationScreen) => boolean;
-  navState: any;
-  services: any;
-  handleLoginTokenSubmit: (token: string) => void;
-  handleConfigSelect: (config: ConfigOption) => Promise<void>;
-  handleModelSelect: (model: ModelOption) => Promise<void>;
-  handleReload: () => Promise<void>;
-  closeCurrentScreen: () => void;
-  activePermissionRequest: any;
-  handleToolPermissionResponse: (
-    requestId: string,
-    approved: boolean,
-    createPolicy?: boolean,
-    stopStream?: boolean,
-  ) => void;
-  handleUserMessage: (message: string) => void;
-  isWaitingForResponse: boolean;
-  inputMode: boolean;
-  handleInterrupt: () => void;
-  handleFileAttached: (filePath: string, content: string) => void;
-  isInputDisabled: boolean;
-  isRemoteMode: boolean;
-}
-
-const ScreenContent: React.FC<ScreenContentProps> = ({
-  isScreenActive,
-  navState,
-  services,
-  handleLoginTokenSubmit,
-  handleConfigSelect,
-  handleModelSelect,
-  handleReload,
-  closeCurrentScreen,
-  activePermissionRequest,
-  handleToolPermissionResponse,
-  handleUserMessage,
-  isWaitingForResponse,
-  inputMode,
-  handleInterrupt,
-  handleFileAttached,
-  isInputDisabled,
-  isRemoteMode,
-}) => {
-  // Login prompt
-  if (isScreenActive("login") && navState.screenData) {
-    return (
-      <Box
-        paddingX={1}
-        borderStyle="round"
-        borderColor="yellow"
-        flexDirection="column"
-        gap={1}
-      >
-        <Text color="yellow" bold>
-          Login Required
-        </Text>
-        <Text>{navState.screenData.text}</Text>
-        <UserInput
-          onSubmit={handleLoginTokenSubmit}
-          isWaitingForResponse={false}
-          inputMode={true}
-          assistant={services.config?.config || undefined}
-          disabled={false}
-          placeholder="Enter your token..."
-          hideNormalUI={true}
-        />
-      </Box>
-    );
-  }
-
-  // Config selector (now includes organization switching)
-  if (isScreenActive("config")) {
-    return (
-      <ConfigSelector
-        onSelect={handleConfigSelect}
-        onCancel={closeCurrentScreen}
-      />
-    );
-  }
-
-  if (isScreenActive("mcp")) {
-    return <MCPSelector onCancel={closeCurrentScreen} />;
-  }
-
-  // Model selector
-  if (isScreenActive("model")) {
-    return (
-      <ModelSelector
-        onSelect={handleModelSelect}
-        onCancel={closeCurrentScreen}
-      />
-    );
-  }
-
-  // Free trial transition UI
-  if (isScreenActive("free-trial")) {
-    return <FreeTrialTransitionUI onReload={handleReload} />;
-  }
-
-  // Chat screen with input area
-  if (isScreenActive("chat")) {
-    if (activePermissionRequest) {
-      return (
-        <ToolPermissionSelector
-          toolName={activePermissionRequest.toolName}
-          toolArgs={activePermissionRequest.toolArgs}
-          requestId={activePermissionRequest.requestId}
-          toolCallPreview={activePermissionRequest.toolCallPreview}
-          onResponse={handleToolPermissionResponse}
-        />
-      );
-    }
-    return (
-      <UserInput
-        onSubmit={handleUserMessage}
-        isWaitingForResponse={isWaitingForResponse}
-        inputMode={inputMode}
-        onInterrupt={handleInterrupt}
-        assistant={services.config?.config || undefined}
-        onFileAttached={handleFileAttached}
-        disabled={isInputDisabled}
-        isRemoteMode={isRemoteMode}
-      />
-    );
-  }
-
-  return null;
-};
 
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
@@ -433,6 +107,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const {
     messages,
     setMessages,
+    chatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,
@@ -459,10 +134,19 @@ const TUIChat: React.FC<TUIChatProps> = ({
     remoteUrl,
   });
 
+  // Calculate context percentage
+  const contextData = useContextPercentage({
+    chatHistory,
+    model: services.model?.model || undefined,
+  });
+
   const { renderMessage } = useMessageRenderer();
 
-  const { handleConfigSelect, handleModelSelect } =
-    useSelectors(configPath, setMessages, resetChatHistory);
+  const { handleConfigSelect, handleModelSelect } = useSelectors(
+    configPath,
+    setMessages,
+    resetChatHistory,
+  );
 
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
@@ -502,9 +186,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {isWaitingForResponse && responseStartTime && (
           <Box paddingX={1} flexDirection="row" gap={1}>
             <LoadingAnimation visible={isWaitingForResponse} />
-            <Text color="gray">(</Text>
+            <Text key="loading-start" color="gray">
+              (
+            </Text>
             <Timer startTime={responseStartTime} />
-            <Text color="gray">• esc to interrupt )</Text>
+            <Text key="loading-end" color="gray">
+              • esc to interrupt )
+            </Text>
           </Box>
         )}
 
@@ -532,12 +220,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar
           currentMode={currentMode}
-          repoURlText={repoURlText}
+          repoURLText={repoURlText}
           isRemoteMode={isRemoteMode}
           services={services}
           navState={navState}
           navigateTo={navigateTo}
           closeCurrentScreen={closeCurrentScreen}
+          contextPercentage={contextData?.percentage}
         />
       </Box>
     </Box>

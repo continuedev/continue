@@ -5,7 +5,7 @@ test
 .continue
 .releaserc.json
 AGENTS.md
-jest.config.mjs
+vitest.config.ts
 tsconfig.json
 tsconfig.build.json
 TESTING_STRATEGY.md

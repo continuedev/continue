@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
+import { listSessionsCommand } from "./commands/ls.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
@@ -146,6 +147,17 @@ program
   .description("Log out from Continue")
   .action(async () => {
     await logout();
+  });
+
+// List sessions subcommand
+program
+  .command("ls")
+  .description("List recent chat sessions and select one to resume")
+  .option("--json", "Output in JSON format")
+  .action(async (options) => {
+    await listSessionsCommand({
+      format: options.json ? "json" : undefined,
+    });
   });
 
 // Remote subcommand
