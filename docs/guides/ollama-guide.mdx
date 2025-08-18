@@ -99,29 +99,7 @@ ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
 If the model isn't installed, Ollama will return: `404 model "deepseek-r1:32b" not found, try pulling it first`
 </Warning>
 
-### Method 2: Manual Configuration
-
-For custom configurations or models not on the hub:
-
-```yaml
-models:
-  - name: DeepSeek R1 32B
-    provider: ollama
-    model: deepseek-r1:32b  # Must match exactly what `ollama list` shows
-    apiBase: http://localhost:11434
-    roles:
-      - chat
-      - edit
-    capabilities:  # Add if not auto-detected
-      - tool_use
-  - name: Qwen2.5-Coder 1.5B
-    provider: ollama
-    model: qwen2.5-coder:1.5b
-    roles:
-      - autocomplete
-```
-
-### Method 3: Using Autodetect
+### Method 2: Using Autodetect
 
 Continue can automatically detect available Ollama models. You can configure this in your YAML:
 
@@ -148,6 +126,28 @@ The Autodetect feature scans your local Ollama installation and lists all availa
 </Note>
 
 You can update `apiBase` with the IP address of a remote machine serving Ollama.
+
+### Method 3: Manual Configuration
+
+For custom configurations or models not on the hub:
+
+```yaml
+models:
+  - name: DeepSeek R1 32B
+    provider: ollama
+    model: deepseek-r1:32b  # Must match exactly what `ollama list` shows
+    apiBase: http://localhost:11434
+    roles:
+      - chat
+      - edit
+    capabilities:  # Add if not auto-detected
+      - tool_use
+  - name: Qwen2.5-Coder 1.5B
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    roles:
+      - autocomplete
+```
 
 ### Model Capabilities and Tool Support
 
