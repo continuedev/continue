@@ -21,7 +21,6 @@ import { PolicySingleton } from "../control-plane/PolicySingleton.js";
 import { Logger } from "../util/Logger.js";
 import { Telemetry } from "../util/posthog.js";
 import {
-  ASSISTANTS,
   getAllDotContinueDefinitionFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
@@ -358,9 +357,14 @@ export class ConfigHandler {
       const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
         options,
-        ASSISTANTS,
+        "assistants",
       );
-      const profiles = assistantFiles.map((assistant) => {
+      const agentFiles = await getAllDotContinueDefinitionFiles(
+        this.ide,
+        options,
+        "agents",
+      );
+      const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
           this.ideSettingsPromise,

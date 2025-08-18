@@ -241,7 +241,7 @@ export function BlockSettingsTopToolbar() {
             <AssistantAndOrgListbox />
           )}
           <ToolTip id="assistant-select-tooltip" place="top">
-            {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}
+            {isUsingFreeTrial ? "View free trial usage" : "Select Agent"}
           </ToolTip>
         </HoverItem>
       </div>

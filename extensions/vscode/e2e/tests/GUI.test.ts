@@ -53,7 +53,7 @@ describe("GUI Test", () => {
       const description = await GUISelectors.getDescription(view);
 
       expect(await description.getText()).has.string(
-        "Log in to quickly build your first custom AI code assistant",
+        "Log in to quickly build your first custom AI code agent",
       );
     }).timeout(DEFAULT_TIMEOUT.XL);
 
@@ -281,7 +281,7 @@ describe("GUI Test", () => {
 
       // Verify the rule content
       const ruleItemText = await ruleItem.getText();
-      expect(ruleItemText).to.include("Assistant rule");
+      expect(ruleItemText).to.include("Agent rule");
       expect(ruleItemText).to.include("Always applied");
       expect(ruleItemText).to.include("TEST_SYS_MSG");
     }).timeout(DEFAULT_TIMEOUT.MD);

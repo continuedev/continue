@@ -288,4 +288,4 @@ We require all contributors to accept the CLA and have made it as easy as commen
    I have read the CLA Document and I hereby sign the CLA
    ```
 
-3. The CLA‑Assistant bot records your signature in the repo and marks the status check as passed.
+3. The CLA-Agent bot records your signature in the repo and marks the status check as passed.

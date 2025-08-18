@@ -276,7 +276,7 @@ describe("E2E Scenarios", () => {
     const unrolledConfig = await unrollAssistant(
       {
         uriType: "file",
-        fileUri: "./src/__tests__/local-files/duplicate-test-assistant.yaml",
+        fileUri: "./src/__tests__/local-files/duplicate-test-agent.yaml",
       },
       registry,
       {
