@@ -150,6 +150,10 @@ export class SelectionChangeManager {
     );
   }
 
+  public updateUsingFullFileDiff(usingFullFileDiff: boolean) {
+    this.usingFullFileDiff = usingFullFileDiff;
+  }
+
   public documentChanged(): void {
     this.isTypingSession = true;
     this.lastDocumentChangeTime = Date.now();
