@@ -18,8 +18,6 @@ export function SelectedSection() {
       return <ModelsSection />;
     case "rules":
       return <RulesSection />;
-    // case "docs":
-    //   return <DocsSection />;
     case "prompts":
       return <PromptsSection />;
     case "context":
