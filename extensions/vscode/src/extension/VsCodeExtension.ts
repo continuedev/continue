@@ -44,6 +44,7 @@ import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import { getAst } from "core/autocomplete/util/ast";
 import { modelSupportsNextEdit } from "core/llm/autodetect";
+import { NEXT_EDIT_MODELS } from "core/llm/constants";
 import { DocumentHistoryTracker } from "core/nextEdit/DocumentHistoryTracker";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { isNextEditTest } from "core/nextEdit/utils";
@@ -122,14 +123,14 @@ export class VsCodeExtension {
         return false;
       }
 
-      if (autocompleteModel.model.includes("instinct")) {
+      if (autocompleteModel.model.includes(NEXT_EDIT_MODELS.INSTINCT)) {
         return false;
       }
 
       return true;
     };
 
-    let usingFullFileDiff = true;
+    const usingFullFileDiff = true;
     const selectionManager = SelectionChangeManager.getInstance();
     selectionManager.initialize(this.ide, usingFullFileDiff);
 
