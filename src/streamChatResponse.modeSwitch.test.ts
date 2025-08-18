@@ -2,7 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 
 import { serviceContainer, SERVICE_NAMES, initializeServices } from './services/index.js';
 import { modeService } from './services/ModeService.js';
-import { getAllTools, streamChatResponse } from './streamChatResponse.js';
+import { getAllTools } from './streamChatResponse.js';
 
 describe('streamChatResponse - Mode Switch During Streaming', () => {
   beforeEach(async () => {
@@ -141,7 +141,7 @@ describe('streamChatResponse - Mode Switch During Streaming', () => {
     const abortController = new AbortController();
     
     // Start in normal mode - tools should include Write
-    let initialTools = await getAllTools();
+    const initialTools = await getAllTools();
     expect(initialTools.map(t => t.function.name)).toContain('Write');
 
     // During streaming, if mode switches, subsequent iterations should use new tools
