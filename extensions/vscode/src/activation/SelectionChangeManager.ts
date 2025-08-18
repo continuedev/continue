@@ -150,6 +150,10 @@ export class SelectionChangeManager {
     );
   }
 
+  /**
+   * Updates this class's usingFullFileDiff flag.
+   * @param usingFullFileDiff New value to set.
+   */
   public updateUsingFullFileDiff(usingFullFileDiff: boolean) {
     this.usingFullFileDiff = usingFullFileDiff;
   }
