@@ -49,7 +49,7 @@ export function loadConfigContextProviders(
   }
 
   // Add from defaults if not found in config
-  const DEFAULT_PROVIDERS: IContextProvider[] = [
+  const defaultProviders: IContextProvider[] = [
     new FileContextProvider({}),
     new CurrentFileContextProvider({}),
     new DiffContextProvider({}),
@@ -58,7 +58,7 @@ export function loadConfigContextProviders(
     new RulesContextProvider({}),
   ];
 
-  for (const defaultProvider of DEFAULT_PROVIDERS) {
+  for (const defaultProvider of defaultProviders) {
     if (
       !providers.find(
         (p) => p.description.title === defaultProvider.description.title,
