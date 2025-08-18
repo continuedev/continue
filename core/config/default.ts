@@ -1,17 +1,5 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
 
-export const defaultContextProvidersVsCode: NonNullable<
-  ConfigYaml["context"]
->[number][] = [
-  { provider: "code" },
-  { provider: "docs" },
-  { provider: "diff" },
-  { provider: "terminal" },
-  { provider: "problems" },
-  { provider: "folder" },
-  { provider: "codebase" },
-];
-
 export const defaultContextProvidersJetBrains: NonNullable<
   ConfigYaml["context"]
 >[number][] = [
@@ -25,7 +13,6 @@ export const defaultConfig: ConfigYaml = {
   version: "1.0.0",
   schema: "v1",
   models: [],
-  context: defaultContextProvidersVsCode,
 };
 
 export const defaultConfigJetBrains: ConfigYaml = {
@@ -33,5 +20,4 @@ export const defaultConfigJetBrains: ConfigYaml = {
   version: "1.0.0",
   schema: "v1",
   models: [],
-  context: defaultContextProvidersJetBrains,
 };
