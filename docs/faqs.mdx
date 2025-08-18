@@ -146,6 +146,234 @@ Most Continue features will work normally, including autocomplete and chat. Howe
 
 For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
 
+## Ollama Issues
+
+For a comprehensive guide on setting up and troubleshooting Ollama, see the [Ollama Guide](/guides/ollama-guide).
+
+### Unable to connect to local Ollama instance
+
+If you're getting "Unable to connect to local Ollama instance" errors:
+
+1. **Verify Ollama is running**: Check http://localhost:11434 in your browser - you should see "Ollama is running"
+2. **Start Ollama properly**: Use `ollama serve` (not just `ollama run model-name`)
+3. **Check your config**: Ensure your `config.yaml` has the correct setup:
+
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    model: llama3:latest
+```
+
+### Connection failed to remote Ollama (EHOSTUNREACH/ECONNREFUSED)
+
+When connecting to Ollama on another machine:
+
+1. **Configure Ollama to listen on all interfaces**:
+   - Set environment variable: `OLLAMA_HOST=0.0.0.0:11434`
+   - For systemd: Edit `/etc/systemd/system/ollama.service` and add under `[Service]`:
+     ```
+     Environment="OLLAMA_HOST=0.0.0.0:11434"
+     Environment="OLLAMA_ORIGINS=*"
+     ```
+   - Restart Ollama: `sudo systemctl restart ollama`
+
+2. **Update your Continue config**:
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://192.168.1.136:11434  # Use your server's IP
+    model: llama3:latest
+```
+
+3. **Check firewall settings**: Ensure port 11434 is open on the server
+
+### Ollama not working in WSL
+
+For WSL users having connection issues:
+
+#### Windows 11 22H2+ (Recommended)
+Create or edit `%UserProfile%\.wslconfig`:
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+Then restart WSL: `wsl --shutdown`
+
+#### Older Windows/WSL versions
+In PowerShell (as Administrator):
+```powershell
+# Add firewall rules
+New-NetFireWallRule -DisplayName 'WSL Ollama' -Direction Inbound -LocalPort 11434 -Action Allow -Protocol TCP
+New-NetFireWallRule -DisplayName 'WSL Ollama' -Direction Outbound -LocalPort 11434 -Action Allow -Protocol TCP
+
+# Get WSL IP (run 'ip addr' in WSL to find eth0 IP)
+# Then add port proxy (replace <WSL_IP> with your actual IP)
+netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 connectport=11434 connectaddress=<WSL_IP>
+```
+
+### Docker container can't connect to host Ollama
+
+When running Continue or other tools in Docker that need to connect to Ollama on the host:
+
+**Windows/Mac**: Use `host.docker.internal`:
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://host.docker.internal:11434
+    model: llama3:latest
+```
+
+**Linux**: Use the Docker bridge IP (usually `172.17.0.1`):
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://172.17.0.1:11434
+    model: llama3:latest
+```
+
+**Docker run command**: Add host mapping:
+```bash
+docker run -d --add-host=host.docker.internal:host-gateway ...
+```
+
+### Parse errors with remote Ollama
+
+If you're getting parse errors with remote Ollama:
+
+1. **Verify the model is installed on the remote**:
+   ```bash
+   OLLAMA_HOST=192.168.1.136:11434 ollama list
+   ```
+   
+2. **Install missing models**:
+   ```bash
+   OLLAMA_HOST=192.168.1.136:11434 ollama pull llama3
+   ```
+
+3. **Check URL format**: Ensure you're using `http://` not `https://` for local network addresses
+
+## Local Assistant
+
+### Managing Local Secrets and Environment Variables
+
+For running Continue completely offline without internet access, see the [Running Continue Without Internet guide](/guides/running-continue-without-internet).
+
+Continue supports multiple methods for managing secrets locally, searched in this order:
+
+1. **Workspace `.env` files**: Place a `.env` file in your workspace root directory
+2. **Workspace Continue folder**: Place a `.env` file in `<workspace-root>/.continue/.env`  
+3. **Global `.env` file**: Place a `.env` file in `~/.continue/.env` for user-wide secrets
+4. **Process environment variables**: Use standard system environment variables
+
+#### Creating `.env` files
+
+Create a `.env` file in one of these locations:
+- **Per-workspace**: `<workspace-root>/.env` or `<workspace-root>/.continue/.env`
+- **Global**: `~/.continue/.env`
+
+Example `.env` file:
+```
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+CUSTOM_API_URL=https://api.example.com
+```
+
+#### Using secrets in config.yaml
+
+Reference your local secrets using the `secrets` namespace:
+```yaml
+models:
+  - provider: openai
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+```
+
+#### Hub-managed secrets
+
+For centralized team secret management, use `${{ inputs.SECRET_NAME }}` syntax in your config.yaml and manage them at [https://hub.continue.dev/settings/secrets](https://hub.continue.dev/settings/secrets):
+```yaml
+models:
+  - provider: openai
+    apiKey: ${{ inputs.OPENAI_API_KEY }}
+```
+
+#### Important notes
+
+- **Never commit `.env` files** to version control - add them to `.gitignore`
+- The `.env` file uses standard dotenv format (KEY=value, no quotes needed)
+- Secrets are loaded when Continue starts, so restart your IDE after changes
+- Local `.env` files take precedence over Hub secrets when both exist
+
+#### Troubleshooting secrets
+
+If your API keys aren't being recognized:
+1. Check the `.env` file is in the correct location
+2. Ensure there are no quotes around values in the `.env` file
+3. Restart your IDE after adding/changing secrets
+4. Verify the variable name matches exactly (case-sensitive)
+5. Check that your `.env` file has proper line endings (LF, not CRLF on Windows)
+
+### Using Model Addons Locally
+
+You can leverage model addons from the Continue Hub in your local assistant configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
+
+#### Requirements
+
+- You must be logged in to Continue
+- Internet connection is required (model addons are fetched from the hub)
+
+#### Usage
+
+In your local `config.yaml`, reference model addons using the format `provider/model-name`:
+
+```yaml
+name: My Local Assistant
+version: 0.0.1
+schema: v1
+models:
+  - uses: ollama/llama3.1-8b
+  - uses: anthropic/claude-3.5-sonnet
+  - uses: openai/gpt-4
+```
+
+#### With local configuration
+
+You can combine hub model addons with local models:
+
+```yaml
+name: My Local Assistant
+version: 0.0.1
+schema: v1
+models:
+  # Hub model addon
+  - uses: anthropic/claude-3.5-sonnet
+  
+  # Local model configuration
+  - name: Local Ollama
+    provider: ollama
+    model: codellama:latest
+    apiBase: http://localhost:11434
+```
+
+#### Override addon settings
+
+You can override specific settings from the model addon:
+
+```yaml
+models:
+  - uses: ollama/llama3.1-8b
+    override:
+      apiBase: http://192.168.1.100:11434  # Use remote Ollama server
+      roles:
+        - chat
+        - autocomplete
+```
+
+This feature allows you to maintain consistent model configurations across teams while still allowing local customization when needed.
+
 ## How do I reset the state of the extension?
 
 Continue stores its data in the `~/.continue` directory (`%USERPROFILE%\.continue` on Windows).
