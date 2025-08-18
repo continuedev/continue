@@ -103,7 +103,33 @@ export class VsCodeExtension {
     this.extensionContext = context;
     this.windowId = uuidv4();
 
-    const usingFullFileDiff = true;
+    // Check if model supports next edit to determine if we should use full file diff.
+    const getUsingFullFileDiff = async () => {
+      const { config } = await this.configHandler.loadConfig();
+      const autocompleteModel = config?.selectedModelByRole.autocomplete;
+
+      if (!autocompleteModel) {
+        return false;
+      }
+
+      if (
+        !modelSupportsNextEdit(
+          autocompleteModel.capabilities,
+          autocompleteModel.model,
+          autocompleteModel.title,
+        )
+      ) {
+        return false;
+      }
+
+      if (autocompleteModel.model.includes("instinct")) {
+        return false;
+      }
+
+      return true;
+    };
+
+    let usingFullFileDiff = true;
     const selectionManager = SelectionChangeManager.getInstance();
     selectionManager.initialize(this.ide, usingFullFileDiff);
 
@@ -190,7 +216,11 @@ export class VsCodeExtension {
       ),
     );
 
-    void this.configHandler.loadConfig().then(({ config }) => {
+    void this.configHandler.loadConfig().then(async ({ config }) => {
+      const shouldUseFullFileDiff = await getUsingFullFileDiff();
+      this.completionProvider.updateUsingFullFileDiff(shouldUseFullFileDiff);
+      selectionManager.updateUsingFullFileDiff(shouldUseFullFileDiff);
+
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.verticalDiffManager.fileUriToCodeLens,
@@ -203,7 +233,12 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
+        const shouldUseFullFileDiff = await getUsingFullFileDiff();
+        this.completionProvider.updateUsingFullFileDiff(shouldUseFullFileDiff);
+        selectionManager.updateUsingFullFileDiff(shouldUseFullFileDiff);
+
         const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
+
         if (
           (autocompleteModel &&
             modelSupportsNextEdit(
