@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 
-import { CONTINUE_ASCII_ART } from "../asciiArt.js";
+import { getDisplayableAsciiArt } from "../asciiArt.js";
 import {
   compactChatHistory,
   findCompactionIndex,
@@ -456,7 +456,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       }
 
       // Show ASCII art and version for TUI mode
-      console.log(CONTINUE_ASCII_ART);
+      console.log(getDisplayableAsciiArt());
 
       // Start TUI with skipOnboarding since we already handled it
       await startTUIChat({
