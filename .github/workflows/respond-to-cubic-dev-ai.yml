@@ -192,25 +192,23 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const line = ${{ github.event.comment.line || 'null' }};
-            const originalLine = ${{ github.event.comment.original_line || 'null' }};
-            const lineDisplay = line || originalLine || 'N/A';
-
             const commentBody = `I've started a remote session to help with your code review comment:
             > ${{ github.event.comment.body }}
 
             **📁 File:** \`${{ github.event.comment.path }}\`
-            **📍 Line:** ${lineDisplay}
-            **🔗 Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
+            ** Remote Session:** ${{ steps.remote-session.outputs.session_url }}`;
 
-            // For review comments, we need to reply in the existing thread
-            // Use the simpler approach of creating a regular issue comment instead
-            await github.rest.issues.createComment({
+            const commentParams = {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ github.event.pull_request.number }},
-              body: commentBody
-            });
+              pull_number: ${{ github.event.pull_request.number }},
+              body: commentBody,
+              commit_id: '${{ github.event.pull_request.head.sha }}',
+              path: '${{ github.event.comment.path }}',
+              in_reply_to: ${{ github.event.comment.id }}
+            };
+
+            await github.rest.pulls.createReviewComment(commentParams);
 
       - name: Log session details
         if: steps.check-mention.outputs.contains_mention == 'true'
