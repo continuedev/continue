@@ -16,16 +16,16 @@ import {
 } from "./services/index.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import {
+  executeStreamedToolCalls,
+  preprocessStreamedToolCalls,
   processChunkContent,
   processToolCallDelta,
   recordStreamTelemetry,
-  preprocessStreamedToolCalls,
-  executeStreamedToolCalls,
   trackFirstTokenTime,
 } from "./streamChatResponse.helpers.js";
 import {
-  StreamCallbacks,
   getDefaultCompletionOptions,
+  StreamCallbacks,
 } from "./streamChatResponse.types.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { getAllBuiltinTools, ToolCall } from "./tools/index.js";
@@ -460,18 +460,20 @@ export async function streamChatResponse(
     SERVICE_NAMES.TOOL_PERMISSIONS,
   );
   const isHeadless = serviceResult.value?.isHeadless ?? false;
-  const tools = await getAllTools();
-
-  logger.debug("Tools prepared", {
-    toolCount: tools.length,
-    toolNames: tools.map((t) => t.function.name),
-  });
 
   let fullResponse = "";
   let finalResponse = "";
 
   while (true) {
     logger.debug("Starting conversation iteration");
+
+    // Recompute tools on each iteration to handle mode changes during streaming
+    const tools = await getAllTools();
+
+    logger.debug("Tools prepared", {
+      toolCount: tools.length,
+      toolNames: tools.map((t) => t.function.name),
+    });
 
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
