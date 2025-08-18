@@ -107,7 +107,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant-with-non-existing-block",
+          packageSlug: "agent-with-non-existing-block",
           versionSlug: "latest",
         },
       },
