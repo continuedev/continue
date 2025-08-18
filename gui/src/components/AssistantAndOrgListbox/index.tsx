@@ -184,22 +184,6 @@ export function AssistantAndOrgListbox() {
                 </span>
               </ListboxOption>
 
-              {session && (
-                <ListboxOption
-                  value="log-out"
-                  fontSizeModifier={-2}
-                  className="border-border border-b px-3 py-1.5"
-                  onClick={onLogout}
-                >
-                  <div
-                    className="text-description flex flex-row items-center"
-                    style={{ fontSize: tinyFont }}
-                  >
-                    Log out
-                  </div>
-                </ListboxOption>
-              )}
-
               <div
                 className="text-description border-border flex items-center justify-between gap-1.5 border-x-0 border-b-0 border-t border-solid px-2 py-2"
                 style={{ fontSize: tinyFont }}
