@@ -20,9 +20,9 @@ import {
 } from "../../";
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
+import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
+import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
-import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
@@ -157,17 +157,21 @@ export default async function doLoadConfig(options: {
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
-  newConfig.contextProviders.push(new RulesContextProvider({}));
 
-  // Add current file as context if setting is enabled
+  // Add docs provider if there are docs and no provider
   if (
-    newConfig.experimental?.useCurrentFileAsContext === true &&
-    !newConfig.contextProviders.find(
-      (c) =>
-        c.description.title === CurrentFileContextProvider.description.title,
-    )
+    newConfig.docs?.length &&
+    !newConfig.contextProviders?.some((cp) => cp.description.title === "docs")
   ) {
-    newConfig.contextProviders.push(new CurrentFileContextProvider({}));
+    newConfig.contextProviders.push(new DocsContextProvider({}));
+  }
+
+  const proxyContextProvider = newConfig.contextProviders?.find(
+    (cp) => cp.description.title === "continue-proxy",
+  );
+  if (proxyContextProvider) {
+    (proxyContextProvider as ContinueProxyContextProvider).workOsAccessToken =
+      workOsAccessToken;
   }
 
   // Show deprecation warnings for providers

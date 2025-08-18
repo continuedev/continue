@@ -64,10 +64,6 @@ class TestCodebaseIndexer extends CodebaseIndexer {
   }
 
   // Add public methods to test private methods
-  public testHasCodebaseContextProvider() {
-    return (this as any).hasCodebaseContextProvider();
-  }
-
   public async testHandleConfigUpdate(
     configResult: ConfigResult<ContinueConfig>,
   ) {
@@ -472,57 +468,6 @@ describe("CodebaseIndexer", () => {
 
     afterEach(() => {
       jest.clearAllMocks();
-    });
-
-    describe("hasCodebaseContextProvider", () => {
-      test("should return true when codebase context provider is present", () => {
-        // Set up config with codebase context provider
-        (testIndexer as any).config = {
-          contextProviders: [
-            {
-              description: {
-                title: CodebaseContextProvider.description.title,
-              },
-            },
-          ],
-        };
-
-        const result = testIndexer.testHasCodebaseContextProvider();
-        expect(result).toBe(true);
-      });
-
-      test("should return false when no context providers are configured", () => {
-        (testIndexer as any).config = {
-          contextProviders: undefined,
-        };
-
-        const result = testIndexer.testHasCodebaseContextProvider();
-        expect(result).toBe(false);
-      });
-
-      test("should return false when context providers exist but no codebase provider", () => {
-        (testIndexer as any).config = {
-          contextProviders: [
-            {
-              description: {
-                title: "SomeOtherProvider",
-              },
-            },
-          ],
-        };
-
-        const result = testIndexer.testHasCodebaseContextProvider();
-        expect(result).toBe(false);
-      });
-
-      test("should return false when context providers is empty array", () => {
-        (testIndexer as any).config = {
-          contextProviders: [],
-        };
-
-        const result = testIndexer.testHasCodebaseContextProvider();
-        expect(result).toBe(false);
-      });
     });
 
     describe("handleConfigUpdate", () => {

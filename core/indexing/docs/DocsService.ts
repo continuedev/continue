@@ -14,7 +14,6 @@ import {
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { isSupportedLanceDbCpuTargetForLinux } from "../../config/util";
-import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
@@ -370,12 +369,6 @@ export default class DocsService {
     if (newConfig) {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
-
-      // No point in indexing if no docs context provider
-      const hasDocsContextProvider = this.hasDocsContextProvider();
-      if (!hasDocsContextProvider) {
-        return;
-      }
 
       // Skip docs indexing if not supported
       // No warning message here because would show on ANY config update
@@ -1002,13 +995,6 @@ export default class DocsService {
         providers: ["docs"],
       });
     }
-  }
-
-  private hasDocsContextProvider() {
-    return !!this.config.contextProviders?.some(
-      (provider) =>
-        provider.description.title === DocsContextProvider.description.title,
-    );
   }
 
   // Lance DB Initialization
