@@ -1,7 +1,10 @@
+import { format, isToday, isYesterday, isThisWeek, isThisYear } from "date-fns";
 import { Box, Text, useInput } from "ink";
 import React, { useMemo, useState } from "react";
 
 import { SessionMetadata } from "../session.js";
+
+import { useTerminalSize } from "./hooks/useTerminalSize.js";
 
 interface SessionSelectorProps {
   sessions: SessionMetadata[];
@@ -10,29 +13,24 @@ interface SessionSelectorProps {
 }
 
 function formatTimestamp(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  } else if (diffDays === 1) {
+  if (isToday(date)) {
+    return format(date, "h:mm a");
+  } else if (isYesterday(date)) {
     return "yesterday";
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago`;
+  } else if (isThisWeek(date)) {
+    return format(date, "EEEE"); // Day name (e.g., "Monday")
+  } else if (isThisYear(date)) {
+    return format(date, "MMM d"); // e.g., "Jan 15"
   } else {
-    return date.toLocaleDateString();
+    return format(date, "MMM d, yyyy"); // e.g., "Jan 15, 2023"
   }
 }
 
 function formatMessage(message: string | undefined): string {
   if (!message) return "(no messages)";
-  return message.split("\n")[0];
-}
-
-function getTerminalHeight(): number {
-  // Default to reasonable fallback if we can't detect
-  return process.stdout.rows || 25;
+  // Ensure we're working with a string, handle edge cases from persisted data
+  const messageStr = typeof message === "string" ? message : String(message);
+  return messageStr.split("\n")[0];
 }
 
 export function SessionSelector({
@@ -41,16 +39,16 @@ export function SessionSelector({
   onExit,
 }: SessionSelectorProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const { rows: terminalHeight } = useTerminalSize();
 
   // Calculate how many sessions we can display based on terminal height
   const displaySessions = useMemo(() => {
-    const terminalHeight = getTerminalHeight();
     // Reserve 5 lines for header and instructions, each session takes 3 lines (2 content + 1 spacer)
     const availableHeight = Math.max(1, terminalHeight - 5);
     const maxDisplayableSessions = Math.floor(availableHeight / 3);
 
     return sessions.slice(0, maxDisplayableSessions);
-  }, [sessions]);
+  }, [sessions, terminalHeight]);
 
   useInput((input, key) => {
     if (key.upArrow || input === "k") {
@@ -96,7 +94,7 @@ export function SessionSelector({
         const color = isSelected ? "cyan" : "white";
 
         return (
-          <Box key={`session-${session.id}`} flexDirection="column">
+          <Box key={session.id} flexDirection="column">
             <Box paddingRight={3}>
               <Text color={color} wrap="truncate-end">
                 {indicator}
@@ -106,11 +104,11 @@ export function SessionSelector({
             <Box marginLeft={2}>
               <Text color="gray">
                 {formatTimestamp(session.timestamp)} - {session.messageCount}{" "}
-                messages
+                {session.messageCount === 1 ? "message" : "messages"}
               </Text>
             </Box>
             {index < displaySessions.length - 1 && (
-              <Text key={`spacer-${index}`}> </Text>
+              <Text key={`spacer-${session.id}`}> </Text>
             )}
           </Box>
         );

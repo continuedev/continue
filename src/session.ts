@@ -271,7 +271,17 @@ function getSessionMetadata(filePath: string): SessionMetadata | null {
     let firstUserMessage: string | undefined;
     for (let i = 0; i < chatHistory.length; i++) {
       if (chatHistory[i].role === "user") {
-        firstUserMessage = chatHistory[i].content;
+        const content = chatHistory[i].content;
+        // Handle both string and array content types
+        if (typeof content === "string") {
+          firstUserMessage = content;
+        } else if (Array.isArray(content)) {
+          // For array content, find the first text part
+          const textPart = content.find((part) => part.type === "text");
+          firstUserMessage = textPart?.text || "(multimodal message)";
+        } else {
+          firstUserMessage = "(unknown content type)";
+        }
         break;
       }
     }
