@@ -1,5 +1,13 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 
+// Export command functions
+export { chat } from "./chat.js";
+export { login } from "./login.js";
+export { logout } from "./logout.js";
+export { remote } from "./remote.js";
+export { serve } from "./serve.js";
+export { listSessionsCommand } from "./ls.js";
+
 export interface SlashCommand {
   name: string;
   description: string;
