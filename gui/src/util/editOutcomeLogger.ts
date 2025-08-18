@@ -7,6 +7,7 @@ import { store } from "../redux/store";
  */
 function extractModelInfo(toolCallState: ToolCallState): {
   modelProvider: string;
+  modelName: string;
   modelTitle: string;
 } {
   // Get the conversation history to find the model info
@@ -28,6 +29,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
     const modelParts = String(assistantMessage.message.model).split("::");
     return {
       modelProvider: modelParts[0] || "unknown",
+      modelName: modelParts[1] || String(assistantMessage.message.model),
       modelTitle: modelParts[1] || String(assistantMessage.message.model),
     };
   }
@@ -38,6 +40,7 @@ function extractModelInfo(toolCallState: ToolCallState): {
 
   return {
     modelProvider: chatModel?.provider || "unknown",
+    modelName: chatModel?.model || "unknown",
     modelTitle: chatModel?.model || "unknown",
   };
 }
@@ -153,7 +156,8 @@ export function assembleEditOutcomeData(
     streamId: applyState.streamId,
     timestamp: new Date().toISOString(),
     modelProvider: modelInfo.modelProvider,
-    modelTitle: modelInfo.modelTitle,
+    modelName: modelInfo.modelName,
+    modelTitle: modelInfo.modelName,
     prompt: promptAndCompletion.prompt,
     completion: promptAndCompletion.completion,
     previousCode: codeChanges.previousCode,

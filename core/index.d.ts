@@ -455,6 +455,7 @@ export type FileSymbolMap = Record<string, SymbolWithRange[]>;
 
 export interface PromptLog {
   modelTitle: string;
+  modelProvider: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -1278,6 +1279,7 @@ export type MCPConnectionStatus =
   | "connecting"
   | "connected"
   | "error"
+  | "authenticating"
   | "not-connected";
 
 export type MCPPromptArgs = {
@@ -1323,6 +1325,7 @@ export interface MCPTool {
 export interface MCPServerStatus extends MCPOptions {
   status: MCPConnectionStatus;
   errors: string[];
+  isProtectedResource: boolean;
 
   prompts: MCPPrompt[];
   tools: MCPTool[];

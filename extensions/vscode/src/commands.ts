@@ -8,7 +8,6 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
-import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { startLocalOllama } from "core/util/ollamaHelper";
 import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
@@ -808,44 +807,6 @@ const getCommandsMap: (
   };
 };
 
-const registerCopyBufferService = (
-  context: vscode.ExtensionContext,
-  core: Core,
-) => {
-  const typeDisposable = vscode.commands.registerCommand(
-    "editor.action.clipboardCopyAction",
-    async (arg) => doCopy(typeDisposable),
-  );
-
-  async function doCopy(typeDisposable: any) {
-    typeDisposable.dispose(); // must dispose to avoid endless loops
-
-    await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
-
-    const clipboardText = await vscode.env.clipboard.readText();
-
-    if (clipboardText) {
-      core.invoke("clipboardCache/add", {
-        content: clipboardText,
-      });
-    }
-
-    await context.workspaceState.update("continue.copyBuffer", {
-      text: clipboardText,
-      copiedAt: new Date().toISOString(),
-    });
-
-    // re-register to continue intercepting copy commands
-    typeDisposable = vscode.commands.registerCommand(
-      "editor.action.clipboardCopyAction",
-      async () => doCopy(typeDisposable),
-    );
-    context.subscriptions.push(typeDisposable);
-  }
-
-  context.subscriptions.push(typeDisposable);
-};
-
 async function installModelWithProgress(
   modelName: string,
   modelInstaller: ModelInstaller,
@@ -914,22 +875,6 @@ export function registerAllCommands(
   )) {
     context.subscriptions.push(
       vscode.commands.registerCommand(command, callback),
-    );
-  }
-
-  try {
-    registerCopyBufferService(context, core);
-  } catch (e: any) {
-    //Non-critical error, it needs to be intercepted and not prevent the extension from starting
-    console.log("Error registering CopyBufferService: ", e);
-    Telemetry.capture(
-      "vscode_extension_copy_buffer_failure",
-      {
-        stack: extractMinimalStackTraceInfo(e.stack),
-        message: e.message,
-      },
-      false,
-      true,
     );
   }
 }

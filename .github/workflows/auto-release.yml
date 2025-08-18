@@ -16,7 +16,7 @@ jobs:
       contents: write # Needed for creating releases
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Get version from package.json
         id: get_version
@@ -45,7 +45,7 @@ jobs:
       contents: write # Needed for creating releases
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 

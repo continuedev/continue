@@ -1,6 +1,7 @@
 ---
-title: "Continue CLI (cn)"
-description: "Context engineering on the command line"
+title: "How to Use Continue CLI (cn)"
+sidebarTitle: "Continue CLI (cn)"
+description: "Learn how to use Continue's command-line interface for context engineering, automated coding tasks, and headless development workflows with customizable models, rules, and tools"
 ---
 
 <Warning>Continue CLI (cn) is currently in Alpha</Warning>
@@ -29,7 +30,7 @@ cn
 cn -p "Generate a conventional commit name for the current git changes"
 ```
 
-## Basic usage
+## How to Use Continue CLI - Basic Usage
 
 Out of the box, `cn` comes with tools that let it understand your codebase, edit files, run terminal commands, and more (if you approve). You can ask `cn` to:
 
@@ -43,7 +44,7 @@ Use '@' to give it file context, or '/' to run slash commands.
 
 If you want to resume a previous conversation, run `cn --resume`.
 
-## Headless mode (`-p` flag)
+## How to Use Headless Mode (`-p` flag)
 
 In headless mode, `cn` will only output its final response, making it perfect for Unix Philosophy-style scripting and automation. For example, you could pipe your git diff into `cn` to generate a commit message, and write this to a file:
 
@@ -51,25 +52,25 @@ In headless mode, `cn` will only output its final response, making it perfect fo
 echo "$(git diff) Generate a conventional commit name for the current git changes" | cn -p > commit-message.txt
 ```
 
-## Configuration
+## How to Configure Continue CLI
 
-`cn` uses [`config.yaml`](./reference.mdx), the exact same configuration file as Continue. This means that you can log in to [Continue Hub](./hub/introduction.mdx) or use your existing local configuration.
+`cn` uses [`config.yaml`](/reference), the exact same configuration file as Continue. This means that you can log in to [Continue Hub](/hub/introduction) or use your existing local configuration.
 
 To switch between configurations, you can use the `/config` slash command in `cn`, or you can start it with the `--config` flag (e.g. `cn --config continuedev/default-agent` or `cn --config ~/.continue/config.yaml`).
 
-### Models
+### How to Add Custom Models
 
-Learn how to add custom models [here](./customization/models.mdx). Then, you can use the `/model` slash command to switch between them in `cn`.
+Learn how to add custom models [here](/customize/overview). Then, you can use the `/model` slash command to switch between them in `cn`.
 
-### Rules
+### How to Configure Rules
 
-`cn` supports [rules](./customize/deep-dives/rules.mdx) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from the hub. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
+`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from the hub. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://hub.continue.dev/nate/spanish) to always speak in Spanish.
 
-### Tools
+### How to Configure Tools
 
-`cn` supports MCP tools, which can be configured in the [same way](./customize/deep-dives/mcp.mdx) as with the Continue IDE extensions.
+`cn` supports MCP tools, which can be configured in the [same way](/customize/deep-dives/mcp) as with the Continue IDE extensions.
 
-#### Tool Permissions
+#### How to Set Tool Permissions
 
 `cn` includes a tool permission system to make sure you approve of the agent's actions. It will begin with minimal permissions but as you approve tool calls, it will add policies to `~/.continue/permissions.yaml` to remember your preferences.
 
