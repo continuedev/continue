@@ -52,10 +52,14 @@ export function AssistantAndOrgListbox() {
   }
 
   function onNewAssistant() {
-    void ideMessenger.request("controlPlane/openUrl", {
-      path: "/new",
-      orgSlug: currentOrg?.slug,
-    });
+    if (session) {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "/new",
+        orgSlug: currentOrg?.slug,
+      });
+    } else {
+      void ideMessenger.request("config/newAssistantFile", undefined);
+    }
     close();
   }
 
@@ -152,7 +156,7 @@ export function AssistantAndOrgListbox() {
                 value="new-assistant"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={session ? onNewAssistant : () => login(false)}
+                onClick={onNewAssistant}
               >
                 <span
                   className="text-description flex flex-row items-center"
