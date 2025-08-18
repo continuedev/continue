@@ -219,7 +219,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar
           currentMode={currentMode}
-          repoURlText={repoURlText}
+          repoURLText={repoURlText}
           isRemoteMode={isRemoteMode}
           services={services}
           navState={navState}
