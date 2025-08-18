@@ -132,6 +132,11 @@ export class ContinueCompletionProvider
     return config.selectedModelByRole.rerank ?? undefined;
   }
 
+  public updateUsingFullFileDiff(usingFullFileDiff: boolean) {
+    this.usingFullFileDiff = usingFullFileDiff;
+    this.prefetchQueue.initialize(this.usingFullFileDiff);
+  }
+
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
