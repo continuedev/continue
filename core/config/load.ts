@@ -389,8 +389,8 @@ async function intermediateToFinalConfig({
       config.contextProviders
         ?.filter((cp) => isContextProviderWithParams(cp))
         .map((cp) => ({
-          provider: cp.name,
-          params: cp.params,
+          provider: (cp as ContextProviderWithParams).name,
+          params: (cp as ContextProviderWithParams).params,
         })),
       !!config.docs?.length,
     );
