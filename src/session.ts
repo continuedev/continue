@@ -156,7 +156,7 @@ function getSessionId(): string {
 function getSessionDir(): string {
   // For tests, use the test directory if we're in test mode
   if (process.env.CONTINUE_CLI_TEST && process.env.HOME) {
-    const sessionDir = path.join(process.env.HOME, ".continue-cli", "sessions");
+    const sessionDir = path.join(process.env.HOME, ".continue", "cli-sessions");
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(sessionDir)) {
@@ -167,7 +167,7 @@ function getSessionDir(): string {
   }
 
   const homeDir = os.homedir();
-  const sessionDir = path.join(homeDir, ".continue-cli", "sessions");
+  const sessionDir = path.join(homeDir, ".continue", "cli-sessions");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {
