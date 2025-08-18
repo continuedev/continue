@@ -414,7 +414,7 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
     const result = await getAllDotContinueDefinitionFiles(
       testIde,
       options,
-      "agent",
+      "agents",
     );
     expect(result).toHaveLength(2);
     const yamlFile = result.find((f) => f.path.includes("agent1.yaml"));

@@ -1,4 +1,4 @@
-name: "CLA Agent"
+name: "CLA Assistant"
 on:
   issue_comment:
     types: [created]
@@ -12,12 +12,12 @@ permissions:
   statuses: write
 
 jobs:
-  CLIAgent:
+  CLAAssistant:
     runs-on: ubuntu-latest
     # Only run this workflow on the main repository (continuedev/continue)
     if: github.repository == 'continuedev/continue'
     steps:
-      - name: "CLA Agent"
+      - name: "CLA Assistant"
         if: (contains(github.event.comment.body, 'recheck') || contains(github.event.comment.body, 'I have read the CLA Document and I hereby sign the CLA')) || github.event_name == 'pull_request_target'
         uses: contributor-assistant/github-action@v2.6.1
         env:
