@@ -1,5 +1,5 @@
 // Mode-related slash commands have been removed per user request
-// This test file is no longer needed but needs a dummy test for Jest
+// This test file is no longer needed but needs a dummy test for Vitest
 
 import { describe, it, expect } from 'vitest';
 

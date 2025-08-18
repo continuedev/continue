@@ -78,7 +78,7 @@ describe("runTerminalCommandTool", () => {
       expect(elapsed).toBeLessThan(TEST_TIMEOUT_MS + 200); // Allow 200ms margin
       expect(elapsed).toBeGreaterThan(TEST_TIMEOUT_MS - 100); // Allow 100ms margin
       expect(result).toContain(`[Command timed out after ${TEST_TIMEOUT_MS / 1000} seconds of no output]`);
-    }, TEST_TIMEOUT_MS + 2000); // Set Jest timeout with buffer
+    }, TEST_TIMEOUT_MS + 2000); // Set test timeout with buffer
 
     it("should not timeout commands that continuously produce output", async () => {
       // Create a command that produces output at intervals shorter than timeout
@@ -95,7 +95,7 @@ describe("runTerminalCommandTool", () => {
       expect(result).toContain("output 1");
       expect(result).toContain(`output ${iterations}`);
       expect(result).not.toContain("[Command timed out");
-    }, TEST_TIMEOUT_MS * 3); // Set Jest timeout with buffer
+    }, TEST_TIMEOUT_MS * 3); // Set test timeout with buffer
 
     it("should reset timeout when command produces stderr output", async () => {
       // Create a command that produces stderr output periodically
@@ -112,7 +112,7 @@ describe("runTerminalCommandTool", () => {
       expect(result).toContain("done");
       expect(result).toContain("Stderr: error 1");
       expect(result).not.toContain("[Command timed out");
-    }, TEST_TIMEOUT_MS * 3); // Set Jest timeout with buffer
+    }, TEST_TIMEOUT_MS * 3); // Set test timeout with buffer
 
     it("should include partial output when timing out", async () => {
       // Create a command that produces some output then stops
@@ -123,7 +123,7 @@ describe("runTerminalCommandTool", () => {
       
       expect(result).toContain("initial output");
       expect(result).toContain(`[Command timed out after ${TEST_TIMEOUT_MS / 1000} seconds of no output]`);
-    }, TEST_TIMEOUT_MS + 2000); // Set Jest timeout with buffer
+    }, TEST_TIMEOUT_MS + 2000); // Set test timeout with buffer
   });
 
   describe("output handling", () => {

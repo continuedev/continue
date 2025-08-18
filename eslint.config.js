@@ -178,7 +178,6 @@ export default [
       "coverage/**",
       "*.d.ts",
       "src/__mocks__/**",
-      "jest.setup.ts",
       "vitest.config.ts",
       "*.config.js",
       "*.config.ts",

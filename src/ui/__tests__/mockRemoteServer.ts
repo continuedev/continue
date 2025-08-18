@@ -159,7 +159,7 @@ export class MockRemoteServer {
   }
 }
 
-// Add a dummy test to satisfy Jest requirement
+// Add a dummy test to satisfy Vitest requirement
 describe("MockRemoteServer", () => {
   test("should be defined", () => {
     expect(MockRemoteServer).toBeDefined();
