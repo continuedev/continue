@@ -1,0 +1,56 @@
+name: Test Continue Agent App Integration
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:  # Allow manual testing
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Test with GitHub App (default behavior)
+  test-with-app:
+    name: Test with Continue Agent App
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: General Review with App
+        uses: ./actions/general-review
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+          continue-org: "test-org"
+          continue-config: "test-org/review-bot"
+          # use_github_app defaults to true
+
+  # Test without GitHub App (fallback mode)
+  test-without-app:
+    name: Test without GitHub App
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: General Review without App
+        uses: ./actions/general-review
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+          continue-org: "test-org"
+          continue-config: "test-org/review-bot"
+          use_github_app: false  # Explicitly disable app authentication
+
+  # Test detailed review with app
+  test-detailed-with-app:
+    name: Test Detailed Review with App
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: contains(github.event.comment.body, '@test-detailed')
+    steps:
+      - name: Detailed Review with App
+        uses: ./actions/detailed-review
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+          continue-org: "test-org"
+          continue-config: "test-org/review-bot"
+          # use_github_app defaults to true

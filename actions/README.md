@@ -119,15 +119,16 @@ jobs:
 
 Both actions accept the same inputs:
 
-| Input              | Description                            | Required |
-| ------------------ | -------------------------------------- | -------- |
-| `continue-api-key` | API key for Continue service           | Yes      |
-| `continue-org`     | Organization for Continue config       | Yes      |
-| `continue-config`  | Config path (e.g., "myorg/review-bot") | Yes      |
+| Input              | Description                                              | Required | Default |
+| ------------------ | -------------------------------------------------------- | -------- | ------- |
+| `continue-api-key` | API key for Continue service                            | Yes      | -       |
+| `continue-org`     | Organization for Continue config                        | Yes      | -       |
+| `continue-config`  | Config path (e.g., "myorg/review-bot")                  | Yes      | -       |
+| `use_github_app`   | Use Continue Agent GitHub App for bot identity          | No       | `true`  |
 
 ## Setup Requirements
 
-### 1. Continue API Key
+### 1. Continue API Key (Required)
 
 Add your Continue API key as a secret named `CONTINUE_API_KEY` in your repository:
 
@@ -137,7 +138,41 @@ Add your Continue API key as a secret named `CONTINUE_API_KEY` in your repositor
 4. Name: `CONTINUE_API_KEY`
 5. Value: Your Continue API key
 
-### 2. Continue Configuration
+### 2. Continue Agent GitHub App (Recommended)
+
+To enable reviews with the `continue-agent[bot]` identity instead of `github-actions[bot]`:
+
+#### Option A: Install the Continue Agent App
+
+1. **Install the app**: Visit https://github.com/apps/continue-agent
+2. **Grant repository access**: Select the repositories where you want to use Continue reviews
+3. **Configure secrets and variables**:
+   - Add a **repository secret**: `CONTINUE_APP_PRIVATE_KEY` 
+     - This should contain your GitHub App's private key (the entire .pem file content)
+   - Add a **repository variable**: `CONTINUE_APP_ID`
+     - This should contain your GitHub App's ID
+
+#### Option B: Use without GitHub App
+
+If you prefer to use the standard `github-actions[bot]` identity, add this to your workflow:
+
+```yaml
+- uses: continuedev/continue/actions/general-review@main
+  with:
+    continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+    continue-org: "your-org-name"
+    continue-config: "your-org-name/review-bot"
+    use_github_app: false  # Disable GitHub App integration
+```
+
+#### Benefits of Using the GitHub App
+
+- ✅ **Branded Identity**: Reviews appear as `continue-agent[bot]` with custom avatar
+- ✅ **Better Rate Limits**: App rate limits scale with repository count
+- ✅ **Professional Appearance**: Distinctive bot identity for your reviews
+- ✅ **Enhanced Security**: Short-lived tokens (1 hour expiry) with automatic revocation
+
+### 3. Continue Configuration
 
 Set up your review bot configuration in Continue:
 
@@ -145,7 +180,7 @@ Set up your review bot configuration in Continue:
 2. Configure the review bot settings
 3. Note your organization name and config path
 
-### 3. Workflow Permissions
+### 4. Workflow Permissions
 
 The workflow requires these permissions:
 
@@ -223,6 +258,26 @@ uses: continuedev/continue/actions/general-review@64bda6b2b3dac1037e9895dbee4ce1
 ```
 
 ## Troubleshooting
+
+### GitHub App Installation Issues
+
+#### Error: "Continue Agent GitHub App is not installed or configured properly"
+
+This error means the GitHub App token could not be generated. Common causes:
+
+1. **App not installed**: Visit https://github.com/apps/continue-agent and install it
+2. **Missing secrets/variables**: Ensure you've added:
+   - Secret: `CONTINUE_APP_PRIVATE_KEY` (the entire .pem file content)
+   - Variable: `CONTINUE_APP_ID` (your app's ID number)
+3. **No repository access**: Check that the app has access to your repository
+4. **Incorrect private key format**: Make sure you include the full private key with headers:
+   ```
+   -----BEGIN RSA PRIVATE KEY-----
+   [key content]
+   -----END RSA PRIVATE KEY-----
+   ```
+
+**Quick fix**: Set `use_github_app: false` in your workflow to bypass app authentication
 
 ### Review not triggering
 
