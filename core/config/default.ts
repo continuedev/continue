@@ -6,10 +6,3 @@ export const defaultConfig: ConfigYaml = {
   schema: "v1",
   models: [],
 };
-
-export const defaultConfigJetBrains: ConfigYaml = {
-  name: "Local Assistant",
-  version: "1.0.0",
-  schema: "v1",
-  models: [],
-};
