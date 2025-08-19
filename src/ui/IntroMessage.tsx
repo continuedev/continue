@@ -19,9 +19,11 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   model,
   mcpService,
 }) => {
+  // Get MCP prompts directly (not memoized since they can change after first render)
+  const mcpPrompts = mcpService.getState().prompts ?? [];
+
   // Memoize expensive operations to avoid running on every resize
-  const { mcpPrompts, allRules, modelCapable } = useMemo(() => {
-    const mcpPrompts = mcpService.getState().prompts ?? [];
+  const { allRules, modelCapable } = useMemo(() => {
     // Show all rules in a single section
     const args = parseArgs();
     const commandLineRules = args.rules || [];
@@ -39,8 +41,8 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       model.model,
     );
 
-    return { mcpPrompts, allRules, modelCapable };
-  }, [config.rules, model.provider, model.name, model.model, mcpService]);
+    return { allRules, modelCapable };
+  }, [config.rules, model.provider, model.name, model.model]);
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
