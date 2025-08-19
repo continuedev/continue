@@ -205,6 +205,36 @@ describe('ModelService', () => {
         index: 1,
       });
     });
+
+    test('should include models with undefined roles', async () => {
+      // Add a model with undefined roles to the assistant
+      const assistantWithUndefinedRoles = {
+        ...mockAssistant,
+        models: [
+          ...mockAssistant.models!,
+          {
+            provider: 'local',
+            model: 'llama-2',
+            name: 'Llama 2',
+            apiKey: 'test-key',
+            // roles is undefined
+          } as ModelConfig,
+        ],
+      };
+
+      vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, assistantWithUndefinedRoles.models![0] as ModelConfig]);
+      await service.initialize(assistantWithUndefinedRoles, mockAuthConfig);
+
+      const models = service.getAvailableChatModels();
+
+      // Should include the two chat models and the model with undefined roles
+      expect(models).toHaveLength(3);
+      expect(models[2]).toEqual({
+        provider: 'local',
+        name: 'Llama 2',
+        index: 2,
+      });
+    });
   });
 
   describe('getCurrentModelIndex()', () => {
