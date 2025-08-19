@@ -200,7 +200,7 @@ export function useMainEditorWebviewListeners({
   );
 
   useWebviewListener(
-    "mentionFile",
+    "mentionFileOrDirectory",
     async (data) => {
       if (!editor) return;
       editor
@@ -208,10 +208,10 @@ export function useMainEditorWebviewListeners({
         .insertContent({
           type: "mention",
           attrs: {
-            id: data.fullFilePath,
-            query: data.fullFilePath,
-            itemType: "file",
-            label: data.shortFilePath,
+            id: data.fullPath,
+            query: data.fullPath,
+            itemType: data.type,
+            label: data.name,
           },
         })
         .insertContent(" ")
