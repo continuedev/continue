@@ -52,7 +52,7 @@ Retrieve the following sites per these providers, and consider these notes on ho
 // TODO: add info for openai, ollama, etc
 
 For any other providers, search the web for "latest [provider] models" and find the most relevant model information using your best judgement.
-Generally, ignore models that do not support text output. These models will be used in a coding assistant client that only supports text/image input and text/output, so extraneous capabilities can be ignored.
+Generally, ignore models that do not support text output. These models will be used in a coding agent client that only supports text/image input and text/output, so extraneous capabilities can be ignored.
 Sometimes, "Experimental", "Preview", or similar versions of models are available. The latest-date version of each should have its own information maintained.
 
 3. UPDATE THE INFORMATION

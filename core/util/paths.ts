@@ -396,10 +396,6 @@ export function getGlobalPromptsPath(): string {
   return getGlobalFolderWithName("prompts");
 }
 
-export function getGlobalAssistantsPath(): string {
-  return getGlobalFolderWithName("assistants");
-}
-
 export function readAllGlobalPromptFiles(
   folderPath: string = getGlobalPromptsPath(),
 ): { path: string; content: string }[] {
