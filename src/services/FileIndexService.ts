@@ -42,6 +42,13 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
       this.fileWatcherUnsubscribe();
       this.fileWatcherUnsubscribe = null;
     }
+
+    // Stop the file watcher to prevent resource leaks
+    if (this.fileWatcherInitialized) {
+      const watcher = getFileWatcher();
+      watcher.stopWatching();
+    }
+
     this.fileWatcherInitialized = false;
   }
 
@@ -159,6 +166,7 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
     return new Promise<string[]>((resolve, reject) => {
       const allMatches: string[] = [];
       let processed = 0;
+      let streamEnded = false;
 
       const globStream = glob.stream(patterns, options);
 
@@ -167,13 +175,13 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
         processed++;
 
         if (processed % batchSize === 0) {
-          if (globStream.emittedEnd) {
+          if (streamEnded) {
             return;
           }
           globStream.pause();
 
           setTimeout(() => {
-            if (globStream.emittedEnd) {
+            if (streamEnded) {
               return;
             }
             globStream.resume();
@@ -181,8 +189,15 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
         }
       });
 
-      globStream.on("end", () => resolve(allMatches));
-      globStream.on("error", (err) => reject(err));
+      globStream.on("end", () => {
+        streamEnded = true;
+        resolve(allMatches);
+      });
+
+      globStream.on("error", (err) => {
+        streamEnded = true;
+        reject(err);
+      });
     });
   }
 
@@ -208,7 +223,7 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
 
     if (filterText.length === 0) {
       // Show files sorted alphabetically when no filter
-      return files
+      return [...files]
         .sort((a, b) => {
           const aFileName = a.path.split("/").pop() || a.path;
           const bFileName = b.path.split("/").pop() || b.path;

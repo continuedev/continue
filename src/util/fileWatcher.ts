@@ -38,10 +38,14 @@ export class FileWatcher {
             normalizedPath.endsWith(`/${dirName}`) ||
             normalizedPath === dirName
           );
-        } else {
+        } else if (suffix.startsWith("*")) {
           // File pattern like **/*.tmp
+          const extension = suffix.slice(1); // Remove the '*' to get the extension
+          return normalizedPath.endsWith(extension);
+        } else {
+          // File pattern like **/package.json
           return (
-            normalizedPath.includes(suffix.slice(0, -1)) ||
+            normalizedPath.endsWith(`/${suffix}`) ||
             normalizedPath.endsWith(suffix)
           );
         }

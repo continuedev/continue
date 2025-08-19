@@ -9,6 +9,7 @@ import { FileIndexService } from './FileIndexService.js';
 vi.mock('../util/fileWatcher.js', () => ({
   getFileWatcher: () => ({
     startWatching: vi.fn(),
+    stopWatching: vi.fn(),
     onChange: vi.fn(() => () => {}), // Return unsubscribe function
   }),
 }));

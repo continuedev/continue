@@ -6,7 +6,6 @@ import {
   ApiClientServiceState,
   AuthServiceState,
   ConfigServiceState,
-  FileIndexServiceState,
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
@@ -60,8 +59,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-    fileIndex: FileIndexServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient", "fileIndex"]);
+  }>(["auth", "config", "model", "mcp", "apiClient"]);
 
   // Use navigation context
   const {

@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,7 +12,7 @@ describe('FileWatcher', () => {
 
   beforeEach(() => {
     // Create a temporary directory for testing
-    tempDir = fs.mkdtempSync(path.join(process.cwd(), 'test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'filewatcher-test-'));
     watcher = new FileWatcher({
       debounceMs: 100, // Shorter debounce for tests
       maxDepth: 2
@@ -85,6 +86,74 @@ describe('FileWatcher', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it('should ignore files matching wildcard patterns like **/*.tmp', async () => {
+    const callback = vi.fn();
+    watcher.onChange(callback);
+    watcher.startWatching(tempDir);
+
+    // Wait for watcher to initialize
+    await new Promise(resolve => setTimeout(resolve, 100));
+    callback.mockClear();
+
+    // Create a .tmp file (should be ignored by **/*.tmp pattern)
+    const tmpFile = path.join(tempDir, 'test.tmp');
+    fs.writeFileSync(tmpFile, 'temporary content');
+
+    // Create a .log file (should be ignored by **/*.log pattern)
+    const logFile = path.join(tempDir, 'debug.log');
+    fs.writeFileSync(logFile, 'log content');
+
+    // Create a .min.js file (should be ignored by **/*.min.js pattern)
+    const minJsFile = path.join(tempDir, 'bundle.min.js');
+    fs.writeFileSync(minJsFile, 'minified js');
+
+    // Wait for debounce
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Should not have been called because all files match ignore patterns
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('should ignore specific files like .DS_Store', async () => {
+    const callback = vi.fn();
+    watcher.onChange(callback);
+    watcher.startWatching(tempDir);
+
+    // Wait for watcher to initialize
+    await new Promise(resolve => setTimeout(resolve, 100));
+    callback.mockClear();
+
+    // Create .DS_Store file (should be ignored by **/.DS_Store pattern)
+    const dsStoreFile = path.join(tempDir, '.DS_Store');
+    fs.writeFileSync(dsStoreFile, 'ds store content');
+
+    // Wait for debounce
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Should not have been called because .DS_Store matches ignore pattern
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('should detect files that do not match ignore patterns', async () => {
+    const callback = vi.fn();
+    watcher.onChange(callback);
+    watcher.startWatching(tempDir);
+
+    // Wait for watcher to initialize
+    await new Promise(resolve => setTimeout(resolve, 100));
+    callback.mockClear();
+
+    // Create a .js file (should NOT be ignored)
+    const jsFile = path.join(tempDir, 'test.js');
+    fs.writeFileSync(jsFile, 'console.log("hello");');
+
+    // Wait for debounce
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Should have been called because .js files are not in ignore patterns
+    expect(callback).toHaveBeenCalled();
+  });
+
   it('should allow unsubscribing from callbacks', async () => {
     const callback = vi.fn();
     const unsubscribe = watcher.onChange(callback);
@@ -102,5 +171,35 @@ describe('FileWatcher', () => {
 
     // Should not have been called because we unsubscribed
     expect(callback).not.toHaveBeenCalled();
+  });
+
+  describe('shouldIgnorePath method', () => {
+    it('should correctly ignore wildcard file patterns', () => {
+      const watcher = new FileWatcher();
+      
+      // Test the private method by accessing it through prototype
+      const shouldIgnorePath = (watcher as any).shouldIgnorePath.bind(watcher);
+      
+      // Test wildcard file patterns
+      expect(shouldIgnorePath('/some/path/file.tmp')).toBe(true);
+      expect(shouldIgnorePath('/some/path/file.log')).toBe(true);
+      expect(shouldIgnorePath('/some/path/bundle.min.js')).toBe(true);
+      expect(shouldIgnorePath('/some/path/styles.min.css')).toBe(true);
+      
+      // Test files that should NOT be ignored
+      expect(shouldIgnorePath('/some/path/file.js')).toBe(false);
+      expect(shouldIgnorePath('/some/path/file.ts')).toBe(false);
+      expect(shouldIgnorePath('/some/path/README.md')).toBe(false);
+      
+      // Test specific files
+      expect(shouldIgnorePath('/some/path/.DS_Store')).toBe(true);
+      expect(shouldIgnorePath('/some/path/Thumbs.db')).toBe(true);
+      
+      // Test directory patterns
+      expect(shouldIgnorePath('/some/path/node_modules')).toBe(true);
+      expect(shouldIgnorePath('/some/path/node_modules/package')).toBe(true);
+      expect(shouldIgnorePath('/path/dist')).toBe(true);
+      expect(shouldIgnorePath('/path/.git')).toBe(true);
+    });
   });
 });

@@ -45,7 +45,7 @@ export const FILE_IGNORE_PATTERNS = [
   "**/*.tgz",
   "**/*.rar",
   "**/*.7z",
-  "**/*.next",
+  "**/.next/**",
 ];
 
 export const FILE_PATTERNS = [
