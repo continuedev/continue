@@ -11,7 +11,7 @@ export const writeChecklistTool: Tool = {
     checklist: {
       type: "string",
       description:
-        "The complete checklist in markdown format using - [ ] for incomplete tasks and - [x] for completed tasks. Avoid headers and additional content unless specifically being used to group checkboxes",
+        "The complete checklist in markdown format using - [ ] for incomplete tasks and - [x] for completed tasks. Avoid headers and additional content unless specifically being used to group checkboxes. Try to keep the list short, and make each item specific and actionable.",
       required: true,
     },
   },
