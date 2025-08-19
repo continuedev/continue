@@ -393,6 +393,7 @@ async function intermediateToFinalConfig({
           params: (cp as ContextProviderWithParams).params,
         })),
       !!config.docs?.length,
+      ideInfo.ideType,
     );
 
   for (const cp of config.contextProviders ?? []) {

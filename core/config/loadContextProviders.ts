@@ -2,7 +2,7 @@ import {
   AssistantUnrolledNonNullable,
   ConfigValidationError,
 } from "@continuedev/config-yaml";
-import { IContextProvider } from "..";
+import { IContextProvider, IdeType } from "..";
 import { contextProviderClassFromName } from "../context/providers";
 import CurrentFileContextProvider from "../context/providers/CurrentFileContextProvider";
 import DiffContextProvider from "../context/providers/DiffContextProvider";
@@ -22,6 +22,7 @@ import TerminalContextProvider from "../context/providers/TerminalContextProvide
 export function loadConfigContextProviders(
   configContext: AssistantUnrolledNonNullable["context"],
   hasDocs: boolean,
+  ideType: IdeType,
 ): {
   providers: IContextProvider[];
   errors: ConfigValidationError[];
@@ -72,8 +73,19 @@ export function loadConfigContextProviders(
     providers.push(new DocsContextProvider({}));
   }
 
+  // @problems and @terminal are not supported in jetbrains
+  const filteredProviders = providers.filter((pv) => {
+    if (ideType === "jetbrains") {
+      return (
+        pv.description.title !== TerminalContextProvider.description.title &&
+        pv.description.title !== ProblemsContextProvider.description.title
+      );
+    }
+    return true;
+  });
+
   return {
-    providers,
+    providers: filteredProviders,
     errors,
   };
 }

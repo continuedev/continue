@@ -370,6 +370,7 @@ async function configYamlToContinueConfig(options: {
   const { providers, errors: contextErrors } = loadConfigContextProviders(
     config.context,
     !!config.docs?.length,
+    ideInfo.ideType,
   );
 
   continueConfig.contextProviders = providers;
