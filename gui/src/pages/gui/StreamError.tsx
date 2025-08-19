@@ -59,12 +59,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const checkKeysButton = apiKeyUrl ? (
     <GhostButton
       className="flex items-center"
-      onClick={() => {
-        ideMessenger.post("controlPlane/openUrl", {
-          path: apiKeyUrl,
-          orgSlug: undefined,
-        });
-      }}
+      onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
       <span>View key</span>
