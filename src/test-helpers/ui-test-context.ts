@@ -24,11 +24,27 @@ export function createUITestContext(
   const {
     serviceValue = null,
     serviceState = "idle",
-    services = {},
+    services: customServices = {},
     allServicesReady = false,
     chatMessages = [],
     isWaitingForResponse = false,
   } = options;
+
+  // Default services with FileIndexService mock
+  const defaultServices = {
+    fileIndex: {
+      files: [
+        { path: "README.md", displayName: "README.md" },
+        { path: "src/index.ts", displayName: "src/index.ts" },
+        { path: "package.json", displayName: "package.json" },
+      ],
+      isIndexing: false,
+      error: null,
+    },
+    ...customServices,
+  };
+
+  const services = { ...defaultServices, ...customServices };
 
   // Mock useService hook
   const mockUseService = vi.fn().mockReturnValue({

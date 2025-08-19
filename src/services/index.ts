@@ -5,6 +5,7 @@ import { logger } from "../util/logger.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { AuthService } from "./AuthService.js";
 import { ConfigService } from "./ConfigService.js";
+import { FileIndexService } from "./FileIndexService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
@@ -24,6 +25,7 @@ const configService = new ConfigService();
 const modelService = new ModelService();
 const apiClientService = new ApiClientService();
 const mcpService = new MCPService();
+const fileIndexService = new FileIndexService();
 
 /**
  * Initialize all services and register them with the service container
@@ -211,6 +213,12 @@ export async function initializeServices(
     [SERVICE_NAMES.CONFIG], // Depends on config
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.FILE_INDEX,
+    () => fileIndexService.initialize(),
+    [],
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -252,6 +260,7 @@ export function areServicesReady(): boolean {
     SERVICE_NAMES.CONFIG,
     SERVICE_NAMES.MODEL,
     SERVICE_NAMES.MCP,
+    SERVICE_NAMES.FILE_INDEX,
   ].every((name) => serviceContainer.isReady(name));
 }
 
@@ -271,6 +280,7 @@ export const services = {
   model: modelService,
   apiClient: apiClientService,
   mcp: mcpService,
+  fileIndex: fileIndexService,
   mode: modeService,
 } as const;
 

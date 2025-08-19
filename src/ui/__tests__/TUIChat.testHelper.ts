@@ -12,6 +12,17 @@ import {
   MockMCPService,
 } from "./TUIChat.setup.js";
 
+// Shared mock FileIndex to avoid duplication
+const MOCK_FILE_INDEX = {
+  files: [
+    { path: "README.md", displayName: "README.md" },
+    { path: "src/index.ts", displayName: "src/index.ts" },
+    { path: "package.json", displayName: "package.json" },
+  ],
+  isIndexing: false,
+  error: null,
+};
+
 // Define RenderResult type to match ink-testing-library's Instance
 interface RenderResult {
   stdin: {
@@ -142,6 +153,8 @@ export function runTest(
                       return { mcpService: new MockMCPService() };
                     case "apiClient":
                       return { apiClient: new MockApiClient() };
+                    case "fileIndex":
+                      return MOCK_FILE_INDEX;
                     default:
                       return null;
                   }
@@ -297,6 +310,8 @@ export function runTestSuite(
                             return { mcpService: new MockMCPService() };
                           case "apiClient":
                             return { apiClient: new MockApiClient() };
+                          case "fileIndex":
+                            return MOCK_FILE_INDEX;
                           default:
                             return null;
                         }
