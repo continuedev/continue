@@ -49,7 +49,8 @@ export class ModelService
     this.assistant = assistant;
     this.authConfig = authConfig;
     this.availableModels = (assistant.models?.filter(
-      (model) => model && model.roles?.includes("chat"),
+      (model) =>
+        model && (model.roles?.includes("chat") || model.roles === undefined),
     ) || []) as ModelConfig[];
 
     // Check if we have a persisted model name and use it if valid
@@ -91,7 +92,8 @@ export class ModelService
       this.assistant = assistant;
       this.authConfig = authConfig;
       this.availableModels = (assistant.models?.filter(
-        (model) => model && model.roles?.includes("chat"),
+        (model) =>
+          model && (model.roles?.includes("chat") || model.roles === undefined),
       ) || []) as ModelConfig[];
 
       const [llmApi, model] = getLlmApi(assistant, authConfig);
