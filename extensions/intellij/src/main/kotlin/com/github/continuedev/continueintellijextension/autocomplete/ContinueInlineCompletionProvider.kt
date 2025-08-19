@@ -12,10 +12,12 @@ import com.intellij.codeInsight.inline.completion.*
 import com.intellij.codeInsight.inline.completion.elements.InlineCompletionElement
 import com.intellij.codeInsight.inline.completion.elements.InlineCompletionGrayTextElement
 import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionSuggestion
+import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionSingleSuggestion
 import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionVariant
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 
 class ContinueInlineCompletionProvider : InlineCompletionProvider {
     override val id get() = InlineCompletionProviderID("Continue")
@@ -24,8 +26,13 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
     private var lastProject: Project? = null
     private var isUsingNextEdit = false
 
-    override fun isEnabled(event: InlineCompletionEvent): Boolean =
-        ContinueExtensionSettings.instance.continueState.enableTabAutocomplete
+    override fun isEnabled(event: InlineCompletionEvent): Boolean {
+        val isSettingEnabled = ContinueExtensionSettings.instance.continueState.enableTabAutocomplete
+        val isEventOk = event is InlineCompletionEvent.DirectCall
+                || event is InlineCompletionEvent.DocumentChange
+                || event is InlineCompletionEvent.LookupChange
+        return isSettingEnabled && isEventOk
+    }
 
     override suspend fun getSuggestion(request: InlineCompletionRequest): InlineCompletionSuggestion {
         val editor = request.editor
@@ -121,34 +128,18 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
             )
             if (variant == null)
                 return InlineCompletionSuggestion.Empty
-
-            return object : InlineCompletionSuggestion {
-                override suspend fun getVariants(): List<InlineCompletionVariant> {
-                    val completion = InlineCompletionVariant.build(
-                        request.file.virtualFile,
-                        flow { emit(InlineCompletionGrayTextElement(variant)) }
-                    )
-                    return listOf(completion)
-                }
-            }
+            return InlineCompletionSingleSuggestion.build(elements = flowOf(InlineCompletionGrayTextElement(variant)))
         }
     }
 
-    // todo: we're hacking here with this handler + lastUuid and lastProject variables
-    // todo: because we simply want to get notified which completion is accepted (this sounds like a common problem!)
-    // todo: search for simpler solution / ask jetbrains why it's so complicated
-    private inner class NotifyingHandler() : InlineCompletionInsertHandler {
+    private inner class NotifyingHandler : DefaultInlineCompletionInsertHandler() {
+
         override fun afterInsertion(
             environment: InlineCompletionInsertEnvironment,
             elements: List<InlineCompletionElement>
         ) {
-            DefaultInlineCompletionInsertHandler.INSTANCE.afterInsertion(environment, elements)
-
-            if (isUsingNextEdit) {
-                lastProject?.service<NextEditService>()?.acceptEdit(lastUuid ?: "")
-            } else {
-                lastProject?.service<CompletionService>()?.acceptAutocomplete(lastUuid)
-            }
+            super.afterInsertion(environment, elements)
+            lastProject?.service<CompletionService>()?.acceptAutocomplete(lastUuid)
         }
     }
 }

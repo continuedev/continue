@@ -19,7 +19,8 @@
             "pages": [
               "index",
               "getting-started/overview",
-              "getting-started/install"
+              "getting-started/install",
+              "getting-started/quick-start"
             ]
           },
           {
