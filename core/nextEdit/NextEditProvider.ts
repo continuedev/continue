@@ -36,7 +36,6 @@ import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import {
   INSTINCT_SYSTEM_PROMPT,
-  MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_SYSTEM_PROMPT,
   MODEL_WINDOW_SIZES,
   UNIQUE_TOKEN,
@@ -688,21 +687,14 @@ export class NextEditProvider {
     const llm = await this._prepareLlm();
     if (!llm) return undefined;
 
-    // TODO: Check for mercury models, and inject some unique tokens so that
-    // the backend knows that mercury-coder is a next edit.
-    // TODO: Capture the unique tokens in llm Inception.ts and apis Inception.ts
-    // TODO: where does capabilities come in???
-    // My best answer is that it's a non-mercury-specific way of determining if
-    // the model supports next edit. If it does, then we can inject the unique tokens.
-
     // Check for mercury models, and inject unique token for next edit.
+    // Capture the unique tokens in llm Inception.ts and apis Inception.ts
     const modelName = helper.modelName;
     if (
       modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
       modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
     ) {
       // Inject the unique token to the last prompt's content.
-      // TODO: Check if there is an actual modification of prompts.
       const lastPrompt = prompts[prompts.length - 1];
       if (lastPrompt && typeof lastPrompt.content === "string") {
         lastPrompt.content += UNIQUE_TOKEN;
@@ -712,24 +704,20 @@ export class NextEditProvider {
     const msg: ChatMessage = await llm.chat([prompts[1]], token, {
       stream: false,
     });
-    console.log("message");
-    console.log(msg.content);
 
     if (typeof msg.content !== "string") {
       return undefined;
     }
 
-    // const nextCompletion = msg.content.split(
-    //   `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
-    // )[1]
-    //   ? replaceEscapedCharacters(
-    //       msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
-    //     ).replace(/\n$/, "")
-    //   : replaceEscapedCharacters(msg.content);
-    const nextCompletion =
-      msg.content
-        .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
-        .replace(/\n$/, "") ?? msg.content;
+    // NOTE: Keep this in case there is a change in spec.
+    // const nextCompletion =
+    //   msg.content
+    //     .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
+    //     .replace(/\n$/, "") ?? msg.content;
+    const nextCompletion = msg.content.slice(
+      msg.content.indexOf("\`\`\`\n") + "\'\'\'\n".length,
+      msg.content.lastIndexOf("\n\n\`\`\`"),
+    );
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       return await this._handlePartialFileDiff(
