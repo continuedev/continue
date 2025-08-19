@@ -21,6 +21,12 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
     return true;
   }
 
+  // Handle Ctrl+L to refresh screen (clear terminal artifacts)
+  if (key.ctrl && input === "l") {
+    process.stdout.write("\x1b[2J\x1b[H");
+    return true;
+  }
+
   // Handle Shift+Tab to cycle through modes
   if (key.tab && key.shift && !showSlashCommands && !showFileSearch) {
     cycleModes().catch((error) => {
