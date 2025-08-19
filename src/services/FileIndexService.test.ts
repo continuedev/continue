@@ -91,10 +91,10 @@ describe('FileIndexService', () => {
   it('should ignore specified patterns', async () => {
     // Create files that should be ignored
     fs.mkdirSync('node_modules');
-    fs.writeFileSync('node_modules/package.js', 'module.exports = {}');
+    fs.writeFileSync(path.join('node_modules', 'package.js'), 'module.exports = {}');
     
     fs.mkdirSync('dist');
-    fs.writeFileSync('dist/bundle.js', 'console.log("bundle")');
+    fs.writeFileSync(path.join('dist', 'bundle.js'), 'console.log("bundle")');
 
     // Create files that should be included
     fs.writeFileSync('src.js', 'console.log("src")');
@@ -129,7 +129,7 @@ describe('FileIndexService', () => {
   it('should include files with matching names and paths', async () => {
     // Create nested structure
     fs.mkdirSync('src');
-    fs.writeFileSync('src/test-helper.js', 'helper');
+    fs.writeFileSync(path.join('src', 'test-helper.js'), 'helper');
     fs.writeFileSync('test.js', 'test file');
 
     await service.initialize();
@@ -140,7 +140,8 @@ describe('FileIndexService', () => {
     expect(filtered.length).toBeGreaterThanOrEqual(2);
     const filePaths = filtered.map(f => f.path);
     expect(filePaths).toContain('test.js');
-    expect(filePaths).toContain('src/test-helper.js');
+    // Normalize path separators for cross-platform compatibility
+    expect(filePaths).toContain(path.join('src', 'test-helper.js'));
   });
 
   it('should respect limit parameter', async () => {
