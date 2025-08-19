@@ -154,9 +154,20 @@ class NextEditWindowManager(private val project: Project) {
         ApplicationManager.getApplication().invokeLater {
             try {
                 val caretPosition = editor.caretModel.primaryCaret.logicalPosition
-                val caretPoint = editor.logicalPositionToXY(caretPosition)
+                val currentLine = caretPosition.line
+                val lineEndOffset = editor.document.getLineEndOffset(currentLine)
+                val lineText = editor.document.getText(
+                    TextRange(
+                        editor.document.getLineStartOffset(currentLine),
+                        lineEndOffset
+                    )
+                )
+
+                val endOfLinePosition = LogicalPosition(currentLine, lineText.length + 4)
+                val endOfLinePoint = editor.logicalPositionToXY(endOfLinePosition)
+
                 val editorComponent = editor.contentComponent
-                val screenPoint = java.awt.Point(caretPoint.x + 20, caretPoint.y + editor.lineHeight)
+                val screenPoint = java.awt.Point(endOfLinePoint.x, endOfLinePoint.y)
                 javax.swing.SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
 
                 popup.showInScreenCoordinates(editorComponent, screenPoint)
