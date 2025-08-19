@@ -15,6 +15,7 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
+import { ToolTip } from "../gui/Tooltip";
 import {
   Listbox,
   ListboxOption,
@@ -114,7 +115,10 @@ export function AssistantAndOrgListbox() {
       <div className="relative" ref={listboxRef}>
         <SelectedAssistantButton selectedProfile={selectedProfile} />
         <Transition>
-          <ListboxOptions className="-translate-x-1.5 pb-0">
+          <ListboxOptions
+            className="-translate-x-1.5 pb-0"
+            style={{ zIndex: 200 }}
+          >
             <div className="border-border border-x-0 border-t-0 border-solid px-2 py-2">
               <div className="flex flex-col gap-2 pl-1">
                 {session ? (
@@ -122,13 +126,15 @@ export function AssistantAndOrgListbox() {
                     {session?.AUTH_TYPE !== AuthType.OnPrem &&
                       session?.account.id}
                     <ArrowRightStartOnRectangleIcon
-                      className="h-3 w-3 cursor-pointer"
+                      className="h-3 w-3 cursor-pointer hover:brightness-125"
                       onClick={onLogout}
+                      data-tooltip-id="logout-tooltip"
                     />
+                    <ToolTip id="logout-tooltip">Logout</ToolTip>
                   </span>
                 ) : (
                   <span
-                    className="text-description-muted flex cursor-pointer items-center justify-end gap-x-1"
+                    className="text-description-muted flex cursor-pointer items-center justify-end gap-x-1 hover:brightness-125"
                     onClick={() => login(false)}
                   >
                     Log In <ArrowRightEndOnRectangleIcon className="h-3 w-3" />
