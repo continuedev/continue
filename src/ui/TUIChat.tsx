@@ -108,6 +108,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     messages,
     setMessages,
     chatHistory,
+    setChatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,
@@ -128,6 +129,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
+    onShowSessionSelector: () => navigateTo("session"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
     // Remote mode configuration
@@ -145,6 +147,48 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { handleOrganizationSelect, handleConfigSelect, handleModelSelect } =
     useSelectors(configPath, setMessages, resetChatHistory);
+
+  // Session selection handler
+  const handleSessionSelect = async (sessionId: string) => {
+    try {
+      // Close the session selector
+      closeCurrentScreen();
+
+      // Import session functions
+      const { loadSessionById } = await import("../session.js");
+
+      // Load the session history
+      const sessionHistory = loadSessionById(sessionId);
+      if (!sessionHistory) {
+        console.error(`Session ${sessionId} could not be loaded.`);
+        return;
+      }
+
+      // Set the session ID so future operations use this session
+      process.env.CONTINUE_CLI_TEST_SESSION_ID = sessionId.replace(
+        "continue-cli-",
+        "",
+      );
+
+      // Directly set the chat history and messages to the loaded session
+      setChatHistory(sessionHistory);
+
+      // Convert chat history to display messages (exclude system messages)
+      const displayMessages = sessionHistory
+        .filter((msg) => msg.role !== "system")
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content as string,
+        }));
+
+      setMessages(displayMessages);
+
+      // Clear the intro message since we're now showing a resumed session
+      setShowIntroMessage(false);
+    } catch (error) {
+      console.error("Error loading session:", error);
+    }
+  };
 
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
@@ -203,6 +247,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleOrganizationSelect={handleOrganizationSelect}
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
+          handleSessionSelect={handleSessionSelect}
           handleReload={handleReload}
           closeCurrentScreen={closeCurrentScreen}
           activePermissionRequest={activePermissionRequest}

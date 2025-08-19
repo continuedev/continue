@@ -197,6 +197,10 @@ const commandHandlers: Record<string, CommandHandler> = {
     posthogService.capture("useSlashCommand", { name: "mcp" });
     return { openMcpSelector: true };
   },
+  resume: () => {
+    posthogService.capture("useSlashCommand", { name: "resume" });
+    return { openSessionSelector: true };
+  },
   org: handleOrg,
 };
 
@@ -211,6 +215,7 @@ export async function handleSlashCommands(
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
   openMCPSelector?: boolean;
+  openSessionSelector?: boolean;
   compact?: boolean;
 } | null> {
   // Only trigger slash commands if slash is the very first character

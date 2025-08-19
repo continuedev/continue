@@ -194,6 +194,13 @@ describe("handleSlashCommands", () => {
       expect(result?.compact).toBe(true);
     });
 
+    test("resume command should open session selector", async () => {
+      const result = await handleSlashCommands("/resume", mockAssistant);
+
+      expect(result).not.toBeNull();
+      expect(result?.openSessionSelector).toBe(true);
+    });
+
     test("non-slash input should return null", async () => {
       const result = await handleSlashCommands("regular input", mockAssistant);
       expect(result).toBeNull();

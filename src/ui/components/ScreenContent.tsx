@@ -1,12 +1,14 @@
 import { Box, Text } from "ink";
 import React from "react";
 
+import { listSessions } from "../../session.js";
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import { OrganizationSelector } from "../OrganizationSelector.js";
+import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UserInput } from "../UserInput.js";
 
@@ -23,6 +25,7 @@ interface ScreenContentProps {
   ) => Promise<void>;
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
+  handleSessionSelect: (sessionId: string) => Promise<void>;
   handleReload: () => Promise<void>;
   closeCurrentScreen: () => void;
   activePermissionRequest: any;
@@ -49,6 +52,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleOrganizationSelect,
   handleConfigSelect,
   handleModelSelect,
+  handleSessionSelect,
   handleReload,
   closeCurrentScreen,
   activePermissionRequest,
@@ -118,6 +122,18 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
       <ModelSelector
         onSelect={handleModelSelect}
         onCancel={closeCurrentScreen}
+      />
+    );
+  }
+
+  // Session selector
+  if (isScreenActive("session")) {
+    const sessions = listSessions(20);
+    return (
+      <SessionSelector
+        sessions={sessions}
+        onSelect={handleSessionSelect}
+        onExit={closeCurrentScreen}
       />
     );
   }

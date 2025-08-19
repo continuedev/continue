@@ -15,6 +15,7 @@ export interface UseChatProps {
   onShowConfigSelector: () => void;
   onShowMCPSelector: () => void;
   onShowModelSelector?: () => void;
+  onShowSessionSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
   // Remote mode props
@@ -58,5 +59,6 @@ export interface SlashCommandResult {
   openConfigSelector?: boolean;
   openModelSelector?: boolean;
   openMcpSelector?: boolean;
+  openSessionSelector?: boolean;
   compact?: boolean;
 }
