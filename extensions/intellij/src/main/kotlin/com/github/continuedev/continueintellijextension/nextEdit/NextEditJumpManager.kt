@@ -18,8 +18,8 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -314,7 +314,7 @@ class NextEditJumpManager(private val project: Project) {
             foreground = JBColor.foreground()
             background = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
             isOpaque = true
-            font = UIUtil.getLabelFont()
+            font = JBFont.small()
         }
 
         panel.add(label, BorderLayout.CENTER)
