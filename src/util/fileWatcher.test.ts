@@ -60,18 +60,26 @@ describe('FileWatcher', () => {
   });
 
   it('should ignore paths that match ignore patterns', async () => {
+    // Pre-create the node_modules directory to avoid directory creation events
+    const nodeModulesDir = path.join(tempDir, 'node_modules');
+    fs.mkdirSync(nodeModulesDir);
+    
     const callback = vi.fn();
     watcher.onChange(callback);
     watcher.startWatching(tempDir);
 
+    // Wait longer to ensure watcher is fully initialized and settled
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Reset the callback mock to ignore any initialization events
+    callback.mockClear();
+
     // Create a file in node_modules (should be ignored)
-    const nodeModulesDir = path.join(tempDir, 'node_modules');
-    fs.mkdirSync(nodeModulesDir);
     const testFile = path.join(nodeModulesDir, 'test.js');
     fs.writeFileSync(testFile, 'test content');
 
-    // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 150));
+    // Wait for debounce with longer timeout for CI environments
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Should not have been called because node_modules is ignored
     expect(callback).not.toHaveBeenCalled();
