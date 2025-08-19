@@ -33,12 +33,12 @@ export class InceptionApi extends OpenAIApi {
     });
   }
 
-  // Add custom edit completions method
+  // Add custom edit completions method.
   async *editCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("chat/completions", this.apiBase);
+    const endpoint = new URL("edit/completions", this.apiBase);
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
@@ -71,16 +71,42 @@ export class InceptionApi extends OpenAIApi {
     }
   }
 
-  // Override the regular chat method to route to edit endpoint for certain models
+  // Add custom edit completions method (non-streaming).
+  async editCompletionNonStream(
+    body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
+  ): Promise<ChatCompletion> {
+    const endpoint = new URL("edit/completions", this.apiBase);
+    const resp = await customFetch(this.config.requestOptions)(endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        model: body.model,
+        messages: body.messages,
+        max_tokens: body.max_tokens,
+        temperature: body.temperature,
+        top_p: body.top_p,
+        frequency_penalty: body.frequency_penalty,
+        presence_penalty: body.presence_penalty,
+        stop: body.stop,
+        stream: false, // Set to false for non-streaming
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+      signal,
+    });
+
+    const data = await resp.json();
+    return data as ChatCompletion;
+  }
+
+  // Override the regular chat stream method to route to edit endpoint for next edit requests.
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    // Cast to access the custom property
-    // const bodyWithNextEdit =
-    //   body as InceptionChatCompletionCreateParamsStreaming;
-    // const { nextEdit, ...cleanBody } = bodyWithNextEdit;
-
     if (this.isNextEdit(body.messages)) {
       body.messages = this.removeNextEditToken(body.messages);
       yield* this.editCompletionStream(body, signal);
@@ -89,16 +115,14 @@ export class InceptionApi extends OpenAIApi {
     }
   }
 
+  // Override the regular chat non stream method to route to edit endpoint for next edit requests.
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    // const bodyWithNextEdit =
-    //   body as InceptionChatCompletionCreateParamsNonStreaming;
-    // const { nextEdit, ...cleanBody } = bodyWithNextEdit;
-
     if (this.isNextEdit(body.messages)) {
-      throw new Error("Non-streaming edit completions not yet implemented");
+      body.messages = this.removeNextEditToken(body.messages);
+      return this.editCompletionNonStream(body, signal);
     } else {
       return super.chatCompletionNonStream(body, signal);
     }
@@ -146,8 +170,8 @@ export class InceptionApi extends OpenAIApi {
     throw new Error("Method not implemented.");
   }
 
+  // Check if any message contains the unique next edit token.
   private isNextEdit(messages: ChatCompletionMessageParam[]): boolean {
-    // Check if any message contains the unique next edit token.
     return messages.some(
       (message) =>
         typeof message.content === "string" &&
@@ -155,6 +179,7 @@ export class InceptionApi extends OpenAIApi {
     );
   }
 
+  // Remove the unique token from messages.
   private removeNextEditToken(
     messages: ChatCompletionMessageParam[],
   ): ChatCompletionMessageParam[] {
