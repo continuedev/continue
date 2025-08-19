@@ -118,11 +118,18 @@ const optimizedStrategy: CachingStrategy = (body) => {
           };
         }
       } else if (message.content && Array.isArray(message.content)) {
+        // Only add one cache control per message with array content
+        let addedCacheControl = false;
         const updatedContent = message.content.map((item: any) => {
           if (item.type === "text" && item.text) {
             const tokens = estimateTokenCount(item.text);
-            if (tokens > 500 && availableCacheMessages > 0) {
+            if (
+              tokens > 500 &&
+              availableCacheMessages > 0 &&
+              !addedCacheControl
+            ) {
               availableCacheMessages -= 1;
+              addedCacheControl = true;
               return {
                 ...item,
                 cache_control: { type: "ephemeral" },
