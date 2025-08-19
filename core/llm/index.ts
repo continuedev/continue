@@ -190,6 +190,7 @@ export abstract class BaseLLM implements ILLM {
 
   //URI to local block defining this LLM
   sourceFile?: string;
+  forceStreamChat = false;
 
   private _llmOptions: LLMOptions;
 
@@ -993,9 +994,11 @@ export abstract class BaseLLM implements ILLM {
       messages = compiledChatMessages;
     }
 
+    const messagesCopy = [...messages]; // templateMessages may modify messages.
+
     const prompt = this.templateMessages
-      ? this.templateMessages(messages)
-      : this._formatChatMessages(messages);
+      ? this.templateMessages(messagesCopy)
+      : this._formatChatMessages(messagesCopy);
     if (logEnabled) {
       interaction?.logItem({
         kind: "startChat",
@@ -1013,7 +1016,7 @@ export abstract class BaseLLM implements ILLM {
     let usage: Usage | undefined = undefined;
 
     try {
-      if (this.templateMessages) {
+      if (this.templateMessages && !this.forceStreamChat) {
         for await (const chunk of this._streamComplete(
           prompt,
           signal,
