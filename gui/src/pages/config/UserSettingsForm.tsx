@@ -93,7 +93,7 @@ export function UserSettingsForm() {
   const enableExperimentalTools =
     config.experimental?.enableExperimentalTools ?? false;
   const onlyUseSystemMessageTools =
-    config.experimental?.onlyUseSystemMessageTools ?? false;
+    config.experimental?.onlyUseSystemMessageTools ?? true;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
   const enableStaticContextualization =
