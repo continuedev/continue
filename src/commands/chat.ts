@@ -471,44 +471,16 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
       // If we detected piped input, create a custom stdin for TUI
       if ((options as any).hasPipedInput) {
-        try {
-          const fs = await import("fs");
-          const { ReadStream } = await import("tty");
-          const ttyFd = fs.openSync("/dev/tty", "r");
-          const customStdin = new ReadStream(ttyFd);
-          tuiOptions.customStdin = customStdin;
-          logger.debug("Created custom TTY stdin for TUI mode");
-        } catch (error) {
-          logger.debug(
-            "Failed to create custom stdin, TUI may not work properly:",
-            error,
-          );
-        }
+        const fs = await import("fs");
+        const { ReadStream } = await import("tty");
+        const ttyFd = fs.openSync("/dev/tty", "r");
+        const customStdin = new ReadStream(ttyFd);
+        tuiOptions.customStdin = customStdin;
+        logger.debug("Created custom TTY stdin for TUI mode");
       }
 
-      try {
-        await startTUIChat(tuiOptions);
-        return;
-      } catch (error) {
-        // If TUI fails (likely due to TTY issues with piped input), fall back to headless mode
-        if (
-          error instanceof Error &&
-          (error.message.includes("TUI initialization failed") ||
-            error.message.includes("setRawMode") ||
-            error.message.includes("Raw mode is not supported"))
-        ) {
-          logger.debug(
-            "TUI mode failed, falling back to headless mode:",
-            error.message,
-          );
-          // Clear any partial output and switch to headless mode
-          console.clear();
-          options.headless = true;
-        } else {
-          // Re-throw unexpected errors
-          throw error;
-        }
-      }
+      await startTUIChat(tuiOptions);
+      return;
     }
 
     // Run headless mode
