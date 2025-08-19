@@ -1,13 +1,13 @@
 ---
-title: "Using Llama 3.1 with Continue"
-description: "Continue makes it easy to code with the latest open-source models, including the entire Llama 3.1 family of models. Llama 3.2 models are also supported but not recommended for chat, because they are specifically designed to be small or multi-modal."
+title: "How to Use Llama 3.1 with Continue"
+description: "Learn how to set up and use Llama 3.1 models with Continue using Ollama, Groq, Together AI, Replicate, SambaNova, or Cerebras Inference for local and cloud-based development"
 ---
 
-If you haven't already installed Continue, you can do that [here for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [here for JetBrains](https://plugins.jetbrains.com/plugin/22707-continue). For more general information on customizing Continue, read [our customization docs](/customization/overview).
+If you haven't already installed Continue, you can do that [here for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [here for JetBrains](https://plugins.jetbrains.com/plugin/22707-continue). For more general information on customizing Continue, read [our customization docs](/customize/overview).
 
 Below we share some of the easiest ways to get up and running, depending on your use-case.
 
-## Ollama
+## How to Use Llama 3.1 with Ollama
 
 Ollama is the fastest way to get up and running with local language models. We recommend trying Llama 3.1 8b, which is impressive for its size and will perform well on most hardware.
 
@@ -37,7 +37,7 @@ config.json
 }
 ```
 
-## Groq
+## How to Use Llama 3.1 with Groq
 
 <Info>
   Check if your chosen model is still supported by referring to the [model
@@ -78,7 +78,7 @@ config.json
 }
 ```
 
-## Together AI
+## How to Use Llama 3.1 with Together AI
 
 Together AI provides fast and reliable inference of open-source models. You'll be able to run the 405b model with good speed.
 
@@ -114,7 +114,7 @@ config.json
 }
 ```
 
-## Replicate
+## How to Use Llama 3.1 with Replicate
 
 Replicate makes it easy to host and run open-source AI with an API.
 
@@ -149,7 +149,7 @@ config.json
 }
 ```
 
-## SambaNova
+## How to Use Llama 3.1 with SambaNova
 
 SambaNova Cloud provides world record Llama3.1 70B/405B serving.
 
@@ -185,9 +185,15 @@ config.json
 }
 ```
 
-## Cerebras Inference
+## How to Use Llama 3.1 and 3.3 with Cerebras Inference
 
-Cerebras Inference uses specialized silicon to provides fast inference for the Llama3.1 8B/70B.
+<Info>
+  Check if your chosen model is still supported by referring to the [model
+  status](https://status.cerebras.ai/). If a model has been
+  deprecated, you may encounter a 404 error when attempting to use it.
+</Info>
+
+Cerebras Inference uses specialized silicon to provides fast inference for the Llama3.1 8B and Llama3.3 70B.
 
 1. Create an account in the portal [here](https://cloud.cerebras.ai/).
 2. Create and copy the API key for use in Continue.
@@ -200,9 +206,9 @@ config.yaml
 
 ```
 models:
-  - name: Cerebras Llama 3.1 70B
+  - name: Cerebras Llama 3.3 70B
     provider: cerebras
-    model: llama3.1-70b
+    model: llama3.3-70b
     apiKey: <YOUR_CEREBRAS_API_KEY>
 ```
 
@@ -212,9 +218,9 @@ config.json
 {
   "models": [
     {
-      "title": "Cerebras Llama 3.1 70B",
+      "title": "Cerebras Llama 3.3 70B",
       "provider": "cerebras",
-      "model": "llama3.1-70b",
+      "model": "llama3.3-70b",
       "apiKey": "<YOUR_CEREBRAS_API_KEY>"
     }
   ]

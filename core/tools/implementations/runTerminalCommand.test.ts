@@ -352,4 +352,123 @@ describe("runTerminalCommandImpl", () => {
     expect(result[0].content).toBe("Command is running in the background...");
     expect(result[0].status).toBe("Command is running in the background...");
   });
+
+  it("should handle missing workspace directory gracefully", async () => {
+    // Mock IDE to return empty workspace directories
+    const mockEmptyWorkspace = jest.fn().mockReturnValue(Promise.resolve([]));
+
+    // Create IDE mock with empty workspace
+    const mockIde = {
+      getIdeInfo: jest
+        .fn()
+        .mockReturnValue(Promise.resolve({ remoteName: "local" })),
+      getWorkspaceDirs: mockEmptyWorkspace,
+      runCommand: jest.fn(),
+      getIdeSettings: jest.fn(),
+      getDiff: jest.fn(),
+      getClipboardContent: jest.fn(),
+      isTelemetryEnabled: jest.fn(),
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+      renameFile: jest.fn(),
+      deleteFile: jest.fn(),
+      globFiles: jest.fn(),
+      ls: jest.fn(),
+    };
+
+    const extras = {
+      ide: mockIde as unknown as IDE,
+      llm: {} as any,
+      fetch: {} as any,
+      tool: {} as any,
+      toolCallId: "test-tool-call",
+    } as ToolExtras;
+
+    const command = `node -e "console.log('no workspace test')"`;
+    const args = { command, waitForCompletion: true };
+
+    const result = await runTerminalCommandImpl(args, extras);
+
+    // Should still work - falling back to HOME or cwd
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Terminal");
+    expect(result[0].description).toBe("Terminal command output");
+    expect(result[0].content).toContain("no workspace test");
+    expect(result[0].status).toBe("Command completed");
+
+    // Verify workspace dirs was called but returned empty
+    expect(mockEmptyWorkspace).toHaveBeenCalled();
+  });
+
+  it("should handle case where cwd fallbacks all fail", async () => {
+    // Mock IDE to return empty workspace directories
+    const mockEmptyWorkspace = jest.fn().mockReturnValue(Promise.resolve([]));
+
+    // Save original environment variables and process.cwd
+    const originalHome = process.env.HOME;
+    const originalUserProfile = process.env.USERPROFILE;
+    const originalCwd = process.cwd;
+
+    try {
+      // Mock all fallbacks to fail
+      delete process.env.HOME;
+      delete process.env.USERPROFILE;
+      process.cwd = jest.fn().mockImplementation(() => {
+        throw new Error("Current directory unavailable");
+      }) as jest.MockedFunction<() => string>;
+
+      // Create IDE mock with empty workspace
+      const mockIde = {
+        getIdeInfo: jest
+          .fn()
+          .mockReturnValue(Promise.resolve({ remoteName: "local" })),
+        getWorkspaceDirs: mockEmptyWorkspace,
+        runCommand: jest.fn(),
+        getIdeSettings: jest.fn(),
+        getDiff: jest.fn(),
+        getClipboardContent: jest.fn(),
+        isTelemetryEnabled: jest.fn(),
+        readFile: jest.fn(),
+        writeFile: jest.fn(),
+        renameFile: jest.fn(),
+        deleteFile: jest.fn(),
+        globFiles: jest.fn(),
+        ls: jest.fn(),
+      };
+
+      const extras = {
+        ide: mockIde as unknown as IDE,
+        llm: {} as any,
+        fetch: {} as any,
+        tool: {} as any,
+        toolCallId: "test-tool-call",
+      } as ToolExtras;
+
+      const command = `node -e "console.log('fallback test')"`;
+      const args = { command, waitForCompletion: true };
+
+      // This should now handle the case gracefully by falling back to temp directory
+      const result = await runTerminalCommandImpl(args, extras);
+
+      // Should work using the temp directory as fallback
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("Terminal");
+      expect(result[0].content).toContain("fallback test");
+      expect(result[0].status).toBe("Command completed");
+
+      console.log(
+        "Successfully handled cwd fallback to temp directory:",
+        result[0].status,
+      );
+    } finally {
+      // Always restore original values
+      if (originalHome !== undefined) {
+        process.env.HOME = originalHome;
+      }
+      if (originalUserProfile !== undefined) {
+        process.env.USERPROFILE = originalUserProfile;
+      }
+      process.cwd = originalCwd;
+    }
+  });
 });

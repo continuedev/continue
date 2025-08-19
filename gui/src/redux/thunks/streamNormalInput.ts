@@ -3,7 +3,6 @@ import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -27,6 +26,7 @@ import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTo
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 /**
@@ -36,6 +36,7 @@ import { callToolById } from "./callToolById";
 async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
+  activeTools: Tool[],
 ): Promise<void> {
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
@@ -52,11 +53,15 @@ async function handleToolCallExecution(
   }
 
   // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every(
-    (toolCallState) =>
-      toolSettings[toolCallState.toolCall.function.name] ===
-      "allowedWithoutPermission",
-  );
+  const allAutoApproved = toolCallStates.every((toolCallState) => {
+    const toolPolicy =
+      toolSettings[toolCallState.toolCall.function.name] ??
+      activeTools.find(
+        (tool) => tool.function.name === toolCallState.toolCall.function.name,
+      )?.defaultToolPolicy ??
+      DEFAULT_TOOL_SETTING;
+    return toolPolicy == "allowedWithoutPermission";
+  });
 
   // Set all tools as generated first
   toolCallStates.forEach((toolCallState) => {
@@ -120,8 +125,8 @@ function filterToolsForModel(
  * Determines whether to use search and replace tool instead of edit file
  * Right now we only know that this is reliable with Claude models
  */
-function shouldUseFindReplaceEdits(model: ModelDescription): boolean {
-  return model.model.includes("claude");
+function shouldUseFindReplaceEdits({ model }: ModelDescription): boolean {
+  return model.includes("claude") || model.includes("gpt-5");
 }
 
 export const streamNormalInput = createAsyncThunk<
@@ -173,6 +178,7 @@ export const streamNormalInput = createAsyncThunk<
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
       selectedChatModel,
+      activeTools,
     );
 
     const systemMessage = systemToolsFramework
@@ -267,6 +273,7 @@ export const streamNormalInput = createAsyncThunk<
             prompt: next.value.prompt,
             completion: next.value.completion,
             modelProvider: selectedChatModel.underlyingProviderName,
+            modelName: selectedChatModel.title,
             modelTitle: selectedChatModel.title,
             sessionId: state.session.id,
             ...(!!activeTools.length && {
@@ -297,11 +304,16 @@ export const streamNormalInput = createAsyncThunk<
     // Check if ALL generating tool calls are auto-approved
     const allAutoApproved =
       generatingToolCalls.length > 0 &&
-      generatingToolCalls.every(
-        (toolCallState) =>
-          toolSettings[toolCallState.toolCall.function.name] ===
-          "allowedWithoutPermission",
-      );
+      generatingToolCalls.every((toolCallState) => {
+        const toolPolicy =
+          toolSettings[toolCallState.toolCall.function.name] ??
+          activeTools.find(
+            (tool) =>
+              tool.function.name === toolCallState.toolCall.function.name,
+          )?.defaultToolPolicy ??
+          DEFAULT_TOOL_SETTING;
+        return toolPolicy == "allowedWithoutPermission";
+      });
 
     // Only set inactive if:
     // 1. There are no tool calls, OR
@@ -311,6 +323,6 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(setInactive());
     }
 
-    await handleToolCallExecution(dispatch, getState);
+    await handleToolCallExecution(dispatch, getState, activeTools);
   },
 );

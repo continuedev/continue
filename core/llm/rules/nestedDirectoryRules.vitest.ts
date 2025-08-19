@@ -20,7 +20,7 @@ describe("Nested directory rules application", () => {
   // A global rule for comparison
   const globalRule: RuleWithSource = {
     name: "Global Rule",
-    rule: "SOLID Design Principles - Coding Assistant Guidelines",
+    rule: "SOLID Design Principles - Coding Agent Guidelines",
     source: "rules-block",
     ruleFile: ".continue/rules.md",
   };

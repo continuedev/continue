@@ -2,25 +2,30 @@ import Handlebars from "handlebars";
 import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import { NEXT_EDIT_MODELS } from "../../llm/constants";
 import {
+  INSTINCT_USER_PROMPT_PREFIX,
   MERCURY_CURRENT_FILE_CONTENT_CLOSE,
   MERCURY_CURRENT_FILE_CONTENT_OPEN,
-  MERCURY_CURSOR,
   MERCURY_EDIT_DIFF_HISTORY_CLOSE,
   MERCURY_EDIT_DIFF_HISTORY_OPEN,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
-  MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 import {
+  InstinctTemplateVars,
   MercuryTemplateVars,
-  Model1TemplateVars,
   NextEditTemplate,
   PromptMetadata,
   SystemPrompt,
   TemplateVars,
   UserPrompt,
 } from "../types";
+import {
+  contextSnippetsBlock,
+  currentFileContentBlock as instinctCurrentFileContentBlock,
+  editHistoryBlock as instinctEditHistoryBlock,
+} from "./instinct";
 import {
   currentFileContentBlock,
   editHistoryBlock,
@@ -30,7 +35,6 @@ import {
   insertCursorToken,
   insertEditableRegionTokensWithStaticRange,
 } from "./utils";
-import { NEXT_EDIT_MODELS } from "../../llm/constants";
 
 type TemplateRenderer = (vars: TemplateVars) => string;
 
@@ -38,9 +42,8 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
   "mercury-coder-nextedit": {
     template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at {{{currentFilePath}}}.\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
   },
-  "model-1": {
-    template:
-      "### User Edits:\n\n{{{userEdits}}}\n\n### User Excerpts:\n\n```{{{languageShorthand}}}\n{{{userExcerpts}}}```",
+  instinct: {
+    template: `${INSTINCT_USER_PROMPT_PREFIX}\n\n### Context:\n{{{contextSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpts:\n{{{currentFilePath}}}\n\n{{{currentFileContent}}}\`\`\`\n### Response:`,
   },
 };
 
@@ -90,11 +93,11 @@ export async function renderPrompt(
     case "mercury-coder-nextedit": {
       userEdits = ctx.editDiffHistory;
 
-      editedCodeWithTokens = insertTokens(
-        helper.fileContents.split("\n"),
-        helper.pos,
-        MERCURY_CURSOR,
-      );
+      // editedCodeWithTokens = insertTokens(
+      //   helper.fileContents.split("\n"),
+      //   helper.pos,
+      //   MERCURY_CURSOR,
+      // );
 
       const mercuryCtx: MercuryTemplateVars = {
         recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
@@ -112,24 +115,37 @@ export async function renderPrompt(
 
       tv = mercuryCtx;
 
+      editedCodeWithTokens = mercuryCtx.currentFileContent;
+
       break;
     }
-    case "model-1": {
-      userEdits = ctx.userEdits;
+    case "instinct": {
+      userEdits = ctx.editDiffHistory;
 
-      editedCodeWithTokens = insertTokens(
-        helper.fileContents.split("\n"),
-        helper.pos,
-        MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
-      );
+      // editedCodeWithTokens = insertTokens(
+      //   helper.fileContents.split("\n"),
+      //   helper.pos,
+      //   INSTINCT_USER_CURSOR_IS_HERE_TOKEN,
+      // );
 
-      const model1Ctx: Model1TemplateVars = {
-        userEdits: ctx.userEdits,
+      const instinctCtx: InstinctTemplateVars = {
+        contextSnippets: contextSnippetsBlock(ctx.contextSnippets),
+        currentFileContent: instinctCurrentFileContentBlock(
+          ctx.currentFileContent,
+          ctx.windowStart,
+          ctx.windowEnd,
+          ctx.editableRegionStartLine,
+          ctx.editableRegionEndLine,
+          helper.pos,
+        ),
+        editDiffHistory: instinctEditHistoryBlock(ctx.editDiffHistory),
+        currentFilePath: ctx.currentFilePath,
         languageShorthand: ctx.languageShorthand,
-        userExcerpts: ctx.userExcerpts,
       };
 
-      tv = model1Ctx;
+      tv = instinctCtx;
+
+      editedCodeWithTokens = instinctCtx.currentFileContent;
 
       break;
     }

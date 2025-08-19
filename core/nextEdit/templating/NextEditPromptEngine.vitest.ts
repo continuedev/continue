@@ -3,7 +3,10 @@ import { Position } from "../..";
 import { SnippetPayload } from "../../autocomplete/snippets";
 import { AutocompleteSnippetType } from "../../autocomplete/snippets/types";
 import { HelperVars } from "../../autocomplete/util/HelperVars";
+import { NEXT_EDIT_MODELS } from "../../llm/constants";
 import {
+  INSTINCT_USER_CURSOR_IS_HERE_TOKEN,
+  INSTINCT_USER_PROMPT_PREFIX,
   MERCURY_CURRENT_FILE_CONTENT_CLOSE,
   MERCURY_CURRENT_FILE_CONTENT_OPEN,
   MERCURY_CURSOR,
@@ -11,19 +14,17 @@ import {
   MERCURY_EDIT_DIFF_HISTORY_OPEN,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
-  MODEL_1_USER_CURSOR_IS_HERE_TOKEN,
 } from "../constants";
 import {
   renderDefaultSystemPrompt,
   renderDefaultUserPrompt,
   renderPrompt,
 } from "./NextEditPromptEngine";
-import { NEXT_EDIT_MODELS } from "../../llm/constants";
 
 describe("NextEditPromptEngine", () => {
   describe("renderPrompt", () => {
     let mercuryHelper: HelperVars;
-    let model1Helper: HelperVars;
+    let instinctHelper: HelperVars;
     let testHelper: HelperVars;
     let unsupportedHelper: HelperVars;
     let ctx: any;
@@ -35,8 +36,8 @@ describe("NextEditPromptEngine", () => {
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
       } as HelperVars;
-      model1Helper = {
-        modelName: "continuedev/model-1" as NEXT_EDIT_MODELS,
+      instinctHelper = {
+        modelName: "continuedev/instinct" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
@@ -53,7 +54,7 @@ describe("NextEditPromptEngine", () => {
           { filepath: "/path/to/file1.ts", content: "const b = 2;" },
         ],
         currentFileContent: "function test() {\n  const a = 1;\n  return a;\n}",
-        editDiffHistory: "diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@",
+        editDiffHistory: ["diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@"],
         editableRegionStartLine: 0,
         editableRegionEndLine: 3,
         userEdits: "Added constant a",
@@ -80,17 +81,35 @@ describe("NextEditPromptEngine", () => {
       expect(result.userExcerpts).toContain(MERCURY_CURSOR);
     });
 
-    it("should render model-1 prompt correctly", async () => {
-      const result = await renderPrompt(model1Helper, ctx);
+    it("should render instinct prompt correctly", async () => {
+      // Create proper instinct context structure matching NextEditProvider.ts
+      const instinctCtx = {
+        contextSnippets:
+          "+++++ /path/to/context.ts\nconst contextVar = 'test';",
+        currentFileContent: instinctHelper.fileContents,
+        windowStart: 0, // Math.max(0, helper.pos.line - 25)
+        windowEnd: 3, // Math.min(helper.fileLines.length - 1, helper.pos.line + 25)
+        editableRegionStartLine: 0, // Math.max(0, helper.pos.line - 1) within window
+        editableRegionEndLine: 2, // Math.min(helper.pos.line + 5) within window
+        editDiffHistory: [
+          "diff --git a/file.ts b/file.ts\nindex 123..456 789\n--- a/file.ts\n+++ b/file.ts\n@@ -1,3 +1,4 @@\n function test() {\n+  const a = 1;\n   return a;\n }",
+        ], // unified diff
+        currentFilePath: "/path/to/file.ts",
+        languageShorthand: "ts",
+      };
+
+      const result = await renderPrompt(instinctHelper, instinctCtx);
+      console.log(result);
 
       expect(result).toHaveProperty("prompt");
       expect(result.prompt.role).toBe("user");
+      expect(result.prompt.content).toContain(INSTINCT_USER_PROMPT_PREFIX);
+      expect(result.prompt.content).toContain("### Context:");
       expect(result.prompt.content).toContain("### User Edits:");
       expect(result.prompt.content).toContain("### User Excerpts:");
-      expect(result.prompt.content).toContain("```ts");
 
-      expect(result.userEdits).toBe(ctx.userEdits);
-      expect(result.userExcerpts).toContain(MODEL_1_USER_CURSOR_IS_HERE_TOKEN);
+      expect(result.userEdits).toBe(instinctCtx.editDiffHistory);
+      expect(result.userExcerpts).toContain(INSTINCT_USER_CURSOR_IS_HERE_TOKEN);
     });
 
     it("should throw error for unsupported model name", async () => {
@@ -204,7 +223,7 @@ describe("NextEditPromptEngine", () => {
           { filepath: "/path/to/file1.ts", content: "const b = 2;" },
         ],
         currentFileContent: "function test() {\n  const a = 1;\n  return a;\n}",
-        editDiffHistory: "diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@",
+        editDiffHistory: ["diff --git a/file.ts b/file.ts\n@@ -1,3 +1,4 @@"],
         editableRegionStartLine: 0,
         editableRegionEndLine: 3,
         userEdits: "Added constant a",

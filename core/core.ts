@@ -23,7 +23,6 @@ import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
-import { clipboardCache } from "./util/clipboardCache";
 import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
@@ -61,6 +60,7 @@ import {
 } from "./config/onboarding";
 import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
+import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -71,10 +71,12 @@ import { RULES_MARKDOWN_FILENAME } from "./llm/rules/constants";
 import { llmStreamChat } from "./llm/streamChat";
 import { BeforeAfterDiff } from "./nextEdit/context/diffFormatting";
 import { processSmallEdit } from "./nextEdit/context/processSmallEdit";
+import { PrefetchQueue } from "./nextEdit/NextEditPrefetchQueue";
 import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { Logger } from "./util/Logger.js";
 import { getUriPathBasename } from "./util/uri";
 
 const hasRulesFiles = (uris: string[]): boolean => {
@@ -130,114 +132,143 @@ export class Core {
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
   ) {
-    // Ensure .continue directory is created
-    migrateV1DevDataFiles();
+    try {
+      // Ensure .continue directory is created
+      migrateV1DevDataFiles();
 
-    const ideInfoPromise = messenger.request("getIdeInfo", undefined);
-    const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-    const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
-      silent: true,
-      useOnboarding: false,
-    });
-
-    this.configHandler = new ConfigHandler(
-      this.ide,
-      ideSettingsPromise,
-      this.llmLogger,
-      sessionInfoPromise,
-    );
-
-    this.docsService = DocsService.createSingleton(
-      this.configHandler,
-      this.ide,
-      this.messenger,
-    );
-
-    MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
-      void this.configHandler.reloadConfig("MCP Connections refreshed");
-
-      // Refresh @mention dropdown submenu items for MCP providers
-      const mcpManager = MCPManagerSingleton.getInstance();
-      const mcpProviderNames = Array.from(mcpManager.connections.keys()).map(
-        (mcpId) => `mcp-${mcpId}`,
+      const ideInfoPromise = messenger.request("getIdeInfo", undefined);
+      const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
+      const sessionInfoPromise = messenger.request(
+        "getControlPlaneSessionInfo",
+        {
+          silent: true,
+          useOnboarding: false,
+        },
       );
 
-      if (mcpProviderNames.length > 0) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: mcpProviderNames,
-        });
-      }
-    };
+      this.configHandler = new ConfigHandler(
+        this.ide,
+        ideSettingsPromise,
+        this.llmLogger,
+        sessionInfoPromise,
+      );
 
-    this.codeBaseIndexer = new CodebaseIndexer(
-      this.configHandler,
-      this.ide,
-      this.messenger,
-      this.globalContext.get("indexingPaused"),
-    );
+      this.docsService = DocsService.createSingleton(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+      );
 
-    this.configHandler.onConfigUpdate((result) => {
-      void (async () => {
-        const serializedResult = await this.configHandler.getSerializedConfig();
-        this.messenger.send("configUpdate", {
-          result: serializedResult,
-          profileId:
-            this.configHandler.currentProfile?.profileDescription.id || null,
-          organizations: this.configHandler.getSerializedOrgs(),
-          selectedOrgId: this.configHandler.currentOrg.id,
-        });
+      MCPManagerSingleton.getInstance().onConnectionsRefreshed = () => {
+        void this.configHandler.reloadConfig("MCP Connections refreshed");
 
-        // update additional submenu context providers registered via VSCode API
-        const additionalProviders =
-          this.configHandler.getAdditionalSubmenuContextProviders();
-        if (additionalProviders.length > 0) {
+        // Refresh @mention dropdown submenu items for MCP providers
+        const mcpManager = MCPManagerSingleton.getInstance();
+        const mcpProviderNames = Array.from(mcpManager.connections.keys()).map(
+          (mcpId) => `mcp-${mcpId}`,
+        );
+
+        if (mcpProviderNames.length > 0) {
           this.messenger.send("refreshSubmenuItems", {
-            providers: additionalProviders,
+            providers: mcpProviderNames,
           });
         }
-      })();
-    });
+      };
 
-    // Dev Data Logger
-    const dataLogger = DataLogger.getInstance();
-    dataLogger.core = this;
-    dataLogger.ideInfoPromise = ideInfoPromise;
-    dataLogger.ideSettingsPromise = ideSettingsPromise;
+      this.configHandler.onConfigUpdate((result) => {
+        void (async () => {
+          const serializedResult =
+            await this.configHandler.getSerializedConfig();
+          this.messenger.send("configUpdate", {
+            result: serializedResult,
+            profileId:
+              this.configHandler.currentProfile?.profileDescription.id || null,
+            organizations: this.configHandler.getSerializedOrgs(),
+            selectedOrgId: this.configHandler.currentOrg?.id ?? null,
+          });
 
-    const getLlm = async () => {
-      const { config } = await this.configHandler.loadConfig();
-      if (!config) {
-        return undefined;
-      }
-      return config.selectedModelByRole.autocomplete ?? undefined;
-    };
-    this.completionProvider = new CompletionProvider(
-      this.configHandler,
-      ide,
-      getLlm,
-      (e) => {},
-      (..._) => Promise.resolve([]),
-    );
-
-    const codebaseRulesCache = CodebaseRulesCache.getInstance();
-    void codebaseRulesCache
-      .refresh(ide)
-      .catch((e) => console.error("Failed to initialize colocated rules cache"))
-      .then(() => {
-        void this.configHandler.reloadConfig(
-          "Initial codebase rules post-walkdir/load reload",
-        );
+          // update additional submenu context providers registered via VSCode API
+          const additionalProviders =
+            this.configHandler.getAdditionalSubmenuContextProviders();
+          if (additionalProviders.length > 0) {
+            this.messenger.send("refreshSubmenuItems", {
+              providers: additionalProviders,
+            });
+          }
+        })();
       });
-    this.nextEditProvider = NextEditProvider.initialize(
-      this.configHandler,
-      ide,
-      getLlm,
-      (e) => {},
-      (..._) => Promise.resolve([]),
-      "fineTuned",
-    );
 
-    this.registerMessageHandlers(ideSettingsPromise);
+      this.codeBaseIndexer = new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+        this.globalContext.get("indexingPaused"),
+      );
+
+      // Dev Data Logger
+      const dataLogger = DataLogger.getInstance();
+      dataLogger.core = this;
+      dataLogger.ideInfoPromise = ideInfoPromise;
+      dataLogger.ideSettingsPromise = ideSettingsPromise;
+
+      void ideSettingsPromise.then((ideSettings) => {
+        // Index on initialization
+        void this.ide.getWorkspaceDirs().then(async (dirs) => {
+          // Respect pauseCodebaseIndexOnStart user settings
+          if (ideSettings.pauseCodebaseIndexOnStart) {
+            this.codeBaseIndexer.paused = true;
+            void this.messenger.request("indexProgress", {
+              progress: 0,
+              desc: "Initial Indexing Skipped",
+              status: "paused",
+            });
+            return;
+          }
+
+          void this.codeBaseIndexer.refreshCodebaseIndex(dirs);
+        });
+      });
+
+      const getLlm = async () => {
+        const { config } = await this.configHandler.loadConfig();
+        if (!config) {
+          return undefined;
+        }
+        return config.selectedModelByRole.autocomplete ?? undefined;
+      };
+      this.completionProvider = new CompletionProvider(
+        this.configHandler,
+        ide,
+        getLlm,
+        (e) => {},
+        (..._) => Promise.resolve([]),
+      );
+
+      const codebaseRulesCache = CodebaseRulesCache.getInstance();
+      void codebaseRulesCache
+        .refresh(ide)
+        .catch((e) =>
+          Logger.error("Failed to initialize colocated rules cache"),
+        )
+        .then(() => {
+          void this.configHandler.reloadConfig(
+            "Initial codebase rules post-walkdir/load reload",
+          );
+        });
+      this.nextEditProvider = NextEditProvider.initialize(
+        this.configHandler,
+        ide,
+        getLlm,
+        (e) => {},
+        (..._) => Promise.resolve([]),
+        "fineTuned",
+      );
+
+      this.registerMessageHandlers(ideSettingsPromise);
+    } catch (error) {
+      Logger.error(error);
+      throw error; // Re-throw to prevent partially initialized core
+    }
   }
 
   /* eslint-disable max-lines-per-function */
@@ -417,6 +448,19 @@ export class Core {
         description: prompt.description,
       };
     });
+    on("mcp/startAuthentication", async (msg) => {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      MCPManagerSingleton.getInstance().setStatus(msg.data, "authenticating");
+      const status = await performAuth(msg.data, this.ide);
+      if (status === "AUTHORIZED") {
+        await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+      }
+    });
+    on("mcp/removeAuthentication", async (msg) => {
+      removeMCPAuth(msg.data, this.ide);
+      await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
@@ -447,7 +491,7 @@ export class Core {
           });
         return items || [];
       } catch (e) {
-        console.error(e);
+        Logger.error(e);
         return [];
       }
     });
@@ -465,17 +509,8 @@ export class Core {
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
         organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg.id,
+        selectedOrgId: this.configHandler.currentOrg?.id ?? null,
       };
-    });
-
-    on("clipboardCache/add", (msg) => {
-      const added = clipboardCache.add(uuidv4(), msg.data.content);
-      if (added) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: ["clipboard"],
-        });
-      }
     });
 
     on("llm/streamChat", (msg) => {
@@ -554,7 +589,7 @@ export class Core {
         });
         return undefined;
       } catch (error) {
-        console.error("Error compacting conversation:", error);
+        Logger.error(`Error compacting conversation: ${error}`);
         return undefined;
       }
     });
@@ -578,17 +613,79 @@ export class Core {
     // Next Edit
     on("nextEdit/predict", async (msg) => {
       const outcome = await this.nextEditProvider.provideInlineCompletionItems(
-        msg.data,
+        msg.data.input,
         undefined,
-        { withChain: false, usingFullFileDiff: true },
+        {
+          withChain: msg.data.options?.withChain ?? false,
+          usingFullFileDiff: msg.data.options?.usingFullFileDiff ?? true,
+        },
       );
-      return outcome ? [outcome.completion, outcome.originalEditableRange] : [];
+      return outcome;
+      // ? [outcome.completion, outcome.originalEditableRange]
     });
     on("nextEdit/accept", async (msg) => {
+      console.log("nextEdit/accept");
       this.nextEditProvider.accept(msg.data.completionId);
     });
     on("nextEdit/reject", async (msg) => {
+      console.log("nextEdit/reject");
       this.nextEditProvider.reject(msg.data.completionId);
+    });
+    on("nextEdit/startChain", async (msg) => {
+      console.log("nextEdit/startChain");
+      NextEditProvider.getInstance().startChain();
+      return;
+    });
+
+    on("nextEdit/deleteChain", async (msg) => {
+      console.log("nextEdit/deleteChain");
+      await NextEditProvider.getInstance().deleteChain();
+      return;
+    });
+
+    on("nextEdit/isChainAlive", async (msg) => {
+      console.log("nextEdit/isChainAlive");
+      return NextEditProvider.getInstance().chainExists();
+    });
+
+    on("nextEdit/queue/getProcessedCount", async (msg) => {
+      console.log("nextEdit/queue/getProcessedCount");
+      const queue = PrefetchQueue.getInstance();
+      console.log(queue.processedCount);
+      return queue.processedCount;
+    });
+
+    on("nextEdit/queue/dequeueProcessed", async (msg) => {
+      console.log("nextEdit/queue/dequeueProcessed");
+      const queue = PrefetchQueue.getInstance();
+      return queue.dequeueProcessed() || null;
+    });
+
+    on("nextEdit/queue/processOne", async (msg) => {
+      console.log("nextEdit/queue/processOne");
+      const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;
+      const queue = PrefetchQueue.getInstance();
+
+      await queue.process({
+        ...ctx,
+        recentlyVisitedRanges,
+        recentlyEditedRanges,
+      });
+      return;
+    });
+
+    on("nextEdit/queue/clear", async (msg) => {
+      console.log("nextEdit/queue/clear");
+      const queue = PrefetchQueue.getInstance();
+      queue.clear();
+      return;
+    });
+
+    on("nextEdit/queue/abort", async (msg) => {
+      console.log("nextEdit/queue/abort");
+      const queue = PrefetchQueue.getInstance();
+      queue.abort();
+      return;
     });
 
     on("streamDiffLines", async (msg) => {
@@ -762,7 +859,7 @@ export class Core {
           prevFilepaths.filepaths = filepaths;
         }
       } catch (e) {
-        console.error(
+        Logger.error(
           `didChangeVisibleTextEditors: failed to update openedFilesLruCache`,
         );
       }
@@ -787,7 +884,7 @@ export class Core {
               openedFilesLruCache.set(filepath, filepath);
             }
           } catch (e) {
-            console.error(
+            Logger.error(
               `files/opened: failed to update openedFiles cache for ${filepath}`,
             );
           }
@@ -1067,7 +1164,7 @@ export class Core {
               void this.configHandler.reloadConfig("Codebase rule update");
             });
           } catch (e) {
-            console.error("Failed to update codebase rule", e);
+            Logger.error(`Failed to update codebase rule: ${e}`);
           }
         } else if (
           uri.endsWith(".continueignore") ||
@@ -1144,7 +1241,7 @@ export class Core {
         break;
 
       default:
-        console.error(`Invalid mode: ${mode}`);
+        Logger.error(`Invalid mode: ${mode}`);
         editConfigYamlCallback = (config) => config;
     }
 

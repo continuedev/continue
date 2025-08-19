@@ -60,6 +60,9 @@ function PromptRow({
     }
   };
 
+  const canEdit =
+    prompt.promptFile && !prompt.promptFile.startsWith("builtin:");
+
   return (
     <div
       className="hover:bg-list-active hover:text-list-active-foreground flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:cursor-pointer"
@@ -78,8 +81,9 @@ function PromptRow({
       </div>
       <div className="flex items-center gap-2">
         <PencilIcon
-          className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
-          onClick={handleEditClick}
+          className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125 ${!canEdit ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
+          onClick={canEdit ? handleEditClick : undefined}
+          aria-disabled={!canEdit}
         />
         <div
           onClick={handleBookmarkClick}

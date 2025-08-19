@@ -1,17 +1,19 @@
 ---
-title: Azure AI Foundry
+title: "How to Configure Azure AI Foundry with Continue"
 slug: ../azure
+description: "Configure Azure AI Foundry with Continue to access models from OpenAI and Mistral with Microsoft's enterprise security features, including setup for GPT-4o, Codestral, and embedding models"
+sidebarTitle: "Azure AI Foundry"
 ---
 
 Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
 
 <Info>
 
-For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azure-openai-service-configuration).
+For details on OpenAI model setup, see [Azure OpenAI Service configuration](#how-to-configure-azure-openai-service).
 
 </Info>
 
-## Chat model
+## How to Set Up Azure AI Foundry Chat Models
 
 We recommend configuring **GPT-4o** as your chat model.
 
@@ -27,6 +29,7 @@ We recommend configuring **GPT-4o** as your chat model.
       env:
         deployment: <YOUR_DEPLOYMENT_NAME>
         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+        apiVersion: 2023-07-01-preview # Azure API version
   ```
   </Tab>
   <Tab title="JSON">
@@ -46,12 +49,15 @@ We recommend configuring **GPT-4o** as your chat model.
   </Tab>
 </Tabs>
 
-## Autocomplete model
+## How to Set Up Azure AI Foundry Autocomplete Models
 
-We recommend configuring **Codestral** as your autocomplete model. 
+We recommend configuring **Codestral** as your autocomplete model.
 
 <Info>
-**Note:** Azure AI Foundry does not provide the FIM (Fill-in-Middle) endpoint required for autocomplete functionality. To use Codestral for autocomplete, deploy it through **Azure Machine Learning Studio** instead, which provides the necessary `/v1/fim/completions` endpoint.
+  **Note:** Azure AI Foundry does not provide the FIM (Fill-in-Middle) endpoint
+  required for autocomplete functionality. To use Codestral for autocomplete,
+  deploy it through **Azure Machine Learning Studio** instead, which provides
+  the necessary `/v1/fim/completions` endpoint.
 </Info>
 
 If you use Azure Machine Learning Studio to deploy Codestral:
@@ -84,7 +90,7 @@ If you use Azure Machine Learning Studio to deploy Codestral:
   </Tab>
 </Tabs>
 
-## Embeddings model
+## How to Configure Azure AI Foundry Embeddings Models
 
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
@@ -100,6 +106,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
         env:
           deployment: <YOUR_DEPLOYMENT_NAME>
           apiType: azure
+          apiVersion: 2023-07-01-preview
     ```
     </Tab>
     <Tab title="JSON">
