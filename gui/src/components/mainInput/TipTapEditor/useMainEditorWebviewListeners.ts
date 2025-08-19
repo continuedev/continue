@@ -198,4 +198,25 @@ export function useMainEditorWebviewListeners({
     },
     [editor, activeContextProviders, isInEdit, useCurrentFileAsContext],
   );
+
+  useWebviewListener(
+    "mentionFile",
+    async (data) => {
+      if (!editor) return;
+      editor
+        .chain()
+        .insertContent({
+          type: "mention",
+          attrs: {
+            id: data.fullFilePath,
+            query: data.fullFilePath,
+            itemType: "file",
+            label: data.shortFilePath,
+          },
+        })
+        .insertContent(" ")
+        .run();
+    },
+    [editor],
+  );
 }
