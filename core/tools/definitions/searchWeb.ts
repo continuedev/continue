@@ -1,6 +1,6 @@
 import { Tool } from "../..";
 
-import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { BuiltInToolNames, HUB_TOOLS_GROUP_NAME } from "../builtIn";
 
 export const searchWebTool: Tool = {
   type: "function",
@@ -9,11 +9,11 @@ export const searchWebTool: Tool = {
   isCurrently: 'searching the web for "{{{ query }}}"',
   hasAlready: 'searched the web for "{{{ query }}}"',
   readonly: true,
-  group: BUILT_IN_GROUP_NAME,
+  group: HUB_TOOLS_GROUP_NAME,
   function: {
     name: BuiltInToolNames.SearchWeb,
     description:
-      "Performs a web search, returning top results. Use this tool sparingly - only for questions that require specialized, external, and/or up-to-date knowledege. Common programming questions do not require web search.",
+      "Performs a web search, returning top results. Use this tool sparingly - only for questions that require specialized, external, and/or up-to-date knowledge. Common programming questions do not require web search.",
     parameters: {
       type: "object",
       required: ["query"],
