@@ -29,12 +29,17 @@ runs:
         SHOULD_RUN="false"
         
         if [ "${{ github.event_name }}" = "pull_request" ]; then
-          # Check PR author association
-          AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
-          if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
-            SHOULD_RUN="true"
+          # Check if PR is a draft
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "::notice::Skipping review - PR is a draft"
           else
-            echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+            # Check PR author association
+            AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
+            if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
+              SHOULD_RUN="true"
+            else
+              echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+            fi
           fi
         elif [ "${{ github.event_name }}" = "issue_comment" ]; then
           # Check if it's a PR comment with the trigger phrase

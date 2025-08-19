@@ -98,6 +98,7 @@ export default async function doLoadConfig(options: {
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
+  const isSignedIn = await controlPlaneClient.isSignedIn();
 
   // Migrations for old config files
   // Removes
@@ -285,6 +286,7 @@ export default async function doLoadConfig(options: {
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
+      isSignedIn,
     }),
   );
 

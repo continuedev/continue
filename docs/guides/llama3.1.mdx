@@ -185,9 +185,15 @@ config.json
 }
 ```
 
-## How to Use Llama 3.1 with Cerebras Inference
+## How to Use Llama 3.1 and 3.3 with Cerebras Inference
 
-Cerebras Inference uses specialized silicon to provides fast inference for the Llama3.1 8B/70B.
+<Info>
+  Check if your chosen model is still supported by referring to the [model
+  status](https://status.cerebras.ai/). If a model has been
+  deprecated, you may encounter a 404 error when attempting to use it.
+</Info>
+
+Cerebras Inference uses specialized silicon to provides fast inference for the Llama3.1 8B and Llama3.3 70B.
 
 1. Create an account in the portal [here](https://cloud.cerebras.ai/).
 2. Create and copy the API key for use in Continue.
@@ -200,9 +206,9 @@ config.yaml
 
 ```
 models:
-  - name: Cerebras Llama 3.1 70B
+  - name: Cerebras Llama 3.3 70B
     provider: cerebras
-    model: llama3.1-70b
+    model: llama3.3-70b
     apiKey: <YOUR_CEREBRAS_API_KEY>
 ```
 
@@ -212,9 +218,9 @@ config.json
 {
   "models": [
     {
-      "title": "Cerebras Llama 3.1 70B",
+      "title": "Cerebras Llama 3.3 70B",
       "provider": "cerebras",
-      "model": "llama3.1-70b",
+      "model": "llama3.3-70b",
       "apiKey": "<YOUR_CEREBRAS_API_KEY>"
     }
   ]

@@ -113,6 +113,13 @@
             <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
         </action>
 
+        <action id="continue.addLicenseKey"
+                class="com.github.continuedev.continueintellijextension.license.AddLicenseKey"
+                text="Enter Enterprise License Key"
+                description="Enter Enterprise License Key">
+            <override-text place="GoToAction" text="Continue: Enter Enterprise License Key"/>
+        </action>
+
         <action id="continue.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
