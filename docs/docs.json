@@ -45,7 +45,8 @@
                   "features/autocomplete/how-it-works",
                   "features/autocomplete/model-setup",
                   "features/autocomplete/how-to-customize",
-                  "features/autocomplete/context-selection"
+                  "features/autocomplete/context-selection",
+                  "features/autocomplete/next-edit"
                 ]
               },
               {
@@ -87,7 +88,7 @@
           {
             "group": "Help",
             "icon": "book-open",
-            "pages": ["troubleshooting"]
+            "pages": ["faqs", "troubleshooting"]
           }
         ]
       },
@@ -1009,6 +1010,90 @@
     {
       "source": "/customization/overview#documentation-context",
       "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/troubleshooting#faqs",
+      "destination": "/faqs"
+    },
+    {
+      "source": "/troubleshooting#networking-issues",
+      "destination": "/faqs#networking-issues"
+    },
+    {
+      "source": "/troubleshooting#configure-certificates",
+      "destination": "/faqs#configure-certificates"
+    },
+    {
+      "source": "/troubleshooting#vs-code-proxy-settings",
+      "destination": "/faqs#vs-code-proxy-settings"
+    },
+    {
+      "source": "/troubleshooting#code-server",
+      "destination": "/faqs#code-server"
+    },
+    {
+      "source": "/troubleshooting#changes-to-assistants-not-showing-in-vs-code",
+      "destination": "/faqs#changes-to-assistants-not-showing-in-vs-code"
+    },
+    {
+      "source": "/troubleshooting#i-installed-continue-but-dont-see-the-sidebar-window",
+      "destination": "/faqs#i-installed-continue-but-dont-see-the-sidebar-window"
+    },
+    {
+      "source": "/troubleshooting#im-getting-a-404-error-from-openai",
+      "destination": "/faqs#im-getting-a-404-error-from-openai"
+    },
+    {
+      "source": "/troubleshooting#im-getting-a-404-error-from-openrouter",
+      "destination": "/faqs#im-getting-a-404-error-from-openrouter"
+    },
+    {
+      "source": "/troubleshooting#indexing-issues",
+      "destination": "/faqs#indexing-issues"
+    },
+    {
+      "source": "/troubleshooting#agent-mode-is-unavailable-or-tools-arent-working",
+      "destination": "/faqs#agent-mode-is-unavailable-or-tools-arent-working"
+    },
+    {
+      "source": "/troubleshooting#check-if-your-model-has-tool-support",
+      "destination": "/faqs#check-if-your-model-has-tool-support"
+    },
+    {
+      "source": "/troubleshooting#tools-not-working",
+      "destination": "/faqs#tools-not-working"
+    },
+    {
+      "source": "/troubleshooting#images-not-uploading",
+      "destination": "/faqs#images-not-uploading"
+    },
+    {
+      "source": "/troubleshooting#add-capabilities",
+      "destination": "/faqs#add-capabilities"
+    },
+    {
+      "source": "/troubleshooting#verify-with-provider",
+      "destination": "/faqs#verify-with-provider"
+    },
+    {
+      "source": "/troubleshooting#verifying-current-capabilities",
+      "destination": "/faqs#verifying-current-capabilities"
+    },
+    {
+      "source": "/troubleshooting#android-studio-nothing-to-show-in-chat",
+      "destination": "/faqs#android-studio-nothing-to-show-in-chat"
+    },
+    {
+      "source": "/troubleshooting#i-received-a-codebase-indexing-disabled-your-linux-system-lacks-required-cpu-features-avx2-fma-notification",
+      "destination": "/faqs#i-received-a-codebase-indexing-disabled-your-linux-system-lacks-required-cpu-features-avx2-fma-notification"
+    },
+    {
+      "source": "/troubleshooting#how-do-i-reset-the-state-of-the-extension",
+      "destination": "/faqs#how-do-i-reset-the-state-of-the-extension"
+    },
+    {
+      "source": "/troubleshooting#still-having-trouble",
+      "destination": "/faqs#still-having-trouble"
     },
     {
       "source": "/customize/model-providers",

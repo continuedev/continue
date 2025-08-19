@@ -60,27 +60,34 @@ export class ApplyManager {
           myersDiff(activeTextEditor.document.getText(), text),
         );
 
-        await this.verticalDiffManager.streamDiffLines(
-          diffLinesGenerator,
-          true,
-          streamId,
-          toolCallId,
-        );
+          await this.verticalDiffManager.streamDiffLines(
+            diffLinesGenerator,
+            true,
+            streamId,
+            toolCallId,
+          );
+        } else {
+          await this.handleExistingDocument(
+            activeTextEditor,
+            text,
+            streamId,
+            toolCallId,
+          );
+        }
       } else {
-        await this.handleExistingDocument(
+        await this.handleEmptyDocument(
           activeTextEditor,
           text,
           streamId,
           toolCallId,
         );
       }
-    } else {
-      await this.handleEmptyDocument(
-        activeTextEditor,
-        text,
+    } finally {
+      await this.webviewProtocol.request("updateApplyState", {
         streamId,
+        status: "done",
         toolCallId,
-      );
+      });
     }
   }
 

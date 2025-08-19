@@ -51,6 +51,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
