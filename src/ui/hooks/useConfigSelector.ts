@@ -94,7 +94,10 @@ export function useConfigSelector({
 
       // If we need to switch organizations, we'll handle both org + config switching
       // using a different approach to avoid duplicate reloads
-      if (config.organizationId !== currentOrgId) {
+      if (config.organizationId === currentOrgId) {
+        // Only config path is changing, no organization switch needed
+        await services.config.updateConfigPath(targetConfigPath);
+      } else {
         onMessage({
           role: "system",
           content: `Switching to organization for ${config.name}...`,
@@ -106,9 +109,6 @@ export function useConfigSelector({
 
         // Update config path THEN reload services once
         // This avoids the double reload issue
-        await services.config.updateConfigPath(targetConfigPath);
-      } else {
-        // Only config path is changing, no organization switch needed
         await services.config.updateConfigPath(targetConfigPath);
       }
 

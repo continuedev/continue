@@ -119,7 +119,6 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         const assistantSlug = getAssistantSlug(authConfig);
         if (assistantSlug) {
           // Find the matching config by slug and organization
-          const packageSlug = assistantSlug.split("/")[1];
           const matchingConfig = options.find(
             (opt) =>
               opt.type === "assistant" &&
