@@ -1,11 +1,12 @@
 import { Box, Text } from "ink";
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
   ConfigServiceState,
+  FileIndexServiceState,
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
@@ -14,7 +15,6 @@ import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ScreenContent } from "./components/ScreenContent.js";
 import { StaticChatContent } from "./components/StaticChatContent.js";
 import { useNavigation } from "./context/NavigationContext.js";
-import { startFileIndexing } from "./FileSearchUI.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
@@ -60,7 +60,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     model: ModelServiceState;
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
-  }>(["auth", "config", "model", "mcp", "apiClient"]);
+    fileIndex: FileIndexServiceState;
+  }>(["auth", "config", "model", "mcp", "apiClient", "fileIndex"]);
 
   // Use navigation context
   const {
@@ -86,14 +87,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     navState,
     closeCurrentScreen,
   );
-
-  // Start file indexing as soon as the component mounts
-  useEffect(() => {
-    // Start indexing files in the background immediately
-    startFileIndexing().catch((error) => {
-      console.error("Failed to start file indexing:", error);
-    });
-  }, []);
 
   // Service reload handlers - these will trigger reactive updates
   const handleReload = async () => {

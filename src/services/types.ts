@@ -89,6 +89,8 @@ export interface ToolPermissionServiceState {
   originalPolicies?: ToolPermissions;
 }
 
+export type { FileIndexServiceState } from "./FileIndexService.js";
+
 /**
  * Service names as constants to prevent typos
  */
@@ -99,6 +101,7 @@ export const SERVICE_NAMES = {
   MCP: "mcp",
   API_CLIENT: "apiClient",
   TOOL_PERMISSIONS: "toolPermissions",
+  FILE_INDEX: "fileIndex",
 } as const;
 
 /**
