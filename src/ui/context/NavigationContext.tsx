@@ -16,7 +16,8 @@ export type NavigationScreen =
   | "model" // Model selector
   | "free-trial" // Free trial transition UI
   | "login" // Login prompt
-  | "mcp"; // MCP selector
+  | "mcp" // MCP selector
+  | "session"; // Session selector
 
 interface NavigationState {
   currentScreen: NavigationScreen;
