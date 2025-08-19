@@ -26,15 +26,15 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
 }) => {
   const { columns, rows } = useTerminalSize();
   const { stdout } = useStdout();
-  
+
   // State for managing static refresh with key-based remounting (gemini-cli approach)
   const [staticKey, setStaticKey] = useState(0);
   const isInitialMount = useRef(true);
-  
+
   // Refresh function that clears terminal and remounts Static component
   const refreshStatic = useCallback(() => {
     // Clear terminal completely before remounting
-    stdout.write('\x1b[2J\x1b[H');
+    stdout.write("\x1b[2J\x1b[H");
     setStaticKey((prev) => prev + 1);
   }, [stdout]);
 
@@ -68,7 +68,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
           config={config}
           model={model}
           mcpService={mcpService}
-        />
+        />,
       );
     }
 

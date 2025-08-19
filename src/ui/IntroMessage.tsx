@@ -33,7 +33,11 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
     const allRules = [...commandLineRules, ...configRules];
 
     // Check if model is capable - now checking both name and model properties
-    const modelCapable = isModelCapable(model.provider, model.name, model.model);
+    const modelCapable = isModelCapable(
+      model.provider,
+      model.name,
+      model.model,
+    );
 
     return { mcpPrompts, allRules, modelCapable };
   }, [config.rules, model.provider, model.name, model.model, mcpService]);
