@@ -24,7 +24,9 @@ interface StartTUIChatOptions {
   skipOnboarding?: boolean;
 }
 
-export async function startTUIChat(options: StartTUIChatOptions) {
+export async function startTUIChat(
+  options: StartTUIChatOptions & { customStdin?: NodeJS.ReadStream },
+) {
   const {
     initialPrompt,
     resume,
@@ -33,21 +35,28 @@ export async function startTUIChat(options: StartTUIChatOptions) {
     additionalRules,
     toolPermissionOverrides,
     skipOnboarding,
+    customStdin,
   } = options;
+
   // Initialize services only if not already done (skipOnboarding means already initialized)
   if (!skipOnboarding) {
-    initializeServices({
+    await initializeServices({
       configPath,
       organizationSlug,
       rules: additionalRules,
       headless: false,
       toolPermissionOverrides,
-    }).catch((error) => {
-      console.error("Failed to initialize services:", error);
     });
   }
 
+  // Use static imports since we're always loading TUI when there's piped input
+
   // Start the TUI immediately - it will handle loading states
+  const renderOptions: any = {};
+  if (customStdin) {
+    renderOptions.stdin = customStdin;
+  }
+
   const { unmount } = render(
     React.createElement(ServiceContainerProvider, {
       children: React.createElement(AppRoot, {
@@ -57,6 +66,7 @@ export async function startTUIChat(options: StartTUIChatOptions) {
         additionalRules,
       }),
     }),
+    renderOptions,
   );
 
   // Handle cleanup

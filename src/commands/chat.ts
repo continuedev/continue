@@ -459,7 +459,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       console.log(getDisplayableAsciiArt());
 
       // Start TUI with skipOnboarding since we already handled it
-      await startTUIChat({
+      const tuiOptions: any = {
         initialPrompt: prompt,
         resume: options.resume,
         configPath: options.config,
@@ -467,7 +467,19 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         additionalRules: options.rule,
         toolPermissionOverrides: permissionOverrides,
         skipOnboarding: true,
-      });
+      };
+
+      // If we detected piped input, create a custom stdin for TUI
+      if ((options as any).hasPipedInput) {
+        const fs = await import("fs");
+        const { ReadStream } = await import("tty");
+        const ttyFd = fs.openSync("/dev/tty", "r");
+        const customStdin = new ReadStream(ttyFd);
+        tuiOptions.customStdin = customStdin;
+        logger.debug("Created custom TTY stdin for TUI mode");
+      }
+
+      await startTUIChat(tuiOptions);
       return;
     }
 

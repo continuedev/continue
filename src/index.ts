@@ -62,6 +62,28 @@ addCommonOptions(program)
   )
   .option("--resume", "Resume from last session")
   .action(async (prompt, options) => {
+    // Handle piped input - detect it early and decide on mode
+    let stdinInput = null;
+
+    if (!options.print) {
+      // Check if there's piped input available
+      stdinInput = readStdinSync();
+      if (stdinInput) {
+        // Use piped input as the initial prompt
+        if (prompt) {
+          // Combine stdin and prompt argument
+          prompt = `${stdinInput}\n\n${prompt}`;
+        } else {
+          // Only stdin input, use as initial prompt
+          prompt = stdinInput;
+        }
+
+        // We have piped input but want to use TUI mode
+        // Store a flag to pass custom stdin to TUI
+        (options as any).hasPipedInput = true;
+      }
+    }
+
     // Configure console overrides FIRST, before any other logging
     const isHeadless = options.print;
     configureConsoleForHeadless(isHeadless);
@@ -101,16 +123,16 @@ addCommonOptions(program)
       logger.debug("Verbose logging enabled");
     }
 
-    // Check for piped input when using -p flag
-    if (options.print) {
-      const stdinInput = readStdinSync();
-      if (stdinInput) {
+    // Handle piped input for headless mode (only if we haven't already read it)
+    if (options.print && !stdinInput) {
+      const headlessStdinInput = readStdinSync();
+      if (headlessStdinInput) {
         if (prompt) {
           // Combine stdin and prompt argument - stdin comes first in XML block
-          prompt = `<stdin>\n${stdinInput}\n</stdin>\n\n${prompt}`;
+          prompt = `<stdin>\n${headlessStdinInput}\n</stdin>\n\n${prompt}`;
         } else {
           // Only stdin input, use as-is
-          prompt = stdinInput;
+          prompt = headlessStdinInput;
         }
       }
     }
