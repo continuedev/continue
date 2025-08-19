@@ -5,7 +5,7 @@
 The current codebase has tightly coupled dependencies (config, apiClient, MCP service, model, etc.) that require full reloads when any component changes. This causes:
 
 1. **Slow startup**: TUI can't start until all components are loaded
-2. **Poor UX**: Slash commands like `/org`, `/config` trigger complete restarts
+2. **Poor UX**: Slash commands like `/config` trigger complete restarts
 3. **Tight coupling**: Can't change individual components without reloading everything
 4. **Blocking initialization**: All dependencies must load before anything works
 
@@ -99,7 +99,7 @@ Make slash commands reactive by updating services instead of triggering reloads.
 - [x] Update `src/slashCommands.ts` - Remove `onReload` callback pattern
 - [x] Update `/login` command to use AuthService.login()
 - [x] Update `/logout` command to use AuthService.logout()
-- [x] Add `/org` command to use AuthService.switchOrg()
+- [x] ~~Add `/org` command to use AuthService.switchOrg()~~ **Merged into `/config` command**
 - [x] Update `/config` command (handled via ConfigSelector UI)
 
 #### 3.2 Remove Reload Mechanisms
@@ -178,7 +178,7 @@ Enhance the user experience with better loading states and error recovery.
 
 - [x] Slash commands work without full reloads
 - [x] `/login` and `/logout` commands update UI instantly
-- [x] New `/org` command for organization switching
+- [x] ~~New `/org` command for organization switching~~ **Merged into `/config` command**
 - [x] No more blocking reinitialization
 
 ### Phase 4 Success
@@ -193,7 +193,7 @@ Enhance the user experience with better loading states and error recovery.
 
 1. **Fast Startup**: TUI starts immediately, shows progressive loading
 2. **Reactive Updates**: Services auto-propagate changes without reloads
-3. **Better UX**: `/login`, `/logout`, `/org` commands work instantly
+3. **Better UX**: `/login`, `/logout`, `/config` commands work instantly
 4. **Cleaner Architecture**: Clear separation of concerns between services
 5. **Type Safety**: Full TypeScript support with proper service typing
 

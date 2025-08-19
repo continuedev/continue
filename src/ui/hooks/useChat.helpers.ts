@@ -34,16 +34,6 @@ export async function initChatHistory(
 }
 
 /**
- * Handle /org command
- */
-export function handleOrgCommand(onShowOrgSelector: () => void): void {
-  posthogService.capture("useSlashCommand", {
-    name: "org",
-  });
-  onShowOrgSelector();
-}
-
-/**
  * Handle /config command
  */
 export function handleConfigCommand(onShowConfigSelector: () => void): void {
@@ -234,7 +224,6 @@ interface HandleSpecialCommandsOptions {
   message: string;
   isRemoteMode: boolean;
   remoteUrl?: string;
-  onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
   exit: () => void;
   setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
@@ -247,18 +236,11 @@ export async function handleSpecialCommands({
   message,
   isRemoteMode,
   remoteUrl,
-  onShowOrgSelector,
   onShowConfigSelector,
   exit,
   setMessages,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
-
-  // Special handling for /org command in TUI
-  if (trimmedMessage === "/org") {
-    handleOrgCommand(onShowOrgSelector);
-    return true;
-  }
 
   // Special handling for /config command in TUI
   if (trimmedMessage === "/config") {

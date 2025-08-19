@@ -125,7 +125,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
-    onShowOrgSelector: () => navigateTo("organization"),
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
@@ -145,8 +144,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { renderMessage } = useMessageRenderer();
 
-  const { handleOrganizationSelect, handleConfigSelect, handleModelSelect } =
-    useSelectors(configPath, setMessages, resetChatHistory);
+  const { handleConfigSelect, handleModelSelect } = useSelectors(
+    configPath,
+    setMessages,
+    resetChatHistory,
+  );
 
   // Session selection handler
   const handleSessionSelect = async (sessionId: string) => {
@@ -244,7 +246,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           navState={navState}
           services={services}
           handleLoginTokenSubmit={handleLoginTokenSubmit}
-          handleOrganizationSelect={handleOrganizationSelect}
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleSessionSelect={handleSessionSelect}

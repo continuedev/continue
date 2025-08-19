@@ -186,8 +186,8 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       // Option 3: Switch to different configuration
       navigateTo("config");
     } else if (selectedOption === 4 && hasOrganizations) {
-      // Option 4: Switch to organization
-      navigateTo("organization");
+      // Option 4: Switch to configuration (includes organization switching)
+      navigateTo("config");
     }
   };
 
@@ -242,7 +242,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         {hasOrganizations && (
           <Text color={selectedOption === 4 ? "cyan" : "white"}>
             {selectedOption === 4 ? "▶ " : "  "}4. 🏢 Switch to organization
-            profile
+            configuration
           </Text>
         )}
         <Text></Text>

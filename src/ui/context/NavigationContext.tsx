@@ -12,8 +12,7 @@ import React, {
  */
 export type NavigationScreen =
   | "chat" // Normal chat interface
-  | "organization" // Organization selector
-  | "config" // Config selector
+  | "config" // Config selector (includes organization switching)
   | "model" // Model selector
   | "free-trial" // Free trial transition UI
   | "login" // Login prompt

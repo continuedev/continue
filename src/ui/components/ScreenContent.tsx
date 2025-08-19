@@ -7,7 +7,6 @@ import type { NavigationScreen } from "../context/NavigationContext.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
-import { OrganizationSelector } from "../OrganizationSelector.js";
 import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UserInput } from "../UserInput.js";
@@ -19,10 +18,6 @@ interface ScreenContentProps {
   navState: any;
   services: any;
   handleLoginTokenSubmit: (token: string) => void;
-  handleOrganizationSelect: (
-    organizationId: string | null,
-    organizationName: string,
-  ) => Promise<void>;
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
   handleSessionSelect: (sessionId: string) => Promise<void>;
@@ -49,7 +44,6 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   navState,
   services,
   handleLoginTokenSubmit,
-  handleOrganizationSelect,
   handleConfigSelect,
   handleModelSelect,
   handleSessionSelect,
@@ -89,16 +83,6 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
           hideNormalUI={true}
         />
       </Box>
-    );
-  }
-
-  // Organization selector
-  if (isScreenActive("organization")) {
-    return (
-      <OrganizationSelector
-        onSelect={handleOrganizationSelect}
-        onCancel={closeCurrentScreen}
-      />
     );
   }
 

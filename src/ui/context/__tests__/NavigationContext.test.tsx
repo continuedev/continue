@@ -50,10 +50,10 @@ describe("NavigationContext", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
         act(() => {
-          result.current.navigateTo("organization");
+          result.current.navigateTo("config");
         });
 
-        expect(result.current.state.currentScreen).toBe("organization");
+        expect(result.current.state.currentScreen).toBe("config");
       });
 
       it("navigates to a new screen with data", () => {
@@ -72,11 +72,11 @@ describe("NavigationContext", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
         const screens: NavigationScreen[] = [
           "chat",
-          "organization",
           "config",
           "model",
           "free-trial",
           "login",
+          "mcp",
         ];
 
         screens.forEach((screen) => {
@@ -113,7 +113,7 @@ describe("NavigationContext", () => {
         expect(result.current.state.screenData).toEqual(testData);
 
         act(() => {
-          result.current.navigateTo("organization");
+          result.current.navigateTo("config");
         });
         expect(result.current.state.screenData).toBeNull();
       });
@@ -124,9 +124,9 @@ describe("NavigationContext", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
         act(() => {
-          result.current.navigateTo("organization");
+          result.current.navigateTo("config");
         });
-        expect(result.current.state.currentScreen).toBe("organization");
+        expect(result.current.state.currentScreen).toBe("config");
 
         act(() => {
           result.current.closeCurrentScreen();
@@ -163,12 +163,12 @@ describe("NavigationContext", () => {
 
       it("closes from any screen back to chat", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: Array<"organization" | "config" | "model" | "free-trial" | "login"> = [
-          "organization",
+        const screens: Array<"config" | "model" | "free-trial" | "login" | "mcp"> = [
           "config", 
           "model",
           "free-trial",
           "login",
+          "mcp",
         ];
 
         screens.forEach((screen) => {
@@ -192,19 +192,19 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("chat")).toBe(true);
 
         act(() => {
-          result.current.navigateTo("organization");
+          result.current.navigateTo("config");
         });
 
-        expect(result.current.isScreenActive("organization")).toBe(true);
+        expect(result.current.isScreenActive("config")).toBe(true);
         expect(result.current.isScreenActive("chat")).toBe(false);
       });
 
       it("returns false for inactive screens", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
-        expect(result.current.isScreenActive("organization")).toBe(false);
         expect(result.current.isScreenActive("config")).toBe(false);
         expect(result.current.isScreenActive("model")).toBe(false);
+        expect(result.current.isScreenActive("mcp")).toBe(false);
         expect(result.current.isScreenActive("free-trial")).toBe(false);
         expect(result.current.isScreenActive("login")).toBe(false);
       });
@@ -237,11 +237,11 @@ describe("NavigationContext", () => {
         const initialState = result.current.state;
 
         act(() => {
-          result.current.navigateTo("organization");
+          result.current.navigateTo("config");
         });
 
         expect(result.current.state).not.toBe(initialState);
-        expect(result.current.state.currentScreen).toBe("organization");
+        expect(result.current.state.currentScreen).toBe("config");
       });
 
       it("preserves unrelated state when updating", () => {
@@ -288,14 +288,14 @@ describe("NavigationContext", () => {
         expect(result.current.state.screenData).toBeNull();
       });
 
-      it("handles organization selection flow", () => {
+      it("handles config selection flow (now includes organization switching)", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
-        // Navigate to organization selector
+        // Navigate to config selector
         act(() => {
-          result.current.navigateTo("organization");
+          result.current.navigateTo("config");
         });
-        expect(result.current.isScreenActive("organization")).toBe(true);
+        expect(result.current.isScreenActive("config")).toBe(true);
 
         // Close after selection
         act(() => {
