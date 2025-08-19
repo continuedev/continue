@@ -6,6 +6,36 @@ import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
+sealed class NextEditModelMatcher {
+    abstract fun matches(modelName: String?, title: String?): Boolean
+
+    data object MercuryCoder : NextEditModelMatcher() {
+        override fun matches(modelName: String?, title: String?): Boolean =
+            modelName?.lowercase()?.contains("mercury-coder") == true ||
+                    title?.lowercase()?.contains("mercury-coder") == true
+    }
+
+    data object MercuryCoderNextEdit : NextEditModelMatcher() {
+        override fun matches(modelName: String?, title: String?): Boolean =
+            modelName?.lowercase()?.contains("mercury-coder-nextedit") == true ||
+                    title?.lowercase()?.contains("mercury-coder-nextedit") == true
+    }
+
+    data object Instinct : NextEditModelMatcher() {
+        override fun matches(modelName: String?, title: String?): Boolean =
+            modelName?.lowercase()?.contains("instinct") == true ||
+                    title?.lowercase()?.contains("instinct") == true
+    }
+
+    companion object {
+        private val allMatchers = listOf(MercuryCoder, MercuryCoderNextEdit, Instinct)
+
+        fun isSupported(modelName: String?, title: String?): Boolean =
+            allMatchers.any { it.matches(modelName, title) }
+    }
+}
+
+
 object NextEditUtils {
     suspend fun isNextEditSupported(project: Project): Boolean {
         return try {
@@ -35,17 +65,11 @@ object NextEditUtils {
         title: String?,
         capabilities: Map<String, Any>?
     ): Boolean {
-        // Check capabilities first
+        // Check capabilities first - this takes precedence.
         val hasNextEditCapability = capabilities?.get("nextEdit") as? Boolean ?: false
-        // Check model name and title against known Next Edit models
-        val supportedModels = listOf("mercury-coder-nextedit", "instinct")
-        val modelLower = model.lowercase()
-        val titleLower = title?.lowercase()
 
-        return hasNextEditCapability || supportedModels.any { supportedModel ->
-            modelLower.contains(supportedModel) ||
-                    (titleLower?.contains(supportedModel) == true)
-        }
+        // Check model name and title against known Next Edit models.
+        return hasNextEditCapability || NextEditModelMatcher.isSupported(model, title)
     }
 
     /**
@@ -65,7 +89,8 @@ object NextEditUtils {
         var prefixLength = 0
         while (prefixLength < oldEditRange.length &&
             prefixLength < newEditRange.length &&
-            oldEditRange[prefixLength] == newEditRange[prefixLength]) {
+            oldEditRange[prefixLength] == newEditRange[prefixLength]
+        ) {
             prefixLength++
         }
 
@@ -75,7 +100,8 @@ object NextEditUtils {
 
         while (oldSuffixPos >= prefixLength &&
             newSuffixPos >= prefixLength &&
-            oldEditRange[oldSuffixPos] == newEditRange[newSuffixPos]) {
+            oldEditRange[oldSuffixPos] == newEditRange[newSuffixPos]
+        ) {
             oldSuffixPos--
             newSuffixPos--
         }
