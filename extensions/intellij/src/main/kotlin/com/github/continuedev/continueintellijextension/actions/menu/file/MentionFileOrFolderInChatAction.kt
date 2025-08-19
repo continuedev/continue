@@ -7,24 +7,26 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.vfs.VirtualFile
 
-class MentionFileInChatAction : AnAction() {
+class MentionFileOrFolderInChatAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
         val virtualFile = e.getFile() ?: return
 
+        val type = if (virtualFile.isDirectory) "folder" else "file"
         val params = mapOf(
-            "fullFilePath" to virtualFile.url,
-            "shortFilePath" to virtualFile.name,
+            "type" to type,
+            "fullPath" to virtualFile.url,
+            "name" to virtualFile.name,
         )
 
-        continuePluginService.sendToWebview("mentionFile", params)
+        continuePluginService.sendToWebview("mentionFileOrDirectory", params)
     }
 
     override fun update(e: AnActionEvent) {
         val file = e.getFile()
         val files = e.getFiles()
 
-        val isAvailable = file != null && !file.isDirectory && files.size == 1
+        val isAvailable = file != null && files.size == 1
 
         e.presentation.isVisible = isAvailable
     }

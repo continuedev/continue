@@ -78,5 +78,8 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
   generateRule: [undefined, void];
-  mentionFile: [{ fullFilePath: string; shortFilePath: string }, void];
+  mentionFileOrDirectory: [
+    { type: "file" | "folder"; fullPath: string; name: string },
+    void,
+  ];
 };
