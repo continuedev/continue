@@ -8,6 +8,7 @@ import {
   getOrganizationId,
   loadAuthConfig,
   getAssistantSlug,
+  listUserOrganizations,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
 import { env } from "../env.js";
@@ -17,6 +18,7 @@ import { Selector, SelectorOption } from "./Selector.js";
 interface ConfigOption extends SelectorOption {
   type: "local" | "assistant" | "create";
   slug?: string;
+  organizationId?: string | null; // null for personal, string for org
 }
 
 interface ConfigSelectorProps {
@@ -41,7 +43,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
       try {
         const authConfig = loadAuthConfig();
         const accessToken = getAccessToken(authConfig);
-        const organizationId = getOrganizationId(authConfig);
+        const currentOrganizationId = getOrganizationId(authConfig);
 
         const options: ConfigOption[] = [];
         let currentId: string | null = null;
@@ -50,34 +52,58 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         if (fs.existsSync(CONFIG_PATH)) {
           options.push({
             id: "local",
-            name: "Local config.yaml",
+            name: "[Personal] Local config.yaml",
             type: "local",
-            displaySuffix: " (local)",
+            organizationId: null,
           });
         }
 
-        // Add assistants from current organization if authenticated
+        // Add assistants from all organizations if authenticated
         if (accessToken) {
           const apiClient = getApiClient(accessToken);
 
           try {
-            const assistants = await apiClient.listAssistants({
-              alwaysUseProxy: "false",
-              organizationId: organizationId ?? undefined,
+            // Get all organizations
+            const organizations = await listUserOrganizations();
+            const allOrgs = [
+              { id: null, name: "Personal" }, // Personal organization
+              ...(organizations || []),
+            ];
+
+            // Fetch assistants for each organization
+            const assistantPromises = allOrgs.map(async (org) => {
+              try {
+                const assistants = await apiClient.listAssistants({
+                  alwaysUseProxy: "false",
+                  organizationId: org.id ?? undefined,
+                });
+
+                return assistants.map((assistant) => {
+                  const displayName = `[${org.name}] ${assistant.ownerSlug}/${assistant.packageSlug}`;
+                  // Create unique ID that includes org info to avoid conflicts
+                  const uniqueId = `${org.id || "personal"}-${assistant.packageSlug}`;
+                  return {
+                    id: uniqueId,
+                    name: displayName,
+                    type: "assistant" as const,
+                    slug: `${assistant.ownerSlug}/${assistant.packageSlug}`,
+                    organizationId: org.id,
+                  };
+                });
+              } catch (err) {
+                console.error(
+                  `Failed to load assistants for org ${org.name}:`,
+                  err,
+                );
+                return [];
+              }
             });
 
-            for (const assistant of assistants) {
-              // Use full ownerSlug/packageSlug as the slug and create a display name from ownerSlug/packageSlug
-              const displayName = `${assistant.ownerSlug}/${assistant.packageSlug}`;
-              options.push({
-                id: assistant.packageSlug,
-                name: displayName,
-                type: "assistant",
-                slug: `${assistant.ownerSlug}/${assistant.packageSlug}`,
-              });
-            }
+            const assistantResults = await Promise.all(assistantPromises);
+            const allAssistants = assistantResults.flat();
+            options.push(...allAssistants);
           } catch (err) {
-            console.error("Failed to load assistants:", err);
+            console.error("Failed to load organizations or assistants:", err);
           }
         }
 
@@ -92,8 +118,14 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         // Determine current config by checking auth config
         const assistantSlug = getAssistantSlug(authConfig);
         if (assistantSlug) {
-          // Extract packageSlug from the full slug for matching
-          currentId = assistantSlug.split("/")[1];
+          // Find the matching config by slug and organization
+          const matchingConfig = options.find(
+            (opt) =>
+              opt.type === "assistant" &&
+              opt.slug === assistantSlug &&
+              opt.organizationId === currentOrganizationId,
+          );
+          currentId = matchingConfig?.id || null;
         } else if (fs.existsSync(CONFIG_PATH)) {
           // No assistant slug means local config is current
           currentId = "local";

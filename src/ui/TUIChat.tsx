@@ -124,7 +124,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
-    onShowOrgSelector: () => navigateTo("organization"),
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
@@ -143,8 +142,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { renderMessage } = useMessageRenderer();
 
-  const { handleOrganizationSelect, handleConfigSelect, handleModelSelect } =
-    useSelectors(configPath, setMessages, resetChatHistory);
+  const { handleConfigSelect, handleModelSelect } = useSelectors(
+    configPath,
+    setMessages,
+    resetChatHistory,
+  );
 
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
@@ -200,7 +202,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           navState={navState}
           services={services}
           handleLoginTokenSubmit={handleLoginTokenSubmit}
-          handleOrganizationSelect={handleOrganizationSelect}
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleReload={handleReload}

@@ -11,7 +11,6 @@ export interface UseChatProps {
   initialPrompt?: string;
   resume?: boolean;
   additionalRules?: string[];
-  onShowOrgSelector: () => void;
   onShowConfigSelector: () => void;
   onShowMCPSelector: () => void;
   onShowModelSelector?: () => void;
