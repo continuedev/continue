@@ -1,6 +1,6 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Text } from "ink";
-import React from "react";
+import React, { useMemo } from "react";
 
 import { parseArgs } from "../args.js";
 import { MCPService } from "../services/MCPService.js";
@@ -19,20 +19,24 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   model,
   mcpService,
 }) => {
-  const mcpPrompts = mcpService.getState().prompts ?? [];
+  // Memoize expensive operations to avoid running on every resize
+  const { mcpPrompts, allRules, modelCapable } = useMemo(() => {
+    const mcpPrompts = mcpService.getState().prompts ?? [];
+    // Show all rules in a single section
+    const args = parseArgs();
+    const commandLineRules = args.rules || [];
+    const configRules =
+      config.rules?.map((rule: any) =>
+        typeof rule === "string" ? rule : rule?.name || "Unknown",
+      ) || [];
 
-  // Show all rules in a single section
-  const args = parseArgs();
-  const commandLineRules = args.rules || [];
-  const configRules =
-    config.rules?.map((rule: any) =>
-      typeof rule === "string" ? rule : rule?.name || "Unknown",
-    ) || [];
+    const allRules = [...commandLineRules, ...configRules];
 
-  const allRules = [...commandLineRules, ...configRules];
+    // Check if model is capable - now checking both name and model properties
+    const modelCapable = isModelCapable(model.provider, model.name, model.model);
 
-  // Check if model is capable - now checking both name and model properties
-  const modelCapable = isModelCapable(model.provider, model.name, model.model);
+    return { mcpPrompts, allRules, modelCapable };
+  }, [config.rules, model.provider, model.name, model.model, mcpService]);
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
