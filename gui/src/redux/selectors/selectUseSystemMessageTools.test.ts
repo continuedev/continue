@@ -59,17 +59,23 @@ describe("selectUseSystemMessageTools", () => {
     expect(selectUseSystemMessageTools(state)).toBe(false);
   });
 
-  test("falls back to manual setting when no auto-preference: manual true", () => {
-    mockSelectSelectedChatModel.mockReturnValue(createModel("openai", "gpt-4"));
+  test.only("falls back to manual setting when no auto-preference: manual true", () => {
+    mockSelectSelectedChatModel.mockReturnValue(createModel("ollama", "phi3"));
     const state = createMockState(true);
     expect(selectUseSystemMessageTools(state)).toBe(true);
   });
 
   test("falls back to manual setting when no auto-preference: manual false", () => {
     mockSelectSelectedChatModel.mockReturnValue(
-      createModel("anthropic", "claude-3.5-sonnet"),
+      createModel("lmstudio", "gemma3"),
     );
     const state = createMockState(false);
+    expect(selectUseSystemMessageTools(state)).toBe(false);
+  });
+
+  test("should be false when model natively supports native tools", () => {
+    mockSelectSelectedChatModel.mockReturnValue(createModel("openai", "gpt-5"));
+    const state = createMockState(true);
     expect(selectUseSystemMessageTools(state)).toBe(false);
   });
 
