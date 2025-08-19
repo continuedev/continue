@@ -35,9 +35,13 @@ class ContinueBinaryProcess(
 
         val builder = ProcessBuilder(path)
         val proxySettings = ProxySettings.getSettings()
-        if (proxySettings.enabled)
+        if (proxySettings.enabled) {
             builder.environment() += "HTTP_PROXY" to proxySettings.proxy
-            builder.environment() += "NO_PROXY" to proxySettings.noProxy
+
+            if (proxySettings.noProxy.isNotEmpty()) {
+                builder.environment() += "NO_PROXY" to proxySettings.noProxy
+            }
+        }
         return builder
             .directory(File(path).parentFile)
             .start()
