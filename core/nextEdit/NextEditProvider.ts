@@ -709,7 +709,9 @@ export class NextEditProvider {
       }
     }
 
-    const msg: ChatMessage = await llm.chat([prompts[1]], token);
+    const msg: ChatMessage = await llm.chat([prompts[1]], token, {
+      stream: false,
+    });
     console.log("message");
     console.log(msg.content);
 
