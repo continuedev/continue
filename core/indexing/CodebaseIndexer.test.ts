@@ -802,4 +802,57 @@ describe("CodebaseIndexer", () => {
       });
     });
   });
+
+  describe("wasIndexesChanged", () => {
+    let testIndexer: TestCodebaseIndexer;
+    let mockGetIndexesToBuild: jest.MockedFunction<any>;
+
+    beforeEach(() => {
+      testIndexer = new TestCodebaseIndexer(
+        testConfigHandler,
+        testIde,
+        mockMessenger as any,
+        false,
+      );
+
+      // Mock getIndexesToBuild to control what indexes should be built
+      mockGetIndexesToBuild = jest
+        .spyOn(testIndexer as any, "getIndexesToBuild")
+        .mockResolvedValue([]);
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test("should return true when indexes to build differ from built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new TestCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
+      (testIndexer as any).builtIndexes = [mockIndex2];
+
+      const result = await testIndexer.wasIndexesChanged();
+      expect(result).toBe(true);
+    });
+
+    test("should return true when there are more indexes to build than built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new TestCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1, mockIndex2]);
+      (testIndexer as any).builtIndexes = [mockIndex1];
+
+      const result = await testIndexer.wasIndexesChanged();
+      expect(result).toBe(true);
+    });
+
+    test("should return false when there are fewer indexes to build than built indexes", async () => {
+      const mockIndex1 = new TestCodebaseIndex();
+      const mockIndex2 = new TestCodebaseIndex();
+      mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
+      (testIndexer as any).builtIndexes = [mockIndex1, mockIndex2];
+
+      const result = await testIndexer.wasIndexesChanged();
+      expect(result).toBe(false);
+    });
+  });
 });

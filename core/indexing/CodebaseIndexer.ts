@@ -61,6 +61,7 @@ export class CodebaseIndexer {
   private indexingCancellationController: AbortController;
   private codebaseIndexingState: IndexingProgressUpdate;
   private readonly pauseToken: PauseToken;
+  private builtIndexes: CodebaseIndex[] = [];
 
   private getUserFriendlyIndexName(artifactId: string): string {
     if (artifactId === FullTextSearchCodebaseIndex.artifactId)
@@ -208,6 +209,7 @@ export class CodebaseIndexer {
       }
     }
 
+    this.builtIndexes = indexes;
     return indexes;
   }
 
@@ -720,6 +722,13 @@ export class CodebaseIndexer {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       foundLock = await IndexLock.isLocked();
     }
+  }
+
+  public async wasIndexesChanged() {
+    const indexes = await this.getIndexesToBuild();
+    return !indexes.every((index) =>
+      this.builtIndexes.some((builtIndex) => builtIndex === index),
+    );
   }
 
   public async refreshCodebaseIndex(paths: string[]) {
