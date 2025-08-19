@@ -5,8 +5,11 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object InlineCompletionUtils {
     /**
@@ -16,69 +19,12 @@ object InlineCompletionUtils {
      *
      * @param editor The editor to trigger completion for
      * @param project The project context (optional, will be inferred from editor if null)
-     * @param callback Optional callback to receive the result (called on EDT)
      */
-    fun triggerInlineCompletion(
+    suspend fun triggerInlineCompletion(
         editor: Editor,
-        project: Project? = null,
-        callback: ((Boolean) -> Unit)? = null
-    ) {
-        val application = ApplicationManager.getApplication()
-
-        if (application.isDispatchThread) {
-            // Already on EDT, execute directly
-            val result = performTrigger(editor, project)
-            callback?.invoke(result)
-        } else {
-            // Not on EDT, invoke later
-            application.invokeLater {
-                val result = performTrigger(editor, project)
-                callback?.invoke(result)
-            }
-        }
-    }
-
-    /**
-     * Synchronous version that blocks until completion is triggered (use carefully).
-     * Only use this if you're already on the EDT or in a context where blocking is acceptable.
-     *
-     * @param editor The editor to trigger completion for
-     * @param project The project context (optional, will be inferred from editor if null)
-     * @return true if the action was found and executed, false otherwise
-     */
-    fun triggerInlineCompletionSync(editor: Editor, project: Project? = null): Boolean {
-        val application = ApplicationManager.getApplication()
-
-        return if (application.isDispatchThread) {
-            performTrigger(editor, project)
-        } else {
-            var result = false
-            application.invokeAndWait {
-                result = performTrigger(editor, project)
-            }
-            result
-        }
-    }
-
-    /**
-     * Triggers inline completion with a delay.
-     * Useful for scenarios where you want to trigger completion after some processing.
-     *
-     * @param editor The editor to trigger completion for
-     * @param delayMs Delay in milliseconds before triggering
-     * @param project The project context (optional, will be inferred from editor if null)
-     * @param callback Optional callback to receive the result (called on EDT after trigger)
-     */
-    fun triggerInlineCompletionDelayed(
-        editor: Editor,
-        delayMs: Long = 2000,
-        project: Project? = null,
-        callback: ((Boolean) -> Unit)? = null
-    ) {
-        ApplicationManager.getApplication().executeOnPooledThread {
-            Thread.sleep(delayMs)
-            triggerInlineCompletion(editor, project, callback)
-        }
+        project: Project? = null
+    ): Boolean = withContext(Dispatchers.EDT) {
+        performTrigger(editor, project)
     }
 
     /**
