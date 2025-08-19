@@ -29,12 +29,17 @@ runs:
         SHOULD_RUN="false"
         
         if [ "${{ github.event_name }}" = "pull_request" ]; then
-          # Check PR author association
-          AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
-          if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
-            SHOULD_RUN="true"
+          # Check if PR is a draft
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "::notice::Skipping review - PR is a draft"
           else
-            echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+            # Check PR author association
+            AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
+            if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
+              SHOULD_RUN="true"
+            else
+              echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+            fi
           fi
         elif [ "${{ github.event_name }}" = "issue_comment" ]; then
           # Check if it's a PR comment with the trigger phrase
@@ -268,7 +273,23 @@ runs:
               console.log('Invalid comments:', JSON.stringify(invalidComments, null, 2));
             }
             
-            const comments = validComments.map(comment => ({
+            // Deduplicate comments based on path + position + body
+            const uniqueComments = [];
+            const seen = new Set();
+            
+            for (const comment of validComments) {
+              const key = `${comment.path}:${comment.position}:${comment.body}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                uniqueComments.push(comment);
+              }
+            }
+            
+            if (uniqueComments.length < validComments.length) {
+              console.log(`Filtered out ${validComments.length - uniqueComments.length} duplicate comments (same path + position + body)`);
+            }
+            
+            const comments = uniqueComments.map(comment => ({
               path: comment.path,
               position: comment.position,
               body: comment.body
@@ -283,12 +304,19 @@ runs:
             // Create the review
             if (comments.length > 0) {
               try {
+                let reviewBody = `${reviewData.review_summary || 'AI Code Review'}\n\n---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+                
+                // Add triggered by note if from comment
+                if (context.eventName === 'issue_comment') {
+                  reviewBody = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewBody}`;
+                }
+                
                 await github.rest.pulls.createReview({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: prNumber,
                   commit_id: commitSha,
-                  body: `${reviewData.review_summary || 'AI Code Review'}\n\n---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`,
+                  body: reviewBody,
                   event: 'COMMENT',
                   comments: comments
                 });
@@ -310,22 +338,19 @@ runs:
               }
             } else {
               // No inline comments, just post the summary
+              let summaryBody = `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*\n\n` +
+                `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+              
+              // Add triggered by note if from comment
+              if (context.eventName === 'issue_comment') {
+                summaryBody = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${summaryBody}`;
+              }
+              
               await github.rest.issues.createComment({
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*\n\n` +
-                  `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`
-              });
-            }
-            
-            // Add triggered by note if from comment
-            if (context.eventName === 'issue_comment') {
-              await github.rest.issues.createComment({
-                issue_number: prNumber,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `*Inline review triggered by @${context.payload.comment.user.login}*`
+                body: summaryBody
               });
             }
             

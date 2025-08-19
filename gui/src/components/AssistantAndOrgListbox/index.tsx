@@ -162,7 +162,7 @@ export function AssistantAndOrgListbox() {
                   className="text-description flex flex-row items-center"
                   style={{ fontSize: tinyFont }}
                 >
-                  <PlusIcon className="mr-1 h-3 w-3" /> New Assistant
+                  <PlusIcon className="mr-1 h-3 w-3" /> New Agent
                 </span>
               </ListboxOption>
 
@@ -184,7 +184,7 @@ export function AssistantAndOrgListbox() {
                       configLoading && "animate-spin-slow",
                     )}
                   />
-                  Reload assistants
+                  Reload agents
                 </span>
               </ListboxOption>
 
@@ -193,7 +193,7 @@ export function AssistantAndOrgListbox() {
                 style={{ fontSize: tinyFont }}
               >
                 <span className="block" style={{ fontSize: tinyFont - 1 }}>
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle assistant
+                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle agent
                 </span>
               </div>
             </div>

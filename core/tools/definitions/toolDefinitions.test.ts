@@ -7,6 +7,7 @@ describe("Tool Definitions", () => {
   const mockParams: ConfigDependentToolParams = {
     rules: [],
     enableExperimentalTools: false,
+    isSignedIn: false,
   };
 
   // Helper function to get the actual tool object
