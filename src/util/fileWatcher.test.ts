@@ -70,7 +70,9 @@ describe('FileWatcher', () => {
     watcher.startWatching(tempDir);
 
     // Wait longer to ensure watcher is fully initialized and settled
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Increase timeout for CI environments where file system events may be slower
+    // Account for the 50ms initialization delay plus extra time for CI
+    await new Promise(resolve => setTimeout(resolve, 600));
 
     // Reset the callback mock to ignore any initialization events
     callback.mockClear();
@@ -80,7 +82,7 @@ describe('FileWatcher', () => {
     fs.writeFileSync(testFile, 'test content');
 
     // Wait for debounce with longer timeout for CI environments
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Should not have been called because node_modules is ignored
     expect(callback).not.toHaveBeenCalled();
@@ -91,8 +93,9 @@ describe('FileWatcher', () => {
     watcher.onChange(callback);
     watcher.startWatching(tempDir);
 
-    // Wait for watcher to initialize
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for watcher to initialize with longer timeout for CI
+    // Account for the 50ms initialization delay plus extra time for CI
+    await new Promise(resolve => setTimeout(resolve, 600));
     callback.mockClear();
 
     // Create a .tmp file (should be ignored by **/*.tmp pattern)
@@ -107,8 +110,8 @@ describe('FileWatcher', () => {
     const minJsFile = path.join(tempDir, 'bundle.min.js');
     fs.writeFileSync(minJsFile, 'minified js');
 
-    // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Wait for debounce with longer timeout for CI
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Should not have been called because all files match ignore patterns
     expect(callback).not.toHaveBeenCalled();
@@ -119,16 +122,17 @@ describe('FileWatcher', () => {
     watcher.onChange(callback);
     watcher.startWatching(tempDir);
 
-    // Wait for watcher to initialize
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for watcher to initialize with longer timeout for CI
+    // Account for the 50ms initialization delay plus extra time for CI
+    await new Promise(resolve => setTimeout(resolve, 600));
     callback.mockClear();
 
     // Create .DS_Store file (should be ignored by **/.DS_Store pattern)
     const dsStoreFile = path.join(tempDir, '.DS_Store');
     fs.writeFileSync(dsStoreFile, 'ds store content');
 
-    // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Wait for debounce with longer timeout for CI
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Should not have been called because .DS_Store matches ignore pattern
     expect(callback).not.toHaveBeenCalled();
@@ -139,16 +143,17 @@ describe('FileWatcher', () => {
     watcher.onChange(callback);
     watcher.startWatching(tempDir);
 
-    // Wait for watcher to initialize
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for watcher to initialize with longer timeout for CI
+    // Account for the 50ms initialization delay plus extra time for CI
+    await new Promise(resolve => setTimeout(resolve, 600));
     callback.mockClear();
 
     // Create a .js file (should NOT be ignored)
     const jsFile = path.join(tempDir, 'test.js');
     fs.writeFileSync(jsFile, 'console.log("hello");');
 
-    // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Wait for debounce with longer timeout for CI
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Should have been called because .js files are not in ignore patterns
     expect(callback).toHaveBeenCalled();

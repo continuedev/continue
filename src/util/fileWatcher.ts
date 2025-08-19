@@ -15,6 +15,7 @@ export class FileWatcher {
   private debounceTimer: NodeJS.Timeout | null = null;
   private options: Required<FileWatcherOptions>;
   private watchedDirs: Set<string> = new Set();
+  private isInitializing: boolean = false;
 
   constructor(options: FileWatcherOptions = {}) {
     this.options = {
@@ -55,6 +56,11 @@ export class FileWatcher {
   }
 
   private triggerCallbacks(): void {
+    // Don't trigger callbacks during initialization
+    if (this.isInitializing) {
+      return;
+    }
+
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
@@ -170,10 +176,18 @@ export class FileWatcher {
 
   public startWatching(rootPath: string = process.cwd()): void {
     this.stopWatching();
+    this.isInitializing = true;
     this.watchDirectory(rootPath);
+
+    // Allow a small delay for initial file system events to settle
+    // before enabling callbacks
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 50);
   }
 
   public stopWatching(): void {
+    this.isInitializing = false;
     this.watchers.forEach((watcher) => {
       try {
         watcher.close();
