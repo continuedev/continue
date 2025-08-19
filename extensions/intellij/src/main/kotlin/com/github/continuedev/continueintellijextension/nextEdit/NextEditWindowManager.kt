@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerManager
 import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
@@ -20,6 +21,10 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
@@ -29,6 +34,8 @@ import javax.swing.border.AbstractBorder
 
 @Service(Service.Level.PROJECT)
 class NextEditWindowManager(private val project: Project) {
+    private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
     private var currentPopup: JBPopup? = null
     private var deletionHighlighters: List<RangeHighlighter> = emptyList()
     private var isAccepted = false
@@ -914,10 +921,13 @@ class NextEditWindowManager(private val project: Project) {
             }
 
             println("DEBUG: WriteCommandAction completed successfully")
-            InlineCompletionUtils.triggerInlineCompletion(
-                editor,
-                project
-            ) { success -> println("invocation: $success") }
+
+            coroutineScope.launch(Dispatchers.EDT) {
+                InlineCompletionUtils.triggerInlineCompletion(
+                    editor,
+                    project
+                )
+            }
         } catch (e: Exception) {
             println("ERROR: Exception in acceptEdit: ${e.message}")
             e.printStackTrace()

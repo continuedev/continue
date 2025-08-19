@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.nextEdit
 import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerManager
 import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
@@ -22,6 +23,7 @@ import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.awt.*
 import java.awt.event.ActionEvent
@@ -42,7 +44,7 @@ data class CompletionDataForAfterJump(
 @Service(Service.Level.PROJECT)
 class NextEditJumpManager(private val project: Project) {
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+    private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     // State management
     private var jumpState = JumpState()
@@ -409,7 +411,9 @@ class NextEditJumpManager(private val project: Project) {
             // Clear decorations (this will cancel popup, but won't trigger reject due to state check)
             clearJumpDecoration()
 
-            InlineCompletionUtils.triggerInlineCompletion(editor, project) { success -> "success: $success" }
+            coroutineScope.launch(Dispatchers.EDT) {
+                InlineCompletionUtils.triggerInlineCompletion(editor, project)
+            }
 
             // Reset accepted state after a brief moment
             coroutineScope.launch {
