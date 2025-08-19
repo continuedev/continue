@@ -1,4 +1,5 @@
 import { shouldAutoEnableSystemMessageTools } from "core/config/shouldAutoEnableSystemMessageTools";
+import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import { RootState } from "../store";
 
@@ -30,6 +31,11 @@ export function selectUseSystemMessageTools(state: RootState): boolean {
   // If auto-detection has a preference, use it (takes priority)
   if (autoSetting !== undefined) {
     return autoSetting;
+  }
+
+  // For native supported models, use native tools
+  if (modelSupportsNativeTools(selectedModel)) {
+    return false;
   }
 
   // If no auto-preference, use manual setting or default to false
