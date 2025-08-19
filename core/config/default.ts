@@ -21,7 +21,7 @@ export const defaultContextProvidersJetBrains: NonNullable<
 ];
 
 export const defaultConfig: ConfigYaml = {
-  name: "Local Assistant",
+  name: "Local Agent",
   version: "1.0.0",
   schema: "v1",
   models: [],
@@ -29,7 +29,7 @@ export const defaultConfig: ConfigYaml = {
 };
 
 export const defaultConfigJetBrains: ConfigYaml = {
-  name: "Local Assistant",
+  name: "Local Agent",
   version: "1.0.0",
   schema: "v1",
   models: [],

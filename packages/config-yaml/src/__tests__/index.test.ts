@@ -107,7 +107,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant-with-non-existing-block",
+          packageSlug: "agent-with-non-existing-block",
           versionSlug: "latest",
         },
       },
@@ -130,7 +130,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant",
+          packageSlug: "agent",
           versionSlug: "latest",
         },
       },
@@ -221,7 +221,7 @@ describe("E2E Scenarios", () => {
         uriType: "slug",
         fullSlug: {
           ownerSlug: "test-org",
-          packageSlug: "assistant",
+          packageSlug: "agent",
           versionSlug: "latest",
         },
       },
@@ -276,7 +276,7 @@ describe("E2E Scenarios", () => {
     const unrolledConfig = await unrollAssistant(
       {
         uriType: "file",
-        fileUri: "./src/__tests__/local-files/duplicate-test-assistant.yaml",
+        fileUri: "./src/__tests__/local-files/duplicate-test-agent.yaml",
       },
       registry,
       {
