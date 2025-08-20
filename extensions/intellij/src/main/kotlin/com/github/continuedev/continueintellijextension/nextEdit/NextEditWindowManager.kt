@@ -53,15 +53,6 @@ class NextEditWindowManager(private val project: Project) {
         newCode: String,
         diffLines: List<DiffLine>
     ) {
-        println("DEBUG: showNextEditWindow called with:")
-        println("  currCursorPos: $currCursorPos")
-        println("  editableRegionStartLine: $editableRegionStartLine")
-        println("  editableRegionEndLine: $editableRegionEndLine")
-        println("  oldCode length: ${oldCode.length}")
-        println("  newCode length: ${newCode.length}")
-        println("  document total lines: ${editor.document.lineCount}")
-        println("  document writable: ${editor.document.isWritable}")
-
         // Clear existing decorations first
         hideAllNextEditWindows()
 
@@ -80,8 +71,6 @@ class NextEditWindowManager(private val project: Project) {
             newCode,
             diffLines
         )
-
-        println("DEBUG: isLineDelete: $isLineDelete")
 
         // Show the code popup with the new suggestion
         showCodePopup(editor, newCode, diffLines) { action ->
@@ -210,7 +199,6 @@ class NextEditWindowManager(private val project: Project) {
                 // Force focus after popup is shown
                 ApplicationManager.getApplication().invokeLater {
                     popupComponent.requestFocusInWindow()
-                    println("DEBUG: Popup shown and focus requested")
                 }
             } catch (e: Exception) {
                 popup.showInBestPositionFor(editor)
@@ -258,9 +246,6 @@ class NextEditWindowManager(private val project: Project) {
 
                 // Check for DPI scaling
                 val scale = JBUI.scale(1f)
-                println("DEBUG: UI scale factor: $scale")
-                println("DEBUG: FontMetrics - height: $height, ascent: $ascent")
-                println("DEBUG: Font size from font object: ${font.size}")
 
                 // Adjust for DPI scaling
                 val adjustedFontSize = if (scale > 1f) {
@@ -268,8 +253,6 @@ class NextEditWindowManager(private val project: Project) {
                 } else {
                     font.size
                 }
-
-                println("DEBUG: Adjusted font size: $adjustedFontSize")
 
                 return adjustedFontSize
             }
@@ -282,8 +265,6 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     private fun createCodeDisplayPanel(editor: Editor, code: String, diffLines: List<DiffLine>): JComponent {
-        println("DEBUG: createCodeDisplayPanel - START")
-
         try {
             val scheme = EditorColorsManager.getInstance().globalScheme
             val editorFont = editor.colorsScheme.getFont(com.intellij.openapi.editor.colors.EditorFontType.PLAIN)
@@ -298,10 +279,6 @@ class NextEditWindowManager(private val project: Project) {
 //            val adjustedLineHeight = if (uiScale > 1f) (editorLineHeight / uiScale).toInt() else editorLineHeight
 
             val adjustedLineHeight = actualFontSize
-
-            println("DEBUG: Using font size: $actualFontSize")
-            println("DEBUG: Editor line height: $editorLineHeight, adjusted: $adjustedLineHeight")
-            println("DEBUG: UI scale: $uiScale")
 
             // Get file type for proper syntax highlighting
             val fileType = getCurrentFileType(editor)
@@ -396,8 +373,6 @@ class NextEditWindowManager(private val project: Project) {
         // Convert background color to hex
         val backgroundHex =
             String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
-
-        println("DEBUG: HTML font - Family: $fontFamily, Size: ${fontSize}px, LineHeight: ${lineHeight}px")
 
         if (text.trim().isEmpty()) {
             return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
@@ -600,8 +575,6 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     private fun addKeyboardShortcuts(panel: JComponent, onAction: (PopupAction) -> Unit) {
-        println("DEBUG: Adding keyboard shortcuts to panel")
-
         // CRITICAL FIX: Disable focus traversal for Tab key
         panel.setFocusTraversalKeysEnabled(false)
 
@@ -612,7 +585,6 @@ class NextEditWindowManager(private val project: Project) {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "accept")
         actionMap.put("accept", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent?) {
-                println("DEBUG: Accept action triggered!")
                 onAction(PopupAction.ACCEPT)
             }
         })
@@ -621,44 +593,11 @@ class NextEditWindowManager(private val project: Project) {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "reject")
         actionMap.put("reject", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent?) {
-                println("DEBUG: Reject action triggered!")
                 onAction(PopupAction.REJECT)
             }
         })
 
         panel.isFocusable = true
-
-        // Keep your existing debug listeners
-        panel.addFocusListener(object : java.awt.event.FocusListener {
-            override fun focusGained(e: java.awt.event.FocusEvent?) {
-                println("DEBUG: Panel gained focus")
-            }
-
-            override fun focusLost(e: java.awt.event.FocusEvent?) {
-                println("DEBUG: Panel lost focus")
-            }
-        })
-
-        panel.addKeyListener(object : java.awt.event.KeyListener {
-            override fun keyPressed(e: KeyEvent?) {
-                println("DEBUG: Key pressed: ${e?.keyCode} (Tab = ${KeyEvent.VK_TAB})")
-            }
-
-            override fun keyReleased(e: KeyEvent?) {}
-            override fun keyTyped(e: KeyEvent?) {}
-        })
-
-        panel.addHierarchyListener { e ->
-            if (e.changeFlags and java.awt.event.HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                if (panel.isShowing) {
-                    println("DEBUG: Panel is showing, requesting focus")
-                    ApplicationManager.getApplication().invokeLater {
-                        val focusResult = panel.requestFocusInWindow()
-                        println("DEBUG: Focus request result: $focusResult")
-                    }
-                }
-            }
-        }
     }
 
     private fun renderDeletionDecorations(
@@ -834,12 +773,6 @@ class NextEditWindowManager(private val project: Project) {
         endLine: Int,
         isLineDelete: Boolean = false
     ) {
-        println("DEBUG: acceptEdit called with:")
-        println("  newText: '$newText'")
-        println("  startLine: $startLine")
-        println("  endLine: $endLine")
-        println("  isLineDelete: $isLineDelete")
-
         isAccepted = true
 
         // Clear handler before making document changes that move cursor
@@ -850,20 +783,16 @@ class NextEditWindowManager(private val project: Project) {
         try {
             // Fix: Use the simpler WriteCommandAction.runWriteCommandAction
             WriteCommandAction.runWriteCommandAction(project) {
-                println("DEBUG: Inside WriteCommandAction")
                 val document = editor.document
 
                 // Validate line indices
                 val totalLines = document.lineCount
-                println("DEBUG: Total lines in document: $totalLines")
 
                 if (startLine < 0 || startLine >= totalLines) {
-                    println("ERROR: Invalid startLine $startLine (total lines: $totalLines)")
                     return@runWriteCommandAction
                 }
 
                 if (endLine < 0 || endLine >= totalLines) {
-                    println("ERROR: Invalid endLine $endLine (total lines: $totalLines)")
                     return@runWriteCommandAction
                 }
 
@@ -875,52 +804,32 @@ class NextEditWindowManager(private val project: Project) {
                     // If this isn't the last line, extend to include the newline character
                     if (startLine < document.lineCount - 1) {
                         endOffset = document.getLineStartOffset(startLine + 1)
-                        println("DEBUG: Line delete - including newline, endOffset: $endOffset")
                     } else {
                         // If it's the last line, just delete to end of line
                         endOffset = document.getLineEndOffset(startLine)
-                        println("DEBUG: Line delete - last line, endOffset: $endOffset")
                     }
 
-                    println("DEBUG: Line deletion offsets:")
-                    println("  startOffset: $startOffset")
-                    println("  endOffset: $endOffset")
-
                     val oldText = document.getText(TextRange(startOffset, endOffset))
-                    println("DEBUG: Deleting text: '$oldText'")
 
                     // Delete the entire line including newline
                     document.deleteString(startOffset, endOffset)
-                    println("DEBUG: Line deletion completed")
 
                 } else {
                     // Handle normal text replacement
                     val startOffset = document.getLineStartOffset(startLine)
                     val endOffset = document.getLineEndOffset(endLine)
 
-                    println("DEBUG: Normal edit offsets:")
-                    println("  startOffset: $startOffset")
-                    println("  endOffset: $endOffset")
-                    println("  document length: ${document.textLength}")
-
                     if (startOffset < 0 || endOffset > document.textLength || startOffset > endOffset) {
-                        println("ERROR: Invalid offsets - startOffset: $startOffset, endOffset: $endOffset, docLength: ${document.textLength}")
                         return@runWriteCommandAction
                     }
 
                     // Show what we're replacing
                     val oldText = document.getText(TextRange(startOffset, endOffset))
-                    println("DEBUG: Replacing text:")
-                    println("  Old: '$oldText'")
-                    println("  New: '$newText'")
 
                     // Perform the replacement
                     document.replaceString(startOffset, endOffset, newText)
-                    println("DEBUG: Document replacement completed")
                 }
             }
-
-            println("DEBUG: WriteCommandAction completed successfully")
 
             coroutineScope.launch(Dispatchers.EDT) {
                 InlineCompletionUtils.triggerInlineCompletion(
@@ -935,7 +844,6 @@ class NextEditWindowManager(private val project: Project) {
 
         // Log acceptance (placeholder)
         currentCompletionId?.let {
-            println("DEBUG: Would log acceptance for completion ID: $it")
             // project.getService(NextEditService::class.java).acceptEdit(it)
         }
 
@@ -1007,31 +915,6 @@ class NextEditWindowManager(private val project: Project) {
         hideAllNextEditWindows()
         currentCompletionId = null
     }
-
-//    fun registerSelectionChangeHandler() {
-//        val selectionManager = project.getService(SelectionChangeManager::class.java)
-//
-//        selectionManager.registerListener(
-//            "nextEditWindowManager",
-//            { event, state ->
-//                handleSelectionChange(event, state)
-//            },
-//            HandlerPriority.HIGH
-//        )
-//    }
-//
-//    private suspend fun handleSelectionChange(
-//        event: SelectionEvent,
-//        state: StateSnapshot
-//    ): Boolean {
-//        // If window was just accepted, preserve the chain
-//        if (state.nextEditWindowAccepted) {
-//            println("Next edit window accepted, preserving chain")
-//            return true
-//        }
-//
-//        return false
-//    }
 }
 
 enum class PopupAction {

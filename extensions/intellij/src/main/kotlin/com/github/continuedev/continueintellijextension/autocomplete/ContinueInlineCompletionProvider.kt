@@ -11,8 +11,8 @@ import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.codeInsight.inline.completion.*
 import com.intellij.codeInsight.inline.completion.elements.InlineCompletionElement
 import com.intellij.codeInsight.inline.completion.elements.InlineCompletionGrayTextElement
-import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionSuggestion
 import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionSingleSuggestion
+import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionSuggestion
 import com.intellij.codeInsight.inline.completion.suggestion.InlineCompletionVariant
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project

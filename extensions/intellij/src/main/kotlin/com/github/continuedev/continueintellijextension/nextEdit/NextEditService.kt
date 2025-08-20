@@ -56,8 +56,6 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
         currCursorPos: Pair<Int, Int>,
         lastUuid: String?
     ): NextEditOutcome? {
-        println("Case 1: Typing (chain does not exist)")
-
         // Start a new chain
         startChain()
 
@@ -75,8 +73,6 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
 
     // Case 2: Jumping (chain exists, jump was taken).
     override suspend fun handleCase2(): NextEditOutcome? {
-        println("Case 2: Jumping (chain exists, jump was taken)")
-
         val jumpManager = project.service<NextEditJumpManager>()
 
         // Reset jump state
@@ -90,15 +86,12 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
             return outcome
         } else {
             // This technically should not happen according to the TypeScript comment
-            println("Error: No saved completion found after jump was taken")
             return null
         }
     }
 
     // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
     override suspend fun handleCase3(editor: Editor, currentCursorPos: Pair<Int, Int>): NextEditOutcome? {
-        println("Case 3: Accepting next edit outcome (chain exists, jump is not taken)")
-
         val jumpManager = project.service<NextEditJumpManager>()
 
         // Try suggesting jump for each location in the chain
@@ -107,7 +100,6 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
         while (chainExists() && !isJumpSuggested) {
             val nextItemInChain = getNextInChain()
             if (nextItemInChain == null) {
-                println("No more items in chain")
                 break
             }
 
@@ -141,7 +133,6 @@ class ContinueNextEditService(private val project: Project) : NextEditService {
         }
 
         if (!isJumpSuggested) {
-            println("No suitable jump location found after trying all positions")
             deleteChain()
             return null
         }

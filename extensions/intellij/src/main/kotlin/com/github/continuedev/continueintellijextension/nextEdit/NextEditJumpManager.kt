@@ -121,11 +121,8 @@ class NextEditJumpManager(private val project: Project) {
         if (completionContent != null &&
             isContentIdentical(editor, nextJumpLocation, completionContent)
         ) {
-            println("Skipping jump as content is identical at jump location")
             return false
         }
-
-        println("Suggesting jump from line ${currentPosition.line} to line ${nextJumpLocation.line}")
 
         // Update state
         jumpState = jumpState.copy(
@@ -151,9 +148,7 @@ class NextEditJumpManager(private val project: Project) {
                     editor.scrollingModel.scrollTo(nextJumpLocation, ScrollType.CENTER)
 
                     result = true
-                    println("DEBUG: suggestJump completed successfully")
                 } catch (e: Exception) {
-                    println("DEBUG: Error in suggestJump UI operations: $e")
                     // Reset state on error
                     jumpState = jumpState.copy(inProgress = false)
                     result = false
@@ -266,7 +261,6 @@ class NextEditJumpManager(private val project: Project) {
                 // Force focus after popup is shown
                 ApplicationManager.getApplication().invokeLater {
                     popupComponent.requestFocusInWindow()
-                    println("DEBUG: Jump popup shown and focus requested")
                 }
             } catch (e: Exception) {
                 jumpPopup?.showInBestPositionFor(editor)
@@ -331,8 +325,6 @@ class NextEditJumpManager(private val project: Project) {
     }
 
     private fun addKeyboardShortcuts(panel: JComponent, editor: Editor) {
-        println("DEBUG: Adding keyboard shortcuts to jump panel")
-
         // CRITICAL: Disable focus traversal for Tab key
         panel.setFocusTraversalKeysEnabled(false)
 
@@ -343,7 +335,6 @@ class NextEditJumpManager(private val project: Project) {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "acceptJump")
         actionMap.put("acceptJump", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent?) {
-                println("DEBUG: Accept jump action triggered!")
                 acceptJump(editor)
             }
         })
@@ -352,54 +343,30 @@ class NextEditJumpManager(private val project: Project) {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "rejectJump")
         actionMap.put("rejectJump", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent?) {
-                println("DEBUG: Reject jump action triggered!")
                 rejectJump()
             }
         })
 
         panel.isFocusable = true
 
-        // Debug listeners
-        panel.addFocusListener(object : java.awt.event.FocusListener {
-            override fun focusGained(e: java.awt.event.FocusEvent?) {
-                println("DEBUG: Jump panel gained focus")
-            }
-
-            override fun focusLost(e: java.awt.event.FocusEvent?) {
-                println("DEBUG: Jump panel lost focus")
-            }
-        })
-
-        panel.addKeyListener(object : java.awt.event.KeyListener {
-            override fun keyPressed(e: KeyEvent?) {
-                println("DEBUG: Jump panel key pressed: ${e?.keyCode} (Tab = ${KeyEvent.VK_TAB}, Esc = ${KeyEvent.VK_ESCAPE})")
-            }
-
-            override fun keyReleased(e: KeyEvent?) {}
-            override fun keyTyped(e: KeyEvent?) {}
-        })
-
-        panel.addHierarchyListener { e ->
-            if (e.changeFlags and java.awt.event.HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-                if (panel.isShowing) {
-                    println("DEBUG: Jump panel is showing, requesting focus")
-                    ApplicationManager.getApplication().invokeLater {
-                        val focusResult = panel.requestFocusInWindow()
-                        println("DEBUG: Jump panel focus request result: $focusResult")
-                    }
-                }
-            }
-        }
+//        panel.addHierarchyListener { e ->
+//            if (e.changeFlags and java.awt.event.HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+//                if (panel.isShowing) {
+//                    println("DEBUG: Jump panel is showing, requesting focus")
+//                    ApplicationManager.getApplication().invokeLater {
+//                        val focusResult = panel.requestFocusInWindow()
+//                        println("DEBUG: Jump panel focus request result: $focusResult")
+//                    }
+//                }
+//            }
+//        }
     }
 
     private fun acceptJump(editor: Editor) {
         val state = jumpState
         if (!state.inProgress || state.jumpPosition == null || state.editor == null) {
-            println("DEBUG: Cannot accept jump - invalid state: ${!state.inProgress} ${state.jumpPosition == null} ${state.editor == null}")
             return
         }
-
-        println("Accepting jump to position: ${state.jumpPosition}")
 
         // Update state BEFORE clearing decorations to prevent cancel callback from triggering reject
         jumpState = jumpState.copy(justAccepted = true)
@@ -431,11 +398,8 @@ class NextEditJumpManager(private val project: Project) {
 
     private fun rejectJump() {
         if (!jumpState.inProgress) {
-            println("DEBUG: Cannot reject jump - not in progress")
             return
         }
-
-        println("Rejecting jump - deleting chain")
 
         // Delete the chain
         deleteChainCallback?.invoke()
@@ -505,50 +469,6 @@ class NextEditJumpManager(private val project: Project) {
             false
         }
     }
-
-//    private fun registerSelectionChangeHandler() {
-//        val selectionManager = project.getService(SelectionChangeManager::class.java)
-//
-//        selectionManager.registerListener(
-//            "nextEditJumpManager",
-//            { event, state -> handleSelectionChange(event, state) },
-//            HandlerPriority.HIGH
-//        )
-//    }
-//
-//    private suspend fun handleSelectionChange(
-//        event: SelectionEvent,
-//        state: StateSnapshot
-//    ): Boolean {
-//        // Preserve chain during jump operations
-//        when {
-//            state.jumpInProgress -> {
-//                println("Jump in progress, preserving chain")
-//
-//                // Check if cursor moved away from expected position
-//                val currentPos = event.editor.caretModel.logicalPosition
-//                val oldPos = jumpState.oldCursorPosition
-//                val jumpPos = jumpState.jumpPosition
-//
-//                // If cursor moved but not to jump position, reject the jump
-//                if (oldPos != null && jumpPos != null &&
-//                    !currentPos.equals(oldPos) && !currentPos.equals(jumpPos)
-//                ) {
-//                    println("DEBUG: Cursor moved unexpectedly, rejecting jump")
-//                    rejectJump()
-//                }
-//
-//                return true
-//            }
-//
-//            state.jumpJustAccepted -> {
-//                println("Jump just accepted, preserving chain")
-//                return true
-//            }
-//
-//            else -> return false
-//        }
-//    }
 
     fun cleanup() {
         clearJumpState()
