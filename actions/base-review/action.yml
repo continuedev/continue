@@ -7,11 +7,10 @@ inputs:
     description: "API key for Continue service (required)"
     required: true
   app-id:
-    description: "GitHub App ID (optional, defaults to Continue's app)"
+    description: "GitHub App ID (optional)"
     required: false
-    default: "1090372"  # Continue Agent App ID
   app-private-key:
-    description: "GitHub App Private Key (optional, defaults to Continue's app)"
+    description: "GitHub App Private Key (optional)"
     required: false
 
 runs:
