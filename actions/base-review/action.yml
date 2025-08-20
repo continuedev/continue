@@ -6,6 +6,9 @@ inputs:
   continue-api-key:
     description: "API key for Continue service (required)"
     required: true
+  github-token:
+    description: "GitHub token for API operations (optional, defaults to github.token)"
+    required: false
 
 runs:
   using: "composite"
@@ -51,7 +54,7 @@ runs:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continue"
         continue-config: "continue/default"
-        use_github_app: true  # Keep it simple - install the app for the best experience
+        github-token: ${{ inputs.github-token }}
 
 branding:
   icon: "code"

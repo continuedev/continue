@@ -12,71 +12,23 @@ inputs:
   continue-config:
     description: 'Config path to use (e.g., "myorg/review-bot")'
     required: true
-  use_github_app:
-    description: "Use Continue Agent GitHub App for bot identity (requires app installation)"
-    default: "true"
-    required: false
-  app_id:
-    description: "GitHub App ID (required if use_github_app is true)"
-    required: false
-  app_private_key:
-    description: "GitHub App Private Key (required if use_github_app is true)"
+  github-token:
+    description: "GitHub token for API operations (defaults to github.token)"
     required: false
 
 runs:
   using: "composite"
   steps:
-    - name: Generate Continue Agent App Token
-      if: inputs.use_github_app == 'true' && inputs.app_id != '' && inputs.app_private_key != ''
-      id: app-token
-      uses: actions/create-github-app-token@v2
-      with:
-        app-id: ${{ inputs.app_id }}
-        private-key: ${{ inputs.app_private_key }}
-      continue-on-error: true
-
-    - name: Verify App Installation
-      if: inputs.use_github_app == 'true' && steps.app-token.outcome == 'failure'
-      shell: bash
-      run: |
-        echo "::error::Continue Agent GitHub App is not installed or configured properly"
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "🤖 Continue Agent App Setup Required"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo ""
-        echo "To enable Continue reviews with proper bot identity:"
-        echo ""
-        echo "1. 📱 Install the Continue Agent app:"
-        echo "   https://github.com/apps/continue-agent"
-        echo ""
-        echo "2. 🔑 Configure repository secrets and variables:"
-        echo "   • Secret: CONTINUE_APP_PRIVATE_KEY (your app's private key)"
-        echo "   • Variable: CONTINUE_APP_ID (your app's ID)"
-        echo ""
-        echo "3. ✅ Ensure the app has access to this repository"
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "💡 Quick Fix Options:"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo ""
-        echo "• For immediate use without the app, add to your workflow:"
-        echo "  use_github_app: false"
-        echo ""
-        echo "• For help, see: https://github.com/continuedev/continue/actions"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        exit 1
-
     - name: Set GitHub Token
       shell: bash
       run: |
-        # Use app token if available, otherwise use standard token
-        if [ "${{ inputs.use_github_app }}" = "true" ] && [ "${{ steps.app-token.outcome }}" = "success" ]; then
-          echo "GH_TOKEN=${{ steps.app-token.outputs.token }}" >> $GITHUB_ENV
-          echo "Using Continue Agent app token for GitHub operations"
+        # Use provided token or default to github.token
+        if [ "${{ inputs.github-token }}" != "" ]; then
+          echo "GH_TOKEN=${{ inputs.github-token }}" >> $GITHUB_ENV
+          echo "Using provided GitHub token for operations"
         else
           echo "GH_TOKEN=${{ github.token }}" >> $GITHUB_ENV
-          echo "Using standard GitHub Actions token"
+          echo "Using default GitHub Actions token"
         fi
 
     - name: Checkout Repository
