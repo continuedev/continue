@@ -34,7 +34,7 @@ fun focusContinueInput(project: Project?) {
 fun getPluginService(project: Project?): ContinuePluginService? =
     project?.service<ContinuePluginService>()
 
-fun AnActionEvent.getFiles(): Array<out VirtualFile> {
+fun AnActionEvent.getSelectedFiles(): Array<out VirtualFile> {
     val multipleFiles = this.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
     if (multipleFiles != null) {
         return multipleFiles
