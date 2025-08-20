@@ -71,7 +71,7 @@ runs:
         # Write outputs safely
         echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
         echo "review_type=$REVIEW_TYPE" >> "$GITHUB_OUTPUT"
-        
+
         # Save custom prompt to a file to avoid issues with special characters
         if [ -n "$CUSTOM_PROMPT" ]; then
           echo "$CUSTOM_PROMPT" > custom_prompt.txt
@@ -128,7 +128,7 @@ runs:
       run: |
         # Check user permissions for PR or comment events
         AUTHORIZED="false"
-        
+
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
           if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
@@ -144,7 +144,7 @@ runs:
             echo "::notice::Skipping review - Commenter is not a team member (association: $COMMENTER_ASSOC)"
           fi
         fi
-        
+
         if [ "$AUTHORIZED" != "true" ]; then
           echo "should_run=false" >> "$GITHUB_OUTPUT"
           exit 0

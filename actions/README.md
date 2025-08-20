@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: continuedev/continue/actions/base-review@main
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
@@ -95,14 +95,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate GitHub App Token
         id: app-token
         uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.CONTINUE_APP_ID }}
           private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
-      
+
       - uses: continuedev/continue/actions/base-review@main
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
@@ -124,15 +124,19 @@ jobs:
 ### Basic Usage
 
 #### Automatic Review on PR
+
 When a PR is opened or marked ready for review, the Continue Agent will automatically perform a code review.
 
 #### Manual Trigger with @mention
+
 Comment on any PR with:
+
 ```
 @continue-agent
 ```
 
 #### Request Detailed Review
+
 ```
 @continue-agent detailed
 ```
@@ -158,6 +162,7 @@ You can provide specific instructions after the @mention:
 ### Multi-Layer Security
 
 1. **Workflow-level filtering**: The workflow only runs when:
+
    - It's a PR event (opened, synchronized, ready_for_review)
    - It's a comment on a PR that contains `@continue-agent`
 
@@ -171,6 +176,7 @@ You can provide specific instructions after the @mention:
 ### How Custom Prompts Work
 
 When you comment `@continue-agent [your custom instructions]`, the action:
+
 1. Extracts the text after `@continue-agent`
 2. Sanitizes it by treating it as data (no shell execution)
 3. Passes it to the review action as additional context
@@ -275,15 +281,15 @@ jobs:
 
 ### Base Review Action
 
-| Input              | Description                                    | Required | Default |
-| ------------------ | ---------------------------------------------- | -------- | ------- |
-| `continue-api-key` | API key for Continue service                   | Yes      | -       |
-| `continue-org`     | Organization for Continue config               | No       | `continuedev` |
-| `continue-config`  | Config path (e.g., "myorg/review-bot")         | No       | `continuedev/review-bot` |
-| `use_github_app`   | Use GitHub App for bot identity                | No       | `true`  |
-| `app-id`           | GitHub App ID                                  | No       | `1090372` |
-| `app-private-key`  | GitHub App Private Key                         | No       | -       |
-| `github-token`     | GitHub token for API access                    | No       | -       |
+| Input              | Description                            | Required | Default                  |
+| ------------------ | -------------------------------------- | -------- | ------------------------ |
+| `continue-api-key` | API key for Continue service           | Yes      | -                        |
+| `continue-org`     | Organization for Continue config       | No       | `continuedev`            |
+| `continue-config`  | Config path (e.g., "myorg/review-bot") | No       | `continuedev/review-bot` |
+| `use_github_app`   | Use GitHub App for bot identity        | No       | `true`                   |
+| `app-id`           | GitHub App ID                          | No       | `1090372`                |
+| `app-private-key`  | GitHub App Private Key                 | No       | -                        |
+| `github-token`     | GitHub token for API access            | No       | -                        |
 
 ### General and Detailed Review Actions
 
