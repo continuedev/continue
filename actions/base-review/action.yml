@@ -81,7 +81,7 @@ runs:
       with:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continuedev"
-        continue-config: "continuedev/clean-code"
+        continue-config: "continuedev/review-bot"
         github-token: ${{ steps.app-token.outputs.token || github.token }}
 
 branding:
