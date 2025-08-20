@@ -13,7 +13,7 @@ export const readCurrentlyOpenFileTool: Tool = {
   function: {
     name: BuiltInToolNames.ReadCurrentlyOpenFile,
     description:
-      "Read the currently open file in the IDE. If the user seems to be referring to a file that you can't see, or is requestion an action on content that seems missing, try using this tool.",
+      "Read the currently open file in the IDE. If the user seems to be referring to a file that you can't see, or is requesting an action on content that seems missing, try using this tool.",
     parameters: {
       type: "object",
       properties: {},

@@ -46,7 +46,7 @@ export const EDIT_CODE_INSTRUCTIONS = `\
   of changes unless the user specifically asks for code only.
 `;
 
-const BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks, use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'";`;
+const BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks (>20 lines), use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'`;
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
@@ -69,7 +69,7 @@ ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 
 ${BRIEF_LAZY_INSTRUCTIONS}
 
-However, only output codeblocks for suggestion and demonstration purposes. For examle, when enumerating multiple hypothetical options, output codeblocks rather than using the tool. But for making any actual changes, use the edit tools.
+However, only output codeblocks for suggestion and demonstration purposes, for examle, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
 
 </important_rules>`;
 
@@ -85,7 +85,7 @@ ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 
 ${BRIEF_LAZY_INSTRUCTIONS}
 
-However, only output codeblocks for suggestion and planning purposes. For making changes, request to switch to Agent mode.
+However, only output codeblocks for suggestion and planning purposes. When ready to implement changes, request to switch to Agent mode.
 
   In plan mode, only write code when directly suggesting changes. Prioritize understanding and developing a plan.
 </important_rules>`;
