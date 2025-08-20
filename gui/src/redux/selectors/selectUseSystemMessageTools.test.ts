@@ -59,7 +59,7 @@ describe("selectUseSystemMessageTools", () => {
     expect(selectUseSystemMessageTools(state)).toBe(false);
   });
 
-  test.only("falls back to manual setting when no auto-preference: manual true", () => {
+  test("falls back to manual setting when no auto-preference: manual true", () => {
     mockSelectSelectedChatModel.mockReturnValue(createModel("ollama", "phi3"));
     const state = createMockState(true);
     expect(selectUseSystemMessageTools(state)).toBe(true);
