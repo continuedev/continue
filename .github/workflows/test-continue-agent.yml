@@ -27,6 +27,8 @@ jobs:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "test-org"
           continue-config: "test-org/review-bot"
+          app_id: ${{ secrets.CONTINUE_APP_ID }}
+          app_private_key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
           # use_github_app defaults to true
 
   # Test without GitHub App (fallback mode)
@@ -62,4 +64,6 @@ jobs:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "test-org"
           continue-config: "test-org/review-bot"
+          app_id: ${{ secrets.CONTINUE_APP_ID }}
+          app_private_key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
           # use_github_app defaults to true
