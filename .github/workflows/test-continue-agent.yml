@@ -14,6 +14,12 @@ permissions:
 
 jobs:
   review:
+    # Only run on PRs (for automatic reviews) or when @continue-agent is mentioned in a comment
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-agent'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

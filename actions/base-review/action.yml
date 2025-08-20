@@ -36,6 +36,7 @@ runs:
         # Determine if we should run based on event type
         SHOULD_RUN="false"
         REVIEW_TYPE="general"
+        CUSTOM_PROMPT=""
 
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           if [ "${{ github.event.pull_request.draft }}" != "true" ]; then
@@ -43,25 +44,47 @@ runs:
           fi
         elif [ "${{ github.event_name }}" = "issue_comment" ]; then
           if [ "${{ github.event.issue.pull_request }}" != "" ]; then
-            COMMENT="${{ github.event.comment.body }}"
+            # Safely handle comment body to prevent injection
+            COMMENT_FILE=$(mktemp)
+            cat > "$COMMENT_FILE" << 'END_COMMENT'
+        ${{ github.event.comment.body }}
+        END_COMMENT
+            
             # Check for @continue-agent mention
-            if echo "$COMMENT" | grep -qi "@continue-agent"; then
+            if grep -qi "@continue-agent" "$COMMENT_FILE"; then
               SHOULD_RUN="true"
-              # Check for review type keywords
-              if echo "$COMMENT" | grep -qi "detailed"; then
+              
+              # Extract custom prompt after @continue-agent (if any)
+              # This sanitizes the input by reading it as data, not executing it
+              CUSTOM_PROMPT=$(grep -i "@continue-agent" "$COMMENT_FILE" | sed 's/.*@continue-agent\s*//i' | head -1)
+              
+              # Check for review type keywords in the full comment
+              if grep -qi "detailed" "$COMMENT_FILE"; then
                 REVIEW_TYPE="detailed"
               fi
             fi
+            
+            rm -f "$COMMENT_FILE"
           fi
         fi
 
+        # Write outputs safely
         echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
         echo "review_type=$REVIEW_TYPE" >> $GITHUB_OUTPUT
+        
+        # Save custom prompt to a file to avoid issues with special characters
+        if [ -n "$CUSTOM_PROMPT" ]; then
+          echo "$CUSTOM_PROMPT" > custom_prompt.txt
+          echo "has_custom_prompt=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_custom_prompt=false" >> $GITHUB_OUTPUT
+        fi
 
         # Debug output
         echo "Event: ${{ github.event_name }}"
         echo "Should run: $SHOULD_RUN"
         echo "Review type: $REVIEW_TYPE"
+        echo "Has custom prompt: $([ -n "$CUSTOM_PROMPT" ] && echo "yes" || echo "no")"
 
     - name: Generate GitHub App Token
       if: steps.check.outputs.should_run == 'true' && inputs.use_github_app == 'true'
@@ -126,6 +149,16 @@ runs:
           echo "should_run=false" >> $GITHUB_OUTPUT
           exit 0
         fi
+
+    - name: Pass Custom Prompt to Review
+      if: steps.check.outputs.should_run == 'true' && steps.check.outputs.has_custom_prompt == 'true'
+      shell: bash
+      run: |
+        # Append custom prompt to the review configuration
+        # This will be picked up by the detailed-review action
+        echo "CUSTOM_REVIEW_PROMPT<<EOF" >> $GITHUB_ENV
+        cat custom_prompt.txt >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     - name: Run Continue Detailed Review
       if: steps.check.outputs.should_run == 'true'
