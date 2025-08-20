@@ -233,7 +233,7 @@ function ParallelListeners() {
   });
 
   // Track processed toolCallIds to prevent duplicates
-  const processedToolCalls = useRef(new Set<string>());
+  // const processedToolCalls = useRef(new Set<string>());
 
   useWebviewListener(
     "updateApplyState",
@@ -265,9 +265,9 @@ function ParallelListeners() {
           }
           if (state.status === "closed") {
             // Check if we've already processed this toolCallId
-            if (processedToolCalls.current.has(state.toolCallId)) {
-              return;
-            }
+            // if (processedToolCalls.current.has(state.toolCallId)) {
+            //   return;
+            // }
 
             // Find the tool call to check if it was canceled
             const toolCallState = findToolCallById(
@@ -287,7 +287,7 @@ function ParallelListeners() {
               hasValidDiffData
             ) {
               // Mark this toolCallId as processed
-              processedToolCalls.current.add(state.toolCallId);
+              //processedToolCalls.current.add(state.toolCallId);
               // Use 3-state feedback based on acceptance/rejection counts
               const totalDiffs =
                 (state.acceptedDiffs || 0) + (state.rejectedDiffs || 0);
@@ -306,11 +306,6 @@ function ParallelListeners() {
                   content: feedbackMessage,
                   status: "user_rejected_all",
                 };
-                dispatch(
-                  acceptToolCall({
-                    toolCallId: state.toolCallId,
-                  }),
-                );
               } else if (state.acceptedDiffs === totalDiffs && totalDiffs > 0) {
                 // All diffs were accepted
                 feedbackMessage = "User accepted all proposed changes";
@@ -320,25 +315,15 @@ function ParallelListeners() {
                   content: feedbackMessage,
                   status: "accepted",
                 };
-                dispatch(
-                  acceptToolCall({
-                    toolCallId: state.toolCallId,
-                  }),
-                );
               } else if (totalDiffs > 0) {
                 // Partial acceptance - stop and ask user what to do next
-                feedbackMessage = `User partially accepted changes (${state.acceptedDiffs}/${totalDiffs} accepted, ${state.rejectedDiffs}/${totalDiffs} rejected). Some of your proposed changes were accepted while others were rejected.\n\nPlease ask the user what they would like to do next. For example:\n- Do they want you to try different approaches for the rejected changes?\n- Are they satisfied with the current state?\n- Do they have specific feedback about what they want instead?`;
+                feedbackMessage = `User partially accepted changes. Some of your proposed changes were accepted while others were rejected.\n\nPlease ask the user what they would like to do next. For example:\n- Do they want you to try different approaches for the rejected changes?\n- Are they satisfied with the current state?\n- Do they have specific feedback about what they want instead?`;
                 finalOutput = {
                   name: "Search and Replace Result - Partial Acceptance",
                   description: `Partial acceptance of changes to ${state.filepath} - LLM should ask user for next steps`,
                   content: feedbackMessage,
                   status: "partial",
                 };
-                dispatch(
-                  acceptToolCall({
-                    toolCallId: state.toolCallId,
-                  }),
-                );
               } else {
                 // No diffs were processed (shouldn't happen, but handle gracefully)
                 feedbackMessage = "File changes were applied successfully";
@@ -348,11 +333,6 @@ function ParallelListeners() {
                   content: feedbackMessage,
                   status: "success",
                 };
-                dispatch(
-                  acceptToolCall({
-                    toolCallId: state.toolCallId,
-                  }),
-                );
               }
 
               // Replace the entire output rather than appending to avoid confusion
@@ -360,6 +340,13 @@ function ParallelListeners() {
                 updateToolCallOutput({
                   toolCallId: state.toolCallId,
                   contextItems: [finalOutput],
+                }),
+              );
+
+              // Then mark the tool call as accepted
+              dispatch(
+                acceptToolCall({
+                  toolCallId: state.toolCallId,
                 }),
               );
 
