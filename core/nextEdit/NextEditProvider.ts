@@ -31,13 +31,14 @@ import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { myersDiff } from "../diff/myers.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
+import { NEXT_EDIT_MODELS } from "../llm/constants.js";
 import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
 import {
   INSTINCT_SYSTEM_PROMPT,
-  MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_SYSTEM_PROMPT,
   MODEL_WINDOW_SIZES,
+  UNIQUE_TOKEN,
 } from "./constants.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
 import {
@@ -392,9 +393,13 @@ export class NextEditProvider {
       this.ide.getWorkspaceDirs(),
     ]);
 
-    const modelName = helper.modelName.includes("mercury-coder-nextedit")
-      ? "mercury-coder-nextedit"
-      : "instinct";
+    const modelName = helper.modelName.includes(
+      NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT,
+    )
+      ? NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT
+      : helper.modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)
+        ? NEXT_EDIT_MODELS.MERCURY_CODER
+        : NEXT_EDIT_MODELS.INSTINCT;
 
     const { editableRegionStartLine, editableRegionEndLine } =
       opts?.usingFullFileDiff
@@ -551,7 +556,10 @@ export class NextEditProvider {
     const modelName = helper.modelName;
     let ctx: any;
 
-    if (modelName.includes("mercury-coder-nextedit")) {
+    if (
+      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
+      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
+    ) {
       ctx = {
         recentlyViewedCodeSnippets:
           snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
@@ -564,7 +572,7 @@ export class NextEditProvider {
         editDiffHistory: this.diffContext,
         currentFilePath: helper.filepath,
       };
-    } else if (modelName.includes("instinct")) {
+    } else if (modelName.includes(NEXT_EDIT_MODELS.INSTINCT)) {
       // Calculate the window around the cursor position (25 lines above and below).
       const windowStart = Math.max(0, helper.pos.line - 25);
       const windowEnd = Math.min(
@@ -608,9 +616,11 @@ export class NextEditProvider {
 
     const systemPrompt: Prompt = {
       role: "system",
-      content: modelName.includes("mercury-coder-nextedit")
-        ? MERCURY_SYSTEM_PROMPT
-        : INSTINCT_SYSTEM_PROMPT,
+      content:
+        modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
+        modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
+          ? MERCURY_SYSTEM_PROMPT
+          : INSTINCT_SYSTEM_PROMPT,
     };
 
     return [systemPrompt, promptMetadata.prompt];
@@ -677,25 +687,37 @@ export class NextEditProvider {
     const llm = await this._prepareLlm();
     if (!llm) return undefined;
 
-    const msg: ChatMessage = await llm.chat(prompts, token);
-    console.log("message");
-    console.log(msg.content);
+    // Check for mercury models, and inject unique token for next edit.
+    // Capture the unique tokens in llm Inception.ts and apis Inception.ts
+    const modelName = helper.modelName;
+    if (
+      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
+      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
+    ) {
+      // Inject the unique token to the last prompt's content.
+      const lastPrompt = prompts[prompts.length - 1];
+      if (lastPrompt && typeof lastPrompt.content === "string") {
+        lastPrompt.content += UNIQUE_TOKEN;
+      }
+    }
+
+    const msg: ChatMessage = await llm.chat([prompts[1]], token, {
+      stream: false,
+    });
 
     if (typeof msg.content !== "string") {
       return undefined;
     }
 
-    // const nextCompletion = msg.content.split(
-    //   `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
-    // )[1]
-    //   ? replaceEscapedCharacters(
-    //       msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
-    //     ).replace(/\n$/, "")
-    //   : replaceEscapedCharacters(msg.content);
-    const nextCompletion =
-      msg.content
-        .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
-        .replace(/\n$/, "") ?? msg.content;
+    // NOTE: Keep this in case there is a change in spec.
+    // const nextCompletion =
+    //   msg.content
+    //     .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
+    //     .replace(/\n$/, "") ?? msg.content;
+    const nextCompletion = msg.content.slice(
+      msg.content.indexOf("\`\`\`\n") + "\'\'\'\n".length,
+      msg.content.lastIndexOf("\n\n\`\`\`"),
+    );
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       return await this._handlePartialFileDiff(

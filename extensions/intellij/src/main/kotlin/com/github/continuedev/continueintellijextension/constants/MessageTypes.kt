@@ -83,6 +83,7 @@ class MessageTypes {
             "devdata/log",
             "config/addModel",
             "config/newPromptFile",
+            "config/newAssistantFile",
             "config/ideSettingsUpdate",
             "config/addLocalWorkspaceBlock",
             "config/getSerializedProfileInfo",
