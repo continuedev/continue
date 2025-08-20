@@ -38,10 +38,15 @@ runs:
         
         echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
         echo "review_type=$REVIEW_TYPE" >> $GITHUB_OUTPUT
+        
+        # Debug output
+        echo "Event: ${{ github.event_name }}"
+        echo "Should run: $SHOULD_RUN"
+        echo "Review type: $REVIEW_TYPE"
 
     - name: Run Continue Review
       if: steps.check.outputs.should_run == 'true'
-      uses: continuedev/continue/actions/general-review@main
+      uses: continuedev/continue/actions/general-review@bdougie/continue-agent
       with:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continue"
