@@ -200,22 +200,26 @@ export function useMainEditorWebviewListeners({
   );
 
   useWebviewListener(
-    "mentionFileOrDirectory",
+    "mentionFilesOrDirectories",
     async (data) => {
       if (!editor) return;
-      editor
-        .chain()
-        .insertContent({
-          type: "mention",
-          attrs: {
-            id: data.fullPath,
-            query: data.fullPath,
-            itemType: data.type,
-            label: data.name,
-          },
-        })
-        .insertContent(" ")
-        .run();
+      let chain = editor.chain();
+
+      for (let mention of data.data) {
+        chain
+          .insertContent({
+            type: "mention",
+            attrs: {
+              id: mention.fullPath,
+              query: mention.fullPath,
+              itemType: mention.type,
+              label: mention.name,
+            },
+          })
+          .insertContent(" ");
+      }
+
+      chain.run();
     },
     [editor],
   );

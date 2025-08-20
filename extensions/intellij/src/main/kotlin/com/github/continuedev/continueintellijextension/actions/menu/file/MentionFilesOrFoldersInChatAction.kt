@@ -7,36 +7,42 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.vfs.VirtualFile
 
-class MentionFileOrFolderInChatAction : AnAction() {
+class MentionFilesOrFoldersInChatAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-        val virtualFile = e.getFile() ?: return
+        val selectedFiles = e.getFiles()
 
-        val type = if (virtualFile.isDirectory) "folder" else "file"
-        val params = mapOf(
-            "type" to type,
-            "fullPath" to virtualFile.url,
-            "name" to virtualFile.name,
+        val requestData = selectedFiles.map { vFile ->
+            val type = if (vFile.isDirectory) "folder" else "file"
+
+            mapOf(
+                "type" to type,
+                "fullPath" to vFile.url,
+                "name" to vFile.name,
+            )
+        }
+        val requestParams = mapOf(
+            "data" to requestData
         )
 
-        continuePluginService.sendToWebview("mentionFileOrDirectory", params)
+        continuePluginService.sendToWebview("mentionFilesOrDirectories", requestParams)
     }
 
     override fun update(e: AnActionEvent) {
-        val file = e.getFile()
         val files = e.getFiles()
 
-        val isAvailable = file != null && files.size == 1
+        val isAvailable = files.isNotEmpty()
 
         e.presentation.isVisible = isAvailable
     }
 
-    private fun AnActionEvent.getFile(): VirtualFile? {
-        return this.getData(CommonDataKeys.VIRTUAL_FILE)
-    }
-
     private fun AnActionEvent.getFiles(): Array<out VirtualFile> {
-        return this.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY).orEmpty()
+        val multipleFiles = this.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
+        if (multipleFiles != null) {
+            return multipleFiles
+        }
+
+        return this.getData(CommonDataKeys.VIRTUAL_FILE)?.let { arrayOf(it) } ?: emptyArray()
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
