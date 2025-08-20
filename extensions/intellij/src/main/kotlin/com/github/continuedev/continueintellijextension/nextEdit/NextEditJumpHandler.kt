@@ -32,19 +32,16 @@ class NextEditJumpHandler(
         return when {
             // Cursor moved to the expected jump position - this is expected
             jumpPosition != null && newPosition == jumpPosition -> {
-                println("NextEditJumpHandler: Cursor moved to expected jump position")
                 true
             }
 
             // Cursor is still at the original position - no movement yet
             originalPosition != null && newPosition == originalPosition -> {
-                println("NextEditJumpHandler: Cursor still at original position")
                 true
             }
 
             // Cursor moved somewhere else - user moved manually, abort jump
             else -> {
-                println("NextEditJumpHandler: Cursor moved to unexpected position, aborting jump")
                 jumpManager.abortJump()
                 false
             }

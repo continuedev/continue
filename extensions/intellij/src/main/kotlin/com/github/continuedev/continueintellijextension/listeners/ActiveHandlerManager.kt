@@ -72,8 +72,6 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
 
         activeHandler = handler
         handler.onActivated()
-
-        println("ActiveHandlerManager: Set active handler '${handler.handlerId}'")
     }
 
     /**
@@ -82,7 +80,6 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
      */
     fun clearActiveHandler() {
         activeHandler?.let { handler ->
-            println("ActiveHandlerManager: Clearing active handler '${handler.handlerId}'")
             handler.onDeactivated()
             handler.dispose()
         }
@@ -142,10 +139,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
                 try {
                     val wasHandled = handler.onCursorMoved(editor, oldPosition, currentPosition)
                     if (!wasHandled) {
-                        println("ActiveHandlerManager: Active handler '${handler.handlerId}' did not handle cursor movement, treating as deliberate")
                         handleDeliberateCursorMovement()
-                    } else {
-                        println("ActiveHandlerManager: Active handler '${handler.handlerId}' handled cursor movement")
                     }
                 } catch (e: Exception) {
                     println("ActiveHandlerManager: Error in handler '${handler.handlerId}': ${e.message}")
@@ -154,7 +148,6 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
                 }
             } else {
                 // No active handler - this is a deliberate cursor movement
-                println("ActiveHandlerManager: No active handler, treating cursor movement as deliberate")
                 handleDeliberateCursorMovement()
             }
         } finally {
@@ -170,8 +163,6 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
             // Delete the next edit chain
             val nextEditService = project.getService(NextEditService::class.java)
             nextEditService.deleteChain()
-
-            println("ActiveHandlerManager: Deleted next edit chain due to deliberate cursor movement")
         } catch (e: Exception) {
             println("ActiveHandlerManager: Error handling deliberate cursor movement: ${e.message}")
         }

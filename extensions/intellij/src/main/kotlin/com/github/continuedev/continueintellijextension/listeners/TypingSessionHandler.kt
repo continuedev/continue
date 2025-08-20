@@ -39,12 +39,10 @@ class TypingSessionHandler(
             } ?: false
 
             if (isTypingMovement) {
-                println("TypingSessionHandler: Cursor movement during typing session")
                 return true
             }
         }
 
-        println("TypingSessionHandler: Not a typing movement (time since edit: ${timeSinceLastEdit}ms)")
         return false
     }
 

@@ -348,18 +348,6 @@ class NextEditJumpManager(private val project: Project) {
         })
 
         panel.isFocusable = true
-
-//        panel.addHierarchyListener { e ->
-//            if (e.changeFlags and java.awt.event.HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
-//                if (panel.isShowing) {
-//                    println("DEBUG: Jump panel is showing, requesting focus")
-//                    ApplicationManager.getApplication().invokeLater {
-//                        val focusResult = panel.requestFocusInWindow()
-//                        println("DEBUG: Jump panel focus request result: $focusResult")
-//                    }
-//                }
-//            }
-//        }
     }
 
     private fun acceptJump(editor: Editor) {

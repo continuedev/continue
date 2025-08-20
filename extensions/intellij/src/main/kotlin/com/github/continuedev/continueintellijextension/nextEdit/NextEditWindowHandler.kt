@@ -23,18 +23,15 @@ class NextEditWindowHandler(
     ): Boolean {
         // Check if window was just accepted
         if (windowManager.hasAccepted()) {
-            println("NextEditWindowHandler: Window was accepted, cursor movement is expected")
             return true
         }
 
         // Check if cursor is still near the expected position (within the same line)
         if (newPosition.line == expectedPosition.line) {
-            println("NextEditWindowHandler: Cursor movement within same line as suggestion")
             return true
         }
 
         // User moved away from the suggestion area - close window and treat as deliberate
-        println("NextEditWindowHandler: Cursor moved away from suggestion area")
         windowManager.hideAllNextEditWindows()
         return false
     }
