@@ -1815,6 +1815,16 @@ export interface CompiledMessagesResult {
   contextPercentage: number;
 }
 
+export interface MentionFilesOrDirectoriesPayload {
+  data: MentionFileOrDirectoryPayload[];
+}
+
+interface MentionFileOrDirectoryPayload {
+  type: "file" | "folder";
+  fullPath: string;
+  name: string;
+}
+
 export interface MessageOption {
   precompiled: boolean;
 }
