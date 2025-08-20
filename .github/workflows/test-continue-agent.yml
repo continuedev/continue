@@ -1,83 +1,23 @@
-name: Test Continue Agent Actions
+name: AI Code Review
 on:
   pull_request:
-    types: [opened, ready_for_review]
+    types: [opened, synchronize, ready_for_review]
   issue_comment:
     types: [created]
-  workflow_dispatch: # Allow manual testing
 
 permissions:
   contents: read
   pull-requests: write
   issues: write
+  actions: read
+  checks: write
 
 jobs:
-  # Test the new simplified base-review action
-  test-base-review:
-    name: Test Base Review (Simplified)
+  review:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
-      - name: Base Review
-        uses: ./actions/base-review
+      - uses: continuedev/continue/actions/base-review@bdougie/continue-agent
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-
-  # Test with GitHub App (default behavior)
-  test-with-app:
-    name: Test with Continue Agent App
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      
-      - name: General Review with App
-        uses: ./actions/general-review
-        with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "test-org"
-          continue-config: "test-org/review-bot"
-          app_id: ${{ secrets.CONTINUE_APP_ID }}
-          app_private_key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
-          # use_github_app defaults to true
-
-  # Test without GitHub App (fallback mode)
-  test-without-app:
-    name: Test without GitHub App
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      
-      - name: General Review without App
-        uses: ./actions/general-review
-        with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "test-org"
-          continue-config: "test-org/review-bot"
-          use_github_app: false # Explicitly disable app authentication
-
-  # Test detailed review with app
-  test-detailed-with-app:
-    name: Test Detailed Review with App
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: contains(github.event.comment.body, '@test-detailed')
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      
-      - name: Detailed Review with App
-        uses: ./actions/detailed-review
-        with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "test-org"
-          continue-config: "test-org/review-bot"
-          app_id: ${{ secrets.CONTINUE_APP_ID }}
-          app_private_key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
-          # use_github_app defaults to true
