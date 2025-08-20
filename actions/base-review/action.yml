@@ -6,14 +6,16 @@ inputs:
   continue-api-key:
     description: "API key for Continue service (required)"
     required: true
+  use_github_app:
+    description: "Use GitHub App for bot identity (defaults to true)"
+    default: "true"
+    required: false
   app-id:
-    description: "GitHub App ID (optional)"
+    description: "GitHub App ID (optional, defaults to Continue Agent app)"
     required: false
+    default: "1090372"  # Continue Agent App ID
   app-private-key:
-    description: "GitHub App Private Key (optional)"
-    required: false
-  github-token:
-    description: "GitHub token for API access (optional - for posting comments with GitHub App)"
+    description: "GitHub App Private Key (optional, defaults to repository secret)"
     required: false
 
 runs:
@@ -54,16 +56,16 @@ runs:
         echo "Review type: $REVIEW_TYPE"
 
     - name: Generate GitHub App Token
-      if: steps.check.outputs.should_run == 'true' && inputs.app-private-key != ''
+      if: steps.check.outputs.should_run == 'true' && inputs.use_github_app == 'true'
       id: app-token
       uses: actions/create-github-app-token@v2
       with:
-        app-id: ${{ inputs.app-id }}
-        private-key: ${{ inputs.app-private-key }}
+        app-id: ${{ inputs.app-id || secrets.CONTINUE_APP_ID || '1090372' }}
+        private-key: ${{ inputs.app-private-key || secrets.CONTINUE_APP_PRIVATE_KEY }}
       continue-on-error: true
 
     - name: Comment on App Installation
-      if: steps.check.outputs.should_run == 'true' && inputs.app-private-key != '' && steps.app-token.outcome == 'failure'
+      if: steps.check.outputs.should_run == 'true' && inputs.use_github_app == 'true' && steps.app-token.outcome == 'failure'
       uses: actions/github-script@v7
       with:
         github-token: ${{ github.token }}
@@ -78,14 +80,17 @@ runs:
             });
           }
 
-    - name: Run Continue Review
+    - name: Run Continue Detailed Review  
       if: steps.check.outputs.should_run == 'true'
-      uses: continuedev/continue/actions/general-review@bdougie/continue-agent
+      uses: continuedev/continue/actions/detailed-review@bdougie/continue-agent
       with:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continuedev"
         continue-config: "continuedev/review-bot"
-        github-token: ${{ inputs.github-token || steps.app-token.outputs.token || github.token }}
+        use_github_app: ${{ inputs.use_github_app }}
+        app-id: ${{ inputs.app-id }}
+        app-private-key: ${{ inputs.app-private-key }}
+        github-token: ${{ steps.app-token.outputs.token || github.token }}
 
 branding:
   icon: "code"

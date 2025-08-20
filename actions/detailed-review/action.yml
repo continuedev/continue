@@ -12,20 +12,43 @@ inputs:
   continue-config:
     description: 'Config path to use (e.g., "myorg/review-bot")'
     required: true
+  use_github_app:
+    description: "Use GitHub App for bot identity (defaults to true)"
+    default: "true"
+    required: false
+  app-id:
+    description: "GitHub App ID (optional, defaults to Continue Agent app)"
+    required: false
+    default: "1090372"  # Continue Agent App ID
+  app-private-key:
+    description: "GitHub App Private Key (optional, defaults to repository secret)"
+    required: false
   github-token:
-    description: "GitHub token for API operations (defaults to github.token)"
+    description: "GitHub token for API operations (optional, overrides app token)"
     required: false
 
 runs:
   using: "composite"
   steps:
+    - name: Generate GitHub App Token
+      if: inputs.use_github_app == 'true' && inputs.github-token == ''
+      id: app-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.app-id || secrets.CONTINUE_APP_ID || '1090372' }}
+        private-key: ${{ inputs.app-private-key || secrets.CONTINUE_APP_PRIVATE_KEY }}
+      continue-on-error: true
+
     - name: Set GitHub Token
       shell: bash
       run: |
-        # Use provided token or default to github.token
+        # Priority: provided token > app token > default token
         if [ "${{ inputs.github-token }}" != "" ]; then
           echo "GH_TOKEN=${{ inputs.github-token }}" >> $GITHUB_ENV
           echo "Using provided GitHub token for operations"
+        elif [ "${{ inputs.use_github_app }}" = "true" ] && [ "${{ steps.app-token.outcome }}" = "success" ]; then
+          echo "GH_TOKEN=${{ steps.app-token.outputs.token }}" >> $GITHUB_ENV
+          echo "Using GitHub App token for operations"
         else
           echo "GH_TOKEN=${{ github.token }}" >> $GITHUB_ENV
           echo "Using default GitHub Actions token"
