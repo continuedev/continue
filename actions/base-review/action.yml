@@ -10,6 +10,14 @@ inputs:
     description: "Use GitHub App for bot identity (defaults to true)"
     default: "true"
     required: false
+  continue-org:
+    description: "Organization for Continue config (optional)"
+    required: false
+    default: "continuedev"
+  continue-config:
+    description: "Config path to use (optional)"
+    required: false
+    default: "continuedev/review-bot"
   app-id:
     description: "GitHub App ID (optional, defaults to Continue Agent app)"
     required: false
@@ -80,13 +88,52 @@ runs:
             });
           }
 
+    - name: Validate GitHub App Credentials
+      if: steps.check.outputs.should_run == 'true' && inputs.use_github_app == 'true'
+      shell: bash
+      run: |
+        # Validate that both app-id and app-private-key are provided together
+        if [ -n "${{ inputs.app-private-key }}" ] && [ -z "${{ inputs.app-id }}" ]; then
+          echo "::warning::app-private-key provided without app-id. Both are required for GitHub App authentication."
+        elif [ -n "${{ inputs.app-id }}" ] && [ -z "${{ inputs.app-private-key }}" ] && [ -z "${{ secrets.CONTINUE_APP_PRIVATE_KEY }}" ]; then
+          echo "::warning::app-id provided without app-private-key. Both are required for GitHub App authentication."
+        fi
+
+    - name: Check Authorization
+      if: steps.check.outputs.should_run == 'true'
+      shell: bash
+      run: |
+        # Check user permissions for PR or comment events
+        AUTHORIZED="false"
+        
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
+          if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
+            AUTHORIZED="true"
+          else
+            echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+          fi
+        elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+          COMMENTER_ASSOC="${{ github.event.comment.author_association }}"
+          if [ "$COMMENTER_ASSOC" = "OWNER" ] || [ "$COMMENTER_ASSOC" = "MEMBER" ] || [ "$COMMENTER_ASSOC" = "COLLABORATOR" ]; then
+            AUTHORIZED="true"
+          else
+            echo "::notice::Skipping review - Commenter is not a team member (association: $COMMENTER_ASSOC)"
+          fi
+        fi
+        
+        if [ "$AUTHORIZED" != "true" ]; then
+          echo "should_run=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
     - name: Run Continue Detailed Review
       if: steps.check.outputs.should_run == 'true'
-      uses: continuedev/continue/actions/detailed-review@bdougie/continue-agent
+      uses: continuedev/continue/actions/detailed-review@main
       with:
         continue-api-key: ${{ inputs.continue-api-key }}
-        continue-org: "continuedev"
-        continue-config: "continuedev/review-bot"
+        continue-org: ${{ inputs.continue-org }}
+        continue-config: ${{ inputs.continue-config }}
         use_github_app: ${{ inputs.use_github_app }}
         app-id: ${{ inputs.app-id }}
         app-private-key: ${{ inputs.app-private-key }}
