@@ -57,6 +57,7 @@ runs:
       with:
         app-id: ${{ inputs.app-id }}
         private-key: ${{ inputs.app-private-key }}
+      continue-on-error: true
 
     - name: Run Continue Review
       if: steps.check.outputs.should_run == 'true'

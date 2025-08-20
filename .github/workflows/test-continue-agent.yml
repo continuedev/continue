@@ -18,8 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # This will use GitHub App token if available, otherwise falls back to github.token
       - uses: continuedev/continue/actions/base-review@bdougie/continue-agent
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          app-id: ${{ secrets.CONTINUE_APP_ID }}
-          app-private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
+          # Optional: Provide these if you have a GitHub App installed
+          # app-id: ${{ secrets.CONTINUE_APP_ID }}
+          # app-private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
