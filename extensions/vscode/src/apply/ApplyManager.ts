@@ -50,15 +50,16 @@ export class ApplyManager {
       toolCallId,
     });
 
-    const hasExistingDocument = !!activeTextEditor.document.getText().trim();
+    try {
+      const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
-    if (hasExistingDocument) {
-      // Currently `isSearchAndReplace` will always provide a full file rewrite
-      // as the contents of `text`, so we can just instantly apply
-      if (isSearchAndReplace) {
-        const diffLinesGenerator = generateLines(
-          myersDiff(activeTextEditor.document.getText(), text),
-        );
+      if (hasExistingDocument) {
+        // Currently `isSearchAndReplace` will always provide a full file rewrite
+        // as the contents of `text`, so we can just instantly apply
+        if (isSearchAndReplace) {
+          const diffLinesGenerator = generateLines(
+            myersDiff(activeTextEditor.document.getText(), text),
+          );
 
           await this.verticalDiffManager.streamDiffLines(
             diffLinesGenerator,
