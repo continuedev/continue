@@ -6,16 +6,14 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
-class MentionFilesOrFoldersInChatAction : AnAction() {
+class MentionRepoMapInChatAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
         val selectedFiles = e.getFiles()
 
         val requestData = selectedFiles.map { vFile ->
-            val type = if (vFile.isDirectory) "folder" else "file"
-
             mapOf(
-                "type" to type,
+                "type" to "repo-map",
                 "fullPath" to vFile.url,
                 "name" to vFile.name,
             )
@@ -30,7 +28,8 @@ class MentionFilesOrFoldersInChatAction : AnAction() {
     override fun update(e: AnActionEvent) {
         val files = e.getFiles()
 
-        val isAvailable = files.isNotEmpty()
+        // only directories can be used
+        val isAvailable = files.isNotEmpty() && files.all { file -> file.isDirectory }
 
         e.presentation.isVisible = isAvailable
     }

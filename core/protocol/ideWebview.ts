@@ -3,10 +3,10 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
 import {
   AcceptOrRejectDiffPayload,
+  AddChatMentionsPayload,
   ApplyState,
   ApplyToFilePayload,
   HighlightedCodePayload,
-  MentionFilesOrDirectoriesPayload,
   MessageContent,
   RangeInFileWithContents,
   SetCodeToEditPayload,
@@ -79,5 +79,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
   generateRule: [undefined, void];
-  mentionFilesOrDirectories: [MentionFilesOrDirectoriesPayload, void];
+  addChatMention: [AddChatMentionsPayload, void];
 };

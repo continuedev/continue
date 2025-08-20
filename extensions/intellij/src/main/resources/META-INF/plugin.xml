@@ -186,6 +186,10 @@
                     class="com.github.continuedev.continueintellijextension.actions.menu.file.MentionFilesOrFoldersInChatAction"
                     text="Mention in the Chat">
             </action>
+            <action id="com.github.continuedev.continueintellijextension.actions.menu.file.MentionRepoMapInChatAction"
+                    class="com.github.continuedev.continueintellijextension.actions.menu.file.MentionRepoMapInChatAction"
+                    text="Mention in the Chat as a Repo Map">
+            </action>
 
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </group>
