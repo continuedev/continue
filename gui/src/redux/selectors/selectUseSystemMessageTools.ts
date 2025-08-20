@@ -9,8 +9,9 @@ import { RootState } from "../store";
  *
  * Priority order:
  * 1. Auto-detection (if it returns true/false)
- * 2. Manual user configuration (if auto-detection returns undefined)
- * 3. Default to false
+ * 2. Model does not support native tools (always true)
+ * 3. Manual user configuration
+ * 4. Default to false
  *
  * @param state The Redux root state
  * @returns true if system message tools should be used, false otherwise
@@ -28,14 +29,14 @@ export function selectUseSystemMessageTools(state: RootState): boolean {
   // Check auto-detection first
   const autoSetting = shouldAutoEnableSystemMessageTools(selectedModel);
 
-  // when model does not support native tools, use system message tools
-  if (!modelSupportsNativeTools(selectedModel)) {
-    return true;
-  }
-
   // If auto-detection has a preference, use it (takes priority)
   if (autoSetting !== undefined) {
     return autoSetting;
+  }
+
+  // when model does not support native tools, use system message tools
+  if (!modelSupportsNativeTools(selectedModel)) {
+    return true;
   }
 
   // If no auto-preference, use manual setting or default to false
