@@ -5,17 +5,14 @@ import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 fun environment(key: String) = providers.environmentVariable(key)
 
 val remoteRobotVersion = "0.11.23"
-val platformType: String by project
 val platformVersion: String by project
 val pluginGroup: String by project
 val pluginVersion: String by project
-val pluginSinceBuild: String by project
-val pluginRepositoryUrl: String by project
 val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
 plugins {
-    kotlin("jvm") version "1.8.0"
-    id("org.jetbrains.intellij.platform") version "2.6.0"
+    kotlin("jvm") version "1.9.22"
+    id("org.jetbrains.intellij.platform") version "2.7.2"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
     id("org.jetbrains.kotlinx.kover") version "0.7.3"
@@ -34,40 +31,44 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create(platformType, platformVersion)
-        plugins(listOf("org.jetbrains.plugins.terminal:223.8214.6"))
+        create("IC", platformVersion)
+        plugins(listOf("org.jetbrains.plugins.terminal:241.14494.150"))
         testFramework(TestFrameworkType.Platform)
     }
     implementation("com.posthog.java:posthog:1.2.0")
 
+    testImplementation("junit:junit:4.13.2")
     testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
     testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
-    testImplementation("io.mockk:mockk:1.14.2")
+    testImplementation("io.mockk:mockk:1.14.2") {
+        // this transitive dependency (1.6.4) conflicts with built-in version (1.7.3)
+        // otherwise e2e tests (runIdeForUiTests) will have linkage errors
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    }
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     testImplementation("com.automation-remarks:video-recorder-junit5:2.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.0") // required to run both JUnit 5 and JUnit 3
 }
 
-kotlin { jvmToolchain(17) }
+kotlin {
+    jvmToolchain(17)
+}
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = pluginSinceBuild
+            sinceBuild = "241"
         }
     }
     pluginVerification {
         ides {
-            ide("IC", "2025.1.4")
-            ide("IC", "2022.3.3")
+            ide("IC", "2025.2")
+            ide("IC", "2025.1")
+            ide("IC", "2024.3")
+            ide("IC", "2024.2")
+            ide("IC", "2024.1")
         }
     }
-}
-
-changelog {
-    groups.empty()
-    repositoryUrl = pluginRepositoryUrl
 }
 
 qodana {
@@ -77,7 +78,11 @@ qodana {
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
 }
 
-koverReport { defaults { xml { onCheck = true } } }
+koverReport {
+    defaults {
+        xml { onCheck = true }
+    }
+}
 
 intellijPlatformTesting {
     runIde {
