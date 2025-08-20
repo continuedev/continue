@@ -66,6 +66,11 @@ runs:
         HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-general-review') }}
       run: |
         # Check if this action should run based on event type and user permissions
+        # TODO: Future improvement - consolidate into a single action that responds to 
+        # @continue-agent mentions with smart heuristics to determine review type:
+        # - "@continue-agent" or "@continue-agent review" -> general review
+        # - "@continue-agent detailed" or similar keywords -> detailed review
+        # This would provide a more natural bot interaction similar to Claude or GitHub Copilot
         SHOULD_RUN="false"
 
         if [ "${{ github.event_name }}" = "pull_request" ]; then
