@@ -69,15 +69,15 @@ runs:
         fi
 
         # Write outputs safely
-        echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
-        echo "review_type=$REVIEW_TYPE" >> $GITHUB_OUTPUT
+        echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+        echo "review_type=$REVIEW_TYPE" >> "$GITHUB_OUTPUT"
         
         # Save custom prompt to a file to avoid issues with special characters
         if [ -n "$CUSTOM_PROMPT" ]; then
           echo "$CUSTOM_PROMPT" > custom_prompt.txt
-          echo "has_custom_prompt=true" >> $GITHUB_OUTPUT
+          echo "has_custom_prompt=true" >> "$GITHUB_OUTPUT"
         else
-          echo "has_custom_prompt=false" >> $GITHUB_OUTPUT
+          echo "has_custom_prompt=false" >> "$GITHUB_OUTPUT"
         fi
 
         # Debug output
@@ -146,7 +146,7 @@ runs:
         fi
         
         if [ "$AUTHORIZED" != "true" ]; then
-          echo "should_run=false" >> $GITHUB_OUTPUT
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -156,9 +156,9 @@ runs:
       run: |
         # Append custom prompt to the review configuration
         # This will be picked up by the detailed-review action
-        echo "CUSTOM_REVIEW_PROMPT<<EOF" >> $GITHUB_ENV
-        cat custom_prompt.txt >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+        echo "CUSTOM_REVIEW_PROMPT<<EOF" >> "$GITHUB_ENV"
+        cat custom_prompt.txt >> "$GITHUB_ENV"
+        echo "EOF" >> "$GITHUB_ENV"
 
     - name: Run Continue Detailed Review
       if: steps.check.outputs.should_run == 'true'
