@@ -175,6 +175,25 @@
       ]
     },
     {
+      "label": "gui:build",
+      "type": "shell",
+      "command": "npm",
+      "options": {
+        "cwd": "${workspaceFolder}/gui",
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=4096"
+        }
+      },
+      "args": ["run", "build"],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true
+      }
+    },
+    {
       "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",
@@ -298,6 +317,33 @@
       "type": "shell",
       "command": "echo",
       "args": ["Build with packages completed"],
+      "problemMatcher": [],
+      "dependsOrder": "sequence",
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true,
+        "focus": false
+      }
+    },
+    {
+      "label": "vscode-extension:build-without-watch",
+      "dependsOn": [
+        "continue-packages:build",
+        "gui:dev",
+        "vscode-extension:continue-ui:build"
+      ],
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "esbuild"],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      },
       "problemMatcher": [],
       "dependsOrder": "sequence",
       "runOptions": {

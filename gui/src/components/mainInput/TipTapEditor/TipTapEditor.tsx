@@ -14,7 +14,10 @@ import { InputBoxDiv } from "./components/StyledComponents";
 import { useMainEditor } from "./MainEditorProvider";
 import "./TipTapEditor.css";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
-import { handleImageFile } from "./utils/imageUtils";
+import {
+  handleImageFile,
+  handleVSCodeResourceFromHtml,
+} from "./utils/imageUtils";
 import { useEditorEventHandlers } from "./utils/keyHandlers";
 
 export interface TipTapEditorProps {
@@ -199,11 +202,14 @@ export function TipTapEditor(props: TipTapEditorProps) {
             setTimeout(() => setShowDragOverMsg(false), 2000);
           }
         }
+        setShowDragOverMsg(false);
       }}
       onDragEnter={() => {
         setShowDragOverMsg(true);
       }}
       onDrop={(event) => {
+        event.preventDefault();
+
         if (
           !defaultModel ||
           !modelSupportsImages(
@@ -216,20 +222,61 @@ export function TipTapEditor(props: TipTapEditorProps) {
           return;
         }
         setShowDragOverMsg(false);
-        let file = event.dataTransfer.files[0];
-        void handleImageFile(ideMessenger, file).then((result) => {
-          if (!editor) {
+
+        // Handle file drop first
+        if (event.dataTransfer.files.length > 0) {
+          const file = event.dataTransfer.files[0];
+          void handleImageFile(ideMessenger, file).then((result) => {
+            if (!editor) {
+              return;
+            }
+            if (result) {
+              const [_, dataUrl] = result;
+              const { schema } = editor.state;
+              const node = schema.nodes.image.create({ src: dataUrl });
+              const tr = editor.state.tr.insert(0, node);
+              editor.view.dispatch(tr);
+            }
+          });
+          return;
+        }
+
+        // Handle drop of HTML content (including VS Code resource URLs)
+        const html = event.dataTransfer.getData("text/html");
+        if (html) {
+          // Check if HTML contains VS Code resource URL and handle it specially
+          if (html.includes("file+.vscode-resource.vscode-cdn.net")) {
+            // Prevent the default browser behavior and TipTap's HTML processing
+            event.preventDefault();
+            event.stopPropagation();
+
+            void handleVSCodeResourceFromHtml(ideMessenger, html).then(
+              (dataUrl) => {
+                if (!editor || !dataUrl) {
+                  return;
+                }
+                const { schema } = editor.state;
+                const node = schema.nodes.image.create({ src: dataUrl });
+                const tr = editor.state.tr.insert(0, node);
+                editor.view.dispatch(tr);
+              },
+            );
             return;
           }
-          if (result) {
-            const [_, dataUrl] = result;
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            const tr = editor.state.tr.insert(0, node);
-            editor.view.dispatch(tr);
-          }
-        });
-        event.preventDefault();
+
+          // Handle other HTML content (like images from browsers)
+          void handleVSCodeResourceFromHtml(ideMessenger, html).then(
+            (dataUrl) => {
+              if (!editor || !dataUrl) {
+                return;
+              }
+              const { schema } = editor.state;
+              const node = schema.nodes.image.create({ src: dataUrl });
+              const tr = editor.state.tr.insert(0, node);
+              editor.view.dispatch(tr);
+            },
+          );
+        }
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
@@ -274,9 +321,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
           defaultModel?.model || "",
           defaultModel?.title,
           defaultModel?.capabilities,
-        ) && (
-          <DragOverlay show={showDragOverMsg} setShow={setShowDragOverMsg} />
-        )}
+        ) && <DragOverlay show={showDragOverMsg} />}
       <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
   );
