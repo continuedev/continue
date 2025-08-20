@@ -1816,12 +1816,12 @@ export interface CompiledMessagesResult {
   contextPercentage: number;
 }
 
-export interface MentionFilesOrDirectoriesPayload {
-  data: MentionFileOrDirectoryPayload[];
+export interface AddChatMentionsPayload {
+  data: AddChatMentionPayload[];
 }
 
-interface MentionFileOrDirectoryPayload {
-  type: "file" | "folder";
+interface AddChatMentionPayload {
+  type: "file" | "folder" | "repo-map";
   fullPath: string;
   name: string;
 }
