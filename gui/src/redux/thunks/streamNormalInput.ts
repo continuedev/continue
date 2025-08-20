@@ -1,8 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
+import { LLMFullCompletionOptions, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
-import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
 import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -86,49 +85,6 @@ async function handleToolCallExecution(
   }
 }
 
-/**
- * Filters tools based on the selected model's capabilities.
- * Returns either the edit file tool or search and replace tool, but not both.
- */
-function filterToolsForModel(
-  tools: Tool[],
-  selectedModel: ModelDescription,
-): Tool[] {
-  const editFileTool = tools.find(
-    (tool) => tool.function.name === BuiltInToolNames.EditExistingFile,
-  );
-  const searchAndReplaceTool = tools.find(
-    (tool) => tool.function.name === BuiltInToolNames.SearchAndReplaceInFile,
-  );
-
-  // If we don't have both tools, return tools as-is
-  if (!editFileTool || !searchAndReplaceTool) {
-    return tools;
-  }
-
-  // Determine which tool to use based on the model
-  const shouldUseFindReplace = shouldUseFindReplaceEdits(selectedModel);
-
-  // Filter out the unwanted tool
-  return tools.filter((tool) => {
-    if (tool.function.name === BuiltInToolNames.EditExistingFile) {
-      return !shouldUseFindReplace;
-    }
-    if (tool.function.name === BuiltInToolNames.SearchAndReplaceInFile) {
-      return shouldUseFindReplace;
-    }
-    return true;
-  });
-}
-
-/**
- * Determines whether to use search and replace tool instead of edit file
- * Right now we only know that this is reliable with Claude models
- */
-function shouldUseFindReplaceEdits({ model }: ModelDescription): boolean {
-  return model.includes("claude") || model.includes("gpt-5");
-}
-
 export const streamNormalInput = createAsyncThunk<
   void,
   {
@@ -146,8 +102,8 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // Get tools and filter them based on the selected model
-    const allActiveTools = selectActiveTools(state);
-    const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
+    const activeTools = selectActiveTools(state);
+
     const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
 
     // Use the centralized selector to determine if system message tools should be used

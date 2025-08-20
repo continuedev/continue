@@ -35,7 +35,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { getToolsForIde } from "../../tools";
+import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
@@ -177,7 +177,7 @@ async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: await getToolsForIde(ide),
+    tools: getBaseToolDefinitions(),
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {
