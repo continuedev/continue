@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
       - name: General Review with App
         uses: ./actions/general-review
         with:
@@ -32,6 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
       - name: General Review without App
         uses: ./actions/general-review
         with:
@@ -47,6 +53,9 @@ jobs:
     timeout-minutes: 10
     if: contains(github.event.comment.body, '@test-detailed')
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
       - name: Detailed Review with App
         uses: ./actions/detailed-review
         with:
