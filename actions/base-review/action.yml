@@ -6,6 +6,13 @@ inputs:
   continue-api-key:
     description: "API key for Continue service (required)"
     required: true
+  app-id:
+    description: "GitHub App ID (optional, defaults to Continue's app)"
+    required: false
+    default: "1090372"  # Continue Agent App ID
+  app-private-key:
+    description: "GitHub App Private Key (optional, defaults to Continue's app)"
+    required: false
 
 runs:
   using: "composite"
@@ -45,12 +52,12 @@ runs:
         echo "Review type: $REVIEW_TYPE"
 
     - name: Generate GitHub App Token
-      if: steps.check.outputs.should_run == 'true'
+      if: steps.check.outputs.should_run == 'true' && inputs.app-private-key != ''
       id: app-token
       uses: actions/create-github-app-token@v2
       with:
-        app-id: ${{ vars.CONTINUE_APP_ID }}
-        private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.app-private-key }}
 
     - name: Run Continue Review
       if: steps.check.outputs.should_run == 'true'
@@ -59,7 +66,7 @@ runs:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continue"
         continue-config: "continue/default"
-        github-token: ${{ steps.app-token.outputs.token }}
+        github-token: ${{ steps.app-token.outputs.token || github.token }}
 
 branding:
   icon: "code"
