@@ -28,14 +28,14 @@ export function selectUseSystemMessageTools(state: RootState): boolean {
   // Check auto-detection first
   const autoSetting = shouldAutoEnableSystemMessageTools(selectedModel);
 
+  // when model does not support native tools, use system message tools
+  if (!modelSupportsNativeTools(selectedModel)) {
+    return true;
+  }
+
   // If auto-detection has a preference, use it (takes priority)
   if (autoSetting !== undefined) {
     return autoSetting;
-  }
-
-  // For native supported models, use native tools
-  if (modelSupportsNativeTools(selectedModel)) {
-    return false;
   }
 
   // If no auto-preference, use manual setting or default to false

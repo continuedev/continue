@@ -65,26 +65,34 @@ describe("selectUseSystemMessageTools", () => {
     expect(selectUseSystemMessageTools(state)).toBe(true);
   });
 
-  test("falls back to manual setting when no auto-preference: manual false", () => {
+  test("should be true when model does not natively support native tools", () => {
     mockSelectSelectedChatModel.mockReturnValue(
       createModel("lmstudio", "gemma3"),
     );
     const state = createMockState(false);
-    expect(selectUseSystemMessageTools(state)).toBe(false);
+    expect(selectUseSystemMessageTools(state)).toBe(true);
   });
 
-  test("should be false when model natively supports native tools", () => {
+  test("should override when set true yet model supports native tools", () => {
     mockSelectSelectedChatModel.mockReturnValue(createModel("openai", "gpt-5"));
     const state = createMockState(true);
-    expect(selectUseSystemMessageTools(state)).toBe(false);
+    expect(selectUseSystemMessageTools(state)).toBe(true);
   });
 
-  test("defaults to false when no auto-preference and no manual setting", () => {
+  test("should be false when explicitly set to false and model supports native tools", () => {
+    mockSelectSelectedChatModel.mockReturnValue(
+      createModel("anthropic", "claude-4"),
+    );
+    const state = createMockState(true);
+    expect(selectUseSystemMessageTools(state)).toBe(true);
+  });
+
+  test("defaults to true when no auto-preference and no manual setting", () => {
     mockSelectSelectedChatModel.mockReturnValue(
       createModel("groq", "llama-3.3-70b"),
     );
     const state = createMockState(undefined);
-    expect(selectUseSystemMessageTools(state)).toBe(false);
+    expect(selectUseSystemMessageTools(state)).toBe(true);
   });
 
   test("handles missing selected model: uses manual setting", () => {
