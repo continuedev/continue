@@ -4,9 +4,8 @@ author: "Continue Dev, Inc."
 
 inputs:
   continue-api-key:
-    description: "API key for Continue service (optional if using default)"
-    required: false
-    default: ""
+    description: "API key for Continue service (required)"
+    required: true
 
 runs:
   using: "composite"
@@ -44,7 +43,7 @@ runs:
       if: steps.check.outputs.should_run == 'true'
       uses: continuedev/continue/actions/general-review@main
       with:
-        continue-api-key: ${{ inputs.continue-api-key || secrets.CONTINUE_API_KEY || vars.CONTINUE_DEFAULT_KEY || 'demo-key' }}
+        continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continue"
         continue-config: "continue/default"
         use_github_app: false  # Keep it simple - no app complexity
