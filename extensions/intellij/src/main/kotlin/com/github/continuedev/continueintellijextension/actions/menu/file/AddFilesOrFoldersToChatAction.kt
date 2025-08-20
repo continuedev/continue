@@ -1,7 +1,7 @@
 package com.github.continuedev.continueintellijextension.actions.menu.file
 
 import com.github.continuedev.continueintellijextension.actions.getContinuePluginService
-import com.github.continuedev.continueintellijextension.actions.getFiles
+import com.github.continuedev.continueintellijextension.actions.getSelectedFiles
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,7 +9,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 class AddFilesOrFoldersToChatAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-        val selectedFiles = e.getFiles()
+        val selectedFiles = e.getSelectedFiles()
 
         val requestData = selectedFiles.map { vFile ->
             val type = if (vFile.isDirectory) "folder" else "file"
@@ -28,7 +28,7 @@ class AddFilesOrFoldersToChatAction : AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        val files = e.getFiles()
+        val files = e.getSelectedFiles()
 
         val isAvailable = files.isNotEmpty()
 
