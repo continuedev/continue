@@ -1,17 +1,16 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
-import { IndexingStatus } from "core";
-import { useMemo } from "react";
+import { XMarkIcon } from "@heroicons/react/24/solid";
+import { useMemo, useState } from "react";
 import { useAuth } from "../../../../../context/Auth";
 import { useAppSelector } from "../../../../../redux/hooks";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
 function DocsIndexingStatuses() {
+  const [searchTerm, setSearchTerm] = useState("");
   const config = useAppSelector((store) => store.config.config);
-  const indexingStatuses = useAppSelector(
-    (store) => store.indexing.indexing.statuses,
-  );
   const { selectedProfile } = useAuth();
+  
   const mergedDocs = useMemo(() => {
     const parsed = selectedProfile?.rawYaml
       ? parseConfigYaml(selectedProfile?.rawYaml ?? "")
@@ -22,36 +21,47 @@ function DocsIndexingStatuses() {
     }));
   }, [config.docs, selectedProfile?.rawYaml]);
 
-  const sortedConfigDocs = useMemo(() => {
-    const sorter = (status: IndexingStatus["status"]) => {
-      if (status === "complete") return 0;
-      if (status === "indexing" || status === "paused") return 1;
-      if (status === "failed") return 2;
-      if (status === "aborted" || status === "pending") return 3;
-      return 4;
-    };
-
-    const docs = [...mergedDocs];
-    docs.sort((a, b) => {
-      const statusA = indexingStatuses[a.doc.startUrl]?.status ?? "pending";
-      const statusB = indexingStatuses[b.doc.startUrl]?.status ?? "pending";
-
-      // First, compare by status
-      const statusCompare = sorter(statusA) - sorter(statusB);
-      if (statusCompare !== 0) return statusCompare;
-
-      // If status is the same, sort by presence of icon
-      const hasIconA = !!a.doc.faviconUrl;
-      const hasIconB = !!b.doc.faviconUrl;
-      return hasIconB === hasIconA ? 0 : hasIconB ? 1 : -1;
+  const filteredAndSortedDocs = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    
+    // Filter docs based on search term
+    const filtered = term === ""
+      ? mergedDocs
+      : mergedDocs.filter(({ doc }) => {
+          const title = (doc.title || "").toLowerCase();
+          const url = (doc.startUrl || "").toLowerCase();
+          return title.includes(term) || url.includes(term);
+        });
+    
+    // Sort alphabetically by title (or URL if no title)
+    const sorted = [...filtered].sort((a, b) => {
+      const aName = (a.doc.title || a.doc.startUrl || "").toLowerCase();
+      const bName = (b.doc.title || b.doc.startUrl || "").toLowerCase();
+      return aName.localeCompare(bName);
     });
-    return docs;
-  }, [mergedDocs, indexingStatuses]);
+    
+    return sorted;
+  }, [mergedDocs, searchTerm]);
 
   return (
     <div className="flex flex-col gap-1">
+      <div className="relative my-2">
+        <input
+          className="bg-vsc-input-background text-vsc-foreground w-full rounded-md border border-none py-1 pl-2 pr-8 text-sm outline-none"
+          placeholder="Search docs by name or URL"
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        {searchTerm && (
+          <XMarkIcon
+            className="text-vsc-foreground hover:bg-vsc-background duration-50 absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 transform cursor-pointer rounded-full p-0.5 transition-colors"
+            onClick={() => setSearchTerm("")}
+          />
+        )}
+      </div>
       <div className="flex flex-col overflow-y-auto overflow-x-hidden pr-2">
-        {sortedConfigDocs.map((docConfig) => {
+        {filteredAndSortedDocs.map((docConfig) => {
           return (
             <div
               key={docConfig.doc.startUrl}
