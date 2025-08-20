@@ -181,7 +181,7 @@
             <add-to-group group-id="EditorPopupMenu"/>
             <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
         </action>
-        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue">
+        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue" icon="/icons/continue.svg">
             <action id="com.github.continuedev.continueintellijextension.actions.menu.file.MentionFilesOrFoldersInChatAction"
                     class="com.github.continuedev.continueintellijextension.actions.menu.file.MentionFilesOrFoldersInChatAction"
                     text="Mention in the Chat">
