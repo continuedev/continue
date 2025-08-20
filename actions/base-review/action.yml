@@ -12,6 +12,9 @@ inputs:
   app-private-key:
     description: "GitHub App Private Key (optional)"
     required: false
+  github-token:
+    description: "GitHub token for API access (optional - for posting comments with GitHub App)"
+    required: false
 
 runs:
   using: "composite"
@@ -82,7 +85,7 @@ runs:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continuedev"
         continue-config: "continuedev/review-bot"
-        github-token: ${{ steps.app-token.outputs.token || github.token }}
+        github-token: ${{ inputs.github-token || steps.app-token.outputs.token || github.token }}
 
 branding:
   icon: "code"
