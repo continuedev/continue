@@ -13,7 +13,7 @@ inputs:
   app-id:
     description: "GitHub App ID (optional, defaults to Continue Agent app)"
     required: false
-    default: "1090372"  # Continue Agent App ID
+    default: "1090372" # Continue Agent App ID
   app-private-key:
     description: "GitHub App Private Key (optional, defaults to repository secret)"
     required: false
@@ -28,7 +28,7 @@ runs:
         # Determine if we should run based on event type
         SHOULD_RUN="false"
         REVIEW_TYPE="general"
-        
+
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           if [ "${{ github.event.pull_request.draft }}" != "true" ]; then
             SHOULD_RUN="true"
@@ -46,10 +46,10 @@ runs:
             fi
           fi
         fi
-        
+
         echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
         echo "review_type=$REVIEW_TYPE" >> $GITHUB_OUTPUT
-        
+
         # Debug output
         echo "Event: ${{ github.event_name }}"
         echo "Should run: $SHOULD_RUN"
@@ -80,7 +80,7 @@ runs:
             });
           }
 
-    - name: Run Continue Detailed Review  
+    - name: Run Continue Detailed Review
       if: steps.check.outputs.should_run == 'true'
       uses: continuedev/continue/actions/detailed-review@bdougie/continue-agent
       with:

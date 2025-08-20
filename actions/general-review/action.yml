@@ -19,7 +19,7 @@ inputs:
   app-id:
     description: "GitHub App ID (optional, defaults to Continue Agent app)"
     required: false
-    default: "1090372"  # Continue Agent App ID
+    default: "1090372" # Continue Agent App ID
   app-private-key:
     description: "GitHub App Private Key (optional, defaults to repository secret)"
     required: false
