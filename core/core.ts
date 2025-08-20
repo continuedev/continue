@@ -51,6 +51,7 @@ import {
 import { BLOCK_TYPES, ConfigYaml } from "@continuedev/config-yaml";
 import { getDiffFn, GitDiffCache } from "./autocomplete/snippets/gitDiffCache";
 import { stringifyMcpPrompt } from "./commands/slash/mcpSlashCommand";
+import { createNewAssistantFile } from "./config/createNewAssistantFile";
 import { isLocalDefinitionFile } from "./config/loadLocalAssistants";
 import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import {
@@ -351,6 +352,13 @@ export class Core {
       await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig(
         "Prompt file created (config/newPromptFile message)",
+      );
+    });
+
+    on("config/newAssistantFile", async (msg) => {
+      await createNewAssistantFile(this.ide, undefined);
+      await this.configHandler.reloadConfig(
+        "Assistant file created (config/newAssistantFile message)",
       );
     });
 

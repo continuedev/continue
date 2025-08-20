@@ -132,6 +132,15 @@ export class ContinueCompletionProvider
     return config.selectedModelByRole.rerank ?? undefined;
   }
 
+  /**
+   * Updates this class and the prefetch queue's usingFullFileDiff flag.
+   * @param usingFullFileDiff New value to set.
+   */
+  public updateUsingFullFileDiff(usingFullFileDiff: boolean) {
+    this.usingFullFileDiff = usingFullFileDiff;
+    this.prefetchQueue.initialize(this.usingFullFileDiff);
+  }
+
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,

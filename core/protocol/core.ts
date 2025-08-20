@@ -49,8 +49,8 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
-import { NextEditOutcome } from "../nextEdit/types";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
+import { NextEditOutcome } from "../nextEdit/types";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -86,6 +86,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
+  "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
