@@ -1,4 +1,4 @@
-name: Test Continue Agent App Integration
+name: Test Continue Agent Actions
 on:
   pull_request:
     types: [opened, ready_for_review]
@@ -12,6 +12,20 @@ permissions:
   issues: write
 
 jobs:
+  # Test the new simplified base-review action
+  test-base-review:
+    name: Test Base Review (Simplified)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Base Review
+        uses: ./actions/base-review
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+
   # Test with GitHub App (default behavior)
   test-with-app:
     name: Test with Continue Agent App

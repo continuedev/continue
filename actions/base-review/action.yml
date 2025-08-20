@@ -1,0 +1,54 @@
+name: "Continue Base Review"
+description: "Zero-config AI code review - just add this action and optionally an API key"
+author: "Continue Dev, Inc."
+
+inputs:
+  continue-api-key:
+    description: "API key for Continue service (optional if using default)"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check trigger
+      id: check
+      shell: bash
+      run: |
+        # Determine if we should run based on event type
+        SHOULD_RUN="false"
+        REVIEW_TYPE="general"
+        
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "${{ github.event.pull_request.draft }}" != "true" ]; then
+            SHOULD_RUN="true"
+          fi
+        elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+          if [ "${{ github.event.issue.pull_request }}" != "" ]; then
+            COMMENT="${{ github.event.comment.body }}"
+            # Check for @continue-agent mention
+            if echo "$COMMENT" | grep -qi "@continue-agent"; then
+              SHOULD_RUN="true"
+              # Check for review type keywords
+              if echo "$COMMENT" | grep -qi "detailed"; then
+                REVIEW_TYPE="detailed"
+              fi
+            fi
+          fi
+        fi
+        
+        echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
+        echo "review_type=$REVIEW_TYPE" >> $GITHUB_OUTPUT
+
+    - name: Run Continue Review
+      if: steps.check.outputs.should_run == 'true'
+      uses: continuedev/continue/actions/general-review@main
+      with:
+        continue-api-key: ${{ inputs.continue-api-key || secrets.CONTINUE_API_KEY || vars.CONTINUE_DEFAULT_KEY || 'demo-key' }}
+        continue-org: "continue"
+        continue-config: "continue/default"
+        use_github_app: false  # Keep it simple - no app complexity
+
+branding:
+  icon: "code"
+  color: "blue"
