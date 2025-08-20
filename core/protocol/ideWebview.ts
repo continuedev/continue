@@ -6,6 +6,7 @@ import {
   ApplyState,
   ApplyToFilePayload,
   HighlightedCodePayload,
+  MentionFilesOrDirectoriesPayload,
   MessageContent,
   RangeInFileWithContents,
   SetCodeToEditPayload,
@@ -77,8 +78,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
   generateRule: [undefined, void];
-  mentionFileOrDirectory: [
-    { type: "file" | "folder"; fullPath: string; name: string },
-    void,
-  ];
+  mentionFilesOrDirectories: [MentionFilesOrDirectoriesPayload, void];
 };
