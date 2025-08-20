@@ -14,7 +14,7 @@ Before getting started, ensure your system meets these requirements:
 
 ## How to Install Ollama - Step-by-Step
 
-### Step 1: How to Install Ollama
+### Step 1: Install Ollama
 
 Choose the installation method for your operating system:
 
@@ -29,7 +29,7 @@ curl -fsSL https://ollama.ai/install.sh | sh
 # Download from ollama.ai
 ```
 
-### Step 2: How to Start Ollama
+### Step 2: Start Ollama Service
 
 After installation, start the Ollama service:
 
@@ -40,9 +40,12 @@ ollama serve
 # Verify it's running
 curl http://localhost:11434
 # Should return "Ollama is running"
+
+# Check Ollama version
+ollama --version
 ```
 
-### Step 3: How to Download Models
+### Step 3: Download Models
 
 <Warning>
 **Important**: Always use `ollama pull` instead of `ollama run` to download models. The `run` command starts an interactive session which isn't needed for Continue.
@@ -181,10 +184,30 @@ See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for
 
 For optimal performance, consider these advanced configuration options:
 
-- Memory optimization: Adjust `num_ctx` for context window size
-- GPU acceleration: Use `num_gpu` to control GPU layers
-- Custom model parameters: Temperature, top_p, top_k settings
-- Performance tuning: Batch size and threading options
+```yaml
+models:
+  - name: Optimized DeepSeek
+    provider: ollama
+    model: deepseek-r1:32b
+    contextLength: 8192  # Adjust context window (default varies by model)
+    completionOptions:
+      temperature: 0.7    # Controls randomness (0.0-1.0)
+      top_p: 0.9         # Nucleus sampling threshold
+      top_k: 40          # Top-k sampling
+      num_predict: 2048  # Max tokens to generate
+    # Ollama-specific options (set via environment or modelfile)
+    # num_gpu: 35        # Number of GPU layers to offload
+    # num_thread: 8      # CPU threads to use
+```
+
+For GPU acceleration and memory tuning, create an Ollama Modelfile:
+```
+# Create custom model with optimizations
+FROM deepseek-r1:32b
+PARAMETER num_gpu 35
+PARAMETER num_thread 8
+PARAMETER num_ctx 4096
+```
 
 ## What Are the Best Practices for Ollama
 
@@ -192,18 +215,35 @@ For optimal performance, consider these advanced configuration options:
 
 Choose models based on your specific needs:
 
-1. **Code Generation**: Use CodeLlama or Mistral
-2. **Chat**: Llama2 or Mistral
-3. **Specialized Tasks**: Domain-specific models
+1. **Code Generation**: 
+   - `qwen2.5-coder:7b` - Excellent for code completion
+   - `codellama:13b` - Strong general coding support
+   - `deepseek-coder:6.7b` - Fast and efficient
+
+2. **Chat & Reasoning**: 
+   - `llama3.1:8b` - Latest Llama with tool support
+   - `mistral:7b` - Fast and versatile
+   - `deepseek-r1:32b` - Advanced reasoning capabilities
+
+3. **Autocomplete**: 
+   - `qwen2.5-coder:1.5b` - Lightweight and fast
+   - `starcoder2:3b` - Optimized for code completion
+
+4. **Memory Requirements**:
+   - 1.5B-3B models: ~4GB RAM
+   - 7B models: ~8GB RAM  
+   - 13B models: ~16GB RAM
+   - 32B models: ~32GB RAM
 
 ### How to Optimize Performance
 
 To get the best performance from Ollama:
 
-- Monitor system resources
-- Adjust context window size
-- Use appropriate model sizes
-- Enable GPU acceleration when available
+- Monitor system resources with `ollama ps` to see memory usage
+- Adjust context window size based on available RAM
+- Use appropriate model sizes for your hardware
+- Enable GPU acceleration when available (NVIDIA CUDA or AMD ROCm)
+- Use `ollama logs` to debug performance issues
 
 ## How to Troubleshoot Ollama Issues
 
@@ -269,13 +309,29 @@ models:
 - Model too large: Check available memory with `ollama ps`
 - GPU issues: Verify CUDA/ROCm installation for GPU acceleration
 - Slow generation: Adjust `num_gpu` layers in model configuration
+- Check system diagnostics: `ollama ps` for active models and memory usage
 
 ## What Are Example Workflows with Ollama
 
 ### How to Use Ollama for Code Generation
 
-```
-# Example: Generate a FastAPI endpointdef create_user_endpoint():    # Continue will help generate the implementation    pass
+```python
+# Example: Generate a FastAPI endpoint
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class User(BaseModel):
+    name: str
+    email: str
+    age: int
+
+@app.post("/users/")
+async def create_user(user: User):
+    # Continue will help complete this implementation
+    # Use Cmd+I (Mac) or Ctrl+I (Windows/Linux) to generate code
+    pass
 ```
 
 ### How to Use Ollama for Code Review
@@ -293,4 +349,4 @@ Ollama with Continue provides a powerful local development environment for AI-as
 
 ---
 
-_This guide is based on Ollama v0.1.x and Continue v0.8.x. Please check for updates regularly._
+_This guide is based on Ollama v0.5.x and Continue v0.9.x. Please check for updates regularly._
