@@ -80,8 +80,8 @@ runs:
       uses: continuedev/continue/actions/general-review@bdougie/continue-agent
       with:
         continue-api-key: ${{ inputs.continue-api-key }}
-        continue-org: "continue"
-        continue-config: "continue/default"
+        continue-org: "continuedev"
+        continue-config: "continuedev/clean-code"
         github-token: ${{ steps.app-token.outputs.token || github.token }}
 
 branding:
