@@ -51,7 +51,7 @@ runs:
         continue-api-key: ${{ inputs.continue-api-key }}
         continue-org: "continue"
         continue-config: "continue/default"
-        use_github_app: false  # Keep it simple - no app complexity
+        use_github_app: true  # Keep it simple - install the app for the best experience
 
 branding:
   icon: "code"
