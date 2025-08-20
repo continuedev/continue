@@ -59,6 +59,22 @@ runs:
         private-key: ${{ inputs.app-private-key }}
       continue-on-error: true
 
+    - name: Comment on App Installation
+      if: steps.check.outputs.should_run == 'true' && inputs.app-private-key != '' && steps.app-token.outcome == 'failure'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ github.token }}
+        script: |
+          const prNumber = context.payload.pull_request?.number || context.payload.issue?.number;
+          if (prNumber) {
+            await github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 Continue Agent Setup\n\nI noticed the Continue Agent GitHub App isn't installed on this repository.\n\n**To enable AI-powered code reviews with proper bot identity:**\n\n1. 📱 [Install the Continue Agent app](https://github.com/apps/continue-agent)\n2. ✅ Grant it access to this repository\n3. 🔄 Re-run this workflow or comment \`@continue-agent\` to trigger a new review\n\n**Benefits of using the app:**\n- Reviews appear from the Continue Agent bot instead of github-actions\n- Better formatting and threading of review comments\n- Enhanced permissions for code analysis\n\n*Note: Reviews will still work without the app, but with limited features.*`
+            });
+          }
+
     - name: Run Continue Review
       if: steps.check.outputs.should_run == 'true'
       uses: continuedev/continue/actions/general-review@bdougie/continue-agent
