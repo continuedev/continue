@@ -4,23 +4,179 @@ GitHub Actions that provide automated code reviews for pull requests using Conti
 
 ## Available Actions
 
-This repository provides two GitHub Actions for different review styles:
+This repository provides three GitHub Actions for automated code reviews:
 
-### 1. General Review Action
+### 1. Base Review Action (Recommended)
+
+Zero-config AI code review that automatically handles both general and detailed reviews.
+
+- **Path:** `continuedev/continue/actions/base-review@main`
+- **Trigger:** `@continue-agent` (with optional custom instructions)
+- **Output:** Comprehensive review with inline comments
+
+### 2. General Review Action
 
 Provides high-level PR assessment with overall feedback and recommendations.
 
-- **Path:** `continuedev/continue/actions/general-review@<commit-sha>`
+- **Path:** `continuedev/continue/actions/general-review@main`
 - **Trigger:** `@continue-general-review`
 - **Output:** Summary comment with strengths, issues, and recommendations
 
-### 2. Detailed Review Action
+### 3. Detailed Review Action
 
 Provides line-by-line inline comments on specific code changes.
 
-- **Path:** `continuedev/continue/actions/detailed-review@<commit-sha>`
+- **Path:** `continuedev/continue/actions/detailed-review@main`
 - **Trigger:** `@continue-detailed-review`
 - **Output:** Inline review comments on specific lines of code
+
+## Quick Start
+
+### Zero-Config Setup (Recommended)
+
+The simplest way to add AI code reviews to your repository:
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  actions: read
+  checks: write
+
+jobs:
+  review:
+    # Only run on PRs or when @continue-agent is mentioned
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-agent'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: continuedev/continue/actions/base-review@main
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+```
+
+### With GitHub App (For Bot Identity)
+
+```yaml
+name: AI Code Review
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  actions: read
+  checks: write
+
+jobs:
+  review:
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'issue_comment' && 
+       github.event.issue.pull_request && 
+       contains(github.event.comment.body, '@continue-agent'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CONTINUE_APP_ID }}
+          private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
+      
+      - uses: continuedev/continue/actions/base-review@main
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+          github-token: ${{ steps.app-token.outputs.token }}
+```
+
+### With Custom Configuration
+
+```yaml
+- uses: continuedev/continue/actions/base-review@main
+  with:
+    continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+    continue-org: "your-org-name"
+    continue-config: "your-org-name/custom-review-bot"
+```
+
+## Usage Examples
+
+### Basic Usage
+
+#### Automatic Review on PR
+When a PR is opened or marked ready for review, the Continue Agent will automatically perform a code review.
+
+#### Manual Trigger with @mention
+Comment on any PR with:
+```
+@continue-agent
+```
+
+#### Request Detailed Review
+```
+@continue-agent detailed
+```
+
+### Custom Review Focus
+
+You can provide specific instructions after the @mention:
+
+```
+@continue-agent please focus on security implications and performance
+```
+
+```
+@continue-agent check if this follows our team's React best practices
+```
+
+```
+@continue-agent detailed review the error handling and edge cases
+```
+
+## Security Features
+
+### Multi-Layer Security
+
+1. **Workflow-level filtering**: The workflow only runs when:
+   - It's a PR event (opened, synchronized, ready_for_review)
+   - It's a comment on a PR that contains `@continue-agent`
+
+2. **Action-level authorization**: Only authorized users (OWNER, MEMBER, COLLABORATOR) can trigger reviews
+
+3. **Input sanitization**: Custom prompts are:
+   - Read as data, not executed as code
+   - Written to temporary files to prevent injection
+   - Passed through environment variables safely
+
+### How Custom Prompts Work
+
+When you comment `@continue-agent [your custom instructions]`, the action:
+1. Extracts the text after `@continue-agent`
+2. Sanitizes it by treating it as data (no shell execution)
+3. Passes it to the review action as additional context
+4. The AI incorporates your instructions into its review
+
+This allows flexible, context-aware reviews while maintaining security.
 
 ## Quick Start
 
@@ -116,6 +272,20 @@ jobs:
 ```
 
 ## Inputs
+
+### Base Review Action
+
+| Input              | Description                                    | Required | Default |
+| ------------------ | ---------------------------------------------- | -------- | ------- |
+| `continue-api-key` | API key for Continue service                   | Yes      | -       |
+| `continue-org`     | Organization for Continue config               | No       | `continuedev` |
+| `continue-config`  | Config path (e.g., "myorg/review-bot")         | No       | `continuedev/review-bot` |
+| `use_github_app`   | Use GitHub App for bot identity                | No       | `true`  |
+| `app-id`           | GitHub App ID                                  | No       | `1090372` |
+| `app-private-key`  | GitHub App Private Key                         | No       | -       |
+| `github-token`     | GitHub token for API access                    | No       | -       |
+
+### General and Detailed Review Actions
 
 Both actions accept the same inputs:
 
