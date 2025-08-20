@@ -69,7 +69,7 @@ ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 
 ${BRIEF_LAZY_INSTRUCTIONS}
 
-However, only output codeblocks for suggestion and demonstration purposes. For making changes, use the edit tools
+However, only output codeblocks for suggestion and demonstration purposes. For examle, when enumerating multiple hypothetical options, output codeblocks rather than using the tool. But for making any actual changes, use the edit tools.
 
 </important_rules>`;
 
