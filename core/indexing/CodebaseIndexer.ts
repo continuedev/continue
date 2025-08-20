@@ -727,7 +727,9 @@ export class CodebaseIndexer {
   public async wasIndexesChanged() {
     const indexes = await this.getIndexesToBuild();
     return !indexes.every((index) =>
-      this.builtIndexes.some((builtIndex) => builtIndex === index),
+      this.builtIndexes.some(
+        (builtIndex) => builtIndex.artifactId === index.artifactId,
+      ),
     );
   }
 

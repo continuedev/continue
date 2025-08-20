@@ -21,6 +21,7 @@ import CodebaseContextProvider from "../context/providers/CodebaseContextProvide
 import { ContinueConfig } from "../index.js";
 import { localPathToUri } from "../util/pathToUri.js";
 import { CodebaseIndexer } from "./CodebaseIndexer.js";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
@@ -827,7 +828,7 @@ describe("CodebaseIndexer", () => {
 
     test("should return true when indexes to build differ from built indexes", async () => {
       const mockIndex1 = new TestCodebaseIndex();
-      const mockIndex2 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
       mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
       (testIndexer as any).builtIndexes = [mockIndex2];
 
@@ -837,7 +838,7 @@ describe("CodebaseIndexer", () => {
 
     test("should return true when there are more indexes to build than built indexes", async () => {
       const mockIndex1 = new TestCodebaseIndex();
-      const mockIndex2 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
       mockGetIndexesToBuild.mockResolvedValue([mockIndex1, mockIndex2]);
       (testIndexer as any).builtIndexes = [mockIndex1];
 
@@ -847,7 +848,7 @@ describe("CodebaseIndexer", () => {
 
     test("should return false when there are fewer indexes to build than built indexes", async () => {
       const mockIndex1 = new TestCodebaseIndex();
-      const mockIndex2 = new TestCodebaseIndex();
+      const mockIndex2 = new FullTextSearchCodebaseIndex();
       mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
       (testIndexer as any).builtIndexes = [mockIndex1, mockIndex2];
 
