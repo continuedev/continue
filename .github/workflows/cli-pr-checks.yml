@@ -3,8 +3,6 @@ name: CLI PR Checks
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "extensions/cli/**"
 
 permissions:
   contents: read
