@@ -251,7 +251,7 @@ export function isSecurityConcern(filePathOrUri: string) {
   return defaultFileAndFolderSecurityIgnores.ignores(filepath);
 }
 
-export async function throwIfFileIsSecurityConcern(filepath: string) {
+export function throwIfFileIsSecurityConcern(filepath: string) {
   if (isSecurityConcern(filepath)) {
     throw new Error(
       `Reading or Editing ${filepath} is not allowed because it is a security concern. Do not attempt to read or edit this file in any way.`,

@@ -25,6 +25,11 @@ jobs:
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
 
+      - name: Install core dependencies
+        run: |
+          cd core
+          npm i
+
       - name: Install dependencies
         run: |
           cd extensions/cli
@@ -52,6 +57,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
+
+      - name: Install core dependencies
+        run: |
+          cd core
+          npm i
 
       - name: Install dependencies
         run: |

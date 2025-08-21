@@ -8,7 +8,7 @@ import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");
-  await throwIfFileIsSecurityConcern(filepath);
+  throwIfFileIsSecurityConcern(filepath);
 
   const firstUriMatch = await resolveRelativePathInDir(filepath, extras.ide);
   if (!firstUriMatch) {
