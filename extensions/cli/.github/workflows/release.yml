@@ -1,0 +1,111 @@
+name: Legacy Release (Deprecated)
+
+on:
+  # schedule:
+  #   # Run every day at 9am UTC
+  #   - cron: "0 9 * * *"
+  workflow_dispatch:
+    # Keep manual triggering for emergencies
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          always-auth: true
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # - name: Check beta version age
+      #   run: |
+      #     echo "Checking if any beta versions are less than 7 days old..."
+
+      #     # Get all beta versions from npm
+      #     BETA_VERSIONS=$(npm view @continuedev/cli versions --json | jq -r '.[] | select(contains("-beta."))' 2>/dev/null || echo "[]")
+
+      #     if [ "$BETA_VERSIONS" = "[]" ] || [ -z "$BETA_VERSIONS" ]; then
+      #       echo "No beta versions found, proceeding with release"
+      #       exit 0
+      #     fi
+
+      #     # Current date in seconds since epoch
+      #     CURRENT_DATE=$(date +%s)
+      #     SEVEN_DAYS_AGO=$((CURRENT_DATE - 7 * 24 * 60 * 60))
+
+      #     # Check each beta version
+      #     echo "$BETA_VERSIONS" | while read -r version; do
+      #       if [ -z "$version" ]; then
+      #         continue
+      #       fi
+
+      #       echo "Checking version: $version"
+
+      #       # Extract date from beta version (format: X.Y.Z-beta.YYYYMMDD or X.Y.Z-beta.YYYYMMDD.HHMM)
+      #       DATE_PART=$(echo "$version" | sed -n 's/.*-beta\.\([0-9]\{8\}\).*/\1/p')
+
+      #       if [ -z "$DATE_PART" ]; then
+      #         echo "Could not extract date from version $version, skipping"
+      #         continue
+      #       fi
+
+      #       # Convert YYYYMMDD to epoch seconds (assuming midnight UTC)
+      #       YEAR=${DATE_PART:0:4}
+      #       MONTH=${DATE_PART:4:2}
+      #       DAY=${DATE_PART:6:2}
+
+      #       # Validate date components
+      #       if [ ${#YEAR} -ne 4 ] || [ ${#MONTH} -ne 2 ] || [ ${#DAY} -ne 2 ]; then
+      #         echo "Invalid date format in version $version, skipping"
+      #         continue
+      #       fi
+
+      #       # Convert to epoch seconds
+      #       VERSION_DATE=$(date -d "${YEAR}-${MONTH}-${DAY}" +%s 2>/dev/null || continue)
+
+      #       echo "Version $version date: ${YEAR}-${MONTH}-${DAY} (${VERSION_DATE})"
+      #       echo "Seven days ago: $(date -d @${SEVEN_DAYS_AGO} '+%Y-%m-%d') (${SEVEN_DAYS_AGO})"
+
+      #       # Check if beta version is less than 7 days old
+      #       if [ "$VERSION_DATE" -gt "$SEVEN_DAYS_AGO" ]; then
+      #         echo "❌ ERROR: Beta version $version was created on ${YEAR}-${MONTH}-${DAY}, which is less than 7 days ago."
+      #         echo "Cannot create a stable release until at least 7 days have passed since the latest beta."
+      #         echo "Please wait until $(date -d @$((VERSION_DATE + 7 * 24 * 60 * 60)) '+%Y-%m-%d') before creating a stable release."
+      #         exit 1
+      #       else
+      #         echo "✅ Beta version $version is older than 7 days (created ${YEAR}-${MONTH}-${DAY})"
+      #       fi
+      #     done
+
+      #     echo "All beta versions are at least 7 days old, proceeding with release"
+
+      - name: Install semantic-release and plugins
+        run: npm install -D semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Semantic Release
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
