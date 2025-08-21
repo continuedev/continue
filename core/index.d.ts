@@ -1682,6 +1682,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
   data?: DataDestination[];
 }
 
