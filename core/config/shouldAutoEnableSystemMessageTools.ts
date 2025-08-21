@@ -21,12 +21,9 @@ import { ModelDescription } from "../index.d";
 export function shouldAutoEnableSystemMessageTools(
   model: ModelDescription,
 ): boolean | undefined {
-  // Auto-enable for OpenRouter, but exclude Claude/KimiK2 models which have good native tool calling
+  // Auto-enable for OpenRouter, but exclude Claude models which have good native tool calling
   if (model.provider === "openrouter") {
-    return (
-      !model.model.toLowerCase().includes("claude") &&
-      !model.model.toLowerCase().includes("kimi-k2")
-    );
+    return !model.model.toLowerCase().includes("claude");
   }
 
   // No auto-preference for all other providers - use manual setting
