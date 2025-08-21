@@ -194,7 +194,10 @@ export function fromChatCompletionChunk(
       role: "assistant",
       content: "",
       toolCalls: delta?.tool_calls
-        .filter((tool_call) => tool_call.type === "function" && "function" in tool_call)
+        .filter(
+          (tool_call) =>
+            tool_call.type === "function" && "function" in tool_call,
+        )
         .map((tool_call) => ({
           id: tool_call.id,
           type: "function" as const,

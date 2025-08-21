@@ -250,7 +250,12 @@ export class BedrockApi implements BaseLlmApi {
         if (message.tool_calls) {
           for (const toolCall of message.tool_calls) {
             // Type guard for function tool calls
-            if (toolCall.type === "function" && "function" in toolCall && toolCall.id && toolCall.function?.name) {
+            if (
+              toolCall.type === "function" &&
+              "function" in toolCall &&
+              toolCall.id &&
+              toolCall.function?.name
+            ) {
               if (availableTools.has(toolCall.function.name)) {
                 currentBlocks.push({
                   toolUse: {
@@ -270,7 +275,9 @@ export class BedrockApi implements BaseLlmApi {
                 });
               }
             } else {
-              console.warn(`Unsupported tool call type in Bedrock: ${toolCall.type}`);
+              console.warn(
+                `Unsupported tool call type in Bedrock: ${toolCall.type}`,
+              );
             }
           }
         }

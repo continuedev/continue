@@ -102,7 +102,11 @@ function assertFetchCall(mockFetch: any, expectedRequest: any) {
   if (expectedRequest.headers) {
     // Handle both plain objects and Headers objects
     const actualHeaders = options.headers;
-    if (actualHeaders && typeof actualHeaders === 'object' && 'get' in actualHeaders) {
+    if (
+      actualHeaders &&
+      typeof actualHeaders === "object" &&
+      "get" in actualHeaders
+    ) {
       // This is a Headers-like object, convert to plain object for comparison
       const headersObj: Record<string, string> = {};
       for (const key of Object.keys(expectedRequest.headers)) {

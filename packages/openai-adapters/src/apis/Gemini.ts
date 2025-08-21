@@ -150,7 +150,9 @@ export class GeminiApi implements BaseLlmApi {
                   },
                 };
               } else {
-                throw new Error(`Unsupported tool call type in Gemini: ${toolCall.type}`);
+                throw new Error(
+                  `Unsupported tool call type in Gemini: ${toolCall.type}`,
+                );
               }
             }),
           };
