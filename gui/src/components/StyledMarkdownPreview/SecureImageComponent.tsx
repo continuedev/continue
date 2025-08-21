@@ -139,7 +139,8 @@ export const SecureImageComponent: React.FC<SecureImageComponentProps> = ({
   return (
     <ImagePlaceholder>
       <WarningText>
-        Image blocked for security. External images can leak data through URL parameters. Click to load if you trust the source.
+        Image blocked for security. External images can leak data through URL
+        parameters. Click to load if you trust the source.
       </WarningText>
 
       <UrlDisplay>

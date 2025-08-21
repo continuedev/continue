@@ -12,7 +12,9 @@ describe("SecureImageComponent", () => {
       render(<SecureImageComponent src="https://example.com/image.jpg" />);
 
       expect(
-        screen.getByText(/Image blocked for security.*External images can leak data/),
+        screen.getByText(
+          /Image blocked for security.*External images can leak data/,
+        ),
       ).toBeInTheDocument();
       expect(screen.getByText("Load Image")).toBeInTheDocument();
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
@@ -97,7 +99,9 @@ describe("SecureImageComponent", () => {
 
       // Warning message should be gone
       expect(
-        screen.queryByText(/Image blocked for security.*External images can leak data/),
+        screen.queryByText(
+          /Image blocked for security.*External images can leak data/,
+        ),
       ).not.toBeInTheDocument();
     });
 
