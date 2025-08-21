@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 import { useServices } from "../hooks/useService.js";
 import {
@@ -95,6 +95,16 @@ const TUIChat: React.FC<TUIChatProps> = ({
     process.stdout.write("\x1b[2J\x1b[H");
   };
 
+  // State to trigger static content refresh for /clear command
+  const [staticRefreshTrigger, setStaticRefreshTrigger] = useState(0);
+
+  // Handle clearing chat and resetting intro message
+  const handleClear = () => {
+    setShowIntroMessage(true);
+    // Trigger static content refresh by incrementing the trigger
+    setStaticRefreshTrigger(prev => prev + 1);
+  };
+
   const {
     messages,
     setMessages,
@@ -122,6 +132,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowSessionSelector: () => navigateTo("session"),
     onLoginPrompt: handleLoginPrompt,
     onReload: handleReload,
+    onClear: handleClear,
     // Remote mode configuration
     isRemoteMode,
     remoteUrl,
@@ -212,6 +223,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           mcpService={services.mcp?.mcpService || undefined}
           messages={messages}
           renderMessage={renderMessage}
+          refreshTrigger={staticRefreshTrigger}
         />
       </Box>
 
