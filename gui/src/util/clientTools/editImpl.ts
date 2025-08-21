@@ -35,12 +35,14 @@ export const editToolImpl: ClientToolImpl = async (
       toolCallId,
       filepath: firstUriMatch,
     })
-    .catch(() => {
-      void extras.dispatch(
-        handleEditToolApplyError({
-          toolCallId,
-        }),
-      );
+    .then((res) => {
+      if (res.status === "error") {
+        void extras.dispatch(
+          handleEditToolApplyError({
+            toolCallId,
+          }),
+        );
+      }
     });
   return {
     respondImmediately: false,
