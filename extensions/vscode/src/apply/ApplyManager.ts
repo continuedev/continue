@@ -32,7 +32,6 @@ export class ApplyManager {
     if (filepath) {
       await this.ensureFileOpen(filepath);
     }
-    throw new Error("expected");
 
     const { activeTextEditor } = vscode.window;
     if (!activeTextEditor) {
