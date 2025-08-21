@@ -1,7 +1,7 @@
 import fs from "fs";
-
 import ignore from "ignore";
 
+import path from "path";
 import { IDE } from "..";
 import { getGlobalContinueIgnorePath } from "../util/paths";
 import { localPathOrUriToPath } from "../util/pathToUri";
@@ -236,9 +236,19 @@ export const defaultIgnoreFileAndDir = ignore()
   .add(defaultIgnoreDir);
 
 export function isSecurityConcern(filePathOrUri: string) {
-  return defaultFileAndFolderSecurityIgnores.ignores(
-    localPathOrUriToPath(filePathOrUri),
-  );
+  if (!filePathOrUri) {
+    return false;
+  }
+  let filepath = localPathOrUriToPath(filePathOrUri);
+  if (path.isAbsolute(filepath)) {
+    const dir = path.dirname(filepath).split(/\/|\\/).at(-1) ?? "";
+    const basename = path.basename(filepath);
+    filepath = `${dir ? dir + "/" : ""}${basename}`;
+  }
+  if (!filepath) {
+    return false;
+  }
+  return defaultFileAndFolderSecurityIgnores.ignores(filepath);
 }
 
 export async function throwIfFileIsSecurityConcern(filepath: string) {

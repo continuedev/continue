@@ -7,7 +7,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { throwIfFileIsSecurityConcern } from "../../../../core/indexing/ignore.js";
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { markFileAsRead, readFilesSet } from "./edit.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";

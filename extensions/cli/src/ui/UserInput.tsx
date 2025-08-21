@@ -8,7 +8,7 @@ import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 
-import { throwIfFileIsSecurityConcern } from "../../../../core/indexing/ignore.js";
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { FileSearchUI } from "./FileSearchUI.js";
 import {
   handleControlKeys,
