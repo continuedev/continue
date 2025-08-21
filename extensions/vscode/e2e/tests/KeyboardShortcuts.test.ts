@@ -4,12 +4,12 @@ import {
   InputBox,
   Key,
   TextEditor,
+  until,
   VSBrowser,
   WebDriver,
   WebElement,
   WebView,
-  Workbench,
-  until,
+  Workbench
 } from "vscode-extension-tester";
 
 import { GUIActions } from "../actions/GUI.actions";
@@ -103,10 +103,12 @@ describe("Keyboard Shortcuts", () => {
     );
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it("Should not create a code block when Cmd+L is pressed without text highlighted", async () => {
-    const text = "Hello, world!";
+
+  it("Should not create a code block when Cmd+L is pressed on an empty line", async () => {
+    const text = "\n\nHello, world!";
 
     await editor.setText(text);
+    await editor.moveCursor(1, 1);//Move cursor to the 1st line
 
     await GUIActions.executeFocusContinueInputShortcut(driver);
 
@@ -115,8 +117,53 @@ describe("Keyboard Shortcuts", () => {
     await TestUtils.expectNoElement(async () => {
       return GUISelectors.getInputBoxCodeBlockAtIndex(view, 0);
     }, DEFAULT_TIMEOUT.XS);
+
+  });
+
+  it("Should create a code block when Cmd+L is pressed with text highlighted", async () => {
+    const text = "Hello, world!";
+
+    await editor.setText(text);
+    await editor.selectText(text);
+
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    ({ view } = await GUIActions.switchToReactIframe());
+
+    const codeBlock = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
+    );
+    const codeblockContent = await codeBlock.getAttribute(
+      "data-codeblockcontent",
+    );
+
+    expect(codeblockContent).to.equal(text);
+
     await GUIActions.executeFocusContinueInputShortcut(driver);
   }).timeout(DEFAULT_TIMEOUT.XL);
+
+  it("Should create a code block when Cmd+L is pressed on a non-empty line", async () => {
+    const text = "Hello, world!";
+
+    await editor.setText(text);
+    await editor.moveCursor(1, 7);//Move cursor to the 1st space
+
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    ({ view } = await GUIActions.switchToReactIframe());
+
+    const codeBlock = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
+    );
+    const codeblockContent = await codeBlock.getAttribute(
+      "data-codeblockcontent",
+    );
+
+    expect(codeblockContent).to.equal(text);
+
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+  }).timeout(DEFAULT_TIMEOUT.XL);
+
 
   it("Fresh VS Code window → sidebar closed → cmd+L with no code highlighted → opens sidebar and focuses input → cmd+L closes sidebar", async () => {
     await GUIActions.executeFocusContinueInputShortcut(driver);
@@ -174,25 +221,4 @@ describe("Keyboard Shortcuts", () => {
     expect(await textInput.isDisplayed()).to.equal(false);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it("Should create a code block when Cmd+L is pressed with text highlighted", async () => {
-    const text = "Hello, world!";
-
-    await editor.setText(text);
-    await editor.selectText(text);
-
-    await GUIActions.executeFocusContinueInputShortcut(driver);
-
-    ({ view } = await GUIActions.switchToReactIframe());
-
-    const codeBlock = await TestUtils.waitForSuccess(() =>
-      GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
-    );
-    const codeblockContent = await codeBlock.getAttribute(
-      "data-codeblockcontent",
-    );
-
-    expect(codeblockContent).to.equal(text);
-
-    await GUIActions.executeFocusContinueInputShortcut(driver);
-  }).timeout(DEFAULT_TIMEOUT.XL);
 });
