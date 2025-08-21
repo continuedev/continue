@@ -1,8 +1,10 @@
-name: CI
+name: CLI PR Checks
 
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'extensions/cli/**'
 
 permissions:
   contents: read
@@ -21,12 +23,17 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+          cache-dependency-path: extensions/cli/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd extensions/cli
+          npm ci
 
       - name: Run linting
-        run: npm run lint
+        run: |
+          cd extensions/cli
+          npm run lint
 
   format-check:
     runs-on: ubuntu-latest
@@ -39,9 +46,12 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+          cache-dependency-path: extensions/cli/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd extensions/cli
+          npm ci
 
       - name: Debug environment info
         run: |
@@ -51,7 +61,9 @@ jobs:
           echo "Platform: $(uname -a)"
 
       - name: Check code formatting
-        run: npm run format:check
+        run: |
+          cd extensions/cli
+          npm run format:check
 
   test:
     strategy:
@@ -69,22 +81,31 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
+          cache-dependency-path: extensions/cli/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd extensions/cli
+          npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          cd extensions/cli
+          npm run build
 
       # e2e tests are failing on Windows specifically - likely due to stdout flush issues
       - name: Run tests
         if: matrix.os != 'windows-latest'
-        run: npm test
+        run: |
+          cd extensions/cli
+          npm test
 
       - name: Run tests (excluding e2e on Windows)
         if: matrix.os == 'windows-latest'
         shell: bash
-        run: npm test -- --exclude='**/*.e2e.*' --exclude='**/e2e/**'
+        run: |
+          cd extensions/cli
+          npm test -- --exclude='**/*.e2e.*' --exclude='**/e2e/**'
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
