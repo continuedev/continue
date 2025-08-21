@@ -98,6 +98,15 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
       return;
     }
 
+    // Only enable file watching in git repositories
+    // Outside git repos (like home directory), file watching causes performance issues
+    // and provides little value since files change less predictably
+    const inGitRepo = isGitRepo();
+    if (!inGitRepo) {
+      console.log("Skipping file watcher: not in a git repository");
+      return;
+    }
+
     this.fileWatcherInitialized = true;
     const watcher = getFileWatcher();
 
