@@ -71,9 +71,10 @@ export const DEFAULT_SECURITY_IGNORE_DIRS = [
   "venv/",
 
   // IDE directories that may contain cached credentials
-  ".vscode/",
-  ".idea/",
-  ".vs/",
+  // For now excluding, reasons for this unclear
+  // ".vscode/",
+  // ".idea/",
+  // ".vs/",
 
   // Cloud provider credential directories
   ".aws/",
@@ -93,9 +94,6 @@ export const DEFAULT_SECURITY_IGNORE_DIRS = [
   ".ssh/",
   ".gnupg/",
   ".gpg/",
-
-  // Application-specific
-  ".continue/",
 
   // Temporary directories that might contain sensitive data
   "tmp/secrets/",
