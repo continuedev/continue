@@ -47,6 +47,7 @@ export function useChat({
   onShowMCPSelector,
   onShowSessionSelector,
   onLoginPrompt: _onLoginPrompt,
+  onClear,
   isRemoteMode = false,
   remoteUrl,
 }: UseChatProps) {
@@ -292,6 +293,7 @@ export function useChat({
           onShowModelSelector,
           onShowMCPSelector,
           onShowSessionSelector,
+          onClear,
         });
 
         if (newInput) {

@@ -17,6 +17,7 @@ export interface UseChatProps {
   onShowSessionSelector?: () => void;
   onLoginPrompt?: (promptText: string) => Promise<string>;
   onReload?: () => Promise<void>;
+  onClear?: () => void;
   // Remote mode props
   isRemoteMode?: boolean;
   remoteUrl?: string;
