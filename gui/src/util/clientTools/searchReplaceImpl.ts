@@ -1,6 +1,5 @@
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
-import { throwIfFileIsSecurityConcern } from "core/indexing/ignore";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";
@@ -17,8 +16,6 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
 
   const streamId = uuid();
-
-  throwIfFileIsSecurityConcern(filepath);
 
   // Resolve the file path
   const resolvedFilepath = await resolveRelativePathInDir(
