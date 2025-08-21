@@ -19,7 +19,7 @@ export class AzureApi extends OpenAIApi {
     const { baseURL, defaultQuery } = this._getAzureBaseURL(azureConfig);
 
     this.openai = new OpenAI({
-      apiKey: azureConfig.apiKey,
+      apiKey: azureConfig.apiKey ?? "",
       baseURL,
       fetch: customFetch(azureConfig.requestOptions),
       defaultQuery,
