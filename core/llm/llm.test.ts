@@ -145,6 +145,7 @@ function testLLM(
                     description: "Say Hello",
                     parameters: {
                       type: "object",
+                      required: ["name"],
                       properties: {
                         name: {
                           type: "string",
@@ -165,7 +166,7 @@ function testLLM(
             },
           )) {
             const typedChunk = chunk as AssistantChatMessage;
-            if (!typedChunk.toolCalls) {
+            if (!typedChunk.toolCalls || typedChunk.toolCalls.length === 0) {
               continue;
             }
             const toolCall = typedChunk.toolCalls[0];

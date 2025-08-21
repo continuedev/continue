@@ -190,24 +190,20 @@ export function fromChatCompletionChunk(
       content: delta.content,
     };
   } else if (delta?.tool_calls) {
-    const toolCalls = delta?.tool_calls
-      .filter((tool_call) => tool_call.type === "function")
-      .map((tool_call) => ({
-        id: tool_call.id,
-        type: "function" as const,
-        function: {
-          name: (tool_call as any).function?.name,
-          arguments: (tool_call as any).function?.arguments,
-        },
-      }));
-
-    if (toolCalls.length > 0) {
-      return {
-        role: "assistant",
-        content: "",
-        toolCalls,
-      };
-    }
+    return {
+      role: "assistant",
+      content: "",
+      toolCalls: delta?.tool_calls
+        .filter((tool_call) => !tool_call.type || tool_call.type === "function")
+        .map((tool_call) => ({
+          id: tool_call.id,
+          type: "function" as const,
+          function: {
+            name: (tool_call as any).function?.name,
+            arguments: (tool_call as any).function?.arguments,
+          },
+        })),
+    };
   }
 
   return undefined;
