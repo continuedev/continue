@@ -69,7 +69,7 @@ const LoadButton = styled.button`
 const ImageContainer = styled.div`
   max-width: 100%;
   display: inline-block;
-  
+
   img {
     max-width: 100%;
     height: auto;
@@ -100,7 +100,7 @@ export const SecureImageComponent: React.FC<SecureImageComponentProps> = ({
   // Parse URL to check for query parameters
   let queryParams: Record<string, string> = {};
   let hasQueryParams = false;
-  
+
   try {
     const url = new URL(src, window.location.href);
     const params = new URLSearchParams(url.search);
@@ -110,7 +110,7 @@ export const SecureImageComponent: React.FC<SecureImageComponentProps> = ({
     });
   } catch (e) {
     // If URL parsing fails, treat src as a relative path
-    const queryIndex = src.indexOf('?');
+    const queryIndex = src.indexOf("?");
     if (queryIndex > -1) {
       hasQueryParams = true;
       const params = new URLSearchParams(src.substring(queryIndex));
@@ -141,11 +141,11 @@ export const SecureImageComponent: React.FC<SecureImageComponentProps> = ({
       <WarningText>
         Image blocked for security. Click to load if you trust the source.
       </WarningText>
-      
+
       <UrlDisplay>
         <strong>URL:</strong> {src}
       </UrlDisplay>
-      
+
       {hasQueryParams && (
         <QueryParamsDisplay>
           <strong>Warning: URL contains query parameters:</strong>
@@ -154,16 +154,14 @@ export const SecureImageComponent: React.FC<SecureImageComponentProps> = ({
           </pre>
         </QueryParamsDisplay>
       )}
-      
+
       {imageError && (
         <div style={{ color: lightGray, fontSize: "12px", marginTop: "8px" }}>
           Failed to load image. The URL may be invalid or inaccessible.
         </div>
       )}
-      
-      <LoadButton onClick={() => setShowImage(true)}>
-        Load Image
-      </LoadButton>
+
+      <LoadButton onClick={() => setShowImage(true)}>Load Image</LoadButton>
     </ImagePlaceholder>
   );
 };
