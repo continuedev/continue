@@ -247,9 +247,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       }
 
       if (
-        ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
-          (part) => model.toLowerCase().includes(part),
-        )
+        [
+          "vision",
+          "math",
+          "guard",
+          "mistrallite",
+          "mistral-openorca",
+          "claude",
+        ].some((part) => model.toLowerCase().includes(part))
       ) {
         return false;
       }
