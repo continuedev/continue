@@ -1,5 +1,7 @@
 import * as fs from "fs";
 
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
@@ -8,7 +10,6 @@ import {
 import { Tool } from "../types.js";
 import { generateDiff } from "../writeFile.js";
 
-import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { findSearchMatch } from "./findSearchMatch.js";
 import { parseSearchAndReplaceArgs } from "./parseArgs.js";
 import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
