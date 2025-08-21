@@ -6,14 +6,18 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "cn": "dist/index.js"
+    "cn": "dist/cn.js"
   },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:ui": "vitest --ui",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "test:smoke": "node smoke-test.mjs",
+    "build:tsc": "tsc -p tsconfig.build.json",
+    "build:local-deps": "cd ../../packages/config-types && npm run build && cd ../config-yaml && npm run build && cd ../openai-adapters && npm run build",
+    "build:bundle": "node build.mjs",
+    "build": "npm run build:local-deps && npm run build:bundle",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
@@ -107,6 +111,7 @@
     "@vitest/ui": "^3.2.4",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "cross-env": "^7.0.3",
+    "esbuild": "^0.25.9",
     "eslint": "^9.32.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
