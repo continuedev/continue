@@ -200,7 +200,7 @@ export function fromChatCompletionChunk(
           arguments: (tool_call as any).function?.arguments,
         },
       }));
-    
+
     if (toolCalls.length > 0) {
       return {
         role: "assistant",
