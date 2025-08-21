@@ -60,7 +60,10 @@ import {
   PromptMetadata,
   RecentlyEditedRange,
 } from "./types.js";
-import { isWhitespaceOnlyDeletion } from "./utils.js";
+import {
+  convertNextEditModelNameToEnum,
+  isWhitespaceOnlyDeletion,
+} from "./utils.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 
@@ -393,13 +396,20 @@ export class NextEditProvider {
       this.ide.getWorkspaceDirs(),
     ]);
 
-    const modelName = helper.modelName.includes(
-      NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT,
-    )
-      ? NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT
-      : helper.modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)
-        ? NEXT_EDIT_MODELS.MERCURY_CODER
-        : NEXT_EDIT_MODELS.INSTINCT;
+    // const modelName = helper.modelName.includes(
+    //   NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT,
+    // )
+    //   ? NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT
+    //   : helper.modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)
+    //     ? NEXT_EDIT_MODELS.MERCURY_CODER
+    //     : NEXT_EDIT_MODELS.INSTINCT;
+
+    const modelName = convertNextEditModelNameToEnum(helper.modelName);
+    if (!modelName) {
+      throw new Error(
+        `The model ${helper.modelName} is currently not supported for next edit.`,
+      );
+    }
 
     const { editableRegionStartLine, editableRegionEndLine } =
       opts?.usingFullFileDiff
@@ -414,17 +424,6 @@ export class NextEditProvider {
               helper.fileLines.length - 1,
             ),
           };
-
-    // const editableRegionStartLine = opts?.usingFullFileDiff
-    //   ? 0
-    //   : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
-
-    // const editableRegionEndLine = opts?.usingFullFileDiff
-    //   ? helper.fileLines.length - 1
-    //   : Math.min(
-    //       helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-    //       helper.fileLines.length - 1,
-    //     );
 
     const prompts: Prompt[] = [];
 
@@ -556,10 +555,7 @@ export class NextEditProvider {
     const modelName = helper.modelName;
     let ctx: any;
 
-    if (
-      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
-      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
-    ) {
+    if (modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)) {
       ctx = {
         recentlyViewedCodeSnippets:
           snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
@@ -616,11 +612,9 @@ export class NextEditProvider {
 
     const systemPrompt: Prompt = {
       role: "system",
-      content:
-        modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
-        modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
-          ? MERCURY_SYSTEM_PROMPT
-          : INSTINCT_SYSTEM_PROMPT,
+      content: modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)
+        ? MERCURY_SYSTEM_PROMPT
+        : INSTINCT_SYSTEM_PROMPT,
     };
 
     return [systemPrompt, promptMetadata.prompt];
@@ -690,10 +684,7 @@ export class NextEditProvider {
     // Check for mercury models, and inject unique token for next edit.
     // Capture the unique tokens in llm Inception.ts and apis Inception.ts
     const modelName = helper.modelName;
-    if (
-      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER) ||
-      modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT)
-    ) {
+    if (modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)) {
       // Inject the unique token to the last prompt's content.
       const lastPrompt = prompts[prompts.length - 1];
       if (lastPrompt && typeof lastPrompt.content === "string") {

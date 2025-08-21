@@ -42,9 +42,6 @@ const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
   "mercury-coder": {
     template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n`,
   },
-  "mercury-coder-nextedit": {
-    template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n`,
-  },
   instinct: {
     template: `${INSTINCT_USER_PROMPT_PREFIX}\n\n### Context:\n{{{contextSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpt:\n{{{currentFilePath}}}\n\n{{{currentFileContent}}}\`\`\`\n### Response:`,
   },
@@ -94,35 +91,6 @@ export async function renderPrompt(
 
   switch (modelName) {
     case NEXT_EDIT_MODELS.MERCURY_CODER: {
-      userEdits = ctx.editDiffHistory;
-
-      // editedCodeWithTokens = insertTokens(
-      //   helper.fileContents.split("\n"),
-      //   helper.pos,
-      //   MERCURY_CURSOR,
-      // );
-
-      const mercuryCtx: MercuryTemplateVars = {
-        recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
-          ctx.recentlyViewedCodeSnippets,
-        ),
-        currentFileContent: currentFileContentBlock(
-          ctx.currentFileContent,
-          ctx.editableRegionStartLine,
-          ctx.editableRegionEndLine,
-          helper.pos,
-        ),
-        editDiffHistory: editHistoryBlock(ctx.editDiffHistory),
-        currentFilePath: ctx.currentFilePath,
-      };
-
-      tv = mercuryCtx;
-
-      editedCodeWithTokens = mercuryCtx.currentFileContent;
-
-      break;
-    }
-    case NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT: {
       userEdits = ctx.editDiffHistory;
 
       // editedCodeWithTokens = insertTokens(

@@ -216,7 +216,7 @@ describe("NextEditPromptEngine", () => {
   describe("insertTokens", () => {
     it("should correctly insert cursor and editable region tokens", () => {
       const mercuryHelper = {
-        modelName: "inception/mercury-coder-nextedit" as NEXT_EDIT_MODELS,
+        modelName: "inception/mercury-coder" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
