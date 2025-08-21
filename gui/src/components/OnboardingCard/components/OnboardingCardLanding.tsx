@@ -58,7 +58,7 @@ export function OnboardingCardLanding({
         <>
           <p className="xs:w-3/4 w-full text-sm">
             You've reached the free trial limit. Visit the Continue Platform to
-            select a Coding Assistant.
+            select a Coding Agent.
           </p>
           <Button
             onClick={openPastFreeTrialOnboarding}
