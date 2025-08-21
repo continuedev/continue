@@ -3,6 +3,7 @@ import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSea
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";
+import { handleEditToolApplyResponse } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 
 export const searchReplaceToolImpl: ClientToolImpl = async (
@@ -82,13 +83,22 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     // This works becaues of our logic in `applyCodeBlock` that determines
     // that the full file rewrite here can be applied instantly, so the diff
     // lines are just st
-    await extras.ideMessenger.request("applyToFile", {
-      streamId,
-      toolCallId,
-      text: currentContent,
-      filepath: resolvedFilepath,
-      isSearchAndReplace: true,
-    });
+    void extras.ideMessenger
+      .request("applyToFile", {
+        streamId,
+        toolCallId,
+        text: currentContent,
+        filepath: resolvedFilepath,
+        isSearchAndReplace: true,
+      })
+      .then((response) => {
+        void extras.dispatch(
+          handleEditToolApplyResponse({
+            response,
+            toolCallId,
+          }),
+        );
+      });
 
     // Return success - applyToFile will handle the completion state
     return {

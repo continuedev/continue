@@ -50,45 +50,37 @@ export class ApplyManager {
       toolCallId,
     });
 
-    try {
-      const hasExistingDocument = !!activeTextEditor.document.getText().trim();
+    const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
-      if (hasExistingDocument) {
-        // Currently `isSearchAndReplace` will always provide a full file rewrite
-        // as the contents of `text`, so we can just instantly apply
-        if (isSearchAndReplace) {
-          const diffLinesGenerator = generateLines(
-            myersDiff(activeTextEditor.document.getText(), text),
-          );
+    if (hasExistingDocument) {
+      // Currently `isSearchAndReplace` will always provide a full file rewrite
+      // as the contents of `text`, so we can just instantly apply
+      if (isSearchAndReplace) {
+        const diffLinesGenerator = generateLines(
+          myersDiff(activeTextEditor.document.getText(), text),
+        );
 
-          await this.verticalDiffManager.streamDiffLines(
-            diffLinesGenerator,
-            true,
-            streamId,
-            toolCallId,
-          );
-        } else {
-          await this.handleExistingDocument(
-            activeTextEditor,
-            text,
-            streamId,
-            toolCallId,
-          );
-        }
+        await this.verticalDiffManager.streamDiffLines(
+          diffLinesGenerator,
+          true,
+          streamId,
+          toolCallId,
+        );
       } else {
-        await this.handleEmptyDocument(
+        await this.handleExistingDocument(
           activeTextEditor,
           text,
           streamId,
           toolCallId,
         );
       }
-    } finally {
-      await this.webviewProtocol.request("updateApplyState", {
+    } else {
+      await this.handleEmptyDocument(
+        activeTextEditor,
+        text,
         streamId,
-        status: "done",
         toolCallId,
-      });
+      );
     }
   }
 
