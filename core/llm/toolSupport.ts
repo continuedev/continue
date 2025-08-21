@@ -302,6 +302,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "meta-llama/llama-3-70b-instruct",
         "arcee-ai/caller-large",
         "nousresearch/hermes-3-llama-3.1-70b",
+        "moonshotai/kimi-k2",
       ];
       for (const model of specificModels) {
         if (model.toLowerCase() === model) {
