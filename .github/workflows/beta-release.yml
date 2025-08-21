@@ -31,12 +31,14 @@ jobs:
           always-auth: true
 
       - name: Install dependencies
+        working-directory: extensions/cli
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get current version
         id: get_version
+        working-directory: extensions/cli
         run: |
           # Get the latest version from package.json or npm registry
           CURRENT_VERSION=$(node -p "require('./package.json').version")
@@ -65,14 +67,17 @@ jobs:
           echo "date_suffix=$DATE_SUFFIX" >> $GITHUB_OUTPUT
 
       - name: Update package.json for beta
+        working-directory: extensions/cli
         run: |
           # Update version in package.json
           npm version ${{ steps.get_version.outputs.beta_version }} --no-git-tag-version
 
       - name: Build
+        working-directory: extensions/cli
         run: npm run build
 
       - name: Publish beta to npm
+        working-directory: extensions/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
