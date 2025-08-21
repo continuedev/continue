@@ -88,7 +88,7 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error("Error performing full file index:", error);
+      logger.error("Error performing full file index:", error);
       this.setState({ isIndexing: false, error: errorMessage });
     }
   }
@@ -103,7 +103,7 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
     // and provides little value since files change less predictably
     const inGitRepo = isGitRepo();
     if (!inGitRepo) {
-      console.log("Skipping file watcher: not in a git repository");
+      logger.debug("Skipping file watcher: not in a git repository");
       return;
     }
 
@@ -153,13 +153,9 @@ export class FileIndexService extends BaseService<FileIndexServiceState> {
         }));
 
         this.setState({ files });
-
-        console.log(
-          `File index updated: +${addedFiles.length} -${removedFiles.length} files`,
-        );
       }
     } catch (error) {
-      console.error("Error handling file system change:", error);
+      logger.error("Error handling file system change:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.setState({ error: errorMessage });
