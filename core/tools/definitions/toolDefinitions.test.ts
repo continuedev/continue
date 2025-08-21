@@ -8,6 +8,8 @@ describe("Tool Definitions", () => {
     rules: [],
     enableExperimentalTools: false,
     isSignedIn: false,
+    isRemote: false,
+    modelName: "a model",
   };
 
   // Helper function to get the actual tool object
