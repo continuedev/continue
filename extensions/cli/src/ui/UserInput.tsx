@@ -152,6 +152,17 @@ const UserInput: React.FC<UserInputProps> = ({
       }
     }
 
+    // Check if there are any matching commands
+    const filteredCommands = allCommands.filter((cmd) =>
+      cmd.name.toLowerCase().includes(afterSlash.toLowerCase()),
+    );
+
+    // If no commands match, hide the dropdown to allow normal Enter behavior
+    if (filteredCommands.length === 0) {
+      setShowSlashCommands(false);
+      return;
+    }
+
     // Show selector for partial matches
     setShowSlashCommands(true);
     setSlashCommandFilter(afterSlash);
