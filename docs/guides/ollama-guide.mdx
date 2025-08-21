@@ -100,14 +100,10 @@ models:
   **Important**: Hub blocks only provide configuration - you still need to pull
   the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue
   to use `model: deepseek-r1:32b`, but the actual model must be installed:
-  
-  ```bash
-  # Check what the hub block expects (view on hub.continue.dev)
-  # Then pull that exact model tag locally
-  ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
-  ```
-  
-  If the model isn't installed, Ollama will return: `404 model "deepseek-r1:32b" not found, try pulling it first`
+  ```bash # Check what the hub block expects (view on hub.continue.dev) # Then
+  pull that exact model tag locally ollama pull deepseek-r1:32b # Required for
+  ollama/deepseek-r1-32b hub block ``` If the model isn't installed, Ollama will
+  return: `404 model "deepseek-r1:32b" not found, try pulling it first`
 </Warning>
 
 ### Method 2: Using Autodetect
@@ -123,6 +119,8 @@ models:
       - chat
       - edit
       - apply
+      - rerank
+      - autocomplete
 ```
 
 Or use it through the GUI:
@@ -136,7 +134,9 @@ Or use it through the GUI:
   The Autodetect feature scans your local Ollama installation and lists all
   available models. When set to `AUTODETECT`, Continue will dynamically populate
   the model list based on what's installed locally via `ollama list`. This is
-  useful for quickly switching between models without manual configuration.
+  useful for quickly switching between models without manual configuration. For
+  any roles not covered by the detected models, you may need to manually
+  configure them.
 </Note>
 
 You can update `apiBase` with the IP address of a remote machine serving Ollama.
