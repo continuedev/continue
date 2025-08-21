@@ -40,7 +40,7 @@
   "homepage": "https://continue.dev",
   "dependencies": {
     "@continuedev/config-yaml": "^1.0.96",
-    "@continuedev/openai-adapters": "^1.4.1",
+    "@continuedev/openai-adapters": "file:../../packages/openai-adapters",
     "@continuedev/sdk": "^0.0.13",
     "@modelcontextprotocol/sdk": "^1.17.2",
     "@opentelemetry/api": "^1.9.0",
