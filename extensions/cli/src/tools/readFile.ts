@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-import { throwIfFileIsSecurityConcern } from "../../../../core/tools/implementations/readFileLimit.js";
+import { throwIfFileIsSecurityConcern } from "../../../../core/indexing/ignore.js";
 import { markFileAsRead } from "./edit.js";
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";

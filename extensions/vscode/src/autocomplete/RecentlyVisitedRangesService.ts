@@ -3,7 +3,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "core/autocomplete/snippets/types";
-import { defaultFileAndFolderSecurityIgnores } from "core/indexing/ignore";
+import { isSecurityConcern } from "core/indexing/ignore";
 import { PosthogFeatureFlag, Telemetry } from "core/util/posthog";
 import { LRUCache } from "lru-cache";
 import * as vscode from "vscode";
@@ -53,7 +53,7 @@ export class RecentlyVisitedRangesService {
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
     const fsPath = event.textEditor.document.fileName;
-    if (defaultFileAndFolderSecurityIgnores.ignores(fsPath)) {
+    if (isSecurityConcern(fsPath)) {
       return;
     }
     const filepath = event.textEditor.document.uri.toString();

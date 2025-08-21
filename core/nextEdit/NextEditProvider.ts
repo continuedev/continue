@@ -30,7 +30,7 @@ import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { myersDiff } from "../diff/myers.js";
-import { defaultFileAndFolderSecurityIgnores } from "../indexing/ignore.js";
+import { isSecurityConcern } from "../indexing/ignore.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { NEXT_EDIT_MODELS } from "../llm/constants.js";
 import { countTokens } from "../llm/countTokens.js";
@@ -286,10 +286,7 @@ export class NextEditProvider {
       usingFullFileDiff: boolean;
     },
   ): Promise<NextEditOutcome | undefined> {
-    const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
-      localPathOrUriToPath(input.filepath),
-    );
-    if (isSecurityConcern) {
+    if (isSecurityConcern(input.filepath)) {
       return undefined;
     }
     try {

@@ -1,6 +1,6 @@
 import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
-import { throwIfFileIsSecurityConcern } from "core/tools/implementations/readFileLimit";
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import posthog from "posthog-js";
 import { v4 as uuid } from "uuid";

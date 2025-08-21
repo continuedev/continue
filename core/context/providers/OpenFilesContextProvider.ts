@@ -3,8 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { defaultFileAndFolderSecurityIgnores } from "../../indexing/ignore.js";
-import { localPathOrUriToPath } from "../../util/pathToUri.js";
+import { isSecurityConcern } from "../../indexing/ignore.js";
 import { getUriDescription } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -31,10 +30,8 @@ class OpenFilesContextProvider extends BaseContextProvider {
       openFiles.map(async (filepath: string) => {
         const { relativePathOrBasename, last2Parts, baseName } =
           getUriDescription(filepath, workspaceDirs);
-        const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
-          localPathOrUriToPath(filepath),
-        );
-        if (isSecurityConcern) {
+
+        if (isSecurityConcern(filepath)) {
           return {
             description: last2Parts,
             content:

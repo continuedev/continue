@@ -3,7 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { defaultFileAndFolderSecurityIgnores } from "../../indexing/ignore.js";
+import { isSecurityConcern } from "../../indexing/ignore.js";
 import { getUriDescription } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -29,10 +29,7 @@ class ProblemsContextProvider extends BaseContextProvider {
           problem.filepath,
           workspaceDirs,
         );
-        const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
-          relativePathOrBasename,
-        );
-        if (isSecurityConcern) {
+        if (isSecurityConcern(relativePathOrBasename)) {
           return {
             description: "Problems in current file",
             content:

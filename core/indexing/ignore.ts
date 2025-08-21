@@ -4,6 +4,7 @@ import ignore from "ignore";
 
 import { IDE } from "..";
 import { getGlobalContinueIgnorePath } from "../util/paths";
+import { localPathOrUriToPath } from "../util/pathToUri";
 
 // Security-focused ignore patterns - these should always be excluded for security reasons
 export const DEFAULT_SECURITY_IGNORE_FILETYPES = [
@@ -233,6 +234,20 @@ export const defaultFileAndFolderSecurityIgnores = ignore()
 export const defaultIgnoreFileAndDir = ignore()
   .add(defaultIgnoreFile)
   .add(defaultIgnoreDir);
+
+export function isSecurityConcern(filePathOrUri: string) {
+  return defaultFileAndFolderSecurityIgnores.ignores(
+    localPathOrUriToPath(filePathOrUri),
+  );
+}
+
+export async function throwIfFileIsSecurityConcern(filepath: string) {
+  if (isSecurityConcern(filepath)) {
+    throw new Error(
+      `Reading or Editing ${filepath} is not allowed because it is a security concern. Do not attempt to read or edit this file in any way.`,
+    );
+  }
+}
 
 export function gitIgArrayFromFile(file: string) {
   return file

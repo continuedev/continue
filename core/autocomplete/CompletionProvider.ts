@@ -6,8 +6,7 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 
-import { defaultFileAndFolderSecurityIgnores } from "../indexing/ignore.js";
-import { localPathOrUriToPath } from "../util/pathToUri.js";
+import { isSecurityConcern } from "../indexing/ignore.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
@@ -152,10 +151,7 @@ export class CompletionProvider {
         return undefined;
       }
 
-      const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
-        localPathOrUriToPath(input.filepath),
-      );
-      if (isSecurityConcern) {
+      if (isSecurityConcern(input.filepath)) {
         return undefined;
       }
 

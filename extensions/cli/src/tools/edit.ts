@@ -6,7 +6,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
-import { throwIfFileIsSecurityConcern } from "../../../../core/tools/implementations/readFileLimit.js";
+import { throwIfFileIsSecurityConcern } from "../../../../core/indexing/ignore.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
