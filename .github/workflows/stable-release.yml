@@ -67,6 +67,7 @@ jobs:
       - name: Find beta version to promote
         if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         id: find_beta
+        working-directory: extensions/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -116,6 +117,7 @@ jobs:
 
       - name: Download and verify beta package
         if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
+        working-directory: extensions/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -131,6 +133,7 @@ jobs:
 
       - name: Prepare package for beta promotion
         if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
+        working-directory: extensions/cli
         run: |
           # Copy the beta package contents
           cp -r package/* .
@@ -140,6 +143,7 @@ jobs:
 
       - name: Prepare package for direct stable release
         if: ${{ inputs.release_type == 'direct-stable' }}
+        working-directory: extensions/cli
         run: |
           # Install dependencies for direct build
           npm ci
@@ -148,9 +152,11 @@ jobs:
           npm version ${{ inputs.stable_version }} --no-git-tag-version
 
       - name: Build (verification step)
+        working-directory: extensions/cli
         run: npm run build
 
       - name: Run tests (verification step)
+        working-directory: extensions/cli
         run: npm test
 
       - name: Set final version
@@ -167,6 +173,7 @@ jobs:
           echo "release_notes=$RELEASE_NOTES" >> $GITHUB_OUTPUT
 
       - name: Publish stable to npm
+        working-directory: extensions/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
