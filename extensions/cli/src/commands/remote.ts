@@ -15,6 +15,7 @@ export async function remote(
     idempotencyKey?: string;
     start?: boolean;
     branch?: string;
+    repo?: string;
   } = {},
 ) {
   // Check if prompt should come from stdin instead of parameter
@@ -79,7 +80,7 @@ export async function remote(
     const accessToken = getAccessToken(authConfig);
 
     const requestBody: any = {
-      repoUrl: getRepoUrl(),
+      repoUrl: options.repo || getRepoUrl(),
       name: `devbox-${Date.now()}`,
       prompt: actualPrompt,
       idempotencyKey: options.idempotencyKey,
