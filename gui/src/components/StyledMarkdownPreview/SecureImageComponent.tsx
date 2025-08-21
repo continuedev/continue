@@ -162,7 +162,7 @@ export const SecureImageComponent: React.FC<SecureImageComponentProps> = ({
       )}
       
       <LoadButton onClick={() => setShowImage(true)}>
-        Load Image {hasQueryParams && "(Contains Parameters)"}
+        Load Image
       </LoadButton>
     </ImagePlaceholder>
   );
