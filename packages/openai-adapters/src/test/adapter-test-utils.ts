@@ -111,7 +111,7 @@ function assertFetchCall(mockFetch: any, expectedRequest: any) {
       const headersObj: Record<string, string> = {};
       for (const key of Object.keys(expectedRequest.headers)) {
         const value = actualHeaders.get(key);
-        if (value !== null) {
+        if (value !== null && value !== undefined) {
           headersObj[key] = value;
         }
       }
