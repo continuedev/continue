@@ -54,7 +54,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        `You must use the Read tool to read ${testFilePath} before editing it.`
+        `You must use the Read tool to read ${testFilePath} before editing it.`,
       );
     });
 
@@ -74,7 +74,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        `File ${nonExistentFile} does not exist`
+        `File ${nonExistentFile} does not exist`,
       );
     });
 
@@ -87,7 +87,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "edits array is required and must contain at least one edit"
+        "edits array is required and must contain at least one edit",
       );
     });
 
@@ -105,7 +105,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "Edit 1: old_string is required"
+        "Edit 1: old_string is required",
       );
     });
 
@@ -123,7 +123,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "Edit 1: new_string is required"
+        "Edit 1: new_string is required",
       );
     });
 
@@ -141,7 +141,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        "Edit 1: old_string and new_string must be different"
+        "Edit 1: old_string and new_string must be different",
       );
     });
 
@@ -160,7 +160,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        'Edit 1: String not found in file: "Not found"'
+        'Edit 1: String not found in file: "Not found"',
       );
     });
 
@@ -179,7 +179,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.preprocess!(args)).rejects.toThrow(
-        'Edit 1: String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.'
+        'Edit 1: String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
       );
     });
 
@@ -236,7 +236,7 @@ describe("multiEditTool", () => {
       const result = await multiEditTool.preprocess!(args);
 
       expect(result.args.newContent).toBe(
-        "Hi there\nThis is a test file\nSee you later"
+        "Hi there\nThis is a test file\nSee you later",
       );
       expect(result.args.editCount).toBe(2);
       expect(result.preview?.[0]?.content).toContain("Will apply 2 edits");
@@ -259,7 +259,7 @@ describe("multiEditTool", () => {
       const result = await multiEditTool.preprocess!(args);
 
       expect(result.args.newContent).toBe(
-        "Hello universe\nThis is a test file\nGoodbye universe"
+        "Hello universe\nThis is a test file\nGoodbye universe",
       );
     });
 
@@ -309,7 +309,7 @@ describe("multiEditTool", () => {
       const result = await multiEditTool.preprocess!(args);
 
       expect(result.args.newContent).toBe(
-        "Greetings cosmos\nThis is a test file\nGoodbye world"
+        "Greetings cosmos\nThis is a test file\nGoodbye world",
       );
     });
   });
@@ -327,8 +327,14 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath} with 1 edit\nDiff:\nmocked diff`);
-      expect(fs.writeFileSync).toHaveBeenCalledWith(testFilePath, newContent, "utf-8");
+      expect(result).toBe(
+        `Successfully edited ${testFilePath} with 1 edit\nDiff:\nmocked diff`,
+      );
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        testFilePath,
+        newContent,
+        "utf-8",
+      );
     });
 
     it("should return correct message for multiple edits", async () => {
@@ -342,7 +348,9 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath} with 3 edits\nDiff:\nmocked diff`);
+      expect(result).toBe(
+        `Successfully edited ${testFilePath} with 3 edits\nDiff:\nmocked diff`,
+      );
     });
 
     it("should return correct message for new file creation", async () => {
@@ -356,7 +364,9 @@ describe("multiEditTool", () => {
 
       const result = await multiEditTool.run(args);
 
-      expect(result).toBe(`Successfully created /tmp/new-file.txt with 1 edit\nDiff:\nmocked diff`);
+      expect(result).toBe(
+        `Successfully created /tmp/new-file.txt with 1 edit\nDiff:\nmocked diff`,
+      );
     });
 
     it("should throw error if file write fails", async () => {
@@ -373,7 +383,7 @@ describe("multiEditTool", () => {
       };
 
       await expect(multiEditTool.run(args)).rejects.toThrow(
-        `Error: failed to edit ${testFilePath}: Write failed`
+        `Error: failed to edit ${testFilePath}: Write failed`,
       );
     });
   });
@@ -397,7 +407,9 @@ describe("multiEditTool", () => {
       const result = await multiEditTool.preprocess!(args);
 
       expect(result.args.file_path).toBe(absolutePath);
-      expect(result.args.newContent).toBe("Hi there\nThis is a test file\nGoodbye world");
+      expect(result.args.newContent).toBe(
+        "Hi there\nThis is a test file\nGoodbye world",
+      );
     });
 
     it("should handle relative paths with subdirectories", async () => {
@@ -462,7 +474,7 @@ describe("multiEditTool", () => {
     it("should handle relative path for new file creation", async () => {
       const relativePath = "new-file.txt";
       const absolutePath = path.resolve(process.cwd(), relativePath);
-      
+
       vi.mocked(fs.existsSync).mockImplementation((path) => {
         // Parent directory (cwd) exists, but file doesn't
         if (path === process.cwd()) return true;

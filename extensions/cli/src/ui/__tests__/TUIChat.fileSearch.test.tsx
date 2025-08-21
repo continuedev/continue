@@ -21,7 +21,7 @@ describe("TUIChat - @ File Search Tests", () => {
     expect(hasAtSymbol).toBe(true);
 
     // Mode-specific UI
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
@@ -44,15 +44,16 @@ describe("TUIChat - @ File Search Tests", () => {
     expect(frame).toContain("@READ");
 
     // In local mode, should show either navigation hints or files
-    if (mode === 'local') {
+    if (mode === "local") {
       // Should show either navigation hints or at least indicate file search is working
       const hasNavigationHints = frame.includes("↑/↓ to navigate");
-      const hasFileSearch = frame.includes("@READ") && !frame.includes("Remote Mode");
+      const hasFileSearch =
+        frame.includes("@READ") && !frame.includes("Remote Mode");
       expect(hasNavigationHints || hasFileSearch).toBe(true);
     }
 
     // Mode-specific checks
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
@@ -75,7 +76,7 @@ describe("TUIChat - @ File Search Tests", () => {
     expect(frame).toContain("@@test");
 
     // Mode-specific UI elements
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).toContain("Continue CLI");
@@ -98,10 +99,11 @@ describe("TUIChat - @ File Search Tests", () => {
     expect(frame.length).toBeGreaterThan(0);
 
     // In local mode, should show either navigation hints or file search UI
-    if (mode === 'local') {
+    if (mode === "local") {
       // Should show either navigation hints or at least the @ character in file search
       const hasNavigationHints = frame.includes("↑/↓ to navigate");
-      const hasFileSearchUI = frame.includes("@") && !frame.includes("Remote Mode");
+      const hasFileSearchUI =
+        frame.includes("@") && !frame.includes("Remote Mode");
       expect(hasNavigationHints || hasFileSearchUI).toBe(true);
     }
   });

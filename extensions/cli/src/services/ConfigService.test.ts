@@ -40,7 +40,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/path/to/config.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       expect(state).toEqual({
@@ -59,7 +59,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         undefined,
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       expect(state).toEqual({
@@ -69,20 +69,20 @@ describe("ConfigService", () => {
     });
 
     test("should inject rules into config", async () => {
-
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
-      vi.mocked(args.processRule)
-        .mockImplementation(async (rule) => `Processed: ${rule}`);
+      vi.mocked(args.processRule).mockImplementation(
+        async (rule) => `Processed: ${rule}`,
+      );
 
       const state = await service.initialize(
         { accessToken: "token" } as any,
         "/config.yaml",
         "org-123",
         mockApiClient as any,
-        ["rule1", "rule2"]
+        ["rule1", "rule2"],
       );
 
       expect(state.config).toEqual({
@@ -95,7 +95,6 @@ describe("ConfigService", () => {
 
   describe("switchConfig()", () => {
     test("should switch to new configuration", async () => {
-
       // Initialize first
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
@@ -105,7 +104,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       // Switch to new config
@@ -119,7 +118,7 @@ describe("ConfigService", () => {
         "/new.yaml",
         { accessToken: "token" } as any,
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       expect(state).toEqual({
@@ -130,31 +129,30 @@ describe("ConfigService", () => {
     });
 
     test("should handle switch config errors", async () => {
-
       await service.initialize(
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
-      vi.mocked(configLoader.loadConfiguration)
-        .mockRejectedValue(new Error("Config not found"));
+      vi.mocked(configLoader.loadConfiguration).mockRejectedValue(
+        new Error("Config not found"),
+      );
 
       await expect(
         service.switchConfig(
           "/bad.yaml",
           { accessToken: "token" } as any,
           "org-123",
-          mockApiClient as any
-        )
+          mockApiClient as any,
+        ),
       ).rejects.toThrow("Config not found");
     });
   });
 
   describe("reload()", () => {
     test("should reload current configuration", async () => {
-
       // Initialize with a config
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
@@ -164,7 +162,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/config.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       // Modify mock to return updated config
@@ -177,7 +175,7 @@ describe("ConfigService", () => {
       const state = await service.reload(
         { accessToken: "token" } as any,
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       expect(state).toEqual({
@@ -196,22 +194,21 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         undefined,
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       await expect(
         service.reload(
           { accessToken: "token" } as any,
           "org-123",
-          mockApiClient as any
-        )
+          mockApiClient as any,
+        ),
       ).rejects.toThrow("No configuration path available for reload");
     });
   });
 
   describe("updateConfigPath()", () => {
     test("should update config path and reload dependent services", async () => {
-
       // Initialize service first
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
@@ -221,12 +218,14 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       // Mock service container
-      vi.mocked(workos.loadAuthConfig)
-        .mockReturnValue({ accessToken: "token", organizationId: "org-123" } as any);
+      vi.mocked(workos.loadAuthConfig).mockReturnValue({
+        accessToken: "token",
+        organizationId: "org-123",
+      } as any);
       vi.mocked(serviceContainer.get).mockResolvedValue({
         apiClient: mockApiClient,
       });
@@ -246,13 +245,13 @@ describe("ConfigService", () => {
       });
       expect(vi.mocked(serviceContainer.set)).toHaveBeenCalledWith(
         SERVICE_NAMES.CONFIG,
-        expect.objectContaining({ config: newConfig })
+        expect.objectContaining({ config: newConfig }),
       );
       expect(vi.mocked(serviceContainer.reload)).toHaveBeenCalledWith(
-        SERVICE_NAMES.MODEL
+        SERVICE_NAMES.MODEL,
       );
       expect(vi.mocked(serviceContainer.reload)).toHaveBeenCalledWith(
-        SERVICE_NAMES.MCP
+        SERVICE_NAMES.MCP,
       );
     });
 
@@ -261,17 +260,19 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
-      vi.mocked(workos.loadAuthConfig)
-        .mockReturnValue({ accessToken: "token", organizationId: "org-123" } as any);
+      vi.mocked(workos.loadAuthConfig).mockReturnValue({
+        accessToken: "token",
+        organizationId: "org-123",
+      } as any);
       vi.mocked(serviceContainer.get).mockResolvedValue({
         apiClient: null,
       });
 
       await expect(service.updateConfigPath("/new.yaml")).rejects.toThrow(
-        "API client not available"
+        "API client not available",
       );
     });
   });
@@ -284,7 +285,6 @@ describe("ConfigService", () => {
 
   describe("Event Emission", () => {
     test("should emit stateChanged when switching config", async () => {
-
       vi.mocked(configLoader.loadConfiguration).mockResolvedValue({
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/old.yaml" } as any,
@@ -293,7 +293,7 @@ describe("ConfigService", () => {
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       const listener = vi.fn();
@@ -309,22 +309,24 @@ describe("ConfigService", () => {
         "/new.yaml",
         { accessToken: "token" } as any,
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({ config: newConfig, configPath: "/new.yaml" }),
-        expect.objectContaining({ config: mockConfig, configPath: "/old.yaml" })
+        expect.objectContaining({
+          config: mockConfig,
+          configPath: "/old.yaml",
+        }),
       );
     });
 
     test("should emit error on switch failure", async () => {
-
       await service.initialize(
         { accessToken: "token" } as any,
         "/old.yaml",
         "org-123",
-        mockApiClient as any
+        mockApiClient as any,
       );
 
       const errorListener = vi.fn();
@@ -338,8 +340,8 @@ describe("ConfigService", () => {
           "/bad.yaml",
           { accessToken: "token" } as any,
           "org-123",
-          mockApiClient as any
-        )
+          mockApiClient as any,
+        ),
       ).rejects.toThrow();
       expect(errorListener).toHaveBeenCalledWith(error);
     });

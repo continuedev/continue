@@ -15,7 +15,7 @@ describe("TUIChat - Message Display Tests", () => {
     expect(frame).toContain("│");
 
     // Mode-specific assertions
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
@@ -35,12 +35,12 @@ describe("TUIChat - Message Display Tests", () => {
     expect(frame).toContain("/ for slash commands");
 
     // In local mode, also shows context hint
-    if (mode === 'local') {
+    if (mode === "local") {
       expect(frame).toContain("@ for context");
     }
 
     // Verify mode-specific UI
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).toContain("Continue CLI");
@@ -65,9 +65,9 @@ describe("TUIChat - Message Display Tests", () => {
     // Verify the component renders
     const frame = lastFrame();
     expect(frame).toContain("Ask anything");
-    
+
     // In local mode, we have access to more UI elements
-    if (mode === 'local') {
+    if (mode === "local") {
       expect(frame).toContain("@ for context");
       expect(frame).toContain("/ for slash commands");
     }

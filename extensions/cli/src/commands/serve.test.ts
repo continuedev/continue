@@ -1,13 +1,6 @@
 import type { Server } from "http";
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
 
@@ -40,7 +33,7 @@ describe("serve command", () => {
           config: { models: [] },
           llmApi: { chat: vi.fn() },
           model: { name: "test-model" },
-        })
+        }),
       ),
     }));
 
@@ -73,7 +66,7 @@ describe("serve command", () => {
 
   afterEach(async () => {
     context.cleanup();
-    
+
     // Restore original process.exit
     process.exit = originalProcessExit;
 
@@ -100,26 +93,28 @@ describe("serve command", () => {
   it("should pass the --org flag through to initializeServices", async () => {
     // Import the services module to spy on
     const servicesModule = await import("../services/index.js");
-    
+
     // Create spy on initializeServices
-    const initializeServicesSpy = vi.spyOn(servicesModule, "initializeServices")
+    const initializeServicesSpy = vi
+      .spyOn(servicesModule, "initializeServices")
       .mockResolvedValue({
         config: { models: [] },
         llmApi: { chat: vi.fn() },
-        model: { name: "test-model" }
+        model: { name: "test-model" },
       } as any);
 
-    // Create spy on getService  
-    const getServiceSpy = vi.spyOn(servicesModule, "getService")
+    // Create spy on getService
+    const getServiceSpy = vi
+      .spyOn(servicesModule, "getService")
       .mockResolvedValueOnce({
         config: { name: "test" },
         llmApi: { chat: vi.fn() },
-        model: { provider: "test", model: "test" }
+        model: { provider: "test", model: "test" },
       } as any)
       .mockResolvedValueOnce({
         config: { name: "test" },
         llmApi: { chat: vi.fn() },
-        model: { provider: "test", model: "test" }
+        model: { provider: "test", model: "test" },
       } as any);
 
     // Import serve after setting up spies
@@ -129,7 +124,7 @@ describe("serve command", () => {
     const testOptions = {
       org: "test-organization-slug",
       timeout: "60",
-      port: "9000"
+      port: "9000",
     };
 
     try {
@@ -142,8 +137,8 @@ describe("serve command", () => {
     expect(initializeServicesSpy).toHaveBeenCalled();
     expect(initializeServicesSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        organizationSlug: "test-organization-slug"
-      })
+        organizationSlug: "test-organization-slug",
+      }),
     );
 
     // Clean up spies

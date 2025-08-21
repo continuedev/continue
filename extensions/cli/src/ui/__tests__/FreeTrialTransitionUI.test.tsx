@@ -6,7 +6,7 @@ import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 
 // Mock the 'open' module to prevent actual URL opening during tests
 vi.mock("open", () => ({
-  default: vi.fn()
+  default: vi.fn(),
 }));
 
 // Mock the NavigationContext
@@ -15,8 +15,8 @@ vi.mock("../context/NavigationContext.js", () => ({
     navigateTo: vi.fn(),
     closeCurrentScreen: vi.fn(),
     isScreenActive: vi.fn(() => false),
-    state: { currentScreen: 'free-trial', screenData: null }
-  })
+    state: { currentScreen: "free-trial", screenData: null },
+  }),
 }));
 
 describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
@@ -29,9 +29,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
   describe("Initial Choice Screen Rendering", () => {
     it("displays all three options with proper formatting", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
@@ -44,22 +42,20 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
 
     it("highlights first option by default", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
       expect(frame).toContain("▶ 1. 💳 Sign up for models add-on");
       expect(frame).not.toContain("▶ 2. 🔑 Enter your Anthropic API key");
-      expect(frame).not.toContain("▶ 3. ⚙️ Switch to a different configuration");
+      expect(frame).not.toContain(
+        "▶ 3. ⚙️ Switch to a different configuration",
+      );
     });
 
     it("renders without crashing when all props are provided", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
@@ -72,7 +68,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
         <FreeTrialTransitionUI
           onReload={mockOnReload}
           // onShowConfigSelector not provided
-        />
+        />,
       );
 
       const frame = lastFrame();
@@ -83,21 +79,19 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
 
     it("includes proper user instructions", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
       expect(frame).toContain("Choose how you'd like to continue:");
-      expect(frame).toContain("Use ↑↓ arrows or 1/2/3 to select, Enter to confirm");
+      expect(frame).toContain(
+        "Use ↑↓ arrows or 1/2/3 to select, Enter to confirm",
+      );
     });
 
     it("shows all options with proper descriptions", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
@@ -111,22 +105,14 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
     it("accepts all required callback props", () => {
       // Test that component accepts and renders with all props
       expect(() => {
-        render(
-          <FreeTrialTransitionUI
-            onReload={mockOnReload}
-          />
-        );
+        render(<FreeTrialTransitionUI onReload={mockOnReload} />);
       }).not.toThrow();
     });
 
     it("accepts optional onShowConfigSelector prop", () => {
       // Test that component works without onShowConfigSelector
       expect(() => {
-        render(
-          <FreeTrialTransitionUI
-            onReload={mockOnReload}
-          />
-        );
+        render(<FreeTrialTransitionUI onReload={mockOnReload} />);
       }).not.toThrow();
     });
   });
@@ -134,9 +120,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
   describe("Visual Styling and Layout", () => {
     it("renders with proper border styling", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
@@ -146,32 +130,34 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
 
     it("displays with proper spacing and formatting", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
       // Should have proper spacing between lines
-      expect(frame?.split('\n').length).toBeGreaterThan(5);
+      expect(frame?.split("\n").length).toBeGreaterThan(5);
     });
 
     it("shows selection indicator on first option by default", () => {
       const { lastFrame } = render(
-        <FreeTrialTransitionUI
-          onReload={mockOnReload}
-        />
+        <FreeTrialTransitionUI onReload={mockOnReload} />,
       );
 
       const frame = lastFrame();
-      const lines = frame?.split('\n') || [];
-      const modelsLine = lines.find(line => line.includes('Sign up for models add-on'));
-      const apiKeyLine = lines.find(line => line.includes('Enter your Anthropic API key'));
-      const configLine = lines.find(line => line.includes('Switch to a different configuration'));
+      const lines = frame?.split("\n") || [];
+      const modelsLine = lines.find((line) =>
+        line.includes("Sign up for models add-on"),
+      );
+      const apiKeyLine = lines.find((line) =>
+        line.includes("Enter your Anthropic API key"),
+      );
+      const configLine = lines.find((line) =>
+        line.includes("Switch to a different configuration"),
+      );
 
-      expect(modelsLine).toContain('▶');
-      expect(apiKeyLine).not.toContain('▶');
-      expect(configLine).not.toContain('▶');
+      expect(modelsLine).toContain("▶");
+      expect(apiKeyLine).not.toContain("▶");
+      expect(configLine).not.toContain("▶");
     });
   });
 

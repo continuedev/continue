@@ -19,9 +19,7 @@ describe("TUIChat - Tool Display Tests", () => {
   });
 
   it("renders without crashing when tools are available", () => {
-    const { lastFrame } = render(
-      <AppRoot remoteUrl="http://localhost:3000" />
-    );
+    const { lastFrame } = render(<AppRoot remoteUrl="http://localhost:3000" />);
     const frame = lastFrame();
 
     expect(frame).toBeDefined();
@@ -29,9 +27,7 @@ describe("TUIChat - Tool Display Tests", () => {
   });
 
   it("handles UI with no tools configured", () => {
-    const { lastFrame } = render(
-      <AppRoot remoteUrl="http://localhost:3000" />
-    );
+    const { lastFrame } = render(<AppRoot remoteUrl="http://localhost:3000" />);
     const frame = lastFrame();
 
     // Should render normally even without tools
@@ -41,7 +37,7 @@ describe("TUIChat - Tool Display Tests", () => {
 
   it("maintains UI stability during tool operations", async () => {
     const { lastFrame, stdin } = render(
-      <AppRoot remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />,
     );
 
     // Type a message that might trigger tool use
@@ -60,7 +56,7 @@ describe("TUIChat - Tool Display Tests", () => {
 
   it("shows tool-related slash commands", async () => {
     const { lastFrame, stdin } = render(
-      <AppRoot remoteUrl="http://localhost:3000" />
+      <AppRoot remoteUrl="http://localhost:3000" />,
     );
 
     // Wait for initial render
@@ -79,12 +75,12 @@ describe("TUIChat - Tool Display Tests", () => {
 
     // The slash command menu might show different UI states
     // On Windows, the timing might be different
-    const hasSlashCommandIndicator = frame ? (
-      frame.includes("↑/↓ to navigate") ||
-      frame.includes("/exit") ||
-      frame.includes("◉ /") ||
-      frame.includes("/ for slash commands")
-    ) : false;
+    const hasSlashCommandIndicator = frame
+      ? frame.includes("↑/↓ to navigate") ||
+        frame.includes("/exit") ||
+        frame.includes("◉ /") ||
+        frame.includes("/ for slash commands")
+      : false;
 
     expect(hasSlashCommandIndicator).toBe(true);
   });

@@ -9,11 +9,11 @@ describe("TUIChat - User Input Tests", () => {
     const frame = lastFrame();
     // The input might be in a different format, let's be more flexible
     expect(frame ? frame.toLowerCase() : "").toMatch(
-      /testing|123|ask anything/
+      /testing|123|ask anything/,
     );
-    
+
     // Mode-specific assertions
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
@@ -36,34 +36,37 @@ describe("TUIChat - User Input Tests", () => {
     // The UI should remain stable after Enter (no crash)
     expect(afterEnter).toBeDefined();
     expect(afterEnter).toContain("Ask anything");
-    
+
     // Local mode specific features
-    if (mode === 'local') {
+    if (mode === "local") {
       expect(afterEnter).toContain("@ for context");
       expect(afterEnter).toContain("/ for slash commands");
     }
   });
 
-  testBothModes("handles special characters in input without crashing", (mode) => {
-    const { lastFrame, stdin } = renderInMode(mode);
+  testBothModes(
+    "handles special characters in input without crashing",
+    (mode) => {
+      const { lastFrame, stdin } = renderInMode(mode);
 
-    // Try typing various special characters
-    stdin.write("!@#$%^&*()");
+      // Try typing various special characters
+      stdin.write("!@#$%^&*()");
 
-    const frame = lastFrame();
+      const frame = lastFrame();
 
-    // Should handle special characters without crashing
-    expect(frame).toBeDefined();
-    expect(frame).not.toBe("");
-    
-    // UI should still be functional
-    expect(frame).toContain("Ask anything");
-    
-    // Mode-specific UI elements
-    if (mode === 'remote') {
-      expect(frame).toContain("Remote Mode");
-    } else {
-      expect(frame).toContain("Continue CLI");
-    }
-  });
+      // Should handle special characters without crashing
+      expect(frame).toBeDefined();
+      expect(frame).not.toBe("");
+
+      // UI should still be functional
+      expect(frame).toContain("Ask anything");
+
+      // Mode-specific UI elements
+      if (mode === "remote") {
+        expect(frame).toContain("Remote Mode");
+      } else {
+        expect(frame).toContain("Continue CLI");
+      }
+    },
+  );
 });

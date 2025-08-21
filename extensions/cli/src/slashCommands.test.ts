@@ -35,7 +35,7 @@ describe("handleSlashCommands", () => {
       expect.arrayContaining([
         expect.objectContaining({ name: "help" }),
         expect.objectContaining({ name: "login" }),
-      ])
+      ]),
     );
   });
 
@@ -58,7 +58,7 @@ describe("handleSlashCommands", () => {
 
       expect(result).not.toBeNull();
       expect(result?.output).toContain(
-        "Login successful! All services updated automatically."
+        "Login successful! All services updated automatically.",
       );
 
       // Verify auth service login was called
@@ -73,8 +73,6 @@ describe("handleSlashCommands", () => {
       expect(reloadService).not.toHaveBeenCalledWith(SERVICE_NAMES.CONFIG);
     });
 
-
-
     test.skip("login failure should not trigger any reloads", async () => {
       const loginError = new Error("Login failed");
       (services.auth.login as any).mockRejectedValue(loginError);
@@ -87,8 +85,6 @@ describe("handleSlashCommands", () => {
       // Verify NO reload was triggered on failure
       expect(reloadService).not.toHaveBeenCalled();
     });
-
-
   });
 
   describe("Other Commands (unchanged behavior)", () => {

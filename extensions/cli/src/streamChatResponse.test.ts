@@ -4,7 +4,7 @@ import type {
   ChatCompletionChunk,
   ChatCompletionMessageParam,
 } from "openai/resources/chat/completions.mjs";
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 import { toolPermissionManager } from "./permissions/permissionManager.js";
 import {
@@ -17,7 +17,6 @@ import { readFileTool } from "./tools/readFile.js";
 import { searchCodeTool } from "./tools/searchCode.js";
 import { PreprocessedToolCall } from "./tools/types.js";
 import { writeFileTool } from "./tools/writeFile.js";
-
 
 // Test the chunk processing logic that was identified as buggy
 describe("processStreamingResponse - content preservation", () => {
@@ -49,7 +48,7 @@ describe("processStreamingResponse - content preservation", () => {
   function toolCallChunk(
     id: string,
     name?: string,
-    args?: string
+    args?: string,
   ): ChatCompletionChunk {
     return {
       id: "test",
@@ -83,7 +82,7 @@ describe("processStreamingResponse - content preservation", () => {
     index: number,
     id?: string,
     name?: string,
-    args?: string
+    args?: string,
   ): ChatCompletionChunk {
     const toolCall: any = {
       index,
@@ -185,27 +184,27 @@ describe("processStreamingResponse - content preservation", () => {
       toolCallChunk(
         "toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A",
         undefined,
-        '{"filepath'
+        '{"filepath',
       ),
       toolCallChunk(
         "toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A",
         undefined,
-        '": "/Use'
+        '": "/Use',
       ),
       toolCallChunk(
         "toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A",
         undefined,
-        "rs/nate/gh/c"
+        "rs/nate/gh/c",
       ),
       toolCallChunk(
         "toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A",
         undefined,
-        "ontinuede"
+        "ontinuede",
       ),
       toolCallChunk(
         "toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A",
         undefined,
-        "v/cli/README"
+        "v/cli/README",
       ),
       toolCallChunk("toolu_vrtx_01Jj9m9VbtwVZwcU6A311g6A", undefined, '.md"}'),
       contentChunk(""),
@@ -228,7 +227,7 @@ describe("processStreamingResponse - content preservation", () => {
     // Verify the tool call was assembled correctly
     expect(result.toolCalls[0].name).toBe("Read");
     expect(result.toolCalls[0].argumentsStr).toBe(
-      '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
+      '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}',
     );
   });
 
@@ -257,14 +256,14 @@ describe("processStreamingResponse - content preservation", () => {
         0,
         "toolu_vrtx_01ULx6UjdJ7B7bjf5WPHTXGz",
         "Read",
-        ""
+        "",
       ),
       // Subsequent chunks only have index, no ID
       toolCallChunkWithIndex(
         0,
         undefined,
         undefined,
-        '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
+        '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}',
       ),
     ];
 
@@ -277,19 +276,19 @@ describe("processStreamingResponse - content preservation", () => {
 
     // Content is captured correctly
     expect(result.content).toBe(
-      "I'll read the README.md file for you and then say hello!"
+      "I'll read the README.md file for you and then say hello!",
     );
     expect(result.toolCalls.length).toBe(1);
 
     // Fixed: finalContent preserves content
     expect(result.finalContent).toBe(
-      "I'll read the README.md file for you and then say hello!"
+      "I'll read the README.md file for you and then say hello!",
     );
 
     // Tool call arguments are preserved using index mapping
     expect(result.toolCalls[0].name).toBe("Read");
     expect(result.toolCalls[0].argumentsStr).toBe(
-      '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
+      '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}',
     );
   });
 
@@ -302,7 +301,7 @@ describe("processStreamingResponse - content preservation", () => {
         0,
         "toolu_vrtx_01ULx6UjdJ7B7bjf5WPHTXGz",
         "Read",
-        ""
+        "",
       ),
       // Subsequent chunks fragment the JSON arguments
       toolCallChunkWithIndex(0, undefined, undefined, '{"filepa'),
@@ -328,13 +327,13 @@ describe("processStreamingResponse - content preservation", () => {
     // Fixed: Both issues are resolved
     // 1. Content is preserved
     expect(result.finalContent).toBe(
-      "I'll read the README.md file for you and then say hello!"
+      "I'll read the README.md file for you and then say hello!",
     );
 
     // 2. Tool call arguments are assembled correctly
     expect(result.toolCalls[0].name).toBe("Read");
     expect(result.toolCalls[0].argumentsStr).toBe(
-      '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}'
+      '{"filepath": "/Users/nate/gh/continuedev/cli/README.md"}',
     );
   });
 
@@ -352,15 +351,15 @@ describe("processStreamingResponse - content preservation", () => {
         prompt_tokens: 711,
         total_tokens: 807,
         prompt_tokens_details: {
-          cached_tokens: 3353
-        }
-      }
+          cached_tokens: 3353,
+        },
+      },
     };
 
     chunks = [
       malformedChunk, // Put malformed chunk first to trigger the bug more clearly
       contentChunk("Hello "),
-      contentChunk("world!")
+      contentChunk("world!"),
     ];
 
     // This should not throw an error: "Cannot read properties of undefined (reading 'delta')"
@@ -440,7 +439,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     vi.spyOn(toolsModule, "validateToolCallArgsPresent").mockImplementationOnce(
       () => {
         throw new Error("Missing required argument");
-      }
+      },
     );
 
     const toolCalls: ToolCall[] = [
@@ -470,7 +469,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     expect(callbacks.onToolStart).toHaveBeenCalledWith("Read", {});
     expect(callbacks.onToolError).toHaveBeenCalledWith(
       expect.stringContaining("Missing required argument"),
-      "Read"
+      "Read",
     );
   });
 
@@ -492,7 +491,7 @@ describe.skip("preprocessStreamedToolCalls", () => {
     expect(preprocessedCalls).toHaveLength(0);
     expect(errorChatEntries).toHaveLength(1);
     expect(errorChatEntries[0].content).toContain(
-      "Tool nonexistent_tool not found"
+      "Tool nonexistent_tool not found",
     );
   });
 });
@@ -538,7 +537,7 @@ describe.skip("executeStreamedToolCalls", () => {
 
     const { chatHistoryEntries } = await executeStreamedToolCalls(
       preprocessedCalls,
-      callbacks
+      callbacks,
     );
 
     // Verify results
@@ -549,7 +548,7 @@ describe.skip("executeStreamedToolCalls", () => {
     });
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Tool execution successful",
-      "Read"
+      "Read",
     );
     expect(mockedExecuteToolCall).toHaveBeenCalledWith(preprocessedCalls[0]);
   });
@@ -583,7 +582,7 @@ describe.skip("executeStreamedToolCalls", () => {
           });
         }
         return toolPermissionManager;
-      }
+      },
     );
 
     // Create preprocessed tool call
@@ -614,7 +613,7 @@ describe.skip("executeStreamedToolCalls", () => {
 
     const { chatHistoryEntries, hasRejection } = await executeStreamedToolCalls(
       preprocessedCalls,
-      callbacks
+      callbacks,
     );
 
     // Verify results
@@ -622,7 +621,7 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(chatHistoryEntries).toHaveLength(2);
     expect(chatHistoryEntries[0].content).toBe("Permission denied by user");
     expect(chatHistoryEntries[1].content).toBe(
-      "Cancelled due to previous tool rejection"
+      "Cancelled due to previous tool rejection",
     );
     expect(callbacks.onToolStart).toHaveBeenCalledWith("Write", {
       filepath: "/test.txt",
@@ -630,13 +629,13 @@ describe.skip("executeStreamedToolCalls", () => {
     });
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Permission denied by user",
-      "Write"
+      "Write",
     );
     expect(callbacks.onToolPermissionRequest).toHaveBeenCalledWith(
       "Write",
       { filepath: "/test.txt", content: "data" },
       "req_123",
-      undefined
+      undefined,
     );
   });
 
@@ -649,7 +648,7 @@ describe.skip("executeStreamedToolCalls", () => {
 
     const toolsModule = await import("./tools/index.js");
     vi.spyOn(toolsModule, "executeToolCall").mockRejectedValue(
-      new Error("Execution failed")
+      new Error("Execution failed"),
     );
 
     // Create preprocessed tool call
@@ -671,13 +670,13 @@ describe.skip("executeStreamedToolCalls", () => {
 
     const { chatHistoryEntries, hasRejection } = await executeStreamedToolCalls(
       preprocessedCalls,
-      callbacks
+      callbacks,
     );
 
     // Verify results
     expect(chatHistoryEntries).toHaveLength(1);
     expect(chatHistoryEntries[0].content).toContain(
-      "Error executing tool search_code"
+      "Error executing tool search_code",
     );
     expect(chatHistoryEntries[0].content).toContain("Execution failed");
     expect(callbacks.onToolStart).toHaveBeenCalledWith("search_code", {
@@ -685,9 +684,9 @@ describe.skip("executeStreamedToolCalls", () => {
     });
     expect(callbacks.onToolError).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Error executing tool search_code: Execution failed"
+        "Error executing tool search_code: Execution failed",
       ),
-      "search_code"
+      "search_code",
     );
   });
 });

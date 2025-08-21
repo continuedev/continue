@@ -11,14 +11,14 @@
  */
 function stripThinkTags(response: string): string {
   // Remove <think></think> tags and their content
-  let cleaned = response.replace(/<think>[\s\S]*?<\/think>/g, '');
-  
+  let cleaned = response.replace(/<think>[\s\S]*?<\/think>/g, "");
+
   // Remove excess whitespace: multiple consecutive newlines become single newlines
-  cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
-  
+  cleaned = cleaned.replace(/\n\s*\n\s*\n/g, "\n\n");
+
   // Trim leading and trailing whitespace
   cleaned = cleaned.trim();
-  
+
   return cleaned;
 }
 

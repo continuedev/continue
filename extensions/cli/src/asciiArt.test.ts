@@ -4,7 +4,7 @@ import { getDisplayableAsciiArt, CONTINUE_ASCII_ART } from "./asciiArt.js";
 
 describe("asciiArt", () => {
   let originalColumns: number | undefined;
-  
+
   beforeEach(() => {
     originalColumns = process.stdout.columns;
   });
@@ -23,7 +23,7 @@ describe("asciiArt", () => {
       process.stdout.columns = 80;
 
       const result = getDisplayableAsciiArt();
-      
+
       expect(result).toBe(CONTINUE_ASCII_ART);
     });
 
@@ -32,7 +32,7 @@ describe("asciiArt", () => {
       process.stdout.columns = 60;
 
       const result = getDisplayableAsciiArt();
-      
+
       expect(result).toContain("CONTINUE");
       expect(result).toContain("v0.0.0-dev");
       expect(result).not.toBe(CONTINUE_ASCII_ART);
@@ -45,7 +45,7 @@ describe("asciiArt", () => {
       process.stdout.columns = 74;
 
       const result = getDisplayableAsciiArt();
-      
+
       expect(result).toContain("CONTINUE");
       expect(result).not.toBe(CONTINUE_ASCII_ART);
     });
@@ -55,7 +55,7 @@ describe("asciiArt", () => {
       process.stdout.columns = 75;
 
       const result = getDisplayableAsciiArt();
-      
+
       expect(result).toBe(CONTINUE_ASCII_ART);
     });
 
@@ -64,7 +64,7 @@ describe("asciiArt", () => {
       delete (process.stdout as any).columns;
 
       const result = getDisplayableAsciiArt();
-      
+
       expect(result).toBe(CONTINUE_ASCII_ART);
     });
   });

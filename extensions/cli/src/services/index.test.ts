@@ -11,7 +11,7 @@ vi.mock("../onboarding.js", () => ({
   createOrUpdateConfig: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock auth module  
+// Mock auth module
 vi.mock("../auth/workos.js", () => ({
   loadAuthConfig: vi.fn().mockReturnValue({}),
 }));
@@ -47,12 +47,15 @@ describe("initializeServices", () => {
     // Set up mocks
     (modeService as any).initialize = mockModeService.initialize;
     (modeService as any).getCurrentMode = mockModeService.getCurrentMode;
-    (modeService as any).getToolPermissionService = mockModeService.getToolPermissionService;
-    
+    (modeService as any).getToolPermissionService =
+      mockModeService.getToolPermissionService;
+
     // Mock serviceContainer methods
-    (serviceContainer as any).registerValue = mockServiceContainer.registerValue;
+    (serviceContainer as any).registerValue =
+      mockServiceContainer.registerValue;
     (serviceContainer as any).register = mockServiceContainer.register;
-    (serviceContainer as any).initializeAll = mockServiceContainer.initializeAll;
+    (serviceContainer as any).initializeAll =
+      mockServiceContainer.initializeAll;
   });
 
   afterEach(() => {

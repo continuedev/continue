@@ -56,7 +56,7 @@ describe("ToolPermissionService unit tests", () => {
       // getState() returns a shallow copy, getPermissions() returns the same permissions object
       expect(state.permissions).toEqual(permissions);
       expect(state.permissions).toBe(permissions); // Same reference with shallow copy
-      
+
       // Multiple calls to getPermissions() should return the same reference
       const permissions2 = service.getPermissions();
       expect(permissions).toEqual(permissions2);

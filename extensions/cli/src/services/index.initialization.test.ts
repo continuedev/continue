@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { serviceContainer } from './ServiceContainer.js';
-import type { ToolPermissionServiceState } from './ToolPermissionService.js';
+import { serviceContainer } from "./ServiceContainer.js";
+import type { ToolPermissionServiceState } from "./ToolPermissionService.js";
 
-import { initializeServices, getServiceSync, SERVICE_NAMES } from './index.js';
+import { initializeServices, getServiceSync, SERVICE_NAMES } from "./index.js";
 
-describe('Service Initialization', () => {
+describe("Service Initialization", () => {
   beforeEach(() => {
     // Clean up service container state
     const services = [
@@ -14,10 +14,10 @@ describe('Service Initialization', () => {
       SERVICE_NAMES.API_CLIENT,
       SERVICE_NAMES.CONFIG,
       SERVICE_NAMES.MODEL,
-      SERVICE_NAMES.MCP
+      SERVICE_NAMES.MCP,
     ];
-    
-    services.forEach(service => {
+
+    services.forEach((service) => {
       // Reset service state
       (serviceContainer as any).services.delete(service);
       (serviceContainer as any).factories.delete(service);
@@ -25,37 +25,41 @@ describe('Service Initialization', () => {
     });
   });
 
-  it('should have TOOL_PERMISSIONS service ready after initialization', async () => {
+  it("should have TOOL_PERMISSIONS service ready after initialization", async () => {
     // Before initialization, service should not be ready
     const beforeInit = getServiceSync(SERVICE_NAMES.TOOL_PERMISSIONS);
-    expect(beforeInit.state).toBe('error'); // Not registered yet
-    
+    expect(beforeInit.state).toBe("error"); // Not registered yet
+
     // Initialize services
     await initializeServices({
       headless: true,
       toolPermissionOverrides: {
-        mode: 'normal'
-      }
+        mode: "normal",
+      },
     });
-    
+
     // After initialization, service should be ready
-    const afterInit = getServiceSync<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS);
-    expect(afterInit.state).toBe('ready');
+    const afterInit = getServiceSync<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+    );
+    expect(afterInit.state).toBe("ready");
     expect(afterInit.value).toBeDefined();
-    expect(afterInit.value?.currentMode).toBe('normal');
+    expect(afterInit.value?.currentMode).toBe("normal");
     expect(afterInit.value?.isHeadless).toBe(true);
   });
-  
-  it('should have TOOL_PERMISSIONS service ready immediately when accessed early', async () => {
+
+  it("should have TOOL_PERMISSIONS service ready immediately when accessed early", async () => {
     await initializeServices({
-      headless: true
+      headless: true,
     });
-    
+
     // Simulate early access like in streamChatResponse
-    const serviceResult = getServiceSync<ToolPermissionServiceState>(SERVICE_NAMES.TOOL_PERMISSIONS);
-    
+    const serviceResult = getServiceSync<ToolPermissionServiceState>(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+    );
+
     // Service should be ready, not idle
-    expect(serviceResult.state).toBe('ready');
+    expect(serviceResult.state).toBe("ready");
     expect(serviceResult.value).toBeDefined();
   });
 });

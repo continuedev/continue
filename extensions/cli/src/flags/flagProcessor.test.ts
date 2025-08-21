@@ -23,7 +23,7 @@ describe("convertLegacyModeFlags", () => {
 
   test("should throw error when both readonly and auto are true", () => {
     expect(() => convertLegacyModeFlags(true, true)).toThrow(
-      "Cannot use both --readonly and --auto flags together"
+      "Cannot use both --readonly and --auto flags together",
     );
   });
 });
@@ -34,7 +34,7 @@ describe("buildPermissionOverrides", () => {
       ["readFile"],
       ["writeFile"],
       ["runTerminalCommand"],
-      "plan"
+      "plan",
     );
 
     expect(result).toEqual({
@@ -125,7 +125,7 @@ describe("processCommandFlags", () => {
       processCommandFlags({
         readonly: true,
         auto: true,
-      })
+      }),
     ).toThrow("Cannot use both --readonly and --auto flags together");
   });
 

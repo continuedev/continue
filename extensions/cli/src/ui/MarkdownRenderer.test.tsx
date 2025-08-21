@@ -132,13 +132,13 @@ describe("MarkdownRenderer", () => {
 
     it("handles headings with multiple words", () => {
       const result = renderMarkdown(
-        "# This is a long heading with multiple words"
+        "# This is a long heading with multiple words",
       );
       expect(result.length).toBe(1);
       expect(React.isValidElement(result[0])).toBe(true);
       expect((result[0] as any).props.bold).toBe(true);
       expect((result[0] as any).props.children).toBe(
-        "This is a long heading with multiple words"
+        "This is a long heading with multiple words",
       );
     });
 
@@ -183,7 +183,7 @@ describe("MarkdownRenderer", () => {
 
     it("handles code blocks mixed with other formatting", () => {
       const result = renderMarkdown(
-        "Here's some code:\n```\nfunction test() {\n  return 42;\n}\n```\nAnd **bold** text"
+        "Here's some code:\n```\nfunction test() {\n  return 42;\n}\n```\nAnd **bold** text",
       );
       expect(result.length).toBe(5);
       expect(result[0]).toBe("Here's some code:\n");

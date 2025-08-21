@@ -27,7 +27,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
         }}
         requestId="test-request-123"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -42,7 +42,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
       "test-request-123",
       false, // approved = false
       false, // createPolicy = false
-      true   // stopStream = true
+      true, // stopStream = true
     );
   });
 
@@ -58,7 +58,7 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
         }}
         requestId="dangerous-request"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -73,14 +73,14 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
       "dangerous-request",
       false, // rejected
       false, // createPolicy = false
-      true   // stopStream = true
+      true, // stopStream = true
     );
   });
 
   it("tests that rejection response leads to stream stopping behavior", () => {
     // This test validates the key behavior - when onResponse is called with approved=false,
     // it should lead to the streamChatResponse function stopping and returning early
-    
+
     const mockStreamingFunction = vi.fn().mockImplementation((approved) => {
       if (!approved) {
         // Simulate early return when tool is rejected
@@ -104,10 +104,12 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
 
   it("validates permission manager handles rejection correctly", async () => {
     // Import the permission manager to test its behavior
-    const { toolPermissionManager } = await import("../../permissions/permissionManager.js");
+    const { toolPermissionManager } = await import(
+      "../../permissions/permissionManager.js"
+    );
 
     const mockResolve = vi.fn();
-    
+
     // Simulate a pending request
     const requestId = "test-request-456";
     (toolPermissionManager as any).pendingRequests.set(requestId, {
@@ -121,15 +123,17 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     // Verify the request was properly rejected
     expect(result).toBe(true);
     expect(mockResolve).toHaveBeenCalledWith({ approved: false });
-    
+
     // Verify the request was removed from pending requests
-    expect((toolPermissionManager as any).pendingRequests.has(requestId)).toBe(false);
+    expect((toolPermissionManager as any).pendingRequests.has(requestId)).toBe(
+      false,
+    );
   });
 
   it("handles multiple tool calls correctly when first is rejected", () => {
     // Test the bug fix: when multiple tool calls are present and the first is rejected,
     // remaining tool calls should be marked as cancelled to maintain chat history consistency
-    
+
     const mockMultipleToolCalls = [
       { id: "call_1", name: "Edit", arguments: {} },
       { id: "call_2", name: "Write", arguments: {} },
@@ -143,10 +147,10 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     // Simulate the rejection handling logic
     const deniedMessage = "Permission denied by user";
     const rejectedToolCall = mockMultipleToolCalls[0];
-    
+
     // First tool call gets denied
     mockCallbacks.onToolResult(deniedMessage, rejectedToolCall.name);
-    
+
     // Remaining tool calls should be cancelled
     for (let i = 1; i < mockMultipleToolCalls.length; i++) {
       const remainingToolCall = mockMultipleToolCalls[i];
@@ -156,30 +160,62 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
 
     // Verify all tool calls got results
     expect(mockCallbacks.onToolResult).toHaveBeenCalledTimes(3);
-    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(1, "Permission denied by user", "Edit");
-    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(2, "Cancelled due to previous tool rejection", "Write");
-    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(3, "Cancelled due to previous tool rejection", "Read");
+    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(
+      1,
+      "Permission denied by user",
+      "Edit",
+    );
+    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(
+      2,
+      "Cancelled due to previous tool rejection",
+      "Write",
+    );
+    expect(mockCallbacks.onToolResult).toHaveBeenNthCalledWith(
+      3,
+      "Cancelled due to previous tool rejection",
+      "Read",
+    );
   });
 
   it("ensures proper response content in headless mode", () => {
     // Test the bug fix: ensure finalResponse fallback works properly in headless mode
-    
-    const mockStreamingBehavior = (isHeadless: boolean, finalResponse: string, content: string, fullResponse: string) => {
+
+    const mockStreamingBehavior = (
+      isHeadless: boolean,
+      finalResponse: string,
+      content: string,
+      fullResponse: string,
+    ) => {
       // Simulate the fixed return logic
-      const responseToReturn = isHeadless ? (finalResponse || content) : fullResponse;
+      const responseToReturn = isHeadless
+        ? finalResponse || content
+        : fullResponse;
       return responseToReturn;
     };
 
     // Test headless mode with initialized finalResponse
-    expect(mockStreamingBehavior(true, "final content", "current content", "full content"))
-      .toBe("final content");
+    expect(
+      mockStreamingBehavior(
+        true,
+        "final content",
+        "current content",
+        "full content",
+      ),
+    ).toBe("final content");
 
     // Test headless mode with uninitialized finalResponse (empty string)
-    expect(mockStreamingBehavior(true, "", "current content", "full content"))
-      .toBe("current content");
+    expect(
+      mockStreamingBehavior(true, "", "current content", "full content"),
+    ).toBe("current content");
 
     // Test non-headless mode
-    expect(mockStreamingBehavior(false, "final content", "current content", "full content"))
-      .toBe("full content");
+    expect(
+      mockStreamingBehavior(
+        false,
+        "final content",
+        "current content",
+        "full content",
+      ),
+    ).toBe("full content");
   });
 });

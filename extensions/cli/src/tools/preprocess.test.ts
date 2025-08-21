@@ -1,7 +1,7 @@
 import * as fs from "fs";
 
 import * as diff from "diff";
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Mock fs module
 vi.mock("fs", async () => {
@@ -397,7 +397,7 @@ new line 2
       };
 
       await expect(
-        searchAndReplaceInFileTool.preprocess!(args)
+        searchAndReplaceInFileTool.preprocess!(args),
       ).rejects.toThrowError(/file .* does not exist/);
     });
 
@@ -411,9 +411,9 @@ new line 2
       };
 
       await expect(
-        searchAndReplaceInFileTool.preprocess!(args)
+        searchAndReplaceInFileTool.preprocess!(args),
       ).rejects.toThrowError(
-        "No complete search/replace blocks found in any diffs"
+        "No complete search/replace blocks found in any diffs",
       );
     });
 
@@ -433,7 +433,7 @@ replacement
       };
 
       await expect(
-        searchAndReplaceInFileTool.preprocess!(args)
+        searchAndReplaceInFileTool.preprocess!(args),
       ).rejects.toThrowError(/Search content not found in block 1:/);
     });
 
@@ -461,7 +461,7 @@ modified line 3
       const result = await searchAndReplaceInFileTool.preprocess!(args);
 
       expect(result.args.newContent).toBe(
-        "modified line 1\nline 2\nmodified line 3\nline 4"
+        "modified line 1\nline 2\nmodified line 3\nline 4",
       );
     });
   });

@@ -11,10 +11,12 @@ describe("ColoredDiff", () => {
    return "world";
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
-    expect(frame).toContain("console.log(\"added line\")");
+    expect(frame).toContain('console.log("added line")');
     expect(frame).toContain("+");
   });
 
@@ -25,10 +27,12 @@ describe("ColoredDiff", () => {
    return "world";
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
-    expect(frame).toContain("console.log(\"removed line\")");
+    expect(frame).toContain('console.log("removed line")');
     expect(frame).toContain("-");
   });
 
@@ -40,11 +44,13 @@ describe("ColoredDiff", () => {
    return "world";
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     expect(frame).toContain("function hello()");
-    expect(frame).toContain("return \"world\"");
+    expect(frame).toContain('return "world"');
   });
 
   it("renders word-level diffs for modified lines", () => {
@@ -54,18 +60,22 @@ describe("ColoredDiff", () => {
 +  return "new text";
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
-    expect(frame).toContain("return \"");
-    expect(frame).toContain("text\"");
+    expect(frame).toContain('return "');
+    expect(frame).toContain('text"');
     // Should show both old and new versions for word-level diff
     expect(frame).toContain("-");
     expect(frame).toContain("+");
   });
 
   it("handles empty diff content", () => {
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent: "" }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent: "" }),
+    );
     const frame = lastFrame();
 
     expect(frame).toContain("No changes detected");
@@ -73,13 +83,17 @@ describe("ColoredDiff", () => {
 
   it("truncates long diffs", () => {
     // Create a diff with more than 16 lines
-    const lines = Array.from({ length: 20 }, (_, i) => `+  line ${i + 1}`).join('\n');
+    const lines = Array.from({ length: 20 }, (_, i) => `+  line ${i + 1}`).join(
+      "\n",
+    );
     const diffContent = `@@ -1,1 +1,20 @@
  function hello() {
 ${lines}
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     expect(frame).toContain("more lines");
@@ -95,13 +109,15 @@ ${lines}
    return x + y;
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     // Should render word-level diffs
-    expect(frame).toContain("const x = \"");
-    expect(frame).toContain("value\"");
-    expect(frame).toContain("const y = \"another");
+    expect(frame).toContain('const x = "');
+    expect(frame).toContain('value"');
+    expect(frame).toContain('const y = "another');
   });
 
   it("handles single-type changes without word-level diffing", () => {
@@ -112,12 +128,14 @@ ${lines}
    return "world";
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     // Should render as normal line additions, not word-level
-    expect(frame).toContain("console.log(\"new line 1\")");
-    expect(frame).toContain("console.log(\"new line 2\")");
+    expect(frame).toContain('console.log("new line 1")');
+    expect(frame).toContain('console.log("new line 2")');
     expect(frame).toContain("+");
   });
 
@@ -128,7 +146,9 @@ ${lines}
 +  return "new text";
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     // Extract just the line numbers and content, ignoring colors/styling
@@ -136,8 +156,8 @@ ${lines}
     expect(frame).toContain("function hello()");
     expect(frame).toContain("- ");
     expect(frame).toContain("+ ");
-    expect(frame).toContain("return \"");
-    expect(frame).toContain("text\"");
+    expect(frame).toContain('return "');
+    expect(frame).toContain('text"');
 
     // Verify we have both old and new text content
     // Word-level diff splits these into separate words
@@ -156,20 +176,22 @@ ${lines}
 +const y = "hello universe";
  const z = 3;`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     // All original text should be preserved
     expect(frame).toContain("const x = 1");
     expect(frame).toContain("const z = 3");
-    
+
     // Both old and new versions should be shown
     // Word-level diff splits these into separate words
     expect(frame).toContain("hello");
     expect(frame).toContain("world");
     expect(frame).toContain("universe");
-    expect(frame).toContain("const y = \"");
-    
+    expect(frame).toContain('const y = "');
+
     // Should have proper line prefixes
     expect(frame).toContain("- ");
     expect(frame).toContain("+ ");
@@ -184,7 +206,9 @@ ${lines}
 +  return result.data;
  }`;
 
-    const { lastFrame } = render(React.createElement(ColoredDiff, { diffContent }));
+    const { lastFrame } = render(
+      React.createElement(ColoredDiff, { diffContent }),
+    );
     const frame = lastFrame();
 
     // Check that all unique content appears

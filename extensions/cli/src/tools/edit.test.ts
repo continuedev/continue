@@ -50,7 +50,7 @@ describe("editTool", () => {
       };
 
       await expect(editTool.preprocess!(args)).rejects.toThrow(
-        `You must use the Read tool to read ${testFilePath} before editing it.`
+        `You must use the Read tool to read ${testFilePath} before editing it.`,
       );
     });
 
@@ -66,7 +66,7 @@ describe("editTool", () => {
       };
 
       await expect(editTool.preprocess!(args)).rejects.toThrow(
-        `File ${nonExistentFile} does not exist`
+        `File ${nonExistentFile} does not exist`,
       );
     });
 
@@ -81,7 +81,7 @@ describe("editTool", () => {
       };
 
       await expect(editTool.preprocess!(args)).rejects.toThrow(
-        "String not found in file: Not found"
+        "String not found in file: Not found",
       );
     });
 
@@ -96,7 +96,7 @@ describe("editTool", () => {
       };
 
       await expect(editTool.preprocess!(args)).rejects.toThrow(
-        'String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.'
+        'String "world" appears 2 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
       );
     });
 
@@ -110,7 +110,7 @@ describe("editTool", () => {
       };
 
       await expect(editTool.preprocess!(args)).rejects.toThrow(
-        "old_string and new_string must be different"
+        "old_string and new_string must be different",
       );
     });
 
@@ -154,7 +154,7 @@ describe("editTool", () => {
       const result = await editTool.preprocess!(args);
 
       expect(result.args.newContent).toBe(
-        "Hello universe\nThis is a test file\nGoodbye universe"
+        "Hello universe\nThis is a test file\nGoodbye universe",
       );
     });
   });
@@ -170,8 +170,14 @@ describe("editTool", () => {
 
       const result = await editTool.run(args);
 
-      expect(result).toBe(`Successfully edited ${testFilePath}\nDiff:\nmocked diff`);
-      expect(fs.writeFileSync).toHaveBeenCalledWith(testFilePath, newContent, "utf-8");
+      expect(result).toBe(
+        `Successfully edited ${testFilePath}\nDiff:\nmocked diff`,
+      );
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        testFilePath,
+        newContent,
+        "utf-8",
+      );
     });
 
     it("should throw error if file write fails", async () => {
@@ -186,7 +192,7 @@ describe("editTool", () => {
       };
 
       await expect(editTool.run(args)).rejects.toThrow(
-        `Error: failed to edit ${testFilePath}: Write failed`
+        `Error: failed to edit ${testFilePath}: Write failed`,
       );
     });
   });

@@ -3,13 +3,17 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { describe, it, expect, vi } from "vitest";
 
-import { compactChatHistory, findCompactionIndex, getHistoryForLLM, COMPACTION_MARKER } from "./compaction.js";
+import {
+  compactChatHistory,
+  findCompactionIndex,
+  getHistoryForLLM,
+  COMPACTION_MARKER,
+} from "./compaction.js";
 import { streamChatResponse } from "./streamChatResponse.js";
-
 
 // Mock the streamChatResponse function
 vi.mock("./streamChatResponse.js", () => ({
-  streamChatResponse: vi.fn()
+  streamChatResponse: vi.fn(),
 }));
 
 describe("compaction", () => {
@@ -27,7 +31,10 @@ describe("compaction", () => {
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nThis is a summary` },
+        {
+          role: "assistant",
+          content: `${COMPACTION_MARKER}\nThis is a summary`,
+        },
         { role: "user", content: "Another message" },
       ];
 
@@ -67,7 +74,10 @@ describe("compaction", () => {
     it("should not match marker in middle of content", () => {
       const history: ChatCompletionMessageParam[] = [
         { role: "system", content: "System message" },
-        { role: "assistant", content: `Some text ${COMPACTION_MARKER} in the middle` },
+        {
+          role: "assistant",
+          content: `Some text ${COMPACTION_MARKER} in the middle`,
+        },
         { role: "user", content: "Hello" },
       ];
 
@@ -116,21 +126,30 @@ describe("compaction", () => {
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nThis is a summary` },
+        {
+          role: "assistant",
+          content: `${COMPACTION_MARKER}\nThis is a summary`,
+        },
         { role: "user", content: "Another message" },
       ];
 
       const result = getHistoryForLLM(history, 3);
       expect(result).toEqual([
         { role: "system", content: "System message" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nThis is a summary` },
+        {
+          role: "assistant",
+          content: `${COMPACTION_MARKER}\nThis is a summary`,
+        },
         { role: "user", content: "Another message" },
       ]);
     });
 
     it("should return compacted history without system message when compaction is at index 0", () => {
       const history: ChatCompletionMessageParam[] = [
-        { role: "assistant", content: `${COMPACTION_MARKER}\nThis is a summary` },
+        {
+          role: "assistant",
+          content: `${COMPACTION_MARKER}\nThis is a summary`,
+        },
         { role: "user", content: "Another message" },
       ];
 
@@ -157,9 +176,7 @@ describe("compaction", () => {
       const result = getHistoryForLLM(history, -1);
       // Negative index with slice means "from the end", so -1 gives us only the last message
       // Since compactionIndex is not > 0, system message is not included
-      expect(result).toEqual([
-        { role: "user", content: "Hello" },
-      ]);
+      expect(result).toEqual([{ role: "user", content: "Hello" }]);
     });
 
     it("should handle empty history", () => {
@@ -233,12 +250,14 @@ describe("compaction", () => {
     it("should compact chat history successfully", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
       const mockContent = "This is a summary of the conversation";
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.(mockContent);
-        callbacks?.onContentComplete?.(mockContent);
-        return mockContent;
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.(mockContent);
+          callbacks?.onContentComplete?.(mockContent);
+          return mockContent;
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "system", content: "System message" },
@@ -247,12 +266,15 @@ describe("compaction", () => {
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       expect(result.compactedHistory).toHaveLength(2);
-      expect(result.compactedHistory[0]).toEqual({ role: "system", content: "System message" });
+      expect(result.compactedHistory[0]).toEqual({
+        role: "system",
+        content: "System message",
+      });
       expect(result.compactedHistory[1]).toEqual({
         role: "assistant",
-        content: `${COMPACTION_MARKER}\n${mockContent}`
+        content: `${COMPACTION_MARKER}\n${mockContent}`,
       });
       expect(result.compactionIndex).toBe(1);
       expect(result.compactionContent).toBe(mockContent);
@@ -263,13 +285,15 @@ describe("compaction", () => {
       const mockContent = "Summary content";
       const onStreamContent = vi.fn();
       const onStreamComplete = vi.fn();
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("Summary ");
-        callbacks?.onContent?.("content");
-        callbacks?.onContentComplete?.(mockContent);
-        return mockContent;
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Summary ");
+          callbacks?.onContent?.("content");
+          callbacks?.onContentComplete?.(mockContent);
+          return mockContent;
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "user", content: "Hello" },
@@ -277,9 +301,9 @@ describe("compaction", () => {
 
       await compactChatHistory(history, mockModel, mockLlmApi, {
         onStreamContent,
-        onStreamComplete
+        onStreamComplete,
       });
-      
+
       expect(onStreamContent).toHaveBeenCalledWith("Summary ");
       expect(onStreamContent).toHaveBeenCalledWith("content");
       expect(onStreamComplete).toHaveBeenCalled();
@@ -289,7 +313,7 @@ describe("compaction", () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
       const mockError = new Error("Stream failed");
       const onError = vi.fn();
-      
+
       mockStreamResponse.mockRejectedValue(mockError);
 
       const history: ChatCompletionMessageParam[] = [
@@ -297,48 +321,55 @@ describe("compaction", () => {
       ];
 
       await expect(
-        compactChatHistory(history, mockModel, mockLlmApi, { onError })
+        compactChatHistory(history, mockModel, mockLlmApi, { onError }),
       ).rejects.toThrow("Stream failed");
-      
+
       expect(onError).toHaveBeenCalledWith(mockError);
     });
 
     it("should handle history with only system message", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
       const mockContent = "Summary of system setup";
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.(mockContent);
-        callbacks?.onContentComplete?.(mockContent);
-        return mockContent;
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.(mockContent);
+          callbacks?.onContentComplete?.(mockContent);
+          return mockContent;
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "system", content: "You are a helpful assistant" },
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       expect(result.compactedHistory).toHaveLength(2);
-      expect(result.compactedHistory[0]).toEqual({ role: "system", content: "You are a helpful assistant" });
+      expect(result.compactedHistory[0]).toEqual({
+        role: "system",
+        content: "You are a helpful assistant",
+      });
       expect(result.compactedHistory[1].content).toContain(COMPACTION_MARKER);
     });
 
     it("should handle empty content from stream", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("");
-        callbacks?.onContentComplete?.("");
-        return "";
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("");
+          callbacks?.onContentComplete?.("");
+          return "";
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "user", content: "Hello" },
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       expect(result.compactionContent).toBe("");
       expect(result.compactedHistory[0].content).toBe(`${COMPACTION_MARKER}\n`);
     });
@@ -346,13 +377,15 @@ describe("compaction", () => {
     it("should correctly construct prompt for compaction", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
       let capturedHistory: ChatCompletionMessageParam[] = [];
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        capturedHistory = [...history];
-        callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.("Summary");
-        return "Summary";
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          capturedHistory = [...history];
+          callbacks?.onContent?.("Summary");
+          callbacks?.onContentComplete?.("Summary");
+          return "Summary";
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "system", content: "System" },
@@ -361,24 +394,26 @@ describe("compaction", () => {
       ];
 
       await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       // Should have original history plus the compaction prompt
       expect(capturedHistory).toHaveLength(4);
       expect(capturedHistory[3]).toEqual({
         role: "user",
-        content: expect.stringContaining("provide a concise summary")
+        content: expect.stringContaining("provide a concise summary"),
       });
     });
 
     it("should handle history with tool calls and mixed message types", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
       const mockContent = "Summary including tool usage";
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.(mockContent);
-        callbacks?.onContentComplete?.(mockContent);
-        return mockContent;
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.(mockContent);
+          callbacks?.onContentComplete?.(mockContent);
+          return mockContent;
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "system", content: "System" },
@@ -389,32 +424,34 @@ describe("compaction", () => {
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       expect(result.compactedHistory).toHaveLength(2);
       expect(result.compactionContent).toBe(mockContent);
     });
 
     it("should handle very long chat histories", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("Long summary");
-        callbacks?.onContentComplete?.("Long summary");
-        return "Long summary";
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Long summary");
+          callbacks?.onContentComplete?.("Long summary");
+          return "Long summary";
+        },
+      );
 
       // Create a very long history
       const history: ChatCompletionMessageParam[] = [
         { role: "system", content: "System" },
       ];
-      
+
       for (let i = 0; i < 100; i++) {
         history.push({ role: "user", content: `User message ${i}` });
         history.push({ role: "assistant", content: `Assistant response ${i}` });
       }
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       expect(result.compactedHistory).toHaveLength(2); // System + compaction
       expect(result.compactionIndex).toBe(1);
     });
@@ -422,12 +459,14 @@ describe("compaction", () => {
     it("should handle history without system message", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
       const mockContent = "Summary without system";
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.(mockContent);
-        callbacks?.onContentComplete?.(mockContent);
-        return mockContent;
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.(mockContent);
+          callbacks?.onContentComplete?.(mockContent);
+          return mockContent;
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "user", content: "Hello" },
@@ -435,7 +474,7 @@ describe("compaction", () => {
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       expect(result.compactedHistory).toHaveLength(1); // Only compaction
       expect(result.compactedHistory[0].role).toBe("assistant");
       expect(result.compactionIndex).toBe(0);
@@ -444,14 +483,17 @@ describe("compaction", () => {
 
   describe("property-based tests", () => {
     it("getHistoryForLLM should always return a subset of the original history", () => {
-      const testCases: Array<{ history: ChatCompletionMessageParam[], compactionIndex: number | null }> = [
+      const testCases: Array<{
+        history: ChatCompletionMessageParam[];
+        compactionIndex: number | null;
+      }> = [
         {
           history: [
             { role: "system", content: "System" },
             { role: "user", content: "User 1" },
             { role: "assistant", content: "Assistant 1" },
           ],
-          compactionIndex: 1
+          compactionIndex: 1,
         },
         {
           history: [
@@ -459,51 +501,61 @@ describe("compaction", () => {
             { role: "assistant", content: "Assistant 1" },
             { role: "user", content: "User 2" },
           ],
-          compactionIndex: 2
+          compactionIndex: 2,
         },
         {
           history: [],
-          compactionIndex: null
-        }
+          compactionIndex: null,
+        },
       ];
 
       testCases.forEach(({ history, compactionIndex }) => {
         const result = getHistoryForLLM(history, compactionIndex);
-        
+
         // Every message in result should exist in original history
-        result.forEach(msg => {
+        result.forEach((msg) => {
           expect(history).toContainEqual(msg);
         });
-        
+
         // Result length should be <= original length
         expect(result.length).toBeLessThanOrEqual(history.length);
       });
     });
 
     it("getHistoryForLLM should always include system message if it exists at index 0", () => {
-      const systemMessage: ChatCompletionMessageParam = { role: "system", content: "System" };
-      const testCases: Array<{ history: ChatCompletionMessageParam[], compactionIndex: number | null }> = [
+      const systemMessage: ChatCompletionMessageParam = {
+        role: "system",
+        content: "System",
+      };
+      const testCases: Array<{
+        history: ChatCompletionMessageParam[];
+        compactionIndex: number | null;
+      }> = [
         {
           history: [
             systemMessage,
             { role: "user", content: "User 1" },
             { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
           ],
-          compactionIndex: 2
+          compactionIndex: 2,
         },
         {
           history: [
             systemMessage,
             { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
           ],
-          compactionIndex: 1
-        }
+          compactionIndex: 1,
+        },
       ];
 
       testCases.forEach(({ history, compactionIndex }) => {
         const result = getHistoryForLLM(history, compactionIndex);
-        
-        if (history[0]?.role === "system" && compactionIndex !== null && compactionIndex > 0) {
+
+        if (
+          history[0]?.role === "system" &&
+          compactionIndex !== null &&
+          compactionIndex > 0
+        ) {
           expect(result[0]).toEqual(systemMessage);
         }
       });
@@ -511,12 +563,14 @@ describe("compaction", () => {
 
     it("compaction should always reduce message count for non-trivial histories", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.("Summary");
-        return "Summary";
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Summary");
+          callbacks?.onContentComplete?.("Summary");
+          return "Summary";
+        },
+      );
 
       const testHistories: ChatCompletionMessageParam[][] = [
         [
@@ -530,12 +584,12 @@ describe("compaction", () => {
           { role: "user", content: "User 1" },
           { role: "assistant", content: "Assistant 1" },
           { role: "user", content: "User 2" },
-        ]
+        ],
       ];
 
       for (const history of testHistories) {
         const result = await compactChatHistory(history, mockModel, mockLlmApi);
-        
+
         // Compacted history should be shorter than original
         // (system + compaction) or just compaction
         expect(result.compactedHistory.length).toBeLessThanOrEqual(2);
@@ -547,39 +601,56 @@ describe("compaction", () => {
   describe("invariant tests", () => {
     it("compactionIndex should always point to a message with COMPACTION_MARKER", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("Summary content");
-        callbacks?.onContentComplete?.("Summary content");
-        return "Summary content";
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Summary content");
+          callbacks?.onContentComplete?.("Summary content");
+          return "Summary content";
+        },
+      );
 
       const histories: ChatCompletionMessageParam[][] = [
-        [{ role: "system", content: "System" }, { role: "user", content: "Hello" }],
-        [{ role: "user", content: "Hello" }, { role: "assistant", content: "Hi" }],
+        [
+          { role: "system", content: "System" },
+          { role: "user", content: "Hello" },
+        ],
+        [
+          { role: "user", content: "Hello" },
+          { role: "assistant", content: "Hi" },
+        ],
         [{ role: "system", content: "System" }],
       ];
 
       for (const history of histories) {
         const result = await compactChatHistory(history, mockModel, mockLlmApi);
-        
+
         // The message at compactionIndex should contain the marker
-        const compactionMessage = result.compactedHistory[result.compactionIndex];
+        const compactionMessage =
+          result.compactedHistory[result.compactionIndex];
         expect(compactionMessage.role).toBe("assistant");
-        expect(typeof compactionMessage.content === "string" && compactionMessage.content.startsWith(COMPACTION_MARKER)).toBe(true);
+        expect(
+          typeof compactionMessage.content === "string" &&
+            compactionMessage.content.startsWith(COMPACTION_MARKER),
+        ).toBe(true);
       }
     });
 
     it("system message should always be preserved in the same position", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.("Summary");
-        return "Summary";
-      });
 
-      const systemMessage: ChatCompletionMessageParam = { role: "system", content: "You are helpful" };
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Summary");
+          callbacks?.onContentComplete?.("Summary");
+          return "Summary";
+        },
+      );
+
+      const systemMessage: ChatCompletionMessageParam = {
+        role: "system",
+        content: "You are helpful",
+      };
       const history: ChatCompletionMessageParam[] = [
         systemMessage,
         { role: "user", content: "Hello" },
@@ -587,19 +658,21 @@ describe("compaction", () => {
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       // System message should still be at index 0
       expect(result.compactedHistory[0]).toEqual(systemMessage);
     });
 
     it("findCompactionIndex should be consistent with compactChatHistory result", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      
-      mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-        callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.("Summary");
-        return "Summary";
-      });
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Summary");
+          callbacks?.onContentComplete?.("Summary");
+          return "Summary";
+        },
+      );
 
       const history: ChatCompletionMessageParam[] = [
         { role: "user", content: "Hello" },
@@ -607,7 +680,7 @@ describe("compaction", () => {
       ];
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
-      
+
       // findCompactionIndex should find the same index
       const foundIndex = findCompactionIndex(result.compactedHistory);
       expect(foundIndex).toBe(result.compactionIndex);

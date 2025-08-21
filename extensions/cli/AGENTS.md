@@ -18,25 +18,30 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 ### Core Components
 
 1. **Entry Point** (`src/index.ts`): Main CLI logic with two modes:
+
    - **Headless mode**: Non-interactive mode for automation/CI
    - **TUI mode**: Terminal User Interface using Ink/React
    - **Standard mode**: Traditional readline-based chat interface
 
 2. **Authentication** (`src/auth/`): WorkOS-based authentication system
+
    - `ensureAuth.ts`: Handles authentication flow
    - `workos.ts`: WorkOS configuration and token management
 
 3. **Continue SDK Integration** (`src/continueSDK.ts`): Initializes the Continue SDK client with:
+
    - API key authentication
    - Assistant configuration (slug-based)
    - Organization support
 
 4. **Terminal UI** (`src/ui/`): React/Ink-based TUI components
+
    - `TUIChat.tsx`: Main chat interface component
    - `UserInput.tsx`: Input handling with multi-line support
    - `TextBuffer.ts`: Text display utilities
 
 5. **Tools System** (`src/tools/`): Built-in development tools including:
+
    - File operations (read, write, list)
    - Code search functionality
    - Terminal command execution

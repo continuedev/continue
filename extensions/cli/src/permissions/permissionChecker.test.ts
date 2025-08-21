@@ -21,7 +21,7 @@ describe("Permission Checker", () => {
 
     it("should match prefix wildcards", () => {
       expect(matchesToolPattern("mcp__ide__getDiagnostics", "mcp__*")).toBe(
-        true
+        true,
       );
       expect(matchesToolPattern("mcp__filesystem__read", "mcp__*")).toBe(true);
       expect(matchesToolPattern("builtin__readFile", "mcp__*")).toBe(false);
@@ -58,7 +58,7 @@ describe("Permission Checker", () => {
       expect(matchesToolPattern("test{brace}", "test{brace}")).toBe(true);
       expect(matchesToolPattern("test|pipe", "test|pipe")).toBe(true);
       expect(matchesToolPattern("test\\backslash", "test\\backslash")).toBe(
-        true
+        true,
       );
     });
 
@@ -74,64 +74,66 @@ describe("Permission Checker", () => {
     describe("Bash command patterns", () => {
       it("should match Bash command patterns with Bash tool", () => {
         expect(matchesToolPattern("Bash", "Bash(ls*)", { command: "ls" })).toBe(
-          true
+          true,
         );
         expect(
-          matchesToolPattern("Bash", "Bash(ls*)", { command: "ls -la" })
+          matchesToolPattern("Bash", "Bash(ls*)", { command: "ls -la" }),
         ).toBe(true);
         expect(
-          matchesToolPattern("Bash", "Bash(ls*)", { command: "pwd" })
+          matchesToolPattern("Bash", "Bash(ls*)", { command: "pwd" }),
         ).toBe(false);
       });
 
       it("should match Bash command patterns with Bash display name", () => {
         expect(
-          matchesToolPattern("Bash", "Bash(git*)", { command: "git status" })
+          matchesToolPattern("Bash", "Bash(git*)", { command: "git status" }),
         ).toBe(true);
         expect(
-          matchesToolPattern("Bash", "Bash(git*)", { command: "git commit" })
+          matchesToolPattern("Bash", "Bash(git*)", { command: "git commit" }),
         ).toBe(true);
         expect(
-          matchesToolPattern("Bash", "Bash(git*)", { command: "npm install" })
+          matchesToolPattern("Bash", "Bash(git*)", { command: "npm install" }),
         ).toBe(false);
       });
 
       it("should match exact Bash commands", () => {
         expect(matchesToolPattern("Bash", "Bash(ls)", { command: "ls" })).toBe(
-          true
+          true,
         );
         expect(
-          matchesToolPattern("Bash", "Bash(ls)", { command: "ls -la" })
+          matchesToolPattern("Bash", "Bash(ls)", { command: "ls -la" }),
         ).toBe(false);
       });
 
       it("should not match Bash patterns for non-bash tools", () => {
         expect(matchesToolPattern("Read", "Bash(ls*)", { command: "ls" })).toBe(
-          false
+          false,
         );
         expect(
-          matchesToolPattern("Write", "Bash(git*)", { command: "git status" })
+          matchesToolPattern("Write", "Bash(git*)", { command: "git status" }),
         ).toBe(false);
       });
 
       it("should not match Bash patterns without command argument", () => {
         expect(matchesToolPattern("Bash", "Bash(ls*)", {})).toBe(false);
         expect(
-          matchesToolPattern("Bash", "Bash(ls*)", { other: "value" })
+          matchesToolPattern("Bash", "Bash(ls*)", { other: "value" }),
         ).toBe(false);
       });
 
       it("should handle complex Bash command patterns", () => {
         expect(
-          matchesToolPattern("Bash", "Bash(npm*)", { command: "npm install" })
+          matchesToolPattern("Bash", "Bash(npm*)", { command: "npm install" }),
         ).toBe(true);
         expect(
-          matchesToolPattern("Bash", "Bash(npm*)", { command: "npm run build" })
+          matchesToolPattern("Bash", "Bash(npm*)", {
+            command: "npm run build",
+          }),
         ).toBe(true);
         expect(
           matchesToolPattern("Bash", "Bash(git*commit*)", {
             command: "git commit -m 'test'",
-          })
+          }),
         ).toBe(true);
       });
     });
@@ -209,7 +211,7 @@ describe("Permission Checker", () => {
         config: { host: "localhost", port: 3000 }, // Different reference, same content
       };
       expect(matchesArguments(args, differentButEqualObjectPatterns)).toBe(
-        false
+        false,
       );
     });
 
@@ -250,11 +252,11 @@ describe("Permission Checker", () => {
 
         expect(matchesArguments(args, { command: "npm * test:*" })).toBe(true);
         expect(matchesArguments(args, { command: "npm run *:unit" })).toBe(
-          true
+          true,
         );
         expect(matchesArguments(args, { path: "**/src/**/*.ts" })).toBe(true);
         expect(
-          matchesArguments(args, { path: "/home/*/projects/*/src/**" })
+          matchesArguments(args, { path: "/home/*/projects/*/src/**" }),
         ).toBe(true);
         expect(matchesArguments(args, { command: "yarn *" })).toBe(false);
       });
@@ -268,7 +270,7 @@ describe("Permission Checker", () => {
 
         // Literal dots, brackets, parentheses should match exactly
         expect(matchesArguments(args, { command: "*'test.pattern'*" })).toBe(
-          true
+          true,
         );
         expect(matchesArguments(args, { regex: "test[0-9]+" })).toBe(true);
         expect(matchesArguments(args, { special: "file(1).txt" })).toBe(true);
@@ -276,7 +278,7 @@ describe("Permission Checker", () => {
 
         // These should not match due to regex escaping
         expect(matchesArguments(args, { command: "*test_pattern*" })).toBe(
-          false
+          false,
         );
         expect(matchesArguments(args, { regex: "test*" })).toBe(true); // * is wildcard, + is literal
       });
@@ -294,7 +296,7 @@ describe("Permission Checker", () => {
             tool: "bash", // exact match
             command: "cd*install", // glob match
             flag: "--verbose", // exact match
-          })
+          }),
         ).toBe(true);
 
         expect(
@@ -302,7 +304,7 @@ describe("Permission Checker", () => {
             tool: "bash", // exact match
             command: "cd*test", // glob no match
             flag: "--verbose", // exact match
-          })
+          }),
         ).toBe(false);
       });
 
@@ -350,7 +352,7 @@ describe("Permission Checker", () => {
 
       const result = checkToolPermission(
         { name: "readFile", arguments: { path: "/test.txt" } },
-        permissions
+        permissions,
       );
 
       expect(result.permission).toBe("allow");
@@ -367,7 +369,7 @@ describe("Permission Checker", () => {
           name: "writeFile",
           arguments: { path: "/test.txt", content: "hello" },
         },
-        permissions
+        permissions,
       );
 
       expect(result.permission).toBe("ask");
@@ -381,7 +383,7 @@ describe("Permission Checker", () => {
 
       const result = checkToolPermission(
         { name: "runTerminalCommand", arguments: { command: "rm -rf /" } },
-        permissions
+        permissions,
       );
 
       expect(result.permission).toBe("exclude");
@@ -398,14 +400,14 @@ describe("Permission Checker", () => {
 
       const mcpResult = checkToolPermission(
         { name: "mcp__ide__getDiagnostics", arguments: {} },
-        permissions
+        permissions,
       );
       expect(mcpResult.permission).toBe("ask");
       expect(mcpResult.matchedPolicy?.tool).toBe("mcp__*");
 
       const builtinResult = checkToolPermission(
         { name: "readFile", arguments: { path: "/test.txt" } },
-        permissions
+        permissions,
       );
       expect(builtinResult.permission).toBe("allow");
       expect(builtinResult.matchedPolicy?.tool).toBe("*");
@@ -428,7 +430,7 @@ describe("Permission Checker", () => {
           name: "writeFile",
           arguments: { path: "/sensitive.txt", content: "data" },
         },
-        permissions
+        permissions,
       );
       expect(sensitiveResult.permission).toBe("exclude");
 
@@ -437,7 +439,7 @@ describe("Permission Checker", () => {
           name: "writeFile",
           arguments: { path: "/normal.txt", content: "data" },
         },
-        permissions
+        permissions,
       );
       expect(normalResult.permission).toBe("allow");
     });
@@ -459,7 +461,7 @@ describe("Permission Checker", () => {
 
       const result = checkToolPermission(
         { name: "unknownTool", arguments: {} },
-        permissions
+        permissions,
       );
 
       expect(result.permission).toBe("ask");
@@ -477,7 +479,7 @@ describe("Permission Checker", () => {
       // Should match "Bash(ls*)" pattern and allow
       const lsResult = checkToolPermission(
         { name: "Bash", arguments: { command: "ls -la" } },
-        permissions
+        permissions,
       );
       expect(lsResult.permission).toBe("allow");
       expect(lsResult.matchedPolicy?.tool).toBe("Bash(ls*)");
@@ -485,7 +487,7 @@ describe("Permission Checker", () => {
       // Should match "Bash(git*)" pattern and ask
       const gitResult = checkToolPermission(
         { name: "Bash", arguments: { command: "git status" } },
-        permissions
+        permissions,
       );
       expect(gitResult.permission).toBe("ask");
       expect(gitResult.matchedPolicy?.tool).toBe("Bash(git*)");
@@ -493,7 +495,7 @@ describe("Permission Checker", () => {
       // Should match general fallback for other commands
       const npmResult = checkToolPermission(
         { name: "Bash", arguments: { command: "npm install" } },
-        permissions
+        permissions,
       );
       expect(npmResult.permission).toBe("ask");
       expect(npmResult.matchedPolicy?.tool).toBe("Bash");
@@ -522,7 +524,7 @@ describe("Permission Checker", () => {
       // Should exclude dangerous rm commands
       const rmResult = checkToolPermission(
         { name: "Bash", arguments: { command: "rm -rf /" } },
-        permissions
+        permissions,
       );
       expect(rmResult.permission).toBe("exclude");
       expect(rmResult.matchedPolicy?.argumentMatches?.command).toBe("rm*");
@@ -533,17 +535,17 @@ describe("Permission Checker", () => {
           name: "Write",
           arguments: { file_path: "/src/components/Button.ts" },
         },
-        permissions
+        permissions,
       );
       expect(tsResult.permission).toBe("ask");
       expect(tsResult.matchedPolicy?.argumentMatches?.file_path).toBe(
-        "**/*.ts"
+        "**/*.ts",
       );
 
       // Should allow other file writes
       const jsResult = checkToolPermission(
         { name: "Write", arguments: { file_path: "/src/utils/helper.js" } },
-        permissions
+        permissions,
       );
       expect(jsResult.permission).toBe("allow");
       expect(jsResult.matchedPolicy?.argumentMatches).toBeUndefined();

@@ -31,7 +31,7 @@ describe("withExponentialBackoff", () => {
     const results: string[] = [];
     const generator = withExponentialBackoff(
       generatorFactory,
-      abortController.signal
+      abortController.signal,
     );
 
     for await (const chunk of generator) {
@@ -63,7 +63,7 @@ describe("withExponentialBackoff", () => {
       {
         maxRetries: 2,
         initialDelay: 10, // Short delay for testing
-      }
+      },
     );
 
     for await (const chunk of generator) {
@@ -83,7 +83,7 @@ describe("withExponentialBackoff", () => {
 
     const generator = withExponentialBackoff(
       generatorFactory,
-      abortController.signal
+      abortController.signal,
     );
 
     await expect(async () => {
@@ -107,7 +107,7 @@ describe("withExponentialBackoff", () => {
 
     const generator = withExponentialBackoff(
       generatorFactory,
-      abortController.signal
+      abortController.signal,
     );
 
     await expect(async () => {

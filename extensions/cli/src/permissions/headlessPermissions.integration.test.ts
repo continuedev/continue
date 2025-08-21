@@ -23,7 +23,10 @@ describe("Headless Permissions Integration", () => {
       });
 
       // CLI exclusion should come first
-      expect(policies[0]).toEqual({ tool: "dangerous_tool", permission: "exclude" });
+      expect(policies[0]).toEqual({
+        tool: "dangerous_tool",
+        permission: "exclude",
+      });
       // Default policies should follow
       expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
     });
@@ -34,16 +37,36 @@ describe("Headless Permissions Integration", () => {
       const permissions = { policies: DEFAULT_TOOL_POLICIES };
 
       // Read-only tools should be allowed
-      expect(checkToolPermission({ name: "Read", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "List", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "Search", arguments: {} }, permissions).permission).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Read", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+      expect(
+        checkToolPermission({ name: "List", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Search", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
 
-      // Write operations should require permission  
-      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("ask");
-      expect(checkToolPermission({ name: "Bash", arguments: {} }, permissions).permission).toBe("ask");
+      // Write operations should require permission
+      expect(
+        checkToolPermission({ name: "Write", arguments: {} }, permissions)
+          .permission,
+      ).toBe("ask");
+      expect(
+        checkToolPermission({ name: "Bash", arguments: {} }, permissions)
+          .permission,
+      ).toBe("ask");
 
       // Unknown tools should default to ask
-      expect(checkToolPermission({ name: "unknown_tool", arguments: {} }, permissions).permission).toBe("ask");
+      expect(
+        checkToolPermission(
+          { name: "unknown_tool", arguments: {} },
+          permissions,
+        ).permission,
+      ).toBe("ask");
     });
 
     it("should respect CLI overrides even in headless mode", () => {
@@ -56,13 +79,19 @@ describe("Headless Permissions Integration", () => {
       // Excluded tool should be blocked
       const excludedResult = checkToolPermission(
         { name: "dangerous_tool", arguments: {} },
-        permissions
+        permissions,
       );
       expect(excludedResult.permission).toBe("exclude");
 
       // Default tools should follow their normal rules
-      expect(checkToolPermission({ name: "Read", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("ask");
+      expect(
+        checkToolPermission({ name: "Read", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Write", arguments: {} }, permissions)
+          .permission,
+      ).toBe("ask");
     });
   });
 
@@ -83,18 +112,38 @@ describe("Headless Permissions Integration", () => {
       const permissions = { policies };
 
       // Excluded tools should be blocked
-      expect(checkToolPermission({ name: "rm", arguments: {} }, permissions).permission).toBe("exclude");
-      expect(checkToolPermission({ name: "sudo", arguments: {} }, permissions).permission).toBe("exclude");
+      expect(
+        checkToolPermission({ name: "rm", arguments: {} }, permissions)
+          .permission,
+      ).toBe("exclude");
+      expect(
+        checkToolPermission({ name: "sudo", arguments: {} }, permissions)
+          .permission,
+      ).toBe("exclude");
 
       // Explicitly allowed tools should be allowed
-      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "Bash", arguments: {} }, permissions).permission).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Write", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Bash", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
 
       // Read-only tools should still be allowed by default
-      expect(checkToolPermission({ name: "Read", arguments: {} }, permissions).permission).toBe("allow");
-      
+      expect(
+        checkToolPermission({ name: "Read", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+
       // Unknown tools should default to ask (since no wildcard allow override was provided)
-      expect(checkToolPermission({ name: "unknown_tool", arguments: {} }, permissions).permission).toBe("ask");
+      expect(
+        checkToolPermission(
+          { name: "unknown_tool", arguments: {} },
+          permissions,
+        ).permission,
+      ).toBe("ask");
     });
 
     it("should handle workflow with wildcard allow override", () => {
@@ -109,9 +158,20 @@ describe("Headless Permissions Integration", () => {
       const permissions = { policies };
 
       // All tools should be allowed due to wildcard override
-      expect(checkToolPermission({ name: "Write", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "Bash", arguments: {} }, permissions).permission).toBe("allow");
-      expect(checkToolPermission({ name: "unknown_tool", arguments: {} }, permissions).permission).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Write", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+      expect(
+        checkToolPermission({ name: "Bash", arguments: {} }, permissions)
+          .permission,
+      ).toBe("allow");
+      expect(
+        checkToolPermission(
+          { name: "unknown_tool", arguments: {} },
+          permissions,
+        ).permission,
+      ).toBe("allow");
     });
   });
 });

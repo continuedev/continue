@@ -50,7 +50,7 @@ describe("TUIChat - Basic UI Tests", () => {
 
   it("handles remote URL prop", () => {
     const { lastFrame } = render(
-      React.createElement(AppRoot, { remoteUrl: "http://localhost:3000" })
+      React.createElement(AppRoot, { remoteUrl: "http://localhost:3000" }),
     );
     const frame = lastFrame();
 

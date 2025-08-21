@@ -22,10 +22,10 @@ describe("formatToolCall", () => {
 
   it("should format tool name with relative path argument", () => {
     expect(formatToolCall("Write", { filepath: "README.md" })).toBe(
-      "Write(README.md)"
+      "Write(README.md)",
     );
     expect(formatToolCall("Read", { filepath: "src/index.ts" })).toBe(
-      "Read(src/index.ts)"
+      "Read(src/index.ts)",
     );
   });
 
@@ -33,26 +33,24 @@ describe("formatToolCall", () => {
     expect(
       formatToolCall("Write", {
         filepath: "/Users/test/project/README.md",
-      })
+      }),
     ).toBe("Write(README.md)");
 
     expect(
       formatToolCall("Read", {
         filepath: "/Users/test/project/src/components/App.tsx",
-      })
+      }),
     ).toBe("Read(src/components/App.tsx)");
   });
 
   it("should handle absolute paths outside the project", () => {
-    expect(
-      formatToolCall("Write", { filepath: "/Users/other/file.txt" })
-    ).toBe("Write(../../other/file.txt)");
+    expect(formatToolCall("Write", { filepath: "/Users/other/file.txt" })).toBe(
+      "Write(../../other/file.txt)",
+    );
   });
 
   it("should handle non-path arguments", () => {
-    expect(formatToolCall("Search", { pattern: "TODO" })).toBe(
-      "Search(TODO)"
-    );
+    expect(formatToolCall("Search", { pattern: "TODO" })).toBe("Search(TODO)");
     expect(formatToolCall("Search", { pattern: 123 })).toBe("Search(123)");
   });
 
@@ -61,7 +59,7 @@ describe("formatToolCall", () => {
       formatToolCall("Write", {
         filepath: "test.txt",
         content: "Hello world",
-      })
+      }),
     ).toBe("Write(test.txt)");
   });
 });
@@ -82,10 +80,10 @@ describe("formatToolArgument", () => {
 
   it("should convert absolute paths to relative", () => {
     expect(formatToolArgument("/Users/test/project/README.md")).toBe(
-      "README.md"
+      "README.md",
     );
     expect(formatToolArgument("/Users/test/project/src/index.ts")).toBe(
-      "src/index.ts"
+      "src/index.ts",
     );
   });
 

@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 import { parseArgs, processRule } from "./args.js";
 
@@ -20,7 +20,6 @@ describe("parseArgs", () => {
     expect(result).toEqual({});
   });
 
-
   it("should set resume to true when --resume flag is present", () => {
     process.argv = ["node", "script.js", "--resume"];
     const result = parseArgs();
@@ -32,7 +31,6 @@ describe("parseArgs", () => {
     const result = parseArgs();
     expect(result.readonly).toBe(true);
   });
-
 
   it("should parse config path from --config flag", () => {
     process.argv = ["node", "script.js", "--config", "/path/to/config.yaml"];
@@ -189,8 +187,7 @@ describe("parseArgs", () => {
   it("should handle empty arguments array", () => {
     process.argv = ["node", "script.js"];
     const result = parseArgs();
-    expect(result).toEqual({
-    });
+    expect(result).toEqual({});
   });
 
   it("should handle multiple boolean flags", () => {
@@ -224,7 +221,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
   // Mock fetch for hub tests
   const originalFetch = global.fetch;
   const mockFetch = vi.fn() as any;
-  
+
   beforeAll(() => {
     global.fetch = mockFetch;
   });
@@ -232,7 +229,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
   afterAll(() => {
     global.fetch = originalFetch;
   });
-  
+
   beforeEach(() => {
     mockFetch.mockClear();
   });
@@ -242,11 +239,12 @@ describe("processRule (loadRuleFromHub integration)", () => {
       // Create a mock zip file containing a markdown rule
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
-      const ruleContent = "# Sentry Next.js Rule\n\nThis is a sample rule for Sentry integration with Next.js applications.";
+      const ruleContent =
+        "# Sentry Next.js Rule\n\nThis is a sample rule for Sentry integration with Next.js applications.";
       zip.file("rule.md", ruleContent);
-      
+
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
-      
+
       // Mock successful fetch response
       mockFetch.mockResolvedValue({
         ok: true,
@@ -254,10 +252,13 @@ describe("processRule (loadRuleFromHub integration)", () => {
       } as Response);
 
       const result = await processRule("continuedev/sentry-nextjs");
-      
+
       expect(result).toBe(ruleContent);
       expect(mockFetch).toHaveBeenCalledWith(
-        new URL("v0/continuedev/sentry-nextjs/latest/download", "https://api.continue.dev/")
+        new URL(
+          "v0/continuedev/sentry-nextjs/latest/download",
+          "https://api.continue.dev/",
+        ),
       );
     });
 
@@ -269,7 +270,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
       } as Response);
 
       await expect(processRule("continuedev/nonexistent-rule")).rejects.toThrow(
-        'Failed to load rule from hub "continuedev/nonexistent-rule": HTTP 404: Not Found'
+        'Failed to load rule from hub "continuedev/nonexistent-rule": HTTP 404: Not Found',
       );
     });
 
@@ -277,7 +278,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 
       await expect(processRule("continuedev/sentry-nextjs")).rejects.toThrow(
-        'Failed to load rule from hub "continuedev/sentry-nextjs": Network error'
+        'Failed to load rule from hub "continuedev/sentry-nextjs": Network error',
       );
     });
 
@@ -285,7 +286,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
       // "invalid-slug" doesn't contain "/" so it's treated as direct content, not a hub slug
       // Let's test with a slug that has wrong format but contains "/"
       await expect(processRule("invalid/slug/too/many/parts")).rejects.toThrow(
-        'Invalid hub slug format. Expected "owner/package", got: invalid/slug/too/many/parts'
+        'Invalid hub slug format. Expected "owner/package", got: invalid/slug/too/many/parts',
       );
     });
 
@@ -293,14 +294,14 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
       await expect(processRule("continuedev/empty-rule")).rejects.toThrow(
-        'Failed to load rule from hub "continuedev/empty-rule": No rule content found in downloaded zip file'
+        'Failed to load rule from hub "continuedev/empty-rule": No rule content found in downloaded zip file',
       );
     });
 
@@ -309,14 +310,14 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const zip = new JSZip();
       zip.folder("docs"); // Create a directory but no files
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
       await expect(processRule("continuedev/directory-only")).rejects.toThrow(
-        'Failed to load rule from hub "continuedev/directory-only": No rule content found in downloaded zip file'
+        'Failed to load rule from hub "continuedev/directory-only": No rule content found in downloaded zip file',
       );
     });
 
@@ -325,20 +326,20 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const zip = new JSZip();
       const mdContent = "# Main Rule\n\nThis is the markdown rule content.";
       const txtContent = "This is just a text file.";
-      
+
       zip.file("README.txt", txtContent);
       zip.file("rule.md", mdContent);
       zip.file("package.json", '{"name": "test"}');
-      
+
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
       const result = await processRule("continuedev/mixed-files");
-      
+
       expect(result).toBe(mdContent);
     });
 
@@ -347,33 +348,33 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const zip = new JSZip();
       const rule1Content = "# First Rule\n\nThis is the first rule.";
       const rule2Content = "# Second Rule\n\nThis is the second rule.";
-      
+
       zip.file("rule1.md", rule1Content);
       zip.file("rule2.md", rule2Content);
-      
+
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
       const result = await processRule("continuedev/multiple-rules");
-      
+
       // Should use the first markdown file found (alphabetically)
       expect(result).toBe(rule1Content);
     });
 
     it("should handle malformed zip files", async () => {
       const invalidZipBuffer = new ArrayBuffer(10);
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(invalidZipBuffer),
       } as Response);
 
       await expect(processRule("continuedev/corrupted-zip")).rejects.toThrow(
-        'Failed to load rule from hub "continuedev/corrupted-zip"'
+        'Failed to load rule from hub "continuedev/corrupted-zip"',
       );
     });
   });
@@ -384,7 +385,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
       const zip = new JSZip();
       zip.file("rule.md", "# Hub Rule");
       const zipBuffer = await zip.generateAsync({ type: "arraybuffer" });
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(zipBuffer),
@@ -406,7 +407,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
       // This would be treated as a file path, not a hub slug
       // since it starts with "."
       await expect(processRule("./owner/package")).rejects.toThrow(
-        'Failed to read rule file "./owner/package": Rule file not found'
+        'Failed to read rule file "./owner/package": Rule file not found',
       );
       expect(mockFetch).not.toHaveBeenCalled();
     });

@@ -1,28 +1,32 @@
-import { ServiceContainer } from './ServiceContainer.js';
+import { ServiceContainer } from "./ServiceContainer.js";
 
-import { initializeServices } from './index.js';
+import { initializeServices } from "./index.js";
 
-describe('Service Circular Dependencies', () => {
-  it('should not have circular dependencies in service setup', async () => {
+describe("Service Circular Dependencies", () => {
+  it("should not have circular dependencies in service setup", async () => {
     // Create a fresh container and initialize services to get real dependencies
     const testContainer = new ServiceContainer();
-    
+
     // Monkey patch the global serviceContainer to capture registrations
     const originalRegister = testContainer.register.bind(testContainer);
     const serviceDependencies: Record<string, string[]> = {};
-    
-    testContainer.register = function<T>(serviceName: string, factory: () => Promise<T>, deps: string[] = []) {
+
+    testContainer.register = function <T>(
+      serviceName: string,
+      factory: () => Promise<T>,
+      deps: string[] = [],
+    ) {
       serviceDependencies[serviceName] = [...deps]; // Capture actual dependencies
       return originalRegister(serviceName, factory, deps);
     };
 
     // Import and run the real service initialization to capture dependencies
-    const { serviceContainer } = await import('./index.js');
+    const { serviceContainer } = await import("./index.js");
     const originalContainer = serviceContainer;
-    
+
     // Temporarily replace the global container
     (global as any).serviceContainer = testContainer;
-    
+
     try {
       // This will register services with their real dependencies
       await initializeServices({ headless: true });
@@ -34,7 +38,9 @@ describe('Service Circular Dependencies', () => {
     }
 
     // Detect circular dependencies using topological sort
-    const detectCircularDependencies = (dependencies: Record<string, string[]>): string[] => {
+    const detectCircularDependencies = (
+      dependencies: Record<string, string[]>,
+    ): string[] => {
       const visited = new Set<string>();
       const recStack = new Set<string>();
       const cycle: string[] = [];
@@ -78,9 +84,11 @@ describe('Service Circular Dependencies', () => {
     };
 
     const circularDeps = detectCircularDependencies(serviceDependencies);
-    
+
     if (circularDeps.length > 0) {
-      throw new Error(`Circular dependency detected: ${circularDeps.join(' -> ')}`);
+      throw new Error(
+        `Circular dependency detected: ${circularDeps.join(" -> ")}`,
+      );
     }
 
     // Also verify that all services can be theoretically loaded without circular issues
@@ -89,9 +97,15 @@ describe('Service Circular Dependencies', () => {
       const maxIterations = Object.keys(serviceDependencies).length * 2;
       let iterations = 0;
 
-      while (resolved.size < Object.keys(serviceDependencies).length && iterations < maxIterations) {
+      while (
+        resolved.size < Object.keys(serviceDependencies).length &&
+        iterations < maxIterations
+      ) {
         for (const [service, deps] of Object.entries(serviceDependencies)) {
-          if (!resolved.has(service) && deps.every(dep => resolved.has(dep))) {
+          if (
+            !resolved.has(service) &&
+            deps.every((dep) => resolved.has(dep))
+          ) {
             resolved.add(service);
           }
         }

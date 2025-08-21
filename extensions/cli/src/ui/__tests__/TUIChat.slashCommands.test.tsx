@@ -14,9 +14,9 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Should show the slash character
     expect(frame).toContain("/");
-    
+
     // Mode-specific assertions
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
@@ -37,9 +37,9 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Should show the typed command
     expect(frame).toContain("/log");
-    
+
     // Mode-specific UI elements
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
@@ -52,9 +52,9 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Type /log and then tab
     stdin.write("/log");
-    
+
     await new Promise((resolve) => setTimeout(resolve, 50));
-    
+
     stdin.write("\t");
 
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -65,9 +65,9 @@ describe("TUIChat - Slash Commands Tests", () => {
     expect(frameAfterTab).toBeDefined();
     if (frameAfterTab) {
       expect(frameAfterTab.length).toBeGreaterThan(0);
-      
+
       // Mode-specific checks
-      if (mode === 'remote') {
+      if (mode === "remote") {
         expect(frameAfterTab).toContain("Remote Mode");
       } else {
         expect(frameAfterTab).not.toContain("Remote Mode");
@@ -87,9 +87,9 @@ describe("TUIChat - Slash Commands Tests", () => {
 
     // Should show the slash
     expect(frame).toContain("/");
-    
+
     // In remote mode, slash command menu shows immediately
-    if (mode === 'remote') {
+    if (mode === "remote") {
       expect(frame).toContain("/exit");
       expect(frame).toContain("Remote Mode");
     } else {

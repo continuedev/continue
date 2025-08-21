@@ -39,11 +39,13 @@ function isRetryableError(error: any): boolean {
   }
 
   // Check for premature close errors by message content
-  if (lower?.includes("premature close") || 
-      lower?.includes("premature end") ||
-      lower?.includes("connection reset") ||
-      lower?.includes("socket hang up") ||
-      lower?.includes("aborted")) {
+  if (
+    lower?.includes("premature close") ||
+    lower?.includes("premature end") ||
+    lower?.includes("connection reset") ||
+    lower?.includes("socket hang up") ||
+    lower?.includes("aborted")
+  ) {
     return true;
   }
 
@@ -52,7 +54,7 @@ function isRetryableError(error: any): boolean {
 
 function calculateDelay(
   attempt: number,
-  options: Required<ExponentialBackoffOptions>
+  options: Required<ExponentialBackoffOptions>,
 ): number {
   const baseDelay =
     options.initialDelay * Math.pow(options.backoffMultiplier, attempt);
@@ -270,7 +272,7 @@ describe("exponentialBackoff utilities", () => {
 
       // Mock Math.random to return 0.5 (middle of jitter range)
       const originalRandom = Math.random;
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       // With jitter factor of 0.5 + 0.5 * 0.5 = 0.75
       expect(calculateDelay(0, options)).toBe(750); // 1000 * 0.75

@@ -5,7 +5,11 @@ import { renderHook, act } from "@testing-library/react";
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 
-import { NavigationProvider, useNavigation, NavigationScreen } from "../NavigationContext.js";
+import {
+  NavigationProvider,
+  useNavigation,
+  NavigationScreen,
+} from "../NavigationContext.js";
 
 describe("NavigationContext", () => {
   // Helper to create wrapper
@@ -163,13 +167,9 @@ describe("NavigationContext", () => {
 
       it("closes from any screen back to chat", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: Array<"config" | "model" | "free-trial" | "login" | "mcp"> = [
-          "config", 
-          "model",
-          "free-trial",
-          "login",
-          "mcp",
-        ];
+        const screens: Array<
+          "config" | "model" | "free-trial" | "login" | "mcp"
+        > = ["config", "model", "free-trial", "login", "mcp"];
 
         screens.forEach((screen) => {
           act(() => {
@@ -257,8 +257,12 @@ describe("NavigationContext", () => {
           result.current.navigateTo("login", { different: "data" });
         });
 
-        expect(result.current.state.currentScreen).toBe(stateWithData.currentScreen);
-        expect(result.current.state.screenData).not.toBe(stateWithData.screenData);
+        expect(result.current.state.currentScreen).toBe(
+          stateWithData.currentScreen,
+        );
+        expect(result.current.state.screenData).not.toBe(
+          stateWithData.screenData,
+        );
       });
     });
 
@@ -269,9 +273,9 @@ describe("NavigationContext", () => {
 
         // Navigate to login with resolve callback
         act(() => {
-          result.current.navigateTo("login", { 
-            text: "Please log in", 
-            resolve: mockResolve 
+          result.current.navigateTo("login", {
+            text: "Please log in",
+            resolve: mockResolve,
           });
         });
 

@@ -79,12 +79,12 @@ describe("ensureOrganization with CLI organization slug", () => {
       const consoleInfoSpy = vi.spyOn(console, "info");
 
       await expect(
-        ensureOrganization(mockAuthConfig, true, "invalid-org")
+        ensureOrganization(mockAuthConfig, true, "invalid-org"),
       ).rejects.toThrow('Organization "invalid-org" not found');
 
       expect(consoleInfoSpy).toHaveBeenCalledWith(
         chalk.yellow("Available organizations:"),
-        expect.stringContaining("personal")
+        expect.stringContaining("personal"),
       );
     });
   });
@@ -99,13 +99,13 @@ describe("ensureOrganization with CLI organization slug", () => {
         });
 
       await expect(
-        ensureOrganization(mockAuthConfig, false, "org-one")
+        ensureOrganization(mockAuthConfig, false, "org-one"),
       ).rejects.toThrow("Process exit");
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         chalk.red(
-          "The --org flag is only supported in headless mode (with -p/--print flag)"
-        )
+          "The --org flag is only supported in headless mode (with -p/--print flag)",
+        ),
       );
       expect(processExitSpy).toHaveBeenCalledWith(1);
 
@@ -141,7 +141,7 @@ describe("ensureOrganization with CLI organization slug", () => {
       const result = await ensureOrganization(
         mockEnvAuthConfig,
         true,
-        "org-two"
+        "org-two",
       );
 
       expect(result).toMatchObject({
@@ -192,7 +192,7 @@ describe("ensureOrganization with CLI organization slug", () => {
       vi.mocked(getApiClient).mockReturnValue(apiClient as any);
 
       await expect(
-        ensureOrganization(mockAuthConfig, true, "org-one")
+        ensureOrganization(mockAuthConfig, true, "org-one"),
       ).rejects.toThrow("API Error");
     });
   });

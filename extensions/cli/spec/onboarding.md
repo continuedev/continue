@@ -8,6 +8,7 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
 
 1. If the --config flag is provided, load this config
 2. Otherwise, we will present the user with two options:
+
    - Log in with Continue: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
    - Enter your Anthropic API key: let them enter the key, and then either create a ~/.continue/config.yaml with the following contents OR update the existing config.yaml to add the model
 

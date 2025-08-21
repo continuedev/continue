@@ -206,7 +206,7 @@ describe("ToolPermissionManager", () => {
 
       // Start all requests
       const promises = toolCalls.map((toolCall) =>
-        manager.requestPermission(toolCall)
+        manager.requestPermission(toolCall),
       );
 
       // Get all pending request IDs
@@ -255,7 +255,7 @@ describe("ToolPermissionManager", () => {
 
       const promise = manager.requestPermission(toolCall);
       const requestDetails = manager.getPendingRequest(
-        manager.getPendingRequestIds()[0]
+        manager.getPendingRequestIds()[0],
       );
 
       expect(requestDetails?.toolCall.arguments).toEqual(toolCall.arguments);

@@ -29,7 +29,7 @@ describe("PosthogService Error Handling", () => {
 
     // This should not throw an error
     await expect(
-      posthogService.capture("test_event", { test: "data" })
+      posthogService.capture("test_event", { test: "data" }),
     ).resolves.toBeUndefined();
 
     // Verify the client capture was called
@@ -68,12 +68,12 @@ describe("PosthogService Error Handling", () => {
   it("should handle getClient errors gracefully", async () => {
     // Mock the getClient method to throw an error
     vi.spyOn(posthogService as any, "getClient").mockRejectedValue(
-      new Error("Failed to initialize PostHog client")
+      new Error("Failed to initialize PostHog client"),
     );
 
     // This should not throw an error
     await expect(
-      posthogService.capture("test_event", { test: "data" })
+      posthogService.capture("test_event", { test: "data" }),
     ).resolves.toBeUndefined();
   });
 

@@ -71,7 +71,9 @@ describe("formatArgs function", () => {
     });
 
     it("should handle special characters", () => {
-      expect(formatArgs({ path: "/special/chars!@#$%^&*()_+" })).toBe("/special/chars!@#$%^&*()_+");
+      expect(formatArgs({ path: "/special/chars!@#$%^&*()_+" })).toBe(
+        "/special/chars!@#$%^&*()_+",
+      );
       expect(formatArgs({ emoji: "🎉🎊✨" })).toBe("🎉🎊✨");
     });
   });

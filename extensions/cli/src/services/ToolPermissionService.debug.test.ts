@@ -40,9 +40,7 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
         } else {
           // Normal mode behavior depends on user config
           console.log(
-            `Normal mode - Write policy: ${
-              writePolicy?.permission || "none"
-            }`
+            `Normal mode - Write policy: ${writePolicy?.permission || "none"}`,
           );
         }
       });
@@ -52,17 +50,17 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
 
         // Find all policies that could affect Write tool
         const writeRelevantPolicies = policies.filter(
-          (p) => p.tool === "Write" || p.tool === "*"
+          (p) => p.tool === "Write" || p.tool === "*",
         );
 
         console.log(
-          `\n=== WRITE-RELEVANT POLICIES IN ${mode.toUpperCase()} MODE ===`
+          `\n=== WRITE-RELEVANT POLICIES IN ${mode.toUpperCase()} MODE ===`,
         );
         writeRelevantPolicies.forEach((policy, index) => {
           console.log(
             `${index + 1}. tool: "${policy.tool}", permission: "${
               policy.permission
-            }"`
+            }"`,
           );
         });
 
@@ -94,7 +92,7 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
       console.log(
         `${index + 1}. tool: "${policy.tool}", permission: "${
           policy.permission
-        }"`
+        }"`,
       );
     });
 
@@ -107,7 +105,7 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
       console.log(
         `${index + 1}. tool: "${policy.tool}", permission: "${
           policy.permission
-        }"`
+        }"`,
       );
     });
 

@@ -1,10 +1,4 @@
-import { 
-  subDays, 
-  subMonths, 
-  subYears,
-  startOfDay,
-  addHours 
-} from "date-fns";
+import { subDays, subMonths, subYears, startOfDay, addHours } from "date-fns";
 import { render } from "ink-testing-library";
 import React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
@@ -38,7 +32,7 @@ describe("SessionSelector", () => {
         firstUserMessage: "Today's session",
       },
       {
-        id: "session-2", 
+        id: "session-2",
         path: "/test/session-2.json",
         timestamp: yesterday,
         messageCount: 5,
@@ -47,7 +41,7 @@ describe("SessionSelector", () => {
       {
         id: "session-3",
         path: "/test/session-3.json",
-        timestamp: thisWeek, 
+        timestamp: thisWeek,
         messageCount: 8,
         firstUserMessage: "This week's session",
       },
@@ -56,7 +50,7 @@ describe("SessionSelector", () => {
         path: "/test/session-4.json",
         timestamp: thisYear,
         messageCount: 12,
-        firstUserMessage: "This year's session", 
+        firstUserMessage: "This year's session",
       },
       {
         id: "session-5",
@@ -68,35 +62,35 @@ describe("SessionSelector", () => {
     ];
 
     const { lastFrame } = render(
-      <SessionSelector 
+      <SessionSelector
         sessions={sessions}
         onSelect={mockOnSelect}
         onExit={mockOnExit}
-      />
+      />,
     );
 
     // Check that the output contains expected date formats
     expect(lastFrame()).toContain("2:00 PM"); // Today should show time
     expect(lastFrame()).toContain("yesterday"); // Yesterday should show "yesterday"
-    
+
     // This week should show day name (we can't predict exact day without knowing when test runs)
     // but we can check it doesn't contain "ago" which was the old format
     expect(lastFrame()).not.toContain("days ago");
-    
+
     // This year should show month/day format like "Oct 18" (no "ago")
     expect(lastFrame()).toMatch(/[A-Z][a-z]{2} \d{1,2}/); // MMM d format
-    
+
     // Last year should include the year
     expect(lastFrame()).toMatch(/[A-Z][a-z]{2} \d{1,2}, \d{4}/); // MMM d, yyyy format
   });
 
   it("handles empty sessions gracefully", () => {
     const { lastFrame } = render(
-      <SessionSelector 
+      <SessionSelector
         sessions={[]}
         onSelect={mockOnSelect}
         onExit={mockOnExit}
-      />
+      />,
     );
 
     expect(lastFrame()).toContain("No previous sessions found");
@@ -115,11 +109,11 @@ describe("SessionSelector", () => {
     ];
 
     const { lastFrame } = render(
-      <SessionSelector 
+      <SessionSelector
         sessions={sessions}
         onSelect={mockOnSelect}
         onExit={mockOnExit}
-      />
+      />,
     );
 
     expect(lastFrame()).toContain("(no messages)");

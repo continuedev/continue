@@ -128,15 +128,15 @@ describe("precedenceResolver", () => {
       });
 
       // Find the Write policy - should be from CLI (allow)
-      const writePolicy = policies.find(p => p.tool === "Write");
+      const writePolicy = policies.find((p) => p.tool === "Write");
       expect(writePolicy?.permission).toBe("allow");
 
       // Find the Search policy - should be from config
-      const searchPolicy = policies.find(p => p.tool === "Search");
+      const searchPolicy = policies.find((p) => p.tool === "Search");
       expect(searchPolicy?.permission).toBe("ask");
 
       // Should still have default policies
-      const readPolicy = policies.find(p => p.tool === "Read");
+      const readPolicy = policies.find((p) => p.tool === "Read");
       expect(readPolicy).toBeDefined();
     });
 
@@ -178,7 +178,7 @@ describe("precedenceResolver", () => {
 
         // Config policy should override default
         expect(policies[0]).toEqual({ tool: "Bash", permission: "allow" });
-        // Default policies should follow  
+        // Default policies should follow
         expect(policies.slice(1)).toEqual(DEFAULT_TOOL_POLICIES);
       });
     });

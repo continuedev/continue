@@ -26,7 +26,6 @@ import { loadAuthConfig, isAuthenticatedConfig } from "../auth/workos.js";
 
 import { PosthogService } from "./posthogService.js";
 
-
 describe("PosthogService", () => {
   let tempDir: string;
 
@@ -90,7 +89,9 @@ describe("PosthogService", () => {
     it("should use machine id when auth config is environment-based", () => {
       const mockMachineId = "test-machine-id";
 
-      vi.mocked(loadAuthConfig).mockReturnValue({ accessToken: "token" } as any);
+      vi.mocked(loadAuthConfig).mockReturnValue({
+        accessToken: "token",
+      } as any);
       vi.mocked(isAuthenticatedConfig).mockReturnValue(false);
       vi.mocked(machineIdSync).mockReturnValue(mockMachineId);
 

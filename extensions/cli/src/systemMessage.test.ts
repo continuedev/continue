@@ -7,13 +7,15 @@ const { constructSystemMessage } = await import("./systemMessage.js");
 // Mock the service container to avoid "No factory registered for service 'config'" error
 vi.mock("./services/ServiceContainer.js", () => ({
   serviceContainer: {
-    get: vi.fn().mockResolvedValue({ config: { rules: [] } })
-  }
+    get: vi.fn().mockResolvedValue({ config: { rules: [] } }),
+  },
 }));
 
 // Mock processRule to avoid file system operations in tests
 vi.mock("./args.js", () => ({
-  processRule: vi.fn().mockImplementation((rule: string) => Promise.resolve(rule))
+  processRule: vi
+    .fn()
+    .mockImplementation((rule: string) => Promise.resolve(rule)),
 }));
 
 describe("constructSystemMessage", () => {
@@ -124,7 +126,9 @@ Rule 3: Third rule`;
     expect(result).toContain("You are an agent in the Continue CLI");
     expect(result).toContain("IMPORTANT: You are running in headless mode");
     expect(result).toContain("Provide ONLY your final answer");
-    expect(result).toContain("Do not include explanations, reasoning, or additional commentary");
+    expect(result).toContain(
+      "Do not include explanations, reasoning, or additional commentary",
+    );
   });
 
   it("should not add headless mode instructions when headless is false", async () => {

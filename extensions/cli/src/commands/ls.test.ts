@@ -32,7 +32,7 @@ vi.mock("./chat.js", () => ({
 
 describe("listSessionsCommand", () => {
   const mockListSessions = vi.mocked(sessionModule.listSessions);
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -51,7 +51,7 @@ describe("listSessionsCommand", () => {
         firstUserMessage: "Hello world",
       },
       {
-        id: "session-2", 
+        id: "session-2",
         path: "/path/to/session2.json",
         timestamp: new Date("2023-01-01T09:00:00Z"),
         messageCount: 3,
@@ -66,22 +66,26 @@ describe("listSessionsCommand", () => {
     await listSessionsCommand({ format: "json" });
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      JSON.stringify({
-        sessions: [
-          {
-            id: "session-1",
-            timestamp: "2023-01-01T10:00:00.000Z",
-            messageCount: 5,
-            firstUserMessage: "Hello world",
-          },
-          {
-            id: "session-2",
-            timestamp: "2023-01-01T09:00:00.000Z", 
-            messageCount: 3,
-            firstUserMessage: "Test message",
-          },
-        ],
-      }, null, 2)
+      JSON.stringify(
+        {
+          sessions: [
+            {
+              id: "session-1",
+              timestamp: "2023-01-01T10:00:00.000Z",
+              messageCount: 5,
+              firstUserMessage: "Hello world",
+            },
+            {
+              id: "session-2",
+              timestamp: "2023-01-01T09:00:00.000Z",
+              messageCount: 3,
+              firstUserMessage: "Test message",
+            },
+          ],
+        },
+        null,
+        2,
+      ),
     );
 
     consoleSpy.mockRestore();
@@ -107,7 +111,7 @@ describe("listSessionsCommand", () => {
     await listSessionsCommand({ format: "json" });
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      JSON.stringify({ sessions: [] }, null, 2)
+      JSON.stringify({ sessions: [] }, null, 2),
     );
 
     consoleSpy.mockRestore();
@@ -121,7 +125,7 @@ describe("listSessionsCommand", () => {
     await listSessionsCommand({});
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      "No previous sessions found. Start a new conversation with: cn"
+      "No previous sessions found. Start a new conversation with: cn",
     );
 
     consoleSpy.mockRestore();

@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import {
-  getGitHubActionsRepoUrl,
-  isGitHubActions,
-} from "./git.js";
+import { getGitHubActionsRepoUrl, isGitHubActions } from "./git.js";
 
 describe("git utilities - GitHub Actions detection", () => {
   beforeEach(() => {
@@ -42,7 +39,7 @@ describe("git utilities - GitHub Actions detection", () => {
     it("should return GitHub URL with default server", () => {
       process.env.GITHUB_ACTIONS = "true";
       process.env.GITHUB_REPOSITORY = "owner/repo";
-      
+
       expect(getGitHubActionsRepoUrl()).toBe("https://github.com/owner/repo");
     });
 
@@ -50,8 +47,10 @@ describe("git utilities - GitHub Actions detection", () => {
       process.env.GITHUB_ACTIONS = "true";
       process.env.GITHUB_REPOSITORY = "owner/repo";
       process.env.GITHUB_SERVER_URL = "https://github.enterprise.com";
-      
-      expect(getGitHubActionsRepoUrl()).toBe("https://github.enterprise.com/owner/repo");
+
+      expect(getGitHubActionsRepoUrl()).toBe(
+        "https://github.enterprise.com/owner/repo",
+      );
     });
   });
 
@@ -59,7 +58,7 @@ describe("git utilities - GitHub Actions detection", () => {
     it("should prioritize GitHub Actions environment variables", () => {
       process.env.GITHUB_ACTIONS = "true";
       process.env.GITHUB_REPOSITORY = "owner/repo";
-      
+
       // Since we can't easily mock git commands, we'll rely on the fact that
       // GitHub Actions detection should take priority and return immediately
       const result = getGitHubActionsRepoUrl();
@@ -70,7 +69,7 @@ describe("git utilities - GitHub Actions detection", () => {
       process.env.GITHUB_ACTIONS = "true";
       process.env.GITHUB_REPOSITORY = "enterprise/repo";
       process.env.GITHUB_SERVER_URL = "https://git.company.com";
-      
+
       const result = getGitHubActionsRepoUrl();
       expect(result).toBe("https://git.company.com/enterprise/repo");
     });

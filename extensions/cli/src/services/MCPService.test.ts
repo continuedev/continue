@@ -43,7 +43,7 @@ describe("MCPService", () => {
 
   afterEach(async () => {
     vi.clearAllMocks();
-    await mcpService.cleanup()
+    await mcpService.cleanup();
   });
 
   describe("initialization", () => {
@@ -86,7 +86,7 @@ describe("MCPService", () => {
       const firstStatus = mcpService.getOverallStatus();
       expect(firstStatus.status).toBe("connected");
       expect(firstStatus.hasWarnings).toBe(false);
-      await mcpService.cleanup()
+      await mcpService.cleanup();
       const secondStatus = mcpService.getOverallStatus();
       expect(secondStatus.status).toBe("idle");
     });
@@ -107,14 +107,13 @@ describe("MCPService", () => {
 
     it("should handle server not found error", async () => {
       await expect(mcpService.restartServer("nonexistent")).rejects.toThrow(
-        "Server nonexistent not found in configuration"
+        "Server nonexistent not found in configuration",
       );
     });
 
     it("should handle stop individual server", async () => {
       await expect(mcpService.stopServer("test-server")).resolves.not.toThrow();
     });
-
   });
 
   describe("tools and prompts", () => {
@@ -129,7 +128,7 @@ describe("MCPService", () => {
 
     it("should throw error for unknown tool", async () => {
       await expect(mcpService.runTool("unknown-tool", {})).rejects.toThrow(
-        "Tool unknown-tool not found"
+        "Tool unknown-tool not found",
       );
     });
   });
@@ -137,10 +136,14 @@ describe("MCPService", () => {
   describe("shutdown", () => {
     it("should handle shutdown gracefully", async () => {
       await mcpService.initialize(mockAssistant);
-      await mcpService.cleanup()
+      await mcpService.cleanup();
 
       const state = mcpService.getState();
-      expect(state.mcpService?.getState().connections.filter(c => c.status === "connected")).toHaveLength(0)
+      expect(
+        state.mcpService
+          ?.getState()
+          .connections.filter((c) => c.status === "connected"),
+      ).toHaveLength(0);
     });
 
     it("should handle multiple shutdown calls", async () => {

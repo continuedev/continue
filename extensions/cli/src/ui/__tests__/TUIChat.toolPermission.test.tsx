@@ -26,7 +26,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-123"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -58,7 +58,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-123"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -72,7 +72,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       "test-request-123",
       true,
       false,
-      false
+      false,
     );
   });
 
@@ -87,7 +87,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-456"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -101,7 +101,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       "test-request-456",
       false,
       false,
-      true
+      true,
     );
   });
 
@@ -116,7 +116,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-789"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -130,7 +130,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       "test-request-789",
       false,
       false,
-      true
+      true,
     );
   });
 
@@ -145,7 +145,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-123"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -162,7 +162,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       "test-request-123",
       true,
       undefined,
-      undefined
+      undefined,
     );
   });
 
@@ -177,7 +177,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-policy"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -192,7 +192,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       "test-request-policy",
       true,
       true,
-      false
+      false,
     );
   });
 
@@ -209,7 +209,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-stop"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -217,7 +217,7 @@ describe("TUIChat - Tool Permission Tests", () => {
     // Verify the new option exists in the rendered output
     const frame = lastFrame();
     expect(frame).toContain("No, and tell Continue what to do differently");
-    
+
     // Verify all 3 options are present
     expect(frame).toContain("Continue");
     expect(frame).toContain("Continue + don't ask again");
@@ -240,7 +240,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-escape"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -253,9 +253,9 @@ describe("TUIChat - Tool Permission Tests", () => {
     // Verify the escape key triggers the stopStream behavior
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-escape",
-      false,        // approved = false (rejection)
-      false,        // createPolicy = false
-      true          // stopStream = true (this is the new behavior)
+      false, // approved = false (rejection)
+      false, // createPolicy = false
+      true, // stopStream = true (this is the new behavior)
     );
   });
 
@@ -272,7 +272,7 @@ describe("TUIChat - Tool Permission Tests", () => {
         }}
         requestId="test-request-n-key"
         onResponse={handleResponse}
-      />
+      />,
     );
 
     await vi.advanceTimersByTimeAsync(50);
@@ -285,24 +285,22 @@ describe("TUIChat - Tool Permission Tests", () => {
     // Verify the 'n' key triggers the stopStream behavior
     expect(handleResponse).toHaveBeenCalledWith(
       "test-request-n-key",
-      false,        // approved = false (rejection)
-      false,        // createPolicy = false
-      true          // stopStream = true (this is the new behavior)
+      false, // approved = false (rejection)
+      false, // createPolicy = false
+      true, // stopStream = true (this is the new behavior)
     );
   });
 
   it("shows tool result with red dot and 'Cancelled by user' message", async () => {
     // Import the components we need for this test
-    const { ToolResultSummary } = await import(
-      "../ToolResultSummary.js"
-    );
+    const { ToolResultSummary } = await import("../ToolResultSummary.js");
     const { MemoizedMessage } = await import(
       "../components/MemoizedMessage.js"
     );
 
     // Test the ToolResultSummary component directly
     const { lastFrame: summaryFrame } = render(
-      <ToolResultSummary toolName="Edit" content="Permission denied by user" />
+      <ToolResultSummary toolName="Edit" content="Permission denied by user" />,
     );
 
     const summary = summaryFrame();
@@ -318,7 +316,7 @@ describe("TUIChat - Tool Permission Tests", () => {
     };
 
     const { lastFrame: messageFrame } = render(
-      <MemoizedMessage message={message} index={0} />
+      <MemoizedMessage message={message} index={0} />,
     );
 
     await vi.advanceTimersByTimeAsync(100);
