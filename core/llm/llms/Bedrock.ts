@@ -2,8 +2,8 @@ import {
   BedrockRuntimeClient,
   ContentBlock,
   ConversationRole,
-  ConverseCommand,
   ConverseStreamCommand,
+  ConverseStreamCommandOutput,
   ImageFormat,
   InvokeModelCommand,
   Message,
@@ -91,33 +91,47 @@ class Bedrock extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    if (options.stream !== false) {
-      yield* this._streamChatStreaming(messages, signal, options);
-    } else {
-      yield* this._streamChatNonStreaming(messages, signal, options);
-    }
-  }
+    const credentials = await this._getCredentials();
+    const client = new BedrockRuntimeClient({
+      region: this.region,
+      endpoint: this.apiBase,
+      credentials: {
+        accessKeyId: credentials.accessKeyId,
+        secretAccessKey: credentials.secretAccessKey,
+        sessionToken: credentials.sessionToken || "",
+      },
+    });
 
-  /**
-   * Handles streaming chat using ConverseStreamCommand
-   */
-  private async *_streamChatStreaming(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
-  ): AsyncGenerator<ChatMessage> {
-    const client = await this._createBedrockClient();
-    this._addClientMiddleware(client);
+    let config_headers =
+      this.requestOptions && this.requestOptions.headers
+        ? this.requestOptions.headers
+        : {};
+    // AWS SigV4 requires strict canonicalization of headers.
+    // DO NOT USE "_" in your header name. It will return an error like below.
+    // "The request signature we calculated does not match the signature you provided."
+
+    client.middlewareStack.add(
+      (next) => async (args: any) => {
+        args.request.headers = {
+          ...args.request.headers,
+          ...config_headers,
+        };
+        return next(args);
+      },
+      {
+        step: "build",
+      },
+    );
 
     const input = this._generateConverseInput(messages, {
       ...options,
       stream: true,
     });
-
     const command = new ConverseStreamCommand(input);
-    const response = await client.send(command, {
+
+    const response = (await client.send(command, {
       abortSignal: signal,
-    });
+    })) as ConverseStreamCommandOutput;
 
     if (!response?.stream) {
       throw new Error("No stream received from Bedrock API");
@@ -144,17 +158,17 @@ class Bedrock extends BaseLLM {
               role: "assistant",
               content: chunk.contentBlockDelta.delta.text,
             };
-            continue; // Continue parsing the stream
+            continue;
           }
 
-          // Handle reasoning text content
+          // Handle text content
           if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
             yield {
               role: "thinking",
               content: (chunk.contentBlockDelta.delta as any).reasoningContent
                 .text,
             };
-            continue; // Continue parsing the stream
+            continue;
           }
 
           // Handle signature for thinking
@@ -164,7 +178,7 @@ class Bedrock extends BaseLLM {
               content: "",
               signature: delta.reasoningContent.signature,
             };
-            continue; // Continue parsing the stream
+            continue;
           }
 
           // Handle redacted thinking
@@ -174,7 +188,7 @@ class Bedrock extends BaseLLM {
               content: "",
               redactedThinking: delta.redactedReasoning.data,
             };
-            continue; // Continue parsing the stream
+            continue;
           }
 
           if (
@@ -187,7 +201,7 @@ class Bedrock extends BaseLLM {
             }
             this._currentToolResponse.input +=
               chunk.contentBlockDelta.delta.toolUse.input;
-            continue; // Continue parsing the stream
+            continue;
           }
         }
 
@@ -199,7 +213,7 @@ class Bedrock extends BaseLLM {
               content: "",
               redactedThinking: start.redactedReasoning.data,
             };
-            continue; // Continue parsing the stream
+            continue;
           }
 
           const toolUse = chunk.contentBlockStart.start.toolUse;
@@ -210,7 +224,7 @@ class Bedrock extends BaseLLM {
               input: "",
             };
           }
-          continue; // Continue parsing the stream
+          continue;
         }
 
         if (chunk.contentBlockStop) {
@@ -231,7 +245,7 @@ class Bedrock extends BaseLLM {
             };
             this._currentToolResponse = null;
           }
-          continue; // Continue parsing the stream
+          continue;
         }
       }
     } catch (error: unknown) {
@@ -239,133 +253,6 @@ class Bedrock extends BaseLLM {
       this._currentToolResponse = null;
       throw error;
     }
-  }
-
-  /**
-   * Handles non-streaming chat using ConverseCommand
-   */
-  private async *_streamChatNonStreaming(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions,
-  ): AsyncGenerator<ChatMessage> {
-    const client = await this._createBedrockClient();
-    this._addClientMiddleware(client);
-
-    const input = this._generateConverseInput(messages, {
-      ...options,
-      stream: false,
-    });
-
-    const command = new ConverseCommand(input);
-    const response = await client.send(command, {
-      abortSignal: signal,
-    });
-
-    // Reset cache metrics for new request
-    this._promptCachingMetrics = {
-      cacheReadInputTokens: 0,
-      cacheWriteInputTokens: 0,
-    };
-
-    try {
-      if (response.output?.message?.content) {
-        for (const contentBlock of response.output.message.content) {
-          if (contentBlock.text) {
-            yield {
-              role: "assistant",
-              content: contentBlock.text,
-            };
-          }
-
-          if ((contentBlock as any).reasoningContent) {
-            const reasoningContent = (contentBlock as any).reasoningContent;
-            if (reasoningContent.reasoningText) {
-              yield {
-                role: "thinking",
-                content: reasoningContent.reasoningText.text || "",
-                signature: reasoningContent.reasoningText.signature,
-              };
-            }
-            if (reasoningContent.redactedContent) {
-              yield {
-                role: "thinking",
-                content: "",
-                redactedThinking: reasoningContent.redactedContent,
-              };
-            }
-          }
-
-          if (contentBlock.toolUse) {
-            yield {
-              role: "assistant",
-              content: "",
-              toolCalls: [
-                {
-                  id: contentBlock.toolUse.toolUseId,
-                  type: "function",
-                  function: {
-                    name: contentBlock.toolUse.name,
-                    arguments: JSON.stringify(contentBlock.toolUse.input || {}),
-                  },
-                },
-              ],
-            };
-          }
-        }
-      }
-
-      // Handle usage metadata if available
-      if (response.usage) {
-        console.log(`${JSON.stringify(response.usage)}`);
-      }
-    } catch (error: unknown) {
-      // Clean up state and let the original error bubble up to the retry decorator
-      this._currentToolResponse = null;
-      throw error;
-    }
-  }
-
-  /**
-   * Creates and configures a Bedrock Runtime Client
-   */
-  private async _createBedrockClient(): Promise<BedrockRuntimeClient> {
-    const credentials = await this._getCredentials();
-    return new BedrockRuntimeClient({
-      region: this.region,
-      endpoint: this.apiBase,
-      credentials: {
-        accessKeyId: credentials.accessKeyId,
-        secretAccessKey: credentials.secretAccessKey,
-        sessionToken: credentials.sessionToken || "",
-      },
-    });
-  }
-
-  /**
-   * Adds middleware to the Bedrock client for custom headers
-   */
-  private _addClientMiddleware(client: BedrockRuntimeClient): void {
-    const config_headers =
-      this.requestOptions && this.requestOptions.headers
-        ? this.requestOptions.headers
-        : {};
-    // AWS SigV4 requires strict canonicalization of headers.
-    // DO NOT USE "_" in your header name. It will return an error like below.
-    // "The request signature we calculated does not match the signature you provided."
-
-    client.middlewareStack.add(
-      (next) => async (args: any) => {
-        args.request.headers = {
-          ...args.request.headers,
-          ...config_headers,
-        };
-        return next(args);
-      },
-      {
-        step: "build",
-      },
-    );
   }
 
   /**
