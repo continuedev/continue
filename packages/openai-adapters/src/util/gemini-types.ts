@@ -146,7 +146,7 @@ export function convertOpenAIToolToGeminiFunction(
   tool: ChatCompletionTool,
 ): GeminiToolFunctionDeclaration {
   // Type guard for function tools
-  if (tool.type !== "function" || !("function" in tool)) {
+  if (tool.type !== "function" || !tool.function) {
     throw new Error(`Unsupported tool type: ${tool.type}`);
   }
 
