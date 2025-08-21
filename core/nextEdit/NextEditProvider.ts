@@ -714,10 +714,12 @@ export class NextEditProvider {
     //   msg.content
     //     .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
     //     .replace(/\n$/, "") ?? msg.content;
-    const nextCompletion = msg.content.slice(
-      msg.content.indexOf("\`\`\`\n") + "\'\'\'\n".length,
-      msg.content.lastIndexOf("\n\n\`\`\`"),
-    );
+    const nextCompletion = modelName.includes(NEXT_EDIT_MODELS.MERCURY_CODER)
+      ? msg.content.slice(
+          msg.content.indexOf("\`\`\`\n") + "\'\'\'\n".length,
+          msg.content.lastIndexOf("\n\n\`\`\`"),
+        )
+      : msg.content;
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       return await this._handlePartialFileDiff(
