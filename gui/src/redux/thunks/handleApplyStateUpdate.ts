@@ -140,7 +140,7 @@ export const handleEditToolApplyError = createAsyncThunk<
               icon: "problems",
               name: "Apply Error",
               description: "Failed to apply changes",
-              content: `Error editing file: failed to apply changes to file.\n\nPlease try again with correct args or notify the user and request guidance.`,
+              content: `Error editing file: failed to apply changes to file.\n\nPlease try again with correct args or notify the user and request further instructions.`,
               hidden: false,
             },
           ],

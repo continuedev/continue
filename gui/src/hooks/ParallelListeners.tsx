@@ -41,9 +41,7 @@ function ParallelListeners() {
     (store) => store.profiles.selectedProfileId,
   );
   const hasDoneInitialConfigLoad = useRef(false);
-  const autoAcceptEditToolDiffs = useAppSelector(
-    (store) => store.config.config.ui?.autoAcceptEditToolDiffs,
-  );
+
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
 
