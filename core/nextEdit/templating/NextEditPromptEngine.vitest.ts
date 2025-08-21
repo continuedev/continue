@@ -14,6 +14,8 @@ import {
   MERCURY_EDIT_DIFF_HISTORY_OPEN,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
   MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN,
 } from "../constants";
 import {
   renderDefaultSystemPrompt,
@@ -31,7 +33,7 @@ describe("NextEditPromptEngine", () => {
 
     beforeEach(() => {
       mercuryHelper = {
-        modelName: "inception/mercury-coder-nextedit" as NEXT_EDIT_MODELS,
+        modelName: "inception/mercury-coder" as NEXT_EDIT_MODELS,
         fileContents: "function test() {\n  const a = 1;\n  return a;\n}",
         pos: { line: 1, character: 12 } as Position,
         lang: { name: "typescript" },
@@ -63,7 +65,7 @@ describe("NextEditPromptEngine", () => {
       };
     });
 
-    it("should render mercury-coder-nextedit prompt correctly", async () => {
+    it("should render mercury-coder prompt correctly", async () => {
       const result = await renderPrompt(mercuryHelper, ctx);
 
       expect(result).toHaveProperty("prompt");
@@ -72,6 +74,8 @@ describe("NextEditPromptEngine", () => {
       const content = result.prompt.content;
       expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN);
       expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE);
+      expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN);
+      expect(content).toContain(MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE);
       expect(content).toContain(MERCURY_CURRENT_FILE_CONTENT_OPEN);
       expect(content).toContain(MERCURY_CURRENT_FILE_CONTENT_CLOSE);
       expect(content).toContain(MERCURY_EDIT_DIFF_HISTORY_OPEN);
