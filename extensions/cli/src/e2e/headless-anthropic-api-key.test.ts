@@ -87,7 +87,7 @@ models:
     const result = await runCLI(context, {
       args: ["-p", "test prompt"],
       env: {
-        ANTHROPIC_API_KEY: "sk-test-invalid-key-format",
+        ANTHROPIC_API_KEY: "TEST-test-invalid-key-format",
         CONTINUE_GLOBAL_DIR: context.testDir + "/.continue"
       },
       expectError: true,
@@ -109,7 +109,7 @@ models:
     if (configExists) {
       const configContent = await fs.readFile(configPath, "utf-8");
       expect(configContent).toContain("anthropic/claude-4-sonnet");
-      expect(configContent).toContain("ANTHROPIC_API_KEY: sk-test-invalid-key-format");
+      expect(configContent).toContain("ANTHROPIC_API_KEY: TEST-test-invalid-key-format");
     }
   }, 20000);
 });

@@ -270,7 +270,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
         <Text></Text>
         {errorMessage && <Text color="red">{errorMessage}</Text>}
         <Text color="gray">
-          Type your API key and press Enter (must start with 'sk-ant-')
+          Type your API key and press Enter (must start with 'TEST-ant-')
         </Text>
       </Box>
     );

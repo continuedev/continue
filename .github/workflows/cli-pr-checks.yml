@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'extensions/cli/**'
+      - "extensions/cli/**"
 
 permissions:
   contents: read
@@ -110,7 +110,7 @@ jobs:
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
-  require-all-checks-to-pass:
+  require-all-checks-to-pass-cli:
     if: always()
     runs-on: ubuntu-latest
     needs:
