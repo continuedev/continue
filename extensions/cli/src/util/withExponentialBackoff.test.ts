@@ -20,7 +20,7 @@ describe("withExponentialBackoff", () => {
 
   it("should successfully yield all values from generator", async () => {
     const mockData = ["chunk1", "chunk2", "chunk3"];
-    const generatorFactory = vi.fn(async () => {
+    const generatorFactory = vi.fn(async (retryAbortSignal: AbortSignal) => {
       return (async function* () {
         for (const chunk of mockData) {
           yield chunk;
@@ -44,7 +44,7 @@ describe("withExponentialBackoff", () => {
 
   it("should retry on retryable errors during generator creation", async () => {
     let callCount = 0;
-    const generatorFactory = vi.fn(async () => {
+    const generatorFactory = vi.fn(async (retryAbortSignal: AbortSignal) => {
       callCount++;
       if (callCount === 1) {
         const error = new Error("Connection reset");
@@ -75,7 +75,7 @@ describe("withExponentialBackoff", () => {
   });
 
   it("should not retry on non-retryable errors", async () => {
-    const generatorFactory = vi.fn(async () => {
+    const generatorFactory = vi.fn(async (retryAbortSignal: AbortSignal) => {
       const error = new Error("Bad request");
       (error as any).status = 400;
       throw error;
@@ -96,7 +96,7 @@ describe("withExponentialBackoff", () => {
   });
 
   it("should handle abort signal", async () => {
-    const generatorFactory = vi.fn(async () => {
+    const generatorFactory = vi.fn(async (retryAbortSignal: AbortSignal) => {
       return (async function* () {
         yield "should-not-yield";
       })();
