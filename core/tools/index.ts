@@ -12,6 +12,7 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
+  toolDefinitions.singleFindAndReplaceTool,
 ];
 
 export const getConfigDependentToolDefinitions = (
@@ -40,7 +41,6 @@ export const getConfigDependentToolDefinitions = (
   if (modelName?.includes("claude") || modelName?.includes("gpt-5")) {
     tools.push(toolDefinitions.multiEditTool);
   } else {
-    tools.push(toolDefinitions.singleFindAndReplaceTool);
     tools.push(toolDefinitions.editFileTool);
   }
 
