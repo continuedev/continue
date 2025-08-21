@@ -102,7 +102,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const handleClear = () => {
     setShowIntroMessage(true);
     // Trigger static content refresh by incrementing the trigger
-    setStaticRefreshTrigger(prev => prev + 1);
+    setStaticRefreshTrigger((prev) => prev + 1);
   };
 
   const {

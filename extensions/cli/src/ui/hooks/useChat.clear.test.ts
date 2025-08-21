@@ -81,7 +81,10 @@ describe("useChat clear command", () => {
   });
 
   it("should preserve system message when clearing", () => {
-    const systemMessage: ChatCompletionMessageParam = { role: "system", content: "Custom system message" };
+    const systemMessage: ChatCompletionMessageParam = {
+      role: "system",
+      content: "Custom system message",
+    };
     const chatHistory: ChatCompletionMessageParam[] = [
       systemMessage,
       { role: "user", content: "Test message" },
