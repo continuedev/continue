@@ -111,6 +111,15 @@ export function useChat({
     return null;
   });
 
+  // Clean up abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortController && !abortController.signal.aborted) {
+        abortController.abort();
+      }
+    };
+  }, [abortController]);
+
   // Remote mode polling
   useEffect(() => {
     if (!isRemoteMode || !remoteUrl || process.env.NODE_ENV === "test") return;
@@ -157,6 +166,92 @@ export function useChat({
       handleUserMessage(initialPrompt);
     }
   }, [initialPrompt, isChatHistoryInitialized]);
+
+  const executeStreamingResponse = async (
+    newHistory: ChatCompletionMessageParam[],
+    currentCompactionIndex: number | null,
+    message: string,
+  ) => {
+    // Clean up previous abort controller if it exists
+    if (abortController && !abortController.signal.aborted) {
+      abortController.abort();
+    }
+
+    // Start streaming response
+    const controller = new AbortController();
+    setAbortController(controller);
+    setIsWaitingForResponse(true);
+    setResponseStartTime(Date.now());
+    setInputMode(false);
+    logger.debug("Starting chat response stream", {
+      messageLength: message.length,
+      historyLength: newHistory.length,
+    });
+
+    try {
+      const currentStreamingMessageRef = {
+        current: null as DisplayMessage | null,
+      };
+      const streamCallbacks = createStreamCallbacks(
+        { setMessages, setActivePermissionRequest },
+        currentStreamingMessageRef,
+      );
+
+      // Execute streaming chat response
+      await executeStreaming({
+        newHistory,
+        model,
+        llmApi,
+        controller,
+        streamCallbacks,
+        currentCompactionIndex,
+      });
+
+      if (
+        currentStreamingMessageRef.current &&
+        currentStreamingMessageRef.current.content
+      ) {
+        const messageContent = currentStreamingMessageRef.current.content;
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: messageContent,
+            isStreaming: false,
+          },
+        ]);
+      }
+
+      // Update the chat history with the complete conversation after streaming
+      setChatHistory(newHistory);
+      logger.debug("Chat history updated", {
+        finalHistoryLength: newHistory.length,
+      });
+
+      // Save the updated history to session
+      logger.debug("Saving session", { historyLength: newHistory.length });
+      saveSession(newHistory);
+      logger.debug("Session saved");
+    } catch (error: any) {
+      const errorMessage = `Error: ${formatError(error)}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: errorMessage,
+          messageType: "system" as const,
+        },
+      ]);
+    } finally {
+      // Stop active time tracking
+      telemetryService.stopActiveTime();
+
+      setAbortController(null);
+      setIsWaitingForResponse(false);
+      setResponseStartTime(null);
+      setInputMode(true);
+    }
+  };
 
   const handleUserMessage = async (message: string) => {
     // Handle special commands
@@ -247,80 +342,8 @@ export function useChat({
     setChatHistory(newHistory);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
 
-    // Start streaming response
-    const controller = new AbortController();
-    setAbortController(controller);
-    setIsWaitingForResponse(true);
-    setResponseStartTime(Date.now());
-    setInputMode(false);
-    logger.debug("Starting chat response stream", {
-      messageLength: message.length,
-      historyLength: newHistory.length,
-    });
-
-    try {
-      const currentStreamingMessageRef = {
-        current: null as DisplayMessage | null,
-      };
-      const streamCallbacks = createStreamCallbacks(
-        { setMessages, setActivePermissionRequest },
-        currentStreamingMessageRef,
-      );
-
-      // Execute streaming chat response
-      await executeStreaming({
-        newHistory,
-        model,
-        llmApi,
-        controller,
-        streamCallbacks,
-        currentCompactionIndex,
-      });
-
-      if (
-        currentStreamingMessageRef.current &&
-        currentStreamingMessageRef.current.content
-      ) {
-        const messageContent = currentStreamingMessageRef.current.content;
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: messageContent,
-            isStreaming: false,
-          },
-        ]);
-      }
-
-      // Update the chat history with the complete conversation after streaming
-      setChatHistory(newHistory);
-      logger.debug("Chat history updated", {
-        finalHistoryLength: newHistory.length,
-      });
-
-      // Save the updated history to session
-      logger.debug("Saving session", { historyLength: newHistory.length });
-      saveSession(newHistory);
-      logger.debug("Session saved");
-    } catch (error: any) {
-      const errorMessage = `Error: ${formatError(error)}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: errorMessage,
-          messageType: "system" as const,
-        },
-      ]);
-    } finally {
-      // Stop active time tracking
-      telemetryService.stopActiveTime();
-
-      setAbortController(null);
-      setIsWaitingForResponse(false);
-      setResponseStartTime(null);
-      setInputMode(true);
-    }
+    // Execute the streaming response
+    await executeStreamingResponse(newHistory, currentCompactionIndex, message);
   };
 
   const handleInterrupt = () => {

@@ -192,7 +192,9 @@ export async function chatCompletionStreamWithBackoff(
  * If the generator throws an error during iteration, it will retry the entire generator.
  */
 export async function* withExponentialBackoff<T>(
-  generatorFactory: () => Promise<AsyncGenerator<T>>,
+  generatorFactory: (
+    retryAbortSignal: AbortSignal,
+  ) => Promise<AsyncGenerator<T>>,
   abortSignal: AbortSignal,
   options: ExponentialBackoffOptions = {},
 ): AsyncGenerator<T> {
@@ -200,7 +202,20 @@ export async function* withExponentialBackoff<T>(
   let lastError: any;
 
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
-    const yieldedValues: T[] = [];
+    // Create a new AbortController for this retry attempt
+    // This prevents accumulating listeners on the original signal
+    const retryAbortController = new AbortController();
+
+    // Forward abort from the original signal to the retry signal
+    const abortListener = () => {
+      retryAbortController.abort();
+    };
+
+    if (abortSignal.aborted) {
+      retryAbortController.abort();
+    } else if (typeof abortSignal.addEventListener === "function") {
+      abortSignal.addEventListener("abort", abortListener);
+    }
 
     try {
       // Check if we should abort before creating the generator
@@ -208,7 +223,7 @@ export async function* withExponentialBackoff<T>(
         throw new Error("Request aborted");
       }
 
-      const generator = await generatorFactory();
+      const generator = await generatorFactory(retryAbortController.signal);
 
       // Iterate through the generator and yield each value
       for await (const chunk of generator) {
@@ -217,14 +232,23 @@ export async function* withExponentialBackoff<T>(
           throw new Error("Request aborted");
         }
 
-        yieldedValues.push(chunk);
         yield chunk;
+      }
+
+      // Clean up the abort listener since we succeeded
+      if (typeof abortSignal.removeEventListener === "function") {
+        abortSignal.removeEventListener("abort", abortListener);
       }
 
       // If we successfully completed the generator, we're done
       return;
     } catch (err: any) {
       lastError = err;
+
+      // Clean up the abort listener
+      if (typeof abortSignal.removeEventListener === "function") {
+        abortSignal.removeEventListener("abort", abortListener);
+      }
 
       // Don't retry if the request was aborted
       if (abortSignal.aborted) {

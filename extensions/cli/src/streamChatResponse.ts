@@ -300,7 +300,7 @@ export async function processStreamingResponse(
   } = options;
   const requestStartTime = Date.now();
 
-  const streamFactory = async () => {
+  const streamFactory = async (retryAbortSignal: AbortSignal) => {
     logger.debug("Creating chat completion stream", {
       model,
       messageCount: chatHistory.length,
@@ -315,7 +315,7 @@ export async function processStreamingResponse(
         tools,
         ...getDefaultCompletionOptions(model.defaultCompletionOptions),
       },
-      abortController.signal,
+      retryAbortSignal,
     );
   };
 
