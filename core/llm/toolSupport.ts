@@ -124,6 +124,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "nova-pro",
           "nova-micro",
           "nova-premier",
+          "gpt-oss",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
