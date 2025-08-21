@@ -67,15 +67,17 @@ export const handleApplyStateUpdate = createAsyncThunk<
             logToolUsage(toolCallState, accepted, true, extra.ideMessenger);
 
             // Log edit outcome for Agent Mode
-            const newState =
+            const newApplyState =
               getState().session.codeBlockApplyStates.states.find(
                 (s) => s.streamId === applyState.streamId,
               );
-
-            if (newState) {
+            const newState = getState();
+            if (newApplyState) {
               void logAgentModeEditOutcome(
+                newState.session.history,
+                newState.config.config,
                 toolCallState,
-                newState,
+                newApplyState,
                 accepted,
                 extra.ideMessenger,
               );
