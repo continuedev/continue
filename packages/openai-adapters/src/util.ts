@@ -1,6 +1,6 @@
 import { RequestOptions } from "@continuedev/config-types";
 import { fetchwithRequestOptions, patchedFetch } from "@continuedev/fetch";
-import { type RequestInfo, type RequestInit } from "openai/_shims/index";
+import { type RequestInfo, type RequestInit } from "node-fetch";
 import {
   ChatCompletionChunk,
   CompletionUsage,
@@ -8,7 +8,7 @@ import {
   Model,
 } from "openai/resources/index";
 
-import { ChatCompletion } from "openai/src/resources/index.js";
+import { ChatCompletion } from "openai/resources/index.js";
 import { CreateRerankResponse } from "./apis/base.js";
 
 export function chatChunk(options: {
