@@ -21,5 +21,18 @@
     "inlineSources": true,
     "jsx": "react"
   },
-  "include": ["src/**/*", "vitest.setup.ts"]
+
+  "include": [
+    "src/**/*",
+    "vitest.setup.ts",
+    "../../core/**/*.ts",
+    "../../core/**/*.d.ts"
+  ],
+  // core/test uses @types/jest, which conflicts with @types/mocha
+  "exclude": [
+    "../../core/dist/**/*",
+    "../../core/**/*.test.ts",
+    "../../core/**/test/**/*",
+    "../../core/**/*.skip.ts"
+  ]
 }

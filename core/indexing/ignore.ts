@@ -1,10 +1,7 @@
-import fs from "fs";
 import ignore from "ignore";
 
 import path from "path";
-import { IDE } from "..";
-import { getGlobalContinueIgnorePath } from "../util/paths";
-import { localPathOrUriToPath } from "../util/pathToUri";
+import { fileURLToPath } from "url";
 
 // Security-focused ignore patterns - these should always be excluded for security reasons
 export const DEFAULT_SECURITY_IGNORE_FILETYPES = [
@@ -239,7 +236,10 @@ export function isSecurityConcern(filePathOrUri: string) {
   if (!filePathOrUri) {
     return false;
   }
-  let filepath = localPathOrUriToPath(filePathOrUri);
+  let filepath = filePathOrUri;
+  try {
+    filepath = fileURLToPath(filePathOrUri);
+  } catch {}
   if (path.isAbsolute(filepath)) {
     const dir = path.dirname(filepath).split(/\/|\\/).at(-1) ?? "";
     const basename = path.basename(filepath);
@@ -265,25 +265,3 @@ export function gitIgArrayFromFile(file: string) {
     .map((l) => l.trim()) // Remove whitespace
     .filter((l) => !/^#|^$/.test(l)); // Remove empty lines
 }
-
-export const getGlobalContinueIgArray = () => {
-  const contents = fs.readFileSync(getGlobalContinueIgnorePath(), "utf8");
-  return gitIgArrayFromFile(contents);
-};
-
-export const getWorkspaceContinueIgArray = async (ide: IDE) => {
-  const dirs = await ide.getWorkspaceDirs();
-  return await dirs.reduce(
-    async (accPromise, dir) => {
-      const acc = await accPromise;
-      try {
-        const contents = await ide.readFile(`${dir}/.continueignore`);
-        return [...acc, ...gitIgArrayFromFile(contents)];
-      } catch (err) {
-        console.error(err);
-        return acc;
-      }
-    },
-    Promise.resolve([] as string[]),
-  );
-};
