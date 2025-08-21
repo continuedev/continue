@@ -30,6 +30,7 @@ import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
 import { myersDiff } from "../diff/myers.js";
+import { defaultFileAndFolderSecurityIgnores } from "../indexing/ignore.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { NEXT_EDIT_MODELS } from "../llm/constants.js";
 import { countTokens } from "../llm/countTokens.js";
@@ -285,6 +286,12 @@ export class NextEditProvider {
       usingFullFileDiff: boolean;
     },
   ): Promise<NextEditOutcome | undefined> {
+    const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
+      localPathOrUriToPath(input.filepath),
+    );
+    if (isSecurityConcern) {
+      return undefined;
+    }
     try {
       this.previousRequest = input;
       const {
@@ -715,8 +722,8 @@ export class NextEditProvider {
     //     .split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1]
     //     .replace(/\n$/, "") ?? msg.content;
     const nextCompletion = msg.content.slice(
-      msg.content.indexOf("\`\`\`\n") + "\'\'\'\n".length,
-      msg.content.lastIndexOf("\n\n\`\`\`"),
+      msg.content.indexOf("```\n") + "'''\n".length,
+      msg.content.lastIndexOf("\n\n```"),
     );
 
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {

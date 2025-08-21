@@ -7,6 +7,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
+import { throwIfFileIsSecurityConcern } from "../../../../core/tools/implementations/readFileLimit.js";
 import { markFileAsRead, readFilesSet } from "./edit.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
@@ -236,6 +237,8 @@ If you want to create a new file, use:
   preprocess: async (args) => {
     // Validate and extract arguments
     const { original_path, file_path, edits } = validateMultiEditArgs(args);
+
+    throwIfFileIsSecurityConcern(file_path);
 
     // Validate each edit operation
     validateEdits(edits);

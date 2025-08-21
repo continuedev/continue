@@ -8,6 +8,7 @@ import {
 import { Tool } from "../types.js";
 import { generateDiff } from "../writeFile.js";
 
+import { throwIfFileIsSecurityConcern } from "../../../../../core/tools/implementations/readFileLimit.js";
 import { findSearchMatch } from "./findSearchMatch.js";
 import { parseSearchAndReplaceArgs } from "./parseArgs.js";
 import { parseAllSearchReplaceBlocks } from "./parseBlock.js";
@@ -95,7 +96,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
   preprocess: async (args) => {
     // Get and validate args
     const { filepath, diffs } = parseSearchAndReplaceArgs(args);
-
+    throwIfFileIsSecurityConcern(filepath);
     // Get current file contents
     if (!fs.existsSync(filepath)) {
       throw new Error(`file ${filepath} does not exist`);

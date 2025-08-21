@@ -8,6 +8,7 @@ import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 
+import { throwIfFileIsSecurityConcern } from "../../../../core/tools/implementations/readFileLimit.js";
 import { FileSearchUI } from "./FileSearchUI.js";
 import {
   handleControlKeys,
@@ -254,6 +255,7 @@ const UserInput: React.FC<UserInputProps> = ({
       // Read the file content and notify parent component
       if (onFileAttached) {
         try {
+          throwIfFileIsSecurityConcern(filePath);
           const fs = await import("fs/promises");
           const content = await fs.readFile(filePath, "utf-8");
           onFileAttached(filePath, content);

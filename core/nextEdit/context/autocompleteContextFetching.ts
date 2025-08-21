@@ -11,7 +11,9 @@ import {
 } from "../../autocomplete/util/types";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { IDE, ILLM } from "../../index";
+import { defaultFileAndFolderSecurityIgnores } from "../../indexing/ignore";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../util/parameters";
+import { localPathOrUriToPath } from "../../util/pathToUri";
 
 /**
  * Gets the formatted autocomplete context string that would be used for autocomplete at the given position.
@@ -59,6 +61,13 @@ export const getAutocompleteContext = async (
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("No config available");
+  }
+
+  const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
+    localPathOrUriToPath(input.filepath),
+  );
+  if (isSecurityConcern) {
+    throw new Error("File is a security concern, autocomplete disabled");
   }
 
   // Use provided autocomplete model or fall back to configured autocomplete model

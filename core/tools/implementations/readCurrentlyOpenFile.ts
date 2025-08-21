@@ -1,12 +1,16 @@
 import { getUriDescription } from "../../util/uri";
 
 import { ToolImpl } from ".";
-import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
+import {
+  throwIfFileExceedsHalfOfContext,
+  throwIfFileIsSecurityConcern,
+} from "./readFileLimit";
 
-export const readCurrentlyOpenFileImpl: ToolImpl = async (args, extras) => {
+export const readCurrentlyOpenFileImpl: ToolImpl = async (_, extras) => {
   const result = await extras.ide.getCurrentFile();
 
   if (result) {
+    await throwIfFileIsSecurityConcern(result.path);
     await throwIfFileExceedsHalfOfContext(
       result.path,
       result.contents,

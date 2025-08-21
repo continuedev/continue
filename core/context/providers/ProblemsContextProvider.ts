@@ -3,6 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
+import { defaultFileAndFolderSecurityIgnores } from "../../indexing/ignore.js";
 import { getUriDescription } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -28,6 +29,17 @@ class ProblemsContextProvider extends BaseContextProvider {
           problem.filepath,
           workspaceDirs,
         );
+        const isSecurityConcern = defaultFileAndFolderSecurityIgnores.ignores(
+          relativePathOrBasename,
+        );
+        if (isSecurityConcern) {
+          return {
+            description: "Problems in current file",
+            content:
+              "Content was redacted because the file is detected as a potential security concern",
+            name: `Warnings in ${baseName}`,
+          };
+        }
         const content = await ide.readFile(problem.filepath);
         const lines = content.split("\n");
         const rangeContent = lines
@@ -40,7 +52,7 @@ class ProblemsContextProvider extends BaseContextProvider {
         return {
           description: "Problems in current file",
           content: `\`\`\`${relativePathOrBasename}\n${rangeContent}\n\`\`\`\n${problem.message}\n\n`,
-          name: `Warning in ${baseName}`,
+          name: `Warnings in ${baseName}`,
         };
       }),
     );

@@ -6,6 +6,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
+import { throwIfFileIsSecurityConcern } from "../../../../core/tools/implementations/readFileLimit.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
@@ -80,7 +81,7 @@ parameter is useful if you want to rename a variable for instance.`,
       new_string,
       replace_all = false,
     } = args as EditArgs;
-
+    throwIfFileIsSecurityConcern(file_path);
     // Check if file has been read
     if (!readFilesSet.has(file_path)) {
       throw new Error(

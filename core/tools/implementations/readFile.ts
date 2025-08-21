@@ -3,10 +3,14 @@ import { getUriPathBasename } from "../../util/uri";
 
 import { ToolImpl } from ".";
 import { getStringArg } from "../parseArgs";
-import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
+import {
+  throwIfFileExceedsHalfOfContext,
+  throwIfFileIsSecurityConcern,
+} from "./readFileLimit";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");
+  await throwIfFileIsSecurityConcern(filepath);
 
   const firstUriMatch = await resolveRelativePathInDir(filepath, extras.ide);
   if (!firstUriMatch) {
