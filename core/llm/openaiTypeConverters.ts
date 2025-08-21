@@ -161,10 +161,10 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage {
       role: "assistant",
       content: "",
       toolCalls: message.tool_calls
-        ?.filter((tc) => tc.type === "function")
+        ?.filter((tc) => tc.type === "function" && "function" in tc)
         .map((tc) => ({
           id: tc.id,
-          type: tc.type,
+          type: "function" as const,
           function: {
             name: (tc as any).function?.name,
             arguments: (tc as any).function?.arguments,
@@ -194,10 +194,10 @@ export function fromChatCompletionChunk(
       role: "assistant",
       content: "",
       toolCalls: delta?.tool_calls
-        .filter((tool_call) => tool_call.type === "function")
+        .filter((tool_call) => tool_call.type === "function" && "function" in tool_call)
         .map((tool_call) => ({
           id: tool_call.id,
-          type: tool_call.type,
+          type: "function" as const,
           function: {
             name: (tool_call as any).function?.name,
             arguments: (tool_call as any).function?.arguments,
