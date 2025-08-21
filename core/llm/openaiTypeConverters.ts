@@ -102,7 +102,7 @@ export function toChatBody(
 
   if (options.tools?.length) {
     params.tools = options.tools
-      .filter((tool) => tool.type === "function")
+      .filter((tool) => !tool.type || tool.type === "function")
       .map((tool) => ({
         type: tool.type,
         function: {
@@ -161,7 +161,7 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage {
       role: "assistant",
       content: "",
       toolCalls: message.tool_calls
-        ?.filter((tc) => tc.type === "function")
+        ?.filter((tc) => !tc.type || tc.type === "function")
         .map((tc) => ({
           id: tc.id,
           type: "function" as const,
