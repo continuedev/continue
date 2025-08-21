@@ -112,7 +112,10 @@ export class GeminiApi implements BaseLlmApi {
     oaiBody.messages.forEach((msg) => {
       if (msg.role === "assistant" && msg.tool_calls) {
         msg.tool_calls.forEach((call) => {
-          toolCallIdToNameMap.set(call.id, call.function.name);
+          // Type guard for function tool calls
+          if (call.type === "function" && "function" in call) {
+            toolCallIdToNameMap.set(call.id, call.function.name);
+          }
         });
       }
     });
@@ -125,21 +128,31 @@ export class GeminiApi implements BaseLlmApi {
 
         if (msg.role === "assistant" && msg.tool_calls?.length) {
           for (const toolCall of msg.tool_calls) {
-            toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
+            // Type guard for function tool calls
+            if (toolCall.type === "function" && "function" in toolCall) {
+              toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
+            }
           }
 
           return {
             role: "model" as const,
-            parts: msg.tool_calls.map((toolCall) => ({
-              functionCall: {
-                id: includeToolCallIds ? toolCall.id : undefined,
-                name: toolCall.function.name,
-                args: safeParseArgs(
-                  toolCall.function.arguments,
-                  `Call: ${toolCall.function.name} ${toolCall.id}`,
-                ),
-              },
-            })),
+            parts: msg.tool_calls.map((toolCall) => {
+              // Type guard for function tool calls
+              if (toolCall.type === "function" && "function" in toolCall) {
+                return {
+                  functionCall: {
+                    id: includeToolCallIds ? toolCall.id : undefined,
+                    name: toolCall.function.name,
+                    args: safeParseArgs(
+                      toolCall.function.arguments,
+                      `Call: ${toolCall.function.name} ${toolCall.id}`,
+                    ),
+                  },
+                };
+              } else {
+                throw new Error(`Unsupported tool call type in Gemini: ${toolCall.type}`);
+              }
+            }),
           };
         }
 
