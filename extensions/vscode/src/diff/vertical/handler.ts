@@ -97,6 +97,17 @@ export class VerticalDiffHandler implements vscode.Disposable {
       false,
     );
 
+    // Store the first changed line position before clearing decorations
+    let firstChangedLine: number | null = null;
+    if (accept) {
+      const diffBlocks =
+        this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
+      if (diffBlocks.length > 0) {
+        const sortedBlocks = diffBlocks.sort((a, b) => a.start - b.start);
+        firstChangedLine = sortedBlocks[0].start;
+      }
+    }
+
     const removedRanges = this.removedLineDecorations.ranges;
     if (accept) {
       // Accept all: delete all the red ranges and clear green decorations
@@ -117,6 +128,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
       this.editor.document.getText(),
     );
+
+    if (accept && firstChangedLine !== null) {
+      const position = new vscode.Position(firstChangedLine, 0);
+      this.editor.selection = new vscode.Selection(position, position);
+      this.editor.revealRange(
+        new vscode.Range(position, position),
+        vscode.TextEditorRevealType.InCenter,
+      );
+    }
 
     this.cancelled = true;
     this.refreshCodeLens();
