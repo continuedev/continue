@@ -123,6 +123,7 @@ export class NextEditWindowManager {
   private editableRegionEndLine: number = 0;
 
   // State tracking for key reservation.
+  // By default it is set to free, and is only set to reserved when the transition is done.
   private keyReservationState: "free" | "reserved" | "transitioning" = "free";
   private keyReservationPromise: Promise<void> | null = null;
 
@@ -178,7 +179,7 @@ export class NextEditWindowManager {
     // Return early when already in desired state.
     if (
       (reserve && this.keyReservationState === "reserved") ||
-      (!reserve && this.keyReservationState == "free")
+      (!reserve && this.keyReservationState === "free")
     ) {
       return;
     }
@@ -224,20 +225,10 @@ export class NextEditWindowManager {
 
   public static async reserveTabAndEsc() {
     await NextEditWindowManager.getInstance().setKeyReservation(true);
-    // await vscode.commands.executeCommand(
-    //   "setContext",
-    //   "nextEditWindowActive",
-    //   true,
-    // );
   }
 
   public static async freeTabAndEsc() {
     await NextEditWindowManager.getInstance().setKeyReservation(false);
-    // await vscode.commands.executeCommand(
-    //   "setContext",
-    //   "nextEditWindowActive",
-    //   false,
-    // );
   }
 
   /**
@@ -425,6 +416,9 @@ export class NextEditWindowManager {
     try {
       await NextEditWindowManager.reserveTabAndEsc();
     } catch (err) {
+      console.error(
+        `Error reserving Tab/Esc after showing decorations: ${err}`,
+      );
       await this.hideAllNextEditWindows();
       return;
     }
@@ -566,11 +560,10 @@ export class NextEditWindowManager {
    */
   public dispose() {
     if (this.keyReservationState !== "free") {
-      vscode.commands
+      void vscode.commands
         .executeCommand("setContext", "nextEditWindowActive", false)
-        .then(
-          () => {},
-          (err) => console.error(`Failed to free keys on dispose: ${err}`),
+        .then(undefined, (err) =>
+          console.error(`Failed to free keys on dispose: ${err}`),
         );
     }
 
