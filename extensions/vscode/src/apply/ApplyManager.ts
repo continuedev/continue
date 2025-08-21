@@ -32,6 +32,7 @@ export class ApplyManager {
     if (filepath) {
       await this.ensureFileOpen(filepath);
     }
+    throw new Error("expected");
 
     const { activeTextEditor } = vscode.window;
     if (!activeTextEditor) {
@@ -51,7 +52,6 @@ export class ApplyManager {
     });
 
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
-
     if (hasExistingDocument) {
       // Currently `isSearchAndReplace` will always provide a full file rewrite
       // as the contents of `text`, so we can just instantly apply

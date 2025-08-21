@@ -1,7 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ApplyState } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
-import { WebviewSingleProtocolMessage } from "core/protocol/util";
 import { logAgentModeEditOutcome } from "../../util/editOutcomeLogger";
 import {
   selectApplyStateByToolCallId,
@@ -84,11 +83,14 @@ export const handleApplyStateUpdate = createAsyncThunk<
             }
 
             if (accepted) {
-              dispatch(
-                acceptToolCall({
-                  toolCallId: applyState.toolCallId,
-                }),
-              );
+              if (toolCallState.status !== "errored") {
+                dispatch(
+                  acceptToolCall({
+                    toolCallId: applyState.toolCallId,
+                  }),
+                );
+              }
+
               void dispatch(
                 streamResponseAfterToolCall({
                   toolCallId: applyState.toolCallId,
@@ -108,50 +110,49 @@ export const handleApplyStateUpdate = createAsyncThunk<
   },
 );
 
-export const handleEditToolApplyResponse = createAsyncThunk<
+export const handleEditToolApplyError = createAsyncThunk<
   void,
-  { response: WebviewSingleProtocolMessage<"applyToFile">; toolCallId: string },
+  { toolCallId: string },
   ThunkApiType
 >(
-  "apply/handleEditResponse",
-  async ({ response, toolCallId }, { dispatch, getState, extra }) => {
-    if (response.status === "error") {
-      const state = getState();
-      const toolCallState = selectToolCallById(state, toolCallId);
-      const applyState = selectApplyStateByToolCallId(state, toolCallId);
-      if (
-        toolCallState &&
-        applyState &&
-        applyState.status !== "closed" &&
-        toolCallState.status === "generated"
-      ) {
-        dispatch(
-          errorToolCall({
-            toolCallId,
-          }),
-        );
-        dispatch(
-          updateToolCallOutput({
-            toolCallId,
-            contextItems: [
-              {
-                icon: "problems",
-                name: "Apply Error",
-                description: "Failed to apply changes",
-                content: `Error editing file: failed to apply changes to file."\n\nPlease try again/something else or request further instructions.`,
-                hidden: false,
-              },
-            ],
-          }),
-        );
-        void dispatch(
-          handleApplyStateUpdate({
-            status: "closed",
-            streamId: applyState.streamId,
-            toolCallId,
-          }),
-        );
-      }
+  "apply/handleEditError",
+  async ({ toolCallId }, { dispatch, getState, extra }) => {
+    const state = getState();
+
+    const toolCallState = selectToolCallById(state, toolCallId);
+    const applyState = selectApplyStateByToolCallId(state, toolCallId);
+    if (
+      toolCallState &&
+      applyState &&
+      applyState.status !== "closed" &&
+      toolCallState.status === "calling"
+    ) {
+      dispatch(
+        errorToolCall({
+          toolCallId,
+        }),
+      );
+      dispatch(
+        updateToolCallOutput({
+          toolCallId,
+          contextItems: [
+            {
+              icon: "problems",
+              name: "Apply Error",
+              description: "Failed to apply changes",
+              content: `Error editing file: failed to apply changes to file.\n\nPlease try again with correct args or notify the user and request guidance.`,
+              hidden: false,
+            },
+          ],
+        }),
+      );
+      void dispatch(
+        handleApplyStateUpdate({
+          status: "closed",
+          streamId: applyState.streamId,
+          toolCallId,
+        }),
+      );
     }
   },
 );
