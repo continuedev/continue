@@ -199,3 +199,53 @@ export function getAutocompleteStatusBarTitle(
 
   return title;
 }
+
+const DISABLE_NEXT_EDIT_MENU_ITEM_LABEL = "$(circle-slash) Disable Next Edit";
+const ENABLE_NEXT_EDIT_MENU_ITEM_LABEL = "$(check) Enable Next Edit";
+
+// Shows what items get rendered in the autocomplete menu.
+export function getNextEditMenuItems(
+  currentStatus: StatusBarStatus | undefined,
+  nextEditEnabled: boolean,
+): vscode.QuickPickItem[] {
+  if (currentStatus !== StatusBarStatus.Enabled) return [];
+
+  return [
+    {
+      label: nextEditEnabled
+        ? DISABLE_NEXT_EDIT_MENU_ITEM_LABEL
+        : ENABLE_NEXT_EDIT_MENU_ITEM_LABEL,
+      description: "Toggle Next Edit feature",
+    },
+  ];
+}
+
+// Checks if the current selected option is a next edit toggle label.
+export function isNextEditToggleLabel(label: string): boolean {
+  return (
+    label === DISABLE_NEXT_EDIT_MENU_ITEM_LABEL ||
+    label === ENABLE_NEXT_EDIT_MENU_ITEM_LABEL
+  );
+}
+
+// Updates the config once next edit is toggled.
+export function handleNextEditToggle(
+  label: string,
+  config: vscode.WorkspaceConfiguration,
+  onEnable?: () => void,
+  onDisable?: () => void,
+) {
+  const isEnabling = label === ENABLE_NEXT_EDIT_MENU_ITEM_LABEL;
+
+  config.update(
+    "enableNextEdit",
+    isEnabling,
+    vscode.ConfigurationTarget.Global,
+  );
+
+  if (isEnabling) {
+    onEnable?.();
+  } else {
+    onDisable?.();
+  }
+}
