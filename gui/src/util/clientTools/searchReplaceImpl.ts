@@ -83,7 +83,7 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
     // Single applyToFile call with all accumulated changes
     // This works becaues of our logic in `applyCodeBlock` that determines
     // that the full file rewrite here can be applied instantly, so the diff
-    // lines are just
+    // lines are generated with meyers diff and streamed instantaneously
     extras.dispatch(
       updateApplyState({
         streamId,

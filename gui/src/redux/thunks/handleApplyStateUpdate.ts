@@ -98,12 +98,7 @@ export const handleApplyStateUpdate = createAsyncThunk<
               );
             }
           }
-          // const output: ContextItem = {
-          //   name: "Edit tool output",
-          //   content: "Completed edit",
-          //   description: "",
-          // };
-          // dispatch(setToolCallOutput([]));
+          // TODO return output from edit tools so the model knows the result
         }
       }
     }
