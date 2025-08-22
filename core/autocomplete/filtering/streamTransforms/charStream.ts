@@ -144,7 +144,7 @@ export async function* stopAtStartOf(
   for await (const chunk of stream) {
     buffer += chunk;
 
-    // Check if the targetPart contains contains the buffer at any point
+    // Check if the targetPart contains the buffer at any point
     if (buffer.length >= sequenceLength && targetPart.includes(buffer)) {
       return; // Stop processing when the sequence is found
     }
