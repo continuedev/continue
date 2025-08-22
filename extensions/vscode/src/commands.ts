@@ -16,6 +16,7 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
+import { modelSupportsNextEdit } from "core/llm/autodetect";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
@@ -799,6 +800,51 @@ const getCommandsMap: (
           `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    },
+    "continue.toggleNextEditEnabled": async () => {
+      captureCommandTelemetry("toggleNextEditEnabled");
+
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
+      const tabAutocompleteEnabled = config.get<boolean>(
+        "enableTabAutocomplete",
+      );
+
+      // Only allow toggling Next Edit if tab autocomplete is enabled.
+      if (!tabAutocompleteEnabled) {
+        vscode.window.showInformationMessage(
+          "Please enable tab autocomplete first to use Next Edit",
+        );
+        return;
+      }
+
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+
+      // Check if model supports Next Edit before enabling.
+      if (!nextEditEnabled) {
+        const { config: continueConfig } = await configHandler.loadConfig();
+        const autocompleteModel =
+          continueConfig?.selectedModelByRole.autocomplete;
+
+        if (
+          !autocompleteModel ||
+          !modelSupportsNextEdit(
+            autocompleteModel.capabilities,
+            autocompleteModel.model,
+            autocompleteModel.title,
+          )
+        ) {
+          vscode.window.showWarningMessage(
+            "The current autocomplete model does not support Next Edit",
+          );
+          return;
+        }
+      }
+
+      config.update(
+        "enableNextEdit",
+        !nextEditEnabled,
+        vscode.ConfigurationTarget.Global,
+      );
     },
     "continue.forceNextEdit": async () => {
       captureCommandTelemetry("forceNextEdit");
