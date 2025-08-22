@@ -456,12 +456,6 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/extensions/intellij/build/reports/tests
 
-      # Upload the Kover report to CodeCov
-      # - name: Upload Code Coverage Report
-      #   uses: codecov/codecov-action@v4
-      #   with:
-      #     files: ${{ github.workspace }}/build/reports/kover/report.xml
-
   # Run Qodana inspections and provide report
   inspectCode:
     if: false
