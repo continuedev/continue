@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ModelConfig } from "@continuedev/config-yaml";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { logger } from "./logger.js";
 import {
-  shouldAutoCompact,
+  AUTO_COMPACT_THRESHOLD,
+  calculateContextUsagePercentage,
   countChatHistoryTokens,
   countMessageTokens,
   getModelContextLimit,
-  calculateContextUsagePercentage,
-  AUTO_COMPACT_THRESHOLD,
+  shouldAutoCompact,
 } from "./tokenizer.js";
-import { logger } from "./logger.js";
 
 // Mock the logger
 vi.mock("./logger.js", () => ({
