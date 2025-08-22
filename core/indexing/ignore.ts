@@ -1,11 +1,100 @@
-import fs from "fs";
-
 import ignore from "ignore";
 
-import { IDE } from "..";
-import { getGlobalContinueIgnorePath } from "../util/paths";
+import path from "path";
+import { fileURLToPath } from "url";
 
-export const DEFAULT_IGNORE_FILETYPES = [
+// Security-focused ignore patterns - these should always be excluded for security reasons
+export const DEFAULT_SECURITY_IGNORE_FILETYPES = [
+  // Environment and configuration files with secrets
+  "*.env",
+  "*.env.*",
+  ".env*",
+  "config.json",
+  "config.yaml",
+  "config.yml",
+  "settings.json",
+  "appsettings.json",
+  "appsettings.*.json",
+
+  // Certificate and key files
+  "*.key",
+  "*.pem",
+  "*.p12",
+  "*.pfx",
+  "*.crt",
+  "*.cer",
+  "*.jks",
+  "*.keystore",
+  "*.truststore",
+
+  // Database files that may contain sensitive data
+  "*.db",
+  "*.sqlite",
+  "*.sqlite3",
+  "*.mdb",
+  "*.accdb",
+
+  // Credential and secret files
+  "*.secret",
+  "*.secrets",
+  "credentials",
+  "credentials.*",
+  "auth.json",
+  "token",
+  "token.*",
+  "*.token",
+
+  // Backup files that might contain sensitive data
+  "*.bak",
+  "*.backup",
+  "*.old",
+  "*.orig",
+
+  // Docker secrets
+  "docker-compose.override.yml",
+  "docker-compose.override.yaml",
+
+  // SSH and GPG
+  "id_rsa",
+  "id_dsa",
+  "id_ecdsa",
+  "id_ed25519",
+  "*.ppk",
+  "*.gpg",
+];
+
+export const DEFAULT_SECURITY_IGNORE_DIRS = [
+  // Environment and configuration directories
+  ".env/",
+  "env/",
+
+  // Cloud provider credential directories
+  ".aws/",
+  ".gcp/",
+  ".azure/",
+  ".kube/",
+  ".docker/",
+
+  // Secret directories
+  "secrets/",
+  ".secrets/",
+  "private/",
+  ".private/",
+  "certs/",
+  "certificates/",
+  "keys/",
+  ".ssh/",
+  ".gnupg/",
+  ".gpg/",
+
+  // Temporary directories that might contain sensitive data
+  "tmp/secrets/",
+  "temp/secrets/",
+  ".tmp/",
+];
+
+// Additional non-security patterns for general indexing exclusion
+export const ADDITIONAL_INDEXING_IGNORE_FILETYPES = [
   "*.DS_Store",
   "*-lock.json",
   "*.lock",
@@ -46,8 +135,6 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.mpeg",
   "*.mov",
   "*.mp3",
-  "*.mp4",
-  "*.mkv",
   "*.mkv",
   "*.webm",
   "*.jar",
@@ -56,20 +143,15 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.pqt",
   "*.wav",
   "*.webp",
-  "*.db",
-  "*.sqlite",
   "*.wasm",
   "*.plist",
   "*.profraw",
   "*.gcda",
   "*.gcno",
   "go.sum",
-  "*.env",
   "*.gitignore",
   "*.gitkeep",
   "*.continueignore",
-  "config.json",
-  "config.yaml",
   "*.csv",
   "*.uasset",
   "*.pdb",
@@ -78,19 +160,13 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.swp",
   "*.jsonl",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
+  // Application specific
+  ".continue/",
 ];
 
-export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
-export const DEFAULT_IGNORE_DIRS = [
+export const ADDITIONAL_INDEXING_IGNORE_DIRS = [
   ".git/",
   ".svn/",
-  ".vscode/",
-  ".idea/",
-  ".vs/",
-  "venv/",
-  ".venv/",
-  "env/",
-  ".env/",
   "node_modules/",
   "dist/",
   "build/",
@@ -100,7 +176,6 @@ export const DEFAULT_IGNORE_DIRS = [
   "bin/",
   ".pytest_cache/",
   ".vscode-test/",
-  ".continue/",
   "__pycache__/",
   "site-packages/",
   ".gradle/",
@@ -108,16 +183,80 @@ export const DEFAULT_IGNORE_DIRS = [
   ".cache/",
   "gems/",
   "vendor/",
+
+  ".venv/",
+  "venv/",
+
+  ".vscode/",
+  ".idea/",
+  ".vs/",
 ];
 
+// Combined patterns: security + additional
+export const DEFAULT_IGNORE_FILETYPES = [
+  ...DEFAULT_SECURITY_IGNORE_FILETYPES,
+  ...ADDITIONAL_INDEXING_IGNORE_FILETYPES,
+];
+
+export const DEFAULT_IGNORE_DIRS = [
+  ...DEFAULT_SECURITY_IGNORE_DIRS,
+  ...ADDITIONAL_INDEXING_IGNORE_DIRS,
+];
+
+// Create ignore instances
+export const defaultSecurityIgnoreFile = ignore().add(
+  DEFAULT_SECURITY_IGNORE_FILETYPES,
+);
+export const defaultSecurityIgnoreDir = ignore().add(
+  DEFAULT_SECURITY_IGNORE_DIRS,
+);
+export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
+
+// String representations
+export const DEFAULT_SECURITY_IGNORE =
+  DEFAULT_SECURITY_IGNORE_FILETYPES.join("\n") +
+  "\n" +
+  DEFAULT_SECURITY_IGNORE_DIRS.join("\n");
 
 export const DEFAULT_IGNORE =
   DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");
 
+// Combined ignore instances
+export const defaultFileAndFolderSecurityIgnores = ignore()
+  .add(defaultSecurityIgnoreFile)
+  .add(defaultSecurityIgnoreDir);
+
 export const defaultIgnoreFileAndDir = ignore()
   .add(defaultIgnoreFile)
   .add(defaultIgnoreDir);
+
+export function isSecurityConcern(filePathOrUri: string) {
+  if (!filePathOrUri) {
+    return false;
+  }
+  let filepath = filePathOrUri;
+  try {
+    filepath = fileURLToPath(filePathOrUri);
+  } catch {}
+  if (path.isAbsolute(filepath)) {
+    const dir = path.dirname(filepath).split(/\/|\\/).at(-1) ?? "";
+    const basename = path.basename(filepath);
+    filepath = `${dir ? dir + "/" : ""}${basename}`;
+  }
+  if (!filepath) {
+    return false;
+  }
+  return defaultFileAndFolderSecurityIgnores.ignores(filepath);
+}
+
+export function throwIfFileIsSecurityConcern(filepath: string) {
+  if (isSecurityConcern(filepath)) {
+    throw new Error(
+      `Reading or Editing ${filepath} is not allowed because it is a security concern. Do not attempt to read or edit this file in any way.`,
+    );
+  }
+}
 
 export function gitIgArrayFromFile(file: string) {
   return file
@@ -125,25 +264,3 @@ export function gitIgArrayFromFile(file: string) {
     .map((l) => l.trim()) // Remove whitespace
     .filter((l) => !/^#|^$/.test(l)); // Remove empty lines
 }
-
-export const getGlobalContinueIgArray = () => {
-  const contents = fs.readFileSync(getGlobalContinueIgnorePath(), "utf8");
-  return gitIgArrayFromFile(contents);
-};
-
-export const getWorkspaceContinueIgArray = async (ide: IDE) => {
-  const dirs = await ide.getWorkspaceDirs();
-  return await dirs.reduce(
-    async (accPromise, dir) => {
-      const acc = await accPromise;
-      try {
-        const contents = await ide.readFile(`${dir}/.continueignore`);
-        return [...acc, ...gitIgArrayFromFile(contents)];
-      } catch (err) {
-        console.error(err);
-        return acc;
-      }
-    },
-    Promise.resolve([] as string[]),
-  );
-};
