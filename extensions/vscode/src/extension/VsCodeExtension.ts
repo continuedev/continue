@@ -90,18 +90,42 @@ export class VsCodeExtension {
     const { config: continueConfig } = await this.configHandler.loadConfig();
     const autocompleteModel = continueConfig?.selectedModelByRole.autocomplete;
     const vscodeConfig = vscode.workspace.getConfiguration(EXTENSION_NAME);
-    const enabledNextEdit =
+    const nextEditEnabled =
       vscodeConfig.get<boolean>("enableNextEdit") ?? false;
 
+    const modelSupportsNext =
+      autocompleteModel &&
+      modelSupportsNextEdit(
+        autocompleteModel.capabilities,
+        autocompleteModel.model,
+        autocompleteModel.title,
+      );
+
+    // Check if Next Edit is enabled but model doesn't support it.
+    if (nextEditEnabled && !modelSupportsNext && !isNextEditTest()) {
+      vscode.window
+        .showWarningMessage(
+          `The current autocomplete model (${autocompleteModel?.title || "unknown"}) does not support next edit.`,
+          "Disable next edit",
+          "Select different model",
+        )
+        .then((selection) => {
+          if (selection === "Disable next edit") {
+            vscodeConfig.update(
+              "enableNextEdit",
+              false,
+              vscode.ConfigurationTarget.Global,
+            );
+          } else if (selection === "Select different model") {
+            vscode.commands.executeCommand(
+              "continue.openTabAutocompleteConfigMenu",
+            );
+          }
+        });
+    }
+
     const shouldEnableNextEdit =
-      (autocompleteModel &&
-        modelSupportsNextEdit(
-          autocompleteModel.capabilities,
-          autocompleteModel.model,
-          autocompleteModel.title,
-        ) &&
-        enabledNextEdit) ||
-      isNextEditTest();
+      (modelSupportsNext && nextEditEnabled) || isNextEditTest();
 
     if (shouldEnableNextEdit) {
       await setupNextEditWindowManager(context);
