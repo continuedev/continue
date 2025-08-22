@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as esbuild from "esbuild";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, chmodSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -86,6 +86,9 @@ const require = createRequire(import.meta.url);`,
 
   // Create wrapper script with shebang
   writeFileSync("dist/cn.js", "#!/usr/bin/env node\nimport('./index.js');");
+  
+  // Make the wrapper script executable
+  chmodSync("dist/cn.js", 0o755);
 
   // Calculate bundle size
   const bundleSize = result.metafile.outputs["dist/index.js"].bytes;
