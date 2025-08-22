@@ -1,4 +1,5 @@
-import { ErrorEvent } from "@sentry/core";
+import * as Sentry from "@sentry/node";
+import { type Event } from "@sentry/core";
 /**
  * Minimalist Sentry anonymization utilities
  */
@@ -75,7 +76,7 @@ export function anonymizeUserInfo(user: any): any {
 /**
  * Main anonymization function - minimalist approach like Rasa
  */
-export function anonymizeSentryEvent(event: ErrorEvent): any | null {
+export function anonymizeSentryEvent(event: any): any | null {
   try {
     // Deep copy to avoid mutating the original event
     const anonymized = structuredClone(event);

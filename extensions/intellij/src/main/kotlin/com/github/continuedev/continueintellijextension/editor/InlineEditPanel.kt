@@ -2,8 +2,8 @@ package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.Icons
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
+import com.github.continuedev.continueintellijextension.`continue`.ProfileInfoService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
-import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
@@ -14,12 +14,13 @@ import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.AffineTransform
@@ -34,6 +35,7 @@ import kotlin.math.max
 import net.miginfocom.swing.MigLayout
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
+import kotlin.time.Duration.Companion.milliseconds
 
 const val MAIN_FONT_SIZE = 13
 const val DOWN_ARROW = " ▾"
@@ -43,37 +45,21 @@ const val MAX_MODEL_WAIT_TIME = 1500
  * Fetches and combines available model titles from both "edit" and "chat" roles.
  * Edit models are prioritized and appear first in the returned list.
  * Handles duplicate models by only including them once (prioritizing edit role).
- *
- * @param continuePluginService The service used to fetch config information
- * @return List of model titles with edit models first, duplicates removed
- * @throws No exceptions, but will return empty list if request fails or times out after 1.5 seconds
  */
-fun getModelTitles(continuePluginService: ContinuePluginService): List<String> {
-    val modelTitles = mutableListOf<String>()
-
-    continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val modelsByRole =
-            response.castNestedOrNull<Map<String, Any>>("content", "result", "config", "modelsByRole") ?: return@request
-
-        // Get edit models first
-        val editModels = modelsByRole.castNestedOrNull<List<*>>("edit")
-            ?.mapNotNull { it.castNestedOrNull<String>("title") } ?: emptyList()
-
-        // Then get chat models
-        val chatModels = modelsByRole.castNestedOrNull<List<*>>("chat")
-            ?.mapNotNull { it.castNestedOrNull<String>("title") } ?: emptyList()
-
-        // Add edit models first, then chat models (avoiding duplicates)
-        modelTitles.addAll(editModels)
-        modelTitles.addAll(chatModels.filter { it !in editModels })
+fun getModelTitles(project: Project): List<String> {
+    // fixme: blocking code on EDT (however this is not a regression compared to the latest changes)
+    return runBlocking {
+        withTimeoutOrNull(MAX_MODEL_WAIT_TIME.milliseconds) {
+            val modelsByRole = project.service<ProfileInfoService>().fetchModelsByRoleOrNull()
+            val editModels = modelsByRole.castNestedOrNull<List<*>>("edit")
+                ?.mapNotNull { it.castNestedOrNull<String>("title") }
+                ?: emptyList()
+            val chatModels = modelsByRole.castNestedOrNull<List<*>>("chat")
+                ?.mapNotNull { it.castNestedOrNull<String>("title") }
+                ?: emptyList()
+            (editModels  + chatModels).distinct()
+        } ?: emptyList()
     }
-
-    val startTime = System.currentTimeMillis()
-    while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < MAX_MODEL_WAIT_TIME) {
-        Thread.sleep(20)
-    }
-
-    return modelTitles
 }
 
 fun makeTextArea(): JTextArea {
@@ -161,8 +147,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     val manager = EditorComponentInlaysManager.from(editor, true)
 
-    val continuePluginService = project.service<ContinuePluginService>()
-    val modelTitles = getModelTitles(continuePluginService)
+    val modelTitles = getModelTitles(project)
 
     val highlightedRIF = editorUtils.getHighlightedRIF() ?: return
     val (startLineNumber, endLineNumber) = highlightedRIF.lines
