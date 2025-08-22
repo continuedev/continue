@@ -17,6 +17,7 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
+import { isSecurityConcern } from "../indexing/ignore.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
