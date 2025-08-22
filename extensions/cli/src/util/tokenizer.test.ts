@@ -1,5 +1,4 @@
 import { ModelConfig } from "@continuedev/config-yaml";
-<<<<<<< Updated upstream
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -37,70 +36,12 @@ describe("tokenizer", () => {
       const model: ModelConfig = {
         name: "test-model",
         model: "test",
-=======
-
-import { getAutoCompactMessage, getModelContextLimit } from "./tokenizer.js";
-
-describe("tokenizer", () => {
-  describe("getAutoCompactMessage", () => {
-    it("should show context limit for all models", () => {
-      const smallContextModel: ModelConfig = {
-        name: "gpt-3.5-turbo",
-        model: "gpt-3.5-turbo",
-        provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 4096,
-        },
-      };
-
-      const message = getAutoCompactMessage(smallContextModel);
-      expect(message).toBe(
-        "Approaching context limit (4K tokens). Auto-compacting chat history...",
-      );
-    });
-
-    it("should return message with context limit for large context models", () => {
-      const largeContextModel: ModelConfig = {
-        name: "gpt-4",
-        model: "gpt-4",
-        provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 128000,
-        },
-      };
-
-      const message = getAutoCompactMessage(largeContextModel);
-      expect(message).toBe(
-        "Approaching context limit (128K tokens). Auto-compacting chat history...",
-      );
-    });
-
-    it("should handle models without explicit context length", () => {
-      const modelWithoutContext: ModelConfig = {
-        name: "claude-3-sonnet",
-        model: "claude-3-sonnet-20240229",
-        provider: "anthropic",
-        // No defaultCompletionOptions
-      };
-
-      const message = getAutoCompactMessage(modelWithoutContext);
-      expect(message).toBe(
-        "Approaching context limit (200K tokens). Auto-compacting chat history...",
-      );
-    });
-
-    it("should properly format context length in thousands", () => {
-      const model8k: ModelConfig = {
-        name: "test-model",
-        model: "test-model",
->>>>>>> Stashed changes
         provider: "openai",
         defaultCompletionOptions: {
           contextLength: 8192,
         },
       };
 
-<<<<<<< Updated upstream
       expect(getModelContextLimit(model)).toBe(8192);
     });
 
@@ -108,72 +49,12 @@ describe("tokenizer", () => {
       const model: ModelConfig = {
         name: "test-model",
         model: "test",
-=======
-      const message = getAutoCompactMessage(model8k);
-      expect(message).toBe(
-        "Approaching context limit (8K tokens). Auto-compacting chat history...",
-      );
-    });
-
-    it("should handle edge case at 16K boundary", () => {
-      const model16k: ModelConfig = {
-        name: "test-model",
-        model: "test-model",
-        provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 16000,
-        },
-      };
-
-      const message = getAutoCompactMessage(model16k);
-      expect(message).toBe(
-        "Approaching context limit (16K tokens). Auto-compacting chat history...",
-      );
-    });
-
-    it("should round context limit to nearest K", () => {
-      const model15k: ModelConfig = {
-        name: "test-model",
-        model: "test-model",
-        provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 15999,
-        },
-      };
-
-      const message = getAutoCompactMessage(model15k);
-      expect(message).toBe(
-        "Approaching context limit (16K tokens). Auto-compacting chat history...",
-      );
-    });
-  });
-
-  describe("getModelContextLimit", () => {
-    it("should return context length from model config when available", () => {
-      const model: ModelConfig = {
-        name: "test-model",
-        model: "test-model",
-        provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 4096,
-        },
-      };
-
-      expect(getModelContextLimit(model)).toBe(4096);
-    });
-
-    it("should return default context length when not specified", () => {
-      const model: ModelConfig = {
-        name: "test-model",
-        model: "test-model",
->>>>>>> Stashed changes
         provider: "openai",
       };
 
       expect(getModelContextLimit(model)).toBe(200_000);
     });
   });
-<<<<<<< Updated upstream
 
   describe("countMessageTokens", () => {
     it("should count tokens for string content", () => {
@@ -328,7 +209,7 @@ describe("tokenizer", () => {
       const chatHistory = createChatHistory(1); // Minimal input
 
       expect(() => shouldAutoCompact(chatHistory, model)).toThrow(
-        "max_tokens is larger than context_length, which should not be possible. Please check your configuration."
+        "max_tokens is larger than context_length, which should not be possible. Please check your configuration.",
       );
     });
 
@@ -337,7 +218,7 @@ describe("tokenizer", () => {
       const chatHistory = createChatHistory(1); // Minimal input
 
       expect(() => shouldAutoCompact(chatHistory, model)).toThrow(
-        "max_tokens is larger than context_length, which should not be possible. Please check your configuration."
+        "max_tokens is larger than context_length, which should not be possible. Please check your configuration.",
       );
     });
 
@@ -408,6 +289,4 @@ describe("tokenizer", () => {
       });
     });
   });
-=======
->>>>>>> Stashed changes
 });

@@ -137,7 +137,9 @@ export function shouldAutoCompact(
 
   // Ensure we have positive space available for input
   if (availableForInput <= 0) {
-    throw new Error(`max_tokens is larger than context_length, which should not be possible. Please check your configuration.`);
+    throw new Error(
+      `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
+    );
   }
 
   const usage = inputTokens / availableForInput;
