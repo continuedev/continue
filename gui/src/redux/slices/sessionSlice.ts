@@ -497,19 +497,6 @@ export const sessionSlice = createSlice({
         ...payload.contextItems,
       ];
     },
-    setAppliedRulesAtIndex: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{
-        index: number;
-        appliedRules: RuleWithSource[];
-      }>,
-    ) => {
-      if (state.history[payload.index]) {
-        state.history[payload.index].appliedRules = payload.appliedRules;
-      }
-    },
     setInactive: (state) => {
       const curMessage = state.history.at(-1);
 
@@ -999,7 +986,6 @@ export const {
   updateFileSymbols,
   setContextItemsAtIndex,
   addContextItemsAtIndex,
-  setAppliedRulesAtIndex,
   setInactive,
   streamUpdate,
   newSession,

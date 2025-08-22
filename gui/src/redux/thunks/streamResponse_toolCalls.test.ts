@@ -386,7 +386,6 @@ describe("streamResponseThunk - tool calls", () => {
       "symbols/updateFromContextItems/pending",
       "session/updateHistoryItemAtIndex",
       "chat/streamNormalInput/pending",
-      "session/setAppliedRulesAtIndex",
       "session/setActive",
       "session/setInlineErrorMessage",
       "session/setIsPruned",
@@ -405,7 +404,6 @@ describe("streamResponseThunk - tool calls", () => {
       "session/resetNextCodeBlockToApplyIndex",
       "session/streamUpdate",
       "chat/streamNormalInput/pending",
-      "session/setAppliedRulesAtIndex",
       "session/setActive",
       "session/setInlineErrorMessage",
       "session/setIsPruned",
@@ -932,13 +930,6 @@ describe("streamResponseThunk - tool calls", () => {
           requestStatus: "pending",
         },
         payload: undefined,
-      },
-      {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          appliedRules: [],
-          index: 1,
-        },
       },
       {
         type: "session/setActive",
@@ -1575,13 +1566,6 @@ describe("streamResponseThunk - tool calls", () => {
           requestStatus: "pending",
         },
         payload: undefined,
-      },
-      {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          appliedRules: [],
-          index: 1,
-        },
       },
       {
         type: "session/setActive",
@@ -2270,13 +2254,6 @@ describe("streamResponseThunk - tool calls", () => {
         payload: undefined,
       },
       {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          appliedRules: [],
-          index: 1,
-        },
-      },
-      {
         type: "session/setActive",
         payload: undefined,
       },
@@ -2562,13 +2539,6 @@ describe("streamResponseThunk - tool calls", () => {
           requestStatus: "pending",
         },
         payload: undefined,
-      },
-      {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          appliedRules: [],
-          index: 1,
-        },
       },
       {
         type: "session/setActive",

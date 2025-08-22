@@ -263,13 +263,6 @@ describe("streamResponseThunk", () => {
         payload: undefined,
       },
       {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          index: 1,
-          appliedRules: [],
-        },
-      },
-      {
         type: "session/setActive",
         payload: undefined,
       },
@@ -761,7 +754,6 @@ describe("streamResponseThunk", () => {
       "symbols/updateFromContextItems/pending",
       "session/updateHistoryItemAtIndex",
       "chat/streamNormalInput/pending",
-      "session/setAppliedRulesAtIndex",
       "session/setActive",
       "session/setInlineErrorMessage",
       "session/setIsPruned",
@@ -780,7 +772,6 @@ describe("streamResponseThunk", () => {
       "session/resetNextCodeBlockToApplyIndex",
       "session/streamUpdate",
       "chat/streamNormalInput/pending",
-      "session/setAppliedRulesAtIndex",
       "session/setActive",
       "session/setInlineErrorMessage",
       "session/setIsPruned",
@@ -1284,13 +1275,6 @@ describe("streamResponseThunk", () => {
           requestStatus: "pending",
         },
         payload: undefined,
-      },
-      {
-        type: "session/setAppliedRulesAtIndex",
-        payload: {
-          appliedRules: [],
-          index: 1,
-        },
       },
       {
         type: "session/setActive",
