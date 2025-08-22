@@ -1,20 +1,26 @@
 import { HelperVars } from "../../autocomplete/util/HelperVars.js";
 import { NEXT_EDIT_MODELS } from "../../llm/constants.js";
-import {
-  INSTINCT_SYSTEM_PROMPT,
-  INSTINCT_USER_PROMPT_PREFIX,
-} from "../constants.js";
+import { INSTINCT_SYSTEM_PROMPT } from "../constants.js";
 import {
   contextSnippetsBlock,
   currentFileContentBlock,
   editHistoryBlock,
 } from "../templating/instinct.js";
-import { ModelSpecificContext, Prompt } from "../types.js";
+import {
+  NEXT_EDIT_MODEL_TEMPLATES,
+  PromptTemplateRenderer,
+} from "../templating/NextEditPromptEngine.js";
+import { ModelSpecificContext, Prompt, PromptMetadata } from "../types.js";
 import { BaseNextEditProvider } from "./BaseNextEditProvider.js";
 
 export class InstinctProvider extends BaseNextEditProvider {
+  private templateRenderer: PromptTemplateRenderer;
+
   constructor() {
     super(NEXT_EDIT_MODELS.INSTINCT);
+
+    const template = NEXT_EDIT_MODEL_TEMPLATES[NEXT_EDIT_MODELS.INSTINCT];
+    this.templateRenderer = new PromptTemplateRenderer(template.template);
   }
 
   getSystemPrompt(): string {
@@ -67,42 +73,22 @@ export class InstinctProvider extends BaseNextEditProvider {
   async generatePrompts(context: ModelSpecificContext): Promise<Prompt[]> {
     const promptCtx = this.buildPromptContext(context);
 
-    // Process context snippets with Instinct-specific formatting.
-    const formattedContextSnippets = contextSnippetsBlock(
-      promptCtx.contextSnippets,
-    );
+    const templateVars = {
+      contextSnippets: contextSnippetsBlock(promptCtx.contextSnippets),
+      currentFileContent: currentFileContentBlock(
+        promptCtx.currentFileContent,
+        promptCtx.windowStart,
+        promptCtx.windowEnd,
+        promptCtx.editableRegionStartLine,
+        promptCtx.editableRegionEndLine,
+        context.helper.pos,
+      ),
+      editDiffHistory: editHistoryBlock(promptCtx.editDiffHistory),
+      currentFilePath: promptCtx.currentFilePath,
+      languageShorthand: promptCtx.languageShorthand,
+    };
 
-    // Format the current file content with editable region markers.
-    const formattedCurrentFileContent = currentFileContentBlock(
-      promptCtx.currentFileContent,
-      promptCtx.windowStart,
-      promptCtx.windowEnd,
-      promptCtx.editableRegionStartLine,
-      promptCtx.editableRegionEndLine,
-      context.helper.pos,
-    );
-
-    // Format edit history.
-    const formattedEditHistory = editHistoryBlock(promptCtx.editDiffHistory);
-
-    // Build the user prompt following Instinct's specific template.
-    const userPromptContent = [
-      INSTINCT_USER_PROMPT_PREFIX,
-      "",
-      "### Context:",
-      formattedContextSnippets,
-      "",
-      "### User Edits:",
-      "",
-      formattedEditHistory,
-      "",
-      "### User Excerpt:",
-      promptCtx.currentFilePath,
-      "",
-      formattedCurrentFileContent,
-      "```",
-      "### Response:",
-    ].join("\n");
+    const userPromptContent = this.templateRenderer.render(templateVars);
 
     return [
       {
@@ -114,6 +100,39 @@ export class InstinctProvider extends BaseNextEditProvider {
         content: userPromptContent,
       },
     ];
+  }
+
+  buildPromptMetadata(
+    helper: HelperVars,
+    context: ModelSpecificContext,
+  ): PromptMetadata {
+    const promptCtx = this.buildPromptContext(context);
+
+    const templateVars = {
+      contextSnippets: contextSnippetsBlock(promptCtx.contextSnippets),
+      currentFileContent: currentFileContentBlock(
+        promptCtx.currentFileContent,
+        promptCtx.windowStart,
+        promptCtx.windowEnd,
+        promptCtx.editableRegionStartLine,
+        promptCtx.editableRegionEndLine,
+        context.helper.pos,
+      ),
+      editDiffHistory: editHistoryBlock(promptCtx.editDiffHistory),
+      currentFilePath: promptCtx.currentFilePath,
+      languageShorthand: promptCtx.languageShorthand,
+    };
+
+    const userPromptContent = this.templateRenderer.render(templateVars);
+
+    return {
+      prompt: {
+        role: "user",
+        content: userPromptContent,
+      },
+      userEdits: promptCtx.editDiffHistory.join("\n"),
+      userExcerpts: templateVars.currentFileContent,
+    };
   }
 
   calculateEditableRegion(

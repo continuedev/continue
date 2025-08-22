@@ -1,26 +1,26 @@
 import { HelperVars } from "../../autocomplete/util/HelperVars.js";
 import { NEXT_EDIT_MODELS } from "../../llm/constants.js";
-import {
-  MERCURY_CURRENT_FILE_CONTENT_CLOSE,
-  MERCURY_CURRENT_FILE_CONTENT_OPEN,
-  MERCURY_EDIT_DIFF_HISTORY_CLOSE,
-  MERCURY_EDIT_DIFF_HISTORY_OPEN,
-  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE,
-  MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN,
-  MERCURY_SYSTEM_PROMPT,
-  UNIQUE_TOKEN,
-} from "../constants.js";
+import { MERCURY_SYSTEM_PROMPT, UNIQUE_TOKEN } from "../constants.js";
 import {
   currentFileContentBlock,
   editHistoryBlock,
   recentlyViewedCodeSnippetsBlock,
 } from "../templating/mercuryCoderNextEdit.js";
-import { ModelSpecificContext, Prompt } from "../types.js";
+import {
+  NEXT_EDIT_MODEL_TEMPLATES,
+  PromptTemplateRenderer,
+} from "../templating/NextEditPromptEngine.js";
+import { ModelSpecificContext, Prompt, PromptMetadata } from "../types.js";
 import { BaseNextEditProvider } from "./BaseNextEditProvider.js";
 
 export class MercuryCoderProvider extends BaseNextEditProvider {
+  private templateRenderer: PromptTemplateRenderer;
+
   constructor() {
     super(NEXT_EDIT_MODELS.MERCURY_CODER);
+
+    const template = NEXT_EDIT_MODEL_TEMPLATES[NEXT_EDIT_MODELS.MERCURY_CODER];
+    this.templateRenderer = new PromptTemplateRenderer(template.template);
   }
 
   getSystemPrompt(): string {
@@ -65,35 +65,21 @@ export class MercuryCoderProvider extends BaseNextEditProvider {
   async generatePrompts(context: ModelSpecificContext): Promise<Prompt[]> {
     const promptCtx = this.buildPromptContext(context);
 
-    // Build the Mercury-specific prompt blocks.
-    const recentlyViewedSnippets = recentlyViewedCodeSnippetsBlock(
-      promptCtx.recentlyViewedCodeSnippets,
-    );
+    const templateVars = {
+      recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
+        promptCtx.recentlyViewedCodeSnippets,
+      ),
+      currentFileContent: currentFileContentBlock(
+        promptCtx.currentFileContent,
+        promptCtx.editableRegionStartLine,
+        promptCtx.editableRegionEndLine,
+        context.helper.pos,
+      ),
+      editDiffHistory: editHistoryBlock(promptCtx.editDiffHistory),
+      currentFilePath: promptCtx.currentFilePath,
+    };
 
-    const currentFileContent = currentFileContentBlock(
-      promptCtx.currentFileContent,
-      promptCtx.editableRegionStartLine,
-      promptCtx.editableRegionEndLine,
-      context.helper.pos,
-    );
-
-    const editHistory = editHistoryBlock(promptCtx.editDiffHistory);
-
-    // Construct the full user prompt following Mercury's template.
-    // TODO: Consider borrowing the templating engine from NextEditPromptEngine.ts
-    const userPromptContent = [
-      `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}`,
-      recentlyViewedSnippets,
-      `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}`,
-      "",
-      `${MERCURY_CURRENT_FILE_CONTENT_OPEN}`,
-      currentFileContent,
-      `${MERCURY_CURRENT_FILE_CONTENT_CLOSE}`,
-      "",
-      `${MERCURY_EDIT_DIFF_HISTORY_OPEN}`,
-      editHistory,
-      `${MERCURY_EDIT_DIFF_HISTORY_CLOSE}`,
-    ].join("\n");
+    const userPromptContent = this.templateRenderer.render(templateVars);
 
     return [
       {
@@ -105,6 +91,38 @@ export class MercuryCoderProvider extends BaseNextEditProvider {
         content: userPromptContent,
       },
     ];
+  }
+
+  buildPromptMetadata(
+    helper: HelperVars,
+    context: ModelSpecificContext,
+  ): PromptMetadata {
+    const promptCtx = this.buildPromptContext(context);
+
+    const templateVars = {
+      recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
+        promptCtx.recentlyViewedCodeSnippets,
+      ),
+      currentFileContent: currentFileContentBlock(
+        promptCtx.currentFileContent,
+        promptCtx.editableRegionStartLine,
+        promptCtx.editableRegionEndLine,
+        helper.pos,
+      ),
+      editDiffHistory: editHistoryBlock(promptCtx.editDiffHistory),
+      currentFilePath: promptCtx.currentFilePath,
+    };
+
+    const userPromptContent = this.templateRenderer.render(templateVars);
+
+    return {
+      prompt: {
+        role: "user",
+        content: userPromptContent,
+      },
+      userEdits: promptCtx.editDiffHistory.join("\n"),
+      userExcerpts: templateVars.currentFileContent,
+    };
   }
 
   calculateEditableRegion(
