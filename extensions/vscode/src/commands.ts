@@ -16,7 +16,6 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
-import { modelSupportsNextEdit } from "core/llm/autodetect";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
@@ -809,37 +808,16 @@ const getCommandsMap: (
         "enableTabAutocomplete",
       );
 
-      // Only allow toggling Next Edit if tab autocomplete is enabled.
       if (!tabAutocompleteEnabled) {
         vscode.window.showInformationMessage(
-          "Please enable tab autocomplete first to use Next Edit",
+          "Please enable tab autocomplete first to use next edit",
         );
         return;
       }
 
       const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
 
-      // Check if model supports Next Edit before enabling.
-      if (!nextEditEnabled) {
-        const { config: continueConfig } = await configHandler.loadConfig();
-        const autocompleteModel =
-          continueConfig?.selectedModelByRole.autocomplete;
-
-        if (
-          !autocompleteModel ||
-          !modelSupportsNextEdit(
-            autocompleteModel.capabilities,
-            autocompleteModel.model,
-            autocompleteModel.title,
-          )
-        ) {
-          vscode.window.showWarningMessage(
-            "The current autocomplete model does not support Next Edit",
-          );
-          return;
-        }
-      }
-
+      // updateNextEditState in VsCodeExtension.ts will handle the validation.
       config.update(
         "enableNextEdit",
         !nextEditEnabled,
