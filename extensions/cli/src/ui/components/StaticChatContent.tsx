@@ -14,6 +14,7 @@ interface StaticChatContentProps {
   mcpService?: MCPService;
   messages: DisplayMessage[];
   renderMessage: (message: DisplayMessage, index: number) => React.ReactElement;
+  refreshTrigger?: number; // Add a prop to trigger refresh from parent
 }
 
 export const StaticChatContent: React.FC<StaticChatContentProps> = ({
@@ -23,6 +24,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   mcpService,
   messages,
   renderMessage,
+  refreshTrigger,
 }) => {
   const { columns, rows } = useTerminalSize();
   const { stdout } = useStdout();
@@ -55,6 +57,13 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       clearTimeout(handler);
     };
   }, [columns, rows, refreshStatic]);
+
+  // Trigger refresh when refreshTrigger prop changes (for /clear command)
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      refreshStatic();
+    }
+  }, [refreshTrigger, refreshStatic]);
 
   // Create static items array (similar to gemini-cli's approach)
   const staticItems = React.useMemo(() => {
