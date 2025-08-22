@@ -72,9 +72,9 @@ export const DEFAULT_SECURITY_IGNORE_DIRS = [
 
   // IDE directories that may contain cached credentials
   // For now excluding, reasons for this unclear
-  // ".vscode/",
-  // ".idea/",
-  // ".vs/",
+  ".vscode/",
+  ".idea/",
+  ".vs/",
 
   // Cloud provider credential directories
   ".aws/",
