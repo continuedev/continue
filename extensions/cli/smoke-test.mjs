@@ -60,9 +60,19 @@ runTest("Wrapper script has shebang", () => {
   }
 });
 
+// Cross-platform command execution helper
+function getCLICommand(args = "") {
+  const isWindows = process.platform === "win32";
+  if (isWindows) {
+    return `node dist/cn.js ${args}`;
+  } else {
+    return `./dist/cn.js ${args}`;
+  }
+}
+
 // Test 3: Version command works
 runTest("Version command", () => {
-  const output = execCommand("./dist/cn.js --version");
+  const output = execCommand(getCLICommand("--version"));
   const packageJson = JSON.parse(
     readFileSync(resolve(__dirname, "package.json"), "utf8"),
   );
@@ -75,7 +85,7 @@ runTest("Version command", () => {
 
 // Test 4: Help command works
 runTest("Help command", () => {
-  const output = execCommand("./dist/cn.js --help");
+  const output = execCommand(getCLICommand("--help"));
   if (!output.includes("Continue CLI") || !output.includes("--version")) {
     throw new Error("Help output missing expected content");
   }
@@ -83,22 +93,39 @@ runTest("Help command", () => {
 
 // Test 5: Check bundle size
 runTest("Bundle size is reasonable", () => {
-  const stats = execSync(`ls -lh dist/index.js`, { encoding: "utf8" });
-  const sizeMatch = stats.match(/(\d+(?:\.\d+)?[MK])/);
-  if (sizeMatch) {
-    const size = sizeMatch[1];
-    console.log(`(${size})`);
-
-    // Parse size to check it's not too large
-    const numSize = parseFloat(size);
-    const unit = size.slice(-1);
-    const sizeInMB = unit === "M" ? numSize : numSize / 1024;
-
-    // This is arbitrary. We might go over at some point,
-    // in which case you can just increase this.
-    if (sizeInMB > 20) {
-      throw new Error(`Bundle too large: ${size}`);
+  const isWindows = process.platform === "win32";
+  const command = isWindows 
+    ? `powershell -Command "(Get-Item dist/index.js).length / 1MB"` 
+    : `ls -lh dist/index.js`;
+  
+  let sizeInMB;
+  
+  if (isWindows) {
+    try {
+      const output = execCommand(command);
+      sizeInMB = parseFloat(output.trim());
+    } catch {
+      // Fallback for Windows if PowerShell fails
+      const stats = readFileSync(resolve(__dirname, "dist/index.js"));
+      sizeInMB = stats.length / (1024 * 1024);
     }
+  } else {
+    const stats = execCommand(command);
+    const sizeMatch = stats.match(/(\d+(?:\.\d+)?[MK])/);
+    if (sizeMatch) {
+      const size = sizeMatch[1];
+      const numSize = parseFloat(size);
+      const unit = size.slice(-1);
+      sizeInMB = unit === "M" ? numSize : numSize / 1024;
+    }
+  }
+
+  console.log(`(${sizeInMB.toFixed(1)}M)`);
+
+  // This is arbitrary. We might go over at some point,
+  // in which case you can just increase this.
+  if (sizeInMB > 20) {
+    throw new Error(`Bundle too large: ${sizeInMB.toFixed(1)}M`);
   }
 });
 
@@ -135,7 +162,9 @@ runTest("Local packages are bundled", () => {
 runTest("CLI can be invoked", () => {
   try {
     // Test that the CLI runs without crashing when given no args
-    execCommand("./dist/cn.js --help > /dev/null 2>&1");
+    const isWindows = process.platform === "win32";
+    const nullDevice = isWindows ? "nul" : "/dev/null";
+    execCommand(`${getCLICommand("--help")} > ${nullDevice} 2>&1`);
   } catch (error) {
     throw new Error(`CLI invocation failed: ${error.message}`);
   }
@@ -158,7 +187,7 @@ runTest("Build metadata exists", () => {
 // Test 9: Verify no missing external dependencies
 runTest("No missing runtime dependencies", () => {
   // This would fail in Test 3 if dependencies were missing, but let's be explicit
-  const output = execCommand("./dist/cn.js --version 2>&1", {
+  const output = execCommand(`${getCLICommand("--version")} 2>&1`, {
     env: { ...process.env, NODE_ENV: "production" },
   });
 

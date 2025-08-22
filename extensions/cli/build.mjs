@@ -45,11 +45,6 @@ try {
     // Handle .js extensions in imports
     resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
 
-    // Preserve important Node.js globals
-    define: {
-      "process.env.NODE_ENV": '"production"',
-    },
-
     // Handle TypeScript paths and local packages
     alias: {
       "@continuedev/config-yaml": resolve(
