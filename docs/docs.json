@@ -1099,6 +1099,10 @@
     {
       "source": "/customize/model-providers",
       "destination": "/customize/model-providers/overview"
+    },
+    {
+      "source": "/features/edit/next-edit",
+      "destination": "/features/autocomplete/next-edit"
     }
   ]
 }
