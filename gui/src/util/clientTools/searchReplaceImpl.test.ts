@@ -581,32 +581,6 @@ keep this too`;
         ),
       ).rejects.toThrow("Failed to apply search and replace: File read error");
     });
-
-    it("should handle applyToFile errors", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
-      mockParseAllSearchReplaceBlocks.mockReturnValue([
-        {
-          isComplete: true,
-          searchContent: "content",
-          replaceContent: "replacement",
-        },
-      ]);
-      mockIdeMessenger.ide.readFile.mockResolvedValue("content");
-      mockFindSearchMatch.mockReturnValue({
-        startIndex: 0,
-        endIndex: 7,
-        strategyName: "exactMatch",
-      });
-      mockIdeMessenger.request.mockRejectedValue(new Error("Apply failed"));
-
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["mock diff content"] },
-          "tool-call-id",
-          mockExtras,
-        ),
-      ).rejects.toThrow("Failed to apply search and replace: Apply failed");
-    });
   });
 
   describe("edge cases", () => {

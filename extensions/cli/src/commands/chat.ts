@@ -10,6 +10,7 @@ import {
   getHistoryForLLM,
 } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { sentryService } from "../sentry.js";
@@ -22,7 +23,6 @@ import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
-import { safeStdout } from "../util/consoleOverride.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import {
