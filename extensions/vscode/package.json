@@ -341,6 +341,10 @@
         "group": "Continue"
       },
       {
+        "command": "continue.toggleNextEditEnabled",
+        "title": "Continue: Toggle Next Edit"
+      },
+      {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",
         "category": "Continue",
         "title": "Hide Next Edit Suggestion"
@@ -462,6 +466,12 @@
         "command": "continue.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
+      },
+      {
+        "command": "continue.toggleNextEditEnabled",
+        "key": "ctrl+k ctrl+n",
+        "mac": "cmd+k cmd+n",
+        "when": "editorTextFocus"
       },
       {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",
