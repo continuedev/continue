@@ -26,7 +26,6 @@ import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { PrefetchQueue } from "./NextEditPrefetchQueue.js";
 import { NextEditProviderFactory } from "./NextEditProviderFactory.js";
 import { BaseNextEditProvider } from "./providers/BaseNextEditProvider.js";
-import { renderPrompt } from "./templating/NextEditPromptEngine.js";
 import {
   ModelSpecificContext,
   NextEditOutcome,
@@ -393,12 +392,12 @@ export class NextEditProvider {
       }),
     };
 
-    // Generate prompts using the model-specific provider.
     const prompts = await this.modelProvider.generatePrompts(context);
 
-    // Store prompt metadata for later use.
-    const promptCtx = this.modelProvider.buildPromptContext(context);
-    this.promptMetadata = await renderPrompt(helper, promptCtx);
+    this.promptMetadata = this.modelProvider.buildPromptMetadata(
+      helper,
+      context,
+    );
 
     return { editableRegionStartLine, editableRegionEndLine, prompts };
   }
