@@ -1,7 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import * as readlineSync from "readline-sync";
 
 import { getDisplayableAsciiArt } from "../asciiArt.js";
 import {
@@ -25,6 +24,7 @@ import { startTUIChat } from "../ui/index.js";
 import { safeStdout } from "../util/consoleOverride.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import { question } from "../util/prompt.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
@@ -399,7 +399,7 @@ async function runHeadlessMode(
     const userInput =
       isFirstMessage && prompt
         ? prompt
-        : readlineSync.question(`\n${chalk.bold.green("You:")} `);
+        : await question(`\n${chalk.bold.green("You:")} `);
 
     isFirstMessage = false;
 
