@@ -70,7 +70,7 @@ To use a model that is not in the dropdown list, you can simply enter the model 
 
 To utilize features such as provider preferences or model routing configuration, include these parameters inside the `models[].requestsOptions.extraBodyProperties` field of your plugin config.
 
-For example, to route requests to a specific provider, you can use the `provider` field like so:
+For example, to prevent extra long prompts from being compressed, you can explicitly turn off the feature like so:
 
 <Tabs>
   <Tab title="YAML">
@@ -81,7 +81,7 @@ For example, to route requests to a specific provider, you can use the `provider
       model: example-model
       requestOptions:
         extraBodyProperties:
-          provider: "anthropic"
+          transforms: []
   ```
   </Tab>
   <Tab title="JSON">
@@ -94,7 +94,7 @@ For example, to route requests to a specific provider, you can use the `provider
         "model": "example-model",
         "requestOptions": {
           "extraBodyProperties": {
-            "provider": "anthropic"
+            "transforms": []
           }
         }
       }
