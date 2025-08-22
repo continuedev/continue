@@ -1,0 +1,58 @@
+{
+  "name": "continue-microservice",
+  "version": "1.0.0",
+  "description": "Unified Continue AI Assistant Microservice",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "build": "echo 'No build step required'",
+    "docker:build": "docker build -t continue-microservice .",
+    "docker:run": "docker run -p 3000:3000 continue-microservice"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "js-yaml": "^4.1.0",
+    "multer": "^1.4.5-lts.1",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.3"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "coding",
+    "continue",
+    "microservice",
+    "llm",
+    "autocomplete",
+    "chat"
+  ],
+  "author": "Continue Team",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/continuedev/continue.git"
+  },
+  "bugs": {
+    "url": "https://github.com/continuedev/continue/issues"
+  },
+  "homepage": "https://continue.dev"
+}
