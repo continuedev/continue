@@ -84,6 +84,49 @@ export class VsCodeExtension {
 
   private ARBITRARY_TYPING_DELAY = 2000;
 
+  private async updateNextEditState(
+    context: vscode.ExtensionContext,
+  ): Promise<void> {
+    const { config: continueConfig } = await this.configHandler.loadConfig();
+    const autocompleteModel = continueConfig?.selectedModelByRole.autocomplete;
+    const vscodeConfig = vscode.workspace.getConfiguration(EXTENSION_NAME);
+    const enabledNextEdit =
+      vscodeConfig.get<boolean>("enableNextEdit") ?? false;
+
+    const shouldEnableNextEdit =
+      (autocompleteModel &&
+        modelSupportsNextEdit(
+          autocompleteModel.capabilities,
+          autocompleteModel.model,
+          autocompleteModel.title,
+        ) &&
+        enabledNextEdit) ||
+      isNextEditTest();
+
+    if (shouldEnableNextEdit) {
+      await setupNextEditWindowManager(context);
+      this.activateNextEdit();
+      await NextEditWindowManager.freeTabAndEsc();
+
+      const jumpManager = JumpManager.getInstance();
+      jumpManager.registerSelectionChangeHandler();
+
+      const ghostTextAcceptanceTracker =
+        GhostTextAcceptanceTracker.getInstance();
+      ghostTextAcceptanceTracker.registerSelectionChangeHandler();
+
+      const nextEditWindowManager = NextEditWindowManager.getInstance();
+      nextEditWindowManager.registerSelectionChangeHandler();
+    } else {
+      NextEditWindowManager.clearInstance();
+      this.deactivateNextEdit();
+      await NextEditWindowManager.freeTabAndEsc();
+
+      JumpManager.clearInstance();
+      GhostTextAcceptanceTracker.clearInstance();
+    }
+  }
+
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
@@ -238,39 +281,7 @@ export class VsCodeExtension {
         this.completionProvider.updateUsingFullFileDiff(shouldUseFullFileDiff);
         selectionManager.updateUsingFullFileDiff(shouldUseFullFileDiff);
 
-        const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
-
-        if (
-          (autocompleteModel &&
-            modelSupportsNextEdit(
-              autocompleteModel.capabilities,
-              autocompleteModel.model,
-              autocompleteModel.title,
-            )) ||
-          isNextEditTest()
-        ) {
-          // Set up next edit window manager only for Continue team members
-          await setupNextEditWindowManager(context);
-          this.activateNextEdit();
-          await NextEditWindowManager.freeTabAndEsc();
-
-          const jumpManager = JumpManager.getInstance();
-          jumpManager.registerSelectionChangeHandler();
-
-          const ghostTextAcceptanceTracker =
-            GhostTextAcceptanceTracker.getInstance();
-          ghostTextAcceptanceTracker.registerSelectionChangeHandler();
-
-          const nextEditWindowManager = NextEditWindowManager.getInstance();
-          nextEditWindowManager.registerSelectionChangeHandler();
-        } else {
-          NextEditWindowManager.clearInstance();
-          this.deactivateNextEdit();
-          await NextEditWindowManager.freeTabAndEsc();
-
-          JumpManager.clearInstance();
-          GhostTextAcceptanceTracker.clearInstance();
-        }
+        await this.updateNextEditState(context);
 
         if (configLoadInterrupted) {
           // Show error in status bar
@@ -562,6 +573,10 @@ export class VsCodeExtension {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
         void this.core.invoke("config/ideSettingsUpdate", settings);
+
+        if (event.affectsConfiguration(`${EXTENSION_NAME}.enableNextEdit`)) {
+          await this.updateNextEditState(context);
+        }
       }
     });
   }
