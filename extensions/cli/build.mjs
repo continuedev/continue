@@ -69,6 +69,9 @@ try {
         __dirname,
         "../../packages/config-types/dist/index.js",
       ),
+      "core": resolve(__dirname, "../../core"),
+      "@continuedev/fetch": resolve(__dirname, "../../packages/fetch/dist/index.js"),
+      "@continuedev/llm-info": resolve(__dirname, "../../packages/llm-info/dist/index.js"),
     },
 
     // Add banner to create require for CommonJS packages

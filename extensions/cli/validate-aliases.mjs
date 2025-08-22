@@ -42,7 +42,8 @@ function getDefinedAliases() {
     }
     
     // Look for package names in non-commented lines
-    const packageMatch = line.match(/"(@continuedev\/[^"]+)"/);
+    // Match both @continuedev/* packages and simple package names like "core"
+    const packageMatch = line.match(/"(@continuedev\/[^"]+|[^"@\/]+)":/);
     if (packageMatch) {
       aliases.add(packageMatch[1]);
     }
