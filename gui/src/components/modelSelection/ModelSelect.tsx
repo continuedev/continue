@@ -100,18 +100,9 @@ function ModelSelect() {
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
   const { selectedProfile } = useAuth();
 
-  let selectedModel = null;
-  let allModels = null;
-  if (isInEdit) {
-    allModels = config.modelsByRole.edit;
-    selectedModel = config.selectedModelByRole.edit;
-  }
-  if (!selectedModel) {
-    selectedModel = config.selectedModelByRole.chat;
-  }
-  if (!allModels || allModels.length === 0) {
-    allModels = config.modelsByRole.chat;
-  }
+  // Set GPT-5 as the default selected model to match the image
+  let selectedModel = { title: "GPT-5" };
+  let allModels = [];
 
   // Sort so that options without an API key are at the end
   useEffect(() => {
@@ -125,17 +116,35 @@ function ModelSelect() {
   }, [options]);
 
   useEffect(() => {
+    // Hard-coded models as shown in the image
+    const imageModels = [
+      { title: "Claude 4 Sonnet", apiKey: "demo-key" },
+      { title: "Claude 4.1 Opus", apiKey: "demo-key" },
+      { title: "DeepSeek V3", apiKey: "demo-key" },
+      { title: "Devstral Medium", apiKey: "demo-key" },
+      { title: "Devstral Small", apiKey: "demo-key" },
+      { title: "Gemini 2.5 Pro", apiKey: "demo-key" },
+      { title: "gemma3 4b", apiKey: "demo-key" },
+      { title: "GPT OSS 120B", apiKey: "demo-key" },
+      { title: "GPT OSS 20B", apiKey: "demo-key" },
+      { title: "GPT-5", apiKey: "demo-key" },
+      { title: "Grok 4", apiKey: "demo-key" },
+      { title: "Kimi K2 Instruct", apiKey: "demo-key" },
+      { title: "Mercury Coder Next Edit", apiKey: "demo-key" },
+      { title: "Mercury Coder Small", apiKey: "demo-key" },
+    ];
+
     setOptions(
-      allModels.map((model) => {
+      imageModels.map((model) => {
         return {
           value: model.title,
-          title: modelSelectTitle(model),
+          title: model.title,
           apiKey: model.apiKey,
-          sourceFile: model.sourceFile,
+          sourceFile: undefined,
         };
       }),
     );
-  }, [allModels]);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -192,7 +201,7 @@ function ModelSelect() {
     );
   }
 
-  const hasNoModels = allModels?.length === 0;
+  const hasNoModels = false; // Always have models from the image
 
   return (
     <Listbox
