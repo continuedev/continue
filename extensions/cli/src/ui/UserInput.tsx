@@ -1,5 +1,4 @@
 import { type AssistantConfig } from "@continuedev/sdk";
-import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useCallback, useState } from "react";
 
@@ -153,6 +152,17 @@ const UserInput: React.FC<UserInputProps> = ({
       }
     }
 
+    // Check if there are any matching commands
+    const filteredCommands = allCommands.filter((cmd) =>
+      cmd.name.toLowerCase().includes(afterSlash.toLowerCase()),
+    );
+
+    // If no commands match, hide the dropdown to allow normal Enter behavior
+    if (filteredCommands.length === 0) {
+      setShowSlashCommands(false);
+      return;
+    }
+
     // Show selector for partial matches
     setShowSlashCommands(true);
     setSlashCommandFilter(afterSlash);
@@ -255,7 +265,6 @@ const UserInput: React.FC<UserInputProps> = ({
       // Read the file content and notify parent component
       if (onFileAttached) {
         try {
-          throwIfFileIsSecurityConcern(filePath);
           const fs = await import("fs/promises");
           const content = await fs.readFile(filePath, "utf-8");
           onFileAttached(filePath, content);
