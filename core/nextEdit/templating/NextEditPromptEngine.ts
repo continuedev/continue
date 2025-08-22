@@ -39,11 +39,14 @@ import {
 type TemplateRenderer = (vars: TemplateVars) => string;
 
 const NEXT_EDIT_MODEL_TEMPLATES: Record<NEXT_EDIT_MODELS, NextEditTemplate> = {
+  "mercury-coder": {
+    template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n`,
+  },
   "mercury-coder-nextedit": {
-    template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n\nThe developer was working on a section of code within the tags \`<|code_to_edit|>\` in the file located at {{{currentFilePath}}}.\nUsing the given \`recently_viewed_code_snippets\`, \`current_file_content\`, \`edit_diff_history\`, and the cursor position marked as \`<|cursor|>\`, please continue the developer's work. Update the \`code_to_edit\` section by predicting and completing the changes they would have made next. Provide the revised code that was between the \`<|code_to_edit|>\` and \`<|/code_to_edit|>\` tags, including the tags themselves.`,
+    template: `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_OPEN}\n{{{recentlyViewedCodeSnippets}}}\n${MERCURY_RECENTLY_VIEWED_CODE_SNIPPETS_CLOSE}\n\n${MERCURY_CURRENT_FILE_CONTENT_OPEN}\n{{{currentFileContent}}}\n${MERCURY_CURRENT_FILE_CONTENT_CLOSE}\n\n${MERCURY_EDIT_DIFF_HISTORY_OPEN}\n{{{editDiffHistory}}}\n${MERCURY_EDIT_DIFF_HISTORY_CLOSE}\n`,
   },
   instinct: {
-    template: `${INSTINCT_USER_PROMPT_PREFIX}\n\n### Context:\n{{{contextSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpts:\n{{{currentFilePath}}}\n\n{{{currentFileContent}}}\`\`\`\n### Response:`,
+    template: `${INSTINCT_USER_PROMPT_PREFIX}\n\n### Context:\n{{{contextSnippets}}}\n\n### User Edits:\n\n{{{editDiffHistory}}}\n\n### User Excerpt:\n{{{currentFilePath}}}\n\n{{{currentFileContent}}}\`\`\`\n### Response:`,
   },
 };
 
@@ -90,7 +93,7 @@ export async function renderPrompt(
   let tv: TemplateVars;
 
   switch (modelName) {
-    case "mercury-coder-nextedit": {
+    case NEXT_EDIT_MODELS.MERCURY_CODER: {
       userEdits = ctx.editDiffHistory;
 
       // editedCodeWithTokens = insertTokens(
@@ -119,7 +122,36 @@ export async function renderPrompt(
 
       break;
     }
-    case "instinct": {
+    case NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT: {
+      userEdits = ctx.editDiffHistory;
+
+      // editedCodeWithTokens = insertTokens(
+      //   helper.fileContents.split("\n"),
+      //   helper.pos,
+      //   MERCURY_CURSOR,
+      // );
+
+      const mercuryCtx: MercuryTemplateVars = {
+        recentlyViewedCodeSnippets: recentlyViewedCodeSnippetsBlock(
+          ctx.recentlyViewedCodeSnippets,
+        ),
+        currentFileContent: currentFileContentBlock(
+          ctx.currentFileContent,
+          ctx.editableRegionStartLine,
+          ctx.editableRegionEndLine,
+          helper.pos,
+        ),
+        editDiffHistory: editHistoryBlock(ctx.editDiffHistory),
+        currentFilePath: ctx.currentFilePath,
+      };
+
+      tv = mercuryCtx;
+
+      editedCodeWithTokens = mercuryCtx.currentFileContent;
+
+      break;
+    }
+    case NEXT_EDIT_MODELS.INSTINCT: {
       userEdits = ctx.editDiffHistory;
 
       // editedCodeWithTokens = insertTokens(

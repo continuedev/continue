@@ -9,7 +9,7 @@ import {
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources/index";
-import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
+import { ChatCompletionCreateParams } from "openai/resources/index.js";
 import { WatsonXConfig } from "../types.js";
 import { chatCompletion, customFetch } from "../util.js";
 import {

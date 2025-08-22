@@ -1,0 +1,17 @@
+.env*
+test
+.vscode
+.github
+.continue
+.releaserc.json
+AGENTS.md
+vitest.config.ts
+vitest.e2e.config.ts
+vitest.setup.ts
+tsconfig.json
+tsconfig.build.json
+TESTING_STRATEGY.md
+.env.example
+package-lock.json
+eslint.config.js
+spec/
