@@ -111,6 +111,11 @@
           "default": true,
           "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
         },
+        "continue.enableNextEdit": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
+        },
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
