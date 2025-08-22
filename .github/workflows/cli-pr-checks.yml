@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          # cache-dependency-path: extensions/cli/package-lock.json
+          cache-dependency-path: extensions/cli/package-lock.json
 
       - name: Setup packages
         uses: ./.github/actions/setup-packages
@@ -58,8 +58,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: extensions/cli/package-lock.json
+
+      - name: Cache CLI node_modules
+        uses: actions/cache@v4
+        with:
+          path: extensions/cli/node_modules
+          key: ${{ runner.os }}-node${{ matrix.node-version }}-cli-modules-${{ hashFiles('extensions/cli/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node${{ matrix.node-version }}-cli-modules-
 
       - name: Setup packages
         uses: ./.github/actions/setup-packages
