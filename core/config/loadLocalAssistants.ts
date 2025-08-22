@@ -35,8 +35,12 @@ async function getDefinitionFilesInDir(
     }
 
     const overrideDefaultIgnores = ignore()
-      .add(DEFAULT_IGNORE_FILETYPES.filter((t) => t !== "config.yaml"))
-      .add(DEFAULT_IGNORE_DIRS);
+      .add(
+        DEFAULT_IGNORE_FILETYPES.filter(
+          (t) => t !== "config.yaml" && t !== "config.yml",
+        ),
+      )
+      .add(DEFAULT_IGNORE_DIRS.filter((d) => d !== ".continue/"));
 
     const uris = await walkDir(dir, ide, {
       overrideDefaultIgnores,
