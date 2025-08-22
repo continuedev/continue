@@ -225,8 +225,9 @@ export function getAutocompleteStatusBarTitle(
   return title;
 }
 
-const DISABLE_NEXT_EDIT_MENU_ITEM_LABEL = "$(circle-slash) Disable Next Edit";
-const ENABLE_NEXT_EDIT_MENU_ITEM_LABEL = "$(check) Enable Next Edit";
+const USE_FIM_MENU_ITEM_LABEL = "$(export) Use FIM autocomplete over next edit";
+const USE_NEXT_EDIT_MENU_ITEM_LABEL =
+  "$(sparkle) Use next edit over FIM autocomplete";
 
 // Shows what items get rendered in the autocomplete menu.
 export function getNextEditMenuItems(
@@ -238,8 +239,8 @@ export function getNextEditMenuItems(
   return [
     {
       label: nextEditEnabled
-        ? DISABLE_NEXT_EDIT_MENU_ITEM_LABEL
-        : ENABLE_NEXT_EDIT_MENU_ITEM_LABEL,
+        ? USE_FIM_MENU_ITEM_LABEL
+        : USE_NEXT_EDIT_MENU_ITEM_LABEL,
       description: getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + N",
     },
   ];
@@ -248,8 +249,7 @@ export function getNextEditMenuItems(
 // Checks if the current selected option is a next edit toggle label.
 export function isNextEditToggleLabel(label: string): boolean {
   return (
-    label === DISABLE_NEXT_EDIT_MENU_ITEM_LABEL ||
-    label === ENABLE_NEXT_EDIT_MENU_ITEM_LABEL
+    label === USE_FIM_MENU_ITEM_LABEL || label === USE_NEXT_EDIT_MENU_ITEM_LABEL
   );
 }
 
@@ -258,7 +258,7 @@ export function handleNextEditToggle(
   label: string,
   config: vscode.WorkspaceConfiguration,
 ) {
-  const isEnabling = label === ENABLE_NEXT_EDIT_MENU_ITEM_LABEL;
+  const isEnabling = label === USE_NEXT_EDIT_MENU_ITEM_LABEL;
 
   config.update(
     "enableNextEdit",
