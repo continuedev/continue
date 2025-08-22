@@ -10,16 +10,6 @@ const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 7500; // ~1500 tokens, will keep truncati
 function splitGrepResultsByFile(content: string): ContextItem[] {
   const matches = [...content.matchAll(/^\.\/([^\n]+)$/gm)];
 
-  if (matches.length === 0) {
-    return [
-      {
-        name: "Search results",
-        description: "Results from grep search",
-        content: "The search returned no results.",
-      },
-    ];
-  }
-
   const contextItems: ContextItem[] = [];
 
   for (let i = 0; i < matches.length; i++) {
@@ -80,6 +70,17 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     results,
     DEFAULT_GREP_SEARCH_CHAR_LIMIT,
   );
+
+  if (numResults === 0) {
+    return [
+      {
+        name: "Search results",
+        description: "Results from grep search",
+        content: "The search returned no results.",
+      },
+    ];
+  }
+
   const truncationReasons: string[] = [];
   if (numResults === DEFAULT_GREP_SEARCH_RESULTS_LIMIT) {
     truncationReasons.push(
