@@ -87,5 +87,5 @@ test("fetchUrlContent should add truncation warning with multiple truncated item
   expect(result).toHaveLength(3); // Two original items + warning
   expect(result[0].content.length).toBe(DEFAULT_FETCH_URL_CHAR_LIMIT);
   expect(result[1].content.length).toBe(DEFAULT_FETCH_URL_CHAR_LIMIT);
-  expect(result[2].name).toBe("URL content truncation warning");
+  expect(result[2].name).toBe("Truncation warning");
 });
