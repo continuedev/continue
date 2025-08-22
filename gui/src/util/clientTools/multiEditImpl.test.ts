@@ -1,5 +1,6 @@
 import * as ideUtils from "core/util/ideUtils";
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolExtras } from "./callClientTool";
 import { multiEditImpl } from "./multiEditImpl";
 
@@ -11,14 +12,20 @@ vi.mock("core/util/ideUtils", () => ({
   resolveRelativePathInDir: vi.fn(),
 }));
 
+vi.mock("../../redux/thunks/handleApplyStateUpdate", () => ({
+  applyForEditTool: vi.fn(),
+}));
+
 describe("multiEditImpl", () => {
   let mockExtras: ClientToolExtras;
   let mockResolveRelativePathInDir: Mock;
+  let mockApplyForEditTool: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockResolveRelativePathInDir = vi.mocked(ideUtils.resolveRelativePathInDir);
+    mockApplyForEditTool = vi.mocked(applyForEditTool);
 
     mockExtras = {
       getState: vi.fn(() => ({
@@ -106,16 +113,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "Hi world",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "Hi world",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should apply multiple edits sequentially", async () => {
@@ -135,16 +139,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "Hi universe\nGoodbye universe",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "Hi universe\nGoodbye universe",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should handle edits that depend on previous edits", async () => {
@@ -164,16 +165,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "let x = 2;",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "let x = 2;",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should throw if string not found in edit sequence", async () => {
@@ -227,16 +225,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "New content\nLine 2",
-          filepath: "new.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "New content\nLine 2",
+        filepath: "new.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should create and edit new file", async () => {
@@ -254,16 +249,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "Hello universe",
-          filepath: "new.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "Hello universe",
+        filepath: "new.txt",
+        isSearchAndReplace: true,
+      });
     });
   });
 
@@ -286,16 +278,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "qux bar qux baz qux",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "qux bar qux baz qux",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should handle mixed replace_all settings", async () => {
@@ -315,16 +304,13 @@ describe("multiEditImpl", () => {
         mockExtras,
       );
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "id",
-          text: "a b a z a",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "id",
+        text: "a b a z a",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
   });
 
@@ -345,25 +331,6 @@ describe("multiEditImpl", () => {
           mockExtras,
         ),
       ).rejects.toThrow("Failed to apply multi edit: Read failed");
-    });
-
-    it("should wrap applyToFile errors", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
-      mockExtras.ideMessenger.ide.readFile = vi.fn().mockResolvedValue("test");
-      mockExtras.ideMessenger.request = vi
-        .fn()
-        .mockRejectedValue(new Error("Write failed"));
-
-      await expect(
-        multiEditImpl(
-          {
-            filepath: "file.txt",
-            edits: [{ old_string: "test", new_string: "new" }],
-          },
-          "id",
-          mockExtras,
-        ),
-      ).rejects.toThrow("Failed to apply multi edit: Write failed");
     });
   });
 

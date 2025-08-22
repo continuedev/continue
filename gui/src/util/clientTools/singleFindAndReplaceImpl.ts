@@ -1,6 +1,6 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
-import { handleEditToolApplyError } from "../../redux/thunks/handleApplyStateUpdate";
+import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 
 export const singleFindAndReplaceImpl: ClientToolImpl = async (
@@ -62,23 +62,15 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
     }
 
     // Apply the changes to the file
-    void extras.ideMessenger
-      .request("applyToFile", {
+    void extras.dispatch(
+      applyForEditTool({
         streamId,
         toolCallId,
         text: newContent,
         filepath: resolvedFilepath,
         isSearchAndReplace: true,
-      })
-      .then((res) => {
-        if (res.status === "error") {
-          void extras.dispatch(
-            handleEditToolApplyError({
-              toolCallId,
-            }),
-          );
-        }
-      });
+      }),
+    );
 
     // Return success - applyToFile will handle the completion state
     return {

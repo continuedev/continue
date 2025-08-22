@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeEach, vi, Mock } from "vitest";
-import { v4 as uuid } from "uuid";
-import { singleFindAndReplaceImpl } from "./singleFindAndReplaceImpl";
-import { ClientToolExtras } from "./callClientTool";
 import * as ideUtils from "core/util/ideUtils";
-
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
+import { ClientToolExtras } from "./callClientTool";
+import { singleFindAndReplaceImpl } from "./singleFindAndReplaceImpl";
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "test-uuid"),
 }));
@@ -12,14 +11,20 @@ vi.mock("core/util/ideUtils", () => ({
   resolveRelativePathInDir: vi.fn(),
 }));
 
+vi.mock("../../redux/thunks/handleApplyStateUpdate", () => ({
+  applyForEditTool: vi.fn(),
+}));
+
 describe("singleFindAndReplaceImpl", () => {
   let mockExtras: ClientToolExtras;
   let mockResolveRelativePathInDir: Mock;
+  let mockApplyForEditTool: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockResolveRelativePathInDir = vi.mocked(ideUtils.resolveRelativePathInDir);
+    mockApplyForEditTool = vi.mocked(applyForEditTool);
 
     mockExtras = {
       getState: vi.fn(() => ({
@@ -159,16 +164,14 @@ describe("singleFindAndReplaceImpl", () => {
 
       await singleFindAndReplaceImpl(args, "tool-call-id", mockExtras);
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "tool-call-id",
-          text: "Hi there\nThis is a test file\nGoodbye world",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      // Check that the dispatch was called with the applyForEditTool thunk
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "tool-call-id",
+        text: "Hi there\nThis is a test file\nGoodbye world",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should throw error if old_string appears multiple times and replace_all is false", async () => {
@@ -204,16 +207,13 @@ describe("singleFindAndReplaceImpl", () => {
 
       await singleFindAndReplaceImpl(args, "tool-call-id", mockExtras);
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "tool-call-id",
-          text: "Hello universe\nThis is a test file\nGoodbye universe",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "tool-call-id",
+        text: "Hello universe\nThis is a test file\nGoodbye universe",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should handle empty new_string (deletion)", async () => {
@@ -229,16 +229,13 @@ describe("singleFindAndReplaceImpl", () => {
 
       await singleFindAndReplaceImpl(args, "tool-call-id", mockExtras);
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "tool-call-id",
-          text: "world\nThis is a test file",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "tool-call-id",
+        text: "world\nThis is a test file",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should handle special characters in strings", async () => {
@@ -256,16 +253,13 @@ describe("singleFindAndReplaceImpl", () => {
 
       await singleFindAndReplaceImpl(args, "tool-call-id", mockExtras);
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "tool-call-id",
-          text: 'const regex = /[a-z]+/g;\nconst text = "Hi $universe"',
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "tool-call-id",
+        text: 'const regex = /[a-z]+/g;\nconst text = "Hi $universe"',
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
 
     it("should preserve whitespace and indentation", async () => {
@@ -283,16 +277,13 @@ describe("singleFindAndReplaceImpl", () => {
 
       await singleFindAndReplaceImpl(args, "tool-call-id", mockExtras);
 
-      expect(mockExtras.ideMessenger.request).toHaveBeenCalledWith(
-        "applyToFile",
-        {
-          streamId: "test-uuid",
-          toolCallId: "tool-call-id",
-          text: "function test() {\n    const value = 'new';\n    return value;\n}",
-          filepath: "/test/file.txt",
-          isSearchAndReplace: true,
-        },
-      );
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
+        streamId: "test-uuid",
+        toolCallId: "tool-call-id",
+        text: "function test() {\n    const value = 'new';\n    return value;\n}",
+        filepath: "/test/file.txt",
+        isSearchAndReplace: true,
+      });
     });
   });
 
@@ -338,26 +329,6 @@ describe("singleFindAndReplaceImpl", () => {
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
       ).rejects.toThrow("Failed to apply find and replace: Permission denied");
-    });
-
-    it("should wrap and rethrow errors from applyToFile", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
-      mockExtras.ideMessenger.ide.readFile = vi
-        .fn()
-        .mockResolvedValue("test content");
-      mockExtras.ideMessenger.request = vi
-        .fn()
-        .mockRejectedValue(new Error("Write failed"));
-
-      const args = {
-        filepath: "file.txt",
-        old_string: "test",
-        new_string: "replacement",
-      };
-
-      await expect(
-        singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("Failed to apply find and replace: Write failed");
     });
   });
 });
