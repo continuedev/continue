@@ -117,20 +117,37 @@ export function calculateContextUsagePercentage(
 /**
  * Check if the chat history exceeds the auto-compact threshold
  * @param chatHistory The chat history to check
- * @param modelName The model name
+ * @param model The model configuration
  * @returns Whether auto-compacting should be triggered
  */
 export function shouldAutoCompact(
   chatHistory: ChatCompletionMessageParam[],
   model: ModelConfig,
 ): boolean {
-  const tokenCount = countChatHistoryTokens(chatHistory);
-  const limit = getModelContextLimit(model);
-  const usage = tokenCount / limit;
+  const inputTokens = countChatHistoryTokens(chatHistory);
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
+
+  // Calculate available space considering max_tokens reservation
+  // If maxTokens is not set, reserve 35% of context for output as a safe default
+  // (64k/200k with claude = 32%, round up to give a buffer)
+  const reservedForOutput =
+    maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
+  const availableForInput = contextLimit - reservedForOutput;
+
+  // Ensure we have positive space available for input
+  if (availableForInput <= 0) {
+    throw new Error(`max_tokens is larger than context_length, which should not be possible. Please check your configuration.`);
+  }
+
+  const usage = inputTokens / availableForInput;
 
   logger.debug("Context usage check", {
-    tokenCount,
-    limit,
+    inputTokens,
+    contextLimit,
+    maxTokens,
+    reservedForOutput,
+    availableForInput,
     usage: `${Math.round(usage * 100)}%`,
     threshold: `${Math.round(AUTO_COMPACT_THRESHOLD * 100)}%`,
     shouldCompact: usage >= AUTO_COMPACT_THRESHOLD,
