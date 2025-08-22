@@ -1,5 +1,7 @@
 import * as fs from "fs";
 
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
@@ -95,7 +97,7 @@ Each string in the diffs array can contain multiple SEARCH/REPLACE blocks, and a
   preprocess: async (args) => {
     // Get and validate args
     const { filepath, diffs } = parseSearchAndReplaceArgs(args);
-
+    throwIfFileIsSecurityConcern(filepath);
     // Get current file contents
     if (!fs.existsSync(filepath)) {
       throw new Error(`file ${filepath} does not exist`);
