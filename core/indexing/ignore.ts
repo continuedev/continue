@@ -67,14 +67,6 @@ export const DEFAULT_SECURITY_IGNORE_DIRS = [
   // Environment and configuration directories
   ".env/",
   "env/",
-  ".venv/",
-  "venv/",
-
-  // IDE directories that may contain cached credentials
-  // For now excluding, reasons for this unclear
-  ".vscode/",
-  ".idea/",
-  ".vs/",
 
   // Cloud provider credential directories
   ".aws/",
@@ -191,6 +183,13 @@ export const ADDITIONAL_INDEXING_IGNORE_DIRS = [
   ".cache/",
   "gems/",
   "vendor/",
+
+  ".venv/",
+  "venv/",
+
+  ".vscode/",
+  ".idea/",
+  ".vs/",
 ];
 
 // Combined patterns: security + additional

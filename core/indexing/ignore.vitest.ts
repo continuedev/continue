@@ -81,18 +81,7 @@ describe("isSecurityConcern", () => {
     it("should detect environment directories as security concerns", () => {
       expect(isSecurityConcern(".env/")).toBe(true);
       expect(isSecurityConcern("env/")).toBe(true);
-      expect(isSecurityConcern(".venv/")).toBe(true);
-      expect(isSecurityConcern("venv/")).toBe(true);
       expect(isSecurityConcern(".env/config")).toBe(true);
-      expect(isSecurityConcern("project/.venv/lib")).toBe(true);
-    });
-
-    it("should detect IDE directories as security concerns", () => {
-      expect(isSecurityConcern(".vscode/")).toBe(true);
-      expect(isSecurityConcern(".idea/")).toBe(true);
-      expect(isSecurityConcern(".vs/")).toBe(true);
-      expect(isSecurityConcern(".vscode/settings.json")).toBe(true);
-      expect(isSecurityConcern(".idea/workspace.xml")).toBe(true);
     });
 
     it("should detect cloud provider directories as security concerns", () => {
