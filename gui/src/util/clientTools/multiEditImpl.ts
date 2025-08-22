@@ -1,7 +1,14 @@
-import { resolveRelativePathInDir } from "core/util/ideUtils";
+import {
+  inferResolvedUriFromRelativePath,
+  resolveRelativePathInDir,
+} from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
+import {
+  performFindAndReplace,
+  validateSingleEdit,
+} from "./findAndReplaceUtils";
 
 interface EditOperation {
   old_string: string;
@@ -9,58 +16,26 @@ interface EditOperation {
   replace_all?: boolean;
 }
 
-function validateEdits(edits: EditOperation[]): void {
-  for (let i = 0; i < edits.length; i++) {
-    const edit = edits[i];
-    if (!edit.old_string && edit.old_string !== "") {
-      throw new Error(`Edit ${i + 1}: old_string is required`);
-    }
-    if (edit.new_string === undefined) {
-      throw new Error(`Edit ${i + 1}: new_string is required`);
-    }
-    if (edit.old_string === edit.new_string) {
+export function validateCreating(edits: EditOperation[]) {
+  const isCreating = edits[0].old_string === "";
+  if (edits.length > 1) {
+    if (isCreating) {
       throw new Error(
-        `Edit ${i + 1}: old_string and new_string must be different`,
+        "cannot make subsequent edits on a file you are creating",
       );
+    } else {
+      for (let i = 1; i < edits.length; i++) {
+        if (edits[i].old_string === "") {
+          throw new Error(
+            `edit #${i + 1}: only the first edit can contain an empty old_string, which is only used for file creation.`,
+          );
+        }
+      }
     }
   }
+
+  return isCreating;
 }
-
-function applyEdit(
-  content: string,
-  edit: EditOperation,
-  editIndex: number,
-  isFirstEditOfNewFile: boolean,
-): string {
-  const { old_string, new_string, replace_all = false } = edit;
-
-  // For new file creation, the first edit can have empty old_string
-  if (isFirstEditOfNewFile && old_string === "") {
-    return new_string;
-  }
-
-  // Check if old_string exists in current content
-  if (!content.includes(old_string)) {
-    throw new Error(
-      `Edit ${editIndex + 1}: String not found in file: "${old_string}"`,
-    );
-  }
-
-  if (replace_all) {
-    // Replace all occurrences
-    return content.split(old_string).join(new_string);
-  } else {
-    // Replace only the first occurrence, but check for uniqueness
-    const occurrences = content.split(old_string).length - 1;
-    if (occurrences > 1) {
-      throw new Error(
-        `Edit ${editIndex + 1}: String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
-      );
-    }
-    return content.replace(old_string, new_string);
-  }
-}
-
 export const multiEditImpl: ClientToolImpl = async (
   args,
   toolCallId,
@@ -81,49 +56,69 @@ export const multiEditImpl: ClientToolImpl = async (
   }
 
   // Validate each edit operation
-  validateEdits(edits);
+  for (let i = 0; i < edits.length; i++) {
+    const edit = edits[i];
+    validateSingleEdit(edit.old_string, edit.new_string, i);
+  }
 
   // Check if this is creating a new file (first edit has empty old_string)
-  const isCreatingNewFile = edits[0].old_string === "";
-
-  // Resolve the file path
-  const resolvedFilepath = await resolveRelativePathInDir(
+  const isCreatingNewFile = validateCreating(edits);
+  const resolvedUri = await resolveRelativePathInDir(
     filepath,
     extras.ideMessenger.ide,
   );
 
-  // For new files, resolvedFilepath might be null, so we construct the path
-  const targetFilepath = resolvedFilepath || filepath;
-
-  if (!isCreatingNewFile) {
-    // For existing files, check if file exists
-    if (!resolvedFilepath) {
-      throw new Error(`File ${filepath} does not exist`);
+  let newContent: string;
+  let fileUri: string;
+  if (isCreatingNewFile) {
+    if (resolvedUri) {
+      throw new Error(
+        `file ${filepath} already exists, cannot create new file`,
+      );
+    }
+    newContent = edits[0].new_string;
+    const response = await extras.ideMessenger.request(
+      "getWorkspaceDirs",
+      undefined,
+    );
+    if (response.status === "error") {
+      throw new Error(
+        "Error getting workspace directories to infer file creation path",
+      );
+    }
+    fileUri = await inferResolvedUriFromRelativePath(
+      filepath,
+      extras.ideMessenger.ide,
+      response.content,
+    );
+  } else {
+    if (!resolvedUri) {
+      throw new Error(
+        `file ${filepath} does not exist. If you are trying to edit it, correct the filepath. If you are trying to create it, you must pass old_string=""`,
+      );
+    }
+    newContent = await extras.ideMessenger.ide.readFile(resolvedUri);
+    fileUri = resolvedUri;
+    for (let i = 0; i < edits.length; i++) {
+      const { old_string, new_string, replace_all } = edits[i];
+      newContent = performFindAndReplace(
+        old_string,
+        edits[0],
+        new_string,
+        replace_all,
+        i,
+      );
     }
   }
 
   try {
-    // Read current file content (or start with empty for new files)
-    let currentContent = "";
-    if (!isCreatingNewFile) {
-      currentContent = await extras.ideMessenger.ide.readFile(targetFilepath);
-    }
-
-    let newContent = currentContent;
-
-    // Apply all edits sequentially
-    for (let i = 0; i < edits.length; i++) {
-      const isFirstEditOfNewFile = i === 0 && isCreatingNewFile;
-      newContent = applyEdit(newContent, edits[i], i, isFirstEditOfNewFile);
-    }
-
     // Apply the changes to the file
     void extras.dispatch(
       applyForEditTool({
         streamId,
         toolCallId,
         text: newContent,
-        filepath: targetFilepath,
+        filepath: fileUri,
         isSearchAndReplace: true,
       }),
     );

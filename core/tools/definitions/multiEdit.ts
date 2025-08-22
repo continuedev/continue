@@ -75,7 +75,7 @@ parameter is useful if you want to rename a variable for instance.
 If you want to create a new file, use:
 - A new file path
 - First edit: empty old_string and the new file's contents as new_string
-- Subsequent edits: normal edit operations on the created content`,
+- Subsequent edits are not allowed - there is no need since you are creating`,
     parameters: {
       type: "object",
       required: ["filepath", "edits"],

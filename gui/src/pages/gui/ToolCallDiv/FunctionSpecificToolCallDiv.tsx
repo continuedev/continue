@@ -33,9 +33,9 @@ function FunctionSpecificToolCallDiv({
         />
       );
     case BuiltInToolNames.SearchAndReplaceInFile:
-      const changes = args.diffs
+      const changes = args?.diffs
         ? Array.isArray(args.diffs)
-          ? args.diffs.join("\n\n---\n\n")
+          ? args.diffs?.join("\n\n---\n\n")
           : args.diffs
         : "";
 
@@ -76,7 +76,7 @@ ${edit?.old_string ?? ""}
 ${edit?.new_string ?? ""}
 ===== REPLACE`,
           )
-          .join("\n\n---\n\n") ?? "";
+          ?.join("\n\n---\n\n") ?? "";
 
       return (
         <EditFile

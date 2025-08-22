@@ -2,6 +2,10 @@ import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
+import {
+  performFindAndReplace,
+  validateSingleEdit,
+} from "./findAndReplaceUtils";
 
 export const singleFindAndReplaceImpl: ClientToolImpl = async (
   args,
@@ -16,15 +20,7 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
   if (!filepath) {
     throw new Error("filepath is required");
   }
-  if (!old_string) {
-    throw new Error("old_string is required");
-  }
-  if (new_string === undefined) {
-    throw new Error("new_string is required");
-  }
-  if (old_string === new_string) {
-    throw new Error("old_string and new_string must be different");
-  }
+  validateSingleEdit(old_string, new_string);
 
   // Resolve the file path
   const resolvedFilepath = await resolveRelativePathInDir(
@@ -40,26 +36,13 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
     const originalContent =
       await extras.ideMessenger.ide.readFile(resolvedFilepath);
 
-    // Check if old_string exists in the file
-    if (!originalContent.includes(old_string)) {
-      throw new Error(`String not found in file: ${old_string}`);
-    }
-
-    let newContent: string;
-
-    if (replace_all) {
-      // Replace all occurrences
-      newContent = originalContent.split(old_string).join(new_string);
-    } else {
-      // Replace only the first occurrence
-      const occurrences = originalContent.split(old_string).length - 1;
-      if (occurrences > 1) {
-        throw new Error(
-          `String "${old_string}" appears ${occurrences} times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.`,
-        );
-      }
-      newContent = originalContent.replace(old_string, new_string);
-    }
+    // Perform the find and replace operation
+    const newContent = performFindAndReplace(
+      originalContent,
+      old_string,
+      new_string,
+      replace_all,
+    );
 
     // Apply the changes to the file
     void extras.dispatch(
