@@ -95,6 +95,9 @@ export const DEFAULT_SECURITY_IGNORE_DIRS = [
   ".gnupg/",
   ".gpg/",
 
+  // Application specific
+  ".continue/",
+
   // Temporary directories that might contain sensitive data
   "tmp/secrets/",
   "temp/secrets/",
