@@ -20,8 +20,11 @@ import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
+  getNextEditMenuItems,
   getStatusBarStatus,
   getStatusBarStatusFromQuickPickItemLabel,
+  handleNextEditToggle,
+  isNextEditToggleLabel,
   quickPickStatusText,
   setupStatusBar,
   StatusBarStatus,
@@ -639,6 +642,8 @@ const getCommandsMap: (
             : StatusBarStatus.Disabled;
       }
 
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? true;
+
       quickPick.items = [
         {
           label: "$(gear) Open settings",
@@ -657,6 +662,7 @@ const getCommandsMap: (
           description:
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
+        ...getNextEditMenuItems(currentStatus, nextEditEnabled),
         {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
@@ -678,6 +684,8 @@ const getCommandsMap: (
             targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );
+        } else if (isNextEditToggleLabel(selectedOption)) {
+          handleNextEditToggle(selectedOption, config);
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
