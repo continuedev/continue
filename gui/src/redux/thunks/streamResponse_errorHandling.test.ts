@@ -493,6 +493,13 @@ describe("streamResponseThunk", () => {
         payload: undefined,
       },
       {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          appliedRules: [],
+          index: 1,
+        },
+      },
+      {
         type: "session/setActive",
         payload: undefined,
       },
@@ -867,6 +874,13 @@ describe("streamResponseThunk", () => {
           requestStatus: "pending",
         },
         payload: undefined,
+      },
+      {
+        type: "session/setAppliedRulesAtIndex",
+        payload: {
+          appliedRules: [],
+          index: 1,
+        },
       },
       {
         type: "session/setActive",

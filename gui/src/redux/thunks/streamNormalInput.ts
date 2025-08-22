@@ -10,6 +10,7 @@ import {
   abortStream,
   addPromptCompletionPair,
   setActive,
+  setAppliedRulesAtIndex,
   setContextPercentage,
   setInactive,
   setInlineErrorMessage,
@@ -201,6 +202,14 @@ export const streamNormalInput = createAsyncThunk<
       systemToolsFramework,
     );
 
+    // TODO parallel tool calls will cause issues with this
+    // because there will be multiple tool messages, so which one should have applied rules?
+    dispatch(
+      setAppliedRulesAtIndex({
+        index: appliedRuleIndex,
+        appliedRules: appliedRules,
+      }),
+    );
 
     dispatch(setActive());
     dispatch(setInlineErrorMessage(undefined));
@@ -267,6 +276,16 @@ export const streamNormalInput = createAsyncThunk<
             modelName: selectedChatModel.title,
             modelTitle: selectedChatModel.title,
             sessionId: state.session.id,
+            ...(!!activeTools.length && {
+              tools: activeTools.map((tool) => tool.function.name),
+            }),
+            ...(appliedRules.length > 0 && {
+              rules: appliedRules.map((rule) => ({
+                id: getRuleId(rule),
+                rule: rule.rule,
+                slug: rule.slug,
+              })),
+            }),
           },
         });
       } catch (e) {
