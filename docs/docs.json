@@ -172,11 +172,7 @@
                   "customize/deep-dives/model-capabilities"
                 ]
               },
-              {
-                "group": "Telemetry",
-                "icon": "chart-line",
-                "pages": ["customize/telemetry"]
-              },
+              "customize/telemetry",
               "customize/custom-providers"
             ]
           }
