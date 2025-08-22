@@ -1,5 +1,7 @@
 import * as fs from "fs";
 
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
@@ -80,7 +82,7 @@ parameter is useful if you want to rename a variable for instance.`,
       new_string,
       replace_all = false,
     } = args as EditArgs;
-
+    throwIfFileIsSecurityConcern(file_path);
     // Check if file has been read
     if (!readFilesSet.has(file_path)) {
       throw new Error(
