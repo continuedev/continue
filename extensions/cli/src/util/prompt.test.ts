@@ -7,7 +7,7 @@ import {
   vi,
   beforeEach,
   afterEach,
-  MockedFunction,
+  MockInstance,
 } from "vitest";
 
 // Mock readline module
@@ -19,8 +19,8 @@ import { question, questionWithChoices } from "./prompt.js";
 
 describe("prompt utilities", () => {
   let mockInterface: any;
-  let consoleLogSpy: MockedFunction<typeof console.log>;
-  let processExitSpy: MockedFunction<typeof process.exit>;
+  let consoleLogSpy: MockInstance<typeof console.log>;
+  let processExitSpy: MockInstance<typeof process.exit>;
 
   beforeEach(() => {
     // Create a mock readline interface
