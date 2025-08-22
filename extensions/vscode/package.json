@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.77",
+  "version": "1.1.83",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -18,9 +18,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code assistant",
+  "displayName": "Continue - open-source AI code agent",
   "pricing": "Free",
-  "description": "The leading open-source AI code assistant",
+  "description": "The leading open-source AI code agent",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",

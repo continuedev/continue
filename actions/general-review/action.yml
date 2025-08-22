@@ -1,0 +1,233 @@
+name: 'Continue PR Review'
+description: 'Automated code review for pull requests using Continue CLI'
+author: 'Continue Dev, Inc.'
+
+inputs:
+  continue-api-key:
+    description: 'API key for Continue service'
+    required: true
+  continue-org:
+    description: 'Organization for Continue config'
+    required: true
+  continue-config:
+    description: 'Config path to use (e.g., "myorg/review-bot")'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Check Authorization
+      shell: bash
+      env:
+        # Only move the dangerous check to env to prevent shell injection
+        HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-general-review') }}
+      run: |
+        # Check if this action should run based on event type and user permissions
+        SHOULD_RUN="false"
+        
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # Check if PR is a draft
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "::notice::Skipping review - PR is a draft"
+          else
+            # Check PR author association
+            AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
+            if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
+              SHOULD_RUN="true"
+            else
+              echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+            fi
+          fi
+        elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+          # Check if it's a PR comment with the trigger phrase
+          if [ "${{ github.event.issue.pull_request }}" != "" ] && [ "$HAS_TRIGGER_PHRASE" = "true" ]; then
+            COMMENTER_ASSOC="${{ github.event.comment.author_association }}"
+            if [ "$COMMENTER_ASSOC" = "OWNER" ] || [ "$COMMENTER_ASSOC" = "MEMBER" ] || [ "$COMMENTER_ASSOC" = "COLLABORATOR" ]; then
+              SHOULD_RUN="true"
+            else
+              echo "::notice::Skipping review - Commenter is not a team member (association: $COMMENTER_ASSOC)"
+            fi
+          else
+            echo "::notice::Skipping review - Comment does not contain @continue-general-review trigger, or is not on a PR"
+          fi
+        else
+          echo "::notice::Skipping review - Unsupported event type: ${{ github.event_name }}"
+        fi
+        
+        echo "SHOULD_RUN=$SHOULD_RUN" >> $GITHUB_ENV
+
+    - name: Setup Node.js
+      if: env.SHOULD_RUN == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Continue CLI
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      run: npm install -g @continuedev/cli@1.4.25
+
+    - name: Build PR Review Prompt
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Get PR number based on event type
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          PR_NUMBER="${{ github.event.number }}"
+        else
+          # For issue_comment event on a PR
+          PR_NUMBER="${{ github.event.issue.number }}"
+        fi
+
+        # Get PR diff
+        gh pr diff $PR_NUMBER > pr_diff.txt
+
+        # Create review prompt
+        cat > review_prompt.txt << 'EOF'
+        You are conducting a code review for a pull request. Below is the git diff showing all the changes:
+
+        EOF
+
+        echo "--- PR DIFF START ---" >> review_prompt.txt
+        cat pr_diff.txt >> review_prompt.txt
+        echo "--- PR DIFF END ---" >> review_prompt.txt
+
+        cat >> review_prompt.txt << 'EOF'
+
+        Please analyze these changes and provide a comprehensive code review. Consider:
+
+        1. **Code Quality**: Are there any bugs, performance issues, or code smells?
+        2. **Best Practices**: Does the code follow established patterns and conventions?
+        3. **Security**: Are there any potential security vulnerabilities?
+        4. **Testing**: Are appropriate tests included or updated?
+        5. **Documentation**: Is documentation adequate for the changes?
+        6. **Architecture**: Do the changes fit well with the existing codebase structure?
+
+        You can use the available tools to explore the codebase and understand context better.
+
+        Format your response as a markdown code review with the following structure:
+
+        ## Code Review Summary
+
+        ### ✅ Strengths
+        - **[Aspect]**: [Description of what was done well]
+
+        ### ⚠️ Issues Found
+
+        Only include the severity subheaders below if you actually found issues at that level:
+
+        #### Critical
+        - **[Issue Title]**: [Description of critical issues that must be fixed before merging]
+
+        #### High
+        - **[Issue Title]**: [Description of high-priority issues that should be fixed]
+
+        #### Medium
+        - **[Issue Title]**: [Description of issues that should be addressed]
+
+        #### Low
+        - **[Issue Title]**: [Description of minor issues or nice-to-have improvements]
+
+
+        ### 💡 Suggestions
+        - **[Suggestion Title]**: [Description of improvement recommendations]
+
+        ### 🚀 Overall Assessment
+        [Provide overall recommendation: APPROVE, REQUEST_CHANGES, or COMMENT]
+
+        Only call the 'exit' tool if you find critical security vulnerabilities or bugs that would break production.
+        EOF
+
+    - name: Run Continue CLI Review
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      env:
+        CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
+        CONTINUE_ORG: ${{ inputs.continue-org }}
+        CONTINUE_CONFIG: ${{ inputs.continue-config }}
+      run: |
+        echo "Running Continue CLI with prompt:"
+        echo "=================================="
+        cat review_prompt.txt
+        echo "=================================="
+        echo ""
+
+        # Validate inputs to prevent command injection
+        if [[ ! "$CONTINUE_ORG" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+          echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
+          exit 1
+        fi
+        
+        if [[ ! "$CONTINUE_CONFIG" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
+          echo "Error: Invalid config path. Must contain only alphanumeric characters, hyphens, underscores, and forward slashes."
+          exit 1
+        fi
+
+        # Run the CLI with validated config
+        cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md
+
+    - name: Upload Review Results
+      if: env.SHOULD_RUN == 'true' && always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: code-review-results
+        path: |
+          code_review.md
+          review_prompt.txt
+          pr_diff.txt
+        retention-days: 30
+
+    - name: Comment PR with Review
+      if: env.SHOULD_RUN == 'true' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          try {
+            let reviewContent = '';
+            
+            if (fs.existsSync('code_review.md') && fs.statSync('code_review.md').size > 0) {
+              reviewContent = fs.readFileSync('code_review.md', 'utf8');
+            } else {
+              reviewContent = '⚠️ AI review completed but no review output was generated. Check the action logs for details.';
+            }
+            
+            // Get PR number based on event type
+            let prNumber;
+            if (context.eventName === 'pull_request') {
+              prNumber = context.payload.pull_request.number;
+            } else {
+              // For issue_comment event
+              prNumber = context.payload.issue.number;
+            }
+
+            // Add a header if triggered by comment
+            if (context.eventName === 'issue_comment') {
+              reviewContent = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewContent}`;
+            }
+
+            // Add instructions for re-review
+            reviewContent += '\n\n---\n*💡 To request a new review, comment `@continue-general-review`*';
+
+            // Create new comment
+            await github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: reviewContent
+            });
+            console.log(`Successfully created new comment on PR #${prNumber}`);
+          } catch (error) {
+            console.log('Failed to post comment:', error.message);
+            console.log('Error details:', error);
+          }
+
+branding:
+  icon: 'code'
+  color: 'blue'

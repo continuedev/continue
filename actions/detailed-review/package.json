@@ -1,0 +1,19 @@
+{
+  "name": "@continue/pr-review-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scripts for Continue PR Review Action",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.test.js"
+    ]
+  }
+}

@@ -14,18 +14,8 @@ import {
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
 
-import {
-  ContinueConfig,
-  IContextProvider,
-  IDE,
-  IdeInfo,
-  IdeSettings,
-  ILLMLogger,
-} from "../..";
+import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import DocsContextProvider from "../../context/providers/DocsContextProvider";
-import FileContextProvider from "../../context/providers/FileContextProvider";
-import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
@@ -37,6 +27,7 @@ import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlash
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { getToolsForIde } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
+import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -72,7 +63,7 @@ async function loadConfigYaml(options: {
     );
     return localBlocks.map((b) => ({
       uriType: "file" as const,
-      filePath: b.path,
+      fileUri: b.path,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -87,7 +78,7 @@ async function loadConfigYaml(options: {
   const getRegistryClient = async () => {
     const rootPath =
       packageIdentifier.uriType === "file"
-        ? dirname(getCleanUriPath(packageIdentifier.filePath))
+        ? dirname(getCleanUriPath(packageIdentifier.fileUri))
         : undefined;
     return new RegistryClient({
       accessToken: await controlPlaneClient.getAccessToken(),
@@ -376,42 +367,14 @@ async function configYamlToContinueConfig(options: {
     });
   }
 
-  // Context providers
-  const DEFAULT_CONTEXT_PROVIDERS = [new FileContextProvider({})];
-
-  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
-    ({ description: { title } }) => title,
+  const { providers, errors: contextErrors } = loadConfigContextProviders(
+    config.context,
+    !!config.docs?.length,
+    ideInfo.ideType,
   );
 
-  continueConfig.contextProviders = (config.context
-    ?.map((context) => {
-      const cls = contextProviderClassFromName(context.provider) as any;
-      if (!cls) {
-        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
-          localErrors.push({
-            fatal: false,
-            message: `Unknown context provider ${context.provider}`,
-          });
-        }
-        return undefined;
-      }
-      const instance: IContextProvider = new cls({
-        name: context.name,
-        ...context.params,
-      });
-      return instance;
-    })
-    .filter((p) => !!p) ?? []) as IContextProvider[];
-  continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
-
-  if (
-    continueConfig.docs?.length &&
-    !continueConfig.contextProviders?.some(
-      (cp) => cp.description.title === "docs",
-    )
-  ) {
-    continueConfig.contextProviders.push(new DocsContextProvider({}));
-  }
+  continueConfig.contextProviders = providers;
+  localErrors.push(...contextErrors);
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();

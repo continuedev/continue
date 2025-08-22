@@ -23,6 +23,7 @@ import "./katex.css";
 import "./markdown.css";
 import MermaidBlock from "./MermaidBlock";
 import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
+import { SecureImageComponent } from "./SecureImageComponent";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -345,6 +346,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             return <MermaidBlock code={codeText} />;
           }
           return <code {...codeProps}>{codeProps.children}</code>;
+        },
+        img: ({ ...imgProps }) => {
+          return (
+            <SecureImageComponent
+              src={imgProps.src}
+              alt={imgProps.alt}
+              title={imgProps.title}
+              className={imgProps.className}
+            />
+          );
         },
       },
     },

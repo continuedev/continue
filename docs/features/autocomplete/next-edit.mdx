@@ -1,0 +1,154 @@
+---
+title: "Next Edit"
+description: "Learn how Continue's Next Edit feature predicts and suggests your next code changes using AI, going beyond traditional autocomplete to anticipate entire code modifications"
+---
+
+<Warning>
+  Next Edit is currently an experimental feature. It requires [Mercury Coder
+  model](https://hub.continue.dev/inceptionlabs/mercury-coder) configured in
+  your Continue autocomplete settings and is not yet available for JetBrains
+  use.
+</Warning>
+
+## What is Next Edit?
+
+Next Edit is an advanced AI-powered code prediction feature that anticipates what changes you'll make next in your code. Unlike traditional autocomplete that reacts to your typing, Next Edit proactively analyzes your recent edits and coding patterns to suggest entire code modifications before you even start typing.
+
+Think of it as having an AI pair programmer that understands your coding flow and suggests the logical next step in your development process.
+
+## How Next Edit Works
+
+### The Prediction Process
+
+1. **Context Analysis**: Captures your current cursor position and recent edit history
+2. **Pattern Recognition**: Analyzes your coding patterns and the surrounding code context
+3. **Next Step Prediction**: Uses specialized AI models to predict what you'll likely change next
+4. **Visual Presentation**: Shows predictions as diff overlays rather than simple text completions
+5. **Interactive Review**: Lets you accept (Tab) or reject (Esc) the suggested changes
+6. **Jump to Next Edit Location**: Lets you jump (Tab) to the next edit location or reject (Esc)
+
+### Intelligent Triggering
+
+Next Edit activates automatically when:
+
+- You finish making a code change
+- The AI detects a logical continuation point
+- Specialized next-edit models are available
+- The current context suggests a predictable next step
+
+## Next Edit vs Traditional Autocomplete
+
+<AccordionGroup>
+  <Accordion title="Prediction Scope">
+    **Autocomplete**: Completes the current line or statement you're typing
+    
+    **Next Edit**: Predicts entire code modifications across multiple lines
+  </Accordion>
+
+  <Accordion title="User Interaction">
+    **Autocomplete**: Shows ghost text at your cursor position
+
+    **Next Edit**: Displays diff overlays showing before/after changes, while also displaying ghost text if the change is purely additive.
+
+   </Accordion>
+
+    <Accordion title="Timing">
+     **Autocomplete**: Reactive - responds to what you're currently typing
+
+     **Next Edit**: Proactive - anticipates what you'll do next
+    </Accordion>
+
+  <Accordion title="Context Awareness">
+    **Autocomplete**: Focuses on immediate code completion
+    
+    **Next Edit**: Analyzes recent edit patterns and broader code context
+  </Accordion>
+</AccordionGroup>
+
+## How to Use Next Edit
+
+### Prerequisites
+
+Next Edit requires:
+
+- Compatible AI models (Mercury Coder)
+- Continue development team access
+- VS Code (JetBrains support coming soon)
+- **API Keys**: Organizations can add API keys to [org secrets](/hub/secrets/secret-types) for team-wide access. Individual users need to provide their own API keys in their [model configuration](/customize/model-providers/overview)
+
+<Note>
+  To use Next Edit, you must have the Mercury Coder model configured in your
+  Continue autocomplete model settings. This model is specifically designed for
+  next edit predictions. Once it's been loaded, you must reload VS Code to
+  activate it.
+  <img
+    src="/images/features/autocomplete/images/mercury-coder-next-edit.png"
+    alt="Next Edit Model Setup"
+  />
+</Note>
+
+### Using Next Edit Predictions
+
+<Steps>
+  <Step title="Make a Code Change">
+    Edit your code normally. Next Edit will analyze your change patterns.
+  </Step>
+
+<Step title="Review Predictions">
+  When Next Edit activates, you'll see a diff overlay showing predicted changes
+  in an editable region.
+</Step>
+
+<Step title="Accept or Reject">
+  - **Tab**: Accept the prediction and apply changes - **Esc**: Reject the
+  prediction and continue coding normally
+</Step>
+
+  <Step title="Continue Coding">
+    If accepted, your cursor moves to the last changed line. If rejected, your
+    workflow continues uninterrupted.
+  </Step>
+</Steps>
+
+## What are the Model Requirements for Next Edit?
+
+### Specialized Models
+
+Next Edit requires AI models specifically trained for code prediction:
+
+- **Mercury Coder**: Primary model optimized for next edit prediction
+
+### Automatic Detection
+
+Continue automatically enables Next Edit when:
+
+1. Your configured autocomplete model supports next edit capabilities
+2. You have development team access permissions
+3. The current code context suggests predictable next steps
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Trust the Process" icon="robot">
+    Let Next Edit observe your coding patterns for a few editing sessions before expecting highly accurate predictions.
+  </Card>
+
+<Card title="Review Carefully" icon="magnifying-glass">
+  Always review suggested changes before accepting, especially for complex logic
+  modifications.
+</Card>
+
+<Card title="Provide Feedback" icon="message">
+  Have feedback? We want to hear it. __[Add your thoughts to our feedback
+  discussions](https://github.com/continuedev/continue/discussions/categories/feedback)__
+  to help us improve.
+</Card>
+
+  <Card title="Combine with Other Features" icon="puzzle-piece">
+    Use Next Edit alongside Continue's Chat and Agent modes for comprehensive AI-assisted development.
+  </Card>
+</CardGroup>
+
+---
+
+_Next Edit represents Continue's vision for proactive AI coding assistance that anticipates developer needs rather than just reacting to input. As this feature evolves, it will become a powerful tool for accelerating development workflows and reducing repetitive coding tasks._

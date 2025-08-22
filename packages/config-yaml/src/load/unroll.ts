@@ -45,12 +45,12 @@ export function parseConfigYaml(configYaml: string): ConfigYaml {
       "cause" in e &&
       e.cause === "result.success was false"
     ) {
-      throw new Error(`Failed to parse assistant: ${e.message}`);
+      throw new Error(`Failed to parse agent: ${e.message}`);
     } else if (e instanceof ZodError) {
-      throw new Error(`Failed to parse assistant: ${formatZodError(e)}`);
+      throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
     } else {
       throw new Error(
-        `Failed to parse assistant: ${e instanceof Error ? e.message : e}`,
+        `Failed to parse agent: ${e instanceof Error ? e.message : e}`,
       );
     }
   }
@@ -65,7 +65,7 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     console.error(
       `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
     );
-    throw new Error(`Failed to parse unrolled assistant: ${formatZodError(e)}`);
+    throw new Error(`Failed to parse agent: ${formatZodError(e)}`);
   }
 }
 
@@ -321,7 +321,7 @@ export async function unrollBlocks(
 
   const sections: (keyof Omit<
     ConfigYaml,
-    "name" | "version" | "rules" | "schema" | "metadata"
+    "name" | "version" | "rules" | "schema" | "metadata" | "env"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel
@@ -465,14 +465,14 @@ export async function unrollBlocks(
               resolvedBlock,
               source:
                 injectBlock.uriType === "file"
-                  ? injectBlock.filePath
+                  ? injectBlock.fileUri
                   : undefined,
               error: null,
             };
           } catch (err) {
             let msg = "";
             if (injectBlock.uriType === "file") {
-              msg = `${(err as Error).message}.\n> ${injectBlock.filePath}`;
+              msg = `${(err as Error).message}.\n> ${injectBlock.fileUri}`;
             } else {
               msg = `${(err as Error).message}.\n> ${injectBlock.fullSlug}`;
             }
@@ -669,7 +669,7 @@ function parseYamlOrMarkdownRule<T>(
   } catch (yamlError) {
     if (
       id.uriType === "file" &&
-      [".yaml", ".yml"].some((ext) => id.filePath.endsWith(ext))
+      [".yaml", ".yml"].some((ext) => id.fileUri.endsWith(ext))
     ) {
       throw yamlError;
     }
