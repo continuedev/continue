@@ -23,4 +23,6 @@ export const viewRepoMapTool: Tool = {
     prefix: `To view the repository map, use the ${BuiltInToolNames.ViewRepoMap} tool. This will provide a visual representation of the project's structure and organization.`,
   },
   defaultToolPolicy: "allowedWithPermission",
+  isExecutionResultSearchable: true,
+  toolCallIcon: "MapIcon",
 };

@@ -31,4 +31,6 @@ export const grepSearchTool: Tool = {
     prefix: `To perform a grep search within the project, call the ${BuiltInToolNames.GrepSearch} tool with the query pattern to match. For example:`,
     exampleArgs: [["query", ".*main_services.*"]],
   },
+  isExecutionResultSearchable: true,
+  toolCallIcon: "MagnifyingGlassIcon",
 };

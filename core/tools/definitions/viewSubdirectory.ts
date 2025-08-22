@@ -30,4 +30,6 @@ export const viewSubdirectoryTool: Tool = {
     exampleArgs: [["directory_path", "path/to/subdirectory"]],
   },
   defaultToolPolicy: "allowedWithPermission",
+  isExecutionResultSearchable: true,
+  toolCallIcon: "FolderOpenIcon",
 };
