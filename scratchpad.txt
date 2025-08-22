@@ -1,0 +1,5 @@
+- [x] Find the Reload assistants functionality in the codebase
+- [x] Identify where the menu close behavior is implemented
+- [x] Modify the code to keep menu open for Reload assistants option
+- [x] Test the changes to ensure they work correctly
+- [ ] Create PR with the changes
