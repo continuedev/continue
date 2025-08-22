@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
+
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   calculateLinesOfCodeDiff,
@@ -236,6 +238,8 @@ If you want to create a new file, use:
   preprocess: async (args) => {
     // Validate and extract arguments
     const { original_path, file_path, edits } = validateMultiEditArgs(args);
+
+    throwIfFileIsSecurityConcern(file_path);
 
     // Validate each edit operation
     validateEdits(edits);

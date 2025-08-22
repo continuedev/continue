@@ -117,6 +117,7 @@ interface ProcessSlashCommandResultOptions {
   onShowModelSelector?: () => void;
   onShowMCPSelector?: () => void;
   onShowSessionSelector?: () => void;
+  onClear?: () => void;
 }
 
 /**
@@ -132,6 +133,7 @@ export function processSlashCommandResult({
   onShowModelSelector,
   onShowMCPSelector,
   onShowSessionSelector,
+  onClear,
 }: ProcessSlashCommandResultOptions): string | null {
   if (result.exit) {
     exit();
@@ -163,6 +165,11 @@ export function processSlashCommandResult({
     const newHistory = systemMessage ? [systemMessage] : [];
     setChatHistory(newHistory);
     setMessages([]);
+
+    // Reset intro message state to show it again after clearing
+    if (onClear) {
+      onClear();
+    }
 
     if (result.output) {
       setMessages([

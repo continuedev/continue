@@ -202,6 +202,10 @@ program
     "--branch <branch>",
     "Specify the git branch name to use in the remote environment",
   )
+  .option(
+    "--repo <url>",
+    "Specify the repository URL to use in the remote environment",
+  )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
   });
