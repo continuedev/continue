@@ -163,5 +163,16 @@ export async function handleSlashCommands(
     return { newInput };
   }
 
+  // Check if this command would match any available commands (same logic as UI)
+  const allCommands = getAllSlashCommands(assistant);
+  const hasMatches = allCommands.some((cmd) =>
+    cmd.name.toLowerCase().includes(command.toLowerCase()),
+  );
+
+  // If no commands match, treat this as regular text instead of an unknown command
+  if (!hasMatches) {
+    return null;
+  }
+
   return { output: `Unknown command: ${command}` };
 }
