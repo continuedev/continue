@@ -51,7 +51,6 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
   const rawQuery = getStringArg(args, "query");
 
-  // Validate and prepare the query for ripgrep
   const { query, warning } = prepareQueryForRipgrep(rawQuery);
 
   let results: string;
@@ -61,10 +60,9 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
       DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
     );
   } catch (error) {
-    // If the search fails, provide helpful error message
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    // Check for common ripgrep exit codes
+    // Helpful error for common ripgrep exit code
     if (errorMessage.includes("Process exited with code 2")) {
       return [
         {
@@ -75,7 +73,6 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
       ];
     }
 
-    // Re-throw other errors
     throw error;
   }
 
@@ -119,16 +116,6 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     warnings.push(
       `Results were truncated because ${truncationReasons.join(" and ")}`,
     );
-  }
-
-  if (warnings.length > 0) {
-    contextItems.push({
-      name: "Search notes",
-      description: "Information about the search",
-      content:
-        warnings.join("\n\n") +
-        "\n\nIf the results are not satisfactory, try refining your search query.",
-    });
   }
 
   if (truncationReasons.length > 0) {
