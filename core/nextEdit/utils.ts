@@ -1,4 +1,5 @@
 import { DiffLine } from "..";
+import { NEXT_EDIT_MODELS } from "../llm/constants";
 
 export function isNextEditTest(): boolean {
   const enabled = process.env.NEXT_EDIT_TEST_ENABLED;
@@ -20,4 +21,12 @@ export function isWhitespaceOnlyDeletion(diffLines: DiffLine[]): boolean {
       diff.type === "old" &&
       (diff.line.trim() === "" || /^\s+$/.test(diff.line)),
   );
+}
+
+export function convertNextEditModelNameToEnum(
+  modelName: string,
+): NEXT_EDIT_MODELS | undefined {
+  const nextEditModels = Object.values(NEXT_EDIT_MODELS);
+
+  return nextEditModels.find((model) => modelName.includes(model));
 }
