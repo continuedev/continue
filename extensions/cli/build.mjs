@@ -1,16 +1,11 @@
 #!/usr/bin/env node
 
 import * as esbuild from "esbuild";
-import { readFileSync, writeFileSync, chmodSync } from "fs";
+import { writeFileSync, chmodSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Read package.json to get dependencies
-const packageJson = JSON.parse(
-  readFileSync(resolve(__dirname, "package.json"), "utf8"),
-);
 
 // List of packages to mark as external (ONLY native modules that cannot be bundled)
 // Note: Everything else will be bundled to create a self-contained CLI
