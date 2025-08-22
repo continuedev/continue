@@ -3,6 +3,7 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
 
 import { Battery } from "../util/battery";
+import { getMetaKeyLabel } from "../util/util";
 import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
@@ -50,18 +51,38 @@ const statusBarItemText = (
     return "$(alert) Continue (config error)";
   }
 
+  let text: string;
   switch (status) {
     case undefined:
       if (loading) {
-        return "$(loading~spin) Continue";
+        text = "$(loading~spin) Continue";
+      } else {
+        text = "Continue";
       }
+      break;
     case StatusBarStatus.Disabled:
-      return "$(circle-slash) Continue";
+      text = "$(circle-slash) Continue";
+      break;
     case StatusBarStatus.Enabled:
-      return "$(check) Continue";
+      text = "$(check) Continue";
+      break;
     case StatusBarStatus.Paused:
-      return "$(debug-pause) Continue";
+      text = "$(debug-pause) Continue";
+      break;
+    default:
+      text = "Continue";
   }
+
+  // Append Next Edit indicator if enabled and autocomplete is enabled.
+  if (status === StatusBarStatus.Enabled) {
+    const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
+    const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+    if (nextEditEnabled) {
+      text += " (NE)";
+    }
+  }
+
+  return text;
 };
 
 const statusBarItemTooltip = (status: StatusBarStatus | undefined) => {
@@ -70,7 +91,11 @@ const statusBarItemTooltip = (status: StatusBarStatus | undefined) => {
     case StatusBarStatus.Disabled:
       return "Click to enable tab autocomplete";
     case StatusBarStatus.Enabled:
-      return "Tab autocomplete is enabled";
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+      return nextEditEnabled
+        ? "Next edit is enabled"
+        : "Tab autocomplete is enabled";
     case StatusBarStatus.Paused:
       return "Tab autocomplete is paused";
   }
@@ -215,7 +240,7 @@ export function getNextEditMenuItems(
       label: nextEditEnabled
         ? DISABLE_NEXT_EDIT_MENU_ITEM_LABEL
         : ENABLE_NEXT_EDIT_MENU_ITEM_LABEL,
-      description: "Toggle Next Edit feature",
+      description: getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + N",
     },
   ];
 }
