@@ -148,7 +148,7 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("String not found in file: not found");
+      ).rejects.toThrow(`String not found in file: "not found"`);
     });
 
     it("should replace single occurrence", async () => {
@@ -328,7 +328,7 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow("Failed to apply find and replace: Permission denied");
+      ).rejects.toThrow("Permission denied");
     });
   });
 });

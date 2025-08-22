@@ -52,19 +52,11 @@ export const multiEditImpl: ClientToolImpl = async (
       );
     }
     newContent = edits[0].new_string;
-    const response = await extras.ideMessenger.request(
-      "getWorkspaceDirs",
-      undefined,
-    );
-    if (response.status === "error") {
-      throw new Error(
-        "Error getting workspace directories to infer file creation path",
-      );
-    }
+    const dirs = await extras.ideMessenger.ide.getWorkspaceDirs();
     fileUri = await inferResolvedUriFromRelativePath(
       filepath,
       extras.ideMessenger.ide,
-      response.content,
+      dirs,
     );
   } else {
     if (!resolvedUri) {
@@ -86,26 +78,20 @@ export const multiEditImpl: ClientToolImpl = async (
     }
   }
 
-  try {
-    // Apply the changes to the file
-    void extras.dispatch(
-      applyForEditTool({
-        streamId,
-        toolCallId,
-        text: newContent,
-        filepath: fileUri,
-        isSearchAndReplace: true,
-      }),
-    );
+  // Apply the changes to the file
+  void extras.dispatch(
+    applyForEditTool({
+      streamId,
+      toolCallId,
+      text: newContent,
+      filepath: fileUri,
+      isSearchAndReplace: true,
+    }),
+  );
 
-    // Return success - applyToFile will handle the completion state
-    return {
-      respondImmediately: false, // Let apply state handle completion
-      output: undefined,
-    };
-  } catch (error) {
-    throw new Error(
-      `Failed to apply multi edit: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  // Return success - applyToFile will handle the completion state
+  return {
+    respondImmediately: false, // Let apply state handle completion
+    output: undefined,
+  };
 };

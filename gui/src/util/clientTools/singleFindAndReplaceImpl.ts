@@ -31,38 +31,32 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
     throw new Error(`File ${filepath} does not exist`);
   }
 
-  try {
-    // Read the current file content
-    const originalContent =
-      await extras.ideMessenger.ide.readFile(resolvedFilepath);
+  // Read the current file content
+  const originalContent =
+    await extras.ideMessenger.ide.readFile(resolvedFilepath);
 
-    // Perform the find and replace operation
-    const newContent = performFindAndReplace(
-      originalContent,
-      old_string,
-      new_string,
-      replace_all,
-    );
+  // Perform the find and replace operation
+  const newContent = performFindAndReplace(
+    originalContent,
+    old_string,
+    new_string,
+    replace_all,
+  );
 
-    // Apply the changes to the file
-    void extras.dispatch(
-      applyForEditTool({
-        streamId,
-        toolCallId,
-        text: newContent,
-        filepath: resolvedFilepath,
-        isSearchAndReplace: true,
-      }),
-    );
+  // Apply the changes to the file
+  void extras.dispatch(
+    applyForEditTool({
+      streamId,
+      toolCallId,
+      text: newContent,
+      filepath: resolvedFilepath,
+      isSearchAndReplace: true,
+    }),
+  );
 
-    // Return success - applyToFile will handle the completion state
-    return {
-      respondImmediately: false, // Let apply state handle completion
-      output: undefined,
-    };
-  } catch (error) {
-    throw new Error(
-      `Failed to apply find and replace: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  // Return success - applyToFile will handle the completion state
+  return {
+    respondImmediately: false, // Let apply state handle completion
+    output: undefined,
+  };
 };

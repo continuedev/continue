@@ -10,6 +10,7 @@ vi.mock("uuid", () => ({
 
 vi.mock("core/util/ideUtils", () => ({
   resolveRelativePathInDir: vi.fn(),
+  inferResolvedUriFromRelativePath: vi.fn(),
 }));
 
 vi.mock("../../redux/thunks/handleApplyStateUpdate", () => ({
@@ -19,12 +20,16 @@ vi.mock("../../redux/thunks/handleApplyStateUpdate", () => ({
 describe("multiEditImpl", () => {
   let mockExtras: ClientToolExtras;
   let mockResolveRelativePathInDir: Mock;
+  let mockInferResolvedUriFromRelativePath: Mock;
   let mockApplyForEditTool: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockResolveRelativePathInDir = vi.mocked(ideUtils.resolveRelativePathInDir);
+    mockInferResolvedUriFromRelativePath = vi.mocked(
+      ideUtils.inferResolvedUriFromRelativePath,
+    );
     mockApplyForEditTool = vi.mocked(applyForEditTool);
 
     mockExtras = {
@@ -33,7 +38,10 @@ describe("multiEditImpl", () => {
       })) as any,
       dispatch: vi.fn() as any,
       ideMessenger: {
-        ide: { readFile: vi.fn() },
+        ide: {
+          readFile: vi.fn(),
+          getWorkspaceDirs: vi.fn().mockResolvedValue(["dir1"]),
+        },
         request: vi.fn(),
       } as any,
     };
@@ -64,7 +72,7 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Edit 1: old_string is required");
+      ).rejects.toThrow("Edit #1: old_string is required");
     });
 
     it("should throw if edit has undefined new_string", async () => {
@@ -77,7 +85,7 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Edit 1: new_string is required");
+      ).rejects.toThrow("Edit #1: new_string is required");
     });
 
     it("should throw if old_string equals new_string", async () => {
@@ -90,13 +98,15 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Edit 1: old_string and new_string must be different");
+      ).rejects.toThrow("Edit #1: old_string and new_string must be different");
     });
   });
 
   describe("sequential edits", () => {
     beforeEach(() => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+      mockResolveRelativePathInDir.mockResolvedValue(
+        "file:///dir/test/file.txt",
+      );
     });
 
     it("should apply single edit", async () => {
@@ -117,7 +127,7 @@ describe("multiEditImpl", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "Hi world",
-        filepath: "/test/file.txt",
+        filepath: "file:///dir/test/file.txt",
         isSearchAndReplace: true,
       });
     });
@@ -143,7 +153,7 @@ describe("multiEditImpl", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "Hi universe\nGoodbye universe",
-        filepath: "/test/file.txt",
+        filepath: "file:///dir/test/file.txt",
         isSearchAndReplace: true,
       });
     });
@@ -169,7 +179,7 @@ describe("multiEditImpl", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "let x = 2;",
-        filepath: "/test/file.txt",
+        filepath: "file:///dir/test/file.txt",
         isSearchAndReplace: true,
       });
     });
@@ -191,7 +201,7 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow('Edit 2: String not found in file: "not found"');
+      ).rejects.toThrow('Edit #2: String not found in file: "not found"');
     });
 
     it("should throw if multiple occurrences without replace_all", async () => {
@@ -208,13 +218,18 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow('Edit 1: String "test" appears 3 times');
+      ).rejects.toThrow(
+        'Edit #1: String "test" appears 3 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+      );
     });
   });
 
   describe("file creation", () => {
     it("should create new file with empty old_string", async () => {
       mockResolveRelativePathInDir.mockResolvedValue(null);
+      mockInferResolvedUriFromRelativePath.mockResolvedValue(
+        "file:///infered/new.txt",
+      );
 
       await multiEditImpl(
         {
@@ -229,31 +244,7 @@ describe("multiEditImpl", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "New content\nLine 2",
-        filepath: "new.txt",
-        isSearchAndReplace: true,
-      });
-    });
-
-    it("should create and edit new file", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue(null);
-
-      await multiEditImpl(
-        {
-          filepath: "new.txt",
-          edits: [
-            { old_string: "", new_string: "Hello world" },
-            { old_string: "world", new_string: "universe" },
-          ],
-        },
-        "id",
-        mockExtras,
-      );
-
-      expect(mockApplyForEditTool).toHaveBeenCalledWith({
-        streamId: "test-uuid",
-        toolCallId: "id",
-        text: "Hello universe",
-        filepath: "new.txt",
+        filepath: "file:///infered/new.txt",
         isSearchAndReplace: true,
       });
     });
@@ -261,7 +252,9 @@ describe("multiEditImpl", () => {
 
   describe("replace_all functionality", () => {
     beforeEach(() => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+      mockResolveRelativePathInDir.mockResolvedValue(
+        "file:///dir/test/file.txt",
+      );
     });
 
     it("should replace all occurrences when specified", async () => {
@@ -282,7 +275,7 @@ describe("multiEditImpl", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "qux bar qux baz qux",
-        filepath: "/test/file.txt",
+        filepath: "file:///dir/test/file.txt",
         isSearchAndReplace: true,
       });
     });
@@ -308,7 +301,7 @@ describe("multiEditImpl", () => {
         streamId: "test-uuid",
         toolCallId: "id",
         text: "a b a z a",
-        filepath: "/test/file.txt",
+        filepath: "file:///dir/test/file.txt",
         isSearchAndReplace: true,
       });
     });
@@ -316,7 +309,9 @@ describe("multiEditImpl", () => {
 
   describe("error handling", () => {
     it("should wrap readFile errors", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+      mockResolveRelativePathInDir.mockResolvedValue(
+        "file:///dir/test/file.txt",
+      );
       mockExtras.ideMessenger.ide.readFile = vi
         .fn()
         .mockRejectedValue(new Error("Read failed"));
@@ -330,13 +325,15 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Failed to apply multi edit: Read failed");
+      ).rejects.toThrow("Read failed");
     });
   });
 
   describe("return value", () => {
     it("should return correct structure", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+      mockResolveRelativePathInDir.mockResolvedValue(
+        "file:///dir/test/file.txt",
+      );
       mockExtras.ideMessenger.ide.readFile = vi.fn().mockResolvedValue("test");
 
       const result = await multiEditImpl(
