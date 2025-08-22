@@ -232,8 +232,6 @@ export function isNextEditToggleLabel(label: string): boolean {
 export function handleNextEditToggle(
   label: string,
   config: vscode.WorkspaceConfiguration,
-  onEnable?: () => void,
-  onDisable?: () => void,
 ) {
   const isEnabling = label === ENABLE_NEXT_EDIT_MENU_ITEM_LABEL;
 
@@ -242,10 +240,4 @@ export function handleNextEditToggle(
     isEnabling,
     vscode.ConfigurationTarget.Global,
   );
-
-  if (isEnabling) {
-    onEnable?.();
-  } else {
-    onDisable?.();
-  }
 }
