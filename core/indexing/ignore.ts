@@ -95,9 +95,6 @@ export const DEFAULT_SECURITY_IGNORE_DIRS = [
   ".gnupg/",
   ".gpg/",
 
-  // Application specific
-  ".continue/",
-
   // Temporary directories that might contain sensitive data
   "tmp/secrets/",
   "temp/secrets/",
@@ -171,6 +168,8 @@ export const ADDITIONAL_INDEXING_IGNORE_FILETYPES = [
   "*.swp",
   "*.jsonl",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
+  // Application specific
+  ".continue/",
 ];
 
 export const ADDITIONAL_INDEXING_IGNORE_DIRS = [
