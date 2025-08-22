@@ -108,9 +108,16 @@ Learn more about available settings [here](https://openrouter.ai/docs).
 
 ## Model Capabilities
 
-Continue automatically determines whether a model supports native tool calling. You can see the full list of supported models [here](https://github.com/continuedev/continue/blob/main/core/src/llm/toolSupport.ts).
+OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the original model's function calling support.
 
-If you're experiencing issues with Agent mode or tools not working, you can add the `capabilities` field to override the default behavior:
+<Info>
+  Continue automatically uses system message tools for models that don't support
+  native function calling, so Agent mode should work even without explicit
+  capability configuration. However, you can still override capabilities if
+  needed.
+</Info>
+
+If you're experiencing issues with Agent mode or tools not working, you can add the capabilities field:
 
 <Tabs>
   <Tab title="YAML">
@@ -122,8 +129,8 @@ If you're experiencing issues with Agent mode or tools not working, you can add 
       apiBase: https://openrouter.ai/api/v1
       apiKey: <YOUR_OPEN_ROUTER_API_KEY>
       capabilities:
-        tools: true      # Enable function calling for Agent mode
-        image_input: true   # Enable image upload support
+        - tool_use      # Enable function calling for Agent mode
+        - image_input   # Enable image upload support
   ```
   </Tab>
   <Tab title="JSON">
@@ -148,9 +155,3 @@ If you're experiencing issues with Agent mode or tools not working, you can add 
 </Tabs>
 
 Note: Not all models support function calling. Check the [OpenRouter models page](https://openrouter.ai/models) for specific model capabilities.
-
-## System Message Tools
-
-For models that do not support native tool calling, Continue will automatically use "system message tools". This means that the tool definitions and calls are embedded in the system message as text. This allows you to use tools with models that don't natively support them.
-
-This feature is enabled by default for all OpenRouter models except for Claude models, which have good native tool calling support.
