@@ -6,7 +6,7 @@ description: "Configure OpenRouter with Continue to access various commercial an
 
 OpenRouter is a unified interface for commercial and open-source models, giving you access to the best models at the best prices. You can sign up [here](https://openrouter.ai/signup), create your API key on the [keys page](https://openrouter.ai/keys), and then choose a model from the [list of supported models](https://openrouter.ai/models).
 
-Change `~/.continue/config.json` to look like the following.
+Change `~/.continue/config.yaml` to look like the following.
 
 <Tabs>
   <Tab title="YAML">
@@ -36,9 +36,41 @@ Change `~/.continue/config.json` to look like the following.
   </Tab>
 </Tabs>
 
+## Using Custom Models
+
+To use a model that is not in the dropdown list, you can simply enter the model name in the `model` field. For example, to use Qwen3Coder, you would update your configuration to look like this:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Qwen3Coder
+      provider: openrouter
+      model: qwen/qwen-coder
+      apiBase: https://openrouter.ai/api/v1
+      apiKey: <YOUR_OPEN_ROUTER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen3Coder",
+        "provider": "openrouter",
+        "model": "qwen/qwen-coder",
+        "apiBase": "https://openrouter.ai/api/v1",
+        "apiKey": "<YOUR_OPEN_ROUTER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
 To utilize features such as provider preferences or model routing configuration, include these parameters inside the `models[].requestsOptions.extraBodyProperties` field of your plugin config.
 
-For example, to prevent extra long prompts from being compressed, you can explicitly turn off the feature like so:
+For example, to route requests to a specific provider, you can use the `provider` field like so:
 
 <Tabs>
   <Tab title="YAML">
@@ -49,7 +81,7 @@ For example, to prevent extra long prompts from being compressed, you can explic
       model: example-model
       requestOptions:
         extraBodyProperties:
-          transforms: []
+          provider: "anthropic"
   ```
   </Tab>
   <Tab title="JSON">
@@ -62,7 +94,7 @@ For example, to prevent extra long prompts from being compressed, you can explic
         "model": "example-model",
         "requestOptions": {
           "extraBodyProperties": {
-            "transforms": []
+            "provider": "anthropic"
           }
         }
       }
@@ -76,16 +108,9 @@ Learn more about available settings [here](https://openrouter.ai/docs).
 
 ## Model Capabilities
 
-OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the original model's function calling support.
+Continue automatically determines whether a model supports native tool calling. You can see the full list of supported models [here](https://github.com/continuedev/continue/blob/main/core/src/llm/toolSupport.ts).
 
-<Info>
-  Continue automatically uses system message tools for models that don't support
-  native function calling, so Agent mode should work even without explicit
-  capability configuration. However, you can still override capabilities if
-  needed.
-</Info>
-
-If you're experiencing issues with Agent mode or tools not working, you can add the capabilities field:
+If you're experiencing issues with Agent mode or tools not working, you can add the `capabilities` field to override the default behavior:
 
 <Tabs>
   <Tab title="YAML">
@@ -97,8 +122,8 @@ If you're experiencing issues with Agent mode or tools not working, you can add 
       apiBase: https://openrouter.ai/api/v1
       apiKey: <YOUR_OPEN_ROUTER_API_KEY>
       capabilities:
-        - tool_use      # Enable function calling for Agent mode
-        - image_input   # Enable image upload support
+        tools: true      # Enable function calling for Agent mode
+        image_input: true   # Enable image upload support
   ```
   </Tab>
   <Tab title="JSON">
@@ -123,3 +148,10 @@ If you're experiencing issues with Agent mode or tools not working, you can add 
 </Tabs>
 
 Note: Not all models support function calling. Check the [OpenRouter models page](https://openrouter.ai/models) for specific model capabilities.
+
+## System Message Tools
+
+For models that do not support native tool calling, Continue will automatically use "system message tools". This means that the tool definitions and calls are embedded in the system message as text. This allows you to use tools with models that don't natively support them.
+
+This feature is enabled by default for all OpenRouter models except for Claude models, which have good native tool calling support.
+
