@@ -213,7 +213,7 @@ describe("LLM", () => {
 
   testLLM(
     new Anthropic({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-4-0",
       apiKey: process.env.ANTHROPIC_API_KEY,
     }),
     { skip: false, testToolCall: true },

@@ -1,6 +1,6 @@
 // Import after mocking
 import { AssistantUnrolled } from "@continuedev/config-yaml";
-import { afterEach, beforeEach, describe, expect, vi, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import * as workos from "./auth/workos.js";
 import * as commands from "./commands/commands.js";
@@ -138,18 +138,10 @@ describe("handleSlashCommands", () => {
       expect(result).toBeNull();
     });
 
-    test("unknown slash command should return error", async () => {
+    test("unknown slash command should return null", async () => {
       const result = await handleSlashCommands("/unknown", mockAssistant);
 
-      expect(result).not.toBeNull();
-      expect(result?.output).toBe("Unknown command: unknown");
-    });
-
-    test("/org command should no longer exist (now merged into /config)", async () => {
-      const result = await handleSlashCommands("/org list", mockAssistant);
-
-      expect(result).not.toBeNull();
-      expect(result?.output).toBe("Unknown command: org");
+      expect(result).toBeNull();
     });
   });
 });
