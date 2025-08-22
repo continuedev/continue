@@ -3,6 +3,7 @@ import { glob, GlobOptionsWithFileTypesFalse } from "glob";
 import { FILE_IGNORE_PATTERNS, FILE_PATTERNS } from "../util/filePatterns.js";
 import { getFileWatcher } from "../util/fileWatcher.js";
 import { isGitRepo } from "../util/git.js";
+import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
