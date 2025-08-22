@@ -189,6 +189,8 @@ jobs:
           cd ../../gui
           npm ci
           npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
 
       # Run prepackage.js script
       - name: Run prepackage script
