@@ -1,6 +1,9 @@
 import * as Sentry from "@sentry/node";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
+import {
+  getProfilingIntegration,
+  isProfilingAvailable,
+} from "./sentry-profiling.js";
 import { logger } from "./util/logger.js";
 import { getVersion } from "./version.js";
 
@@ -45,12 +48,21 @@ class SentryService {
     };
   }
 
-  private initialize() {
+  private async initialize() {
     if (this.initialized || !this.config.dsn) {
       return;
     }
 
     try {
+      const integrations = [];
+      const profilingIntegration = await getProfilingIntegration();
+      if (
+        profilingIntegration &&
+        Object.keys(profilingIntegration).length > 0
+      ) {
+        integrations.push(profilingIntegration);
+      }
+
       Sentry.init({
         dsn: this.config.dsn,
         environment: this.config.environment,
@@ -58,7 +70,7 @@ class SentryService {
         sampleRate: this.config.sampleRate,
         profilesSampleRate: this.config.profilesSampleRate,
         tracesSampleRate: this.config.tracesSampleRate,
-        integrations: [nodeProfilingIntegration()],
+        integrations,
         beforeSend(event) {
           // Filter out certain error types if needed
           if (event.exception?.values?.[0]?.type === "AbortError") {
@@ -72,6 +84,7 @@ class SentryService {
       logger.debug("Sentry initialized", {
         environment: this.config.environment,
         release: this.config.release,
+        profilingAvailable: await isProfilingAvailable(),
       });
     } catch (error) {
       logger.error("Failed to initialize Sentry", error);

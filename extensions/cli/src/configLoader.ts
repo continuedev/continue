@@ -291,7 +291,7 @@ async function unrollAssistantWithConfig(
       apiBase: env.apiBase,
       rootPath:
         packageIdentifier.uriType === "file"
-          ? dirname(packageIdentifier.filePath)
+          ? dirname(packageIdentifier.fileUri)
           : undefined,
     }),
     {
@@ -328,7 +328,7 @@ async function loadConfigYaml(
   apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
   return await unrollAssistantWithConfig(
-    { filePath, uriType: "file" },
+    { fileUri: filePath, uriType: "file" },
     accessToken,
     organizationId,
     apiClient,

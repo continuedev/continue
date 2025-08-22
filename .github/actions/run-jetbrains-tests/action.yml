@@ -93,6 +93,13 @@ runs:
         path: binary/node_modules
         key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
+    - name: Install binary dependencies
+      if: steps.binary-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cd binary
+        npm ci
+
     - name: Build the binaries
       shell: bash
       run: |
