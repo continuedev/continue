@@ -1,3 +1,5 @@
+import ignore from "ignore";
+
 import { ToolImpl } from ".";
 import { walkDir } from "../../indexing/walkDir";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
@@ -27,6 +29,7 @@ export const lsToolImpl: ToolImpl = async (args, extras) => {
     returnRelativeUrisPaths: true,
     include: "both",
     recursive: args?.recursive ?? false,
+    overrideDefaultIgnores: ignore(), // Show all directories including dist/, build/, etc.
   });
 
   const lines = entries.slice(0, MAX_LS_TOOL_LINES);

@@ -44,6 +44,7 @@ import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import { getAst } from "core/autocomplete/util/ast";
 import { modelSupportsNextEdit } from "core/llm/autodetect";
+import { NEXT_EDIT_MODELS } from "core/llm/constants";
 import { DocumentHistoryTracker } from "core/nextEdit/DocumentHistoryTracker";
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { isNextEditTest } from "core/nextEdit/utils";
@@ -102,6 +103,32 @@ export class VsCodeExtension {
     this.ideUtils = new VsCodeIdeUtils();
     this.extensionContext = context;
     this.windowId = uuidv4();
+
+    // Check if model supports next edit to determine if we should use full file diff.
+    const getUsingFullFileDiff = async () => {
+      const { config } = await this.configHandler.loadConfig();
+      const autocompleteModel = config?.selectedModelByRole.autocomplete;
+
+      if (!autocompleteModel) {
+        return false;
+      }
+
+      if (
+        !modelSupportsNextEdit(
+          autocompleteModel.capabilities,
+          autocompleteModel.model,
+          autocompleteModel.title,
+        )
+      ) {
+        return false;
+      }
+
+      if (autocompleteModel.model.includes(NEXT_EDIT_MODELS.INSTINCT)) {
+        return false;
+      }
+
+      return true;
+    };
 
     const usingFullFileDiff = true;
     const selectionManager = SelectionChangeManager.getInstance();
@@ -190,7 +217,11 @@ export class VsCodeExtension {
       ),
     );
 
-    void this.configHandler.loadConfig().then(({ config }) => {
+    void this.configHandler.loadConfig().then(async ({ config }) => {
+      const shouldUseFullFileDiff = await getUsingFullFileDiff();
+      this.completionProvider.updateUsingFullFileDiff(shouldUseFullFileDiff);
+      selectionManager.updateUsingFullFileDiff(shouldUseFullFileDiff);
+
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.verticalDiffManager.fileUriToCodeLens,
@@ -203,7 +234,12 @@ export class VsCodeExtension {
 
     this.configHandler.onConfigUpdate(
       async ({ config: newConfig, configLoadInterrupted }) => {
+        const shouldUseFullFileDiff = await getUsingFullFileDiff();
+        this.completionProvider.updateUsingFullFileDiff(shouldUseFullFileDiff);
+        selectionManager.updateUsingFullFileDiff(shouldUseFullFileDiff);
+
         const autocompleteModel = newConfig?.selectedModelByRole.autocomplete;
+
         if (
           (autocompleteModel &&
             modelSupportsNextEdit(

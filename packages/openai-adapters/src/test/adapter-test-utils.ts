@@ -100,9 +100,29 @@ function assertFetchCall(mockFetch: any, expectedRequest: any) {
   expect(options.method).toBe(expectedRequest.method);
 
   if (expectedRequest.headers) {
-    expect(options.headers).toEqual(
-      expect.objectContaining(expectedRequest.headers),
-    );
+    // Handle both plain objects and Headers objects
+    const actualHeaders = options.headers;
+    if (
+      actualHeaders &&
+      typeof actualHeaders === "object" &&
+      "get" in actualHeaders
+    ) {
+      // This is a Headers-like object, convert to plain object for comparison
+      const headersObj: Record<string, string> = {};
+      for (const key of Object.keys(expectedRequest.headers)) {
+        const value = actualHeaders.get(key);
+        if (value !== null && value !== undefined) {
+          headersObj[key] = value;
+        }
+      }
+      expect(headersObj).toEqual(
+        expect.objectContaining(expectedRequest.headers),
+      );
+    } else {
+      expect(actualHeaders).toEqual(
+        expect.objectContaining(expectedRequest.headers),
+      );
+    }
   }
 
   if (expectedRequest.body) {
