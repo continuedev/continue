@@ -7,6 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
+    AppliedRule,
   ApplyState,
   AssistantChatMessage,
   ChatHistoryItem,
@@ -16,7 +17,6 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
-  RuleWithSource,
   Session,
   SessionMetadata,
   ThinkingChatMessage,
@@ -503,7 +503,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: RuleWithSource[];
+        appliedRules: AppliedRule[];
       }>,
     ) => {
       if (state.history[payload.index]) {
