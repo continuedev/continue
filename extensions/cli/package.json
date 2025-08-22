@@ -44,6 +44,9 @@
   },
   "homepage": "https://continue.dev",
   "dependencies": {
+    "@sentry/profiling-node": "^9.43.0"
+  },
+  "devDependencies": {
     "@continuedev/config-yaml": "file:../../packages/config-yaml",
     "@continuedev/openai-adapters": "file:../../packages/openai-adapters",
     "@continuedev/sdk": "^0.0.13",
@@ -57,7 +60,6 @@
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/semantic-conventions": "^1.36.0",
     "@sentry/node": "^9.43.0",
-    "@sentry/profiling-node": "^9.43.0",
     "@types/express": "^5.0.3",
     "@types/react": "^19.1.8",
     "@types/turndown": "^5.0.5",
@@ -90,9 +92,7 @@
     "typescript": "^5.8.3",
     "uuid": "^9.0.1",
     "winston": "^3.17.0",
-    "yaml": "^2.8.0"
-  },
-  "devDependencies": {
+    "yaml": "^2.8.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.3",
@@ -100,7 +100,6 @@
     "@testing-library/react": "^16.3.0",
     "@types/date-fns": "^2.5.3",
     "@types/diff": "^7.0.2",
-    "@types/express": "^5.0.3",
     "@types/glob": "^8.1.0",
     "@types/ignore-walk": "^4.0.3",
     "@types/ink-testing-library": "^1.0.4",
@@ -121,7 +120,6 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "execa": "^9.6.0",
-    "express": "^5.1.0",
     "happy-dom": "^18.0.1",
     "ink-testing-library": "^4.0.0",
     "jsdom": "^26.1.0",
