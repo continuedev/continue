@@ -2,5 +2,5 @@
 export default {
   connectToDevTools: () => {
     // No-op - devtools not available in production bundle
-  }
+  },
 };
