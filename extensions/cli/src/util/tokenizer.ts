@@ -155,3 +155,13 @@ export function shouldAutoCompact(
 
   return usage >= AUTO_COMPACT_THRESHOLD;
 }
+
+/**
+ * Get a descriptive message for auto-compaction that shows the context limit
+ * @param model The model configuration
+ * @returns A descriptive message explaining why compaction is needed
+ */
+export function getAutoCompactMessage(model: ModelConfig): string {
+  const limit = getModelContextLimit(model);
+  return `Approaching context limit (${(limit / 1000).toFixed(0)}K tokens). Auto-compacting chat history...`;
+}

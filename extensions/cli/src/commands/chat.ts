@@ -28,6 +28,7 @@ import { logger } from "../util/logger.js";
 import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
+  getAutoCompactMessage,
   shouldAutoCompact,
 } from "../util/tokenizer.js";
 
@@ -170,11 +171,7 @@ async function handleAutoCompaction(
   logger.info("Auto-compacting triggered due to context limit");
 
   if (!isHeadless) {
-    console.info(
-      chalk.yellow(
-        "\nApproaching context limit. Auto-compacting chat history...",
-      ),
-    );
+    console.info(chalk.yellow(`\n${getAutoCompactMessage(model)}`));
   } else if (format === "json") {
     safeStdout(
       JSON.stringify({

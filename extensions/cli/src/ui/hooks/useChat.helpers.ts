@@ -7,7 +7,10 @@ import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import { shouldAutoCompact } from "../../util/tokenizer.js";
+import {
+  getAutoCompactMessage,
+  shouldAutoCompact,
+} from "../../util/tokenizer.js";
 import { DisplayMessage } from "../types.js";
 
 import { SlashCommandResult } from "./useChat.types.js";
@@ -305,7 +308,7 @@ export async function handleAutoCompaction({
     ...prev,
     {
       role: "system",
-      content: "Approaching context limit. Auto-compacting chat history...",
+      content: getAutoCompactMessage(model),
       messageType: "system" as const,
     },
   ]);
