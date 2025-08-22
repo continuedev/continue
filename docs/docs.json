@@ -162,7 +162,6 @@
                 "icon": "microscope",
                 "pages": [
                   "customize/deep-dives/configuration",
-                  "customize/settings",
                   "customize/deep-dives/slash-commands",
                   "customize/deep-dives/rules",
                   "customize/deep-dives/prompts",
@@ -207,8 +206,7 @@
                   "hub/blocks/intro",
                   "hub/blocks/use-a-block",
                   "hub/blocks/block-types",
-                  "hub/blocks/create-a-block",
-                  "hub/blocks/bundles"
+                  "hub/blocks/create-a-block"
                 ]
               },
               {
@@ -245,11 +243,8 @@
               "guides/cli",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
-              "guides/llama3.1",
-              "guides/set-up-codestral",
               "guides/running-continue-without-internet",
               "guides/custom-code-rag",
-              "guides/build-your-own-context-provider",
               "guides/how-to-self-host-a-model"
             ]
           }
@@ -388,6 +383,10 @@
     {
       "source": "/customize/deep-dives/settings",
       "destination": "/customize/settings"
+    },
+    {
+      "source": "/customize/settings",
+      "destination": "/customize"
     },
     {
       "source": "/customize/model-types",
@@ -1008,6 +1007,34 @@
     {
       "source": "/customization/overview#documentation-context",
       "destination": "/customize/context/documentation"
+    },
+    {
+      "source": "/guides/llama3.1",
+      "destination": "/guides/ollama-guide"
+    },
+    {
+      "source": "/guides/set-up-codestral",
+      "destination": "/customize/model-providers/top-level/mistral"
+    },
+    {
+      "source": "/guides/build-your-own-context-provider",
+      "destination": "/customize/custom-providers"
+    },
+    {
+      "source": "/hub/blocks/bundles",
+      "destination": "/hub/blocks/intro"
+    },
+    {
+      "source": "/customize/settings",
+      "destination": "/customization/overview"
+    },
+    {
+      "source": "/advanced/deep-dives/settings",
+      "destination": "/customization/overview"
+    },
+    {
+      "source": "/customize/deep-dives/settings",
+      "destination": "/customization/overview"
     }
   ]
 }
