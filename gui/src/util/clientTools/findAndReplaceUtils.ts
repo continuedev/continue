@@ -1,3 +1,5 @@
+import { EditOperation } from "core/tools/definitions/multiEdit";
+
 /**
  * Performs a find and replace operation on text content with proper handling of special characters
  */
@@ -18,12 +20,17 @@ export function performFindAndReplace(
     // Replace all occurrences using replaceAll for proper handling of special characters
     return content.replaceAll(oldString, newString);
   } else {
+    // Handle empty oldString case (insertion)
+    if (oldString === "") {
+      return newString + content;
+    }
+
     // Count occurrences using indexOf for proper handling of special characters
     let count = 0;
-    let index = content.indexOf(oldString);
-    while (index !== -1) {
+    let searchIndex = content.indexOf(oldString);
+    while (searchIndex !== -1) {
       count++;
-      index = content.indexOf(oldString, index + 1);
+      searchIndex = content.indexOf(oldString, searchIndex + 1);
     }
 
     if (count > 1) {
@@ -61,4 +68,25 @@ export function validateSingleEdit(
   if (oldString === newString) {
     throw new Error(`${context}old_string and new_string must be different`);
   }
+}
+
+export function validateCreatingForMultiEdit(edits: EditOperation[]) {
+  const isCreating = edits[0].old_string === "";
+  if (edits.length > 1) {
+    if (isCreating) {
+      throw new Error(
+        "cannot make subsequent edits on a file you are creating",
+      );
+    } else {
+      for (let i = 1; i < edits.length; i++) {
+        if (edits[i].old_string === "") {
+          throw new Error(
+            `edit #${i + 1}: only the first edit can contain an empty old_string, which is only used for file creation.`,
+          );
+        }
+      }
+    }
+  }
+
+  return isCreating;
 }

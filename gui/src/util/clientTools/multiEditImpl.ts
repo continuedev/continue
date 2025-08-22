@@ -7,35 +7,10 @@ import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 import {
   performFindAndReplace,
+  validateCreatingForMultiEdit,
   validateSingleEdit,
 } from "./findAndReplaceUtils";
 
-interface EditOperation {
-  old_string: string;
-  new_string: string;
-  replace_all?: boolean;
-}
-
-export function validateCreating(edits: EditOperation[]) {
-  const isCreating = edits[0].old_string === "";
-  if (edits.length > 1) {
-    if (isCreating) {
-      throw new Error(
-        "cannot make subsequent edits on a file you are creating",
-      );
-    } else {
-      for (let i = 1; i < edits.length; i++) {
-        if (edits[i].old_string === "") {
-          throw new Error(
-            `edit #${i + 1}: only the first edit can contain an empty old_string, which is only used for file creation.`,
-          );
-        }
-      }
-    }
-  }
-
-  return isCreating;
-}
 export const multiEditImpl: ClientToolImpl = async (
   args,
   toolCallId,
@@ -62,7 +37,7 @@ export const multiEditImpl: ClientToolImpl = async (
   }
 
   // Check if this is creating a new file (first edit has empty old_string)
-  const isCreatingNewFile = validateCreating(edits);
+  const isCreatingNewFile = validateCreatingForMultiEdit(edits);
   const resolvedUri = await resolveRelativePathInDir(
     filepath,
     extras.ideMessenger.ide,
@@ -102,8 +77,8 @@ export const multiEditImpl: ClientToolImpl = async (
     for (let i = 0; i < edits.length; i++) {
       const { old_string, new_string, replace_all } = edits[i];
       newContent = performFindAndReplace(
+        newContent,
         old_string,
-        edits[0],
         new_string,
         replace_all,
         i,
