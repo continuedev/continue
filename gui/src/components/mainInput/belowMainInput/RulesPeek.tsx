@@ -1,20 +1,22 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { RuleWithSource } from "core";
+import { AppliedRule } from "core";
 import { getLastNPathParts } from "core/util/uri";
-import { ComponentType, useMemo, useState } from "react";
+import { ComponentType, useContext, useMemo, useState } from "react";
 import ToggleDiv from "../../ToggleDiv";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { DEFAULT_SYSTEM_MESSAGES_URL } from "core/llm/defaultSystemMessages";
 
 interface RulesPeekProps {
-  appliedRules?: RuleWithSource[];
+  appliedRules?: AppliedRule[];
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 interface RulesPeekItemProps {
-  rule: RuleWithSource;
+  rule: AppliedRule;
 }
 
 // Convert technical source to user-friendly text
-const getSourceLabel = (rule: RuleWithSource): string => {
+const getSourceLabel = (rule: AppliedRule): string => {
   switch (rule.source) {
     case "default-chat":
       return "Default Chat";
@@ -45,29 +47,37 @@ const getSourceLabel = (rule: RuleWithSource): string => {
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const isGlobal = rule.alwaysApply ?? !rule.globs;
-  const [expanded, setExpanded] = useState(false);
 
-  // Define maximum length for rule text display
-  const maxRuleLength = 100;
-  const isRuleLong = rule.rule.length > maxRuleLength;
-
-  // Get the displayed rule text based on expanded state
-  const displayedRule =
-    isRuleLong && !expanded
-      ? `${rule.rule.slice(0, maxRuleLength)}...`
-      : rule.rule;
-
-  const toggleExpand = () => {
-    if (isRuleLong) {
-      setExpanded(!expanded);
+  const ideMessenger = useContext(IdeMessengerContext);
+  const handleOpen = async () => {
+    if (rule.slug) {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: `${rule.slug}/new-version`,
+        orgSlug: undefined,
+      });
+    } else if (rule.ruleFile) {
+      ideMessenger.post("openFile", {
+        path: rule.ruleFile,
+      });
+    } else if (
+      rule.source === "default-chat" ||
+      rule.source === "default-plan" ||
+      rule.source === "default-agent"
+    ) {
+      ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
+    } else {
+      ideMessenger.post("config/openProfile", {
+        profileId: undefined,
+        element: { sourceFile: (rule as any).sourceFile },
+      });
     }
   };
 
   return (
     <div
-      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10 ${isRuleLong ? "cursor-pointer hover:text-gray-200" : ""}`}
+      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10`}
       data-testid="rules-peek-item"
-      onClick={toggleExpand}
+      onClick={handleOpen}
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
@@ -87,19 +97,6 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
               : `Pattern: ${typeof rule.globs === "string" ? rule.globs : Array.isArray(rule.globs) ? rule.globs.join(", ") : ""}`}
           </div>
         </div>
-      </div>
-      <div
-        className={`mt-1 whitespace-pre-line pl-6 pr-2 text-xs italic text-gray-300`}
-        title={
-          isRuleLong ? (expanded ? "Click to collapse" : "Click to expand") : ""
-        }
-      >
-        {displayedRule}
-        {isRuleLong && (
-          <span className="text-description-muted ml-1 opacity-0 transition-opacity group-hover:opacity-100">
-            {expanded ? "(collapse)" : "(expand)"}
-          </span>
-        )}
       </div>
       <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
         Source: {getSourceLabel(rule)}
