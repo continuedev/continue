@@ -105,11 +105,17 @@ export const commonMetadataSchema = z.object({
   iconUrl: z.string().optional(),
 });
 
+const envRecord = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean()]),
+);
+
 export const baseConfigYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
   schema: z.string().optional(),
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
+  env: envRecord.optional(),
 });
 
 const modelsUsesSchema = z
@@ -254,6 +260,7 @@ export const configSchema = z.object({
   proxy: z.string().optional(),
   api_base: z.string().optional(),
   api_key: z.string().optional(),
+  env: envRecord.optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

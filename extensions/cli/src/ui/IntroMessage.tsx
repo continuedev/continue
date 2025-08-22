@@ -85,7 +85,9 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {/* Rules */}
       {allRules.length > 0 && (
         <>
-          <Text color="blue">Rules:</Text>
+          <Text bold color="blue">
+            Rules:
+          </Text>
           {allRules.map((rule, index) => (
             <Text key={index}>
               - <Text color="white">{rule}</Text>

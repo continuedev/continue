@@ -35,6 +35,7 @@
     "@types/follow-redirects": "^1.14.4",
     "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
+    "@types/node": "^24.3.0",
     "cross-env": "^7.0.3",
     "semantic-release": "^24.2.7",
     "ts-jest": "^29.2.3",

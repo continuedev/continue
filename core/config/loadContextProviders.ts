@@ -29,11 +29,24 @@ export function loadConfigContextProviders(
 } {
   const providers: IContextProvider[] = [];
   const errors: ConfigValidationError[] = [];
+
+  const defaultProviders: IContextProvider[] = [
+    new FileContextProvider({}),
+    new CurrentFileContextProvider({}),
+    new DiffContextProvider({}),
+    new TerminalContextProvider({}),
+    new ProblemsContextProvider({}),
+    new RulesContextProvider({}),
+  ];
+
   // Add from config
   if (configContext) {
     for (const config of configContext) {
       const cls = contextProviderClassFromName(config.provider) as any;
-      if (!cls) {
+      if (
+        !cls &&
+        !defaultProviders.find((p) => p.description.title === config.provider)
+      ) {
         errors.push({
           fatal: false,
           message: `Unknown context provider ${config.provider}`,
@@ -50,15 +63,6 @@ export function loadConfigContextProviders(
   }
 
   // Add from defaults if not found in config
-  const defaultProviders: IContextProvider[] = [
-    new FileContextProvider({}),
-    new CurrentFileContextProvider({}),
-    new DiffContextProvider({}),
-    new TerminalContextProvider({}),
-    new ProblemsContextProvider({}),
-    new RulesContextProvider({}),
-  ];
-
   for (const defaultProvider of defaultProviders) {
     if (
       !providers.find(
