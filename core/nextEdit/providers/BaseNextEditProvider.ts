@@ -31,10 +31,7 @@ export abstract class BaseNextEditProvider {
   abstract generatePrompts(context: ModelSpecificContext): Promise<Prompt[]>;
   abstract extractCompletion(message: string): string;
   abstract buildPromptContext(context: ModelSpecificContext): any;
-  abstract buildPromptMetadata(
-    helper: HelperVars,
-    context: ModelSpecificContext,
-  ): PromptMetadata;
+  abstract buildPromptMetadata(context: ModelSpecificContext): PromptMetadata;
   abstract getWindowSize(): { topMargin: number; bottomMargin: number };
   abstract calculateEditableRegion(
     helper: HelperVars,

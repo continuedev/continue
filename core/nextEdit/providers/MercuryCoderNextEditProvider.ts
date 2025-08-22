@@ -93,10 +93,7 @@ export class MercuryCoderProvider extends BaseNextEditProvider {
     ];
   }
 
-  buildPromptMetadata(
-    helper: HelperVars,
-    context: ModelSpecificContext,
-  ): PromptMetadata {
+  buildPromptMetadata(context: ModelSpecificContext): PromptMetadata {
     const promptCtx = this.buildPromptContext(context);
 
     const templateVars = {
@@ -107,7 +104,7 @@ export class MercuryCoderProvider extends BaseNextEditProvider {
         promptCtx.currentFileContent,
         promptCtx.editableRegionStartLine,
         promptCtx.editableRegionEndLine,
-        helper.pos,
+        context.helper.pos,
       ),
       editDiffHistory: editHistoryBlock(promptCtx.editDiffHistory),
       currentFilePath: promptCtx.currentFilePath,

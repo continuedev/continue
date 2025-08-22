@@ -102,10 +102,7 @@ export class InstinctProvider extends BaseNextEditProvider {
     ];
   }
 
-  buildPromptMetadata(
-    helper: HelperVars,
-    context: ModelSpecificContext,
-  ): PromptMetadata {
+  buildPromptMetadata(context: ModelSpecificContext): PromptMetadata {
     const promptCtx = this.buildPromptContext(context);
 
     const templateVars = {

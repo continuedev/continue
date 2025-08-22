@@ -394,10 +394,7 @@ export class NextEditProvider {
 
     const prompts = await this.modelProvider.generatePrompts(context);
 
-    this.promptMetadata = this.modelProvider.buildPromptMetadata(
-      helper,
-      context,
-    );
+    this.promptMetadata = this.modelProvider.buildPromptMetadata(context);
 
     return { editableRegionStartLine, editableRegionEndLine, prompts };
   }
