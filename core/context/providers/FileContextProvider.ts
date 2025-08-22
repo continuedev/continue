@@ -6,6 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
+import { isSecurityConcern } from "../../indexing/ignore";
 import { walkDirs } from "../../indexing/walkDir";
 import {
   getShortestUniqueRelativeUriPaths,
@@ -35,6 +36,21 @@ class FileContextProvider extends BaseContextProvider {
       fileUri,
       await extras.ide.getWorkspaceDirs(),
     );
+
+    if (isSecurityConcern(relativePathOrBasename)) {
+      return [
+        {
+          description: last2Parts,
+          content:
+            "Content redacted, this file cannot be viewed for security reasons",
+          name: baseName,
+          uri: {
+            type: "file",
+            value: fileUri,
+          },
+        },
+      ];
+    }
 
     return [
       {
