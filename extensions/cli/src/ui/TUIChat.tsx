@@ -36,6 +36,7 @@ interface TUIChatProps {
   initialPrompt?: string;
   resume?: boolean;
   additionalRules?: string[];
+  additionalPrompts?: string[];
 }
 
 const TUIChat: React.FC<TUIChatProps> = ({
@@ -44,6 +45,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   initialPrompt,
   resume,
   additionalRules,
+  additionalPrompts,
 }) => {
   // Check if we're in remote mode
   const isRemoteMode = useMemo(() => {
@@ -126,6 +128,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
+    additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),

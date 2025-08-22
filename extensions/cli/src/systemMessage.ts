@@ -5,7 +5,7 @@ import * as path from "path";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
-import { processRule } from "./args.js";
+import { processPromptOrRule } from "./args.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
 const { WalkerSync } = pkg;
@@ -150,7 +150,7 @@ export async function constructSystemMessage(
   if (additionalRules && additionalRules.length > 0) {
     for (const ruleSpec of additionalRules) {
       try {
-        const processedRule = await processRule(ruleSpec);
+        const processedRule = await processPromptOrRule(ruleSpec);
         processedRules.push(processedRule);
       } catch (error: any) {
         console.warn(

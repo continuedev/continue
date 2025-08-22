@@ -42,6 +42,7 @@ export function useChat({
   initialPrompt,
   resume,
   additionalRules,
+  additionalPrompts,
   onShowConfigSelector,
   onShowModelSelector,
   onShowMCPSelector,
@@ -163,10 +164,19 @@ export function useChat({
   useEffect(() => {
     // Only handle initial prompt after chat history is initialized
     // This prevents race conditions where the prompt runs before system message is loaded
-    if (initialPrompt && isChatHistoryInitialized) {
-      handleUserMessage(initialPrompt);
+    if ((initialPrompt || (additionalPrompts && additionalPrompts.length > 0)) && isChatHistoryInitialized) {
+      const processPrompts = async () => {
+        const { processAndCombinePrompts } = await import("../../util/promptProcessor.js");
+        const finalMessage = await processAndCombinePrompts(additionalPrompts, initialPrompt);
+        
+        if (finalMessage) {
+          handleUserMessage(finalMessage);
+        }
+      };
+      
+      processPrompts();
     }
-  }, [initialPrompt, isChatHistoryInitialized]);
+  }, [initialPrompt, additionalPrompts, isChatHistoryInitialized]);
 
   const executeStreamingResponse = async (
     newHistory: ChatCompletionMessageParam[],
