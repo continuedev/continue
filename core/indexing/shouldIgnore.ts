@@ -1,7 +1,8 @@
 import ignore from "ignore";
 import type { FileType, IDE } from "../";
 import { findUriInDirs, getUriPathBasename } from "../util/uri";
-import { defaultIgnoreFileAndDir, getGlobalContinueIgArray } from "./ignore";
+import { getGlobalContinueIgArray } from "./continueignore";
+import { defaultIgnoreFileAndDir } from "./ignore";
 import { getIgnoreContext } from "./walkDir";
 
 /*

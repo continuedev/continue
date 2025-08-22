@@ -64,6 +64,7 @@
     "@workos-inc/node": "^7.45.0",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
+    "core": "file:../../core",
     "date-fns": "^4.1.0",
     "diff": "^7.0.0",
     "dotenv": "^16.5.0",
@@ -71,6 +72,7 @@
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",
     "gradient-string": "^3.0.0",
+    "ignore": "^7.0.5",
     "ignore-walk": "^7.0.0",
     "ink": "^6.1.0",
     "jszip": "^3.10.1",
@@ -86,6 +88,7 @@
     "swr": "^2.3.4",
     "turndown": "^7.2.0",
     "typescript": "^5.8.3",
+    "uri-js": "^4.4.1",
     "uuid": "^9.0.1",
     "winston": "^3.17.0",
     "yaml": "^2.8.0"
