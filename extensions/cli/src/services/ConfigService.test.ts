@@ -73,7 +73,7 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
-      vi.mocked(args.processRule).mockImplementation(
+      vi.mocked(args.processPromptOrRule).mockImplementation(
         async (rule) => `Processed: ${rule}`,
       );
 

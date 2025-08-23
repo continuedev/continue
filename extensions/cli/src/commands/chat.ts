@@ -78,6 +78,7 @@ export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
   rule?: string[]; // Array of rule specifications
+  prompt?: string[]; // Array of prompt specifications
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
   org?: string; // Organization slug to use for this session
@@ -395,17 +396,26 @@ async function runHeadlessMode(
     compactionIndex = findCompactionIndex(chatHistory);
   }
 
+  // Handle additional prompts from --prompt flags
+  const { processAndCombinePrompts } = await import(
+    "../util/promptProcessor.js"
+  );
+  const initialUserInput = await processAndCombinePrompts(
+    options.prompt,
+    prompt,
+  );
+
   let isFirstMessage = true;
   while (true) {
     // When in headless mode, don't ask for user input
-    if (!isFirstMessage && prompt && options.headless) {
+    if (!isFirstMessage && initialUserInput && options.headless) {
       break;
     }
 
     // Get user input
     const userInput =
-      isFirstMessage && prompt
-        ? prompt
+      isFirstMessage && initialUserInput
+        ? initialUserInput
         : readlineSync.question(`\n${chalk.bold.green("You:")} `);
 
     isFirstMessage = false;
@@ -472,6 +482,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         configPath: options.config,
         organizationSlug: options.org,
         additionalRules: options.rule,
+        additionalPrompts: options.prompt,
         toolPermissionOverrides: permissionOverrides,
         skipOnboarding: true,
       };
