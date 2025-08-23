@@ -15,6 +15,7 @@ export interface StreamCallbacks {
     requestId: string,
     preview?: ToolCallPreview[],
   ) => void;
+  onSystemMessage?: (message: string) => void;
 }
 
 export function getDefaultCompletionOptions(

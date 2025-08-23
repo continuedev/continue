@@ -4,9 +4,9 @@ import { type AssistantConfig } from "@continuedev/sdk";
 export { chat } from "./chat.js";
 export { login } from "./login.js";
 export { logout } from "./logout.js";
+export { listSessionsCommand } from "./ls.js";
 export { remote } from "./remote.js";
 export { serve } from "./serve.js";
-export { listSessionsCommand } from "./ls.js";
 
 export interface SlashCommand {
   name: string;
@@ -43,6 +43,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   {
     name: "whoami",
     description: "Check who you're currently logged in as",
+    category: "system",
+  },
+  {
+    name: "info",
+    description: "Show session information",
     category: "system",
   },
   {
