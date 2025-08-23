@@ -94,7 +94,13 @@ export class GlobalActions {
     // It will also render a warning every time you try to use the model, interfering with e2e tests.
     // If we need to toggle, execute the command.
     const statusBar = await workbench.getStatusBar();
-    const continueItem = await statusBar.findElement(By.xpath("//*[contains(text(), 'Continue')]"));
+    
+    // Wait for the Continue item to be available in the status bar.
+    const continueItem = await TestUtils.waitForSuccess(
+      async () => await statusBar.findElement(By.xpath("//*[contains(text(), 'Continue')]")),
+      DEFAULT_TIMEOUT.MD
+    );
+    
     const text = await continueItem.getText();
     
     const hasNE = text.includes('(NE)');
