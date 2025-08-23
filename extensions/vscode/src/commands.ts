@@ -642,7 +642,7 @@ const getCommandsMap: (
             : StatusBarStatus.Disabled;
       }
 
-      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? true;
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
 
       quickPick.items = [
         {
