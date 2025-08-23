@@ -90,8 +90,6 @@ export class VsCodeExtension {
     const { config: continueConfig } = await this.configHandler.loadConfig();
     const autocompleteModel = continueConfig?.selectedModelByRole.autocomplete;
     const vscodeConfig = vscode.workspace.getConfiguration(EXTENSION_NAME);
-    const nextEditEnabled =
-      vscodeConfig.get<boolean>("enableNextEdit") ?? false;
 
     const modelSupportsNext =
       autocompleteModel &&
@@ -100,6 +98,18 @@ export class VsCodeExtension {
         autocompleteModel.model,
         autocompleteModel.title,
       );
+
+    // Use smart defaults.
+    let nextEditEnabled = vscodeConfig.get<boolean>("enableNextEdit");
+    if (nextEditEnabled === undefined) {
+      // First time - set smart default.
+      nextEditEnabled = modelSupportsNext ?? false;
+      await vscodeConfig.update(
+        "enableNextEdit",
+        nextEditEnabled,
+        vscode.ConfigurationTarget.Global,
+      );
+    }
 
     // Check if Next Edit is enabled but model doesn't support it.
     if (nextEditEnabled && !modelSupportsNext && !isNextEditTest()) {
