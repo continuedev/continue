@@ -8,17 +8,7 @@ Models are blocks that let you specify Large Language Models (LLMs) and other de
 
 Continue supports [many model providers](/customization/models#openai), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, DeepSeek, and more. Models can have one or more of the following roles depending on its capabilities, including `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`. Read more about roles [here](/customize/model-roles). View [`models`](/reference#models) in the YAML Reference for more details.
 
-## Context
 
-Context blocks define a context provider which can be referenced in Chat with `@` to pull in data from external sources such as files and folders, a URL, Jira or Confluence, and GitHub issues, among others. [Explore context provider blocks](https://hub.continue.dev/explore/context) on the hub.
-
-Learn more about context providers [here](/reference#context). The `config.yaml` spec for context can be found [`here`](/reference#context).
-
-## Docs
-
-Docs are blocks that point to documentation sites, which will be indexed locally and then can be referenced as context using @Docs in Chat. [Explore docs](https://hub.continue.dev/explore/docs) on the hub.
-
-Learn more in the [@Docs context provider documentation](/customize/context/documentation), and view [`docs`](/reference#docs) in the YAML Reference for more details.
 
 ## MCP Servers
 
@@ -38,8 +28,4 @@ Prompts blocks are pre-written, reusable prompts that can be referenced at any t
 
 Prompt blocks have the same syntax as [prompt files](/customization/prompts). The `config.yaml` spec for `prompts` can be found [here](/reference#prompts).
 
-## Data
 
-Data blocks allow you send your development data to custom destinations of your choice. Development data can be used for a variety of purposes, including analyzing usage, gathering insights, or fine-tuning models. You can read more about development data [here](/customize/overview#development-data). Explore data block examples [here](https://hub.continue.dev/explore/data).
-
-Data destinations are configured in the [`data`](/reference#data) section of `config.yaml`.
