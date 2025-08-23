@@ -10,7 +10,7 @@ function DocsIndexingStatuses() {
   const [searchTerm, setSearchTerm] = useState("");
   const config = useAppSelector((store) => store.config.config);
   const { selectedProfile } = useAuth();
-  
+
   const mergedDocs = useMemo(() => {
     const parsed = selectedProfile?.rawYaml
       ? parseConfigYaml(selectedProfile?.rawYaml ?? "")
@@ -23,23 +23,24 @@ function DocsIndexingStatuses() {
 
   const filteredAndSortedDocs = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    
+
     // Filter docs based on search term
-    const filtered = term === ""
-      ? mergedDocs
-      : mergedDocs.filter(({ doc }) => {
-          const title = (doc.title || "").toLowerCase();
-          const url = (doc.startUrl || "").toLowerCase();
-          return title.includes(term) || url.includes(term);
-        });
-    
+    const filtered =
+      term === ""
+        ? mergedDocs
+        : mergedDocs.filter(({ doc }) => {
+            const title = (doc.title || "").toLowerCase();
+            const url = (doc.startUrl || "").toLowerCase();
+            return title.includes(term) || url.includes(term);
+          });
+
     // Sort alphabetically by title (or URL if no title)
     const sorted = [...filtered].sort((a, b) => {
       const aName = (a.doc.title || a.doc.startUrl || "").toLowerCase();
       const bName = (b.doc.title || b.doc.startUrl || "").toLowerCase();
       return aName.localeCompare(bName);
     });
-    
+
     return sorted;
   }, [mergedDocs, searchTerm]);
 
