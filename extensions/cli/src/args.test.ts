@@ -269,7 +269,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
         statusText: "Not Found",
       } as Response);
 
-      await expect(processPromptOrRule("continuedev/nonexistent-rule")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/nonexistent-rule"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/nonexistent-rule": HTTP 404: Not Found',
       );
     });
@@ -277,7 +279,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
     it("should handle network errors when loading from hub", async () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 
-      await expect(processPromptOrRule("continuedev/sentry-nextjs")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/sentry-nextjs"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/sentry-nextjs": Network error',
       );
     });
@@ -285,7 +289,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
     it("should handle invalid slug format", async () => {
       // "invalid-slug" doesn't contain "/" so it's treated as direct content, not a hub slug
       // Let's test with a slug that has wrong format but contains "/"
-      await expect(processPromptOrRule("invalid/slug/too/many/parts")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("invalid/slug/too/many/parts"),
+      ).rejects.toThrow(
         'Invalid hub slug format. Expected "owner/package", got: invalid/slug/too/many/parts',
       );
     });
@@ -300,7 +306,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      await expect(processPromptOrRule("continuedev/empty-rule")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/empty-rule"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/empty-rule": No rule content found in downloaded zip file',
       );
     });
@@ -316,7 +324,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      await expect(processPromptOrRule("continuedev/directory-only")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/directory-only"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/directory-only": No rule content found in downloaded zip file',
       );
     });
@@ -373,7 +383,9 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(invalidZipBuffer),
       } as Response);
 
-      await expect(processPromptOrRule("continuedev/corrupted-zip")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/corrupted-zip"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/corrupted-zip"',
       );
     });

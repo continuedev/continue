@@ -22,9 +22,7 @@ export async function processAndCombinePrompts(
       const processed = await processPromptOrRule(promptSpec);
       processedPrompts.push(processed);
     } catch (error: any) {
-      logger.warn(
-        `Failed to process prompt "${promptSpec}": ${error.message}`,
-      );
+      logger.warn(`Failed to process prompt "${promptSpec}": ${error.message}`);
     }
   }
 

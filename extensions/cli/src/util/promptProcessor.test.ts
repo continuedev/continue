@@ -82,11 +82,7 @@ describe("promptProcessor", () => {
         .mockRejectedValueOnce(new Error("processing failed"))
         .mockResolvedValueOnce("success2");
 
-      const result = await processAndCombinePrompts([
-        "good1",
-        "bad",
-        "good2",
-      ]);
+      const result = await processAndCombinePrompts(["good1", "bad", "good2"]);
 
       expect(mockProcessPromptOrRule).toHaveBeenCalledTimes(3);
       expect(result).toBe("success1\n\nsuccess2");
@@ -98,7 +94,10 @@ describe("promptProcessor", () => {
         .mockRejectedValueOnce(new Error("fail1"))
         .mockRejectedValueOnce(new Error("fail2"));
 
-      const result = await processAndCombinePrompts(["bad1", "bad2"], "initial");
+      const result = await processAndCombinePrompts(
+        ["bad1", "bad2"],
+        "initial",
+      );
 
       expect(result).toBe("initial");
     });

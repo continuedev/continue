@@ -90,20 +90,12 @@ async function loadRuleFromHub(slug: string): Promise<string> {
  */
 export async function processPromptOrRule(spec: string): Promise<string> {
   // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (
-    spec.includes("/") &&
-    !spec.startsWith(".") &&
-    !spec.startsWith("/")
-  ) {
+  if (spec.includes("/") && !spec.startsWith(".") && !spec.startsWith("/")) {
     return await loadRuleFromHub(spec);
   }
 
   // If it looks like a file path (contains . or / or ends with common file extensions)
-  if (
-    spec.includes(".") ||
-    spec.includes("/") ||
-    spec.includes("\\")
-  ) {
+  if (spec.includes(".") || spec.includes("/") || spec.includes("\\")) {
     return loadRuleFromFile(spec);
   }
 
@@ -186,20 +178,26 @@ export function parseArgs(): CommandLineArgs {
       if (promptIndex + 1 >= args.length) {
         throw new Error("--prompt flag requires a value");
       }
-      
+
       const promptValue = args[promptIndex + 1];
-      
+
       // Check if the next argument is actually another flag
       if (promptValue.startsWith("--")) {
         throw new Error("--prompt flag requires a value, found flag instead");
       }
-      
+
       result.prompts.push(promptValue);
     }
   }
 
   // Find the last argument that's not a flag or a flag value
-  const flagsWithValues = ["--config", "--org", "--rule", "--prompt", "--format"];
+  const flagsWithValues = [
+    "--config",
+    "--org",
+    "--rule",
+    "--prompt",
+    "--format",
+  ];
   const nonFlagArgs = args.filter((arg, index) => {
     // Skip flags (starting with --)
     if (arg.startsWith("--") || arg === "-p") return false;

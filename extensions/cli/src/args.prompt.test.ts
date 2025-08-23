@@ -22,13 +22,28 @@ describe("args --prompt flag", () => {
   });
 
   it("should parse multiple prompts from multiple --prompt flags", () => {
-    process.argv = ["node", "script.js", "--prompt", "prompt1", "--prompt", "prompt2"];
+    process.argv = [
+      "node",
+      "script.js",
+      "--prompt",
+      "prompt1",
+      "--prompt",
+      "prompt2",
+    ];
     const result = parseArgs();
     expect(result.prompts).toEqual(["prompt1", "prompt2"]);
   });
 
   it("should handle mixed flags including --prompt", () => {
-    process.argv = ["node", "script.js", "--config", "myconfig", "--prompt", "myprompt", "--resume"];
+    process.argv = [
+      "node",
+      "script.js",
+      "--config",
+      "myconfig",
+      "--prompt",
+      "myprompt",
+      "--resume",
+    ];
     const result = parseArgs();
     expect(result.configPath).toBe("myconfig");
     expect(result.prompts).toEqual(["myprompt"]);
@@ -36,14 +51,27 @@ describe("args --prompt flag", () => {
   });
 
   it("should not include --prompt value in non-flag arguments", () => {
-    process.argv = ["node", "script.js", "--prompt", "prompt-value", "actual-prompt"];
+    process.argv = [
+      "node",
+      "script.js",
+      "--prompt",
+      "prompt-value",
+      "actual-prompt",
+    ];
     const result = parseArgs();
     expect(result.prompts).toEqual(["prompt-value"]);
     expect(result.prompt).toBe("actual-prompt");
   });
 
   it("should handle both --rule and --prompt flags", () => {
-    process.argv = ["node", "script.js", "--rule", "my-rule", "--prompt", "my-prompt"];
+    process.argv = [
+      "node",
+      "script.js",
+      "--rule",
+      "my-rule",
+      "--prompt",
+      "my-prompt",
+    ];
     const result = parseArgs();
     expect(result.rules).toEqual(["my-rule"]);
     expect(result.prompts).toEqual(["my-prompt"]);

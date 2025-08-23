@@ -397,8 +397,13 @@ async function runHeadlessMode(
   }
 
   // Handle additional prompts from --prompt flags
-  const { processAndCombinePrompts } = await import("../util/promptProcessor.js");
-  const initialUserInput = await processAndCombinePrompts(options.prompt, prompt);
+  const { processAndCombinePrompts } = await import(
+    "../util/promptProcessor.js"
+  );
+  const initialUserInput = await processAndCombinePrompts(
+    options.prompt,
+    prompt,
+  );
 
   let isFirstMessage = true;
   while (true) {
