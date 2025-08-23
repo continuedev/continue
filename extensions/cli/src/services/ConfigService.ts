@@ -1,7 +1,7 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
-import { processRule } from "../args.js";
+import { processPromptOrRule } from "../args.js";
 import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
 import { logger } from "../util/logger.js";
 
@@ -155,7 +155,7 @@ export class ConfigService
 
     for (const ruleSpec of rules) {
       try {
-        const processedRule = await processRule(ruleSpec);
+        const processedRule = await processPromptOrRule(ruleSpec);
         processedRules.push(processedRule);
       } catch (error: any) {
         logger.warn(`Failed to process rule "${ruleSpec}": ${error.message}`);

@@ -7,10 +7,6 @@ import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import {
-  getAutoCompactMessage,
-  shouldAutoCompact,
-} from "../../util/tokenizer.js";
 import { DisplayMessage } from "../types.js";
 
 import { SlashCommandResult } from "./useChat.types.js";
@@ -281,13 +277,13 @@ interface HandleAutoCompactionOptions {
 }
 
 /**
- * Handle auto-compaction when approaching context limit
+ * Handle auto-compaction when approaching context limit - TUI wrapper
  */
 export async function handleAutoCompaction({
   chatHistory,
   model,
   llmApi,
-  compactionIndex,
+  compactionIndex: _compactionIndex,
   setMessages,
   setChatHistory,
   setCompactionIndex,
@@ -295,69 +291,21 @@ export async function handleAutoCompaction({
   currentChatHistory: ChatCompletionMessageParam[];
   currentCompactionIndex: number | null;
 }> {
-  if (!model || !shouldAutoCompact(chatHistory, model)) {
-    return {
-      currentChatHistory: chatHistory,
-      currentCompactionIndex: compactionIndex,
-    };
-  }
+  const { handleAutoCompaction: coreAutoCompaction } = await import(
+    "../../streamChatResponse.autoCompaction.js"
+  );
 
-  logger.info("Auto-compacting triggered in TUI mode");
-
-  setMessages((prev) => [
-    ...prev,
-    {
-      role: "system",
-      content: getAutoCompactMessage(model),
-      messageType: "system" as const,
+  const result = await coreAutoCompaction(chatHistory, model, llmApi, {
+    isHeadless: false,
+    callbacks: {
+      setMessages,
+      setChatHistory,
+      setCompactionIndex,
     },
-  ]);
+  });
 
-  try {
-    if (!llmApi) {
-      throw new Error("LLM API is not available for auto-compaction");
-    }
-
-    // Compact the history WITHOUT the current user message
-    const result = await compactChatHistory(chatHistory, model, llmApi);
-
-    // Update state
-    setChatHistory(result.compactedHistory);
-    setCompactionIndex(result.compactionIndex);
-
-    // Save the compacted session
-    saveSession(result.compactedHistory);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: "✓ Chat history auto-compacted successfully.",
-        messageType: "system" as const,
-      },
-    ]);
-
-    return {
-      currentChatHistory: result.compactedHistory,
-      currentCompactionIndex: result.compactionIndex,
-    };
-  } catch (error: any) {
-    const errorMessage = `Auto-compaction error: ${formatError(error)}`;
-    logger.error(errorMessage);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: `Warning: ${errorMessage}. Continuing without compaction...`,
-        messageType: "system" as const,
-      },
-    ]);
-
-    // Continue without compaction on error
-    return {
-      currentChatHistory: chatHistory,
-      currentCompactionIndex: compactionIndex,
-    };
-  }
+  return {
+    currentChatHistory: result.chatHistory,
+    currentCompactionIndex: result.compactionIndex,
+  };
 }

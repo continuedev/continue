@@ -9,6 +9,7 @@ interface AppRootProps {
   initialPrompt?: string;
   resume?: boolean;
   additionalRules?: string[];
+  additionalPrompts?: string[];
 }
 
 /**

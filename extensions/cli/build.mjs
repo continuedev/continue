@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import * as esbuild from "esbuild";
-import { writeFileSync, chmodSync } from "fs";
-import { resolve, dirname } from "path";
+import { chmodSync, writeFileSync } from "fs";
+import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -59,9 +59,15 @@ try {
         __dirname,
         "../../packages/config-types/dist/index.js",
       ),
-      "core": resolve(__dirname, "../../core"),
-      "@continuedev/fetch": resolve(__dirname, "../../packages/fetch/dist/index.js"),
-      "@continuedev/llm-info": resolve(__dirname, "../../packages/llm-info/dist/index.js"),
+      core: resolve(__dirname, "../../core"),
+      "@continuedev/fetch": resolve(
+        __dirname,
+        "../../packages/fetch/dist/index.js",
+      ),
+      "@continuedev/llm-info": resolve(
+        __dirname,
+        "../../packages/llm-info/dist/index.js",
+      ),
     },
 
     // Add banner to create require for CommonJS packages
@@ -76,7 +82,7 @@ const require = createRequire(import.meta.url);`,
 
   // Create wrapper script with shebang
   writeFileSync("dist/cn.js", "#!/usr/bin/env node\nimport('./index.js');");
-  
+
   // Make the wrapper script executable
   chmodSync("dist/cn.js", 0o755);
 

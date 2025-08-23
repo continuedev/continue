@@ -11,6 +11,14 @@ on:
       - main
 
 jobs:
+  track-rerun:
+    runs-on: ubuntu-latest
+    if: github.run_attempt > 1
+    steps:
+      - uses: actions/checkout@v5
+      - name: Track workflow rerun
+        uses: ./.github/actions/track-rerun
+
   prettier-check:
     runs-on: ubuntu-latest
     steps:

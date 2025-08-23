@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { resetConsoleOverrides } from "./src/util/consoleOverride.js";
+import { resetConsoleOverrides } from "./src/init.js";
 
 // Disable telemetry for tests
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
