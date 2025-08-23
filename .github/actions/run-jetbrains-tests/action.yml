@@ -44,6 +44,7 @@ runs:
     - name: Setup FFmpeg
       uses: AnimMouse/setup-ffmpeg@v1
       with:
+        version: 7.1
         token: ${{ inputs.github-token }}
 
     - name: Setup Gradle
