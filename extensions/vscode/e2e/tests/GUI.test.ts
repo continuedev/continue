@@ -36,6 +36,7 @@ describe("GUI Test", () => {
 
     ({ view, driver } = await GUIActions.switchToReactIframe());
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
+    await GlobalActions.disableNextEdit();
   });
 
   afterEach(async function () {
