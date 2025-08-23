@@ -167,7 +167,6 @@
                   "customize/deep-dives/prompts",
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
-                  "customize/deep-dives/vscode-actions",
                   "customize/deep-dives/mcp",
                   "customize/deep-dives/model-capabilities"
                 ]
@@ -526,11 +525,15 @@
     },
     {
       "source": "/walkthroughs/quick-actions",
-      "destination": "/customize/deep-dives/vscode-actions"
+      "destination": "/customize/overview"
     },
     {
       "source": "/advanced/deep-dives/vscode-actions",
-      "destination": "/customize/deep-dives/vscode-actions"
+      "destination": "/customize/overview"
+    },
+    {
+      "source": "/customize/deep-dives/vscode-actions",
+      "destination": "/customize/overview"
     },
     {
       "source": "/changelog",
