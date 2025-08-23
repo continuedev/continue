@@ -174,7 +174,7 @@ export function useChat({
         }
       };
       
-      processPrompts();
+      processPrompts().catch(console.error);
     }
   }, [initialPrompt, additionalPrompts, isChatHistoryInitialized]);
 
