@@ -183,9 +183,18 @@ export function parseArgs(): CommandLineArgs {
   if (promptIndices.length > 0) {
     result.prompts = [];
     for (const promptIndex of promptIndices) {
-      if (promptIndex + 1 < args.length) {
-        result.prompts.push(args[promptIndex + 1]);
+      if (promptIndex + 1 >= args.length) {
+        throw new Error("--prompt flag requires a value");
       }
+      
+      const promptValue = args[promptIndex + 1];
+      
+      // Check if the next argument is actually another flag
+      if (promptValue.startsWith("--")) {
+        throw new Error("--prompt flag requires a value, found flag instead");
+      }
+      
+      result.prompts.push(promptValue);
     }
   }
 

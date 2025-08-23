@@ -1,11 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 
-import { parseArgs, processPrompt } from "./args.js";
+import { parseArgs, processPromptOrRule } from "./args.js";
 
 describe("args --prompt flag", () => {
+  const originalArgv = process.argv;
+
   beforeEach(() => {
     // Reset process.argv for each test
     process.argv = ["node", "script.js"];
+  });
+
+  afterAll(() => {
+    // Restore original process.argv after all tests
+    process.argv = originalArgv;
   });
 
   it("should parse single prompt from --prompt flag", () => {
@@ -43,7 +50,7 @@ describe("args --prompt flag", () => {
   });
 
   it("should process direct string content", async () => {
-    const result = await processPrompt("This is a direct prompt");
+    const result = await processPromptOrRule("This is a direct prompt");
     expect(result).toBe("This is a direct prompt");
   });
 });

@@ -170,7 +170,7 @@ export function useChat({
         const finalMessage = await processAndCombinePrompts(additionalPrompts, initialPrompt);
         
         if (finalMessage) {
-          handleUserMessage(finalMessage);
+          await handleUserMessage(finalMessage);
         }
       };
       
