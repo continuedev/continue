@@ -291,10 +291,6 @@ export async function handleAutoCompaction({
   currentChatHistory: ChatCompletionMessageParam[];
   currentCompactionIndex: number | null;
 }> {
-  if (!llmApi) {
-    throw new Error("LLM API is not available for auto-compaction");
-  }
-
   const { handleAutoCompaction: coreAutoCompaction } = await import(
     "../../streamChatResponse.autoCompaction.js"
   );

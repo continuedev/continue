@@ -1,7 +1,7 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { describe, it, expect, vi } from "vitest";
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import { describe, it, expect, vi } from "vitest";
 
 import { compactChatHistory } from "./compaction.js";
 import { streamChatResponse } from "./streamChatResponse.js";
@@ -43,7 +43,7 @@ describe("compaction infinite loop prevention", () => {
     mockStreamResponse.mockImplementation(
       async (history, model, api, controller, callbacks) => {
         callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.();
+        callbacks?.onContentComplete?.("Summary");
         return "Summary";
       },
     );
@@ -54,7 +54,7 @@ describe("compaction infinite loop prevention", () => {
     ];
 
     // This should not hang - it should break out of the loop
-    const result = await compactChatHistory(history, mockModel, mockLlmApi);
+    const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
 
     // Should complete successfully even though token count is still too high
     expect(result.compactedHistory).toBeDefined();
@@ -75,7 +75,7 @@ describe("compaction infinite loop prevention", () => {
     mockStreamResponse.mockImplementation(
       async (history, model, api, controller, callbacks) => {
         callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.();
+        callbacks?.onContentComplete?.("Summary");
         return "Summary";
       },
     );
@@ -88,7 +88,7 @@ describe("compaction infinite loop prevention", () => {
     ];
 
     // This should not hang
-    const result = await compactChatHistory(history, mockModel, mockLlmApi);
+    const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
 
     expect(result.compactedHistory).toBeDefined();
   });
@@ -116,7 +116,7 @@ describe("compaction infinite loop prevention", () => {
     mockStreamResponse.mockImplementation(
       async (history, model, api, controller, callbacks) => {
         callbacks?.onContent?.("Summary");
-        callbacks?.onContentComplete?.();
+        callbacks?.onContentComplete?.("Summary");
         return "Summary";
       },
     );
@@ -129,7 +129,7 @@ describe("compaction infinite loop prevention", () => {
       { role: "user", content: "Another question" },
     ];
 
-    const result = await compactChatHistory(history, mockModel, mockLlmApi);
+    const result = await compactChatHistory(history, mockModel, mockLlmApi, {});
 
     expect(result.compactedHistory).toBeDefined();
     // The function will call countTokens multiple times during the process
