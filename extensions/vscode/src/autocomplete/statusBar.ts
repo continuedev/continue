@@ -73,13 +73,11 @@ const statusBarItemText = (
       text = "Continue";
   }
 
-  // Append Next Edit indicator if enabled and autocomplete is enabled.
-  if (status === StatusBarStatus.Enabled) {
-    const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
-    const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
-    if (nextEditEnabled) {
-      text += " (NE)";
-    }
+  // Append Next Edit indicator if enabled.
+  const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
+  const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+  if (nextEditEnabled) {
+    text += " (NE)";
   }
 
   return text;
