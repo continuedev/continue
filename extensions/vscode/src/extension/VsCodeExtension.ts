@@ -105,12 +105,12 @@ export class VsCodeExtension {
     if (nextEditEnabled && !modelSupportsNext && !isNextEditTest()) {
       vscode.window
         .showWarningMessage(
-          `The current autocomplete model (${autocompleteModel?.title || "unknown"}) does not support next edit.`,
-          "Disable next edit",
+          `The current autocomplete model (${autocompleteModel?.title || "unknown"}) does not support Next Edit.`,
+          "Disable Next Edit",
           "Select different model",
         )
         .then((selection) => {
-          if (selection === "Disable next edit") {
+          if (selection === "Disable Next Edit") {
             vscodeConfig.update(
               "enableNextEdit",
               false,

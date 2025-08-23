@@ -94,7 +94,7 @@ const statusBarItemTooltip = (status: StatusBarStatus | undefined) => {
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
       return nextEditEnabled
-        ? "Next edit is enabled"
+        ? "Next Edit is enabled"
         : "Tab autocomplete is enabled";
     case StatusBarStatus.Paused:
       return "Tab autocomplete is paused";
@@ -225,9 +225,9 @@ export function getAutocompleteStatusBarTitle(
   return title;
 }
 
-const USE_FIM_MENU_ITEM_LABEL = "$(export) Use FIM autocomplete over next edit";
+const USE_FIM_MENU_ITEM_LABEL = "$(export) Use FIM autocomplete over Next Edit";
 const USE_NEXT_EDIT_MENU_ITEM_LABEL =
-  "$(sparkle) Use next edit over FIM autocomplete";
+  "$(sparkle) Use Next Edit over FIM autocomplete";
 
 // Shows what items get rendered in the autocomplete menu.
 export function getNextEditMenuItems(
@@ -246,14 +246,14 @@ export function getNextEditMenuItems(
   ];
 }
 
-// Checks if the current selected option is a next edit toggle label.
+// Checks if the current selected option is a Next Edit toggle label.
 export function isNextEditToggleLabel(label: string): boolean {
   return (
     label === USE_FIM_MENU_ITEM_LABEL || label === USE_NEXT_EDIT_MENU_ITEM_LABEL
   );
 }
 
-// Updates the config once next edit is toggled.
+// Updates the config once Next Edit is toggled.
 export function handleNextEditToggle(
   label: string,
   config: vscode.WorkspaceConfiguration,

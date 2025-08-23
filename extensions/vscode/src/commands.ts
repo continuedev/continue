@@ -810,7 +810,7 @@ const getCommandsMap: (
 
       if (!tabAutocompleteEnabled) {
         vscode.window.showInformationMessage(
-          "Please enable tab autocomplete first to use next edit",
+          "Please enable tab autocomplete first to use Next Edit",
         );
         return;
       }
