@@ -255,7 +255,8 @@
               "reference",
               "reference/json-reference",
               "reference/yaml-migration",
-              "reference/continue-mcp"
+              "reference/continue-mcp",
+              "reference/deprecated-context-providers"
             ]
           }
         ]
@@ -1022,6 +1023,50 @@
     {
       "source": "/customize/deep-dives/settings",
       "destination": "/customize/overview"
+    },
+    {
+      "source": "/customize/custom-providers#@greptile-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@commits-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@discord-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@jira-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@gitlab-merge-request-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@google-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@database-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@issue-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@url-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@search-context-provider",
+      "destination": "/reference/deprecated-context-providers"
+    },
+    {
+      "source": "/customize/custom-providers#@web-context-provider",
+      "destination": "/reference/deprecated-context-providers"
     }
   ]
 }
