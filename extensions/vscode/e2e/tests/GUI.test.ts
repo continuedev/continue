@@ -36,7 +36,6 @@ describe("GUI Test", () => {
 
     ({ view, driver } = await GUIActions.switchToReactIframe());
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
-    await GlobalActions.clearAllNotifications();
   });
 
   afterEach(async function () {
