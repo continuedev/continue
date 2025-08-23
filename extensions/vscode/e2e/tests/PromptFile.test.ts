@@ -14,6 +14,7 @@ describe("Prompt file", () => {
   let editor: TextEditor;
 
   before(async function () {
+    this.timeout(DEFAULT_TIMEOUT.MD);
     await GlobalActions.disableNextEdit();
   });
 
