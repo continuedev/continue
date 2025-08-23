@@ -7,7 +7,7 @@ import {
   WebDriver,
   WebElement,
   WebView,
-  until,
+  until
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -26,6 +26,7 @@ describe("GUI Test", () => {
     await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
     await GlobalActions.clearAllNotifications();
+    await GlobalActions.disableNextEdit();
   });
 
   beforeEach(async function () {

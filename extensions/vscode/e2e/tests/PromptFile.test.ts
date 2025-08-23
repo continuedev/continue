@@ -13,6 +13,10 @@ import { DEFAULT_TIMEOUT } from "../constants";
 describe("Prompt file", () => {
   let editor: TextEditor;
 
+  before(async function () {
+    await GlobalActions.disableNextEdit();
+  });
+
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
