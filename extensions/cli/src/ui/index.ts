@@ -1,9 +1,10 @@
-import { render } from "ink";
+import { render, RenderOptions } from "ink";
 import React from "react";
 
 import { PermissionMode } from "../permissions/types.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
+import { setTUIUnmount } from "../index.js";
 
 import { AppRoot } from "./AppRoot.js";
 
@@ -52,7 +53,9 @@ export async function startTUIChat(
   // Use static imports since we're always loading TUI when there's piped input
 
   // Start the TUI immediately - it will handle loading states
-  const renderOptions: any = {};
+  const renderOptions: RenderOptions = {
+    exitOnCtrlC: false, // Disable Ink's default Ctrl+C handling so we can implement two-stage exit
+  };
   if (customStdin) {
     renderOptions.stdin = customStdin;
   }
@@ -69,11 +72,8 @@ export async function startTUIChat(
     renderOptions,
   );
 
-  // Handle cleanup
-  process.on("SIGINT", () => {
-    unmount();
-    process.exit(0);
-  });
+  // Register unmount function with main process for two-stage Ctrl+C exit
+  setTUIUnmount(unmount);
 
   return { unmount };
 }
@@ -92,11 +92,8 @@ export async function startRemoteTUIChat(
     }),
   );
 
-  // Handle cleanup
-  process.on("SIGINT", () => {
-    unmount();
-    process.exit(0);
-  });
+  // Register unmount function with main process for two-stage Ctrl+C exit
+  setTUIUnmount(unmount);
 
   return { unmount };
 }

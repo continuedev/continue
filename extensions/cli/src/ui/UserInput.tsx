@@ -62,6 +62,13 @@ const UserInput: React.FC<UserInputProps> = ({
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+
+  // Clear input function for Ctrl+C
+  const clearInput = useCallback(() => {
+    textBuffer.clear();
+    setInputText("");
+    setCursorPosition(0);
+  }, [textBuffer]);
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const [showFileSearch, setShowFileSearch] = useState(false);
@@ -427,6 +434,7 @@ const UserInput: React.FC<UserInputProps> = ({
         showSlashCommands,
         showFileSearch,
         cycleModes,
+        clearInput,
       })
     ) {
       return;

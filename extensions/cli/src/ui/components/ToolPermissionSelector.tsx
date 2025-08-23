@@ -79,8 +79,8 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       return;
     }
 
-    // Escape to reject with stop stream
-    if (key.escape) {
+    // Escape or Ctrl+C to reject with stop stream
+    if (key.escape || (key.ctrl && input === "c")) {
       onResponse(requestId, false, false, true);
       return;
     }

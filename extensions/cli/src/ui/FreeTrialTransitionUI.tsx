@@ -130,6 +130,18 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
   const hasOrganizations = organizations && organizations.length > 0;
 
   useInput((input, key) => {
+    // Allow Escape to cancel immediately, but Ctrl+C uses two-stage exit
+    if (key.escape) {
+      closeCurrentScreen();
+      return;
+    }
+    
+    // Handle Ctrl+C with two-stage exit (delegates to main process)
+    if (key.ctrl && input === "c") {
+      process.kill(process.pid, "SIGINT");
+      return;
+    }
+
     if (currentStep === "choice") {
       handleChoiceInput({
         input,

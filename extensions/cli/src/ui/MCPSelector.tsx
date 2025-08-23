@@ -216,12 +216,13 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const maxIndex = Math.max(0, items.length - 1);
 
   useInput(async (input, key) => {
-    if (isLoading) return;
-
-    if (key.escape) {
+    // Always allow escape/Ctrl+C so users can cancel even when loading
+    if (key.escape || (key.ctrl && input === "c")) {
       handleBack();
       return;
     }
+
+    if (isLoading) return;
 
     if (key.upArrow) {
       setSelectedIndex(selectedIndex <= 0 ? maxIndex : selectedIndex - 1);

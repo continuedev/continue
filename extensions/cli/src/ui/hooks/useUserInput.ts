@@ -9,14 +9,25 @@ interface ControlKeysOptions {
   showSlashCommands: boolean;
   showFileSearch: boolean;
   cycleModes: () => Promise<PermissionMode>;
+  clearInput?: () => void;
 }
 
 export function handleControlKeys(options: ControlKeysOptions): boolean {
-  const { input, key, exit, showSlashCommands, showFileSearch, cycleModes } =
+  const { input, key, exit, showSlashCommands, showFileSearch, cycleModes, clearInput } =
     options;
 
-  // Handle Ctrl+C and Ctrl+D
-  if (key.ctrl && (input === "c" || input === "d")) {
+  // Handle Ctrl+C with two-stage exit, Ctrl+D immediately exits
+  if (key.ctrl && input === "c") {
+    // Clear input box if clearInput function is provided
+    if (clearInput) {
+      clearInput();
+    }
+    // Let the main process SIGINT handler handle Ctrl+C logic
+    process.kill(process.pid, "SIGINT");
+    return true;
+  }
+
+  if (key.ctrl && input === "d") {
     exit();
     return true;
   }

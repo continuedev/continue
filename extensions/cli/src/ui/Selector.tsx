@@ -40,8 +40,20 @@ export function Selector<T extends SelectorOption>({
   onNavigate,
   renderOption,
 }: SelectorProps<T>) {
+  // Handle input for loading and error states
   useInput((input, key) => {
-    if (key.escape) {
+    if (loading || error) {
+      if (key.escape || (key.ctrl && input === "c")) {
+        onCancel();
+        return;
+      }
+    }
+  });
+
+  useInput((input, key) => {
+    if (loading || error) return; // Skip normal input handling during loading/error
+    
+    if (key.escape || (key.ctrl && input === "c")) {
       onCancel();
       return;
     }
@@ -84,7 +96,7 @@ export function Selector<T extends SelectorOption>({
         </Text>
         <Text color="red">{error}</Text>
         <Text color="gray" dimColor>
-          Press Escape to cancel
+          Press Esc to cancel
         </Text>
       </Box>
     );
