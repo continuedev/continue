@@ -39,6 +39,13 @@ export const readFileTool: Tool = {
       const content = fs.readFileSync(args.filepath, "utf-8");
       // Mark this file as read for the edit tool
       markFileAsRead(args.filepath);
+      
+      const lines = content.split('\n');
+      if (lines.length > 5000) {
+        const truncatedContent = lines.slice(0, 5000).join('\n');
+        return `Content of ${args.filepath} (truncated to first 5000 lines of ${lines.length} total):\n${truncatedContent}`;
+      }
+      
       return `Content of ${args.filepath}:\n${content}`;
     } catch (error) {
       return `Error reading file: ${
