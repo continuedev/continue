@@ -39,8 +39,8 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
 
   // Read the current file content
   const originalContent =
-    (await editingFileContents) ??
-    extras.ideMessenger.ide.readFile(resolvedFilepath);
+    editingFileContents ??
+    (await extras.ideMessenger.ide.readFile(resolvedFilepath));
 
   // Perform the find and replace operation
   const newContent = performFindAndReplace(

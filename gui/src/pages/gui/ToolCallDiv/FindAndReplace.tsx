@@ -60,7 +60,7 @@ export function FindAndReplaceDisplay({
     if (editingFileContents) {
       return editingFileContents;
     }
-    return edits.map((edit) => edit.old_string).join("\n");
+    return edits?.map((edit) => edit.old_string ?? "").join("\n");
   }, [editingFileContents, edits]);
 
   const diffResult = useMemo(() => {
@@ -182,7 +182,12 @@ export function FindAndReplaceDisplay({
     );
   }
 
-  if (!diffResult?.diff) {
+  if (
+    !diffResult?.diff ||
+    (diffResult.diff.length === 1 &&
+      !diffResult.diff[0].added &&
+      !diffResult.diff[0].removed)
+  ) {
     return renderContainer(
       <div className="text-description-muted p-3">No changes to display</div>,
     );

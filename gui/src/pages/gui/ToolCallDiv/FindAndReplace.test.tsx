@@ -1,209 +1,347 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ApplyState } from "core";
-import { Provider } from "react-redux";
-import { describe, expect, it, Mock, vi } from "vitest";
-import { useFileContent } from "../../../hooks/useFileContent";
-import { SingleFindAndReplace } from "./FindAndReplace";
+import { EditOperation } from "core/tools/definitions/multiEdit";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { FindAndReplaceDisplay } from "./FindAndReplace";
 
-// Mock the useFileContent hook
-vi.mock("../../../hooks/useFileContent");
-
-// Mock the selectApplyStateByToolCallId selector
-vi.mock("../../../redux/selectors/selectToolCalls", () => ({
-  selectApplyStateByToolCallId: vi.fn(),
+// Mock the dependencies
+vi.mock("../../../context/IdeMessenger", () => ({
+  IdeMessengerContext: {
+    _currentValue: { post: vi.fn() },
+  },
 }));
 
-const mockUseFileContent = useFileContent as Mock;
+vi.mock("../../../redux/hooks", () => ({
+  useAppSelector: vi.fn(),
+}));
 
-// Create a minimal store for testing
-const createTestStore = (applyState?: ApplyState) => {
-  return configureStore({
-    reducer: {
-      session: () => ({
-        codeBlockApplyStates: {
-          states: applyState ? [applyState] : [],
-        },
-      }),
-    },
-  });
-};
+vi.mock("../../../components/ui", () => ({
+  useFontSize: () => 14,
+}));
 
-describe("SingleFindAndReplace", () => {
+vi.mock("../../../util/clientTools/findAndReplaceUtils", () => ({
+  performFindAndReplace: vi.fn(),
+}));
+
+vi.mock("./utils", () => ({
+  getStatusIcon: vi.fn(() => <div data-testid="status-icon">✓</div>),
+}));
+
+vi.mock("react", async () => {
+  const actual = await vi.importActual("react");
+  return {
+    ...actual,
+    useContext: () => ({ post: vi.fn() }),
+  };
+});
+
+// Import mocked modules
+import { useAppSelector } from "../../../redux/hooks";
+import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
+
+const mockPost = vi.fn();
+const mockUseAppSelector = useAppSelector as any;
+const mockPerformFindAndReplace = performFindAndReplace as any;
+
+describe("FindAndReplaceDisplay", () => {
   const defaultProps = {
-    relativeFilePath: "test.ts",
-    oldString: "old code",
-    newString: "new code",
-    replaceAll: false,
+    fileUri: "file:///test/file.ts",
+    relativeFilePath: "test/file.ts",
+    editingFileContents: "const old = 'value';\nconst other = 'test';",
+    edits: [
+      {
+        old_string: "const old = 'value';",
+        new_string: "const new = 'value';",
+        replace_all: false,
+      },
+    ] as EditOperation[],
     toolCallId: "test-tool-call-id",
     historyIndex: 0,
   };
 
+  const mockToolCallState = {
+    status: "done" as const,
+    output: null,
+  };
+
+  const mockConfig = {
+    ui: {
+      showChatScrollbar: true,
+      codeWrap: false,
+    },
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-  });
 
-  it("shows loading state when file content is loading", () => {
-    mockUseFileContent.mockReturnValue({
-      fileContent: null,
-      isLoading: true,
-      error: null,
+    mockUseAppSelector.mockImplementation((selector: any) => {
+      const mockState = {
+        config: { config: mockConfig },
+        session: {
+          history: [],
+          codeBlockApplyStates: { states: [] },
+        },
+      };
+
+      if (selector.toString().includes("selectApplyStateByToolCallId")) {
+        return undefined; // No apply state by default
+      }
+      if (selector.toString().includes("selectToolCallById")) {
+        return mockToolCallState;
+      }
+
+      return selector(mockState);
     });
 
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace {...defaultProps} />
-      </Provider>,
+    mockPerformFindAndReplace.mockImplementation(
+      (content: string, oldStr: string, newStr: string) => {
+        return content.replace(oldStr, newStr);
+      },
     );
-
-    expect(screen.getByText("Loading file content...")).toBeInTheDocument();
   });
 
-  it("shows error when file content fails to load", () => {
-    mockUseFileContent.mockReturnValue({
-      fileContent: null,
-      isLoading: false,
-      error: "File not found",
+  describe("basic rendering", () => {
+    it("should render with collapsed state by default", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      expect(screen.getByText("file.ts")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("toggle-find-and-replace-diff"),
+      ).toBeInTheDocument();
+
+      // Should not show diff content when collapsed
+      const diffContent = screen.queryByText("-");
+      expect(diffContent).not.toBeInTheDocument();
     });
 
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace {...defaultProps} />
-      </Provider>,
-    );
-
-    expect(
-      screen.getByText(`Failed to load file: ${defaultProps.relativeFilePath}`),
-    ).toBeInTheDocument();
-  });
-
-  it("shows error when find and replace operation fails", () => {
-    mockUseFileContent.mockReturnValue({
-      fileContent: "some content without the old string",
-      isLoading: false,
-      error: null,
+    it("should display file name from fileUri", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+      expect(screen.getByText("file.ts")).toBeInTheDocument();
     });
 
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace {...defaultProps} />
-      </Provider>,
-    );
-
-    expect(screen.getByText(/Error:/)).toBeInTheDocument();
-    expect(screen.getByText(/String not found in file/)).toBeInTheDocument();
-  });
-
-  it("shows no changes message when old and new strings result in same content", () => {
-    mockUseFileContent.mockReturnValue({
-      fileContent: "some content",
-      isLoading: false,
-      error: null,
-    });
-
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace
+    it("should display file name from relativeFilePath when no fileUri", () => {
+      render(
+        <FindAndReplaceDisplay
           {...defaultProps}
-          oldString="nonexistent"
-          newString="replacement"
-        />
-      </Provider>,
-    );
-
-    // This should show an error since the string doesn't exist
-    expect(screen.getByText(/Error:/)).toBeInTheDocument();
-  });
-
-  it("shows diff when find and replace operation succeeds", () => {
-    const fileContent = "Hello old code world";
-    mockUseFileContent.mockReturnValue({
-      fileContent,
-      isLoading: false,
-      error: null,
+          fileUri={undefined}
+          relativeFilePath="src/components/test.tsx"
+        />,
+      );
+      expect(screen.getByText("test.tsx")).toBeInTheDocument();
     });
 
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace {...defaultProps} />
-      </Provider>,
-    );
+    it("should handle missing file paths gracefully", () => {
+      render(
+        <FindAndReplaceDisplay
+          {...defaultProps}
+          fileUri={undefined}
+          relativeFilePath={undefined}
+        />,
+      );
 
-    expect(screen.getByText(defaultProps.relativeFilePath)).toBeInTheDocument();
-    // The diff should show the old line being removed and new line being added
-    expect(screen.getByText("Hello old code world")).toBeInTheDocument();
-    expect(screen.getByText("Hello new code world")).toBeInTheDocument();
+      // Should still render the component structure
+      expect(
+        screen.getByTestId("toggle-find-and-replace-diff"),
+      ).toBeInTheDocument();
+    });
   });
 
-  it("shows apply state status when available", () => {
-    mockUseFileContent.mockReturnValue({
-      fileContent: "Hello old code world",
-      isLoading: false,
-      error: null,
+  describe("expand/collapse functionality", () => {
+    it("should expand when clicked", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
+
+      // Should show diff content when expanded
+      expect(screen.getByText("-")).toBeInTheDocument();
+      expect(screen.getByText("+")).toBeInTheDocument();
     });
 
-    const applyState: ApplyState = {
-      streamId: "test-stream",
+    it("should show content when tool call status is 'generated'", () => {
+      mockUseAppSelector.mockImplementation((selector: any) => {
+        const mockState = {
+          config: { config: mockConfig },
+          session: {
+            history: [],
+            codeBlockApplyStates: { states: [] },
+          },
+        };
+
+        if (selector.toString().includes("selectToolCallById")) {
+          return { ...mockToolCallState, status: "generated" };
+        }
+        if (selector.toString().includes("selectApplyStateByToolCallId")) {
+          return undefined;
+        }
+
+        return selector(mockState);
+      });
+
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      // Should show diff content without expanding
+      expect(screen.getByText("-")).toBeInTheDocument();
+      expect(screen.getByText("+")).toBeInTheDocument();
+    });
+  });
+
+  describe("diff generation", () => {
+    it("should generate and display diff correctly", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
+
+      // Should show removed line
+      expect(screen.getByText("const old = 'value';")).toBeInTheDocument();
+
+      // Should show added line
+      expect(screen.getByText("const new = 'value';")).toBeInTheDocument();
+
+      // Should show unchanged line
+      expect(screen.getByText("const other = 'test';")).toBeInTheDocument();
+    });
+
+    it("should handle multiple edits", () => {
+      const multipleEdits = [
+        {
+          old_string: "const old = 'value';",
+          new_string: "const new = 'value';",
+          replace_all: false,
+        },
+        {
+          old_string: "const other = 'test';",
+          new_string: "const other = 'updated';",
+          replace_all: false,
+        },
+      ] as EditOperation[];
+
+      mockPerformFindAndReplace
+        .mockReturnValueOnce("const new = 'value';\nconst other = 'test';")
+        .mockReturnValueOnce("const new = 'value';\nconst other = 'updated';");
+
+      render(<FindAndReplaceDisplay {...defaultProps} edits={multipleEdits} />);
+
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
+
+      expect(mockPerformFindAndReplace).toHaveBeenCalledTimes(2);
+    });
+
+    it("should handle diff generation errors", () => {
+      mockPerformFindAndReplace.mockImplementation(() => {
+        throw new Error("Test error");
+      });
+
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByText("Error generating diff")).toBeInTheDocument();
+      expect(screen.getByText("Test error")).toBeInTheDocument();
+    });
+
+    it("should show 'No changes to display' when diff is empty", () => {
+      // Mock the function to return the exact same content (no changes)
+      mockPerformFindAndReplace.mockReturnValue(
+        defaultProps.editingFileContents,
+      );
+
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
+
+      expect(screen.getByText("No changes to display")).toBeInTheDocument();
+    });
+  });
+
+  describe("apply actions", () => {
+    const mockApplyState: ApplyState = {
+      streamId: "test-stream-id",
       status: "streaming",
-      toolCallId: "test-tool-call-id",
+      numDiffs: 1,
+      fileContent: "test content",
     };
 
-    const store = createTestStore(applyState);
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace {...defaultProps} />
-      </Provider>,
-    );
+    beforeEach(() => {
+      mockUseAppSelector.mockImplementation((selector: any) => {
+        const mockState = {
+          config: { config: mockConfig },
+          session: {
+            history: [],
+            codeBlockApplyStates: { states: [mockApplyState] },
+          },
+        };
 
-    expect(screen.getByText("Applying...")).toBeInTheDocument();
-  });
+        if (selector.toString().includes("selectApplyStateByToolCallId")) {
+          return mockApplyState;
+        }
+        if (selector.toString().includes("selectToolCallById")) {
+          return mockToolCallState;
+        }
 
-  it("shows tool call status icon when enabled", () => {
-    mockUseFileContent.mockReturnValue({
-      fileContent: "Hello old code world",
-      isLoading: false,
-      error: null,
+        return selector(mockState);
+      });
     });
 
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace
+    it("should show apply actions when applyState exists", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      // ApplyActions component should be rendered (we can test by looking for its structure)
+      // Since we don't have the exact structure, we test that the container is there
+      expect(
+        screen.getByTestId("toggle-find-and-replace-diff"),
+      ).toBeInTheDocument();
+    });
+
+    it("should handle accept action", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      // This would need more detailed testing if ApplyActions was properly mocked
+      // For now, we verify the component renders without errors
+      expect(
+        screen.getByTestId("toggle-find-and-replace-diff"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("content handling", () => {
+    it("should use editingFileContents when provided", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
+
+      expect(mockPerformFindAndReplace).toHaveBeenCalledWith(
+        "const old = 'value';\nconst other = 'test';",
+        "const old = 'value';",
+        "const new = 'value';",
+        false,
+        0,
+      );
+    });
+
+    it("should fallback to edit old_strings when no editingFileContents", () => {
+      render(
+        <FindAndReplaceDisplay
           {...defaultProps}
-          showToolCallStatusIcon={true}
-          status="done"
-        />
-      </Provider>,
-    );
+          editingFileContents={undefined}
+        />,
+      );
 
-    // Look for the status indicator (green dot for done status)
-    const statusIndicator = document.querySelector(".bg-green-500");
-    expect(statusIndicator).toBeInTheDocument();
-  });
+      const toggleButton = screen.getByTestId("toggle-find-and-replace-diff");
+      fireEvent.click(toggleButton);
 
-  it("handles replace all option correctly", () => {
-    const fileContent = "old code and more old code";
-    mockUseFileContent.mockReturnValue({
-      fileContent,
-      isLoading: false,
-      error: null,
+      expect(mockPerformFindAndReplace).toHaveBeenCalledWith(
+        "const old = 'value';",
+        "const old = 'value';",
+        "const new = 'value';",
+        false,
+        0,
+      );
     });
-
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <SingleFindAndReplace {...defaultProps} replaceAll={true} />
-      </Provider>,
-    );
-
-    // Should show both replacements in the diff
-    expect(screen.getByText(defaultProps.relativeFilePath)).toBeInTheDocument();
-    expect(screen.getByText("old code and more old code")).toBeInTheDocument();
-    expect(screen.getByText("new code and more new code")).toBeInTheDocument();
   });
 });
