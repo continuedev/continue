@@ -235,6 +235,7 @@
             "pages": [
               "guides/overview",
               "guides/understanding-assistants",
+              "guides/codebase-documentation-awareness",
               "guides/cli",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
