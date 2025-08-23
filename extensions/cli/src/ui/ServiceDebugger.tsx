@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import React from "react";
 
+import { defaultBoxStyles } from "./styles.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -60,13 +61,7 @@ const ServiceDebugger: React.FC<ServiceDebuggerProps> = ({
   };
 
   return (
-    <Box
-      flexDirection="column"
-      paddingX={1}
-      paddingY={1}
-      borderStyle="round"
-      borderColor="cyan"
-    >
+    <Box {...defaultBoxStyles("cyan")}>
       <Text bold color="cyan">
         🔧 Service Debug Info
       </Text>

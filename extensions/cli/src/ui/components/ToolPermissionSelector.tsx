@@ -3,7 +3,7 @@ import React, { useState } from "react";
 
 import { formatToolCall } from "../../tools/index.js";
 import { ToolCallPreview } from "../../tools/types.js";
-
+import { defaultBoxStyles } from "../styles.js";
 import { ToolPreview } from "./ToolPreview.js";
 
 interface PermissionOption {
@@ -104,12 +104,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   const toolCallDisplay = formatToolCall(toolName, toolArgs);
 
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="magenta"
-    >
+    <Box {...defaultBoxStyles("magenta")}>
       <Text color="magenta" bold>
         {toolCallDisplay}
       </Text>
