@@ -180,7 +180,7 @@ function getSessionDir(): string {
 /**
  * Get the session file path for the current session
  */
-function getSessionFilePath(): string {
+export function getSessionFilePath(): string {
   const sessionId = getSessionId();
   const sessionDir = getSessionDir();
   return path.join(sessionDir, `${sessionId}.json`);
