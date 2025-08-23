@@ -204,8 +204,8 @@ export class MessageIde implements IDE {
     return this.request("getPinnedFiles", undefined);
   }
 
-  getSearchResults(query: string, maxResults?: number): Promise<string> {
-    return this.request("getSearchResults", { query, maxResults });
+  getSearchResults(rgArgs: string[], maxResults?: number): Promise<string> {
+    return this.request("getSearchResults", { rgArgs, maxResults });
   }
 
   getFileResults(pattern: string): Promise<string[]> {

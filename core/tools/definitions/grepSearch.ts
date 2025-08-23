@@ -23,6 +23,12 @@ export const grepSearchTool: Tool = {
           description:
             "The search query to use. Must be a valid ripgrep regex expression, escaped where needed",
         },
+        args: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Optional additional ripgrep arguments, for example ['-n', '-w']",
+        },
       },
     },
   },

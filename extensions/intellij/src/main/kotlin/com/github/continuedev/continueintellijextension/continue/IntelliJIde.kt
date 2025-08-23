@@ -366,35 +366,13 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun getSearchResults(query: String, maxResults: Int?): String {
+    override suspend fun getSearchResults(ripgrepArgs: List<String>, maxResults: Int?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
-                val commandArgs = mutableListOf(
-                    ripgrep,
-                    "-i",
-                    "--ignore-file",
-                    ".continueignore",
-                    "--ignore-file",
-                    ".gitignore",
-                    "-C",
-                    "2",
-                    "--heading"
-                )
-
-                // Conditionally add maxResults flag
-                if (maxResults != null) {
-                    commandArgs.add("-m")
-                    commandArgs.add(maxResults.toString())
-                }
-
-                // Add the search query and path
-                commandArgs.add("-e")
-                commandArgs.add(query)
-                commandArgs.add(".")
-
+                val commandArgs = mutableListOf(ripgrep)
+                commandArgs.addAll(ripgrepArgs)
                 val command = GeneralCommandLine(commandArgs)
-
                 command.setWorkDirectory(project.basePath)
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {

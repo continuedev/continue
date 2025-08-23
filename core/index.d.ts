@@ -842,7 +842,7 @@ export interface IDE {
 
   getPinnedFiles(): Promise<string[]>;
 
-  getSearchResults(query: string, maxResults?: number): Promise<string>;
+  getSearchResults(rgArgs: string[], maxResults?: number): Promise<string>;
 
   getFileResults(pattern: string, maxResults?: number): Promise<string[]>;
 

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { formatGrepSearchResults } from "./grepSearch";
+import { buildRipgrepArgs, formatGrepSearchResults } from "./grepSearch";
 
 // Sample grep output mimicking what would come from ripgrep with the params:
 // ripgrep -i --ignore-file .continueignore --ignore-file .gitignore -C 2 --heading -m 100 -e <query> .
@@ -214,4 +214,91 @@ test("decreases indentation when original is more than 2 spaces", () => {
   expect(result.formatted).toContain("  function test() {");
   expect(result.formatted).toContain("    tooMuchIndent();");
   expect(result.formatted).toContain("  }");
+});
+
+test("buildRipgrepArgs applies defaults", () => {
+  const args = buildRipgrepArgs("test");
+  expect(args).toEqual([
+    "-i",
+    "--ignore-file",
+    ".continueignore",
+    "--ignore-file",
+    ".gitignore",
+    "-C",
+    "2",
+    "--heading",
+    "-e",
+    "test",
+    ".",
+  ]);
+});
+
+test("buildRipgrepArgs adds extra args and filters unsafe ones", () => {
+  const args = buildRipgrepArgs("test", {
+    extraArgs: ["-n", "--;", "--json"],
+  });
+  expect(args).toContain("-n");
+  expect(args).not.toContain("--;");
+});
+
+test("buildRipgrepArgs includes maxResults", () => {
+  const args = buildRipgrepArgs("foo", { maxResults: 5 });
+  const index = args.indexOf("-m");
+  expect(index).not.toBe(-1);
+  expect(args[index + 1]).toBe("5");
+});
+
+test("buildRipgrepArgs merges context flags", () => {
+  const onlyAfter = buildRipgrepArgs("test", { extraArgs: ["-A", "3"] });
+  expect(onlyAfter).toEqual([
+    "-i",
+    "--ignore-file",
+    ".continueignore",
+    "--ignore-file",
+    ".gitignore",
+    "-A",
+    "3",
+    "-B",
+    "2",
+    "--heading",
+    "-e",
+    "test",
+    ".",
+  ]);
+
+  const equalBeforeAfter = buildRipgrepArgs("test", {
+    extraArgs: ["-A", "4", "-B", "4"],
+  });
+  expect(equalBeforeAfter).toEqual([
+    "-i",
+    "--ignore-file",
+    ".continueignore",
+    "--ignore-file",
+    ".gitignore",
+    "-C",
+    "4",
+    "--heading",
+    "-e",
+    "test",
+    ".",
+  ]);
+
+  const withCAndOverrides = buildRipgrepArgs("test", {
+    extraArgs: ["-C", "5", "-A", "1"],
+  });
+  expect(withCAndOverrides).toEqual([
+    "-i",
+    "--ignore-file",
+    ".continueignore",
+    "--ignore-file",
+    ".gitignore",
+    "-A",
+    "1",
+    "-B",
+    "5",
+    "--heading",
+    "-e",
+    "test",
+    ".",
+  ]);
 });

@@ -1,8 +1,11 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
-import { formatGrepSearchResults } from "../../util/grepSearch";
+import {
+  buildRipgrepArgs,
+  formatGrepSearchResults,
+} from "../../util/grepSearch";
 import { prepareQueryForRipgrep } from "../../util/regexValidator";
-import { getStringArg } from "../parseArgs";
+import { getOptionalStringArrayArg, getStringArg } from "../parseArgs";
 
 const DEFAULT_GREP_SEARCH_RESULTS_LIMIT = 100;
 const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 7500; // ~1500 tokens, will keep truncation simply for now
@@ -39,12 +42,13 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 }
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
-  const rawQuery = getStringArg(args, "query");
 
-  const { query, warning } = prepareQueryForRipgrep(rawQuery);
-
-  let results: string;
   try {
+    const rawQuery = getStringArg(args, "query");
+
+    const { query, warning } = prepareQueryForRipgrep(rawQuery);
+
+    let results: string;
     results = await extras.ide.getSearchResults(
       query,
       DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
@@ -66,6 +70,17 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     throw error;
   }
 
+  const query = getStringArg(args, "query");
+  const extraArgs = getOptionalStringArrayArg(args, "args");
+  const ripgrepArgs = buildRipgrepArgs(query, {
+    extraArgs,
+    maxResults: DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
+  });
+
+  const results = await extras.ide.getSearchResults(
+    ripgrepArgs,
+    DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
+  );
   const { formatted, numResults, truncated } = formatGrepSearchResults(
     results,
     DEFAULT_GREP_SEARCH_CHAR_LIMIT,
