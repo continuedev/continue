@@ -24,13 +24,15 @@ describe("compaction infinite loop prevention", () => {
     defaultCompletionOptions: {
       maxTokens: 1000,
       contextLength: 4000,
-    }
+    },
   } as ModelConfig;
 
   const mockLlmApi = {} as BaseLlmApi;
 
   it("should not loop infinitely when pruning doesn't reduce history size", async () => {
-    const { countChatHistoryTokens, getModelContextLimit } = await import("./util/tokenizer.js");
+    const { countChatHistoryTokens, getModelContextLimit } = await import(
+      "./util/tokenizer.js"
+    );
     const mockStreamResponse = vi.mocked(streamChatResponse);
     const mockCountTokens = vi.mocked(countChatHistoryTokens);
     const mockGetContextLimit = vi.mocked(getModelContextLimit);
@@ -38,11 +40,13 @@ describe("compaction infinite loop prevention", () => {
     // Setup mocks
     mockGetContextLimit.mockReturnValue(4000);
     mockCountTokens.mockReturnValue(5000); // Always too big
-    mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-      callbacks?.onContent?.("Summary");
-      callbacks?.onContentComplete?.();
-      return "Summary";
-    });
+    mockStreamResponse.mockImplementation(
+      async (history, model, api, controller, callbacks) => {
+        callbacks?.onContent?.("Summary");
+        callbacks?.onContentComplete?.();
+        return "Summary";
+      },
+    );
 
     // History that can't be pruned further (only system message)
     const history: ChatCompletionMessageParam[] = [
@@ -51,14 +55,16 @@ describe("compaction infinite loop prevention", () => {
 
     // This should not hang - it should break out of the loop
     const result = await compactChatHistory(history, mockModel, mockLlmApi);
-    
+
     // Should complete successfully even though token count is still too high
     expect(result.compactedHistory).toBeDefined();
     expect(mockCountTokens).toHaveBeenCalled();
   });
 
   it("should not loop infinitely with history ending in assistant message", async () => {
-    const { countChatHistoryTokens, getModelContextLimit } = await import("./util/tokenizer.js");
+    const { countChatHistoryTokens, getModelContextLimit } = await import(
+      "./util/tokenizer.js"
+    );
     const mockStreamResponse = vi.mocked(streamChatResponse);
     const mockCountTokens = vi.mocked(countChatHistoryTokens);
     const mockGetContextLimit = vi.mocked(getModelContextLimit);
@@ -66,11 +72,13 @@ describe("compaction infinite loop prevention", () => {
     // Setup mocks
     mockGetContextLimit.mockReturnValue(4000);
     mockCountTokens.mockReturnValue(5000); // Always too big
-    mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-      callbacks?.onContent?.("Summary");
-      callbacks?.onContentComplete?.();
-      return "Summary";
-    });
+    mockStreamResponse.mockImplementation(
+      async (history, model, api, controller, callbacks) => {
+        callbacks?.onContent?.("Summary");
+        callbacks?.onContentComplete?.();
+        return "Summary";
+      },
+    );
 
     // History that ends with assistant - pruning won't change it
     const history: ChatCompletionMessageParam[] = [
@@ -81,19 +89,21 @@ describe("compaction infinite loop prevention", () => {
 
     // This should not hang
     const result = await compactChatHistory(history, mockModel, mockLlmApi);
-    
+
     expect(result.compactedHistory).toBeDefined();
   });
 
   it("should successfully prune when pruning actually reduces size", async () => {
-    const { countChatHistoryTokens, getModelContextLimit } = await import("./util/tokenizer.js");
+    const { countChatHistoryTokens, getModelContextLimit } = await import(
+      "./util/tokenizer.js"
+    );
     const mockStreamResponse = vi.mocked(streamChatResponse);
     const mockCountTokens = vi.mocked(countChatHistoryTokens);
     const mockGetContextLimit = vi.mocked(getModelContextLimit);
 
     // Setup mocks
     mockGetContextLimit.mockReturnValue(4000);
-    
+
     // Mock token counting to show reduction after pruning
     let callCount = 0;
     mockCountTokens.mockImplementation(() => {
@@ -102,12 +112,14 @@ describe("compaction infinite loop prevention", () => {
       if (callCount === 2) return 3000; // After pruning, fits
       return 2000; // Subsequent calls
     });
-    
-    mockStreamResponse.mockImplementation(async (history, model, api, controller, callbacks) => {
-      callbacks?.onContent?.("Summary");
-      callbacks?.onContentComplete?.();
-      return "Summary";
-    });
+
+    mockStreamResponse.mockImplementation(
+      async (history, model, api, controller, callbacks) => {
+        callbacks?.onContent?.("Summary");
+        callbacks?.onContentComplete?.();
+        return "Summary";
+      },
+    );
 
     // History that can be successfully pruned
     const history: ChatCompletionMessageParam[] = [
@@ -118,7 +130,7 @@ describe("compaction infinite loop prevention", () => {
     ];
 
     const result = await compactChatHistory(history, mockModel, mockLlmApi);
-    
+
     expect(result.compactedHistory).toBeDefined();
     // The function will call countTokens multiple times during the process
     expect(mockCountTokens).toHaveBeenCalled();

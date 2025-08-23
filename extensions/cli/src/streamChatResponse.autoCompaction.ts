@@ -8,21 +8,20 @@ import { saveSession } from "./session.js";
 import { DisplayMessage } from "./ui/types.js";
 import { formatError } from "./util/formatError.js";
 import { logger } from "./util/logger.js";
-import {
-  getAutoCompactMessage,
-  shouldAutoCompact,
-} from "./util/tokenizer.js";
+import { getAutoCompactMessage, shouldAutoCompact } from "./util/tokenizer.js";
 
 interface AutoCompactionCallbacks {
   // For streaming mode
   onSystemMessage?: (message: string) => void;
   onContent?: (content: string) => void;
-  
+
   // For TUI mode
   setMessages?: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
-  setChatHistory?: React.Dispatch<React.SetStateAction<ChatCompletionMessageParam[]>>;
+  setChatHistory?: React.Dispatch<
+    React.SetStateAction<ChatCompletionMessageParam[]>
+  >;
   setCompactionIndex?: React.Dispatch<React.SetStateAction<number | null>>;
-  
+
   // For headless mode - no callbacks needed, just return values
 }
 
@@ -41,7 +40,7 @@ function notifyCompactionStart(
   callbacks?: AutoCompactionCallbacks,
 ) {
   if (isHeadless) return;
-  
+
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(message);
   } else if (callbacks?.setMessages) {
@@ -65,12 +64,16 @@ function handleCompactionSuccess(
   callbacks?: AutoCompactionCallbacks,
 ) {
   if (isHeadless) return;
-  
+
   const successMessage = "✓ Chat history auto-compacted successfully.";
-  
+
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(successMessage);
-  } else if (callbacks?.setMessages && callbacks?.setChatHistory && callbacks?.setCompactionIndex) {
+  } else if (
+    callbacks?.setMessages &&
+    callbacks?.setChatHistory &&
+    callbacks?.setCompactionIndex
+  ) {
     callbacks.setChatHistory(result.compactedHistory);
     callbacks.setCompactionIndex(result.compactionIndex);
     callbacks.setMessages((prev) => [
@@ -96,9 +99,9 @@ function handleCompactionError(
   logger.error(errorMessage);
 
   if (isHeadless) return;
-  
+
   const warningMessage = `Warning: ${errorMessage}. Continuing without compaction...`;
-  
+
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(warningMessage);
   } else if (callbacks?.setMessages) {
@@ -136,7 +139,9 @@ export async function handleAutoCompaction(
     return { chatHistory, compactionIndex: null };
   }
 
-  logger.info(`Auto-compaction triggered${isHeadless ? ' in headless mode' : ''}`);
+  logger.info(
+    `Auto-compaction triggered${isHeadless ? " in headless mode" : ""}`,
+  );
 
   // Notify about compaction start
   notifyCompactionStart(getAutoCompactMessage(model), isHeadless, callbacks);
@@ -173,4 +178,3 @@ export async function handleAutoCompaction(
     return { chatHistory, compactionIndex: null };
   }
 }
-

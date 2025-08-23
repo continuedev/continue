@@ -1,5 +1,12 @@
 import type { AssistantUnrolled } from "@continuedev/config-yaml";
-import { describe, it, expect, vi, beforeEach, type MockedFunction } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  type MockedFunction,
+} from "vitest";
 
 import type { AuthConfig, AuthenticatedConfig } from "./auth/workos.js";
 import type { ConfigServiceState } from "./services/types.js";
@@ -9,58 +16,60 @@ import { handleSlashCommands } from "./slashCommands.js";
 vi.mock("./services/index.js", () => ({
   services: {
     config: {
-      getState: vi.fn()
-    }
+      getState: vi.fn(),
+    },
   },
   reloadService: vi.fn(),
   SERVICE_NAMES: {
-    AUTH: 'AUTH'
-  }
+    AUTH: "AUTH",
+  },
 }));
 
 // Mock auth functions
 vi.mock("./auth/workos.js", () => ({
   isAuthenticated: vi.fn(),
   isAuthenticatedConfig: vi.fn(),
-  loadAuthConfig: vi.fn()
+  loadAuthConfig: vi.fn(),
 }));
 
 // Mock telemetry
 vi.mock("./telemetry/posthogService.js", () => ({
   posthogService: {
-    capture: vi.fn()
-  }
+    capture: vi.fn(),
+  },
 }));
 
 // Mock commands
 vi.mock("./commands/commands.js", () => ({
-  getAllSlashCommands: vi.fn(() => [])
+  getAllSlashCommands: vi.fn(() => []),
 }));
 
 // Mock os and path
 vi.mock("os", () => ({
   default: {
-    homedir: vi.fn(() => "/home/test")
-  }
+    homedir: vi.fn(() => "/home/test"),
+  },
 }));
 
 vi.mock("path", () => ({
   default: {
-    join: vi.fn((...parts) => parts.join("/"))
+    join: vi.fn((...parts) => parts.join("/")),
   },
-  join: vi.fn((...parts) => parts.join("/"))
+  join: vi.fn((...parts) => parts.join("/")),
 }));
 
 // Mock session functions
 vi.mock("./session.js", () => ({
-  getSessionFilePath: vi.fn(() => "/home/test/.continue/cli-sessions/continue-cli-pid-12345.json"),
-  hasSession: vi.fn(() => false)
+  getSessionFilePath: vi.fn(
+    () => "/home/test/.continue/cli-sessions/continue-cli-pid-12345.json",
+  ),
+  hasSession: vi.fn(() => false),
 }));
 
 describe("slashCommands", () => {
   const mockAssistant: AssistantUnrolled = {
     name: "test-assistant",
-    version: "1.0.0"
+    version: "1.0.0",
   };
 
   beforeEach(() => {
@@ -71,11 +80,17 @@ describe("slashCommands", () => {
     it("should handle /info command when not authenticated", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      
-      (isAuthenticated as MockedFunction<typeof isAuthenticated>).mockReturnValue(false);
-      (services.config.getState as MockedFunction<typeof services.config.getState>).mockReturnValue({
+
+      (
+        isAuthenticated as MockedFunction<typeof isAuthenticated>
+      ).mockReturnValue(false);
+      (
+        services.config.getState as MockedFunction<
+          typeof services.config.getState
+        >
+      ).mockReturnValue({
         config: null,
-        configPath: "/test/config.yaml"
+        configPath: "/test/config.yaml",
       } as ConfigServiceState);
 
       const result = await handleSlashCommands("/info", mockAssistant);
@@ -91,46 +106,66 @@ describe("slashCommands", () => {
     });
 
     it("should handle /info command when authenticated via environment", async () => {
-      const { isAuthenticated, loadAuthConfig, isAuthenticatedConfig } = await import("./auth/workos.js");
+      const { isAuthenticated, loadAuthConfig, isAuthenticatedConfig } =
+        await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      
-      (isAuthenticated as MockedFunction<typeof isAuthenticated>).mockReturnValue(true);
-      (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue({} as AuthConfig);
+
+      (
+        isAuthenticated as MockedFunction<typeof isAuthenticated>
+      ).mockReturnValue(true);
+      (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(
+        {} as AuthConfig,
+      );
       (isAuthenticatedConfig as any).mockReturnValue(false);
-      (services.config.getState as MockedFunction<typeof services.config.getState>).mockReturnValue({
+      (
+        services.config.getState as MockedFunction<
+          typeof services.config.getState
+        >
+      ).mockReturnValue({
         config: null,
-        configPath: undefined
+        configPath: undefined,
       } as ConfigServiceState);
 
       const result = await handleSlashCommands("/info", mockAssistant);
 
       expect(result).toBeDefined();
       expect(result?.output).toContain("Authentication:");
-      expect(result?.output).toContain("Authenticated via environment variable");
+      expect(result?.output).toContain(
+        "Authenticated via environment variable",
+      );
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("Config not found");
       expect(result?.exit).toBe(false);
     });
 
     it("should handle /info command when authenticated with user config", async () => {
-      const { isAuthenticated, loadAuthConfig, isAuthenticatedConfig } = await import("./auth/workos.js");
+      const { isAuthenticated, loadAuthConfig, isAuthenticatedConfig } =
+        await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      
+
       const mockAuthConfig: AuthenticatedConfig = {
         userId: "test-user-id",
         userEmail: "test@example.com",
         accessToken: "test-token",
         refreshToken: "test-refresh-token",
         expiresAt: Date.now() + 3600000,
-        organizationId: "test-org-id"
+        organizationId: "test-org-id",
       };
 
-      (isAuthenticated as MockedFunction<typeof isAuthenticated>).mockReturnValue(true);
-      (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(mockAuthConfig);
+      (
+        isAuthenticated as MockedFunction<typeof isAuthenticated>
+      ).mockReturnValue(true);
+      (loadAuthConfig as MockedFunction<typeof loadAuthConfig>).mockReturnValue(
+        mockAuthConfig,
+      );
       (isAuthenticatedConfig as any).mockReturnValue(true);
-      (services.config.getState as MockedFunction<typeof services.config.getState>).mockReturnValue({
+      (
+        services.config.getState as MockedFunction<
+          typeof services.config.getState
+        >
+      ).mockReturnValue({
         config: null,
-        configPath: "/custom/config.yaml"
+        configPath: "/custom/config.yaml",
       } as ConfigServiceState);
 
       const result = await handleSlashCommands("/info", mockAssistant);
@@ -147,9 +182,15 @@ describe("slashCommands", () => {
     it("should handle config service errors gracefully", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      
-      (isAuthenticated as MockedFunction<typeof isAuthenticated>).mockReturnValue(false);
-      (services.config.getState as MockedFunction<typeof services.config.getState>).mockImplementation(() => {
+
+      (
+        isAuthenticated as MockedFunction<typeof isAuthenticated>
+      ).mockReturnValue(false);
+      (
+        services.config.getState as MockedFunction<
+          typeof services.config.getState
+        >
+      ).mockImplementation(() => {
         throw new Error("Service not ready");
       });
 
@@ -163,14 +204,22 @@ describe("slashCommands", () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
       const { getSessionFilePath } = await import("./session.js");
-      
+
       // Mock the session path for this specific test
-      (getSessionFilePath as any).mockReturnValue("/test-home/.continue/cli-sessions/continue-cli-test-123.json");
-      
-      (isAuthenticated as MockedFunction<typeof isAuthenticated>).mockReturnValue(false);
-      (services.config.getState as MockedFunction<typeof services.config.getState>).mockReturnValue({
+      (getSessionFilePath as any).mockReturnValue(
+        "/test-home/.continue/cli-sessions/continue-cli-test-123.json",
+      );
+
+      (
+        isAuthenticated as MockedFunction<typeof isAuthenticated>
+      ).mockReturnValue(false);
+      (
+        services.config.getState as MockedFunction<
+          typeof services.config.getState
+        >
+      ).mockReturnValue({
         config: null,
-        configPath: undefined
+        configPath: undefined,
       } as ConfigServiceState);
 
       const result = await handleSlashCommands("/info", mockAssistant);

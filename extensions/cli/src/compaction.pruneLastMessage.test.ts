@@ -53,16 +53,18 @@ describe("pruneLastMessage", () => {
     ];
 
     const result = pruneLastMessage(history);
-    expect(result).toEqual([
-      { role: "system", content: "System" },
-    ]);
+    expect(result).toEqual([{ role: "system", content: "System" }]);
   });
 
   it("should remove assistant+tool sequence when second-to-last is assistant with tool calls", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
       { role: "user", content: "Run command" },
-      { role: "assistant", content: "Running...", tool_calls: [{ id: "1" } as any] },
+      {
+        role: "assistant",
+        content: "Running...",
+        tool_calls: [{ id: "1" } as any],
+      },
       { role: "tool", content: "Command output", tool_call_id: "1" },
     ];
 
@@ -95,16 +97,18 @@ describe("pruneLastMessage", () => {
     ];
 
     const result = pruneLastMessage(history);
-    expect(result).toEqual([
-      { role: "system", content: "System" },
-    ]);
+    expect(result).toEqual([{ role: "system", content: "System" }]);
   });
 
   it("should handle tool call sequences by removing user after tool", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
       { role: "user", content: "Do something" },
-      { role: "assistant", content: "I'll help", tool_calls: [{ id: "1" } as any] },
+      {
+        role: "assistant",
+        content: "I'll help",
+        tool_calls: [{ id: "1" } as any],
+      },
       { role: "tool", content: "Tool result", tool_call_id: "1" },
       { role: "user", content: "Follow up question" },
     ];
@@ -113,7 +117,11 @@ describe("pruneLastMessage", () => {
     expect(result).toEqual([
       { role: "system", content: "System" },
       { role: "user", content: "Do something" },
-      { role: "assistant", content: "I'll help", tool_calls: [{ id: "1" } as any] },
+      {
+        role: "assistant",
+        content: "I'll help",
+        tool_calls: [{ id: "1" } as any],
+      },
       { role: "tool", content: "Tool result", tool_call_id: "1" },
     ]);
   });
@@ -134,7 +142,11 @@ describe("pruneLastMessage", () => {
       { role: "user", content: "Request 1" },
       { role: "assistant", content: "Response 1" },
       { role: "user", content: "Request 2" },
-      { role: "assistant", content: "Using tool", tool_calls: [{ id: "1" } as any] },
+      {
+        role: "assistant",
+        content: "Using tool",
+        tool_calls: [{ id: "1" } as any],
+      },
       { role: "tool", content: "Tool result", tool_call_id: "1" },
       { role: "assistant", content: "Final response" },
       { role: "user", content: "Follow up 1" },
@@ -147,7 +159,11 @@ describe("pruneLastMessage", () => {
       { role: "user", content: "Request 1" },
       { role: "assistant", content: "Response 1" },
       { role: "user", content: "Request 2" },
-      { role: "assistant", content: "Using tool", tool_calls: [{ id: "1" } as any] },
+      {
+        role: "assistant",
+        content: "Using tool",
+        tool_calls: [{ id: "1" } as any],
+      },
       { role: "tool", content: "Tool result", tool_call_id: "1" },
       { role: "assistant", content: "Final response" },
     ]);

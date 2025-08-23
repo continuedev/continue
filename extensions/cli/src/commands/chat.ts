@@ -174,7 +174,10 @@ async function handleAutoCompaction(
   // Custom callbacks for headless mode console output
   const callbacks = {
     onSystemMessage: (message: string) => {
-      if (message.includes("Auto-compacting") || message.includes("Approaching")) {
+      if (
+        message.includes("Auto-compacting") ||
+        message.includes("Approaching")
+      ) {
         if (!isHeadless) {
           console.info(chalk.yellow(`\n${message}`));
         } else if (format === "json") {
