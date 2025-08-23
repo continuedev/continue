@@ -21,7 +21,7 @@ describe("GUI Test", () => {
   let driver: WebDriver;
 
   before(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
+    this.timeout(DEFAULT_TIMEOUT.XL + DEFAULT_TIMEOUT.MD);
     // Uncomment this line for faster testing
     await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
@@ -36,6 +36,7 @@ describe("GUI Test", () => {
 
     ({ view, driver } = await GUIActions.switchToReactIframe());
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
+    await GlobalActions.clearAllNotifications();
   });
 
   afterEach(async function () {
