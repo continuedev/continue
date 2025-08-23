@@ -16,7 +16,7 @@ export const multiEditImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, edits } = args;
+  const { filepath, edits, editingFileContents } = args;
 
   const streamId = uuid();
 
@@ -64,7 +64,9 @@ export const multiEditImpl: ClientToolImpl = async (
         `file ${filepath} does not exist. If you are trying to edit it, correct the filepath. If you are trying to create it, you must pass old_string=""`,
       );
     }
-    newContent = await extras.ideMessenger.ide.readFile(resolvedUri);
+    newContent =
+      editingFileContents ??
+      (await extras.ideMessenger.ide.readFile(resolvedUri));
     fileUri = resolvedUri;
     for (let i = 0; i < edits.length; i++) {
       const { old_string, new_string, replace_all } = edits[i];

@@ -12,7 +12,13 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, old_string, new_string, replace_all = false } = args;
+  const {
+    filepath,
+    old_string,
+    new_string,
+    replace_all = false,
+    editingFileContents,
+  } = args;
 
   const streamId = uuid();
 
@@ -33,7 +39,8 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
 
   // Read the current file content
   const originalContent =
-    await extras.ideMessenger.ide.readFile(resolvedFilepath);
+    (await editingFileContents) ??
+    extras.ideMessenger.ide.readFile(resolvedFilepath);
 
   // Perform the find and replace operation
   const newContent = performFindAndReplace(
