@@ -5,6 +5,10 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { StreamCallbacks } from "./streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
+import {
+  countChatHistoryTokens,
+  getModelContextLimit,
+} from "./util/tokenizer.js";
 
 export const COMPACTION_MARKER = "[COMPACTED HISTORY]";
 
@@ -41,8 +45,39 @@ export async function compactChatHistory(
       "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain.",
   };
 
-  // Get the current history for compaction
-  const historyForCompaction = [...chatHistory, compactionPrompt];
+  // Check if the history with compaction prompt is too long, prune if necessary
+  let historyToUse = chatHistory;
+  let historyForCompaction = [...historyToUse, compactionPrompt];
+
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
+  const reservedForOutput =
+    maxTokens > 0 ? maxTokens : Math.ceil(contextLimit * 0.35);
+  const availableForInput = contextLimit - reservedForOutput;
+
+  // Check if we need to prune to fit within context
+  while (
+    countChatHistoryTokens(historyForCompaction) > availableForInput &&
+    historyToUse.length > 0
+  ) {
+    logger.debug("Compaction history too long, pruning last message", {
+      tokenCount: countChatHistoryTokens(historyForCompaction),
+      availableForInput,
+      historyLength: historyToUse.length,
+    });
+    const prunedHistory = pruneLastMessage(historyToUse);
+
+    // Break if pruning didn't change the history (prevents infinite loop)
+    if (prunedHistory.length === historyToUse.length) {
+      logger.warn(
+        "Cannot prune history further while maintaining valid conversation structure",
+      );
+      break;
+    }
+
+    historyToUse = prunedHistory;
+    historyForCompaction = [...historyToUse, compactionPrompt];
+  }
 
   // Stream the compaction response
   const controller = new AbortController();
@@ -121,6 +156,34 @@ export function findCompactionIndex(
  * @param compactionIndex The index of the compaction message, if any
  * @returns The history to send to the LLM
  */
+/**
+ * Prunes chat history by removing messages from the end while ensuring
+ * the history ends with either an assistant message or a tool result message
+ * @param chatHistory The chat history to prune
+ * @returns The pruned chat history ending with assistant or tool message
+ */
+export function pruneLastMessage(
+  chatHistory: ChatCompletionMessageParam[],
+): ChatCompletionMessageParam[] {
+  if (chatHistory.length === 0) {
+    return chatHistory;
+  }
+
+  const secondToLastIndex = chatHistory.length - 2;
+  const secondToLastMessage = chatHistory[secondToLastIndex];
+
+  if (
+    secondToLastMessage.role === "assistant" &&
+    secondToLastMessage.tool_calls?.length
+  ) {
+    return chatHistory.slice(0, -2);
+  } else if (secondToLastMessage.role === "user") {
+    return chatHistory.slice(0, -2);
+  }
+
+  return chatHistory.slice(0, -1);
+}
+
 export function getHistoryForLLM(
   fullHistory: ChatCompletionMessageParam[],
   compactionIndex: number | null,
