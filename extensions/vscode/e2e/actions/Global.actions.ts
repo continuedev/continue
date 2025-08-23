@@ -1,9 +1,10 @@
 import {
+  By,
   EditorView,
   InputBox,
   TextEditor,
   VSBrowser,
-  Workbench,
+  Workbench
 } from "vscode-extension-tester";
 
 import { DEFAULT_TIMEOUT } from "../constants";
@@ -81,5 +82,29 @@ export class GlobalActions {
     } catch (error) {
       console.warn(`Failed to delete file ${filePath}:`, error);
     }
+  }
+
+  static async setNextEditEnabled(enabled: boolean) {
+    const workbench = new Workbench();
+    
+    await workbench.openCommandPrompt();
+    
+    // First, check current state by looking at status bar.
+    // When Next Edit is enabled, it will show "Continue (NE)".
+    // It will also render a warning every time you try to use the model, interfering with e2e tests.
+    // If we need to toggle, execute the command.
+    const statusBar = await workbench.getStatusBar();
+    const continueItem = await statusBar.findElement(By.xpath("//*[contains(text(), 'Continue')]"));
+    const text = await continueItem.getText();
+    
+    const hasNE = text.includes('(NE)');
+    
+    if (hasNE !== enabled) {
+      await workbench.executeCommand('Continue: Toggle Next Edit');
+    }
+  }
+  
+  static async disableNextEdit() {
+    await this.setNextEditEnabled(false);
   }
 }
