@@ -85,6 +85,10 @@ export class InlineTipManager {
   private svgTooltipDecoration = this.createSvgTooltipDecoration();
   private emptyFileTooltipDecoration = this.createEmptyFileTooltipDecoration();
 
+  private isTemporarilyHidden: boolean = false;
+  private lastSelection?: vscode.Selection;
+  private lastEditor?: vscode.TextEditor;
+
   public static getInstance(): InlineTipManager {
     if (!InlineTipManager.instance) {
       InlineTipManager.instance = new InlineTipManager();
@@ -113,12 +117,42 @@ export class InlineTipManager {
     const selection = e.selections[0];
     const editor = e.textEditor;
 
+    this.lastSelection = selection;
+    this.lastEditor = editor;
+
+    if (this.isTemporarilyHidden) {
+      editor.setDecorations(this.svgTooltipDecoration, []);
+      return;
+    }
+
     if (selection.isEmpty || !this.shouldRenderTip(editor.document.uri)) {
       editor.setDecorations(this.svgTooltipDecoration, []);
       return;
     }
 
     this.debouncedSelectionChange(editor, selection);
+  }
+
+  public hideTemporarily(): void {
+    this.isTemporarilyHidden = true;
+
+    if (this.lastActiveEditor) {
+      this.lastActiveEditor.setDecorations(this.svgTooltipDecoration, []);
+    }
+
+    vscode.window.visibleTextEditors.forEach((editor) => {
+      editor.setDecorations(this.svgTooltipDecoration, []);
+    });
+  }
+
+  public restoreVisibility(): void {
+    this.isTemporarilyHidden = false;
+
+    if (this.lastEditor && this.lastSelection && !this.lastSelection.isEmpty) {
+      if (this.shouldRenderTip(this.lastEditor.document.uri)) {
+        this.updateTooltipPosition(this.lastEditor, this.lastSelection);
+      }
+    }
   }
 
   public dispose() {
