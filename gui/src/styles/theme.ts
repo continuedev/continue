@@ -29,7 +29,7 @@ export const THEME_COLORS = {
   },
   "primary-background": {
     vars: ["--vscode-button-background"],
-    default: "#2c5aa0", // medium blue
+    default: "#ffc107", // yellow
   },
   "primary-foreground": {
     vars: ["--vscode-button-foreground"],
@@ -37,7 +37,7 @@ export const THEME_COLORS = {
   },
   "primary-hover": {
     vars: ["--vscode-button-hoverBackground"],
-    default: "#3a6db3", // lighter blue
+    default: "#ffb300", // darker yellow
   },
   "secondary-background": {
     vars: ["--vscode-button-secondaryBackground"],
@@ -57,7 +57,7 @@ export const THEME_COLORS = {
   },
   "border-focus": {
     vars: ["--vscode-focusBorder"],
-    default: "#3a6db3", // lighter blue
+    default: "#ffc107", // yellow
   },
   // Command styles are used for tip-tap editor
   "command-background": {
@@ -74,7 +74,7 @@ export const THEME_COLORS = {
   },
   "command-border-focus": {
     vars: ["--vscode-commandCenter-activeBorder"],
-    default: "#4d8bf0", // bright blue
+    default: "#ffc107", // yellow
   },
   description: {
     vars: ["--vscode-descriptionForeground"],
@@ -138,7 +138,7 @@ export const THEME_COLORS = {
   },
   link: {
     vars: ["--vscode-textLink-foreground"],
-    default: "#5c9ce6", // medium blue
+    default: "#ffc107", // yellow
   },
   textCodeBlockBackground: {
     vars: ["--vscode-textCodeBlock-background"],
@@ -146,11 +146,11 @@ export const THEME_COLORS = {
   },
   accent: {
     vars: ["--vscode-tab-activeBorderTop", "--vscode-focusBorder"],
-    default: "#4d8bf0", // bright blue
+    default: "#ffc107", // yellow
   },
   "find-match": {
     vars: ["--vscode-editor-findMatchBackground"], // Can't get "var(--vscode-editor-findMatchBackground, rgba(237, 18, 146, 0.5))" to work
-    default: "#264f7840", // translucent blue
+    default: "#ffc10740", // translucent yellow
   },
   "find-match-selected": {
     vars: ["--vscode-editor-findMatchHighlightBackground"],
@@ -163,7 +163,7 @@ export const THEME_COLORS = {
   },
   "list-active": {
     vars: ["--vscode-list-activeSelectionBackground"],
-    default: "#2c5aa050", // translucent medium blue
+    default: "#ffeb3b50", // translucent yellow
   },
   "list-active-foreground": {
     vars: ["--vscode-list-activeSelectionForeground"],
