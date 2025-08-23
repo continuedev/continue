@@ -8,6 +8,7 @@ import {
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
+import { getSessionFilePath } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 
@@ -96,6 +97,63 @@ function handleWhoami() {
   }
 }
 
+async function handleInfo() {
+  posthogService.capture("useSlashCommand", { name: "info" });
+
+  const infoLines = [];
+
+  // Auth info
+  if (isAuthenticated()) {
+    const config = loadAuthConfig();
+    if (config && isAuthenticatedConfig(config)) {
+      const email = config.userEmail || config.userId;
+      const org = "(no org)"; // Organization info not available in AuthenticatedConfig
+      infoLines.push(chalk.white("Authentication:"));
+      infoLines.push(`  Email: ${chalk.green(email)}`);
+      infoLines.push(`  Organization: ${chalk.cyan(org)}`);
+    } else {
+      infoLines.push(chalk.white("Authentication:"));
+      infoLines.push(
+        `  ${chalk.yellow("Authenticated via environment variable")}`,
+      );
+    }
+  } else {
+    infoLines.push(chalk.white("Authentication:"));
+    infoLines.push(`  ${chalk.red("Not logged in")}`);
+  }
+
+  // Config info
+  try {
+    const configState = services.config.getState();
+    infoLines.push("");
+    infoLines.push(chalk.white("Configuration:"));
+    if (configState.config) {
+      infoLines.push(`  ${chalk.gray(`Using ${configState.config?.name}`)}`);
+    } else {
+      infoLines.push(`  ${chalk.red(`Config not found`)}`);
+    }
+    if (configState.configPath) {
+      infoLines.push(`  Path: ${chalk.blue(configState.configPath)}`);
+    }
+  } catch {
+    infoLines.push("");
+    infoLines.push(chalk.white("Configuration:"));
+    infoLines.push(`  ${chalk.red("Configuration service not available")}`);
+  }
+
+  // Session history path
+  infoLines.push("");
+  infoLines.push(chalk.white("Session History:"));
+  const sessionFilePath = getSessionFilePath();
+
+  infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
+
+  return {
+    exit: false,
+    output: infoLines.join("\n"),
+  };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -113,6 +171,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   login: handleLogin,
   logout: handleLogout,
   whoami: handleWhoami,
+  info: handleInfo,
   model: () => ({ openModelSelector: true }),
   compact: () => {
     posthogService.capture("useSlashCommand", { name: "compact" });

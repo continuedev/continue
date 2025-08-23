@@ -12,11 +12,19 @@ permissions:
   issues: write
 
 jobs:
+  track-rerun:
+    runs-on: ubuntu-latest
+    if: github.run_attempt > 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Track workflow rerun
+        uses: ./.github/actions/track-rerun
+
   lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -52,7 +60,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4

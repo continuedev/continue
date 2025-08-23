@@ -9,7 +9,7 @@ on:
       publish_build:
         description: "Whether or not to publish the built extension to the VS Code marketplace"
         required: true
-        default: false
+        default: "false"
 
 jobs:
   check_release_name:
