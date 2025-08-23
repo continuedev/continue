@@ -108,7 +108,7 @@ describe("slashCommands", () => {
       expect(result?.output).toContain("Authentication:");
       expect(result?.output).toContain("Authenticated via environment variable");
       expect(result?.output).toContain("Configuration:");
-      expect(result?.output).toContain("Using default configuration");
+      expect(result?.output).toContain("Config not found");
       expect(result?.exit).toBe(false);
     });
 

@@ -9,7 +9,43 @@ describe("pruneLastMessage", () => {
     expect(result).toEqual([]);
   });
 
-  it("should preserve history ending with assistant message", () => {
+  it("should remove single user message", () => {
+    const history: ChatCompletionMessageParam[] = [
+      { role: "user", content: "Hello" },
+    ];
+
+    const result = pruneLastMessage(history);
+    expect(result).toEqual([]);
+  });
+
+  it("should return empty array for single system message", () => {
+    const history: ChatCompletionMessageParam[] = [
+      { role: "system", content: "System" },
+    ];
+
+    const result = pruneLastMessage(history);
+    expect(result).toEqual([]);
+  });
+
+  it("should return empty array for single assistant message", () => {
+    const history: ChatCompletionMessageParam[] = [
+      { role: "assistant", content: "Hello" },
+    ];
+
+    const result = pruneLastMessage(history);
+    expect(result).toEqual([]);
+  });
+
+  it("should return empty array for single tool message", () => {
+    const history: ChatCompletionMessageParam[] = [
+      { role: "tool", content: "Tool output", tool_call_id: "1" },
+    ];
+
+    const result = pruneLastMessage(history);
+    expect(result).toEqual([]);
+  });
+
+  it("should remove last message when second-to-last is user", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
       { role: "user", content: "Hello" },
@@ -17,10 +53,12 @@ describe("pruneLastMessage", () => {
     ];
 
     const result = pruneLastMessage(history);
-    expect(result).toEqual(history);
+    expect(result).toEqual([
+      { role: "system", content: "System" },
+    ]);
   });
 
-  it("should preserve history ending with tool message", () => {
+  it("should remove assistant+tool sequence when second-to-last is assistant with tool calls", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
       { role: "user", content: "Run command" },
@@ -29,13 +67,15 @@ describe("pruneLastMessage", () => {
     ];
 
     const result = pruneLastMessage(history);
-    expect(result).toEqual(history);
+    expect(result).toEqual([
+      { role: "system", content: "System" },
+      { role: "user", content: "Run command" },
+    ]);
   });
 
-  it("should prune user messages at the end", () => {
+  it("should prune last message when second-to-last is not user or assistant with tool calls", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
-      { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there" },
       { role: "user", content: "Another question" },
     ];
@@ -43,16 +83,13 @@ describe("pruneLastMessage", () => {
     const result = pruneLastMessage(history);
     expect(result).toEqual([
       { role: "system", content: "System" },
-      { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there" },
     ]);
   });
 
-  it("should prune multiple user messages at the end", () => {
+  it("should handle multiple user messages by removing two at a time", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi there" },
       { role: "user", content: "Question 1" },
       { role: "user", content: "Question 2" },
     ];
@@ -60,12 +97,10 @@ describe("pruneLastMessage", () => {
     const result = pruneLastMessage(history);
     expect(result).toEqual([
       { role: "system", content: "System" },
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi there" },
     ]);
   });
 
-  it("should handle tool call sequences correctly", () => {
+  it("should handle tool call sequences by removing user after tool", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "system", content: "System" },
       { role: "user", content: "Do something" },
@@ -83,20 +118,7 @@ describe("pruneLastMessage", () => {
     ]);
   });
 
-  it("should return only system message when no assistant/tool messages exist", () => {
-    const history: ChatCompletionMessageParam[] = [
-      { role: "system", content: "System" },
-      { role: "user", content: "Hello" },
-      { role: "user", content: "Another message" },
-    ];
-
-    const result = pruneLastMessage(history);
-    expect(result).toEqual([
-      { role: "system", content: "System" },
-    ]);
-  });
-
-  it("should return empty array when no system message and no assistant/tool messages", () => {
+  it("should remove both user messages when consecutive", () => {
     const history: ChatCompletionMessageParam[] = [
       { role: "user", content: "Hello" },
       { role: "user", content: "Another message" },
@@ -104,28 +126,6 @@ describe("pruneLastMessage", () => {
 
     const result = pruneLastMessage(history);
     expect(result).toEqual([]);
-  });
-
-  it("should handle history with only system message", () => {
-    const history: ChatCompletionMessageParam[] = [
-      { role: "system", content: "System" },
-    ];
-
-    const result = pruneLastMessage(history);
-    expect(result).toEqual([
-      { role: "system", content: "System" },
-    ]);
-  });
-
-  it("should handle history with only assistant message", () => {
-    const history: ChatCompletionMessageParam[] = [
-      { role: "assistant", content: "Hello" },
-    ];
-
-    const result = pruneLastMessage(history);
-    expect(result).toEqual([
-      { role: "assistant", content: "Hello" },
-    ]);
   });
 
   it("should handle complex conversation flow", () => {

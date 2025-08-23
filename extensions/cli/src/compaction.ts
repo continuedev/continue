@@ -169,6 +169,11 @@ export function pruneLastMessage(
     return chatHistory;
   }
 
+  if (chatHistory.length === 1) {
+    // Only one message - always return empty array
+    return [];
+  }
+
   const secondToLastIndex = chatHistory.length - 2;
   const secondToLastMessage = chatHistory[secondToLastIndex];
 
