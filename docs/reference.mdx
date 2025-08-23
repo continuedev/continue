@@ -299,16 +299,11 @@ More information about usage/params for each context provider can be found [here
 context:
   - provider: file
   - provider: code
-  - provider: codebase
-    params:
-      nFinal: 10
-  - provider: docs
   - provider: diff
   - provider: http
     name: Context Server 1
     params:
       url: "https://api.example.com/server1"
-  - provider: folder
   - provider: terminal
 ```
 
@@ -498,12 +493,7 @@ prompts:
 context:
   - provider: diff
   - provider: file
-  - provider: codebase
   - provider: code
-  - provider: docs
-    params:
-      startUrl: https://docs.example.com/introduction
-      rootUrl: https://docs.example.com
 mcpServers:
   - name: DevServer
     command: npm

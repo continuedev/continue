@@ -154,6 +154,28 @@ Our team documentation is available at:
 Always follow our internal standards when suggesting code.
 ```
 
+## Migrating from deprecated context providers
+
+If you were previously using the `@Codebase` or `@Docs` context providers, here's how to migrate to the new approach:
+
+### Migrating from @Codebase
+
+The `@Codebase` context provider has been deprecated. Instead:
+
+1. **Use built-in tools**: Your agent can now use file exploration and search tools to understand your codebase
+2. **Add rules**: Create `.continue/rules` files to provide context about your project structure
+3. **Use MCP servers**: For external codebases, use DeepWiki MCP or custom MCP servers
+
+### Migrating from @Docs
+
+The `@Docs` context provider has been deprecated. Instead:
+
+1. **Use Context7 MCP**: For public documentation, Context7 MCP provides similar functionality
+2. **Add documentation links in rules**: Create rules that reference documentation URLs
+3. **Use custom MCP servers**: For internal documentation, create an MCP server with access to your docs
+
+The new approach provides better integration with Continue's Agent features and more intelligent context selection.
+
 ## Next steps
 
 - Learn more about [MCP servers](/reference/mcp)

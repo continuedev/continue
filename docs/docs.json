@@ -149,14 +149,7 @@
                   "customize/model-roles/reranking"
                 ]
               },
-              {
-                "group": "Context Providers",
-                "icon": "code",
-                "pages": [
-                  "customize/context/codebase",
-                  "customize/context/documentation"
-                ]
-              },
+
               {
                 "group": "Deep Dives",
                 "icon": "microscope",
@@ -257,7 +250,9 @@
               "reference/json-reference",
               "reference/yaml-migration",
               "reference/continue-mcp",
-              "reference/deprecated-context-providers"
+              "reference/deprecated-context-providers",
+              "reference/deprecated-codebase",
+              "reference/deprecated-docs"
             ]
           }
         ]
@@ -451,19 +446,19 @@
     },
     {
       "source": "/walkthroughs/codebase-embeddings",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/features/codebase-embeddings",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/advanced/deep-dives/codebase",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/advanced/context/codebase",
-      "destination": "/customize/context/codebase"
+      "destination": "/reference/deprecated-codebase"
     },
     {
       "source": "/walkthroughs/tab-autocomplete",
@@ -583,19 +578,19 @@
     },
     {
       "source": "/features/talk-to-your-docs",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/advanced/context-integration/documentation",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/advanced/deep-dives/docs",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/advanced/context/documentation",
-      "destination": "/customize/context/documentation"
+      "destination": "/reference/deprecated-docs"
     },
     {
       "source": "/reference/Model Providers/anthropicllm",
@@ -990,12 +985,20 @@
       "destination": "/features/agent/context-selection"
     },
     {
+      "source": "/customize/context/codebase",
+      "destination": "/guides/codebase-documentation-awareness"
+    },
+    {
+      "source": "/customize/context/documentation",
+      "destination": "/guides/codebase-documentation-awareness"
+    },
+    {
       "source": "/customization/overview#codebase-context",
-      "destination": "/customize/context/codebase"
+      "destination": "/guides/codebase-documentation-awareness"
     },
     {
       "source": "/customization/overview#documentation-context",
-      "destination": "/customize/context/documentation"
+      "destination": "/guides/codebase-documentation-awareness"
     },
     {
       "source": "/guides/llama3.1",

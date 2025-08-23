@@ -1,21 +1,27 @@
 ---
-title: "@Docs"
-description: Learn how to access and search your project's documentation directly within Continue
-keywords:
-  [
-    documentation,
-    indexing,
-    context provider,
-    embeddings,
-    docs,
-    embedder,
-    embeddings provider,
-    documentation,
-  ]
-toc_max_heading_level: 5
+title: "@Docs (Deprecated)"
+description: Deprecated documentation context provider - use the new documentation awareness approach instead
+keywords: [deprecated, documentation, docs, context, embeddings, legacy]
+noindex: true
 ---
 
-The [`@Docs` context provider](../custom-providers#docs) allows you to efficiently reference documentation directly within Continue.
+<Warning>
+  **This feature is deprecated.** The `@Docs` context provider has been deprecated in favor of a more integrated approach to documentation awareness. Please refer to our [Guide on Making Agents Aware of Codebases and Documentation](/guides/codebase-documentation-awareness) for the recommended approach.
+</Warning>
+
+## Migration Guide
+
+If you're currently using the `@Docs` context provider, please migrate to the new approach outlined in our [codebase and documentation awareness guide](/guides/codebase-documentation-awareness). The new approach provides:
+
+- Better integration with Continue's Agent features
+- More intelligent context selection
+- Improved performance and accuracy
+
+## Legacy Documentation
+
+**Below is the original documentation for the `@Docs` context provider, preserved for reference**
+
+The [`@Docs` context provider](../customize/custom-providers#docs) allows you to efficiently reference documentation directly within Continue.
 
 ## Enabling the `@Docs` context provider
 
@@ -115,11 +121,11 @@ Indexing will re-sync upon saving the configuration file.
 
 ### Using Your Embeddings Provider
 
-If you have set up an [embeddings provider](../model-roles/embeddings.mdx), @docs will use your embeddings provider. Switching embeddings providers will trigger a re-index of all documentation sites in your configuration.
+If you have set up an [embeddings provider](../customize/model-roles/embeddings.mdx), @docs will use your embeddings provider. Switching embeddings providers will trigger a re-index of all documentation sites in your configuration.
 
 ### Reranking
 
-As with [@Codebase context provider configuration](./codebase#configuration), you can adjust the reranking behavior of the `@Docs` context provider with the `nRetrieve`, `nFinal`, and `useReranking`.
+As with [@Codebase context provider configuration](./deprecated-codebase#configuration), you can adjust the reranking behavior of the `@Docs` context provider with the `nRetrieve`, `nFinal`, and `useReranking`.
 
 <Tabs>
   <Tab title="YAML">
@@ -212,7 +218,7 @@ If your documentation is private, you can skip the default crawler and use a loc
 </Tabs>
 
 <Info>
-  The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../settings) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
+  The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../customize/settings) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
   
   **Note:** Chromium crawling support is being deprecated and may be removed in future versions.
 </Info>
@@ -277,7 +283,7 @@ The following configuration example works out of the box for VS Code. This uses 
 
 ### Jetbrains minimal setup
 
-Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../model-roles/embeddings.mdx).
+Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../customize/model-roles/embeddings.mdx).
 
 <Tabs>
   <Tab title="YAML">
@@ -401,4 +407,4 @@ The following configuration example includes:
   </Tab>
 </Tabs>
 
-This setup could also involve enabling Chromium as a backup for local documentation through the [User Settings Page](../settings).
+This setup could also involve enabling Chromium as a backup for local documentation through the [User Settings Page](../customize/settings).
