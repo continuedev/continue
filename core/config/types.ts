@@ -718,7 +718,7 @@ declare global {
   
     getPinnedFiles(): Promise<string[]>;
   
-    getSearchResults(query: string, maxResults?: number): Promise<string>;
+    getSearchResults(rgArgs: string[], maxResults?: number): Promise<string>;
   
     subprocess(command: string, cwd?: string): Promise<[string, string]>;
   
