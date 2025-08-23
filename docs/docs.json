@@ -373,18 +373,6 @@
       "destination": "/getting-started/install"
     },
     {
-      "source": "/advanced/deep-dives/settings",
-      "destination": "/customize/settings"
-    },
-    {
-      "source": "/customize/deep-dives/settings",
-      "destination": "/customize/settings"
-    },
-    {
-      "source": "/customize/settings",
-      "destination": "/customize"
-    },
-    {
       "source": "/customize/model-types",
       "destination": "/customize/model-roles/intro"
     },
@@ -1022,15 +1010,15 @@
     },
     {
       "source": "/customize/settings",
-      "destination": "/customization/overview"
+      "destination": "/customize/overview"
     },
     {
       "source": "/advanced/deep-dives/settings",
-      "destination": "/customization/overview"
+      "destination": "/customize/overview"
     },
     {
       "source": "/customize/deep-dives/settings",
-      "destination": "/customization/overview"
+      "destination": "/customize/overview"
     }
   ]
 }
