@@ -4,8 +4,8 @@ import { constructLlmApi, LLMConfig } from "@continuedev/openai-adapters";
 import {
   AuthConfig,
   getAccessToken,
-  getOrganizationId,
   getModelName,
+  getOrganizationId,
 } from "../auth/workos.js";
 import { getLlmApi } from "../config.js";
 import { logger } from "../util/logger.js";
