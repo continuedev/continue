@@ -11,7 +11,7 @@ interface ApplyActionsProps {
   applyState?: ApplyState;
   onClickAccept: () => void;
   onClickReject: () => void;
-  onClickApply: () => void;
+  onClickApply?: () => void;
 }
 
 export function ApplyActions(props: ApplyActionsProps) {

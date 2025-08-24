@@ -11,7 +11,7 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, diffs } = args;
+  const { filepath, diffs, editingFileContents } = args;
 
   const state = extras.getState();
   const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
@@ -46,7 +46,8 @@ export const searchReplaceToolImpl: ClientToolImpl = async (
   try {
     // Read the current file content
     const originalContent =
-      await extras.ideMessenger.ide.readFile(resolvedFilepath);
+      editingFileContents ??
+      (await extras.ideMessenger.ide.readFile(resolvedFilepath));
     let currentContent = originalContent;
 
     // Apply all replacements sequentially to build the final content
