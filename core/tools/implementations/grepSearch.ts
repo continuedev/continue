@@ -72,9 +72,11 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
 
   const query = getStringArg(args, "query");
   const extraArgs = getOptionalStringArrayArg(args, "args");
+  const path = args.path as string | undefined;
   const ripgrepArgs = buildRipgrepArgs(query, {
     extraArgs,
     maxResults: DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
+    path,
   });
 
   const results = await extras.ide.getSearchResults(

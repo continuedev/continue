@@ -118,13 +118,16 @@ test("handles empty input", () => {
   expect(result.formatted).toBe("");
 });
 
-test("handles input with only file paths (no content) - lines should be skipped", () => {
+test("handles input with only file paths (no content) - now includes file paths", () => {
   const input =
     "./empty-file.ts\n./another-empty.js\n./has-content.ts\n searchMatch";
   const result = formatGrepSearchResults(input);
 
   expect(result.numResults).toBe(3);
-  expect(result.formatted).toBe("./has-content.ts\n  searchMatch");
+  // Now includes all file paths, including empty ones, plus content for files that have matches
+  expect(result.formatted).toBe(
+    "./empty-file.ts\n./another-empty.js\n./has-content.ts\n  searchMatch",
+  );
 });
 
 test("truncates output when exceeding maxChars", () => {
@@ -301,4 +304,123 @@ test("buildRipgrepArgs merges context flags", () => {
     "test",
     ".",
   ]);
+});
+
+// Tests for -l flag handling
+test("handles -l flag output (files only)", () => {
+  const fileListOutput = `./src/main.ts
+./src/utils.ts
+./tests/main.test.ts`;
+
+  const result = formatGrepSearchResults(fileListOutput);
+
+  expect(result.numResults).toBe(3);
+  expect(result.truncated).toBe(false);
+  expect(result.formatted).toBe(fileListOutput);
+});
+
+test("handles empty -l flag output", () => {
+  const result = formatGrepSearchResults("");
+
+  expect(result.numResults).toBe(0);
+  expect(result.truncated).toBe(false);
+  expect(result.formatted).toBe("");
+});
+
+test("handles no matches found message", () => {
+  const noMatchesOutput = "No matches found";
+
+  const result = formatGrepSearchResults(noMatchesOutput);
+
+  expect(result.numResults).toBe(0);
+  expect(result.truncated).toBe(false);
+  expect(result.formatted).toBe("");
+});
+
+test("buildRipgrepArgs handles -l flag correctly", () => {
+  const argsWithL = buildRipgrepArgs("test", { extraArgs: ["-l"] });
+  expect(argsWithL).toContain("-l");
+  expect(argsWithL).toEqual([
+    "-i",
+    "--ignore-file",
+    ".continueignore",
+    "--ignore-file",
+    ".gitignore",
+    "-C",
+    "2",
+    "--heading",
+    "-l",
+    "-e",
+    "test",
+    ".",
+  ]);
+});
+
+// Tests for complex regex patterns
+test("buildRipgrepArgs handles complex regex patterns", () => {
+  const complexPattern = "\\b(def|function).*\\badd\\b.*\\(";
+  const args = buildRipgrepArgs(complexPattern);
+
+  expect(args).toContain("-e");
+  const eIndex = args.indexOf("-e");
+  expect(args[eIndex + 1]).toBe(complexPattern);
+});
+
+test("buildRipgrepArgs handles word boundaries", () => {
+  const wordBoundaryPattern = "\\bfunction\\b";
+  const args = buildRipgrepArgs(wordBoundaryPattern);
+
+  expect(args).toContain("-e");
+  const eIndex = args.indexOf("-e");
+  expect(args[eIndex + 1]).toBe(wordBoundaryPattern);
+});
+
+test("buildRipgrepArgs handles parentheses in patterns", () => {
+  const parenPattern = "add.*\\(";
+  const args = buildRipgrepArgs(parenPattern);
+
+  expect(args).toContain("-e");
+  const eIndex = args.indexOf("-e");
+  expect(args[eIndex + 1]).toBe(parenPattern);
+});
+
+// Tests for path parameter
+test("buildRipgrepArgs handles file path", () => {
+  const args = buildRipgrepArgs("test", { path: "src/main.ts" });
+
+  expect(args).toContain("src/main.ts");
+  expect(args[args.length - 1]).toBe("src/main.ts");
+});
+
+test("buildRipgrepArgs handles directory path", () => {
+  const args = buildRipgrepArgs("test", { path: "src/" });
+
+  expect(args).toContain("src/");
+  expect(args[args.length - 1]).toBe("src/");
+});
+
+test("buildRipgrepArgs defaults to current directory when no path specified", () => {
+  const args = buildRipgrepArgs("test");
+
+  expect(args[args.length - 1]).toBe(".");
+});
+
+test("buildRipgrepArgs rejects dangerous paths", () => {
+  expect(() => {
+    buildRipgrepArgs("test", { path: "/etc/passwd" });
+  }).toThrow("Absolute paths and path traversal not allowed");
+
+  expect(() => {
+    buildRipgrepArgs("test", { path: "../../../etc/passwd" });
+  }).toThrow("Absolute paths and path traversal not allowed");
+
+  expect(() => {
+    buildRipgrepArgs("test", { path: "file;rm -rf /" });
+  }).toThrow("Invalid characters in search path");
+});
+
+test("buildRipgrepArgs normalizes paths", () => {
+  const args = buildRipgrepArgs("test", { path: "  src\\main.ts  " });
+
+  expect(args[args.length - 1]).toBe("src/main.ts");
 });

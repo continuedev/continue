@@ -21,7 +21,7 @@ export const grepSearchTool: Tool = {
         query: {
           type: "string",
           description:
-            "The search query to use. Must be a valid ripgrep regex expression, escaped where needed",
+            "The search query to use. Must be a valid ripgrep regex expression. For word boundaries use \\b, for literal parentheses use \\(, for alternations use (pattern1|pattern2). Examples: 'function.*add', '\\bclass\\b', 'add.*\\(', '\\b(def|function)\\b'",
         },
         args: {
           type: "array",
@@ -29,12 +29,20 @@ export const grepSearchTool: Tool = {
           description:
             "Optional additional ripgrep arguments, for example ['-n', '-w']",
         },
+        path: {
+          type: "string",
+          description:
+            "Optional path to search in - can be a specific file (e.g., 'src/main.ts') or directory (e.g., 'src/'). If not provided, searches entire project.",
+        },
       },
     },
   },
   defaultToolPolicy: "allowedWithoutPermission",
   systemMessageDescription: {
     prefix: `To perform a grep search within the project, call the ${BuiltInToolNames.GrepSearch} tool with the query pattern to match. For example:`,
-    exampleArgs: [["query", ".*main_services.*"]],
+    exampleArgs: [
+      ["query", ".*main_services.*"],
+      ["query", "throw new Error"],
+    ],
   },
 };
