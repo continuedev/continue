@@ -107,14 +107,21 @@ export class GlobalActions {
     const text = await TestUtils.waitForSuccess(
       async () => {
         const itemText = await continueItem.getText();
-        console.log("Attempting to get text:", itemText);
+        const innerHTML = await continueItem.getAttribute('innerHTML');
+        const textContent = await continueItem.getAttribute('textContent');
         
-        // Ensure we have actual text content.
-        if (!itemText || itemText.trim() === '') {
+        console.log("getText():", itemText);
+        console.log("innerHTML:", innerHTML);
+        console.log("textContent:", textContent);
+        
+        // Try different methods if getText() is empty
+        const finalText = itemText || textContent || '';
+        
+        if (!finalText || finalText.trim() === '') {
           throw new Error('Text content not yet available');
         }
         
-        return itemText;
+        return finalText;
       },
       DEFAULT_TIMEOUT.MD
     );
