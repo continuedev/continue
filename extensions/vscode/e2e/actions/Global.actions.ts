@@ -100,10 +100,17 @@ export class GlobalActions {
       async () => await statusBar.findElement(By.xpath("//*[contains(text(), 'Continue')]")),
       DEFAULT_TIMEOUT.MD
     );
+
+    console.log("continueItem:");
+    console.log(continueItem);
     
     const text = await continueItem.getText();
+    console.log("text:");
+    console.log(text);
     
     const hasNE = text.includes('(NE)');
+    console.log("hasNE:");
+    console.log(hasNE);
     
     if (hasNE !== enabled) {
       await workbench.executeCommand('Continue: Toggle Next Edit');
