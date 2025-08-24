@@ -22,6 +22,22 @@ import {
   renderContextItems,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
+
+// Helper function to render context items and append status information
+function renderContextItemsWithStatus(contextItems: any[]): string {
+  const content = renderContextItems(contextItems);
+
+  // Check if any context items have status information
+  const statusItems = contextItems
+    .filter((item) => item.status)
+    .map((item) => `Status: ${item.status}`);
+
+  if (statusItems.length > 0) {
+    return `${content}\n\n${statusItems.join("\n")}`;
+  }
+
+  return content;
+}
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -133,7 +149,7 @@ export function constructMessages(
           if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
           } else if (toolCallState?.output) {
-            content = renderContextItems(toolCallState.output);
+            content = renderContextItemsWithStatus(toolCallState.output);
           }
 
           msgs.push({
