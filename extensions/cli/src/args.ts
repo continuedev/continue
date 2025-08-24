@@ -1,10 +1,3 @@
-import * as fs from "fs";
-import * as path from "path";
-
-import JSZip from "jszip";
-
-import { env } from "./env.js";
-
 export interface CommandLineArgs {
   configPath?: string;
   organizationSlug?: string; // Organization slug to use for this session
@@ -12,102 +5,44 @@ export interface CommandLineArgs {
   resume?: boolean; // Resume from last session
   readonly?: boolean; // Start in plan mode (backward compatibility)
   rules?: string[]; // Array of rule specifications
+  mcps?: string[]; // Array of MCP server slugs from the hub
+  models?: string[]; // Array of model slugs from the hub
+  prompts?: string[]; // Array of prompt slugs from the hub
   format?: "json"; // Output format for headless mode
 }
 
+// Re-export hub loader functions for backward compatibility
+export { loadMcpFromHub, processRule } from "./hubLoader.js";
+
 /**
- * Load rule content from a file path
- * @param filePath - Path to the rule file
- * @returns The content of the rule file
+ * Extract values for a specific flag that can appear multiple times
  */
-function loadRuleFromFile(filePath: string): string {
-  try {
-    const absolutePath = path.resolve(filePath);
-    if (!fs.existsSync(absolutePath)) {
-      throw new Error(`Rule file not found: ${filePath}`);
+function extractMultipleFlags(args: string[], flagName: string): string[] {
+  const indices: number[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === flagName) {
+      indices.push(i);
     }
-    return fs.readFileSync(absolutePath, "utf-8");
-  } catch (error: any) {
-    throw new Error(`Failed to read rule file "${filePath}": ${error.message}`);
   }
+
+  const values: string[] = [];
+  for (const index of indices) {
+    if (index + 1 < args.length && !args[index + 1].startsWith("--")) {
+      values.push(args[index + 1]);
+    }
+  }
+  return values;
 }
 
 /**
- * Load rule content from hub.continue.dev
- * @param slug - The slug in format "owner/package"
- * @returns The rule content from the hub
+ * Extract value for a single-value flag
  */
-async function loadRuleFromHub(slug: string): Promise<string> {
-  const parts = slug.split("/");
-  if (parts.length !== 2) {
-    throw new Error(
-      `Invalid hub slug format. Expected "owner/package", got: ${slug}`,
-    );
+function extractSingleFlag(args: string[], flagName: string): string | undefined {
+  const index = args.indexOf(flagName);
+  if (index !== -1 && index + 1 < args.length) {
+    return args[index + 1];
   }
-
-  const [ownerSlug, ruleSlug] = parts;
-  const downloadUrl = new URL(
-    `v0/${ownerSlug}/${ruleSlug}/latest/download`,
-    env.apiBase,
-  );
-
-  try {
-    const response = await fetch(downloadUrl);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    // The API returns a zip file, so we need to extract the rule content
-    const arrayBuffer = await response.arrayBuffer();
-    const zip = new JSZip();
-    const zipContents = await zip.loadAsync(arrayBuffer);
-
-    // Find the first .md or .txt file (rule content)
-    const ruleFiles = Object.keys(zipContents.files).filter(
-      (filename) =>
-        filename.endsWith(".md") && !zipContents.files[filename].dir,
-    );
-
-    if (ruleFiles.length === 0) {
-      throw new Error("No rule content found in downloaded zip file");
-    }
-
-    // Use the first rule file found - TODO support multiple rules and parse frontmatter
-    const ruleFile = zipContents.files[ruleFiles[0]];
-    const content = await ruleFile.async("text");
-    return content;
-  } catch (error: any) {
-    throw new Error(`Failed to load rule from hub "${slug}": ${error.message}`);
-  }
-}
-
-/**
- * Process a rule specification and return its content
- * @param ruleSpec - Can be a file path, hub slug, or direct string content
- * @returns The processed rule content
- */
-export async function processRule(ruleSpec: string): Promise<string> {
-  // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (
-    ruleSpec.includes("/") &&
-    !ruleSpec.startsWith(".") &&
-    !ruleSpec.startsWith("/")
-  ) {
-    return await loadRuleFromHub(ruleSpec);
-  }
-
-  // If it looks like a file path (contains . or / or ends with common file extensions)
-  if (
-    ruleSpec.includes(".") ||
-    ruleSpec.includes("/") ||
-    ruleSpec.includes("\\")
-  ) {
-    return loadRuleFromFile(ruleSpec);
-  }
-
-  // Otherwise, treat it as direct string content
-  return ruleSpec;
+  return undefined;
 }
 
 /**
@@ -117,73 +52,68 @@ export async function processRule(ruleSpec: string): Promise<string> {
  */
 export function parseArgs(): CommandLineArgs {
   const args = process.argv.slice(2);
-
-  // Default values
   const result: CommandLineArgs = {};
 
+  // Parse boolean flags
   if (args.includes("--resume")) {
     result.resume = true;
   }
-
   if (args.includes("--readonly")) {
     result.readonly = true;
   }
 
-  // Get format from --format flag
-  const formatIndex = args.indexOf("--format");
-  if (formatIndex !== -1 && formatIndex + 1 < args.length) {
-    const formatValue = args[formatIndex + 1];
-    if (formatValue === "json") {
-      result.format = "json";
-    }
+  // Parse single-value flags
+  const formatValue = extractSingleFlag(args, "--format");
+  if (formatValue === "json") {
+    result.format = "json";
   }
 
-  // Get config path from --config flag
-  const configIndex = args.indexOf("--config");
-  if (configIndex !== -1 && configIndex + 1 < args.length) {
-    result.configPath = args[configIndex + 1];
-  }
-
-  // Get organization slug from --org flag
-  const orgIndex = args.indexOf("--org");
-  if (orgIndex !== -1 && orgIndex + 1 < args.length) {
-    const orgValue = args[orgIndex + 1];
-    // Convert "personal" to undefined right away to simplify downstream logic
-    result.organizationSlug =
+  result.configPath = extractSingleFlag(args, "--config");
+  
+  const orgValue = extractSingleFlag(args, "--org");
+  if (orgValue) {
+    result.organizationSlug = 
       orgValue.toLowerCase() === "personal" ? undefined : orgValue;
   }
 
-  // Get rules from --rule flags (can be specified multiple times)
-  const ruleIndices: number[] = [];
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--rule") {
-      ruleIndices.push(i);
-    }
-  }
-
-  if (ruleIndices.length > 0) {
+  // Parse multi-value flags
+  const rules = extractMultipleFlags(args, "--rule");
+  if (rules.length > 0) {
+    result.rules = rules;
+  } else if (args.includes("--rule")) {
     result.rules = [];
-    for (const ruleIndex of ruleIndices) {
-      if (ruleIndex + 1 < args.length) {
-        result.rules.push(args[ruleIndex + 1]);
-      }
-    }
   }
 
-  // Find the last argument that's not a flag or a flag value
-  const flagsWithValues = ["--config", "--org", "--rule", "--format"];
+  const mcps = extractMultipleFlags(args, "--mcp");
+  if (mcps.length > 0) {
+    result.mcps = mcps;
+  } else if (args.includes("--mcp")) {
+    // Ensure we have an empty array if --mcp flag is present but has no values
+    result.mcps = [];
+  }
+
+  const models = extractMultipleFlags(args, "--model");
+  if (models.length > 0) {
+    result.models = models;
+  } else if (args.includes("--model")) {
+    result.models = [];
+  }
+
+  const prompts = extractMultipleFlags(args, "--prompt");
+  if (prompts.length > 0) {
+    result.prompts = prompts;
+  } else if (args.includes("--prompt")) {
+    result.prompts = [];
+  }
+
+  // Extract prompt from non-flag arguments
+  const flagsWithValues = ["--config", "--org", "--rule", "--mcp", "--model", "--prompt", "--format"];
   const nonFlagArgs = args.filter((arg, index) => {
-    // Skip flags (starting with --)
     if (arg.startsWith("--") || arg === "-p") return false;
-
-    // Skip flag values
     const prevArg = index > 0 ? args[index - 1] : "";
-    if (flagsWithValues.includes(prevArg)) return false;
-
-    return true;
+    return !flagsWithValues.includes(prevArg);
   });
 
-  // If there are any non-flag arguments, use the last one as the prompt
   if (nonFlagArgs.length > 0) {
     result.prompt = nonFlagArgs[nonFlagArgs.length - 1];
   }

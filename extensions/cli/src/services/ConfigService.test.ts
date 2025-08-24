@@ -1,13 +1,14 @@
-import { beforeEach, describe, expect, vi, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock modules
 vi.mock("../auth/workos.js");
 vi.mock("../configLoader.js");
 vi.mock("../args.js");
+vi.mock("../configEnhancer.js");
 vi.mock("./ServiceContainer.js");
 
-import * as args from "../args.js";
 import * as workos from "../auth/workos.js";
+import { configEnhancer } from "../configEnhancer.js";
 import * as configLoader from "../configLoader.js";
 
 import { ConfigService } from "./ConfigService.js";
@@ -73,23 +74,30 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
-      vi.mocked(args.processRule).mockImplementation(
-        async (rule) => `Processed: ${rule}`,
-      );
+      
+      const expectedConfig = {
+        ...mockConfig,
+        systemMessage:
+          "Test system message\n\nProcessed: rule1\n\nProcessed: rule2",
+      };
+      
+      vi.mocked(configEnhancer.enhanceConfig).mockResolvedValue(expectedConfig);
 
       const state = await service.initialize(
         { accessToken: "token" } as any,
         "/config.yaml",
         "org-123",
         mockApiClient as any,
-        ["rule1", "rule2"],
+        { rule: ["rule1", "rule2"] },
       );
 
-      expect(state.config).toEqual({
-        ...mockConfig,
-        systemMessage:
-          "Test system message\n\nProcessed: rule1\n\nProcessed: rule2",
-      });
+      // Verify configEnhancer was called with the right parameters
+      expect(vi.mocked(configEnhancer.enhanceConfig)).toHaveBeenCalledWith(
+        mockConfig,
+        { rule: ["rule1", "rule2"] },
+      );
+
+      expect(state.config).toEqual(expectedConfig);
     });
   });
 

@@ -12,9 +12,9 @@ export { MarkdownRenderer } from "./MarkdownRenderer.js";
 interface StartTUIChatOptions {
   initialPrompt?: string;
   resume?: boolean;
-  configPath?: string;
-  organizationSlug?: string;
-  additionalRules?: string[];
+  config?: string;
+  org?: string;
+  rule?: string[];
   toolPermissionOverrides?: {
     allow?: string[];
     ask?: string[];
@@ -30,9 +30,9 @@ export async function startTUIChat(
   const {
     initialPrompt,
     resume,
-    configPath,
-    organizationSlug,
-    additionalRules,
+    config,
+    org,
+    rule,
     toolPermissionOverrides,
     skipOnboarding,
     customStdin,
@@ -41,9 +41,7 @@ export async function startTUIChat(
   // Initialize services only if not already done (skipOnboarding means already initialized)
   if (!skipOnboarding) {
     await initializeServices({
-      configPath,
-      organizationSlug,
-      rules: additionalRules,
+      options: { config, org, rule },
       headless: false,
       toolPermissionOverrides,
     });
@@ -60,10 +58,10 @@ export async function startTUIChat(
   const { unmount } = render(
     React.createElement(ServiceContainerProvider, {
       children: React.createElement(AppRoot, {
-        configPath,
+        configPath: config,
         initialPrompt,
         resume,
-        additionalRules,
+        additionalRules: rule,
       }),
     }),
     renderOptions,

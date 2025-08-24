@@ -5,6 +5,7 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
+import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
 import { MCPService } from "./MCPService.js";
@@ -108,9 +109,7 @@ export const SERVICE_NAMES = {
  * Service initialization options
  */
 export interface ServiceInitOptions {
-  configPath?: string;
-  organizationSlug?: string; // Organization slug to use for this session
-  rules?: string[];
+  options?: BaseCommandOptions; // Command-line options
   headless?: boolean;
   skipOnboarding?: boolean; // Skip onboarding check even in TUI mode
   toolPermissionOverrides?: {

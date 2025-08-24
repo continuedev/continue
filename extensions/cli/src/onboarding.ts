@@ -257,16 +257,10 @@ async function injectRulesIntoConfig(
   // Clone the config to avoid mutating the original
   const modifiedConfig = { ...config };
 
-  // Combine processed rules with existing system message if the config has one
-  const existingSystemMessage = (modifiedConfig as any).systemMessage || "";
-  const rulesSection = processedRules.join("\n\n");
-
-  if (existingSystemMessage) {
-    (modifiedConfig as any).systemMessage =
-      `${existingSystemMessage}\n\n${rulesSection}`;
-  } else {
-    (modifiedConfig as any).systemMessage = rulesSection;
-  }
+  // Add processed rules to the config's rules array
+  // Each processed rule is a string, which is a valid Rule type
+  const existingRules = modifiedConfig.rules || [];
+  modifiedConfig.rules = [...existingRules, ...processedRules];
 
   return modifiedConfig;
 }
