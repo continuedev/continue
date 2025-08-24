@@ -89,51 +89,68 @@ export class GlobalActions {
     
     await workbench.openCommandPrompt();
     
-    // First, check current state by looking at status bar.
-    // When Next Edit is enabled, it will show "Continue (NE)".
-    // It will also render a warning every time you try to use the model, interfering with e2e tests.
-    // If we need to toggle, execute the command.
+    // Initial wait and clear
+    await TestUtils.waitForTimeout(1000);
+    await GlobalActions.clearAllNotifications();
+    
     const statusBar = await workbench.getStatusBar();
     
-    // Wait for the Continue item to be available in the status bar.
+    // Robust element finding with text validation
     const continueItem = await TestUtils.waitForSuccess(
-      async () => await statusBar.findElement(By.xpath("//*[contains(text(), 'Continue')]")),
-      DEFAULT_TIMEOUT.MD
-    );
-
-    console.log("continueItem:");
-    console.log(continueItem);
-    
-    const text = await TestUtils.waitForSuccess(
       async () => {
-        const itemText = await continueItem.getText();
-        const innerHTML = await continueItem.getAttribute('innerHTML');
-        const textContent = await continueItem.getAttribute('textContent');
-        
-        console.log("getText():", itemText);
-        console.log("innerHTML:", innerHTML);
-        console.log("textContent:", textContent);
-        
-        // Try different methods if getText() is empty
-        const finalText = itemText || textContent || '';
-        
-        if (!finalText || finalText.trim() === '') {
-          throw new Error('Text content not yet available');
+        // Clear any new notifications
+        try {
+          await GlobalActions.clearAllNotifications();
+        } catch (e) {
+          // Ignore
         }
         
-        return finalText;
+        const element = await statusBar.findElement(
+          By.xpath("//*[contains(text(), 'Continue')]")
+        );
+        
+        // Validate we can get text
+        const text = await element.getText();
+        if (!text || text.trim() === '') {
+          // Try alternative methods
+          const textContent = await element.getAttribute('textContent');
+          if (!textContent || textContent.trim() === '') {
+            throw new Error('Text not yet available');
+          }
+        }
+        
+        return element;
       },
       DEFAULT_TIMEOUT.MD
     );
-    console.log("text:");
-    console.log(text);
+
+    // Get text with retry
+    const text = await TestUtils.waitForSuccess(
+      async () => {
+        const itemText = await continueItem.getText();
+        if (!itemText || itemText.trim() === '') {
+          // Fallback to textContent
+          const textContent = await continueItem.getAttribute('textContent');
+          if (textContent && textContent.trim() !== '') {
+            return textContent;
+          }
+          throw new Error('Text content not yet available');
+        }
+        return itemText;
+      },
+      DEFAULT_TIMEOUT.MD
+    );
+    
+    console.log("Final text:", text);
     
     const hasNE = text.includes('(NE)');
-    console.log("hasNE:");
-    console.log(hasNE);
+    console.log("hasNE:", hasNE);
     
     if (hasNE !== enabled) {
       await workbench.executeCommand('Continue: Toggle Next Edit');
+      // Clear any resulting notifications
+      await TestUtils.waitForTimeout(500);
+      await GlobalActions.clearAllNotifications();
     }
   }
   
