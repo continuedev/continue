@@ -9,6 +9,7 @@ import { FileIndexService } from "./FileIndexService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
+import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   ApiClientServiceState,
@@ -26,6 +27,7 @@ const modelService = new ModelService();
 const apiClientService = new ApiClientService();
 const mcpService = new MCPService();
 const fileIndexService = new FileIndexService();
+const resourceMonitoringService = new ResourceMonitoringService();
 
 /**
  * Initialize all services and register them with the service container
@@ -219,6 +221,12 @@ export async function initializeServices(
     [],
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.RESOURCE_MONITORING,
+    () => resourceMonitoringService.initialize(),
+    [],
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -261,6 +269,7 @@ export function areServicesReady(): boolean {
     SERVICE_NAMES.MODEL,
     SERVICE_NAMES.MCP,
     SERVICE_NAMES.FILE_INDEX,
+    SERVICE_NAMES.RESOURCE_MONITORING,
   ].every((name) => serviceContainer.isReady(name));
 }
 
@@ -282,11 +291,13 @@ export const services = {
   mcp: mcpService,
   fileIndex: fileIndexService,
   mode: modeService,
+  resourceMonitoring: resourceMonitoringService,
 } as const;
 
 // Export the service container for advanced usage
 export { serviceContainer };
 
 // Export service names and types
-export type * from "./types.js";
-export { SERVICE_NAMES } from "./types.js";
+  export type * from "./types.js";
+  export { SERVICE_NAMES } from "./types.js";
+
