@@ -135,13 +135,8 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    const afterSlash = beforeCursor.slice(1);
-
-    // Check if we have whitespace in the command
-    if (afterSlash.includes(" ") || afterSlash.includes("\n")) {
-      setShowSlashCommands(false);
-      return;
-    }
+    // Get the complete slash command, not just the part before cursor
+    const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
