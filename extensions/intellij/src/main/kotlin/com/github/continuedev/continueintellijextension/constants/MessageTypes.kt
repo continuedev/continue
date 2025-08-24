@@ -135,6 +135,7 @@ class MessageTypes {
             "indexing/setPaused",
             "docs/initStatuses",
             "docs/getDetails",
+            "docs/getIndexedPages",
             //
             "onboarding/complete",
             "addAutocompleteModel",

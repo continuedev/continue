@@ -1,21 +1,19 @@
 import { DocsIndexingDetails } from "core";
-import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Tooltip } from "react-tooltip";
 import { SecondaryButton } from "../../../..";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../../redux/hooks";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../../redux/slices/uiSlice";
+
 interface DocsDetailsDialogProps {
   startUrl: string;
 }
+
 function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
-  const config = useAppSelector((store) => store.config.config);
-  const posthog = usePostHog();
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
@@ -49,7 +47,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   let comp = <div>Loading...</div>;
