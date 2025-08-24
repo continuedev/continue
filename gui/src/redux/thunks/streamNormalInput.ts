@@ -255,7 +255,6 @@ export const streamNormalInput = createAsyncThunk<
     const toolSettings = newState.ui.toolSettings;
     const allToolCallStates = selectCurrentToolCalls(newState);
 
-    console.log("ADDING EDITNG CURRENT FILE");
     await Promise.all(
       allToolCallStates.map((tcState) =>
         enhanceParsedArgs(
