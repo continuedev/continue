@@ -86,6 +86,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "isItemTooBig",
     "process/markAsBackgrounded",
     "process/isBackgrounded",
+    "process/cancelTerminalCommand",
   ];
 
 // Message types to pass through from core to webview
