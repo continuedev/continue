@@ -102,6 +102,7 @@ export const SERVICE_NAMES = {
   API_CLIENT: "apiClient",
   TOOL_PERMISSIONS: "toolPermissions",
   FILE_INDEX: "fileIndex",
+  RESOURCE_MONITORING: "resourceMonitoring",
 } as const;
 
 /**
