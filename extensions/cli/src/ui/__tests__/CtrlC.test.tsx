@@ -2,9 +2,8 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import { Selector } from "../Selector.js";
-import { MCPSelector } from "../MCPSelector.js";
 import { ConfigSelector } from "../ConfigSelector.js";
+import { Selector } from "../Selector.js";
 
 describe("Ctrl+C behavior", () => {
   let mockOnCancel: ReturnType<typeof vi.fn>;

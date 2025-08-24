@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("Process SIGINT handling functions", () => {
   it("exports the necessary functions for exit message handling", async () => {

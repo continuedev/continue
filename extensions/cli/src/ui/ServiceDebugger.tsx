@@ -1,7 +1,6 @@
 import { Box, Text } from "ink";
 import React from "react";
 
-import { defaultBoxStyles } from "./styles.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -9,6 +8,8 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
+
+import { defaultBoxStyles } from "./styles.js";
 
 interface ServiceDebuggerProps {
   services: {

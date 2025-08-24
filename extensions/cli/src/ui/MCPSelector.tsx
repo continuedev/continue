@@ -10,6 +10,7 @@ import {
   SERVICE_NAMES,
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
+
 import { defaultBoxStyles } from "./styles.js";
 
 // Utility function to get status icon and color based on server connection

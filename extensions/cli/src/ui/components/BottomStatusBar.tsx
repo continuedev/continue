@@ -31,7 +31,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   closeCurrentScreen,
   contextPercentage,
 }) => {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [_refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     setExitMessageCallback(() => {

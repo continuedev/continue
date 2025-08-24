@@ -1,10 +1,10 @@
 import { render, RenderOptions } from "ink";
 import React from "react";
 
+import { setTUIUnmount } from "../index.js";
 import { PermissionMode } from "../permissions/types.js";
 import { initializeServices } from "../services/index.js";
 import { ServiceContainerProvider } from "../services/ServiceContainerContext.js";
-import { setTUIUnmount } from "../index.js";
 
 import { AppRoot } from "./AppRoot.js";
 

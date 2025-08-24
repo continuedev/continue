@@ -3,6 +3,7 @@ import { Box, Text, useInput } from "ink";
 import React, { useMemo, useState } from "react";
 
 import { SessionMetadata } from "../session.js";
+
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
 import { defaultBoxStyles } from "./styles.js";
 
