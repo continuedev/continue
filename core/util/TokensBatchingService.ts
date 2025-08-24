@@ -13,7 +13,7 @@ export class TokensBatchingService {
   private static instance: TokensBatchingService;
   private batches = new Map<string, TokenBatch>();
   private flushTimer: NodeJS.Timeout | null = null;
-  
+
   private readonly BATCH_SIZE_LIMIT = 25;
   private readonly FLUSH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -28,9 +28,14 @@ export class TokensBatchingService {
     this.startFlushTimer();
   }
 
-  addTokens(model: string, provider: string, promptTokens: number, generatedTokens: number): void {
+  addTokens(
+    model: string,
+    provider: string,
+    promptTokens: number,
+    generatedTokens: number,
+  ): void {
     const key = `${provider}:${model}`;
-    
+
     if (!this.batches.has(key)) {
       this.batches.set(key, {
         model,
@@ -66,7 +71,9 @@ export class TokensBatchingService {
         totalPromptTokens: batch.totalPromptTokens,
         totalGeneratedTokens: batch.totalGeneratedTokens,
         avgPromptTokens: Math.round(batch.totalPromptTokens / batch.count),
-        avgGeneratedTokens: Math.round(batch.totalGeneratedTokens / batch.count),
+        avgGeneratedTokens: Math.round(
+          batch.totalGeneratedTokens / batch.count,
+        ),
       },
       true,
     );
