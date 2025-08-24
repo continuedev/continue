@@ -50,7 +50,7 @@ export function ResourceDebugBar({ visible }: ResourceDebugBarProps) {
     };
   }, [visible]);
 
-  if (!visible || !resourceData) {
+  if (!visible) {
     return null;
   }
 
@@ -60,6 +60,10 @@ export function ResourceDebugBar({ visible }: ResourceDebugBarProps) {
         <Text color="red">Resource monitoring error</Text>
       </Box>
     );
+  }
+
+  if (!resourceData) {
+    return null;
   }
 
   const memoryPercent =

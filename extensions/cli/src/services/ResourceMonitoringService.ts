@@ -1,4 +1,5 @@
 import { exec } from "child_process";
+import * as os from "os";
 import { promisify } from "util";
 
 import { logger } from "../util/logger.js";
@@ -265,10 +266,7 @@ class ResourceMonitoringService {
 
   private getLoadAverage(): number[] {
     try {
-      return process.platform !== "win32" &&
-        typeof (process as any).loadavg === "function"
-        ? (process as any).loadavg()
-        : [0, 0, 0];
+      return process.platform === "win32" ? [0, 0, 0] : os.loadavg();
     } catch {
       return [0, 0, 0];
     }
@@ -284,9 +282,7 @@ class ResourceMonitoringService {
 
   private getFreeMemory(): number {
     try {
-      return typeof (process as any).freemem === "function"
-        ? (process as any).freemem()
-        : 0;
+      return os.freemem();
     } catch {
       return 0;
     }
@@ -294,11 +290,9 @@ class ResourceMonitoringService {
 
   private getTotalMemory(): number {
     try {
-      return typeof (process as any).totalmem === "function"
-        ? (process as any).totalmem()
-        : 1024 * 1024 * 1024; // 1GB default
+      return os.totalmem();
     } catch {
-      return 1024 * 1024 * 1024; // 1GB default
+      return 1024 * 1024 * 1024; // 1GB default fallback
     }
   }
 

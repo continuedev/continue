@@ -15,6 +15,7 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
+import { logger } from "../util/logger.js";
 
 import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ResourceDebugBar } from "./components/ResourceDebugBar.js";
@@ -64,7 +65,7 @@ async function loadAndSetSession(
     // Load the session history
     const sessionHistory = loadSessionById(sessionId);
     if (!sessionHistory) {
-      console.error(`Session ${sessionId} could not be loaded.`);
+      logger.error(`Session ${sessionId} could not be loaded.`);
       return;
     }
 
