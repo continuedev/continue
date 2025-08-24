@@ -62,7 +62,12 @@ describe("loadMcpFromHub", () => {
     });
 
     const result = await loadMcpFromHub("continuedev/test-mcp");
-    expect(result).toEqual(mockConfig);
+    // Should now parse the YAML content and return the parsed object
+    expect(result).toEqual({
+      name: "test-mcp",
+      command: "npx test-mcp",
+      args: ["--port", 3000]
+    });
   });
 
   it("should handle missing configuration files", async () => {

@@ -93,7 +93,11 @@ describe("hubLoader", () => {
       });
 
       const result = await loadPackageFromHub("owner/mcp", mcpProcessor);
-      expect(result).toEqual(mcpConfig);
+      // Should parse the YAML content, not return the wrapper
+      expect(result).toEqual({
+        name: "test-mcp",
+        version: "1.0.0"
+      });
     });
 
     it("should handle missing files", async () => {
@@ -186,11 +190,12 @@ describe("hubLoader", () => {
       
       expect(result).toBeDefined();
       expect(typeof result).toBe("object");
-      // The registry returns an object with a content field containing the YAML/JSON
-      expect(result).toHaveProperty("content");
-      expect(typeof result.content).toBe("string");
-      // The content should contain MCP configuration
-      expect(result.content).toContain("mcp");
+      // Should now return the parsed MCP configuration
+      expect(result).toHaveProperty("name");
+      expect(typeof result.name).toBe("string");
+      // The MCP should have type and url properties
+      expect(result).toHaveProperty("type");
+      expect(result).toHaveProperty("url");
     }, 30000);
 
     it("should load model from real hub: openai/gpt-5", async () => {
@@ -203,12 +208,14 @@ describe("hubLoader", () => {
       
       expect(result).toBeDefined();
       expect(typeof result).toBe("object");
-      // The registry returns an object with a content field containing the model configuration
-      expect(result).toHaveProperty("content");
-      expect(typeof result.content).toBe("string");
-      // The content should contain model configuration
-      expect(result.content).toContain("model");
-      expect(result.content).toContain("gpt-5");
+      // Should now return the extracted model from the models array
+      expect(result).toHaveProperty("name");
+      expect(result).toHaveProperty("provider");
+      expect(result).toHaveProperty("model");
+      // Check that the model properties are correct
+      expect(result.provider).toBe("openai");
+      expect(result.model).toBe("gpt-5");
+      expect(result.name).toBe("GPT-5");
     }, 30000);
 
     it("should load prompt from real hub: launchdarkly/using-flags", async () => {

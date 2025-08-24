@@ -127,4 +127,56 @@ describe("ConfigEnhancer", () => {
     expect(config.rules?.[0]).toBe("./rules/my-rule.md");
     expect(config.rules?.[1]).toBe("/absolute/path/rule.txt");
   });
+
+  it("should prepend models from --model flag to make them default", async () => {
+    // Mock loadPackagesFromHub to return test models
+    const { loadPackagesFromHub } = await import("./hubLoader.js");
+    (loadPackagesFromHub as any).mockResolvedValueOnce([
+      { name: "GPT-5", provider: "openai", model: "gpt-5" },
+      { name: "Claude-3", provider: "anthropic", model: "claude-3" },
+    ]);
+
+    // Set up existing models in config
+    mockConfig.models = [
+      { name: "GPT-4", provider: "openai", model: "gpt-4" },
+      { name: "Claude-2", provider: "anthropic", model: "claude-2" },
+    ];
+
+    const options: BaseCommandOptions = {
+      model: ["openai/gpt-5", "anthropic/claude-3"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    // Models from --model flag should be prepended (at the start)
+    expect(config.models).toHaveLength(4);
+    expect(config.models?.[0]).toEqual({ name: "GPT-5", provider: "openai", model: "gpt-5" });
+    expect(config.models?.[1]).toEqual({ name: "Claude-3", provider: "anthropic", model: "claude-3" });
+    expect(config.models?.[2]).toEqual({ name: "GPT-4", provider: "openai", model: "gpt-4" });
+    expect(config.models?.[3]).toEqual({ name: "Claude-2", provider: "anthropic", model: "claude-2" });
+  });
+
+  it("should prepend MCPs from --mcp flag", async () => {
+    // Mock loadPackagesFromHub to return test MCPs
+    const { loadPackagesFromHub } = await import("./hubLoader.js");
+    (loadPackagesFromHub as any).mockResolvedValueOnce([
+      { name: "New-MCP", command: "new-mcp" },
+    ]);
+
+    // Set up existing MCPs in config
+    mockConfig.mcpServers = [
+      { name: "Existing-MCP", command: "existing-mcp" },
+    ];
+
+    const options: BaseCommandOptions = {
+      mcp: ["test/new-mcp"],
+    };
+
+    const config = await enhancer.enhanceConfig(mockConfig, options);
+
+    // MCPs from --mcp flag should be prepended (at the start)
+    expect(config.mcpServers).toHaveLength(2);
+    expect(config.mcpServers?.[0]).toEqual({ name: "New-MCP", command: "new-mcp" });
+    expect(config.mcpServers?.[1]).toEqual({ name: "Existing-MCP", command: "existing-mcp" });
+  });
 });

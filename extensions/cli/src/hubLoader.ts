@@ -34,12 +34,21 @@ export const mcpProcessor: HubPackageProcessor<any> = {
   type: "mcp",
   expectedFileExtensions: [".json", ".yaml", ".yml"],
   parseContent: async (content: string, filename: string) => {
+    let parsed;
     if (filename.endsWith(".json")) {
-      return JSON.parse(content);
+      parsed = JSON.parse(content);
     } else {
       const yaml = await import("yaml");
-      return yaml.parse(content);
+      parsed = yaml.parse(content);
     }
+    
+    // If the parsed content has an 'mcpServers' array, extract the first MCP server
+    // This handles hub packages that return a full config block
+    if (parsed.mcpServers && Array.isArray(parsed.mcpServers) && parsed.mcpServers.length > 0) {
+      return parsed.mcpServers[0];
+    }
+    
+    return parsed;
   },
 };
 
@@ -50,12 +59,21 @@ export const modelProcessor: HubPackageProcessor<any> = {
   type: "model",
   expectedFileExtensions: [".json", ".yaml", ".yml"],
   parseContent: async (content: string, filename: string) => {
+    let parsed;
     if (filename.endsWith(".json")) {
-      return JSON.parse(content);
+      parsed = JSON.parse(content);
     } else {
       const yaml = await import("yaml");
-      return yaml.parse(content);
+      parsed = yaml.parse(content);
     }
+    
+    // If the parsed content has a 'models' array, extract the first model
+    // This handles hub packages that return a full config block
+    if (parsed.models && Array.isArray(parsed.models) && parsed.models.length > 0) {
+      return parsed.models[0];
+    }
+    
+    return parsed;
   },
 };
 
@@ -109,9 +127,21 @@ export async function loadPackageFromHub<T>(
 
     // Check if this is a registry endpoint (returns JSON directly) or a zip file
     if (processor.type === "mcp" || processor.type === "model") {
-      // Registry endpoints return JSON directly
-      const jsonContent = await response.json();
-      return jsonContent;
+      // Registry endpoints return JSON with a 'content' field containing YAML/JSON
+      const jsonResponse = await response.json();
+      
+      // Extract and parse the content field
+      if (jsonResponse.content) {
+        // Parse the YAML/JSON content
+        const parsedContent = await processor.parseContent(
+          jsonResponse.content,
+          `${slug}.yaml`,
+        );
+        return parsedContent;
+      } else {
+        // If there's no content field, return the response as-is (backward compatibility)
+        return jsonResponse;
+      }
     } else {
       // v0 endpoints return zip files
       const arrayBuffer = await response.arrayBuffer();

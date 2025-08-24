@@ -103,11 +103,11 @@ export class ConfigEnhancer {
     // Clone the config to avoid mutating the original
     const modifiedConfig = { ...config };
 
-    // Add processed MCPs to existing mcpServers array
+    // Prepend processed MCPs to existing mcpServers array for consistency
     const existingMcpServers = (modifiedConfig as any).mcpServers || [];
     (modifiedConfig as any).mcpServers = [
-      ...existingMcpServers,
       ...processedMcps,
+      ...existingMcpServers,
     ];
 
     return modifiedConfig;
@@ -125,9 +125,9 @@ export class ConfigEnhancer {
     // Clone the config to avoid mutating the original
     const modifiedConfig = { ...config };
 
-    // Add processed models to existing models array
+    // Prepend processed models to existing models array so they become the default
     const existingModels = (modifiedConfig as any).models || [];
-    (modifiedConfig as any).models = [...existingModels, ...processedModels];
+    (modifiedConfig as any).models = [...processedModels, ...existingModels];
 
     return modifiedConfig;
   }
