@@ -1,5 +1,11 @@
 import { Box, Text } from "ink";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { useServices } from "../hooks/useService.js";
 import {
@@ -91,7 +97,7 @@ async function loadAndSetSession(
 // Custom hook to manage services
 function useTUIChatServices(remoteUrl?: string) {
   const isRemoteMode = useMemo(() => !!remoteUrl, [remoteUrl]);
-  
+
   const { services, allReady: allServicesReady } = useServices<{
     auth: AuthServiceState;
     config: ConfigServiceState;
@@ -99,7 +105,7 @@ function useTUIChatServices(remoteUrl?: string) {
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
   }>(["auth", "config", "model", "mcp", "apiClient"]);
-  
+
   return { services, allServicesReady, isRemoteMode };
 }
 
@@ -110,7 +116,7 @@ function useChatHandlers(
 ) {
   // Temporary refs to avoid circular dependency
   const resetChatHistoryRef = useRef<(() => void) | null>(null);
-  
+
   // Handle clearing chat and resetting intro message
   const handleClear = useCallback(() => {
     setShowIntroMessage(true);
@@ -146,7 +152,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
   additionalPrompts,
 }) => {
   // Use custom hook for services
-  const { services, allServicesReady, isRemoteMode } = useTUIChatServices(remoteUrl);
+  const { services, allServicesReady, isRemoteMode } =
+    useTUIChatServices(remoteUrl);
 
   const repoURlText = useMemo(() => getRepoUrlText(remoteUrl), [remoteUrl]);
 
@@ -257,7 +264,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     navState.currentScreen !== "chat" || !!activePermissionRequest;
 
   // Check if verbose mode is enabled for resource debugging
-  const isVerboseMode = useMemo(() => process.argv.includes('--verbose'), []);
+  const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
 
   return (
     <Box flexDirection="column" height="100%">

@@ -62,9 +62,11 @@ export function ResourceDebugBar({ visible }: ResourceDebugBarProps) {
     );
   }
 
-  const memoryPercent = (resourceData.memory.rss / resourceData.system.totalMemory) * 100;
+  const memoryPercent =
+    (resourceData.memory.rss / resourceData.system.totalMemory) * 100;
   const cpuPercent = resourceData.cpu.percent || 0;
-  const heapPercent = (resourceData.memory.heapUsed / resourceData.memory.heapTotal) * 100;
+  const heapPercent =
+    (resourceData.memory.heapUsed / resourceData.memory.heapTotal) * 100;
 
   // Color coding based on usage levels
   const getMemoryColor = () => {
@@ -88,35 +90,29 @@ export function ResourceDebugBar({ visible }: ResourceDebugBarProps) {
   return (
     <Box paddingX={1}>
       <Text color="gray">Debug: </Text>
-      
+
       <Text color={getMemoryColor()}>
         MEM: {formatBytes(resourceData.memory.rss)}
       </Text>
       <Text color="gray"> | </Text>
-      
-      <Text color="gray">
-        HEAP: {formatPercent(heapPercent)}
-      </Text>
+
+      <Text color="gray">HEAP: {formatPercent(heapPercent)}</Text>
       <Text color="gray"> | </Text>
-      
-      <Text color={getCpuColor()}>
-        CPU: {formatPercent(cpuPercent)}
-      </Text>
+
+      <Text color={getCpuColor()}>CPU: {formatPercent(cpuPercent)}</Text>
       <Text color="gray"> | </Text>
-      
+
       <Text color={getEventLoopColor()}>
         LAG: {formatTime(resourceData.eventLoop.lag)}
       </Text>
-      
+
       {resourceData.fileDescriptors && (
         <>
           <Text color="gray"> | </Text>
-          <Text color="gray">
-            FD: {resourceData.fileDescriptors}
-          </Text>
+          <Text color="gray">FD: {resourceData.fileDescriptors}</Text>
         </>
       )}
-      
+
       <Text color="gray"> | </Text>
       <Text color="gray">
         UP: {formatTime(resourceData.system.uptime * 1000)}
@@ -151,21 +147,29 @@ export function ResourceDebugDetails({ visible }: { visible: boolean }) {
   }
 
   return (
-    <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1} marginTop={1}>
-      <Text color="cyan" bold>Resource Usage Summary</Text>
-      
+    <Box
+      flexDirection="column"
+      borderStyle="single"
+      borderColor="gray"
+      paddingX={1}
+      marginTop={1}
+    >
+      <Text color="cyan" bold>
+        Resource Usage Summary
+      </Text>
+
       <Box marginTop={1}>
         <Text color="gray">Current: </Text>
         <Text>{formatBytes(summary.current.memory.rss)} mem, </Text>
         <Text>{formatPercent(summary.current.cpu.percent || 0)} cpu</Text>
       </Box>
-      
+
       <Box>
         <Text color="gray">Peak: </Text>
         <Text>{formatBytes(summary.peak.memory)} mem, </Text>
         <Text>{formatPercent(summary.peak.cpu)} cpu</Text>
       </Box>
-      
+
       <Box>
         <Text color="gray">Average: </Text>
         <Text>{formatBytes(summary.average.memory)} mem, </Text>

@@ -171,7 +171,9 @@ class ResourceMonitoringService {
       };
     }
 
-    const peakMemory = Math.max(...this.resourceHistory.map((r) => r.memory.rss));
+    const peakMemory = Math.max(
+      ...this.resourceHistory.map((r) => r.memory.rss),
+    );
     const peakCpu = Math.max(
       ...this.resourceHistory.map((r) => r.cpu.percent || 0),
     );
