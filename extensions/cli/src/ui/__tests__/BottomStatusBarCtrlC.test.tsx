@@ -25,7 +25,7 @@ describe("BottomStatusBar Ctrl+C message", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     // Reset mocks to default state
-    const indexModule = await vi.importMock("../../index.js") as any;
+    const indexModule = (await vi.importMock("../../index.js")) as any;
     indexModule.shouldShowExitMessage.mockReturnValue(false);
   });
 
@@ -34,7 +34,7 @@ describe("BottomStatusBar Ctrl+C message", () => {
   });
 
   it("shows repo URL when not in exit message mode", async () => {
-    const indexModule = await vi.importMock("../../index.js") as any;
+    const indexModule = (await vi.importMock("../../index.js")) as any;
     indexModule.shouldShowExitMessage.mockReturnValue(false);
 
     const { lastFrame } = render(<BottomStatusBar {...defaultProps} />);
@@ -44,7 +44,7 @@ describe("BottomStatusBar Ctrl+C message", () => {
   });
 
   it("shows exit message when shouldShowExitMessage returns true", async () => {
-    const indexModule = await vi.importMock("../../index.js") as any;
+    const indexModule = (await vi.importMock("../../index.js")) as any;
     indexModule.shouldShowExitMessage.mockReturnValue(true);
 
     const { lastFrame } = render(<BottomStatusBar {...defaultProps} />);
@@ -54,10 +54,12 @@ describe("BottomStatusBar Ctrl+C message", () => {
   });
 
   it("registers exit message callback on mount", async () => {
-    const indexModule = await vi.importMock("../../index.js") as any;
-    
+    const indexModule = (await vi.importMock("../../index.js")) as any;
+
     render(<BottomStatusBar {...defaultProps} />);
 
-    expect(indexModule.setExitMessageCallback).toHaveBeenCalledWith(expect.any(Function));
+    expect(indexModule.setExitMessageCallback).toHaveBeenCalledWith(
+      expect.any(Function),
+    );
   });
 });

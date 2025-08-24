@@ -13,8 +13,15 @@ interface ControlKeysOptions {
 }
 
 export function handleControlKeys(options: ControlKeysOptions): boolean {
-  const { input, key, exit, showSlashCommands, showFileSearch, cycleModes, clearInput } =
-    options;
+  const {
+    input,
+    key,
+    exit,
+    showSlashCommands,
+    showFileSearch,
+    cycleModes,
+    clearInput,
+  } = options;
 
   // Handle Ctrl+C with two-stage exit, Ctrl+D immediately exits
   if (key.ctrl && input === "c") {

@@ -10,7 +10,7 @@ describe("Ctrl+C input clearing", () => {
 
   beforeEach(() => {
     mockOnSubmit = vi.fn();
-    
+
     // Mock process.kill for SIGINT simulation
     mockProcess = {
       kill: vi.fn(),
@@ -28,10 +28,10 @@ describe("Ctrl+C input clearing", () => {
     const { stdin } = render(
       <UserInput
         onSubmit={mockOnSubmit}
-        onExit={vi.fn()}
+        inputMode={true}
         disabled={false}
         isWaitingForResponse={false}
-      />
+      />,
     );
 
     // Type some text first
@@ -48,10 +48,10 @@ describe("Ctrl+C input clearing", () => {
     const { stdin } = render(
       <UserInput
         onSubmit={mockOnSubmit}
-        onExit={vi.fn()}
+        inputMode={true}
         disabled={false}
         isWaitingForResponse={false}
-      />
+      />,
     );
 
     // Simulate Ctrl+C

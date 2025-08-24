@@ -14,7 +14,7 @@ describe("Ctrl+C behavior", () => {
   beforeEach(() => {
     mockOnCancel = vi.fn();
     mockOnSelect = vi.fn();
-    
+
     // Mock process.exit for testing
     mockProcess = {
       exit: vi.fn(),
@@ -32,7 +32,7 @@ describe("Ctrl+C behavior", () => {
     it("calls onCancel when Ctrl+C is pressed", () => {
       const options = [
         { id: "1", name: "Option 1" },
-        { id: "2", name: "Option 2" }
+        { id: "2", name: "Option 2" },
       ];
 
       const { stdin } = render(
@@ -45,7 +45,7 @@ describe("Ctrl+C behavior", () => {
           onSelect={mockOnSelect}
           onCancel={mockOnCancel}
           onNavigate={vi.fn()}
-        />
+        />,
       );
 
       // Simulate Ctrl+C
@@ -69,7 +69,7 @@ describe("Ctrl+C behavior", () => {
           onSelect={mockOnSelect}
           onCancel={mockOnCancel}
           onNavigate={vi.fn()}
-        />
+        />,
       );
 
       // Simulate Ctrl+C during loading
@@ -91,7 +91,7 @@ describe("Ctrl+C behavior", () => {
           onSelect={mockOnSelect}
           onCancel={mockOnCancel}
           onNavigate={vi.fn()}
-        />
+        />,
       );
 
       // Simulate Ctrl+C during error
@@ -104,10 +104,7 @@ describe("Ctrl+C behavior", () => {
   describe("ConfigSelector component", () => {
     it("calls onCancel when Ctrl+C is pressed", () => {
       const { stdin } = render(
-        <ConfigSelector
-          onSelect={mockOnSelect}
-          onCancel={mockOnCancel}
-        />
+        <ConfigSelector onSelect={mockOnSelect} onCancel={mockOnCancel} />,
       );
 
       // Simulate Ctrl+C

@@ -119,7 +119,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         // Determine current config by checking both auth config and service state
         const assistantSlug = getAssistantSlug(authConfig);
         const currentConfigState = services.config.getState();
-        
+
         if (assistantSlug) {
           // Find the matching config by slug and organization
           const matchingConfig = options.find(
@@ -129,7 +129,10 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
               opt.organizationId === currentOrganizationId,
           );
           currentId = matchingConfig?.id || null;
-        } else if (currentConfigState.configPath === CONFIG_PATH && fs.existsSync(CONFIG_PATH)) {
+        } else if (
+          currentConfigState.configPath === CONFIG_PATH &&
+          fs.existsSync(CONFIG_PATH)
+        ) {
           // Only mark local config as current if it's actually the active config path in the service
           // This ensures we don't show a green checkmark for first-time users just because the file exists
           currentId = "local";

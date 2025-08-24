@@ -135,7 +135,7 @@ const FreeTrialTransitionUI: React.FC<FreeTrialTransitionUIProps> = ({
       closeCurrentScreen();
       return;
     }
-    
+
     // Handle Ctrl+C with two-stage exit (delegates to main process)
     if (key.ctrl && input === "c") {
       process.kill(process.pid, "SIGINT");

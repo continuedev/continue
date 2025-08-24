@@ -52,7 +52,7 @@ export function Selector<T extends SelectorOption>({
 
   useInput((input, key) => {
     if (loading || error) return; // Skip normal input handling during loading/error
-    
+
     if (key.escape || (key.ctrl && input === "c")) {
       onCancel();
       return;
