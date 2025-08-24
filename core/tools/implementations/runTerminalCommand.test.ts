@@ -4,7 +4,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { IDE, ToolExtras } from "../..";
-import * as processBackgroundStates from "../../util/processTerminalBackgroundStates";
+import * as processTerminalStates from "../../util/processTerminalStates";
 import { runTerminalCommandImpl } from "./runTerminalCommand";
 
 // We're using real child processes, so ensure these aren't mocked
@@ -31,7 +31,7 @@ describe("runTerminalCommandImpl", () => {
 
     // Setup backgrounded processes handling - don't mock, just make sure it's empty
     // Get any processes that might be already tracked and clear them
-    const processMap = (processBackgroundStates as any)
+    const processMap = (processTerminalStates as any)
       .processTerminalBackgroundStates;
     if (processMap && typeof processMap.clear === "function") {
       processMap.clear();
