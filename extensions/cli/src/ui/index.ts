@@ -15,6 +15,7 @@ interface StartTUIChatOptions {
   configPath?: string;
   organizationSlug?: string;
   additionalRules?: string[];
+  additionalPrompts?: string[];
   toolPermissionOverrides?: {
     allow?: string[];
     ask?: string[];
@@ -33,6 +34,7 @@ export async function startTUIChat(
     configPath,
     organizationSlug,
     additionalRules,
+    additionalPrompts,
     toolPermissionOverrides,
     skipOnboarding,
     customStdin,
@@ -64,6 +66,7 @@ export async function startTUIChat(
         initialPrompt,
         resume,
         additionalRules,
+        additionalPrompts,
       }),
     }),
     renderOptions,

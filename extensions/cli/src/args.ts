@@ -12,6 +12,7 @@ export interface CommandLineArgs {
   resume?: boolean; // Resume from last session
   readonly?: boolean; // Start in plan mode (backward compatibility)
   rules?: string[]; // Array of rule specifications
+  prompts?: string[]; // Array of prompt specifications
   format?: "json"; // Output format for headless mode
 }
 
@@ -83,31 +84,23 @@ async function loadRuleFromHub(slug: string): Promise<string> {
 }
 
 /**
- * Process a rule specification and return its content
- * @param ruleSpec - Can be a file path, hub slug, or direct string content
- * @returns The processed rule content
+ * Process a specification (rule or prompt) and return its content
+ * @param spec - Can be a file path, hub slug, or direct string content
+ * @returns The processed content
  */
-export async function processRule(ruleSpec: string): Promise<string> {
+export async function processPromptOrRule(spec: string): Promise<string> {
   // If it looks like a hub slug (contains / but doesn't start with . or /)
-  if (
-    ruleSpec.includes("/") &&
-    !ruleSpec.startsWith(".") &&
-    !ruleSpec.startsWith("/")
-  ) {
-    return await loadRuleFromHub(ruleSpec);
+  if (spec.includes("/") && !spec.startsWith(".") && !spec.startsWith("/")) {
+    return await loadRuleFromHub(spec);
   }
 
   // If it looks like a file path (contains . or / or ends with common file extensions)
-  if (
-    ruleSpec.includes(".") ||
-    ruleSpec.includes("/") ||
-    ruleSpec.includes("\\")
-  ) {
-    return loadRuleFromFile(ruleSpec);
+  if (spec.includes(".") || spec.includes("/") || spec.includes("\\")) {
+    return loadRuleFromFile(spec);
   }
 
   // Otherwise, treat it as direct string content
-  return ruleSpec;
+  return spec;
 }
 
 /**
@@ -115,6 +108,7 @@ export async function processRule(ruleSpec: string): Promise<string> {
  * @deprecated Most functionality has been moved to services. This is only kept for backward compatibility.
  * @returns Parsed command line arguments
  */
+/* eslint-disable */
 export function parseArgs(): CommandLineArgs {
   const args = process.argv.slice(2);
 
@@ -170,8 +164,40 @@ export function parseArgs(): CommandLineArgs {
     }
   }
 
+  // Get prompts from --prompt flags (can be specified multiple times)
+  const promptIndices: number[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--prompt") {
+      promptIndices.push(i);
+    }
+  }
+
+  if (promptIndices.length > 0) {
+    result.prompts = [];
+    for (const promptIndex of promptIndices) {
+      if (promptIndex + 1 >= args.length) {
+        throw new Error("--prompt flag requires a value");
+      }
+
+      const promptValue = args[promptIndex + 1];
+
+      // Check if the next argument is actually another flag
+      if (promptValue.startsWith("--")) {
+        throw new Error("--prompt flag requires a value, found flag instead");
+      }
+
+      result.prompts.push(promptValue);
+    }
+  }
+
   // Find the last argument that's not a flag or a flag value
-  const flagsWithValues = ["--config", "--org", "--rule", "--format"];
+  const flagsWithValues = [
+    "--config",
+    "--org",
+    "--rule",
+    "--prompt",
+    "--format",
+  ];
   const nonFlagArgs = args.filter((arg, index) => {
     // Skip flags (starting with --)
     if (arg.startsWith("--") || arg === "-p") return false;
