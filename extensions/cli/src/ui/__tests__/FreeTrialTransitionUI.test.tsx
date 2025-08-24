@@ -37,7 +37,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
       expect(frame).toContain("1. 💳 Sign up for models add-on");
       expect(frame).toContain("2. 🔑 Enter your Anthropic API key");
       expect(frame).toContain("3. ⚙️ Switch to a different configuration");
-      expect(frame).toContain("Use ↑↓ arrows or 1/2/3 to select");
+      expect(frame).toContain("↑/↓ to navigate or 1/2/3 to select");
     });
 
     it("highlights first option by default", () => {
@@ -46,10 +46,10 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
       );
 
       const frame = lastFrame();
-      expect(frame).toContain("▶ 1. 💳 Sign up for models add-on");
-      expect(frame).not.toContain("▶ 2. 🔑 Enter your Anthropic API key");
+      expect(frame).toContain("➤ 1. 💳 Sign up for models add-on");
+      expect(frame).not.toContain("➤ 2. 🔑 Enter your Anthropic API key");
       expect(frame).not.toContain(
-        "▶ 3. ⚙️ Switch to a different configuration",
+        "➤ 3. ⚙️ Switch to a different configuration",
       );
     });
 
@@ -85,7 +85,7 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
       const frame = lastFrame();
       expect(frame).toContain("Choose how you'd like to continue:");
       expect(frame).toContain(
-        "Use ↑↓ arrows or 1/2/3 to select, Enter to confirm",
+        "↑/↓ to navigate or 1/2/3 to select, Enter to confirm",
       );
     });
 
@@ -155,9 +155,9 @@ describe("FreeTrialTransitionUI - Rendering and Props Tests", () => {
         line.includes("Switch to a different configuration"),
       );
 
-      expect(modelsLine).toContain("▶");
-      expect(apiKeyLine).not.toContain("▶");
-      expect(configLine).not.toContain("▶");
+      expect(modelsLine).toContain("➤");
+      expect(apiKeyLine).not.toContain("➤");
+      expect(configLine).not.toContain("➤");
     });
   });
 
