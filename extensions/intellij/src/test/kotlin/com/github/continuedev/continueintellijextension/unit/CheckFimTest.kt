@@ -1,7 +1,7 @@
 package com.github.continuedev.continueintellijextension.unit
 
 import com.github.continuedev.continueintellijextension.FimResult
-import com.github.continuedev.continueintellijextension.utils.checkFim
+import com.github.continuedev.continueintellijextension.nextEdit.NextEditUtils.checkFim
 import junit.framework.TestCase
 
 class CheckFimTest : TestCase() {
