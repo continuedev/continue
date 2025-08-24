@@ -104,7 +104,20 @@ export class GlobalActions {
     console.log("continueItem:");
     console.log(continueItem);
     
-    const text = await continueItem.getText();
+    const text = await TestUtils.waitForSuccess(
+      async () => {
+        const itemText = await continueItem.getText();
+        console.log("Attempting to get text:", itemText);
+        
+        // Ensure we have actual text content.
+        if (!itemText || itemText.trim() === '') {
+          throw new Error('Text content not yet available');
+        }
+        
+        return itemText;
+      },
+      DEFAULT_TIMEOUT.MD
+    );
     console.log("text:");
     console.log(text);
     
