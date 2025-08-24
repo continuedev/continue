@@ -25,6 +25,16 @@ export function addCommonOptions(command: Command): Command {
       [] as string[],
     )
     .option(
+      "--prompt <prompt>",
+      "Add to the initial user message (can be a file path, hub slug, or string content). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[],
+    )
+    .option(
       "--allow <tool>",
       "Allow specified tool (overrides default policies). Can be specified multiple times.",
       (value: string, previous: string[] | undefined) => {
@@ -70,6 +80,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "tools",
     "verbose",
     "rule",
+    "prompt",
     "allow",
     "ask",
     "exclude",

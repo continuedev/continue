@@ -6,7 +6,7 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
-import { processRule } from "./args.js";
+import { processPromptOrRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { env } from "./env.js";
@@ -238,7 +238,7 @@ async function injectRulesIntoConfig(
   const processedRules: string[] = [];
   for (const ruleSpec of rules) {
     try {
-      const processedRule = await processRule(ruleSpec);
+      const processedRule = await processPromptOrRule(ruleSpec);
       processedRules.push(processedRule);
     } catch (error: any) {
       console.warn(
