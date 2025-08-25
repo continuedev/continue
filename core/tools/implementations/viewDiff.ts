@@ -29,8 +29,8 @@ export const viewDiffImpl: ToolImpl = async (args, extras) => {
 
   if (truncated) {
     contextItems.push({
-      name: "Diff truncation warning",
-      description: "Informs that git diff was truncated",
+      name: "Truncation warning",
+      description: "",
       content: `The git diff was truncated because it exceeded ${DEFAULT_GIT_DIFF_LINE_LIMIT} lines. Consider viewing specific files or focusing on smaller changes.`,
     });
   }

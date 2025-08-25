@@ -77,11 +77,8 @@ function stripThinkTags(response: string): string {
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
-  rule?: string[]; // Array of rule specifications
-  prompt?: string[]; // Array of prompt specifications
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
-  org?: string; // Organization slug to use for this session
 }
 
 export async function initializeChatHistory(
@@ -370,9 +367,7 @@ async function runHeadlessMode(
   const { permissionOverrides } = processCommandFlags(options);
 
   await initializeServices({
-    configPath: options.config,
-    organizationSlug: options.org,
-    rules: options.rule,
+    options,
     headless: true,
     toolPermissionOverrides: permissionOverrides,
   });
@@ -460,9 +455,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
       // Initialize services with onboarding handled internally
       const initResult = await initializeServices({
-        configPath: options.config,
-        organizationSlug: options.org,
-        rules: options.rule,
+        options,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
@@ -479,10 +472,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const tuiOptions: any = {
         initialPrompt: prompt,
         resume: options.resume,
-        configPath: options.config,
-        organizationSlug: options.org,
-        additionalRules: options.rule,
-        additionalPrompts: options.prompt,
+        config: options.config,
+        org: options.org,
+        rule: options.rule,
+        prompt: options.prompt,
         toolPermissionOverrides: permissionOverrides,
         skipOnboarding: true,
       };

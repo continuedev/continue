@@ -1,8 +1,8 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
-import { processPromptOrRule } from "../args.js";
 import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
+import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
+import { configEnhancer } from "../configEnhancer.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
@@ -41,9 +41,9 @@ export class ConfigService
   async doInitialize(
     authConfig: AuthConfig,
     configPath: string | undefined,
-    organizationId: string | null,
+    _organizationId: string | null,
     apiClient: DefaultApiInterface,
-    rules?: string[],
+    injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
     // Use the new streamlined config loader
     const { loadConfiguration } = await import("../configLoader.js");
@@ -51,9 +51,17 @@ export class ConfigService
 
     let config = result.config;
 
-    // Inject rules if provided
-    if (rules && rules.length > 0) {
-      config = await this.injectRulesIntoConfig(config, rules);
+    // Apply injected config if provided
+    if (
+      injectedConfigOptions &&
+      this.hasInjectedConfig(injectedConfigOptions)
+    ) {
+      config = await configEnhancer.enhanceConfig(
+        config,
+        injectedConfigOptions,
+      );
+
+      logger.debug("Applied injected configuration");
     }
 
     // Config URI persistence is now handled by the streamlined loader
@@ -72,9 +80,9 @@ export class ConfigService
   async switchConfig(
     newConfigPath: string,
     authConfig: AuthConfig,
-    organizationId: string | null,
+    _organizationId: string | null,
     apiClient: DefaultApiInterface,
-    rules?: string[],
+    injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
     logger.debug("Switching configuration", {
       from: this.currentState.configPath,
@@ -92,9 +100,17 @@ export class ConfigService
 
       let config = result.config;
 
-      // Inject rules if provided
-      if (rules && rules.length > 0) {
-        config = await this.injectRulesIntoConfig(config, rules);
+      // Apply injected config if provided
+      if (
+        injectedConfigOptions &&
+        this.hasInjectedConfig(injectedConfigOptions)
+      ) {
+        config = await configEnhancer.enhanceConfig(
+          config,
+          injectedConfigOptions,
+        );
+
+        logger.debug("Applied injected configuration");
       }
 
       this.setState({
@@ -121,9 +137,9 @@ export class ConfigService
    */
   async reload(
     authConfig: AuthConfig,
-    organizationId: string | null,
+    _organizationId: string | null,
     apiClient: DefaultApiInterface,
-    rules?: string[],
+    injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
     if (!this.currentState.configPath) {
       throw new Error("No configuration path available for reload");
@@ -134,53 +150,22 @@ export class ConfigService
     return this.switchConfig(
       this.currentState.configPath,
       authConfig,
-      organizationId,
+      _organizationId,
       apiClient,
-      rules,
+      injectedConfigOptions,
     );
   }
 
   /**
-   * Process rules and inject them into the assistant config
+   * Check if injected config options contain any config to inject
    */
-  private async injectRulesIntoConfig(
-    config: AssistantUnrolled,
-    rules: string[],
-  ): Promise<AssistantUnrolled> {
-    if (!rules || rules.length === 0) {
-      return config;
-    }
-
-    const processedRules: string[] = [];
-
-    for (const ruleSpec of rules) {
-      try {
-        const processedRule = await processPromptOrRule(ruleSpec);
-        processedRules.push(processedRule);
-      } catch (error: any) {
-        logger.warn(`Failed to process rule "${ruleSpec}": ${error.message}`);
-      }
-    }
-
-    if (processedRules.length === 0) {
-      return config;
-    }
-
-    // Clone the config to avoid mutating the original
-    const modifiedConfig = { ...config };
-
-    // Combine processed rules with existing system message if the config has one
-    const existingSystemMessage = (modifiedConfig as any).systemMessage || "";
-    const rulesSection = processedRules.join("\n\n");
-
-    if (existingSystemMessage) {
-      (modifiedConfig as any).systemMessage =
-        `${existingSystemMessage}\n\n${rulesSection}`;
-    } else {
-      (modifiedConfig as any).systemMessage = rulesSection;
-    }
-
-    return modifiedConfig;
+  private hasInjectedConfig(options: BaseCommandOptions): boolean {
+    return !!(
+      (options.rule && options.rule.length > 0) ||
+      (options.mcp && options.mcp.length > 0) ||
+      (options.model && options.model.length > 0) ||
+      (options.prompt && options.prompt.length > 0)
+    );
   }
 
   /**
