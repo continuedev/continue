@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.StreamDiffLinesPayload
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
@@ -64,7 +65,7 @@ class DiffStreamHandler(
             toolCallId = toolCallId
         )
 
-        project.service<ContinuePluginService>().sendToWebview("updateApplyState", payload)
+        project.getBrowser()?.sendToWebview("updateApplyState", payload)
     }
 
     fun acceptAll() {
