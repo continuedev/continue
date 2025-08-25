@@ -79,9 +79,9 @@
             "pages": [
               "customization/overview",
               "customization/models",
-              "customization/prompts",
+              "customization/mcp-tools",
               "customization/rules",
-              "customization/mcp-tools"
+              "customization/prompts"
             ]
           },
           {
