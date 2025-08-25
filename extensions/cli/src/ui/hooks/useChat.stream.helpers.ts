@@ -1,4 +1,4 @@
-import type { ChatHistoryItem, ToolCallState } from "../../../../../core/index.js";
+import type { ChatHistoryItem, ToolCallState, ToolStatus } from "../../../../../core/index.js";
 
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
@@ -71,7 +71,7 @@ export function createStreamCallbacks(
       });
     },
     
-    onToolResult: (result: string, toolName: string) => {
+    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
       setChatHistory((prev) => {
         const newHistory = [...prev];
         
@@ -84,7 +84,7 @@ export function createStreamCallbacks(
             );
             
             if (toolState) {
-              toolState.status = "done";
+              toolState.status = status;
               toolState.output = [{
                 content: result,
                 name: `Tool Result: ${toolName}`,

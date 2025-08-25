@@ -594,7 +594,7 @@ const UserInput: React.FC<UserInputProps> = ({
         paddingX={1}
         borderColor={isRemoteMode ? "cyan" : "gray"}
       >
-        <Text color={isRemoteMode ? "cyan" : "green"} bold>
+        <Text color={isRemoteMode ? "cyan" : "blue"} bold>
           {isRemoteMode ? "◉" : "●"}{" "}
         </Text>
         {renderInputText()}

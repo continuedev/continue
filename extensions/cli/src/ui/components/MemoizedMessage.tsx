@@ -109,7 +109,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     
     return (
       <Box key={index} marginLeft={1} marginBottom={1}>
-        <Text color={isUser ? "green" : "white"}>●</Text>
+        <Text color={isUser ? "blue" : "white"}>●</Text>
         <Text> </Text>
         {isUser ? (
           <Text color="gray">{typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}</Text>

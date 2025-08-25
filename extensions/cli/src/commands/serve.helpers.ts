@@ -1,4 +1,4 @@
-import type { ChatHistoryItem, Session, ToolCallState } from "../../../../core/index.js";
+import type { ChatHistoryItem, Session, ToolCallState, ToolStatus } from "../../../../core/index.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { StreamCallbacks } from "../streamChatResponse.types.js";
 
@@ -76,7 +76,7 @@ export async function streamChatResponseWithInterruption(
         toolCallStates: [toolCallState],
       });
     },
-    onToolResult: (result: string, toolName: string) => {
+    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
       // Find and update the corresponding tool call state
       for (let i = state.session.history.length - 1; i >= 0; i--) {
         const item = state.session.history[i];
@@ -85,7 +85,7 @@ export async function streamChatResponseWithInterruption(
             (ts: ToolCallState) => ts.toolCall.function.name === toolName && ts.status === "calling"
           );
           if (toolState) {
-            toolState.status = "done";
+            toolState.status = status;
             toolState.output = [{
               content: result,
               name: `Tool Result: ${toolName}`,

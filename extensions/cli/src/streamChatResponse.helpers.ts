@@ -36,7 +36,7 @@ export function handlePermissionDenied(
     content: deniedMessage,
   });
 
-  callbacks?.onToolResult?.(deniedMessage, toolCall.name);
+  callbacks?.onToolResult?.(deniedMessage, toolCall.name, "errored");
   logger.debug("Tool call rejected - stopping stream");
 }
 
@@ -327,9 +327,7 @@ export async function preprocessStreamedToolCalls(
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
-      const errorMessage = `Error processing tool call: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       logger.error("Invalid tool call", {
         name: toolCall.name,
@@ -386,7 +384,7 @@ export async function executeStreamedToolCalls(
         content: cancelledMessage,
       });
 
-      callbacks?.onToolResult?.(cancelledMessage, toolCall.name);
+      callbacks?.onToolResult?.(cancelledMessage, toolCall.name, "canceled");
       continue;
     }
 
@@ -427,7 +425,7 @@ export async function executeStreamedToolCalls(
         content: toolResult,
       });
 
-      callbacks?.onToolResult?.(toolResult, toolCall.name);
+      callbacks?.onToolResult?.(toolResult, toolCall.name, "done");
     } catch (error) {
       const errorMessage = `Error executing tool ${toolCall.name}: ${
         error instanceof Error ? error.message : String(error)

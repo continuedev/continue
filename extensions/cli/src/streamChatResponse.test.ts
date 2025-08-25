@@ -549,6 +549,7 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Tool execution successful",
       "Read",
+      "done",
     );
     expect(mockedExecuteToolCall).toHaveBeenCalledWith(preprocessedCalls[0]);
   });
@@ -630,6 +631,7 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Permission denied by user",
       "Write",
+      "errored",
     );
     expect(callbacks.onToolPermissionRequest).toHaveBeenCalledWith(
       "Write",

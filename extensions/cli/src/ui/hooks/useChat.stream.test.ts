@@ -73,7 +73,7 @@ describe("useChat streaming", () => {
     expect(chatHistory[1].toolCallStates![0].status).toBe("calling");
     
     // Tool result
-    callbacks.onToolResult("File contents", "Read");
+    callbacks.onToolResult("File contents", "Read", "done");
     expect(chatHistory[1].toolCallStates![0].status).toBe("done");
     
     // More content after tool creates a new message
@@ -143,7 +143,7 @@ describe("useChat streaming", () => {
     expect(chatHistory[1].toolCallStates![0].toolCall.function.name).toBe("Read");
     
     // First tool result
-    callbacks.onToolResult("First file contents", "Read");
+    callbacks.onToolResult("First file contents", "Read", "done");
     expect(chatHistory[1].toolCallStates![0].status).toBe("done");
     
     // Second tool call - creates another new message
@@ -153,7 +153,7 @@ describe("useChat streaming", () => {
     expect(chatHistory[2].toolCallStates![0].toolCall.function.name).toBe("Write");
     
     // Second tool result
-    callbacks.onToolResult("Write successful", "Write");
+    callbacks.onToolResult("Write successful", "Write", "done");
     expect(chatHistory[2].toolCallStates![0].status).toBe("done");
     
     // Third tool call - creates yet another new message
