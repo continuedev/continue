@@ -82,6 +82,8 @@ export function UserSettingsForm() {
 
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
   const showSessionTabs = config.ui?.showSessionTabs ?? false;
+  const continueAfterToolRejection =
+    config.ui?.continueAfterToolRejection ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
@@ -447,6 +449,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="@Codebase: use tool calling only"
+                />
+
+                <ToggleSwitch
+                  isToggled={continueAfterToolRejection}
+                  onToggle={() =>
+                    handleUpdate({
+                      continueAfterToolRejection: !continueAfterToolRejection,
+                    })
+                  }
+                  text="Stream after tool rejection"
                 />
 
                 {hasContinueEmail && (
