@@ -15,6 +15,7 @@ import {
   SERVICE_NAMES,
 } from "./services/index.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
+import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 import {
   executeStreamedToolCalls,
   preprocessStreamedToolCalls,
@@ -511,6 +512,24 @@ export async function streamChatResponse(
 
     if (shouldReturn) {
       return finalResponse || content || fullResponse;
+    }
+
+    // Check for auto-compaction after tool execution
+    if (shouldContinue) {
+      const { chatHistory: updatedChatHistory, compactionIndex } =
+        await handleAutoCompaction(chatHistory, model, llmApi, {
+          isHeadless,
+          callbacks: {
+            onSystemMessage: callbacks?.onSystemMessage,
+            onContent: callbacks?.onContent,
+          },
+        });
+
+      // Only update chat history if compaction actually occurred
+      if (compactionIndex !== null && updatedChatHistory !== chatHistory) {
+        chatHistory.length = 0;
+        chatHistory.push(...updatedChatHistory);
+      }
     }
 
     // Check if we should continue

@@ -5,7 +5,9 @@ import * as path from "path";
 import pkg from "ignore-walk";
 import { Minimatch } from "minimatch";
 
-import { processRule } from "./args.js";
+import { processPromptOrRule } from "./args.js";
+import { PermissionMode } from "./permissions/types.js";
+import { modeService } from "./services/ModeService.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
 const { WalkerSync } = pkg;
@@ -116,16 +118,17 @@ async function getConfigYamlRules(): Promise<string[]> {
 
 /**
  * Load and construct a comprehensive system message with base message and rules section
- * @param rulesSystemMessage - The rules system message from the assistant
  * @param additionalRules - Additional rules from --rule flags
  * @param format - Output format for headless mode
  * @param headless - Whether running in headless mode
+ * @param mode - Current permission mode
  * @returns The comprehensive system message with base message and rules section
  */
 export async function constructSystemMessage(
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
+  mode?: PermissionMode,
 ): Promise<string> {
   const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
 
@@ -150,7 +153,7 @@ export async function constructSystemMessage(
   if (additionalRules && additionalRules.length > 0) {
     for (const ruleSpec of additionalRules) {
       try {
-        const processedRule = await processRule(ruleSpec);
+        const processedRule = await processPromptOrRule(ruleSpec);
         processedRules.push(processedRule);
       } catch (error: any) {
         console.warn(
@@ -162,6 +165,9 @@ export async function constructSystemMessage(
 
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
+
+  // Get current mode if not provided
+  const currentMode = mode ?? modeService.getCurrentMode();
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
@@ -183,6 +189,13 @@ Example response format:
 {
   "property": "value"
 }`;
+  }
+
+  // Add plan mode specific instructions if in plan mode
+  if (currentMode === "plan") {
+    systemMessage += `
+
+PLAN MODE: You are operating in plan mode, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files.`;
   }
 
   // Add rules section if we have any rules or agent content

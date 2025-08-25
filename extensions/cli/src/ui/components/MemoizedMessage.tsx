@@ -20,7 +20,10 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         case "tool-start":
           return (
             <Box key={index} marginLeft={1} marginBottom={1}>
-              <Text color="white">○ {message.content}</Text>
+              {/* TODO: Change back to empty circle (○) with white color once we want to differentiate in-progress vs completed tool calls */}
+              <Text color="green">
+                ●<Text color="white"> {message.content}</Text>
+              </Text>
             </Box>
           );
 
@@ -87,7 +90,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
 
     return (
       <Box key={index} marginLeft={1} marginBottom={1}>
-        <Text color={isUser ? "green" : "magenta"}>●</Text>
+        <Text color={isUser ? "green" : "white"}>●</Text>
         <Text> </Text>
         {isUser ? (
           <Text color="gray">{message.content}</Text>

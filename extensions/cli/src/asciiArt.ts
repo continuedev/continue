@@ -12,7 +12,17 @@ ${mind.multiline(`  ██████╗ ██████╗ ███╗   �
  ██║     ██║   ██║██║╚██╗██║   ██║   ██║██║╚██╗██║██║   ██║██╔══╝
  ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║██║ ╚████║╚██████╔╝███████╗
   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝`)}
-                                                         ${d("v" + getVersion())}`;
+                                                    ${d("v" + getVersion() + " (alpha)")}`;
+
+// ASCII art for just "CN" (first two letters)
+const CN_ASCII_ART = `
+${mind.multiline(`  ██████╗███╗   ██╗
+ ██╔════╝████╗  ██║
+ ██║     ██╔██╗ ██║
+ ██║     ██║╚██╗██║
+ ╚██████╗██║ ╚████║
+  ╚═════╝╚═╝  ╚═══╝`)}
+  ${d("v" + getVersion() + " (alpha)")}`;
 
 // Minimum terminal width required to display ASCII art properly
 const MIN_WIDTH_FOR_ASCII_ART = 75;
@@ -28,8 +38,8 @@ export function getDisplayableAsciiArt(): string {
     return CONTINUE_ASCII_ART;
   }
 
-  // If terminal is too narrow, just show a simple version
-  return `\n${chalk.bold.blue("CONTINUE")} ${d("v" + getVersion())}\n`;
+  // If terminal is too narrow, show just "CN" ASCII art
+  return CN_ASCII_ART;
 }
 
 export const CONTINUE_LOGO_ASCII_ART = `

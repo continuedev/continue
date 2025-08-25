@@ -178,7 +178,6 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
 // update core/nextEdit/templating/NextEditPromptEngine.ts as well.
 const MODEL_SUPPORTS_NEXT_EDIT: string[] = [
   NEXT_EDIT_MODELS.MERCURY_CODER,
-  NEXT_EDIT_MODELS.MERCURY_CODER_NEXTEDIT,
   NEXT_EDIT_MODELS.INSTINCT,
 ];
 
