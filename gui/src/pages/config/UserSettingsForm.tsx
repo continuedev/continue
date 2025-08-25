@@ -398,12 +398,10 @@ export function UserSettingsForm() {
                   text="Auto-Accept Agent Edits"
                   showIfToggled={
                     <>
-                      <ExclamationTriangleIcon
-                        data-tooltip-id={`auto-accept-diffs-warning-tooltip`}
-                        className="h-3 w-3 text-yellow-500"
-                      />
-                      <ToolTip id={`auto-accept-diffs-warning-tooltip`}>
-                        {`Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point`}
+                      <ToolTip
+                        content={`Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point`}
+                      >
+                        <ExclamationTriangleIcon className="h-3 w-3 text-yellow-500" />
                       </ToolTip>
                     </>
                   }

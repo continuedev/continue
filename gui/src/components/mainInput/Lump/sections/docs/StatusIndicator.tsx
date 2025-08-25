@@ -25,20 +25,13 @@ export function StatusIndicator({
 }: StatusIndicatorProps) {
   if (!status) return null;
 
-  const indicator = (
-    <div
-      data-tooltip-id={hoverMessage ? "status-tooltip" : undefined}
-      data-tooltip-content={hoverMessage}
-      className={`h-${size} w-${size} rounded-full ${STATUS_TO_COLOR[status]} ${
-        status === "indexing" ? "animate-pulse" : ""
-      } ${className}`}
-    />
-  );
-
   return (
-    <>
-      {indicator}
-      {hoverMessage && <ToolTip id="status-tooltip" />}
-    </>
+    <ToolTip hidden={!hoverMessage} content={hoverMessage}>
+      <div
+        className={`h-${size} w-${size} rounded-full ${STATUS_TO_COLOR[status]} ${
+          status === "indexing" ? "animate-pulse" : ""
+        } ${className}`}
+      />
+    </ToolTip>
   );
 }

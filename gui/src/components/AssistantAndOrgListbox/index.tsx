@@ -125,12 +125,12 @@ export function AssistantAndOrgListbox() {
                   <span className="text-description-muted flex items-center justify-between gap-x-1">
                     {session?.AUTH_TYPE !== AuthType.OnPrem &&
                       session?.account.id}
-                    <ArrowRightStartOnRectangleIcon
-                      className="h-3 w-3 cursor-pointer hover:brightness-125"
-                      onClick={onLogout}
-                      data-tooltip-id="logout-tooltip"
-                    />
-                    <ToolTip id="logout-tooltip">Logout</ToolTip>
+                    <ToolTip content="Logout">
+                      <ArrowRightStartOnRectangleIcon
+                        className="h-3 w-3 cursor-pointer hover:brightness-125"
+                        onClick={onLogout}
+                      />
+                    </ToolTip>
                   </span>
                 ) : (
                   <span
