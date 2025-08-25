@@ -12,6 +12,9 @@ inputs:
   continue-config:
     description: 'Config path to use (e.g., "myorg/review-bot")'
     required: true
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
 
 runs:
   using: 'composite'
@@ -79,7 +82,7 @@ runs:
       if: env.SKIP_REVIEW != 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         # Get PR number based on event type
         if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -223,6 +226,7 @@ runs:
       if: env.SKIP_REVIEW != 'true'
       uses: actions/github-script@v7
       with:
+        github-token: ${{ inputs.github-token }}
         script: |
           const fs = require('fs');
 
@@ -358,8 +362,6 @@ runs:
             console.log('Failed to post review:', error.message);
             console.log('Error details:', error);
           }
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Upload Review Artifacts
       if: env.SKIP_REVIEW != 'true' && always()

@@ -30,5 +30,4 @@ jobs:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: "continuedev"
           continue-config: "continuedev/review-bot"
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          github-token: ${{ steps.app-token.outputs.token }}
