@@ -77,10 +77,14 @@ function ModelOption({
           <span className="line-clamp-1">
             {option.title}
             {option.isAutoDetected && (
-              <span className="ml-2 text-[10px] italic">(autodetected)</span>
+              <span className="text-description-muted ml-1.5 text-[10px] italic">
+                (autodetected)
+              </span>
             )}
             {showMissingApiKeyMsg && (
-              <span className="ml-2 text-[10px] italic">(Missing API key)</span>
+              <span className="ml-1.5 text-[10px] italic">
+                (Missing API key)
+              </span>
             )}
           </span>
         </div>
