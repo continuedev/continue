@@ -88,15 +88,28 @@ describe("compaction", () => {
     });
 
     it("should handle non-string content", () => {
-      const history = convertToUnifiedHistory([
-        { role: "system", content: "System message" },
-        { role: "assistant", content: null as any },
-        { role: "assistant", content: undefined as any },
-        { role: "assistant", content: 123 as any },
-      ]);
+      // Create history items manually since convertToUnifiedHistory will throw on invalid content
+      const history: ChatHistoryItem[] = [
+        {
+          message: { role: "system", content: "System message" },
+          contextItems: []
+        },
+        {
+          message: { role: "assistant", content: null as any },
+          contextItems: []
+        },
+        {
+          message: { role: "assistant", content: undefined as any },
+          contextItems: []
+        },
+        {
+          message: { role: "assistant", content: `${COMPACTION_MARKER}\\nValid compaction` },
+          contextItems: []
+        },
+      ];
 
       const index = findCompactionIndex(history);
-      expect(index).toBeNull();
+      expect(index).toBe(3);
     });
 
     it("should only match assistant role messages", () => {
@@ -137,12 +150,21 @@ describe("compaction", () => {
 
       const result = getHistoryForLLM(history, 3);
       expect(result).toEqual([
-        { role: "system", content: "System message" },
         {
-          role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          message: { role: "system", content: "System message" },
+          contextItems: []
         },
-        { role: "user", content: "Another message" },
+        {
+          message: {
+            role: "assistant",
+            content: `${COMPACTION_MARKER}\nThis is a summary`,
+          },
+          contextItems: []
+        },
+        {
+          message: { role: "user", content: "Another message" },
+          contextItems: []
+        },
       ]);
     });
 
@@ -178,7 +200,10 @@ describe("compaction", () => {
       const result = getHistoryForLLM(history, -1);
       // Negative index with slice means "from the end", so -1 gives us only the last message
       // Since compactionIndex is not > 0, system message is not included
-      expect(result).toEqual([{ role: "user", content: "Hello" }]);
+      expect(result).toEqual([{
+        message: { role: "user", content: "Hello" },
+        contextItems: []
+      }]);
     });
 
     it("should handle empty history", () => {
@@ -205,8 +230,14 @@ describe("compaction", () => {
 
       const result = getHistoryForLLM(history, 1);
       expect(result).toEqual([
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-        { role: "user", content: "New message" },
+        {
+          message: { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+          contextItems: []
+        },
+        {
+          message: { role: "user", content: "New message" },
+          contextItems: []
+        },
       ]);
     });
 
@@ -221,8 +252,14 @@ describe("compaction", () => {
       // Since system message is not at index 0, it's not included
       const result = getHistoryForLLM(history, 2);
       expect(result).toEqual([
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-        { role: "user", content: "New message" },
+        {
+          message: { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+          contextItems: []
+        },
+        {
+          message: { role: "user", content: "New message" },
+          contextItems: []
+        },
       ]);
     });
 
@@ -239,11 +276,26 @@ describe("compaction", () => {
 
       const result = getHistoryForLLM(history, 3);
       expect(result).toEqual([
-        { role: "system", content: "System" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-        { role: "user", content: "New 1" },
-        { role: "assistant", content: "New 2" },
-        { role: "user", content: "New 3" },
+        {
+          message: { role: "system", content: "System" },
+          contextItems: []
+        },
+        {
+          message: { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+          contextItems: []
+        },
+        {
+          message: { role: "user", content: "New 1" },
+          contextItems: []
+        },
+        {
+          message: { role: "assistant", content: "New 2" },
+          contextItems: []
+        },
+        {
+          message: { role: "user", content: "New 3" },
+          contextItems: []
+        },
       ]);
     });
   });
@@ -271,12 +323,19 @@ describe("compaction", () => {
 
       expect(result.compactedHistory).toHaveLength(2);
       expect(result.compactedHistory[0]).toEqual({
-        role: "system",
-        content: "System message",
+        message: {
+          role: "system",
+          content: "System message",
+        },
+        contextItems: []
       });
       expect(result.compactedHistory[1]).toEqual({
-        role: "assistant",
-        content: `${COMPACTION_MARKER}\n${mockContent}`,
+        message: {
+          role: "assistant",
+          content: `${COMPACTION_MARKER}\n${mockContent}`,
+        },
+        contextItems: [],
+        conversationSummary: mockContent
       });
       expect(result.compactionIndex).toBe(1);
       expect(result.compactionContent).toBe(mockContent);

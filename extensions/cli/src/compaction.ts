@@ -161,7 +161,10 @@ export function findCompactionIndex(
   chatHistory: ChatHistoryItem[],
 ): number | null {
   const compactedIndex = chatHistory.findIndex(
-    (item) => item.conversationSummary !== undefined,
+    (item) =>
+      item.message.role === "assistant" &&
+      typeof item.message.content === "string" &&
+      item.message.content.startsWith(COMPACTION_MARKER),
   );
   return compactedIndex === -1 ? null : compactedIndex;
 }
@@ -195,7 +198,7 @@ export function pruneLastMessage(
 
   if (
     secondToLastItem.message.role === "assistant" &&
-    (secondToLastItem.message as any).toolCalls?.length
+    (secondToLastItem.message as any).toolCalls?.length > 0
   ) {
     return chatHistory.slice(0, -2);
   } else if (secondToLastItem.message.role === "user") {

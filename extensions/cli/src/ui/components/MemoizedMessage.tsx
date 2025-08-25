@@ -70,7 +70,8 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             const toolName = toolState.toolCall.function.name;
             const toolArgs = toolState.parsedArgs;
             const isCompleted = toolState.status === "done";
-            const isErrored = toolState.status === "errored";
+            const isErrored =
+              toolState.status === "errored" || toolState.status === "canceled";
 
             return (
               <Box key={toolIndex} flexDirection="column" marginBottom={1}>
@@ -86,23 +87,24 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                   </Text>
                 </Box>
 
-                {/* Show tool result if available */}
-                {toolState.output && toolState.output.length > 0 && (
+                {isErrored ? (
                   <Box marginLeft={3}>
-                    <ToolResultSummary
-                      toolName={toolName}
-                      content={toolState.output
-                        .map((o) => o.content)
-                        .join("\n")}
-                    />
+                    <Text color="red">
+                      {toolState.output?.[0].content ?? "Tool execution failed"}
+                    </Text>
                   </Box>
-                )}
-
-                {/* Show error if tool errored */}
-                {isErrored && !toolState.output && (
-                  <Box marginLeft={3}>
-                    <Text color="red">Tool execution failed</Text>
-                  </Box>
+                ) : (
+                  toolState.output &&
+                  toolState.output.length > 0 && (
+                    <Box marginLeft={3}>
+                      <ToolResultSummary
+                        toolName={toolName}
+                        content={toolState.output
+                          .map((o) => o.content)
+                          .join("\n")}
+                      />
+                    </Box>
+                  )
                 )}
               </Box>
             );

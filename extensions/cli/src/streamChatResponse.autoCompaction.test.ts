@@ -122,13 +122,15 @@ describe("handleAutoCompaction", () => {
     expect(shouldAutoCompact).toHaveBeenCalledWith(mockChatHistory, mockModel);
     expect(getAutoCompactMessage).toHaveBeenCalledWith(mockModel);
     expect(compactChatHistory).toHaveBeenCalledWith(
-      mockChatHistory,
+      convertToUnifiedHistory(mockChatHistory),
       mockModel,
       mockLlmApi,
       expect.any(Object),
     );
     expect(saveSession).toHaveBeenCalledWith(
-      mockCompactionResult.compactedHistory,
+      expect.objectContaining({
+        history: mockCompactionResult.compactedHistory,
+      }),
     );
 
     expect(mockCallbacks.onSystemMessage).toHaveBeenCalledWith(
@@ -139,7 +141,10 @@ describe("handleAutoCompaction", () => {
     );
 
     expect(result).toEqual({
-      chatHistory: mockCompactionResult.compactedHistory,
+      chatHistory: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "assistant", content: "[COMPACTED HISTORY]\nConversation summary..." },
+      ],
       compactionIndex: mockCompactionResult.compactionIndex,
     });
   });

@@ -122,39 +122,63 @@ export function saveSession(session: Session): void {
  */
 function updateSessionsList(session: Session): void {
   try {
-    const listPath = getSessionsListPath();
-    let sessions: SessionMetadata[] = [];
+    const sessionsListFilePath = getSessionsListPath();
+    
+    // Read and update the sessions list (following core/util/history.ts pattern)
+    try {
+      const rawSessionsList = fs.readFileSync(sessionsListFilePath, "utf-8");
 
-    if (fs.existsSync(listPath)) {
-      const content = fs.readFileSync(listPath, "utf8");
+      let sessionsList: SessionMetadata[];
       try {
-        sessions = JSON.parse(content);
-      } catch {
-        sessions = [];
+        sessionsList = JSON.parse(rawSessionsList);
+      } catch (e) {
+        if (rawSessionsList.trim() === "") {
+          fs.writeFileSync(sessionsListFilePath, JSON.stringify([]));
+          sessionsList = [];
+        } else {
+          throw e;
+        }
       }
+
+      // Filter out old format sessions (safety measure)
+      sessionsList = sessionsList.filter((sessionItem: any) => {
+        return typeof sessionItem.session_id !== "string";
+      });
+
+      let found = false;
+      for (const sessionMetadata of sessionsList) {
+        if (sessionMetadata.sessionId === session.sessionId) {
+          sessionMetadata.title = session.title || "Untitled Session";
+          sessionMetadata.workspaceDirectory = session.workspaceDirectory || process.cwd();
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        const sessionMetadata: SessionMetadata = {
+          sessionId: session.sessionId,
+          title: session.title || "Untitled Session",
+          dateCreated: new Date().toISOString(),
+          workspaceDirectory: session.workspaceDirectory || process.cwd(),
+        };
+        sessionsList.push(sessionMetadata);
+      }
+
+      fs.writeFileSync(
+        sessionsListFilePath,
+        JSON.stringify(sessionsList, undefined, 2),
+      );
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error(
+          `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session.`,
+        );
+      }
+      throw new Error(
+        `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`,
+      );
     }
-
-    // Find or create session metadata
-    const existingIndex = sessions.findIndex(
-      (s) => s.sessionId === session.sessionId,
-    );
-    const metadata: SessionMetadata = {
-      sessionId: session.sessionId,
-      title: session.title || "Untitled Session",
-      dateCreated:
-        existingIndex >= 0
-          ? sessions[existingIndex].dateCreated
-          : new Date().toISOString(),
-      workspaceDirectory: session.workspaceDirectory || process.cwd(),
-    };
-
-    if (existingIndex >= 0) {
-      sessions[existingIndex] = metadata;
-    } else {
-      sessions.push(metadata);
-    }
-
-    fs.writeFileSync(listPath, JSON.stringify(sessions, null, 2));
   } catch (error) {
     logger.error("Error updating sessions list:", error);
   }

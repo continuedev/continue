@@ -110,6 +110,6 @@ describe("SessionSelector", () => {
       />,
     );
 
-    expect(lastFrame()).toContain("(no messages)");
+    expect(lastFrame()).toContain("Empty session");
   });
 });
