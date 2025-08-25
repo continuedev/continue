@@ -437,39 +437,6 @@ config.json
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
-### @Google Context Provider – Reference Google Search Results
-
-Reference the results of a Google search.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: google
-    params:
-      serperApiKey: <YOUR_SERPER.DEV_API_KEY>
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "google",
-      "params": { "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>" }
-    }
-  ]
-}
-```
-
-For example, type "@Google python tutorial" if you want to search and discuss ways of learning Python.
-
-Note: You can get an API key for free at [serper.dev](https://serper.dev).
-
 ### @Jira Context Provider – Reference Jira Issues
 
 Reference the conversation in a Jira issue.
