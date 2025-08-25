@@ -368,7 +368,7 @@ describe("E2E Scenarios", () => {
     ).toBe(true);
   });
 
-  it("should throw when a block is not on the allowlist", async () => {
+  it("should return an error when a block is not on the allowlist", async () => {
     const result = await unrollAssistant(
       {
         uriType: "slug",
