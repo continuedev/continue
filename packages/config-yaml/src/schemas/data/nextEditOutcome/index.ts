@@ -17,6 +17,7 @@ export const nextEditOutcomeEventAllSchema = baseDevDataAllSchema.extend({
   completion: z.string(),
   cursorPosition: z.object({ line: z.number(), character: z.number() }),
   accepted: z.boolean().optional(),
+  aborted: z.boolean().optional(),
   modelProvider: z.string(),
   modelName: z.string(),
 });

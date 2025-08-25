@@ -12,6 +12,7 @@ import {
   until,
 } from "vscode-extension-tester";
 
+import { GlobalActions } from "../actions/Global.actions";
 import { GUIActions } from "../actions/GUI.actions";
 import { KeyboardShortcutsActions } from "../actions/KeyboardShortcuts.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
@@ -26,6 +27,7 @@ describe("Keyboard Shortcuts", () => {
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
     await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
+    await GlobalActions.disableNextEdit();
   });
 
   beforeEach(async function () {

@@ -63,6 +63,7 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   cursorPosition: { line: number; character: number };
   finalCursorPosition: { line: number; character: number };
   accepted?: boolean;
+  aborted?: boolean;
   editableRegionStartLine: number;
   editableRegionEndLine: number;
   diffLines: DiffLine[];
