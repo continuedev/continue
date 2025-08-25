@@ -307,5 +307,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+  "process/cancelTerminalCommand": [{ toolCallId: string }, void];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 };
