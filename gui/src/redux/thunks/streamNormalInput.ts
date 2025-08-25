@@ -4,7 +4,6 @@ import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
-import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -148,12 +147,13 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const allActiveTools = selectActiveTools(state);
     const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
-    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
 
     // Use the centralized selector to determine if system message tools should be used
-    const useSystemTools = selectUseSystemMessageTools(state);
-    const useNativeTools = !useSystemTools && supportsNativeTools;
-    const systemToolsFramework = useSystemTools
+    const useNativeTools = state.config.config.experimental
+      ?.onlyUseSystemMessageTools
+      ? false
+      : modelSupportsNativeTools(selectedChatModel);
+    const systemToolsFramework = !useNativeTools
       ? new SystemMessageToolCodeblocksFramework()
       : undefined;
 
