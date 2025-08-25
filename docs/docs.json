@@ -161,11 +161,11 @@
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
                   "customize/deep-dives/mcp",
+                  "customize/deep-dives/custom-providers",
                   "customize/deep-dives/model-capabilities"
                 ]
               },
-              "customize/telemetry",
-              "customize/custom-providers"
+              "customize/telemetry"
             ]
           }
         ]
@@ -550,19 +550,19 @@
     },
     {
       "source": "/customization/context-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/advanced/context-integration/custom-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/advanced/context/custom-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/advanced/custom-providers",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/development-data",
@@ -1010,7 +1010,7 @@
     },
     {
       "source": "/guides/build-your-own-context-provider",
-      "destination": "/customize/custom-providers"
+      "destination": "/customize/deep-dives/custom-providers"
     },
     {
       "source": "/hub/blocks/bundles",
