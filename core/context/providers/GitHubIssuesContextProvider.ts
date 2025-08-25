@@ -15,6 +15,10 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  get deprecationMessage() {
+    return "The GitHub issues context provider is now deprecated. Please consider using the official GitHub MCP (github/github-mcp-server) instead.";
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,

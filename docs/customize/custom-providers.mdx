@@ -437,43 +437,6 @@ config.json
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
-### @Issue Context Provider – Reference GitHub Issue Conversations
-
-Reference the conversation in a GitHub issue.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: issue
-    params:
-      repos:
-        - owner: continuedev
-          repo: continue
-      githubToken: ghp_xxx
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "issue",
-      "params": {
-        "repos": [{ "owner": "continuedev", "repo": "continue" }],
-        "githubToken": "ghp_xxx"
-      }
-    }
-  ]
-}
-```
-
-Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited.
-
 ### @Google Context Provider – Reference Google Search Results
 
 Reference the results of a Google search.
