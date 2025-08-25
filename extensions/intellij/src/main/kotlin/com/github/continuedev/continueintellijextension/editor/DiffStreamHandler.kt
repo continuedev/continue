@@ -335,6 +335,7 @@ class DiffStreamHandler(
 
     private fun setClosed() {
         sendUpdate(ApplyStateStatus.CLOSED)
+        project.service<ContinuePluginService>().sendToWebview("focusContinueInputWithoutClear", Nil)
         resetState()
     }
 }
