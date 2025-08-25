@@ -1,5 +1,5 @@
 import { Editor, JSONContent } from "@tiptap/react";
-import { ContextItemWithId, InputModifiers, RuleWithSource } from "core";
+import { AppliedRule, ContextItemWithId, InputModifiers } from "core";
 import { useMemo } from "react";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
@@ -21,7 +21,7 @@ interface ContinueInputBoxProps {
   ) => void;
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
-  appliedRules?: RuleWithSource[];
+  appliedRules?: AppliedRule[];
   hidden?: boolean;
   inputId: string; // used to keep track of things per input in redux
 }

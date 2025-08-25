@@ -207,7 +207,7 @@ export const streamNormalInput = createAsyncThunk<
     dispatch(
       setAppliedRulesAtIndex({
         index: appliedRuleIndex,
-        appliedRules: appliedRules,
+        appliedRules: { ...appliedRules },
       }),
     );
 
