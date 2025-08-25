@@ -44,7 +44,11 @@ function extractSingleFlag(
   flagName: string,
 ): string | undefined {
   const index = args.indexOf(flagName);
-  if (index !== -1 && index + 1 < args.length && !args[index + 1].startsWith("--")) {
+  if (
+    index !== -1 &&
+    index + 1 < args.length &&
+    !args[index + 1].startsWith("--")
+  ) {
     return args[index + 1];
   }
   return undefined;
