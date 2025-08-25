@@ -1,5 +1,5 @@
 import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { Static, useStdout } from "ink";
+import { Box, Static, useStdout } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChatHistoryItem } from "../../../../../core/index.js";
@@ -66,9 +66,19 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     }
   }, [refreshTrigger, refreshStatic]);
 
-  // Create static items array (similar to gemini-cli's approach)
-  const staticItems = React.useMemo(() => {
+  // Filter out system messages without content
+  const filteredChatHistory = React.useMemo(() => {
+    return chatHistory.filter(
+      (item) => item.message.role !== "system" || item.message.content,
+    );
+  }, [chatHistory]);
+
+  // Split chat history into stable and pending items
+  // Take the last 2 items as "pending" (can be updated dynamically)
+  // Everything else goes into static content
+  const { staticItems, pendingItems } = React.useMemo(() => {
     const items: React.ReactElement[] = [];
+    const PENDING_ITEMS_COUNT = 2;
 
     // Add intro message as first item if it should be shown
     if (showIntroMessage) {
@@ -82,26 +92,57 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       );
     }
 
-    // Add all chat messages (filter out system messages)
-    chatHistory
-      .filter((item) => item.message.role !== "system" || item.message.content) // Keep non-empty system messages
-      .forEach((item, index) => {
-        items.push(renderMessage(item, index));
-      });
+    // Determine split point for stable vs pending items
+    const stableCount = Math.max(
+      0,
+      filteredChatHistory.length - PENDING_ITEMS_COUNT,
+    );
+    const stableHistory = filteredChatHistory.slice(0, stableCount);
+    const pendingHistory = filteredChatHistory.slice(stableCount);
 
-    return items;
-  }, [showIntroMessage, config, model, mcpService, chatHistory, renderMessage]);
+    // Add stable messages to static items
+    stableHistory.forEach((item, index) => {
+      items.push(renderMessage(item, index));
+    });
+
+    // Pending items will be rendered dynamically outside Static
+    const pendingElements = pendingHistory.map((item, index) =>
+      renderMessage(item, stableCount + index),
+    );
+
+    return {
+      staticItems: items,
+      pendingItems: pendingElements,
+    };
+  }, [
+    showIntroMessage,
+    config,
+    model,
+    mcpService,
+    filteredChatHistory,
+    renderMessage,
+  ]);
 
   return (
-    <Static
-      key={staticKey}
-      items={staticItems}
-      style={{
-        width: columns - 1,
-        textWrap: "wrap",
-      }}
-    >
-      {(item) => item}
-    </Static>
+    <Box flexDirection="column">
+      {/* Static content - items that won't change */}
+      <Static
+        key={staticKey}
+        items={staticItems}
+        style={{
+          width: columns - 1,
+          textWrap: "wrap",
+        }}
+      >
+        {(item) => item}
+      </Static>
+
+      {/* Pending area - dynamically rendered items that can update */}
+      <Box flexDirection="column">
+        {pendingItems.map((item, index) => (
+          <React.Fragment key={`pending-${index}`}>{item}</React.Fragment>
+        ))}
+      </Box>
+    </Box>
   );
 };

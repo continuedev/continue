@@ -257,7 +257,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
-      <Box flexDirection="column" flexGrow={1} paddingX={1} overflow="hidden">
+      <Box flexDirection="column" flexGrow={1} overflow="hidden">
         {/* Debug component - comment out when not needed */}
         {/* {!isRemoteMode && (
           <ServiceDebugger
