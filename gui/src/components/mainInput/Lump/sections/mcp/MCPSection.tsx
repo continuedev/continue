@@ -15,6 +15,7 @@ import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateConfig } from "../../../../../redux/slices/configSlice";
+import { selectCurrentOrg } from "../../../../../redux/slices/profilesSlice";
 import { fontSize } from "../../../../../util";
 import { ToolTip } from "../../../../gui/Tooltip";
 import { Button } from "../../../../ui";
@@ -235,10 +236,12 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
 }
 
 function MCPSection() {
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
   const { selectedProfile } = useAuth();
+  const disableMcp = currentOrg?.policy?.allowMcpServers === false;
 
   const mergedBlocks = useMemo(() => {
     const parsed = selectedProfile?.rawYaml
@@ -250,6 +253,15 @@ function MCPSection() {
     }));
   }, [servers, selectedProfile]);
 
+  if (true) {
+    return (
+      <div className="flex flex-col items-center justify-center p-2">
+        <span className="text-description">
+          MCP Servers are disabled in your organization.
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-1">
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">

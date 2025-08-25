@@ -1,5 +1,3 @@
-import { useAppSelector } from "../../../../redux/hooks";
-import { selectCurrentOrg } from "../../../../redux/slices/profilesSlice";
 import { useLump } from "../LumpContext";
 import { ContextSection } from "./ContextSection";
 import { ErrorSection } from "./errors/ErrorSection";
@@ -14,8 +12,6 @@ import { ToolPoliciesSection } from "./tool-policies/ToolPoliciesSection";
  */
 export function SelectedSection() {
   const { displayedSection } = useLump();
-  const currentOrg = useAppSelector(selectCurrentOrg);
-  const hideMcp = currentOrg?.policy?.allowMcpServers === false;
 
   switch (displayedSection) {
     case "models":
@@ -29,9 +25,6 @@ export function SelectedSection() {
     case "tools":
       return <ToolPoliciesSection />;
     case "mcp":
-      if (hideMcp) {
-        return null;
-      }
       return <MCPSection />;
     case "error":
       return <ErrorSection />;
