@@ -85,10 +85,6 @@ export class InlineTipManager {
   private svgTooltipDecoration = this.createSvgTooltipDecoration();
   private emptyFileTooltipDecoration = this.createEmptyFileTooltipDecoration();
 
-  private isTemporarilyHidden: boolean = false;
-  private lastSelection?: vscode.Selection;
-  private lastEditor?: vscode.TextEditor;
-
   public static getInstance(): InlineTipManager {
     if (!InlineTipManager.instance) {
       InlineTipManager.instance = new InlineTipManager();
@@ -117,42 +113,12 @@ export class InlineTipManager {
     const selection = e.selections[0];
     const editor = e.textEditor;
 
-    this.lastSelection = selection;
-    this.lastEditor = editor;
-
-    if (this.isTemporarilyHidden) {
-      editor.setDecorations(this.svgTooltipDecoration, []);
-      return;
-    }
-
     if (selection.isEmpty || !this.shouldRenderTip(editor.document.uri)) {
       editor.setDecorations(this.svgTooltipDecoration, []);
       return;
     }
 
     this.debouncedSelectionChange(editor, selection);
-  }
-
-  public hideTemporarily(): void {
-    this.isTemporarilyHidden = true;
-
-    if (this.lastActiveEditor) {
-      this.lastActiveEditor.setDecorations(this.svgTooltipDecoration, []);
-    }
-
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      editor.setDecorations(this.svgTooltipDecoration, []);
-    });
-  }
-
-  public restoreVisibility(): void {
-    this.isTemporarilyHidden = false;
-
-    if (this.lastEditor && this.lastSelection && !this.lastSelection.isEmpty) {
-      if (this.shouldRenderTip(this.lastEditor.document.uri)) {
-        this.updateTooltipPosition(this.lastEditor, this.lastSelection);
-      }
-    }
   }
 
   public dispose() {
@@ -269,7 +235,7 @@ export class InlineTipManager {
   }
 
   private createSvgTooltipDecoration() {
-    var backgroundColour = 0;
+    var backgroundColour = "#333333";
     if (this.theme) {
       backgroundColour = this.theme.colors["editor.background"];
     }
@@ -292,12 +258,15 @@ export class InlineTipManager {
       "font-size": SVG_CONFIG.fontSize,
     };
 
-    if (!this.theme) {
-      return;
-    }
+    // if (!this.theme) {
+    //   return;
+    // }
 
     try {
-      const svgContent = svgBuilder
+      const builder = svgBuilder.newInstance
+        ? svgBuilder.newInstance()
+        : svgBuilder;
+      const svgContent = builder
         .width(SVG_CONFIG.tipWidth)
         .height(SVG_CONFIG.tipHeight)
         // Chat
@@ -305,7 +274,7 @@ export class InlineTipManager {
           {
             ...baseTextConfig,
             x: SVG_CONFIG.chatLabelX,
-            fill: this.theme.colors["editor.foreground"],
+            fill: this.theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.chatLabel,
         )
@@ -322,7 +291,7 @@ export class InlineTipManager {
           {
             ...baseTextConfig,
             x: SVG_CONFIG.editLabelX,
-            fill: this.theme.colors["editor.foreground"],
+            fill: this.theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.editLabel,
         )
