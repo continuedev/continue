@@ -1,6 +1,8 @@
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { describe, expect, it } from "vitest";
 import {
+  EMPTY_NON_FIRST_EDIT_MESSAGE,
+  FOUND_MULTIPLE_FIND_STRINGS_ERROR,
   performFindAndReplace,
   validateCreatingForMultiEdit,
   validateSingleEdit,
@@ -152,7 +154,7 @@ describe("performFindAndReplace", () => {
 
       expect(() => {
         performFindAndReplace(content, "xyz", "abc");
-      }).toThrow('String not found in file: "xyz"');
+      }).toThrow('string not found in file: "xyz"');
     });
 
     it("should throw error with edit context when string not found", () => {
@@ -160,7 +162,7 @@ describe("performFindAndReplace", () => {
 
       expect(() => {
         performFindAndReplace(content, "xyz", "abc", false, 2);
-      }).toThrow('Edit #3: String not found in file: "xyz"');
+      }).toThrow('edit at index 2: string not found in file: "xyz"');
     });
 
     it("should throw error when multiple occurrences exist and replaceAll is false", () => {
@@ -169,7 +171,7 @@ describe("performFindAndReplace", () => {
       expect(() => {
         performFindAndReplace(content, "Hello", "Hi", false);
       }).toThrow(
-        'String "Hello" appears 3 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+        `String "Hello" appears 3 times in the file. ${FOUND_MULTIPLE_FIND_STRINGS_ERROR}`,
       );
     });
 
@@ -179,7 +181,7 @@ describe("performFindAndReplace", () => {
       expect(() => {
         performFindAndReplace(content, "test", "exam", false, 1);
       }).toThrow(
-        'Edit #2: String "test" appears 3 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+        `edit at index 1: String "test" appears 3 times in the file. ${FOUND_MULTIPLE_FIND_STRINGS_ERROR}`,
       );
     });
   });
@@ -296,19 +298,21 @@ describe("validateSingleEdit", () => {
     it("should include edit number in error messages when index provided", () => {
       expect(() => {
         validateSingleEdit(null as any, "new", 2);
-      }).toThrow("Edit #3: old_string is required");
+      }).toThrow("edit at index 2: old_string is required");
     });
 
     it("should include edit number for new_string errors", () => {
       expect(() => {
         validateSingleEdit("old", undefined as any, 0);
-      }).toThrow("Edit #1: new_string is required");
+      }).toThrow("edit at index 0: new_string is required");
     });
 
     it("should include edit number for identical strings error", () => {
       expect(() => {
         validateSingleEdit("same", "same", 4);
-      }).toThrow("Edit #5: old_string and new_string must be different");
+      }).toThrow(
+        "edit at index 4: old_string and new_string must be different",
+      );
     });
 
     it("should not include context when index not provided", () => {
@@ -382,9 +386,7 @@ describe("validateCreatingForMultiEdit", () => {
 
       expect(() => {
         validateCreatingForMultiEdit(edits);
-      }).toThrow(
-        "edit #2: only the first edit can contain an empty old_string, which is only used for file creation.",
-      );
+      }).toThrow(`edit at index 1: ${EMPTY_NON_FIRST_EDIT_MESSAGE}`);
     });
 
     it("should throw error with correct edit number for empty old_string", () => {
@@ -396,9 +398,7 @@ describe("validateCreatingForMultiEdit", () => {
 
       expect(() => {
         validateCreatingForMultiEdit(edits);
-      }).toThrow(
-        "edit #3: only the first edit can contain an empty old_string, which is only used for file creation.",
-      );
+      }).toThrow(`edit at index 2: ${EMPTY_NON_FIRST_EDIT_MESSAGE}`);
     });
 
     it("should throw error for multiple empty old_strings in subsequent edits", () => {
@@ -410,9 +410,7 @@ describe("validateCreatingForMultiEdit", () => {
 
       expect(() => {
         validateCreatingForMultiEdit(edits);
-      }).toThrow(
-        "edit #2: only the first edit can contain an empty old_string, which is only used for file creation.",
-      );
+      }).toThrow(`edit at index 1: ${EMPTY_NON_FIRST_EDIT_MESSAGE}`);
     });
   });
 

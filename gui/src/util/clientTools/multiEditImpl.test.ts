@@ -2,6 +2,7 @@ import * as ideUtils from "core/util/ideUtils";
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolExtras } from "./callClientTool";
+import { FOUND_MULTIPLE_FIND_STRINGS_ERROR } from "./findAndReplaceUtils";
 import { multiEditImpl } from "./multiEditImpl";
 
 vi.mock("uuid", () => ({
@@ -72,7 +73,7 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Edit #1: old_string is required");
+      ).rejects.toThrow("edit at index 0: old_string is required");
     });
 
     it("should throw if edit has undefined new_string", async () => {
@@ -85,7 +86,7 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Edit #1: new_string is required");
+      ).rejects.toThrow("edit at index 0: new_string is required");
     });
 
     it("should throw if old_string equals new_string", async () => {
@@ -98,7 +99,9 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow("Edit #1: old_string and new_string must be different");
+      ).rejects.toThrow(
+        "edit at index 0: old_string and new_string must be different",
+      );
     });
   });
 
@@ -201,7 +204,9 @@ describe("multiEditImpl", () => {
           "id",
           mockExtras,
         ),
-      ).rejects.toThrow('Edit #2: String not found in file: "not found"');
+      ).rejects.toThrow(
+        'edit at index 1: string not found in file: "not found"',
+      );
     });
 
     it("should throw if multiple occurrences without replace_all", async () => {
@@ -219,7 +224,7 @@ describe("multiEditImpl", () => {
           mockExtras,
         ),
       ).rejects.toThrow(
-        'Edit #1: String "test" appears 3 times in the file. Either provide a more specific string with surrounding context to make it unique, or use replace_all=true to replace all occurrences.',
+        `edit at index 0: String "test" appears 3 times in the file. ${FOUND_MULTIPLE_FIND_STRINGS_ERROR}`,
       );
     });
   });

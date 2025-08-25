@@ -148,7 +148,7 @@ describe("singleFindAndReplaceImpl", () => {
 
       await expect(
         singleFindAndReplaceImpl(args, "tool-call-id", mockExtras),
-      ).rejects.toThrow(`String not found in file: "not found"`);
+      ).rejects.toThrow(`string not found in file: "not found"`);
     });
 
     it("should replace single occurrence", async () => {
