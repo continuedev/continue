@@ -1,5 +1,5 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { ConfigEnhancer } from "../configEnhancer.js";
@@ -22,7 +22,7 @@ vi.mock("../hubLoader.js", () => ({
 describe("Rule duplication integration test", () => {
   it("should not duplicate rules when using --rule flag", async () => {
     const enhancer = new ConfigEnhancer();
-    
+
     // Initial config without any rules
     const initialConfig: AssistantUnrolled = {
       name: "Test Assistant",
@@ -40,13 +40,13 @@ describe("Rule duplication integration test", () => {
     // Verify the rule was added exactly once as a RuleObject
     expect(enhancedConfig.rules).toHaveLength(1);
     expect(enhancedConfig.rules).toEqual([
-      { name: "nate/spanish", rule: "Content for nate/spanish" }
+      { name: "nate/spanish", rule: "Content for nate/spanish" },
     ]);
   });
 
   it("should merge command-line rules with existing config rules", async () => {
     const enhancer = new ConfigEnhancer();
-    
+
     // Initial config with existing rules
     const initialConfig: AssistantUnrolled = {
       name: "Test Assistant",
@@ -72,7 +72,7 @@ describe("Rule duplication integration test", () => {
 
   it("should handle rule content with frontmatter", async () => {
     const enhancer = new ConfigEnhancer();
-    
+
     // Mock processRule to return content with frontmatter
     const { processRule } = await import("../hubLoader.js");
     (processRule as any).mockImplementation((rule: string) => {

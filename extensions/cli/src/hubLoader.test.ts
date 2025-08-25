@@ -17,7 +17,7 @@ global.fetch = mockFetch;
 
 // Mock JSZip
 vi.mock("jszip", () => ({
-  default: vi.fn()
+  default: vi.fn(),
 }));
 
 const mockedJSZip = vi.fn();
@@ -45,7 +45,9 @@ describe("hubLoader", () => {
 
       await expect(
         loadPackageFromHub("owner/package", ruleProcessor),
-      ).rejects.toThrow('Failed to load rule from hub "owner/package": HTTP 404: Not Found');
+      ).rejects.toThrow(
+        'Failed to load rule from hub "owner/package": HTTP 404: Not Found',
+      );
     });
 
     it("should load rule content", async () => {
@@ -54,9 +56,9 @@ describe("hubLoader", () => {
       // Check if JSZip is mocked
       const JSZipModule = await import("jszip");
       const JSZip = JSZipModule.default;
-      
+
       // Since JSZip is mocked, it should be a mock function
-      if (typeof (JSZip as any).mockImplementation === 'function') {
+      if (typeof (JSZip as any).mockImplementation === "function") {
         (JSZip as any).mockImplementation(() => ({
           loadAsync: vi.fn().mockResolvedValueOnce({
             files: {
@@ -65,7 +67,7 @@ describe("hubLoader", () => {
                 async: vi.fn().mockResolvedValue(ruleContent),
               },
             },
-          })
+          }),
         }));
       } else {
         // If mock doesn't work, skip this test
@@ -84,7 +86,7 @@ describe("hubLoader", () => {
 
     it("should load MCP configuration", async () => {
       const mcpConfig = {
-        content: "name: test-mcp\nversion: 1.0.0"
+        content: "name: test-mcp\nversion: 1.0.0",
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -96,7 +98,7 @@ describe("hubLoader", () => {
       // Should parse the YAML content, not return the wrapper
       expect(result).toEqual({
         name: "test-mcp",
-        version: "1.0.0"
+        version: "1.0.0",
       });
     });
 
@@ -104,9 +106,9 @@ describe("hubLoader", () => {
       // Check if JSZip is mocked
       const JSZipModule = await import("jszip");
       const JSZip = JSZipModule.default;
-      
+
       // Since JSZip is mocked, it should be a mock function
-      if (typeof (JSZip as any).mockImplementation === 'function') {
+      if (typeof (JSZip as any).mockImplementation === "function") {
         (JSZip as any).mockImplementation(() => ({
           loadAsync: vi.fn().mockResolvedValueOnce({
             files: {
@@ -115,7 +117,7 @@ describe("hubLoader", () => {
                 async: vi.fn().mockResolvedValue("not a rule"),
               },
             },
-          })
+          }),
         }));
       } else {
         // If mock doesn't work, skip this test
@@ -140,23 +142,35 @@ describe("hubLoader", () => {
     it("should define rule processor correctly", () => {
       expect(ruleProcessor.type).toBe("rule");
       expect(ruleProcessor.expectedFileExtensions).toEqual([".md"]);
-      expect(ruleProcessor.parseContent("test content", "test.md")).toBe("test content");
+      expect(ruleProcessor.parseContent("test content", "test.md")).toBe(
+        "test content",
+      );
     });
 
     it("should define MCP processor correctly", () => {
       expect(mcpProcessor.type).toBe("mcp");
-      expect(mcpProcessor.expectedFileExtensions).toEqual([".json", ".yaml", ".yml"]);
+      expect(mcpProcessor.expectedFileExtensions).toEqual([
+        ".json",
+        ".yaml",
+        ".yml",
+      ]);
     });
 
     it("should define model processor correctly", () => {
       expect(modelProcessor.type).toBe("model");
-      expect(modelProcessor.expectedFileExtensions).toEqual([".json", ".yaml", ".yml"]);
+      expect(modelProcessor.expectedFileExtensions).toEqual([
+        ".json",
+        ".yaml",
+        ".yml",
+      ]);
     });
 
     it("should define prompt processor correctly", () => {
       expect(promptProcessor.type).toBe("prompt");
       expect(promptProcessor.expectedFileExtensions).toEqual([".md", ".txt"]);
-      expect(promptProcessor.parseContent("test content", "test.md")).toBe("test content");
+      expect(promptProcessor.parseContent("test content", "test.md")).toBe(
+        "test content",
+      );
     });
   });
 
@@ -171,8 +185,11 @@ describe("hubLoader", () => {
     });
 
     it("should load rule from real hub: sanity/sanity-opinionated", async () => {
-      const result = await loadPackageFromHub("sanity/sanity-opinionated", ruleProcessor);
-      
+      const result = await loadPackageFromHub(
+        "sanity/sanity-opinionated",
+        ruleProcessor,
+      );
+
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
       expect(result.length).toBeGreaterThan(0);
@@ -184,10 +201,10 @@ describe("hubLoader", () => {
       // Restore real fetch and JSZip for this test
       global.fetch = originalFetch;
       vi.unmock("jszip");
-      
+
       const testSlug = "upstash/context7-mcp";
       const result = await loadPackageFromHub(testSlug, mcpProcessor);
-      
+
       expect(result).toBeDefined();
       expect(typeof result).toBe("object");
       // Should now return the parsed MCP configuration
@@ -202,10 +219,10 @@ describe("hubLoader", () => {
       // Restore real fetch and JSZip for this test
       global.fetch = originalFetch;
       vi.unmock("jszip");
-      
+
       const testSlug = "openai/gpt-5";
       const result = await loadPackageFromHub(testSlug, modelProcessor);
-      
+
       expect(result).toBeDefined();
       expect(typeof result).toBe("object");
       // Should now return the extracted model from the models array
@@ -219,8 +236,11 @@ describe("hubLoader", () => {
     }, 30000);
 
     it("should load prompt from real hub: launchdarkly/using-flags", async () => {
-      const result = await loadPackageFromHub("launchdarkly/using-flags", promptProcessor);
-      
+      const result = await loadPackageFromHub(
+        "launchdarkly/using-flags",
+        promptProcessor,
+      );
+
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
       expect(result.length).toBeGreaterThan(0);

@@ -52,6 +52,8 @@ export interface ConfigServiceState {
 export interface ModelServiceState {
   llmApi: BaseLlmApi | null;
   model: ModelConfig | null;
+  assistant: AssistantUnrolled | null;
+  authConfig: AuthConfig | null;
 }
 
 export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";

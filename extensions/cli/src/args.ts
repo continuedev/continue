@@ -37,7 +37,10 @@ function extractMultipleFlags(args: string[], flagName: string): string[] {
 /**
  * Extract value for a single-value flag
  */
-function extractSingleFlag(args: string[], flagName: string): string | undefined {
+function extractSingleFlag(
+  args: string[],
+  flagName: string,
+): string | undefined {
   const index = args.indexOf(flagName);
   if (index !== -1 && index + 1 < args.length) {
     return args[index + 1];
@@ -69,10 +72,10 @@ export function parseArgs(): CommandLineArgs {
   }
 
   result.configPath = extractSingleFlag(args, "--config");
-  
+
   const orgValue = extractSingleFlag(args, "--org");
   if (orgValue) {
-    result.organizationSlug = 
+    result.organizationSlug =
       orgValue.toLowerCase() === "personal" ? undefined : orgValue;
   }
 
@@ -107,7 +110,15 @@ export function parseArgs(): CommandLineArgs {
   }
 
   // Extract prompt from non-flag arguments
-  const flagsWithValues = ["--config", "--org", "--rule", "--mcp", "--model", "--prompt", "--format"];
+  const flagsWithValues = [
+    "--config",
+    "--org",
+    "--rule",
+    "--mcp",
+    "--model",
+    "--prompt",
+    "--format",
+  ];
   const nonFlagArgs = args.filter((arg, index) => {
     if (arg.startsWith("--") || arg === "-p") return false;
     const prevArg = index > 0 ? args[index - 1] : "";

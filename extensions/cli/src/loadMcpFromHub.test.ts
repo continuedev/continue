@@ -18,7 +18,7 @@ describe("loadMcpFromHub", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Get the mocked JSZip constructor
     const JSZip = (await import("jszip")).default;
     mockJSZip = new JSZip();
@@ -52,13 +52,14 @@ describe("loadMcpFromHub", () => {
 
   it("should parse JSON configuration files", async () => {
     const mockConfig = {
-      content: "name: test-mcp\ncommand: npx test-mcp\nargs:\n  - --port\n  - 3000"
+      content:
+        "name: test-mcp\ncommand: npx test-mcp\nargs:\n  - --port\n  - 3000",
     };
 
     // MCP packages now use the registry endpoint and return JSON directly
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: vi.fn().mockResolvedValue(mockConfig)
+      json: vi.fn().mockResolvedValue(mockConfig),
     });
 
     const result = await loadMcpFromHub("continuedev/test-mcp");
@@ -66,7 +67,7 @@ describe("loadMcpFromHub", () => {
     expect(result).toEqual({
       name: "test-mcp",
       command: "npx test-mcp",
-      args: ["--port", 3000]
+      args: ["--port", 3000],
     });
   });
 
@@ -75,7 +76,7 @@ describe("loadMcpFromHub", () => {
     // If the content field is missing or empty, it should fail
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: vi.fn().mockResolvedValue({})
+      json: vi.fn().mockResolvedValue({}),
     });
 
     const result = await loadMcpFromHub("continuedev/no-config");
@@ -88,7 +89,7 @@ describe("loadMcpFromHub", () => {
     // If the registry returns invalid JSON, it should fail at the fetch level
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: vi.fn().mockRejectedValue(new Error("Invalid JSON"))
+      json: vi.fn().mockRejectedValue(new Error("Invalid JSON")),
     });
 
     await expect(loadMcpFromHub("continuedev/invalid-json")).rejects.toThrow(

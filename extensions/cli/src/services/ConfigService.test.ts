@@ -74,13 +74,13 @@ describe("ConfigService", () => {
         config: mockConfig as any,
         source: { type: "cli-flag", path: "/config.yaml" } as any,
       });
-      
+
       const expectedConfig = {
         ...mockConfig,
         systemMessage:
           "Test system message\n\nProcessed: rule1\n\nProcessed: rule2",
       };
-      
+
       vi.mocked(configEnhancer.enhanceConfig).mockResolvedValue(expectedConfig);
 
       const state = await service.initialize(

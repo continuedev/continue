@@ -57,12 +57,13 @@ export class ConfigEnhancer {
     for (const ruleSpec of rules) {
       try {
         const processedContent = await processRule(ruleSpec);
-        
+
         // Check if this is a hub slug (contains / but doesn't start with . or /)
-        const isHubSlug = ruleSpec.includes("/") && 
-                         !ruleSpec.startsWith(".") && 
-                         !ruleSpec.startsWith("/");
-        
+        const isHubSlug =
+          ruleSpec.includes("/") &&
+          !ruleSpec.startsWith(".") &&
+          !ruleSpec.startsWith("/");
+
         if (isHubSlug) {
           // Store as RuleObject with name (slug) and rule (content)
           processedRules.push({

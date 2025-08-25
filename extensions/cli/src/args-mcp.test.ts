@@ -38,13 +38,7 @@ describe("parseArgs --mcp flag", () => {
   });
 
   it("should handle MCP flag with prompt", () => {
-    process.argv = [
-      "node",
-      "test", 
-      "--mcp",
-      "my-org/my-mcp",
-      "hello world"
-    ];
+    process.argv = ["node", "test", "--mcp", "my-org/my-mcp", "hello world"];
     const result = parseArgs();
     expect(result.mcps).toEqual(["my-org/my-mcp"]);
     expect(result.prompt).toBe("hello world");
@@ -57,8 +51,8 @@ describe("parseArgs --mcp flag", () => {
       "actual prompt",
       "--rule",
       "my-rule",
-      "--mcp", 
-      "my-org/my-mcp"
+      "--mcp",
+      "my-org/my-mcp",
     ];
     const result = parseArgs();
     expect(result.prompt).toBe("actual prompt");

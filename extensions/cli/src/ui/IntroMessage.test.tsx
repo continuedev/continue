@@ -51,14 +51,14 @@ describe("IntroMessage", () => {
 
     // Count occurrences of "nate/spanish" in the output
     const matches = output?.match(/nate\/spanish/g) || [];
-    
+
     // Should appear exactly once, not twice
     expect(matches.length).toBe(1);
-    
+
     // Verify the slug is shown, not the content
     expect(output).toContain("nate/spanish");
     expect(output).not.toContain("Always respond in Spanish");
-    
+
     // Verify plain string rule is shown as-is
     expect(output).toContain("Always be helpful");
   });
@@ -66,11 +66,7 @@ describe("IntroMessage", () => {
   it("should display rules from config correctly", () => {
     const config: AssistantUnrolled = {
       name: "Test Assistant",
-      rules: [
-        "Rule 1",
-        { name: "Rule 2" },
-        "Rule 3",
-      ],
+      rules: ["Rule 1", { name: "Rule 2" }, "Rule 3"],
     } as any;
 
     const { lastFrame } = render(
@@ -134,15 +130,15 @@ describe("IntroMessage", () => {
     const config: AssistantUnrolled = {
       name: "Test Assistant",
       rules: [
-        { 
-          name: "org/complex-rule", 
+        {
+          name: "org/complex-rule",
           rule: `---
 alwaysApply: true
 ---
 
 This is a very long rule content that should not be displayed.
 It contains multiple lines and complex formatting.
-The UI should only show the slug 'org/complex-rule'.`
+The UI should only show the slug 'org/complex-rule'.`,
         },
         { name: "another/rule", rule: "Short content" },
       ],
@@ -161,7 +157,7 @@ The UI should only show the slug 'org/complex-rule'.`
     // Should show slugs only
     expect(output).toContain("org/complex-rule");
     expect(output).toContain("another/rule");
-    
+
     // Should NOT show the rule content
     expect(output).not.toContain("This is a very long rule");
     expect(output).not.toContain("alwaysApply");

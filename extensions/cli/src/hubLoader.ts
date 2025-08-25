@@ -41,13 +41,17 @@ export const mcpProcessor: HubPackageProcessor<any> = {
       const yaml = await import("yaml");
       parsed = yaml.parse(content);
     }
-    
+
     // If the parsed content has an 'mcpServers' array, extract the first MCP server
     // This handles hub packages that return a full config block
-    if (parsed.mcpServers && Array.isArray(parsed.mcpServers) && parsed.mcpServers.length > 0) {
+    if (
+      parsed.mcpServers &&
+      Array.isArray(parsed.mcpServers) &&
+      parsed.mcpServers.length > 0
+    ) {
       return parsed.mcpServers[0];
     }
-    
+
     return parsed;
   },
 };
@@ -66,13 +70,17 @@ export const modelProcessor: HubPackageProcessor<any> = {
       const yaml = await import("yaml");
       parsed = yaml.parse(content);
     }
-    
+
     // If the parsed content has a 'models' array, extract the first model
     // This handles hub packages that return a full config block
-    if (parsed.models && Array.isArray(parsed.models) && parsed.models.length > 0) {
+    if (
+      parsed.models &&
+      Array.isArray(parsed.models) &&
+      parsed.models.length > 0
+    ) {
       return parsed.models[0];
     }
-    
+
     return parsed;
   },
 };
@@ -101,7 +109,7 @@ export async function loadPackageFromHub<T>(
   }
 
   const [ownerSlug, packageSlug] = parts;
-  
+
   // Use different endpoints based on package type
   let downloadUrl: URL;
   if (processor.type === "mcp" || processor.type === "model") {
@@ -129,7 +137,7 @@ export async function loadPackageFromHub<T>(
     if (processor.type === "mcp" || processor.type === "model") {
       // Registry endpoints return JSON with a 'content' field containing YAML/JSON
       const jsonResponse = await response.json();
-      
+
       // Extract and parse the content field
       if (jsonResponse.content) {
         // Parse the YAML/JSON content
@@ -149,12 +157,14 @@ export async function loadPackageFromHub<T>(
       const zipContents = await zip.loadAsync(arrayBuffer);
 
       // Find files matching expected extensions
-      const matchingFiles = Object.keys(zipContents.files).filter((filename) => {
-        if (zipContents.files[filename].dir) return false;
-        return processor.expectedFileExtensions.some((ext) =>
-          filename.endsWith(ext),
-        );
-      });
+      const matchingFiles = Object.keys(zipContents.files).filter(
+        (filename) => {
+          if (zipContents.files[filename].dir) return false;
+          return processor.expectedFileExtensions.some((ext) =>
+            filename.endsWith(ext),
+          );
+        },
+      );
 
       if (matchingFiles.length === 0) {
         throw new Error(
@@ -173,8 +183,13 @@ export async function loadPackageFromHub<T>(
       );
 
       // Validate if processor has validation
-      if (processor.validateContent && !processor.validateContent(parsedContent)) {
-        throw new Error(`Invalid ${processor.type} content in ${matchingFiles[0]}`);
+      if (
+        processor.validateContent &&
+        !processor.validateContent(parsedContent)
+      ) {
+        throw new Error(
+          `Invalid ${processor.type} content in ${matchingFiles[0]}`,
+        );
       }
 
       return parsedContent;
@@ -222,7 +237,7 @@ export async function processRule(ruleSpec: string): Promise<string> {
   ) {
     const fs = await import("fs");
     const path = await import("path");
-    
+
     try {
       const absolutePath = path.resolve(ruleSpec);
       if (!fs.existsSync(absolutePath)) {
@@ -230,7 +245,9 @@ export async function processRule(ruleSpec: string): Promise<string> {
       }
       return fs.readFileSync(absolutePath, "utf-8");
     } catch (error: any) {
-      throw new Error(`Failed to read rule file "${ruleSpec}": ${error.message}`);
+      throw new Error(
+        `Failed to read rule file "${ruleSpec}": ${error.message}`,
+      );
     }
   }
 
@@ -252,7 +269,9 @@ export async function loadPackagesFromHub<T>(
       const content = await loadPackageFromHub(slug, processor);
       results.push(content);
     } catch (error: any) {
-      logger.warn(`Failed to load ${processor.type} "${slug}": ${error.message}`);
+      logger.warn(
+        `Failed to load ${processor.type} "${slug}": ${error.message}`,
+      );
     }
   }
 

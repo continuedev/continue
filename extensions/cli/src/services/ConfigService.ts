@@ -1,4 +1,3 @@
-
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
@@ -53,7 +52,10 @@ export class ConfigService
     let config = result.config;
 
     // Apply injected config if provided
-    if (injectedConfigOptions && this.hasInjectedConfig(injectedConfigOptions)) {
+    if (
+      injectedConfigOptions &&
+      this.hasInjectedConfig(injectedConfigOptions)
+    ) {
       config = await configEnhancer.enhanceConfig(
         config,
         injectedConfigOptions,
@@ -99,7 +101,10 @@ export class ConfigService
       let config = result.config;
 
       // Apply injected config if provided
-      if (injectedConfigOptions && this.hasInjectedConfig(injectedConfigOptions)) {
+      if (
+        injectedConfigOptions &&
+        this.hasInjectedConfig(injectedConfigOptions)
+      ) {
         config = await configEnhancer.enhanceConfig(
           config,
           injectedConfigOptions,
