@@ -28,6 +28,7 @@ import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
+import { enhanceParsedArgs } from "./enhanceParsedArgs";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -253,6 +254,19 @@ export const streamNormalInput = createAsyncThunk<
     const newState = getState();
     const toolSettings = newState.ui.toolSettings;
     const allToolCallStates = selectCurrentToolCalls(newState);
+
+    await Promise.all(
+      allToolCallStates.map((tcState) =>
+        enhanceParsedArgs(
+          extra.ideMessenger,
+          dispatch,
+          tcState?.toolCall.function.name,
+          tcState.toolCallId,
+          tcState.parsedArgs,
+        ),
+      ),
+    );
+
     const generatingToolCalls = allToolCallStates.filter(
       (toolCallState) => toolCallState.status === "generating",
     );
