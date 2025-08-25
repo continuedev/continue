@@ -3,7 +3,6 @@ import { ApplyState } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch } from "../redux/hooks";
-import { cancelToolCall } from "../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../util";
 import { ToolTip } from "./gui/Tooltip";
 
@@ -24,19 +23,6 @@ export default function AcceptRejectAllButtons({
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
-    // For reject operations, cancel all tool calls associated with pending apply states
-    if (status === "rejectDiff") {
-      for (const applyState of pendingApplyStates) {
-        if (applyState.toolCallId && applyState.status === "done") {
-          dispatch(
-            cancelToolCall({
-              toolCallId: applyState.toolCallId,
-            }),
-          );
-        }
-      }
-    }
-
     // Process all pending apply states
     for (const { filepath = "", streamId } of pendingApplyStates) {
       ideMessenger.post(status, {

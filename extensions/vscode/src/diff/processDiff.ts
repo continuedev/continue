@@ -42,8 +42,6 @@ export async function processDiff(
   }
 
   if (streamId) {
-    const fileContent = await ide.readFile(newOrCurrentUri);
-
     // Record the edit outcome before updating the apply state
     await editOutcomeTracker.recordEditOutcome(
       streamId,
@@ -51,14 +49,10 @@ export async function processDiff(
       DataLogger.getInstance(),
     );
 
-    await sidebar.webviewProtocol.request("updateApplyState", {
-      fileContent,
-      filepath: newOrCurrentUri,
-      streamId,
-      status: "closed",
-      numDiffs: 0,
-      toolCallId,
-    });
+    // Note: We don't need to send updateApplyState here because the VerticalDiffHandler
+    // already sends it with the correct acceptance counts in its clear() method.
+    // Sending it again would overwrite the correct counts with zeros since the handler
+    // gets disposed after calling clear().
   }
 
   // Save the file

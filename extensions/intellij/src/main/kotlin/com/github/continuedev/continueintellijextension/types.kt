@@ -286,6 +286,8 @@ data class ApplyState(
     val streamId: String,
     val status: String,
     val numDiffs: Int? = null,
+    val numAccepted: Int? = null,
+    val numRejected: Int? = null,
     val filepath: String? = null,
     val fileContent: String? = null,
     val originalFileContent: String? = null,

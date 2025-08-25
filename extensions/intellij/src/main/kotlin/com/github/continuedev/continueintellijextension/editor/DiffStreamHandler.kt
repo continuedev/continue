@@ -43,6 +43,8 @@ class DiffStreamHandler(
     private var hasAcceptedOrRejectedBlock: Boolean = false
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
     private val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+    private var acceptedDiffs: Int = 0
+    private var rejectedDiffs: Int = 0
 
 
     init {
@@ -59,6 +61,8 @@ class DiffStreamHandler(
             streamId = streamId,
             status = status.status,
             numDiffs = diffBlocks.size,
+            numAccepted = acceptedDiffs,
+            numRejected = rejectedDiffs,
             filepath = virtualFile?.url,
             fileContent = "not implemented",
             toolCallId = toolCallId
@@ -69,7 +73,11 @@ class DiffStreamHandler(
 
     fun acceptAll() {
         ApplicationManager.getApplication().invokeLater {
+            val numDiffsBeingAccepted = diffBlocks.size
+            acceptedDiffs += numDiffsBeingAccepted
             diffBlocks.toList().forEach { it.handleAccept() }
+            // Send final closed status after all diffs are accepted
+            setClosed()
         }
     }
 
@@ -80,9 +88,15 @@ class DiffStreamHandler(
         if (hasAcceptedOrRejectedBlock) {
             ApplicationManager.getApplication().invokeLater {
                 val blocksToReject = diffBlocks.toList()
+                val numDiffsBeingRejected = blocksToReject.size
+                rejectedDiffs += numDiffsBeingRejected
                 blocksToReject.toList().forEach { it.handleReject() }
+                // Send final closed status after all diffs are rejected
+                setClosed()
             }
         } else {
+            val numDiffsBeingRejected = diffBlocks.size
+            rejectedDiffs += numDiffsBeingRejected
             undoChanges()
             // We have to manually call `handleClosedState`, but above,
             // this is done by invoking the button handlers
@@ -165,6 +179,13 @@ class DiffStreamHandler(
     private fun handleDiffBlockAcceptOrReject(diffBlock: VerticalDiffBlock, didAccept: Boolean) {
         hasAcceptedOrRejectedBlock = true
 
+        // Track acceptance/rejection
+        if (didAccept) {
+            acceptedDiffs++
+        } else {
+            rejectedDiffs++
+        }
+
         diffBlocks.remove(diffBlock)
 
         if (didAccept) {
@@ -176,8 +197,7 @@ class DiffStreamHandler(
         if (diffBlocks.isEmpty()) {
             setClosed()
         } else {
-            // TODO: It's confusing that we pass `DONE` here. What we're doing is updating the UI with the latest
-            // diff count. We should have a dedicated status for this.
+            // Send intermediate status update with current acceptance counts
             sendUpdate(ApplyStateStatus.DONE)
         }
     }

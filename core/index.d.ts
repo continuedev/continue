@@ -1375,6 +1375,8 @@ export interface ApplyState {
   streamId: string;
   status?: ApplyStateStatus;
   numDiffs?: number;
+  numAccepted?: number;
+  numRejected?: number;
   filepath?: string;
   fileContent?: string;
   originalFileContent?: string;

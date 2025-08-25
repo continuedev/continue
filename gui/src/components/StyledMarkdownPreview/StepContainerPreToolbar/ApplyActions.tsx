@@ -33,7 +33,10 @@ export function ApplyActions(props: ApplyActionsProps) {
       return (
         <div className="bg-badge flex select-none items-center rounded sm:gap-1 md:px-1.5">
           <span className="text-lightgray flex items-center text-center text-xs max-md:hidden">
-            {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
+            {props.applyState?.numAccepted !== undefined ||
+            props.applyState?.numRejected !== undefined
+              ? `${props.applyState?.numAccepted || 0} accepted, ${props.applyState?.numRejected || 0} rejected`
+              : `${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
           </span>
 
           <div className="flex items-center">
