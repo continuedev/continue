@@ -50,9 +50,7 @@ class ContinuePluginService(private val project: Project) : DumbAware {
         editorFactory.eventMulticaster.addSelectionListener(activeHandlerManager, project)
         editorFactory.eventMulticaster.addCaretListener(activeHandlerManager, project)
         editorFactory.eventMulticaster.addDocumentListener(documentChangeTracker, project)
-
-//        setupCompletionTracking(activeHandlerManager)
-
+        
         // Also register disposal cleanup
         Disposer.register(project) {
             activeHandlerManager.dispose()
