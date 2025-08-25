@@ -26,6 +26,7 @@ export function FeedbackButtons({ item }: FeedbackButtonsProps) {
           name: "chatFeedback",
           data: {
             ...logData,
+            completionOptions: {}, // TODO delete completionOptions from @continuedev/config-yaml
             modelProvider: modelProvider || "unknown",
             modelName: modelTitle,
             modelTitle: modelTitle,

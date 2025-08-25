@@ -1143,7 +1143,6 @@ export abstract class BaseLLM implements ILLM {
       modelProvider: this.underlyingProviderName,
       prompt,
       completion,
-      completionOptions,
     };
   }
 
