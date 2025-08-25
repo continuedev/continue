@@ -25,7 +25,7 @@ class Vllm extends OpenAI {
   constructor(options: LLMOptions) {
     super(options);
 
-    if (options.model === "AUTODETECT") {
+    if (options.isFromAutoDetect) {
       this._setupCompletionOptions();
     }
   }

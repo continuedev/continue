@@ -277,12 +277,12 @@ async function intermediateToFinalConfig({
             const modelNames = await llm.listModels();
             const detectedModels = await Promise.all(
               modelNames.map(async (modelName) => {
-                const autodetectTitle = `${desc.title || desc.model} (auto-detected)`;
                 return await llmFromDescription(
                   {
                     ...desc,
                     model: modelName,
-                    title: autodetectTitle,
+                    title: modelName,
+                    isFromAutoDetect: true,
                   },
                   ide.readFile.bind(ide),
                   getUriFromPath,
@@ -320,6 +320,7 @@ async function intermediateToFinalConfig({
                     ...desc.options,
                     model: modelName,
                     logger: llmLogger,
+                    isFromAutoDetect: true,
                   },
                 }),
             );
@@ -627,6 +628,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     apiKeyLocation: llm.apiKeyLocation,
     envSecretLocations: llm.envSecretLocations,
     sourceFile: llm.sourceFile,
+    isFromAutoDetect: llm.isFromAutoDetect,
   };
 }
 
