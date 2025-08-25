@@ -1,14 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ChatMessage } from "core";
 import posthog from "posthog-js";
 import {
   cancelToolCall as cancelToolCallAction,
-  streamUpdate,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { findToolCallById } from "../util";
-import { streamNormalInput } from "./streamNormalInput";
+import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 const DEFAULT_USER_REJECTION_MESSAGE = `The user skipped the tool call.
 If the tool call is optional or non-critical to the main goal, skip it and continue with the next step.
@@ -22,7 +20,7 @@ export const cancelToolCallThunk = createAsyncThunk<
 >("chat/cancelToolCall", async ({ toolCallId }, { dispatch, getState }) => {
   const state = getState();
   const continueAfterToolRejection =
-    state.config.config.ui?.continueAfterToolRejection ?? false;
+    state.config.config.ui?.continueAfterToolRejection;
   const toolCallState = findToolCallById(state.session.history, toolCallId);
 
   if (toolCallState) {
@@ -45,7 +43,7 @@ export const cancelToolCallThunk = createAsyncThunk<
             name: "Tool Call Rejected",
             description: "User skipped the tool call",
             content: DEFAULT_USER_REJECTION_MESSAGE,
-            hidden: false,
+            hidden: true,
           },
         ],
       }),
@@ -55,15 +53,5 @@ export const cancelToolCallThunk = createAsyncThunk<
   // Dispatch the actual cancel action
   dispatch(cancelToolCallAction({ toolCallId }));
 
-  if (continueAfterToolRejection) {
-    const rejectionMessage: ChatMessage = {
-      role: "tool",
-      content: "User skipped the tool call",
-      toolCallId,
-    };
-    dispatch(streamUpdate([rejectionMessage]));
-
-    // Continue the conversation by triggering a new LLM response
-    void dispatch(streamNormalInput({}));
-  }
+  void dispatch(streamResponseAfterToolCall({ toolCallId }));
 });

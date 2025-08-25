@@ -16,7 +16,7 @@ import { streamThunkWrapper } from "./streamThunkWrapper";
  */
 function areAllToolsDoneStreaming(
   assistantMessage: ChatHistoryItemWithMessageId | undefined,
-  continueAfterToolRejection: boolean,
+  continueAfterToolRejection: boolean | undefined,
 ): boolean {
   // This might occur because of race conditions, if so, the tools are completed
   if (!assistantMessage?.toolCallStates) {
@@ -78,7 +78,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         if (
           areAllToolsDoneStreaming(
             assistantMessage,
-            state.config.config.ui?.continueAfterToolRejection ?? false,
+            state.config.config.ui?.continueAfterToolRejection,
           )
         ) {
           unwrapResult(await dispatch(streamNormalInput({})));
