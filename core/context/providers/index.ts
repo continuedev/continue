@@ -2,7 +2,6 @@ import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
 import { Telemetry } from "../../util/posthog";
 
-import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
@@ -25,7 +24,6 @@ import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
 import MCPContextProvider from "./MCPContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import OSContextProvider from "./OSContextProvider";
-import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
 import RulesContextProvider from "./RulesContextProvider";
@@ -58,7 +56,6 @@ export const Providers: (typeof BaseContextProvider)[] = [
   DocsContextProvider,
   GitLabMergeRequestContextProvider,
   JiraIssuesContextProvider,
-  PostgresContextProvider,
   DatabaseContextProvider,
   CodebaseContextProvider,
   CodeContextProvider,
@@ -71,7 +68,6 @@ export const Providers: (typeof BaseContextProvider)[] = [
   WebContextProvider,
   MCPContextProvider,
   GitCommitContextProvider,
-  ClipboardContextProvider,
   RulesContextProvider,
 ];
 
