@@ -215,7 +215,7 @@ program
 
 // Serve subcommand
 program
-  .command("serve [prompt]")
+  .command("serve [prompt]", { hidden: true })
   .description("Start an HTTP server with /state and /message endpoints")
   .option(
     "--timeout <seconds>",
