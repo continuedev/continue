@@ -53,8 +53,8 @@ export const lsToolImpl: ToolImpl = async (args, extras) => {
       warningContent += ". Try using a non-recursive search";
     }
     contextItems.push({
-      name: "ls truncation warning",
-      description: "Informs the model that ls results were truncated",
+      name: "Truncation warning",
+      description: "",
       content: warningContent,
     });
   }

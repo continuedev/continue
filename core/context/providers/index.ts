@@ -12,6 +12,7 @@ import DebugLocalsProvider from "./DebugLocalsProvider";
 import DiffContextProvider from "./DiffContextProvider";
 import DiscordContextProvider from "./DiscordContextProvider";
 import DocsContextProvider from "./DocsContextProvider";
+import FileContextProvider from "./FileContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import FolderContextProvider from "./FolderContextProvider";
 import GitCommitContextProvider from "./GitCommitContextProvider";
@@ -41,6 +42,7 @@ import WebContextProvider from "./WebContextProvider";
  * See this issue for details: https://github.com/continuedev/continue/issues/1365
  */
 export const Providers: (typeof BaseContextProvider)[] = [
+  FileContextProvider,
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,

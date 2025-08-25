@@ -59,7 +59,7 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { PolicySingleton } from "../control-plane/PolicySingleton";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import { getToolsForIde } from "../tools";
+import { getBaseToolDefinitions } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
 import { loadConfigContextProviders } from "./loadContextProviders";
@@ -283,6 +283,7 @@ async function intermediateToFinalConfig({
                     ...desc,
                     model: modelName,
                     title: modelName,
+                    isFromAutoDetect: true,
                   },
                   ide.readFile.bind(ide),
                   getUriFromPath,
@@ -320,6 +321,7 @@ async function intermediateToFinalConfig({
                     ...desc.options,
                     model: modelName,
                     logger: llmLogger,
+                    isFromAutoDetect: true,
                   },
                 }),
             );
@@ -499,7 +501,7 @@ async function intermediateToFinalConfig({
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    tools: await getToolsForIde(ide),
+    tools: getBaseToolDefinitions(),
     mcpServerStatuses: [],
     slashCommands: [],
     modelsByRole: {
@@ -632,6 +634,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     apiKeyLocation: llm.apiKeyLocation,
     envSecretLocations: llm.envSecretLocations,
     sourceFile: llm.sourceFile,
+    isFromAutoDetect: llm.isFromAutoDetect,
   };
 }
 

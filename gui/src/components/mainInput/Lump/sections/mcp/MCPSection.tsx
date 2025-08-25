@@ -253,7 +253,7 @@ function MCPSection() {
     }));
   }, [servers, selectedProfile]);
 
-  if (disableMcp) {
+  if (true) {
     return (
       <div className="flex flex-col items-center justify-center p-2">
         <span className="text-description">

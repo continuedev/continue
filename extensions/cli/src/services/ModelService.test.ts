@@ -74,6 +74,8 @@ describe("ModelService", () => {
       expect(state).toEqual({
         llmApi: mockLlmApi,
         model: mockAssistant.models![0],
+        assistant: mockAssistant,
+        authConfig: mockAuthConfig,
       });
     });
 
@@ -135,6 +137,8 @@ describe("ModelService", () => {
       expect(state).toEqual({
         llmApi: newLlmApi,
         model: newAssistant.models![0],
+        assistant: newAssistant,
+        authConfig: mockAuthConfig,
       });
     });
   });
@@ -157,6 +161,8 @@ describe("ModelService", () => {
       expect(state).toEqual({
         llmApi: newLlmApi,
         model: mockAssistant.models![1],
+        assistant: mockAssistant,
+        authConfig: mockAuthConfig,
       });
       expect(service.getState()).toEqual(state);
     });
