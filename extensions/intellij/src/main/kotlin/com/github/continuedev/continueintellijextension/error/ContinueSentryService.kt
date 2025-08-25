@@ -20,7 +20,7 @@ private typealias SentryAttachment = io.sentry.Attachment
 class ContinueSentryService(
     private val telemetryStatus: ContinueTelemetryStatus = service<ContinueTelemetryStatusService>()
 ) {
-    private val log = Logger.getInstance(ContinueSentryService::class.java)
+    private val log = Logger.getInstance(ContinueSentryService::class.java.simpleName)
 
     init {
         Sentry.init { config ->
@@ -42,7 +42,7 @@ class ContinueSentryService(
         ignoreTelemetrySettings: Boolean = false
     ) {
         if (!ignoreTelemetrySettings && !telemetryStatus.allowAnonymousTelemetry) {
-            log.warn("Sentry report was ignored because telemetry is disabled")
+            log.warn("Sentry report was ignored because telemetry is disabled", throwable)
             return
         }
         val sentryEvent = SentryEvent()
@@ -50,14 +50,14 @@ class ContinueSentryService(
         sentryEvent.message = Message().apply { this.message = message }
         val hint = Hint.withAttachments(attachments?.map { SentryAttachment(it.bytes, it.path) })
         Sentry.captureEvent(sentryEvent, hint)
-        log.warn("Exception sent to Sentry: $message", throwable)
+        log.warn("Exception sent to Sentry", throwable)
     }
 
     fun reportMessage(
         message: String,
     ) {
         if (!telemetryStatus.allowAnonymousTelemetry) {
-            log.warn("Sentry message report was ignored because telemetry is disabled")
+            log.warn("Sentry message report was ignored because telemetry is disabled: $message")
             return
         }
         Sentry.captureMessage(message)
