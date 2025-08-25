@@ -66,8 +66,8 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             const isErrored = toolState.status === "errored";
             
             return (
-              <Box key={toolIndex} flexDirection="column">
-                <Box marginLeft={1} marginBottom={1}>
+              <Box key={toolIndex} flexDirection="column" marginBottom={1}>
+                <Box marginLeft={1}>
                   <Text color={isErrored ? "red" : isCompleted ? "green" : "white"}>
                     {isCompleted || isErrored ? "●" : "○"}
                   </Text>
