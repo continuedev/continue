@@ -1058,9 +1058,12 @@ declare global {
     streamId: string;
     status?: ApplyStateStatus;
     numDiffs?: number;
+    numAccepted?: number;
+    numRejected?: number;
     filepath?: string;
     fileContent?: string;
     originalFileContent?: string;
+    toolCallId?: string;
   }
   
   export interface RangeInFileWithContents {
