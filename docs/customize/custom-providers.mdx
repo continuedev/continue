@@ -675,35 +675,6 @@ Response
 [  {    "name": "",    "description": "",    "content": ""  }]// OR{  "name": "",  "description": "",  "content": ""}
 ```
 
-### @Commits Context Provider – Reference Git Commit Metadata and Diffs
-
-Reference specific git commit metadata and diff or all of the recent commits.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: commit
-    params:
-      Depth: 50
-      LastXCommitsDepth: 10
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    { "name": "commit", "params": { "Depth": 50, "LastXCommitsDepth": 10 } }
-  ]
-}
-```
-
-The depth is how many commits will be loaded into the submenu, defaults to 50. The LastXCommitsDepth is how many recent commits will be included, defaults to 10.
-
 ### @Greptile Context Provider – Query Greptile Index of Repo/Branch
 
 Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
