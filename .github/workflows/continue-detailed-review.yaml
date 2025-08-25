@@ -25,7 +25,7 @@ jobs:
           private-key: ${{ secrets.CONTINUE_APP_PRIVATE_KEY }}
 
       - name: Run Detailed PR Review
-        uses: continuedev/continue/actions/detailed-review@bdougie/use-continue-agent
+        uses: continuedev/continue/actions/detailed-review@0747efa57100507e9565d5863a172dcb0e05175c
         with:
           continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
           continue-org: continuedev
