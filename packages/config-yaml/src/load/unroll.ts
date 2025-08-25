@@ -392,12 +392,13 @@ export async function unrollBlocks(
               )
             ) {
               throw new Error(
-                `${blockIdentifier.uriType === 'slug' 
-                  ? encodePackageSlug({
-                      ownerSlug: blockIdentifier.fullSlug.ownerSlug,
-                      packageSlug: blockIdentifier.fullSlug.packageSlug,
-                    })
-                  : encodePackageIdentifier(blockIdentifier)
+                `${
+                  blockIdentifier.uriType === "slug"
+                    ? encodePackageSlug({
+                        ownerSlug: blockIdentifier.fullSlug.ownerSlug,
+                        packageSlug: blockIdentifier.fullSlug.packageSlug,
+                      })
+                    : encodePackageIdentifier(blockIdentifier)
                 } is block listed and can not be used.`,
               );
             }

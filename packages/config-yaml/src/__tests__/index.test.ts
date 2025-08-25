@@ -360,9 +360,11 @@ describe("E2E Scenarios", () => {
     expect(result.errors).toBeDefined();
     expect(result.errors?.length).toBeGreaterThan(0);
     expect(
-      result.errors?.some(error => 
-        error.message.includes("test-org/gemini is block listed and can not be used.")
-      )
+      result.errors?.some((error) =>
+        error.message.includes(
+          "test-org/gemini is block listed and can not be used.",
+        ),
+      ),
     ).toBe(true);
   });
 
@@ -404,9 +406,11 @@ describe("E2E Scenarios", () => {
     expect(result.errors).toBeDefined();
     expect(result.errors?.length).toBeGreaterThan(0);
     expect(
-      result.errors?.some(error => 
-        error.message.includes("test-org/gemini is block listed and can not be used.")
-      )
+      result.errors?.some((error) =>
+        error.message.includes(
+          "test-org/gemini is block listed and can not be used.",
+        ),
+      ),
     ).toBe(true);
   });
 
