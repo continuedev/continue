@@ -13,6 +13,8 @@ export interface CommandLineArgs {
 
 // Re-export hub loader functions for backward compatibility
 export { loadMcpFromHub, processRule } from "./hubLoader.js";
+// Alias processRule as processPromptOrRule for backward compatibility
+export { processRule as processPromptOrRule } from "./hubLoader.js";
 
 /**
  * Extract values for a specific flag that can appear multiple times

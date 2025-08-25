@@ -41,7 +41,7 @@ export class ConfigService
   async doInitialize(
     authConfig: AuthConfig,
     configPath: string | undefined,
-    organizationId: string | null,
+    _organizationId: string | null,
     apiClient: DefaultApiInterface,
     injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
@@ -80,7 +80,7 @@ export class ConfigService
   async switchConfig(
     newConfigPath: string,
     authConfig: AuthConfig,
-    organizationId: string | null,
+    _organizationId: string | null,
     apiClient: DefaultApiInterface,
     injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
@@ -137,7 +137,7 @@ export class ConfigService
    */
   async reload(
     authConfig: AuthConfig,
-    organizationId: string | null,
+    _organizationId: string | null,
     apiClient: DefaultApiInterface,
     injectedConfigOptions?: BaseCommandOptions,
   ): Promise<ConfigServiceState> {
@@ -150,7 +150,7 @@ export class ConfigService
     return this.switchConfig(
       this.currentState.configPath,
       authConfig,
-      organizationId,
+      _organizationId,
       apiClient,
       injectedConfigOptions,
     );

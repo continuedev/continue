@@ -15,6 +15,7 @@ interface StartTUIChatOptions {
   config?: string;
   org?: string;
   rule?: string[];
+  prompt?: string[];
   toolPermissionOverrides?: {
     allow?: string[];
     ask?: string[];
@@ -33,6 +34,7 @@ export async function startTUIChat(
     config,
     org,
     rule,
+    prompt,
     toolPermissionOverrides,
     skipOnboarding,
     customStdin,
@@ -41,7 +43,7 @@ export async function startTUIChat(
   // Initialize services only if not already done (skipOnboarding means already initialized)
   if (!skipOnboarding) {
     await initializeServices({
-      options: { config, org, rule },
+      options: { config, org, rule, prompt },
       headless: false,
       toolPermissionOverrides,
     });
@@ -62,6 +64,7 @@ export async function startTUIChat(
         initialPrompt,
         resume,
         additionalRules: rule,
+        additionalPrompts: prompt,
       }),
     }),
     renderOptions,

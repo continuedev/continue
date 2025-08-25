@@ -45,8 +45,8 @@ export function addCommonOptions(command: Command): Command {
       [] as string[],
     )
     .option(
-      "--prompt <slug>",
-      "Add a prompt from the hub (slug in format 'owner/package'). Can be specified multiple times.",
+      "--prompt <prompt>",
+      "Add to the initial user message (can be a file path, hub slug, or string content). Can be specified multiple times.",
       (value: string, previous: string[] | undefined) => {
         const array = Array.isArray(previous) ? previous : [];
         array.push(value);

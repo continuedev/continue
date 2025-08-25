@@ -412,6 +412,16 @@ const UserInput: React.FC<UserInputProps> = ({
     return false;
   };
 
+  // Clear input function
+  const clearInput = () => {
+    textBuffer.clear();
+    setInputText("");
+    setCursorPosition(0);
+    setShowSlashCommands(false);
+    setShowFileSearch(false);
+    inputHistory.resetNavigation();
+  };
+
   useInput((input, key) => {
     // Don't handle any input when disabled
     if (disabled) {
@@ -427,6 +437,7 @@ const UserInput: React.FC<UserInputProps> = ({
         showSlashCommands,
         showFileSearch,
         cycleModes,
+        clearInput,
       })
     ) {
       return;

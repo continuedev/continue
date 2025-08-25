@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 // Mock modules
 vi.mock("../auth/workos.js");
 vi.mock("../configLoader.js");
-vi.mock("../args.js");
 vi.mock("../configEnhancer.js");
 vi.mock("./ServiceContainer.js");
 
