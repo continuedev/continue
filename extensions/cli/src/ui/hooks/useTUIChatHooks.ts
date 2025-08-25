@@ -38,21 +38,10 @@ export function useIntroMessage(
   const [showIntroMessage, setShowIntroMessage] = useState(false);
 
   useEffect(() => {
-    const shouldShow =
-      !isRemoteMode &&
-      allServicesReady &&
-      !!services.config?.config &&
-      !!services.model?.model &&
-      !!services.mcp?.mcpService;
+    const shouldShow = !isRemoteMode;
 
     setShowIntroMessage(shouldShow);
-  }, [
-    isRemoteMode,
-    allServicesReady,
-    services.config?.config,
-    services.model?.model,
-    services.mcp?.mcpService,
-  ]);
+  }, [isRemoteMode]);
 
   return [showIntroMessage, setShowIntroMessage] as const;
 }

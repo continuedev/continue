@@ -70,7 +70,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     const items: React.ReactElement[] = [];
 
     // Add intro message as first item if it should be shown
-    if (showIntroMessage && config && model && mcpService) {
+    if (showIntroMessage) {
       items.push(
         <IntroMessage
           key="intro"
