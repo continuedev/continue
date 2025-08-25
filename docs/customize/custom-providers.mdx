@@ -470,64 +470,6 @@ For example, type "@Google python tutorial" if you want to search and discuss wa
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
-### @Gitlab Merge Request Context Provider – Reference GitLab Merge Requests
-
-Reference an open MR for this branch on GitLab.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: gitlab-mr
-    params:
-      token: "..."
-```
-
-config.json
-
-```json
-{ "contextProviders": [{ "name": "gitlab-mr", "params": { "token": "..." } }] }
-```
-
-You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope.
-
-#### How to Use Self-Hosted GitLab
-
-You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: gitlab-mr
-    params:
-      token: "..."
-      domain: "gitlab.example.com"
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "gitlab-mr",
-      "params": { "token": "...", "domain": "gitlab.example.com" }
-    }
-  ]
-}
-```
-
-#### How to Provide Context by Filtering Comments
-
-If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
-
 ### @Jira Context Provider – Reference Jira Issues
 
 Reference the conversation in a Jira issue.
