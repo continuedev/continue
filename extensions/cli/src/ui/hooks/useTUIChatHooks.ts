@@ -108,7 +108,7 @@ export function useCurrentMode() {
 // Custom hook to combine all selector logic
 export function useSelectors(
   configPath: string | undefined,
-  setMessages: React.Dispatch<React.SetStateAction<any[]>>,
+  setChatHistory: React.Dispatch<React.SetStateAction<any[]>>,
   resetChatHistory: () => void,
 ): {
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
@@ -117,14 +117,22 @@ export function useSelectors(
   const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
+      // Convert message to ChatHistoryItem format
+      setChatHistory((prev) => [...prev, {
+        message: { role: "system", content: message.content },
+        contextItems: [],
+      }]);
     },
     onChatReset: resetChatHistory,
   });
 
   const { handleModelSelect } = useModelSelector({
     onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
+      // Convert message to ChatHistoryItem format
+      setChatHistory((prev) => [...prev, {
+        message: { role: "system", content: message.content },
+        contextItems: [],
+      }]);
     },
   });
 

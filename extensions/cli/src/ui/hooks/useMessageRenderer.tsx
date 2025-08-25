@@ -1,12 +1,12 @@
 import React, { useCallback } from "react";
 
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { MemoizedMessage } from "../components/MemoizedMessage.js";
-import { DisplayMessage } from "../types.js";
 
 export function useMessageRenderer() {
   const renderMessage = useCallback(
-    (message: DisplayMessage, index: number) => {
-      return <MemoizedMessage key={index} message={message} index={index} />;
+    (item: ChatHistoryItem, index: number) => {
+      return <MemoizedMessage key={index} item={item} index={index} />;
     },
     [],
   );

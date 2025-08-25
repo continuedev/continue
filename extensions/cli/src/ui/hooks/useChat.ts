@@ -1,8 +1,9 @@
 import { useApp } from "ink";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { useEffect, useState } from "react";
 
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { findCompactionIndex } from "../../compaction.js";
+import { convertToUnifiedHistory, convertFromUnifiedHistory } from "../../messageConversion.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
 import { loadSession, saveSession } from "../../session.js";
@@ -10,7 +11,6 @@ import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import { DisplayMessage } from "../types.js";
 
 import {
   formatMessageWithFiles,
@@ -54,7 +54,7 @@ export function useChat({
 }: UseChatProps) {
   const { exit } = useApp();
 
-  const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
     () => {
       // In remote mode, start with empty history (will be populated by polling)
       if (isRemoteMode) {
@@ -65,24 +65,15 @@ export function useChat({
       // Load previous session if resume flag is used
       // If no session loaded or not resuming, we'll need to add system message
       // We can't make this async, so we'll handle it in the useEffect
-      return resume ? (loadSession() ?? []) : [];
+      if (resume) {
+        const savedHistory = loadSession();
+        if (savedHistory) {
+          return convertToUnifiedHistory(savedHistory);
+        }
+      }
+      return [];
     },
   );
-
-  const [messages, setMessages] = useState<DisplayMessage[]>(() => {
-    if (resume) {
-      const savedHistory = loadSession();
-      if (savedHistory) {
-        return savedHistory
-          .filter((msg) => msg.role !== "system")
-          .map((msg) => ({
-            role: msg.role,
-            content: msg.content as string,
-          }));
-      }
-    }
-    return [];
-  });
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
@@ -128,7 +119,6 @@ export function useChat({
 
     return setupRemotePolling({
       remoteUrl,
-      setMessages,
       setChatHistory,
       setIsWaitingForResponse,
       responseStartTime,
@@ -187,7 +177,7 @@ export function useChat({
   }, [initialPrompt, additionalPrompts, isChatHistoryInitialized]);
 
   const executeStreamingResponse = async (
-    newHistory: ChatCompletionMessageParam[],
+    newHistory: ChatHistoryItem[],
     currentCompactionIndex: number | null,
     message: string,
   ) => {
@@ -208,17 +198,13 @@ export function useChat({
     });
 
     try {
-      const currentStreamingMessageRef = {
-        current: null as DisplayMessage | null,
-      };
       const streamCallbacks = createStreamCallbacks(
-        { setMessages, setActivePermissionRequest },
-        currentStreamingMessageRef,
+        { setChatHistory, setActivePermissionRequest }
       );
 
       // Execute streaming chat response
       await executeStreaming({
-        newHistory,
+        chatHistory: newHistory,
         model,
         llmApi,
         controller,
@@ -226,39 +212,21 @@ export function useChat({
         currentCompactionIndex,
       });
 
-      if (
-        currentStreamingMessageRef.current &&
-        currentStreamingMessageRef.current.content
-      ) {
-        const messageContent = currentStreamingMessageRef.current.content;
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: messageContent,
-            isStreaming: false,
-          },
-        ]);
-      }
-
-      // Update the chat history with the complete conversation after streaming
-      setChatHistory(newHistory);
-      logger.debug("Chat history updated", {
-        finalHistoryLength: newHistory.length,
-      });
-
       // Save the updated history to session
       logger.debug("Saving session", { historyLength: newHistory.length });
-      saveSession(newHistory);
+      const legacyHistory = convertFromUnifiedHistory(newHistory);
+      saveSession(legacyHistory);
       logger.debug("Session saved");
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: errorMessage,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: errorMessage,
+          },
+          contextItems: [],
         },
       ]);
     } finally {
@@ -280,7 +248,7 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
-      setMessages,
+      setChatHistory,
     });
 
     if (handled) return;
@@ -295,7 +263,6 @@ export function useChat({
             model,
             llmApi,
             setChatHistory,
-            setMessages,
             setCompactionIndex,
           });
           return;
@@ -305,7 +272,6 @@ export function useChat({
           result: commandResult,
           chatHistory,
           setChatHistory,
-          setMessages,
           exit,
           onShowConfigSelector,
           onShowModelSelector,
@@ -336,7 +302,7 @@ export function useChat({
       await handleRemoteMessage({
         remoteUrl,
         messageContent,
-        setMessages,
+        setChatHistory,
       });
       return;
     }
@@ -348,19 +314,20 @@ export function useChat({
         model,
         llmApi,
         compactionIndex,
-        setMessages,
         setChatHistory,
         setCompactionIndex,
       });
 
-    // NOW add user message to history and UI
-    const newUserMessage: ChatCompletionMessageParam = {
-      role: "user",
-      content: messageContent,
+    // NOW add user message to history
+    const newUserMessage: ChatHistoryItem = {
+      message: {
+        role: "user",
+        content: messageContent,
+      },
+      contextItems: [],
     };
     const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Execute the streaming response
     await executeStreamingResponse(newHistory, currentCompactionIndex, message);
@@ -385,12 +352,14 @@ export function useChat({
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: "[Interrupted by user]",
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: "[Interrupted by user]",
+          },
+          contextItems: [],
         },
       ]);
     }
@@ -406,7 +375,6 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
-    setMessages([]);
   };
 
   const handleToolPermissionResponse = async (
@@ -457,13 +425,15 @@ export function useChat({
       // If this is a "stop stream" rejection, abort the current request
       if (stopStream && abortController && isWaitingForResponse) {
         abortController.abort();
-        setMessages((prev) => [
+        setChatHistory((prev) => [
           ...prev,
           {
-            role: "system",
-            content:
-              "[Tool canceled - please tell Continue what to do differently]",
-            messageType: "system" as const,
+            message: {
+              role: "system",
+              content:
+                "[Tool canceled - please tell Continue what to do differently]",
+            },
+            contextItems: [],
           },
         ]);
         setIsWaitingForResponse(false);
@@ -474,8 +444,6 @@ export function useChat({
   };
 
   return {
-    messages,
-    setMessages,
     chatHistory,
     setChatHistory,
     isWaitingForResponse,

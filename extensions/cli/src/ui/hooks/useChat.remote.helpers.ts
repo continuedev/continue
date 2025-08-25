@@ -1,8 +1,7 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-
+import type { ChatHistoryItem } from "../../../../../core/index.js";
+import { convertToUnifiedHistory } from "../../messageConversion.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { logger } from "../../util/logger.js";
-import { DisplayMessage } from "../types.js";
 
 import { RemoteServerState } from "./useChat.types.js";
 
@@ -26,9 +25,8 @@ async function pollRemoteServerState(
 
 interface SetupRemotePollingOptions {
   remoteUrl: string;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
   setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
+    React.SetStateAction<ChatHistoryItem[]>
   >;
   setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
   responseStartTime: number | null;
@@ -40,7 +38,6 @@ interface SetupRemotePollingOptions {
  */
 export function setupRemotePolling({
   remoteUrl,
-  setMessages,
   setChatHistory,
   setIsWaitingForResponse,
   responseStartTime,
@@ -59,7 +56,6 @@ export function setupRemotePolling({
       if (state && isMounted) {
         updateStateFromRemote({
           state,
-          setMessages,
           setChatHistory,
           setIsWaitingForResponse,
           responseStartTime,
@@ -87,9 +83,8 @@ export function setupRemotePolling({
 
 interface UpdateStateFromRemoteOptions {
   state: RemoteServerState;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
   setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
+    React.SetStateAction<ChatHistoryItem[]>
   >;
   setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
   responseStartTime: number | null;
@@ -101,61 +96,35 @@ interface UpdateStateFromRemoteOptions {
  */
 function updateStateFromRemote({
   state,
-  setMessages,
   setChatHistory,
   setIsWaitingForResponse,
   responseStartTime,
   setResponseStartTime,
 }: UpdateStateFromRemoteOptions): void {
-  // Update messages from server
+  // Update chat history from server
   if (state.chatHistory) {
-    setMessages((prevMessages) => {
+    setChatHistory((prevHistory) => {
+      // Convert server's legacy format to unified format
+      const newHistory = convertToUnifiedHistory(state.chatHistory);
+      
       // Quick length check first
-      if (prevMessages.length !== state.chatHistory.length) {
-        return state.chatHistory as DisplayMessage[];
+      if (prevHistory.length !== newHistory.length) {
+        return newHistory;
       }
 
       // Deep comparison - check if content actually changed
-      const hasChanged = state.chatHistory.some((msg: any, index: number) => {
-        const prevMsg = prevMessages[index];
+      const hasChanged = newHistory.some((item, index) => {
+        const prevItem = prevHistory[index];
         return (
-          !prevMsg ||
-          prevMsg.role !== msg.role ||
-          prevMsg.content !== msg.content ||
-          prevMsg.messageType !== msg.messageType ||
-          prevMsg.toolName !== msg.toolName ||
-          prevMsg.toolResult !== msg.toolResult
+          !prevItem ||
+          prevItem.message.role !== item.message.role ||
+          prevItem.message.content !== item.message.content ||
+          JSON.stringify(prevItem.toolCallStates) !== JSON.stringify(item.toolCallStates)
         );
       });
 
       // Only update if there are actual changes
-      return hasChanged
-        ? (state.chatHistory as DisplayMessage[])
-        : prevMessages;
-    });
-
-    // Also update chat history for consistency
-    setChatHistory((prevChatHistory) => {
-      const newChatHistory = state.chatHistory.map((msg: any) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
-
-      // Similar comparison for chat history
-      if (prevChatHistory.length !== newChatHistory.length) {
-        return newChatHistory;
-      }
-
-      const hasChanged = newChatHistory.some((msg: any, index: number) => {
-        const prevMsg = prevChatHistory[index];
-        return (
-          !prevMsg ||
-          prevMsg.role !== msg.role ||
-          prevMsg.content !== msg.content
-        );
-      });
-
-      return hasChanged ? newChatHistory : prevChatHistory;
+      return hasChanged ? newHistory : prevHistory;
     });
   }
 
@@ -173,7 +142,7 @@ function updateStateFromRemote({
  */
 export async function handleRemoteExit(
   remoteUrl: string,
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>,
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>,
   exit: () => void,
 ): Promise<void> {
   posthogService.capture("useSlashCommand", {
@@ -186,35 +155,41 @@ export async function handleRemoteExit(
     });
 
     if (response.ok) {
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: "Remote environment is shutting down...",
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: "Remote environment is shutting down...",
+          },
+          contextItems: [],
         },
       ]);
       setTimeout(() => exit(), 1000);
     } else {
       const text = await response.text();
       logger.error("Remote shutdown failed:", text);
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: "Failed to shutdown remote environment",
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: "Failed to shutdown remote environment",
+          },
+          contextItems: [],
         },
       ]);
     }
   } catch (error) {
     logger.error("Failed to send exit request to remote server:", error);
-    setMessages((prev) => [
+    setChatHistory((prev) => [
       ...prev,
       {
-        role: "system",
-        content: "Error: Failed to connect to remote server for shutdown",
-        messageType: "system" as const,
+        message: {
+          role: "system",
+          content: "Error: Failed to connect to remote server for shutdown",
+        },
+        contextItems: [],
       },
     ]);
   }
@@ -223,7 +198,7 @@ export async function handleRemoteExit(
 interface HandleRemoteMessageOptions {
   remoteUrl: string;
   messageContent: string;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
 }
 
 /**
@@ -232,7 +207,7 @@ interface HandleRemoteMessageOptions {
 export async function handleRemoteMessage({
   remoteUrl,
   messageContent,
-  setMessages,
+  setChatHistory,
 }: HandleRemoteMessageOptions): Promise<void> {
   try {
     const response = await fetch(`${remoteUrl}/message`, {
@@ -245,24 +220,28 @@ export async function handleRemoteMessage({
 
     if (!response.ok) {
       const error = await response.json();
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: `Error: ${error.error || "Failed to send message"}`,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: `Error: ${error.error || "Failed to send message"}`,
+          },
+          contextItems: [],
         },
       ]);
     }
     // State will be updated by polling
   } catch (error) {
     logger.error("Failed to send message to remote server:", error);
-    setMessages((prev) => [
+    setChatHistory((prev) => [
       ...prev,
       {
-        role: "system",
-        content: `Error: Failed to connect to remote server`,
-        messageType: "system" as const,
+        message: {
+          role: "system",
+          content: `Error: Failed to connect to remote server`,
+        },
+        contextItems: [],
       },
     ]);
   }

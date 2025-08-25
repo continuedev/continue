@@ -2,18 +2,18 @@ import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Static, useStdout } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import type { MCPService } from "../../services/MCPService.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
-import type { DisplayMessage } from "../types.js";
 
 interface StaticChatContentProps {
   showIntroMessage: boolean;
   config?: AssistantUnrolled;
   model?: ModelConfig;
   mcpService?: MCPService;
-  messages: DisplayMessage[];
-  renderMessage: (message: DisplayMessage, index: number) => React.ReactElement;
+  chatHistory: ChatHistoryItem[];
+  renderMessage: (item: ChatHistoryItem, index: number) => React.ReactElement;
   refreshTrigger?: number; // Add a prop to trigger refresh from parent
 }
 
@@ -22,7 +22,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   config,
   model,
   mcpService,
-  messages,
+  chatHistory,
   renderMessage,
   refreshTrigger,
 }) => {
@@ -81,13 +81,15 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       );
     }
 
-    // Add all chat messages
-    messages.forEach((message, index) => {
-      items.push(renderMessage(message, index));
-    });
+    // Add all chat messages (filter out system messages)
+    chatHistory
+      .filter(item => item.message.role !== "system" || item.message.content) // Keep non-empty system messages
+      .forEach((item, index) => {
+        items.push(renderMessage(item, index));
+      });
 
     return items;
-  }, [showIntroMessage, config, model, mcpService, messages, renderMessage]);
+  }, [showIntroMessage, config, model, mcpService, chatHistory, renderMessage]);
 
   return (
     <Static

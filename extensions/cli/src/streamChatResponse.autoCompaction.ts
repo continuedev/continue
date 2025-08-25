@@ -5,7 +5,6 @@ import React from "react";
 
 import { compactChatHistory } from "./compaction.js";
 import { saveSession } from "./session.js";
-import { DisplayMessage } from "./ui/types.js";
 import { formatError } from "./util/formatError.js";
 import { logger } from "./util/logger.js";
 import { getAutoCompactMessage, shouldAutoCompact } from "./util/tokenizer.js";
@@ -16,7 +15,7 @@ interface AutoCompactionCallbacks {
   onContent?: (content: string) => void;
 
   // For TUI mode
-  setMessages?: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
+  setMessages?: React.Dispatch<React.SetStateAction<any>>; // Generic for compatibility
   setChatHistory?: React.Dispatch<
     React.SetStateAction<ChatCompletionMessageParam[]>
   >;
@@ -44,14 +43,7 @@ function notifyCompactionStart(
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(message);
   } else if (callbacks?.setMessages) {
-    callbacks.setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: message,
-        messageType: "system" as const,
-      },
-    ]);
+    // TUI mode - handled by caller
   }
 }
 
@@ -76,7 +68,7 @@ function handleCompactionSuccess(
   ) {
     callbacks.setChatHistory(result.compactedHistory);
     callbacks.setCompactionIndex(result.compactionIndex);
-    callbacks.setMessages((prev) => [
+    callbacks.setMessages((prev: any) => [
       ...prev,
       {
         role: "system",
@@ -105,7 +97,7 @@ function handleCompactionError(
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(warningMessage);
   } else if (callbacks?.setMessages) {
-    callbacks.setMessages((prev) => [
+    callbacks.setMessages((prev: any) => [
       ...prev,
       {
         role: "system",

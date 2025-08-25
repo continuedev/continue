@@ -1,13 +1,12 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
+import { convertToUnifiedHistory, convertFromUnifiedHistory } from "../../messageConversion.js";
 import { loadSession, saveSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import { DisplayMessage } from "../types.js";
 
 import { SlashCommandResult } from "./useChat.types.js";
 
@@ -17,11 +16,11 @@ import { SlashCommandResult } from "./useChat.types.js";
 export async function initChatHistory(
   resume?: boolean,
   additionalRules?: string[],
-): Promise<ChatCompletionMessageParam[]> {
+): Promise<ChatHistoryItem[]> {
   if (resume) {
     const savedHistory = loadSession();
     if (savedHistory) {
-      return savedHistory;
+      return convertToUnifiedHistory(savedHistory);
     }
   }
 
@@ -29,7 +28,7 @@ export async function initChatHistory(
     resume,
     rule: additionalRules,
   });
-  return history;
+  return convertToUnifiedHistory(history);
 }
 
 /**
@@ -43,13 +42,12 @@ export function handleConfigCommand(onShowConfigSelector: () => void): void {
 }
 
 interface HandleCompactCommandOptions {
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: any;
   llmApi: any;
   setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
+    React.SetStateAction<ChatHistoryItem[]>
   >;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
@@ -61,44 +59,55 @@ export async function handleCompactCommand({
   model,
   llmApi,
   setChatHistory,
-  setMessages,
   setCompactionIndex,
 }: HandleCompactCommandOptions): Promise<void> {
-  setMessages((prev) => [
+  // Add compacting message
+  setChatHistory((prev) => [
     ...prev,
     {
-      role: "system",
-      content: "Compacting chat history...",
-      messageType: "system" as const,
+      message: {
+        role: "system",
+        content: "Compacting chat history...",
+      },
+      contextItems: [],
     },
   ]);
 
   try {
-    const result = await compactChatHistory(chatHistory, model, llmApi);
+    // Convert to legacy format for compaction
+    const legacyHistory = convertFromUnifiedHistory(chatHistory);
+    const result = await compactChatHistory(legacyHistory, model, llmApi);
 
+    // Convert compacted history back to unified format
+    const compactedUnifiedHistory = convertToUnifiedHistory(result.compactedHistory);
+    
     // Replace chat history with compacted version
-    setChatHistory(result.compactedHistory);
+    setChatHistory(compactedUnifiedHistory);
     setCompactionIndex(result.compactionIndex);
 
     // Save the compacted session
     saveSession(result.compactedHistory);
 
-    setMessages((prev) => [
+    setChatHistory((prev) => [
       ...prev,
       {
-        role: "system",
-        content: "Chat history compacted successfully.",
-        messageType: "system" as const,
+        message: {
+          role: "system",
+          content: "Chat history compacted successfully.",
+        },
+        contextItems: [],
       },
     ]);
   } catch (error) {
     logger.error("Compaction failed:", error);
-    setMessages((prev) => [
+    setChatHistory((prev) => [
       ...prev,
       {
-        role: "system",
-        content: `Compaction failed: ${formatError(error)}`,
-        messageType: "system" as const,
+        message: {
+          role: "system",
+          content: `Compaction failed: ${formatError(error)}`,
+        },
+        contextItems: [],
       },
     ]);
   }
@@ -106,11 +115,10 @@ export async function handleCompactCommand({
 
 interface ProcessSlashCommandResultOptions {
   result: SlashCommandResult;
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
+    React.SetStateAction<ChatHistoryItem[]>
   >;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
   exit: () => void;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
@@ -126,7 +134,6 @@ export function processSlashCommandResult({
   result,
   chatHistory,
   setChatHistory,
-  setMessages,
   exit,
   onShowConfigSelector,
   onShowModelSelector,
@@ -160,10 +167,9 @@ export function processSlashCommandResult({
   }
 
   if (result.clear) {
-    const systemMessage = chatHistory.find((msg) => msg.role === "system");
+    const systemMessage = chatHistory.find((item) => item.message.role === "system");
     const newHistory = systemMessage ? [systemMessage] : [];
     setChatHistory(newHistory);
-    setMessages([]);
 
     // Reset intro message state to show it again after clearing
     if (onClear) {
@@ -171,11 +177,13 @@ export function processSlashCommandResult({
     }
 
     if (result.output) {
-      setMessages([
+      setChatHistory([
         {
-          role: "system",
-          content: result.output,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: result.output,
+          },
+          contextItems: [],
         },
       ]);
     }
@@ -183,13 +191,15 @@ export function processSlashCommandResult({
   }
 
   if (result.output) {
-    setMessages((prev) => [
+    setChatHistory((prev) => [
       ...prev,
       {
-        role: "system" as const,
-        content: result.output || "",
-        messageType: "system" as const,
-      } as DisplayMessage,
+        message: {
+          role: "system",
+          content: result.output || "",
+        },
+        contextItems: [],
+      },
     ]);
   }
 
@@ -232,7 +242,7 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
 }
 
 /**
@@ -244,7 +254,7 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
-  setMessages,
+  setChatHistory,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -257,7 +267,7 @@ export async function handleSpecialCommands({
   // Handle /exit command in remote mode
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
-    await handleRemoteExit(remoteUrl, setMessages, exit);
+    await handleRemoteExit(remoteUrl, setChatHistory, exit);
     return true;
   }
 
@@ -265,13 +275,12 @@ export async function handleSpecialCommands({
 }
 
 interface HandleAutoCompactionOptions {
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: any;
   llmApi: any;
   compactionIndex: number | null;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
   setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
+    React.SetStateAction<ChatHistoryItem[]>
   >;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
 }
@@ -284,28 +293,49 @@ export async function handleAutoCompaction({
   model,
   llmApi,
   compactionIndex: _compactionIndex,
-  setMessages,
   setChatHistory,
   setCompactionIndex,
 }: HandleAutoCompactionOptions): Promise<{
-  currentChatHistory: ChatCompletionMessageParam[];
+  currentChatHistory: ChatHistoryItem[];
   currentCompactionIndex: number | null;
 }> {
   const { handleAutoCompaction: coreAutoCompaction } = await import(
     "../../streamChatResponse.autoCompaction.js"
   );
-
-  const result = await coreAutoCompaction(chatHistory, model, llmApi, {
+  
+  // Convert to legacy format for compaction
+  const legacyHistory = convertFromUnifiedHistory(chatHistory);
+  
+  const result = await coreAutoCompaction(legacyHistory, model, llmApi, {
     isHeadless: false,
     callbacks: {
-      setMessages,
-      setChatHistory,
+      setMessages: (updater: any) => {
+        // Convert messages updates to chat history updates
+        if (typeof updater === 'function') {
+          setChatHistory((prev) => {
+            // For now, just return prev - compaction messages will be handled separately
+            return prev;
+          });
+        }
+      },
+      setChatHistory: (updater: any) => {
+        // Handle chat history updates
+        if (typeof updater === 'function') {
+          setChatHistory((prev) => {
+            const legacyPrev = convertFromUnifiedHistory(prev);
+            const updated = updater(legacyPrev);
+            return convertToUnifiedHistory(updated);
+          });
+        } else {
+          setChatHistory(convertToUnifiedHistory(updater));
+        }
+      },
       setCompactionIndex,
     },
   });
 
   return {
-    currentChatHistory: result.chatHistory,
+    currentChatHistory: convertToUnifiedHistory(result.chatHistory),
     currentCompactionIndex: result.compactionIndex,
   };
 }

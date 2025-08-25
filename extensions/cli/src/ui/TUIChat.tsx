@@ -8,6 +8,7 @@ import React, {
 } from "react";
 
 import { useServices } from "../hooks/useService.js";
+import { convertFromUnifiedHistory } from "../messageConversion.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -52,15 +53,15 @@ async function loadAndSetSession(
   sessionId: string,
   closeCurrentScreen: () => void,
   setChatHistory: (history: any) => void,
-  setMessages: (messages: any) => void,
   setShowIntroMessage: (show: boolean) => void,
 ) {
   try {
     // Close the session selector
     closeCurrentScreen();
 
-    // Import session functions
+    // Import session functions and conversion utilities
     const { loadSessionById } = await import("../session.js");
+    const { convertToUnifiedHistory } = await import("../messageConversion.js");
 
     // Load the session history
     const sessionHistory = loadSessionById(sessionId);
@@ -75,18 +76,9 @@ async function loadAndSetSession(
       "",
     );
 
-    // Directly set the chat history and messages to the loaded session
-    setChatHistory(sessionHistory);
-
-    // Convert chat history to display messages (exclude system messages)
-    const displayMessages = sessionHistory
-      .filter((msg: any) => msg.role !== "system")
-      .map((msg: any) => ({
-        role: msg.role,
-        content: msg.content as string,
-      }));
-
-    setMessages(displayMessages);
+    // Convert to unified format and set the chat history
+    const unifiedHistory = convertToUnifiedHistory(sessionHistory);
+    setChatHistory(unifiedHistory);
 
     // Clear the intro message since we're now showing a resumed session
     setShowIntroMessage(false);
@@ -193,8 +185,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 
   const {
-    messages,
-    setMessages,
     chatHistory,
     setChatHistory,
     isWaitingForResponse,
@@ -233,7 +223,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   // Calculate context percentage
   const contextData = useContextPercentage({
-    chatHistory,
+    chatHistory: convertFromUnifiedHistory(chatHistory),
     model: services.model?.model || undefined,
   });
 
@@ -241,7 +231,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { handleConfigSelect, handleModelSelect } = useSelectors(
     configPath,
-    setMessages,
+    setChatHistory,
     resetChatHistory,
   );
 
@@ -252,11 +242,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
         sessionId,
         closeCurrentScreen,
         setChatHistory,
-        setMessages,
         setShowIntroMessage,
       );
     },
-    [closeCurrentScreen, setChatHistory, setMessages, setShowIntroMessage],
+    [closeCurrentScreen, setChatHistory, setShowIntroMessage],
   );
 
   // Determine if input should be disabled
@@ -289,7 +278,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           config={services.config?.config || undefined}
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
-          messages={messages}
+          chatHistory={chatHistory}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />

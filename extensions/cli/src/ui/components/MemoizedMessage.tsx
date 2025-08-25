@@ -1,79 +1,36 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
 
+import type { ChatHistoryItem } from "../../../../../core/index.js";
+import { formatToolCall } from "../../tools/index.js";
 import { MarkdownRenderer } from "../MarkdownRenderer.js";
 import { ToolResultSummary } from "../ToolResultSummary.js";
-import { DisplayMessage } from "../types.js";
 
 interface MemoizedMessageProps {
-  message: DisplayMessage;
+  item: ChatHistoryItem;
   index: number;
 }
 
 export const MemoizedMessage = memo<MemoizedMessageProps>(
-  ({ message, index }) => {
+  ({ item, index }) => {
+    const { message, toolCallStates, conversationSummary } = item;
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
-
+    const isAssistant = message.role === "assistant";
+    
+    // Handle system messages
     if (isSystem) {
-      switch (message.messageType) {
-        case "tool-start":
-          return (
-            <Box key={index} marginLeft={1} marginBottom={1}>
-              {/* TODO: Change back to empty circle (○) with white color once we want to differentiate in-progress vs completed tool calls */}
-              <Text color="green">
-                ●<Text color="white"> {message.content}</Text>
-              </Text>
-            </Box>
-          );
-
-        case "tool-result":
-          const isFailure =
-            message.toolResult?.startsWith("Permission denied") ||
-            message.toolResult?.startsWith("Error");
-          return (
-            <Box
-              key={index}
-              marginLeft={1}
-              marginBottom={1}
-              flexDirection="column"
-            >
-              <Box>
-                <Text color={isFailure ? "red" : "green"}>●</Text>
-                <Text> {message.content}</Text>
-              </Box>
-              <Box marginLeft={2}>
-                <ToolResultSummary
-                  toolName={message.toolName}
-                  content={message.toolResult || ""}
-                />
-              </Box>
-            </Box>
-          );
-
-        case "tool-error":
-          return (
-            <Box key={index} marginLeft={1} marginBottom={1}>
-              <Text color="red" bold>
-                ✗{" "}
-              </Text>
-              <Text color="red">Tool error: {message.content}</Text>
-            </Box>
-          );
-
-        default:
-          return (
-            <Box key={index} marginLeft={1} marginBottom={1}>
-              <Text color="gray" italic>
-                {message.content}
-              </Text>
-            </Box>
-          );
-      }
+      return (
+        <Box key={index} marginLeft={1} marginBottom={1}>
+          <Text color="gray" italic>
+            {message.content}
+          </Text>
+        </Box>
+      );
     }
-
-    // Special rendering for compaction messages
-    if (message.messageType === "compaction") {
+    
+    // Handle conversation summary (compaction)
+    if (conversationSummary) {
       return (
         <Box
           key={index}
@@ -87,32 +44,88 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         />
       );
     }
-
+    
+    // Handle tool calls
+    if (toolCallStates && toolCallStates.length > 0) {
+      return (
+        <Box key={index} flexDirection="column">
+          {/* Render assistant message content if any */}
+          {message.content && (
+            <Box marginLeft={1} marginBottom={1}>
+              <Text color="white">●</Text>
+              <Text> </Text>
+              <MarkdownRenderer content={message.content as string} />
+            </Box>
+          )}
+          
+          {/* Render tool calls */}
+          {toolCallStates.map((toolState, toolIndex) => {
+            const toolName = toolState.toolCall.function.name;
+            const toolArgs = toolState.parsedArgs;
+            const isCompleted = toolState.status === "done";
+            const isErrored = toolState.status === "errored";
+            
+            return (
+              <Box key={toolIndex} flexDirection="column">
+                <Box marginLeft={1} marginBottom={1}>
+                  <Text color={isErrored ? "red" : isCompleted ? "green" : "white"}>
+                    {isCompleted || isErrored ? "●" : "○"}
+                  </Text>
+                  <Text color="white"> {formatToolCall(toolName, toolArgs)}</Text>
+                </Box>
+                
+                {/* Show tool result if available */}
+                {toolState.output && toolState.output.length > 0 && (
+                  <Box marginLeft={3}>
+                    <ToolResultSummary
+                      toolName={toolName}
+                      content={toolState.output.map(o => o.content).join("\n")}
+                    />
+                  </Box>
+                )}
+                
+                {/* Show error if tool errored */}
+                {isErrored && !toolState.output && (
+                  <Box marginLeft={3}>
+                    <Text color="red">Tool execution failed</Text>
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      );
+    }
+    
+    // Handle regular messages
+    const isStreaming = isAssistant && !message.content && !toolCallStates;
+    
     return (
       <Box key={index} marginLeft={1} marginBottom={1}>
         <Text color={isUser ? "green" : "white"}>●</Text>
         <Text> </Text>
         {isUser ? (
-          <Text color="gray">{message.content}</Text>
+          <Text color="gray">{typeof message.content === 'string' ? message.content : JSON.stringify(message.content)}</Text>
         ) : (
-          <MarkdownRenderer content={message.content} />
+          <MarkdownRenderer content={typeof message.content === 'string' ? message.content : JSON.stringify(message.content)} />
         )}
-        {message.isStreaming && <Text color="gray">▋</Text>}
+        {isStreaming && <Text color="gray">▋</Text>}
       </Box>
     );
   },
   (prevProps, nextProps) => {
     // Custom comparison function for better performance
     // Only re-render if these properties change
+    const prevMessage = prevProps.item.message;
+    const nextMessage = nextProps.item.message;
+    const prevToolStates = prevProps.item.toolCallStates;
+    const nextToolStates = nextProps.item.toolCallStates;
+    
     return (
-      prevProps.message.content === nextProps.message.content &&
-      prevProps.message.role === nextProps.message.role &&
-      prevProps.message.messageType === nextProps.message.messageType &&
-      prevProps.message.isStreaming === nextProps.message.isStreaming &&
-      prevProps.message.toolName === nextProps.message.toolName &&
-      prevProps.message.toolResult === nextProps.message.toolResult &&
-      prevProps.message.permissionRequestId ===
-        nextProps.message.permissionRequestId &&
+      prevMessage.content === nextMessage.content &&
+      prevMessage.role === nextMessage.role &&
+      JSON.stringify(prevToolStates) === JSON.stringify(nextToolStates) &&
+      prevProps.item.conversationSummary === nextProps.item.conversationSummary &&
       prevProps.index === nextProps.index
     );
   },

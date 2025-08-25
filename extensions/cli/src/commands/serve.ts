@@ -1,13 +1,14 @@
 import { exec } from "child_process";
-import path from "path";
 import { promisify } from "util";
 
 import chalk from "chalk";
 import express, { Request, Response } from "express";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
+import type { ChatHistoryItem } from "../../../../core/index.js";
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { convertToUnifiedHistory, convertFromUnifiedHistory } from "../messageConversion.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
   getService,
@@ -20,17 +21,14 @@ import {
   ModelServiceState,
 } from "../services/types.js";
 import { saveSession } from "../session.js";
-import { streamChatResponse } from "../streamChatResponse.js";
-import { StreamCallbacks } from "../streamChatResponse.types.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
-import { getToolDisplayName } from "../tools/index.js";
-import { DisplayMessage } from "../ui/types.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
+import { streamChatResponseWithInterruption, type PendingPermission } from "./serve.helpers.js";
 
 const execAsync = promisify(exec);
 
@@ -39,16 +37,9 @@ interface ServeOptions extends ExtendedCommandOptions {
   port?: string;
 }
 
-interface PendingPermission {
-  toolName: string;
-  toolArgs: any;
-  requestId: string;
-  timestamp: number;
-}
-
 interface ServerState {
   chatHistory: ChatCompletionMessageParam[];
-  displayMessages: DisplayMessage[]; // Messages formatted for display with tool info
+  unifiedHistory: ChatHistoryItem[]; // Unified format for display
   config: any;
   model: any;
   isProcessing: boolean;
@@ -141,7 +132,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Initialize server state
   const state: ServerState = {
     chatHistory,
-    displayMessages: [], // Initialize empty display messages
+    unifiedHistory: convertToUnifiedHistory(chatHistory), // Convert to unified format
     config,
     model,
     isProcessing: false,
@@ -164,7 +155,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
     res.json({
-      chatHistory: state.displayMessages, // Send display messages with proper formatting
+      chatHistory: convertFromUnifiedHistory(state.unifiedHistory), // Convert back to legacy format for API
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
       pendingPermission: state.pendingPermission,
@@ -214,11 +205,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       return res.status(400).json({ error: "Invalid request ID" });
     }
 
-    // Remove the permission request message
-    const lastMsg = state.displayMessages[state.displayMessages.length - 1];
-    if (lastMsg && lastMsg.messageType === "tool-permission-request") {
-      state.displayMessages.pop();
-    }
+    // Remove the permission request message if it exists
+    // Permission requests are handled separately in unified format
 
     // Send the permission response to the toolPermissionManager
     if (approved) {
@@ -357,7 +345,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
       // Add user message to history
       state.chatHistory.push({ role: "user", content: userMessage });
-      state.displayMessages.push({ role: "user", content: userMessage });
+      state.unifiedHistory.push({
+        message: { role: "user", content: userMessage },
+        contextItems: [],
+      });
 
       try {
         // Create new abort controller for this response
@@ -383,15 +374,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           if (lastMessage.role === "assistant" && !lastMessage.content) {
             state.chatHistory.pop();
           }
-          // Also remove partial display messages
-          const lastDisplayMessage =
-            state.displayMessages[state.displayMessages.length - 1];
+          // Also remove partial unified messages
+          const lastUnifiedMessage = state.unifiedHistory[state.unifiedHistory.length - 1];
           if (
-            lastDisplayMessage &&
-            lastDisplayMessage.role === "assistant" &&
-            lastDisplayMessage.isStreaming
+            lastUnifiedMessage &&
+            lastUnifiedMessage.message.role === "assistant" &&
+            !lastUnifiedMessage.message.content
           ) {
-            state.displayMessages.pop();
+            state.unifiedHistory.pop();
           }
         } else {
           logger.error(`Error: ${formatError(e)}`);
@@ -401,9 +391,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
             role: "assistant",
             content: errorMessage,
           });
-          state.displayMessages.push({
-            role: "assistant",
-            content: errorMessage,
+          state.unifiedHistory.push({
+            message: { role: "assistant", content: errorMessage },
+            contextItems: [],
           });
         }
       } finally {
@@ -448,163 +438,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 }
 
-// Modified version of streamChatResponse that supports interruption
-async function streamChatResponseWithInterruption(
-  state: ServerState,
-  llmApi: any,
-  abortController: AbortController,
-  shouldInterrupt: () => boolean,
-): Promise<string> {
-  // Import the original streamChatResponse logic but add interruption checks
-  // Create a wrapper that checks for interruption
-  const originalSignal = abortController.signal;
-  const checkInterruption = () => {
-    if (shouldInterrupt() && !originalSignal.aborted) {
-      abortController.abort();
-    }
-  };
-
-  // Set up periodic interruption checks
-  const interruptionChecker = setInterval(checkInterruption, 100);
-
-  let currentStreamingMessage: DisplayMessage | null = null;
-
-  // Create callbacks to capture tool events
-  const callbacks: StreamCallbacks = {
-    onContent: (content: string) => {
-      if (!currentStreamingMessage) {
-        currentStreamingMessage = {
-          role: "assistant",
-          content: "",
-          isStreaming: true,
-        };
-        state.displayMessages.push(currentStreamingMessage);
-      }
-      currentStreamingMessage.content += content;
-    },
-    onContentComplete: (content: string) => {
-      if (currentStreamingMessage) {
-        currentStreamingMessage.content = content;
-        currentStreamingMessage.isStreaming = false;
-        currentStreamingMessage = null;
-      } else {
-        // Add complete assistant message
-        state.displayMessages.push({
-          role: "assistant",
-          content: content,
-          isStreaming: false,
-        });
-      }
-    },
-    onToolStart: (toolName: string, toolArgs?: any) => {
-      // Format tool call similar to local mode
-      const formatToolCall = (name: string, args: any) => {
-        const displayName = getToolDisplayName(name);
-        if (!args) return displayName;
-
-        const firstValue = Object.values(args)[0];
-        const formatPath = (value: any) => {
-          if (typeof value === "string" && path.isAbsolute(value)) {
-            const workspaceRoot = process.cwd();
-            const relativePath = path.relative(workspaceRoot, value);
-            return relativePath || value;
-          }
-          return value;
-        };
-
-        return `${displayName}(${formatPath(firstValue) || ""})`;
-      };
-
-      // If there was streaming content, finalize it first
-      if (currentStreamingMessage && currentStreamingMessage.content) {
-        currentStreamingMessage.isStreaming = false;
-        currentStreamingMessage = null;
-      }
-
-      state.displayMessages.push({
-        role: "system",
-        content: `○ ${formatToolCall(toolName, toolArgs)}`,
-        messageType: "tool-start",
-        toolName,
-      });
-    },
-    onToolResult: (result: string, toolName: string) => {
-      // Replace the tool-start message with tool-result
-      const displayName = getToolDisplayName(toolName);
-
-      // Find and replace the corresponding tool-start message
-      for (let i = state.displayMessages.length - 1; i >= 0; i--) {
-        if (
-          state.displayMessages[i].messageType === "tool-start" &&
-          state.displayMessages[i].toolName === toolName
-        ) {
-          state.displayMessages[i] = {
-            ...state.displayMessages[i],
-            content: `● ${displayName}`,
-            messageType: "tool-result",
-            toolResult: result,
-          };
-          return;
-        }
-      }
-
-      // If no tool-start found, add as new message (fallback)
-      state.displayMessages.push({
-        role: "system",
-        content: `● ${displayName}`,
-        messageType: "tool-result",
-        toolName,
-        toolResult: result,
-      });
-    },
-    onToolError: (error: string, toolName?: string) => {
-      state.displayMessages.push({
-        role: "system",
-        content: `✗ Tool error: ${error}`,
-        messageType: "tool-error",
-        toolName,
-      });
-    },
-    onToolPermissionRequest: (
-      toolName: string,
-      toolArgs: any,
-      requestId: string,
-    ) => {
-      // Set pending permission state
-      state.pendingPermission = {
-        toolName,
-        toolArgs,
-        requestId,
-        timestamp: Date.now(),
-      };
-
-      // Add a display message indicating permission is needed
-      state.displayMessages.push({
-        role: "system",
-        content: `⚠️ Tool ${toolName} requires permission`,
-        messageType: "tool-permission-request" as any,
-        toolName,
-      });
-
-      // Don't wait here - the streamChatResponse will handle waiting
-    },
-  };
-
-  try {
-    const response = await streamChatResponse(
-      state.chatHistory,
-      state.model,
-      llmApi,
-      abortController,
-      callbacks,
-    );
-    return response || "";
-  } finally {
-    clearInterval(interruptionChecker);
-    // Ensure any streaming message is finalized
-    if (currentStreamingMessage !== null) {
-      // TypeScript is having issues with this line - the message will be finalized anyway
-      // currentStreamingMessage.isStreaming = false;
-    }
-  }
-}
+// Function moved to serve.helpers.ts - remove implementation
+// async function streamChatResponseWithInterruption - moved to helpers {
+// Implementation moved to serve.helpers.ts

@@ -1,9 +1,8 @@
 import { Server } from "http";
 
 import express from "express";
+import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { describe, expect, test } from "vitest";
-
-import { DisplayMessage } from "../types.js";
 
 export interface MockRemoteServerConfig {
   port?: number;
@@ -13,7 +12,7 @@ export interface MockRemoteServerConfig {
 export class MockRemoteServer {
   private server: Server | null = null;
   private app: express.Application;
-  private messages: DisplayMessage[] = [];
+  private messages: ChatCompletionMessageParam[] = [];
   private responses: string[] = [];
   private currentResponseIndex = 0;
   private isProcessing = false;
@@ -88,10 +87,9 @@ export class MockRemoteServer {
     let charIndex = 0;
 
     // Add initial streaming message
-    const streamingMessage: DisplayMessage = {
+    const streamingMessage: ChatCompletionMessageParam = {
       role: "assistant",
       content: "",
-      isStreaming: true,
     };
     this.messages.push(streamingMessage);
 
@@ -103,7 +101,6 @@ export class MockRemoteServer {
         charIndex++;
       } else {
         // Finish streaming
-        streamingMessage.isStreaming = false;
         this.isProcessing = false;
 
         if (this.streamInterval) {
@@ -145,7 +142,7 @@ export class MockRemoteServer {
     });
   }
 
-  public getMessages(): DisplayMessage[] {
+  public getMessages(): ChatCompletionMessageParam[] {
     return [...this.messages];
   }
 
