@@ -6,7 +6,7 @@ description: "Configure OpenRouter with Continue to access various commercial an
 
 OpenRouter is a unified interface for commercial and open-source models, giving you access to the best models at the best prices. You can sign up [here](https://openrouter.ai/signup), create your API key on the [keys page](https://openrouter.ai/keys), and then choose a model from the [list of supported models](https://openrouter.ai/models).
 
-Change `~/.continue/config.json` to look like the following.
+Change `~/.continue/config.yaml` to look like the following.
 
 <Tabs>
   <Tab title="YAML">
@@ -27,6 +27,38 @@ Change `~/.continue/config.json` to look like the following.
         "title": "OpenRouter LLaMA 70 8B",
         "provider": "openrouter",
         "model": "meta-llama/llama-3-70b-instruct",
+        "apiBase": "https://openrouter.ai/api/v1",
+        "apiKey": "<YOUR_OPEN_ROUTER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Using Custom Models
+
+To use a model that is not in the dropdown list, you can simply enter the model name in the `model` field. For example, to use Qwen3Coder, you would update your configuration to look like this:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Qwen3Coder
+      provider: openrouter
+      model: qwen/qwen-coder
+      apiBase: https://openrouter.ai/api/v1
+      apiKey: <YOUR_OPEN_ROUTER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen3Coder",
+        "provider": "openrouter",
+        "model": "qwen/qwen-coder",
         "apiBase": "https://openrouter.ai/api/v1",
         "apiKey": "<YOUR_OPEN_ROUTER_API_KEY>"
       }
