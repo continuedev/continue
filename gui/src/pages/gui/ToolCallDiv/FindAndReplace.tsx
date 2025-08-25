@@ -120,7 +120,7 @@ export function FindAndReplaceDisplay({
         );
       }
     }
-  }, [toolCallState?.status]);
+  }, [toolCallState?.status, toolCallState?.output]);
 
   // Unified container component that always renders the same structure
   const renderContainer = (content: React.ReactNode) => (
@@ -205,7 +205,7 @@ export function FindAndReplaceDisplay({
             return (
               <div
                 key={index}
-                className="text-foreground border-l-3 border-red-900 bg-red-900/30"
+                className="text-foreground border-l-4 border-red-900 bg-red-900/30"
               >
                 {part.value.split("\n").map((line, lineIndex) => {
                   if (
@@ -226,7 +226,7 @@ export function FindAndReplaceDisplay({
             return (
               <div
                 key={index}
-                className="text-foreground border-l-3 border-green-600 bg-green-600/20"
+                className="text-foreground border-l-4 border-green-600 bg-green-600/20"
               >
                 {part.value.split("\n").map((line, lineIndex) => {
                   if (
