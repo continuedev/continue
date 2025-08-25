@@ -176,9 +176,10 @@ export function AssistantAndOrgListbox() {
                 value="reload-assistant"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={() =>
-                  refreshProfiles("Manual refresh from assistant list")
-                }
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  refreshProfiles("Manual refresh from assistant list");
+                }}
               >
                 <span
                   className="text-description flex flex-row items-center"
