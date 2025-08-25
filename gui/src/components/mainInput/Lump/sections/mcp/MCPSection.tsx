@@ -253,7 +253,7 @@ function MCPSection() {
     }));
   }, [servers, selectedProfile]);
 
-  if (true) {
+  if (disableMcp) {
     return (
       <div className="flex flex-col items-center justify-center p-2">
         <span className="text-description">
@@ -262,6 +262,7 @@ function MCPSection() {
       </div>
     );
   }
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
