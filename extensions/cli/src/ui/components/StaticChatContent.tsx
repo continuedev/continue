@@ -35,9 +35,10 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
 
   // Refresh function that clears terminal and remounts Static component
   const refreshStatic = useCallback(() => {
-    // Clear terminal completely before remounting
+    // Clear terminal completely including scrollback buffer (3J)
     stdout.write("\x1b[2J\x1b[H");
     setStaticKey((prev) => prev + 1);
+    stdout.write("\x1b[3J");
   }, [stdout]);
 
   // Debounced terminal resize handler (300ms like gemini-cli)
