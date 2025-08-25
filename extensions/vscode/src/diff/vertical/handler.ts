@@ -19,6 +19,8 @@ export interface VerticalDiffHandlerOptions {
     status?: ApplyState["status"],
     numDiffs?: ApplyState["numDiffs"],
     fileContent?: ApplyState["fileContent"],
+    numAccepted?: ApplyState["numAccepted"],
+    numRejected?: ApplyState["numRejected"],
   ) => void;
   streamId?: string;
 }
@@ -35,6 +37,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private addedLineDecorations: AddedLineDecorationManager;
   private _diffLinesQueue: DiffLine[] = [];
   private _queueLock = false;
+  private _acceptedDiffs = 0;
+  private _rejectedDiffs = 0;
 
   constructor(
     private startLine: number,
@@ -86,6 +90,14 @@ export class VerticalDiffHandler implements vscode.Disposable {
     return this.cancelled;
   }
 
+  get acceptedDiffs() {
+    return this._acceptedDiffs;
+  }
+
+  get rejectedDiffs() {
+    return this._rejectedDiffs;
+  }
+
   private get fileUri() {
     return this.editor.document.uri.toString();
   }
@@ -97,12 +109,22 @@ export class VerticalDiffHandler implements vscode.Disposable {
       false,
     );
 
-    const removedRanges = this.removedLineDecorations.ranges;
+    // Count the diffs being accepted/rejected in this clear operation
+    const currentDiffBlocks =
+      this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
+    const numDiffsBeingProcessed = currentDiffBlocks.length;
+
     if (accept) {
+      // Accept all: track the acceptances
+      this._acceptedDiffs += numDiffsBeingProcessed;
       // Accept all: delete all the red ranges and clear green decorations
+      const removedRanges = this.removedLineDecorations.ranges;
       await this.deleteRangeLines(removedRanges.map((r) => r.range));
     } else {
+      // Reject all: track the rejections
+      this._rejectedDiffs += numDiffsBeingProcessed;
       // Reject all: Re-insert red lines, delete green ones
+      const removedRanges = this.removedLineDecorations.ranges;
       for (const r of removedRanges) {
         await this.deleteRangeLines([r.range]);
         await this.insertTextAboveLine(r.range.start.line, r.line);
@@ -114,8 +136,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     this.options.onStatusUpdate(
       "closed",
-      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
+      0, // No diffs left after clearing
       this.editor.document.getText(),
+      this._acceptedDiffs,
+      this._rejectedDiffs,
     );
 
     this.cancelled = true;
@@ -186,6 +210,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
         "done",
         this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
         this.editor.document.getText(),
+        this._acceptedDiffs,
+        this._rejectedDiffs,
       );
 
       // Reject on user typing
@@ -209,6 +235,13 @@ export class VerticalDiffHandler implements vscode.Disposable {
     numRed: number,
     skipStatusUpdate?: boolean,
   ) {
+    // Track acceptance/rejection
+    if (accept) {
+      this._acceptedDiffs++;
+    } else {
+      this._rejectedDiffs++;
+    }
+
     if (numGreen > 0) {
       // Delete the editor decoration
       this.addedLineDecorations.deleteRangeStartingAt(startLine + numRed);
@@ -250,6 +283,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
         status,
         numDiffs,
         this.editor.document.getText(),
+        this._acceptedDiffs,
+        this._rejectedDiffs,
       );
     }
   }
@@ -296,6 +331,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // Diff is messed up without this delay.
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    // Save current acceptance counts before internal operations
+    const savedAcceptedDiffs = this._acceptedDiffs;
+    const savedRejectedDiffs = this._rejectedDiffs;
+
     // First, we reset the original diff by rejecting all pending diff blocks
     const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
     for (const block of blocks.reverse()) {
@@ -309,6 +348,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
     }
 
     this.clearDecorations();
+
+    // Restore acceptance counts after internal operations
+    this._acceptedDiffs = savedAcceptedDiffs;
+    this._rejectedDiffs = savedRejectedDiffs;
 
     // Then, get our old/new file content based on the original lines
     // We need the input to be "newline terminated" rather than

@@ -74,6 +74,9 @@ class ApplyToFileHandlerTest : TestCase() {
                 withArg { payload ->
                     assert(payload is ApplyState)
                     assert((payload as ApplyState).status == ApplyStateStatus.STREAMING.status)
+                    // New fields should be included
+                    assert((payload as ApplyState).numAccepted == 0)
+                    assert((payload as ApplyState).numRejected == 0)
                 },
                 any()
             )
@@ -85,6 +88,9 @@ class ApplyToFileHandlerTest : TestCase() {
                 withArg { payload ->
                     assert(payload is ApplyState)
                     assert((payload as ApplyState).status == ApplyStateStatus.CLOSED.status)
+                    // New fields should be included
+                    assert((payload as ApplyState).numAccepted == 0)
+                    assert((payload as ApplyState).numRejected == 0)
                 },
                 any()
             )

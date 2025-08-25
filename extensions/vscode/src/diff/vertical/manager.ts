@@ -192,8 +192,19 @@ export class VerticalDiffManager {
       block.numRed,
     );
 
-    if (blocks.length === 1) {
-      this.clearForfileUri(fileUri, true);
+    // Check if this was the last block - if so, the acceptRejectBlock call above
+    // already sent the "closed" status, so we don't need to call clearForfileUri
+    const remainingBlocks = this.fileUriToCodeLens.get(fileUri);
+    if (remainingBlocks && remainingBlocks.length === 0) {
+      // All blocks are processed, acceptRejectBlock already sent "closed" status
+      // Just clean up without sending duplicate status
+      this.fileUriToHandler.delete(fileUri);
+      this.disableDocumentChangeListener();
+      vscode.commands.executeCommand(
+        "setContext",
+        "continue.diffVisible",
+        false,
+      );
     } else {
       // Re-enable listener for user changes to file
       this.enableDocumentChangeListener();
@@ -236,7 +247,13 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
+        onStatusUpdate: (
+          status,
+          numDiffs,
+          fileContent,
+          numAccepted,
+          numRejected,
+        ) =>
           void this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
@@ -244,6 +261,8 @@ export class VerticalDiffManager {
             fileContent,
             filepath: fileUri,
             toolCallId,
+            numAccepted,
+            numRejected,
           }),
         streamId,
       },
@@ -382,7 +401,13 @@ export class VerticalDiffManager {
       {
         instant: isFastApplyModel(llm),
         input,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
+        onStatusUpdate: (
+          status,
+          numDiffs,
+          fileContent,
+          numAccepted,
+          numRejected,
+        ) =>
           streamId &&
           void this.webviewProtocol.request("updateApplyState", {
             streamId,
@@ -391,6 +416,8 @@ export class VerticalDiffManager {
             fileContent,
             filepath: fileUri,
             toolCallId,
+            numAccepted,
+            numRejected,
           }),
         streamId,
       },
