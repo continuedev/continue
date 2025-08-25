@@ -4,7 +4,6 @@ import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -33,8 +32,6 @@ object InlineCompletionUtils {
      */
     private fun performTrigger(editor: Editor, project: Project?): Boolean {
         return try {
-            println("performTrigger called on EDT: ${ApplicationManager.getApplication().isDispatchThread}")
-
             val actionManager = ActionManager.getInstance()
             val action = actionManager.getAction("CallInlineCompletionAction")
 
