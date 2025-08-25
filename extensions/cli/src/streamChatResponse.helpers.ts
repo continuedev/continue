@@ -36,7 +36,7 @@ export function handlePermissionDenied(
     content: deniedMessage,
   });
 
-  callbacks?.onToolResult?.(deniedMessage, toolCall.name, "errored");
+  callbacks?.onToolResult?.(deniedMessage, toolCall.name, "canceled");
   logger.debug("Tool call rejected - stopping stream");
 }
 

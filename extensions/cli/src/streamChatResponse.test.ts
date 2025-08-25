@@ -631,7 +631,7 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Permission denied by user",
       "Write",
-      "errored",
+      "canceled",
     );
     expect(callbacks.onToolPermissionRequest).toHaveBeenCalledWith(
       "Write",
