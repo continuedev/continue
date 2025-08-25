@@ -10,6 +10,7 @@ import {
   getHistoryForLLM,
 } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
 import { sentryService } from "../sentry.js";
@@ -22,7 +23,6 @@ import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
-import { safeStdout } from "../util/consoleOverride.js";
 import { formatAnthropicError, formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 import {
@@ -77,10 +77,8 @@ function stripThinkTags(response: string): string {
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
-  rule?: string[]; // Array of rule specifications
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
-  org?: string; // Organization slug to use for this session
 }
 
 export async function initializeChatHistory(
@@ -159,7 +157,7 @@ async function handleManualCompaction(
   }
 }
 
-// Helper function to handle auto-compaction
+// Helper function to handle auto-compaction for headless mode
 async function handleAutoCompaction(
   chatHistory: ChatCompletionMessageParam[],
   model: ModelConfig,
@@ -167,64 +165,71 @@ async function handleAutoCompaction(
   isHeadless: boolean,
   format?: "json",
 ): Promise<number | null> {
-  logger.info("Auto-compacting triggered due to context limit");
+  const { handleAutoCompaction: coreAutoCompaction } = await import(
+    "../streamChatResponse.autoCompaction.js"
+  );
 
-  if (!isHeadless) {
-    console.info(
-      chalk.yellow(
-        "\nApproaching context limit. Auto-compacting chat history...",
-      ),
-    );
-  } else if (format === "json") {
-    safeStdout(
-      JSON.stringify({
-        status: "info",
-        message: "Auto-compacting triggered",
-        contextUsage:
-          calculateContextUsagePercentage(
-            countChatHistoryTokens(chatHistory),
-            model,
-          ) + "%",
-      }) + "\n",
-    );
-  }
+  // Custom callbacks for headless mode console output
+  const callbacks = {
+    onSystemMessage: (message: string) => {
+      if (
+        message.includes("Auto-compacting") ||
+        message.includes("Approaching")
+      ) {
+        if (!isHeadless) {
+          console.info(chalk.yellow(`\n${message}`));
+        } else if (format === "json") {
+          safeStdout(
+            JSON.stringify({
+              status: "info",
+              message: "Auto-compacting triggered",
+              contextUsage:
+                calculateContextUsagePercentage(
+                  countChatHistoryTokens(chatHistory),
+                  model,
+                ) + "%",
+            }) + "\n",
+          );
+        }
+      } else if (message.includes("✓")) {
+        if (!isHeadless) {
+          console.info(chalk.green(message));
+        } else if (format === "json") {
+          safeStdout(
+            JSON.stringify({
+              status: "success",
+              message: "Auto-compacted successfully",
+              historyLength: chatHistory.length,
+            }) + "\n",
+          );
+        }
+      } else if (message.includes("Warning:")) {
+        if (!isHeadless) {
+          console.error(chalk.red(message));
+          console.info(chalk.yellow("Continuing without compaction..."));
+        } else if (format === "json") {
+          safeStdout(
+            JSON.stringify({
+              status: "warning",
+              message: "Auto-compaction failed, continuing without compaction",
+            }) + "\n",
+          );
+        }
+      }
+    },
+  };
 
-  try {
-    const result = await compactChatHistory(chatHistory, model, llmApi);
-    chatHistory.length = 0;
-    chatHistory.push(...result.compactedHistory);
-    saveSession(chatHistory);
+  const result = await coreAutoCompaction(chatHistory, model, llmApi, {
+    isHeadless,
+    format,
+    callbacks,
+  });
 
-    if (!isHeadless) {
-      console.info(chalk.green("✓ Chat history auto-compacted successfully."));
-    } else if (format === "json") {
-      safeStdout(
-        JSON.stringify({
-          status: "success",
-          message: "Auto-compacted successfully",
-          historyLength: chatHistory.length,
-        }) + "\n",
-      );
-    }
+  // Update the original array reference for headless mode
+  chatHistory.length = 0;
+  chatHistory.push(...result.chatHistory);
 
-    return result.compactionIndex;
-  } catch (error) {
-    const errorMsg = `Auto-compaction error: ${formatError(error)}`;
-    logger.error(errorMsg);
-
-    if (!isHeadless) {
-      console.error(chalk.red(`Warning: ${errorMsg}`));
-      console.info(chalk.yellow("Continuing without compaction..."));
-    } else if (format === "json") {
-      safeStdout(
-        JSON.stringify({
-          status: "warning",
-          message: "Auto-compaction failed, continuing without compaction",
-        }) + "\n",
-      );
-    }
-    return null;
-  }
+  return result.compactionIndex;
 }
 
 interface ProcessMessageOptions {
@@ -362,9 +367,7 @@ async function runHeadlessMode(
   const { permissionOverrides } = processCommandFlags(options);
 
   await initializeServices({
-    configPath: options.config,
-    organizationSlug: options.org,
-    rules: options.rule,
+    options,
     headless: true,
     toolPermissionOverrides: permissionOverrides,
   });
@@ -388,17 +391,26 @@ async function runHeadlessMode(
     compactionIndex = findCompactionIndex(chatHistory);
   }
 
+  // Handle additional prompts from --prompt flags
+  const { processAndCombinePrompts } = await import(
+    "../util/promptProcessor.js"
+  );
+  const initialUserInput = await processAndCombinePrompts(
+    options.prompt,
+    prompt,
+  );
+
   let isFirstMessage = true;
   while (true) {
     // When in headless mode, don't ask for user input
-    if (!isFirstMessage && prompt && options.headless) {
+    if (!isFirstMessage && initialUserInput && options.headless) {
       break;
     }
 
     // Get user input
     const userInput =
-      isFirstMessage && prompt
-        ? prompt
+      isFirstMessage && initialUserInput
+        ? initialUserInput
         : readlineSync.question(`\n${chalk.bold.green("You:")} `);
 
     isFirstMessage = false;
@@ -443,9 +455,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
       // Initialize services with onboarding handled internally
       const initResult = await initializeServices({
-        configPath: options.config,
-        organizationSlug: options.org,
-        rules: options.rule,
+        options,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
@@ -462,9 +472,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const tuiOptions: any = {
         initialPrompt: prompt,
         resume: options.resume,
-        configPath: options.config,
-        organizationSlug: options.org,
-        additionalRules: options.rule,
+        config: options.config,
+        org: options.org,
+        rule: options.rule,
+        prompt: options.prompt,
         toolPermissionOverrides: permissionOverrides,
         skipOnboarding: true,
       };

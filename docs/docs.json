@@ -365,6 +365,10 @@
       "destination": "/hub/blocks/intro"
     },
     {
+      "source": "/hub/agents/intro",
+      "destination": "/hub/assistants/intro"
+    },
+    {
       "source": "/customize",
       "destination": "/customization/overview"
     },
@@ -1099,6 +1103,10 @@
     {
       "source": "/customize/model-providers",
       "destination": "/customize/model-providers/overview"
+    },
+    {
+      "source": "/features/edit/next-edit",
+      "destination": "/features/autocomplete/next-edit"
     }
   ]
 }
