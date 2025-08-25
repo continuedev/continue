@@ -633,50 +633,6 @@ You can override this query by setting the `issueQuery` parameter.
 
 You can set the `maxResults` parameter to limit the number of results returned. The default is `50`.
 
-### @Discord Context Provider – Reference Messages in Discord Channels
-
-Reference the messages in a Discord channel.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: discord
-    params:
-      discordKey: "bot token"
-      guildId: "1234567890"
-      channels:
-        - id: "123456"
-          name: "example-channel"
-        - id: "678901"
-          name: "example-channel-2"
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "discord",
-      "params": {
-        "discordKey": "bot token",
-        "guildId": "1234567890",
-        "channels": [
-          { "id": "123456", "name": "example-channel" },
-          { "id": "678901", "name": "example-channel-2" }
-        ]
-      }
-    }
-  ]
-}
-```
-
-Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
-
 ### @HTTP Context Provider – Reference Data from an HTTP Request
 
 The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
