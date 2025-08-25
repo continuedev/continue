@@ -18,6 +18,10 @@ class DatabaseContextProvider extends BaseContextProvider {
     renderInlineAs: "",
   };
 
+  get deprecationMessage() {
+    return "The database context provider is deprecated. Please consider using a database MCP server like db-mcp-server (github.com/FreePeak/db-mcp-server) instead.";
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,
