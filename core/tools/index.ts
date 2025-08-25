@@ -8,6 +8,8 @@ const getLocalOnlyToolDefinitions = () => [toolDefinitions.grepSearchTool];
 
 const getBaseToolDefinitions = () => [
   toolDefinitions.readFileTool,
+  toolDefinitions.readFileRangeTool,
+  toolDefinitions.readFileHeadTool,
   toolDefinitions.createNewFileTool,
   toolDefinitions.runTerminalCommandTool,
   toolDefinitions.globSearchTool,
