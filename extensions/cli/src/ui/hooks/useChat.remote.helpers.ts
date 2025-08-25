@@ -25,9 +25,7 @@ async function pollRemoteServerState(
 
 interface SetupRemotePollingOptions {
   remoteUrl: string;
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatHistoryItem[]>
-  >;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
   responseStartTime: number | null;
   setResponseStartTime: React.Dispatch<React.SetStateAction<number | null>>;
@@ -83,9 +81,7 @@ export function setupRemotePolling({
 
 interface UpdateStateFromRemoteOptions {
   state: RemoteServerState;
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatHistoryItem[]>
-  >;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
   responseStartTime: number | null;
   setResponseStartTime: React.Dispatch<React.SetStateAction<number | null>>;
@@ -106,7 +102,7 @@ function updateStateFromRemote({
     setChatHistory((prevHistory) => {
       // Convert server's legacy format to unified format
       const newHistory = convertToUnifiedHistory(state.chatHistory);
-      
+
       // Quick length check first
       if (prevHistory.length !== newHistory.length) {
         return newHistory;
@@ -119,7 +115,8 @@ function updateStateFromRemote({
           !prevItem ||
           prevItem.message.role !== item.message.role ||
           prevItem.message.content !== item.message.content ||
-          JSON.stringify(prevItem.toolCallStates) !== JSON.stringify(item.toolCallStates)
+          JSON.stringify(prevItem.toolCallStates) !==
+            JSON.stringify(item.toolCallStates)
         );
       });
 

@@ -2,7 +2,10 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { vi } from "vitest";
 
-import type { ToolCallState, ChatHistoryItem } from "../../../../../core/index.js";
+import type {
+  ToolCallState,
+  ChatHistoryItem,
+} from "../../../../../core/index.js";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
@@ -347,7 +350,7 @@ describe("TUIChat - Tool Permission Tests", () => {
       contextItems: [],
       toolCallStates: [toolCallState],
     };
-    
+
     const { lastFrame: messageFrame } = render(
       <MemoizedMessage item={historyItem} index={0} />,
     );

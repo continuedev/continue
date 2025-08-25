@@ -4,12 +4,16 @@ import path from "path";
 
 import { v4 as uuidv4 } from "uuid";
 
-import type { ChatHistoryItem, Session, SessionMetadata } from "../../../core/index.js";
+import type {
+  ChatHistoryItem,
+  Session,
+  SessionMetadata,
+} from "../../../core/index.js";
 
 // Re-export SessionMetadata for external consumers
 export type { SessionMetadata };
 
-  import { logger } from "./util/logger.js";
+import { logger } from "./util/logger.js";
 
 // Note: We now use UUID-based session IDs instead of terminal-based IDs.
 // Each new chat session gets a unique UUID.
@@ -48,12 +52,12 @@ function getSessionDir(): string {
 function getSessionsListPath(): string {
   const sessionDir = getSessionDir();
   const listPath = path.join(sessionDir, "sessions.json");
-  
+
   // Initialize with empty array if doesn't exist
   if (!fs.existsSync(listPath)) {
     fs.writeFileSync(listPath, JSON.stringify([]));
   }
-  
+
   return listPath;
 }
 
@@ -86,23 +90,26 @@ export function saveSession(session: Session): void {
   try {
     // Store the session ID for future reference
     currentSessionId = session.sessionId;
-    
+
     // Filter out system messages except for the first one
     // TODO: Properly handle system messages vs informational messages in the future
     const filteredHistory = session.history.filter((item, index) => {
       return index === 0 || item.message.role !== "system";
     });
-    
+
     const sessionToSave: Session = {
       ...session,
-      history: filteredHistory
+      history: filteredHistory,
     };
-    
-    const sessionFilePath = path.join(getSessionDir(), `${session.sessionId}.json`);
-    
+
+    const sessionFilePath = path.join(
+      getSessionDir(),
+      `${session.sessionId}.json`,
+    );
+
     // Write the session file
     fs.writeFileSync(sessionFilePath, JSON.stringify(sessionToSave, null, 2));
-    
+
     // Update the sessions list
     updateSessionsList(sessionToSave);
   } catch (error) {
@@ -117,31 +124,36 @@ function updateSessionsList(session: Session): void {
   try {
     const listPath = getSessionsListPath();
     let sessions: SessionMetadata[] = [];
-    
+
     if (fs.existsSync(listPath)) {
-      const content = fs.readFileSync(listPath, 'utf8');
+      const content = fs.readFileSync(listPath, "utf8");
       try {
         sessions = JSON.parse(content);
       } catch {
         sessions = [];
       }
     }
-    
+
     // Find or create session metadata
-    const existingIndex = sessions.findIndex(s => s.sessionId === session.sessionId);
+    const existingIndex = sessions.findIndex(
+      (s) => s.sessionId === session.sessionId,
+    );
     const metadata: SessionMetadata = {
       sessionId: session.sessionId,
       title: session.title || "Untitled Session",
-      dateCreated: existingIndex >= 0 ? sessions[existingIndex].dateCreated : new Date().toISOString(),
+      dateCreated:
+        existingIndex >= 0
+          ? sessions[existingIndex].dateCreated
+          : new Date().toISOString(),
       workspaceDirectory: session.workspaceDirectory || process.cwd(),
     };
-    
+
     if (existingIndex >= 0) {
       sessions[existingIndex] = metadata;
     } else {
       sessions.push(metadata);
     }
-    
+
     fs.writeFileSync(listPath, JSON.stringify(sessions, null, 2));
   } catch (error) {
     logger.error("Error updating sessions list:", error);
@@ -159,12 +171,13 @@ export function loadSession(): Session | null {
       return null;
     }
 
-    const files = fs.readdirSync(sessionDir)
-      .filter(f => f.endsWith('.json') && !f.includes('sessions-list'))
-      .map(f => ({
+    const files = fs
+      .readdirSync(sessionDir)
+      .filter((f) => f.endsWith(".json") && !f.includes("sessions-list"))
+      .map((f) => ({
         name: f,
         path: path.join(sessionDir, f),
-        mtime: fs.statSync(path.join(sessionDir, f)).mtime
+        mtime: fs.statSync(path.join(sessionDir, f)).mtime,
       }))
       .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
 
@@ -203,7 +216,10 @@ export function createSession(history: ChatHistoryItem[] = []): Session {
 export function clearSession(): void {
   try {
     if (currentSessionId) {
-      const sessionFilePath = path.join(getSessionDir(), `${currentSessionId}.json`);
+      const sessionFilePath = path.join(
+        getSessionDir(),
+        `${currentSessionId}.json`,
+      );
       if (fs.existsSync(sessionFilePath)) {
         fs.unlinkSync(sessionFilePath);
       }
@@ -214,7 +230,6 @@ export function clearSession(): void {
   }
 }
 
-
 /**
  * Check if a session exists for the current terminal
  */
@@ -222,15 +237,19 @@ export function hasSession(): boolean {
   if (!currentSessionId) {
     return false;
   }
-  const sessionFilePath = path.join(getSessionDir(), `${currentSessionId}.json`);
+  const sessionFilePath = path.join(
+    getSessionDir(),
+    `${currentSessionId}.json`,
+  );
   return fs.existsSync(sessionFilePath);
 }
-
 
 /**
  * Get metadata from a session file with first user message preview
  */
-function getSessionMetadataWithPreview(filePath: string): SessionMetadata & { firstUserMessage?: string } | null {
+function getSessionMetadataWithPreview(
+  filePath: string,
+): (SessionMetadata & { firstUserMessage?: string }) | null {
   try {
     const sessionData: Session = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const stats = fs.statSync(filePath);
@@ -246,7 +265,10 @@ function getSessionMetadataWithPreview(filePath: string): SessionMetadata & { fi
         } else if (Array.isArray(content)) {
           // For array content, find the first text part
           const textPart = content.find((part) => part.type === "text");
-          firstUserMessage = textPart && 'text' in textPart ? textPart.text : "(multimodal message)";
+          firstUserMessage =
+            textPart && "text" in textPart
+              ? textPart.text
+              : "(multimodal message)";
         } else {
           firstUserMessage = "(unknown content type)";
         }
@@ -270,7 +292,9 @@ function getSessionMetadataWithPreview(filePath: string): SessionMetadata & { fi
 /**
  * List all available sessions with metadata
  */
-export function listSessions(limit: number = 10): (SessionMetadata & { firstUserMessage?: string })[] {
+export function listSessions(
+  limit: number = 10,
+): (SessionMetadata & { firstUserMessage?: string })[] {
   try {
     const sessionDir = getSessionDir();
 
@@ -294,7 +318,10 @@ export function listSessions(limit: number = 10): (SessionMetadata & { firstUser
 
     // Sort by date created (most recent first) and limit results
     return sessions
-      .sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
+      )
       .slice(0, limit);
   } catch (error) {
     logger.error("Error listing sessions:", error);
@@ -314,7 +341,9 @@ export function loadSessionById(sessionId: string): Session | null {
       return null;
     }
 
-    const session: Session = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
+    const session: Session = JSON.parse(
+      fs.readFileSync(sessionFilePath, "utf8"),
+    );
     return session;
   } catch (error) {
     logger.error("Error loading session by ID:", error);

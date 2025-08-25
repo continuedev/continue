@@ -327,7 +327,8 @@ export async function preprocessStreamedToolCalls(
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       logger.error("Invalid tool call", {
         name: toolCall.name,

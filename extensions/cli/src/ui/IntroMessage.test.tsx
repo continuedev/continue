@@ -177,22 +177,16 @@ The UI should only show the slug 'org/complex-rule'.`,
     } as any;
 
     const { lastFrame: frame2 } = render(
-      <IntroMessage
-        config={config}
-        mcpService={mockMcpService}
-      />,
+      <IntroMessage config={config} mcpService={mockMcpService} />,
     );
     output = frame2();
     expect(output).toContain("Test Assistant");
     expect(output).toContain("Loading...");
     expect(output).toContain("Rule 1");
 
-    // Test with only config missing  
+    // Test with only config missing
     const { lastFrame: frame3 } = render(
-      <IntroMessage
-        model={mockModel}
-        mcpService={mockMcpService}
-      />,
+      <IntroMessage model={mockModel} mcpService={mockMcpService} />,
     );
     output = frame3();
     expect(output).toContain("claude-3-sonnet");

@@ -1,11 +1,9 @@
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-
 import { convertToUnifiedHistory } from "../../messageConversion.js";
 
 import { processSlashCommandResult } from "./useChat.helpers.js";
-
 
 describe("useChat clear command", () => {
   let mockSetChatHistory: ReturnType<typeof vi.fn>;
@@ -77,7 +75,7 @@ describe("useChat clear command", () => {
         result,
         chatHistory,
         setChatHistory: mockSetChatHistory,
-          exit: mockExit,
+        exit: mockExit,
         onShowConfigSelector: vi.fn(),
         // onClear is not provided
       });

@@ -83,7 +83,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
 
     // Add all chat messages (filter out system messages)
     chatHistory
-      .filter(item => item.message.role !== "system" || item.message.content) // Keep non-empty system messages
+      .filter((item) => item.message.role !== "system" || item.message.content) // Keep non-empty system messages
       .forEach((item, index) => {
         items.push(renderMessage(item, index));
       });

@@ -26,7 +26,10 @@ import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
-import { streamChatResponseWithInterruption, type ServerState } from "./serve.helpers.js";
+import {
+  streamChatResponseWithInterruption,
+  type ServerState,
+} from "./serve.helpers.js";
 
 const execAsync = promisify(exec);
 
@@ -34,7 +37,6 @@ interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
 }
-
 
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Check if prompt should come from stdin instead of parameter
@@ -109,7 +111,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     undefined,
     true,
   );
-  
+
   const initialHistory = [];
   if (systemMessage) {
     initialHistory.push({
@@ -117,7 +119,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       contextItems: [],
     });
   }
-  
+
   const session = createSession(initialHistory);
 
   // Initialize server state
@@ -359,7 +361,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
           // Remove the partial assistant message if it exists
-          const lastMessage = state.session.history[state.session.history.length - 1];
+          const lastMessage =
+            state.session.history[state.session.history.length - 1];
           if (
             lastMessage &&
             lastMessage.message.role === "assistant" &&

@@ -1,4 +1,8 @@
-import type { ChatHistoryItem, ToolCallState, ToolStatus } from "../../../../../core/index.js";
+import type {
+  ChatHistoryItem,
+  ToolCallState,
+  ToolStatus,
+} from "../../../../../core/index.js";
 
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
@@ -12,28 +16,28 @@ export function createStreamCallbacks(
   options: CreateStreamCallbacksOptions,
 ): any {
   const { setChatHistory, setActivePermissionRequest } = options;
-  
+
   return {
     onContent: (_: string) => {},
-    
+
     onContentComplete: (content: string) => {
       setChatHistory((prev) => [
-          ...prev,
-          {
-            contextItems: [],
-            message: {
-              role: "assistant",
-              content: content,
-              isStreaming: false,
-            }
+        ...prev,
+        {
+          contextItems: [],
+          message: {
+            role: "assistant",
+            content: content,
+            isStreaming: false,
           },
+        },
       ]);
     },
-    
+
     onToolStart: (toolName: string, toolArgs?: any) => {
       setChatHistory((prev) => {
         const newHistory = [...prev];
-        
+
         // Always create a new assistant message for each tool call
         const toolCallId = `tool_${Date.now()}`;
         const toolCallState: ToolCallState = {
@@ -49,76 +53,86 @@ export function createStreamCallbacks(
           status: "calling",
           parsedArgs: toolArgs,
         };
-        
+
         newHistory.push({
           message: {
             role: "assistant",
             content: "",
-            toolCalls: [{
-              id: toolCallId,
-              type: "function",
-              function: {
-                name: toolName,
-                arguments: JSON.stringify(toolArgs || {}),
+            toolCalls: [
+              {
+                id: toolCallId,
+                type: "function",
+                function: {
+                  name: toolName,
+                  arguments: JSON.stringify(toolArgs || {}),
+                },
               },
-            }],
+            ],
           },
           contextItems: [],
           toolCallStates: [toolCallState],
         });
-        
+
         return newHistory;
       });
     },
-    
+
     onToolResult: (result: string, toolName: string, status: ToolStatus) => {
       setChatHistory((prev) => {
         const newHistory = [...prev];
-        
+
         // Find the tool call state and update it
         for (let i = newHistory.length - 1; i >= 0; i--) {
           const item = newHistory[i];
           if (item.toolCallStates) {
             const toolState = item.toolCallStates.find(
-              ts => ts.toolCall.function.name === toolName && ts.status === "calling"
+              (ts) =>
+                ts.toolCall.function.name === toolName &&
+                ts.status === "calling",
             );
-            
+
             if (toolState) {
               toolState.status = status;
-              toolState.output = [{
-                content: result,
-                name: `Tool Result: ${toolName}`,
-                description: "Tool execution result",
-              }];
+              toolState.output = [
+                {
+                  content: result,
+                  name: `Tool Result: ${toolName}`,
+                  description: "Tool execution result",
+                },
+              ];
               break;
             }
           }
         }
-        
+
         return newHistory;
       });
     },
-    
+
     onToolError: (error: string, toolName?: string) => {
       setChatHistory((prev) => {
         const newHistory = [...prev];
-        
+
         // Find the tool call state and mark it as errored
         if (toolName) {
           for (let i = newHistory.length - 1; i >= 0; i--) {
             const item = newHistory[i];
             if (item.toolCallStates) {
               const toolState = item.toolCallStates.find(
-                ts => ts.toolCall.function.name === toolName && ts.status === "calling"
+                (ts) =>
+                  ts.toolCall.function.name === toolName &&
+                  ts.status === "calling",
               );
-              
+
               if (toolState) {
                 toolState.status = "errored";
-                toolState.output = [{
-                  content: error,
-                  name: `Tool Error: ${toolName}`,
-                  description: "Tool execution error",
-                }];
+                toolState.output = [
+                  {
+                    content: error,
+                    name: `Tool Error: ${toolName}`,
+                    description: "Tool execution error",
+                  },
+                ];
                 break;
               }
             }
@@ -133,11 +147,11 @@ export function createStreamCallbacks(
             contextItems: [],
           });
         }
-        
+
         return newHistory;
       });
     },
-    
+
     onToolPermissionRequest: (
       toolName: string,
       toolArgs: any,
@@ -151,7 +165,7 @@ export function createStreamCallbacks(
         toolCallPreview,
       });
     },
-    
+
     onSystemMessage: (message: string) => {
       setChatHistory((prev) => [
         ...prev,
@@ -189,7 +203,7 @@ export async function executeStreaming({
 }: ExecuteStreamingOptions): Promise<void> {
   const { getHistoryForLLM } = await import("../../compaction.js");
   const { streamChatResponse } = await import("../../streamChatResponse.js");
-  
+
   if (model && llmApi) {
     if (
       currentCompactionIndex !== null &&
@@ -200,7 +214,7 @@ export async function executeStreaming({
         currentCompactionIndex,
       );
       const _originalLength = historyForLLM.length;
-      
+
       await streamChatResponse(
         historyForLLM,
         model,
@@ -208,7 +222,7 @@ export async function executeStreaming({
         controller,
         streamCallbacks,
       );
-      
+
       // streamChatResponse modifies the array in place
       // The new messages are already in historyForLLM
     } else {

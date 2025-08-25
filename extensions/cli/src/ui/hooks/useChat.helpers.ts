@@ -1,7 +1,10 @@
 import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
-import { convertFromUnifiedHistory, convertToUnifiedHistory } from "../../messageConversion.js";
+import {
+  convertFromUnifiedHistory,
+  convertToUnifiedHistory,
+} from "../../messageConversion.js";
 import { loadSession, saveSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
@@ -45,9 +48,7 @@ interface HandleCompactCommandOptions {
   chatHistory: ChatHistoryItem[];
   model: any;
   llmApi: any;
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatHistoryItem[]>
-  >;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
   currentSession: Session;
   setCurrentSession: React.Dispatch<React.SetStateAction<Session>>;
@@ -80,7 +81,7 @@ export async function handleCompactCommand({
   try {
     // Compact the chat history directly (already in unified format)
     const result = await compactChatHistory(chatHistory, model, llmApi);
-    
+
     // Replace chat history with compacted version
     setChatHistory(result.compactedHistory);
     setCompactionIndex(result.compactionIndex);
@@ -121,9 +122,7 @@ export async function handleCompactCommand({
 interface ProcessSlashCommandResultOptions {
   result: SlashCommandResult;
   chatHistory: ChatHistoryItem[];
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatHistoryItem[]>
-  >;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   exit: () => void;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
@@ -172,7 +171,9 @@ export function processSlashCommandResult({
   }
 
   if (result.clear) {
-    const systemMessage = chatHistory.find((item) => item.message.role === "system");
+    const systemMessage = chatHistory.find(
+      (item) => item.message.role === "system",
+    );
     const newHistory = systemMessage ? [systemMessage] : [];
     setChatHistory(newHistory);
 
@@ -284,9 +285,7 @@ interface HandleAutoCompactionOptions {
   model: any;
   llmApi: any;
   compactionIndex: number | null;
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatHistoryItem[]>
-  >;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
@@ -307,16 +306,16 @@ export async function handleAutoCompaction({
   const { handleAutoCompaction: coreAutoCompaction } = await import(
     "../../streamChatResponse.autoCompaction.js"
   );
-  
+
   // Convert to legacy format for compaction
   const legacyHistory = convertFromUnifiedHistory(chatHistory);
-  
+
   const result = await coreAutoCompaction(legacyHistory, model, llmApi, {
     isHeadless: false,
     callbacks: {
       setMessages: (updater: any) => {
         // Convert messages updates to chat history updates
-        if (typeof updater === 'function') {
+        if (typeof updater === "function") {
           setChatHistory((prev) => {
             // For now, just return prev - compaction messages will be handled separately
             return prev;
@@ -325,7 +324,7 @@ export async function handleAutoCompaction({
       },
       setChatHistory: (updater: any) => {
         // Handle chat history updates
-        if (typeof updater === 'function') {
+        if (typeof updater === "function") {
           setChatHistory((prev) => {
             const legacyPrev = convertFromUnifiedHistory(prev);
             const updated = updater(legacyPrev);

@@ -3,9 +3,11 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React from "react";
 
-
 import { compactChatHistory } from "./compaction.js";
-import { convertFromUnifiedHistory, convertToUnifiedHistory } from "./messageConversion.js";
+import {
+  convertFromUnifiedHistory,
+  convertToUnifiedHistory,
+} from "./messageConversion.js";
 import { createSession, saveSession } from "./session.js";
 import { formatError } from "./util/formatError.js";
 import { logger } from "./util/logger.js";
@@ -143,7 +145,7 @@ export async function handleAutoCompaction(
   try {
     // Convert to unified format for compaction
     const unifiedHistory = convertToUnifiedHistory(chatHistory);
-    
+
     // Compact the history
     const result = await compactChatHistory(
       unifiedHistory,
@@ -165,8 +167,10 @@ export async function handleAutoCompaction(
     handleCompactionSuccess(result, isHeadless, callbacks);
 
     // Convert back to legacy format for return
-    const compactedLegacyHistory = convertFromUnifiedHistory(result.compactedHistory);
-    
+    const compactedLegacyHistory = convertFromUnifiedHistory(
+      result.compactedHistory,
+    );
+
     return {
       chatHistory: compactedLegacyHistory,
       compactionIndex: result.compactionIndex,

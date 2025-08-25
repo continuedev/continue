@@ -53,7 +53,8 @@ export async function compactChatHistory(
   // Check if the history with compaction prompt is too long, prune if necessary
   let historyToUse = chatHistory;
   let historyForCompaction = [...historyToUse, compactionPrompt];
-  let historyForCompactionLegacy = convertFromUnifiedHistory(historyForCompaction);
+  let historyForCompactionLegacy =
+    convertFromUnifiedHistory(historyForCompaction);
 
   const contextLimit = getModelContextLimit(model);
   const maxTokens = model.defaultCompletionOptions?.maxTokens || 0;
@@ -83,7 +84,8 @@ export async function compactChatHistory(
 
     historyToUse = prunedHistory;
     historyForCompaction = [...historyToUse, compactionPrompt];
-    historyForCompactionLegacy = convertFromUnifiedHistory(historyForCompaction);
+    historyForCompactionLegacy =
+      convertFromUnifiedHistory(historyForCompaction);
   }
 
   // Stream the compaction response
@@ -110,7 +112,9 @@ export async function compactChatHistory(
     );
 
     // Create the compacted history with a special marker
-    const systemMessage = chatHistory.find((item) => item.message.role === "system");
+    const systemMessage = chatHistory.find(
+      (item) => item.message.role === "system",
+    );
     const compactedMessage: ChatHistoryItem = {
       message: {
         role: "assistant",
@@ -123,7 +127,7 @@ export async function compactChatHistory(
     const compactedHistory = systemMessage
       ? [systemMessage, compactedMessage]
       : [compactedMessage];
-    
+
     // Mark the compaction in the unified format
     const compactionIndex = compactedHistory.length - 1;
     if (compactedHistory[compactionIndex]) {
@@ -157,7 +161,7 @@ export function findCompactionIndex(
   chatHistory: ChatHistoryItem[],
 ): number | null {
   const compactedIndex = chatHistory.findIndex(
-    (item) => item.conversationSummary !== undefined
+    (item) => item.conversationSummary !== undefined,
   );
   return compactedIndex === -1 ? null : compactedIndex;
 }

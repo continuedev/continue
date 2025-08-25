@@ -155,7 +155,11 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
     for (let i = 1; i < mockMultipleToolCalls.length; i++) {
       const remainingToolCall = mockMultipleToolCalls[i];
       const cancelledMessage = "Cancelled due to previous tool rejection";
-      mockCallbacks.onToolResult(cancelledMessage, remainingToolCall.name, "canceled");
+      mockCallbacks.onToolResult(
+        cancelledMessage,
+        remainingToolCall.name,
+        "canceled",
+      );
     }
 
     // Verify all tool calls got results

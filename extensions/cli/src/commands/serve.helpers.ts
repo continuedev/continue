@@ -1,4 +1,9 @@
-import type { ChatHistoryItem, Session, ToolCallState, ToolStatus } from "../../../../core/index.js";
+import type {
+  ChatHistoryItem,
+  Session,
+  ToolCallState,
+  ToolStatus,
+} from "../../../../core/index.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { StreamCallbacks } from "../streamChatResponse.types.js";
 
@@ -33,7 +38,7 @@ export async function streamChatResponseWithInterruption(
         };
         state.session.history.push(currentStreamingItem);
       }
-      currentStreamingItem.message.content = 
+      currentStreamingItem.message.content =
         (currentStreamingItem.message.content as string) + content;
     },
     onContentComplete: (content: string) => {
@@ -69,7 +74,7 @@ export async function streamChatResponseWithInterruption(
         status: "calling",
         parsedArgs: toolArgs,
       };
-      
+
       state.session.history.push({
         message: { role: "assistant", content: "" },
         contextItems: [],
@@ -82,15 +87,18 @@ export async function streamChatResponseWithInterruption(
         const item = state.session.history[i];
         if (item.toolCallStates) {
           const toolState = item.toolCallStates.find(
-            (ts: ToolCallState) => ts.toolCall.function.name === toolName && ts.status === "calling"
+            (ts: ToolCallState) =>
+              ts.toolCall.function.name === toolName && ts.status === "calling",
           );
           if (toolState) {
             toolState.status = status;
-            toolState.output = [{
-              content: result,
-              name: `Tool Result: ${toolName}`,
-              description: "Tool execution result",
-            }];
+            toolState.output = [
+              {
+                content: result,
+                name: `Tool Result: ${toolName}`,
+                description: "Tool execution result",
+              },
+            ];
             return;
           }
         }
@@ -103,15 +111,19 @@ export async function streamChatResponseWithInterruption(
           const item = state.session.history[i];
           if (item.toolCallStates) {
             const toolState = item.toolCallStates.find(
-              (ts: ToolCallState) => ts.toolCall.function.name === toolName && ts.status === "calling"
+              (ts: ToolCallState) =>
+                ts.toolCall.function.name === toolName &&
+                ts.status === "calling",
             );
             if (toolState) {
               toolState.status = "errored";
-              toolState.output = [{
-                content: error,
-                name: `Tool Error: ${toolName}`,
-                description: "Tool execution error",
-              }];
+              toolState.output = [
+                {
+                  content: error,
+                  name: `Tool Error: ${toolName}`,
+                  description: "Tool execution error",
+                },
+              ];
               return;
             }
           }
@@ -138,9 +150,9 @@ export async function streamChatResponseWithInterruption(
 
       // Add a system message indicating permission is needed
       state.session.history.push({
-        message: { 
-          role: "system", 
-          content: `⚠️ Tool ${toolName} requires permission`
+        message: {
+          role: "system",
+          content: `⚠️ Tool ${toolName} requires permission`,
         },
         contextItems: [],
       });
@@ -187,4 +199,3 @@ export interface ServerState {
   pendingPermission: PendingPermission | null;
   systemMessage?: string;
 }
-

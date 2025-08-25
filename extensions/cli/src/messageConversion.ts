@@ -1,6 +1,6 @@
 /**
  * Message conversion utilities for transitioning to unified ChatHistoryItem type.
- * 
+ *
  * This module provides conversion functions between the OpenAI ChatCompletionMessageParam
  * format and the unified ChatHistoryItem format from the core package.
  */
@@ -44,7 +44,7 @@ export function convertToUnifiedMessage(
       };
 
       // Convert tool calls if present
-      if ('tool_calls' in message && message.tool_calls) {
+      if ("tool_calls" in message && message.tool_calls) {
         assistantMessage.toolCalls = message.tool_calls.map((tc: any) => ({
           id: tc.id,
           type: "function" as const,
@@ -97,14 +97,16 @@ export function convertFromUnifiedMessage(
 
       // Convert tool calls if present
       if (message.toolCalls && message.toolCalls.length > 0) {
-        (assistantMessage as any).tool_calls = message.toolCalls.map((tc: any) => ({
-          id: tc.id,
-          type: "function",
-          function: {
-            name: tc.function?.name || "",
-            arguments: tc.function?.arguments || "",
-          },
-        }));
+        (assistantMessage as any).tool_calls = message.toolCalls.map(
+          (tc: any) => ({
+            id: tc.id,
+            type: "function",
+            function: {
+              name: tc.function?.name || "",
+              arguments: tc.function?.arguments || "",
+            },
+          }),
+        );
       }
 
       return assistantMessage;
@@ -215,29 +217,31 @@ export function createHistoryItem(
 function handleToolResult(
   unifiedMessage: ChatMessage & { role: "tool" },
   pendingToolCalls: Map<string, ToolCall>,
-  historyItems: ChatHistoryItem[]
+  historyItems: ChatHistoryItem[],
 ): void {
   const toolCall = pendingToolCalls.get(unifiedMessage.toolCallId);
   if (!toolCall) return;
-  
+
   // Add tool result as context to the previous assistant message
   const lastAssistantIndex = historyItems.findLastIndex(
-    item => item.message.role === "assistant"
+    (item) => item.message.role === "assistant",
   );
-  
+
   if (lastAssistantIndex < 0) return;
   if (!historyItems[lastAssistantIndex].toolCallStates) return;
-  
+
   const toolState = historyItems[lastAssistantIndex].toolCallStates?.find(
-    ts => ts.toolCallId === unifiedMessage.toolCallId
+    (ts) => ts.toolCallId === unifiedMessage.toolCallId,
   );
-  
+
   if (toolState) {
-    toolState.output = [{
-      content: unifiedMessage.content as string,
-      name: `Tool Result: ${toolCall.function.name}`,
-      description: "Tool execution result",
-    }];
+    toolState.output = [
+      {
+        content: unifiedMessage.content as string,
+        name: `Tool Result: ${toolCall.function.name}`,
+        description: "Tool execution result",
+      },
+    ];
   }
 }
 
@@ -252,28 +256,30 @@ export function convertToUnifiedHistory(
 
   for (const message of messages) {
     const unifiedMessage = convertToUnifiedMessage(message);
-    
+
     if (unifiedMessage.role === "assistant" && unifiedMessage.toolCalls) {
       // Store tool calls for matching with results
-      const toolCallStates: ToolCallState[] = unifiedMessage.toolCalls.map((tc: any) => {
-        const toolCall: ToolCall = {
-          id: tc.id || "",
-          type: "function",
-          function: {
-            name: tc.function?.name || "",
-            arguments: tc.function?.arguments || "",
-          },
-        };
-        pendingToolCalls.set(toolCall.id, toolCall);
-        
-        return {
-          toolCallId: toolCall.id,
-          toolCall,
-          status: "done" as ToolStatus, // Historical calls are complete
-          parsedArgs: tryParseJson(toolCall.function.arguments),
-        };
-      });
-      
+      const toolCallStates: ToolCallState[] = unifiedMessage.toolCalls.map(
+        (tc: any) => {
+          const toolCall: ToolCall = {
+            id: tc.id || "",
+            type: "function",
+            function: {
+              name: tc.function?.name || "",
+              arguments: tc.function?.arguments || "",
+            },
+          };
+          pendingToolCalls.set(toolCall.id, toolCall);
+
+          return {
+            toolCallId: toolCall.id,
+            toolCall,
+            status: "done" as ToolStatus, // Historical calls are complete
+            parsedArgs: tryParseJson(toolCall.function.arguments),
+          };
+        },
+      );
+
       historyItems.push(createHistoryItem(unifiedMessage, [], toolCallStates));
     } else if (unifiedMessage.role === "tool") {
       // Tool result - handle separately to reduce nesting
@@ -324,8 +330,10 @@ export function extractToolCallInfo(historyItem: ChatHistoryItem): {
   toolCalls?: ToolCall[];
   toolStates?: ToolCallState[];
 } {
-  const hasToolCalls = !!(historyItem.toolCallStates && historyItem.toolCallStates.length > 0);
-  
+  const hasToolCalls = !!(
+    historyItem.toolCallStates && historyItem.toolCallStates.length > 0
+  );
+
   return {
     hasToolCalls,
     toolCalls: historyItem.toolCallStates?.map((ts: any) => ts.toolCall),
@@ -343,4 +351,3 @@ function tryParseJson(str: string): any {
     return str;
   }
 }
-

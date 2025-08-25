@@ -14,7 +14,10 @@ import { processCommandFlags } from "../flags/flagProcessor.js";
 import { safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
-import { convertFromUnifiedHistory, convertToUnifiedHistory } from "../messageConversion.js";
+import {
+  convertFromUnifiedHistory,
+  convertToUnifiedHistory,
+} from "../messageConversion.js";
 import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";

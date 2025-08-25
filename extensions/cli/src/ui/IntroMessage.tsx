@@ -32,11 +32,9 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
     const allRules = configRules;
 
     // Check if model is capable - now checking both name and model properties
-    const modelCapable = model ? isModelCapable(
-      model.provider,
-      model.name,
-      model.model,
-    ) : true; // Default to true if model not loaded yet
+    const modelCapable = model
+      ? isModelCapable(model.provider, model.name, model.model)
+      : true; // Default to true if model not loaded yet
 
     return { allRules, modelCapable };
   }, [config?.rules, model?.provider, model?.name, model?.model]);

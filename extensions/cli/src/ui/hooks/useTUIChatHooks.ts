@@ -32,8 +32,8 @@ export function getRepoUrlText(remoteUrl?: string): string {
 // Custom hook for intro message
 export function useIntroMessage(
   isRemoteMode: boolean,
-  services: any,
-  allServicesReady: boolean,
+  _services: any,
+  _allServicesReady: boolean,
 ) {
   const [showIntroMessage, setShowIntroMessage] = useState(false);
 
@@ -107,10 +107,13 @@ export function useSelectors(
     configPath,
     onMessage: (message) => {
       // Convert message to ChatHistoryItem format
-      setChatHistory((prev) => [...prev, {
-        message: { role: "system", content: message.content },
-        contextItems: [],
-      }]);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          message: { role: "system", content: message.content },
+          contextItems: [],
+        },
+      ]);
     },
     onChatReset: resetChatHistory,
   });
@@ -118,10 +121,13 @@ export function useSelectors(
   const { handleModelSelect } = useModelSelector({
     onMessage: (message) => {
       // Convert message to ChatHistoryItem format
-      setChatHistory((prev) => [...prev, {
-        message: { role: "system", content: message.content },
-        contextItems: [],
-      }]);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          message: { role: "system", content: message.content },
+          contextItems: [],
+        },
+      ]);
     },
   });
 

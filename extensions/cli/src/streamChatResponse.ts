@@ -456,7 +456,7 @@ export async function streamChatResponse(
 ) {
   // Convert to legacy format for processing
   const legacyHistory = convertFromUnifiedHistory(chatHistory);
-  
+
   logger.debug("streamChatResponse called", {
     model,
     historyLength: chatHistory.length,

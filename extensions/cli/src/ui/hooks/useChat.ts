@@ -67,13 +67,13 @@ export function useChat({
         return savedSession;
       }
     }
-    
+
     // Create new session
     return createSession([]);
   });
 
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
-    () => currentSession.history
+    () => currentSession.history,
   );
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
@@ -196,9 +196,10 @@ export function useChat({
     });
 
     try {
-      const streamCallbacks = createStreamCallbacks(
-        { setChatHistory, setActivePermissionRequest }
-      );
+      const streamCallbacks = createStreamCallbacks({
+        setChatHistory,
+        setActivePermissionRequest,
+      });
 
       // Execute streaming chat response
       await executeStreaming({

@@ -10,7 +10,12 @@ vi.mock("./compaction.js", () => ({
 }));
 
 vi.mock("./session.js", () => ({
-  createSession: vi.fn((history) => ({ sessionId: "test", title: "Test", workspaceDirectory: "/test", history })),
+  createSession: vi.fn((history) => ({
+    sessionId: "test",
+    title: "Test",
+    workspaceDirectory: "/test",
+    history,
+  })),
   saveSession: vi.fn(),
 }));
 

@@ -352,7 +352,9 @@ describe("compaction", () => {
         role: "system",
         content: "You are a helpful assistant",
       });
-      expect(result.compactedHistory[1].message.content).toContain(COMPACTION_MARKER);
+      expect(result.compactedHistory[1].message.content).toContain(
+        COMPACTION_MARKER,
+      );
     });
 
     it("should handle empty content from stream", async () => {
@@ -373,7 +375,9 @@ describe("compaction", () => {
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactionContent).toBe("");
-      expect(result.compactedHistory[0].message.content).toBe(`${COMPACTION_MARKER}\n`);
+      expect(result.compactedHistory[0].message.content).toBe(
+        `${COMPACTION_MARKER}\n`,
+      );
     });
 
     it("should correctly construct prompt for compaction", async () => {
@@ -448,13 +452,13 @@ describe("compaction", () => {
       ]);
 
       for (let i = 0; i < 100; i++) {
-        history.push({ 
+        history.push({
           message: { role: "user", content: `User message ${i}` },
-          contextItems: []
+          contextItems: [],
         });
-        history.push({ 
+        history.push({
           message: { role: "assistant", content: `Assistant response ${i}` },
-          contextItems: []
+          contextItems: [],
         });
       }
 
