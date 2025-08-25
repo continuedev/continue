@@ -3,6 +3,8 @@
  * Provides consistent validation across all commands and proper error reporting
  */
 
+import { safeStderr } from "../init.js";
+
 export interface ValidationOptions {
   // Root command specific flags
   print?: boolean;
@@ -182,11 +184,11 @@ export function validateFlags(options: ValidationOptions): ValidationResult {
  */
 export function handleValidationErrors(errors: ValidationError[]): never {
   for (const error of errors) {
-    console.error(error.message);
+    safeStderr(error.message + "\n");
   }
 
   if (errors.length > 1) {
-    console.error(`\nFound ${errors.length} validation errors.`);
+    safeStderr(`\nFound ${errors.length} validation errors.\n`);
   }
 
   process.exit(1);

@@ -1,16 +1,25 @@
 /**
  * Base interface for command options that are shared across multiple commands
+ * Uses command-line flag names for direct compatibility
  */
 export interface BaseCommandOptions {
-  /** Path to configuration file */
+  /** Path to configuration file (--config) */
   config?: string;
-  /** Array of rule specifications (can be file paths, hub slugs, or string content) */
+  /** Organization slug to use for this session (--org) */
+  org?: string;
+  /** Array of rule specifications (--rule) */
   rule?: string[];
-  /** Array of tools to allow (overrides default policies) */
+  /** Array of MCP server slugs from the hub (--mcp) */
+  mcp?: string[];
+  /** Array of model slugs from the hub (--model) */
+  model?: string[];
+  /** Array of prompt slugs from the hub (--prompt) */
+  prompt?: string[];
+  /** Array of tools to allow (--allow) */
   allow?: string[];
-  /** Array of tools to ask permission for (overrides default policies) */
+  /** Array of tools to ask permission for (--ask) */
   ask?: string[];
-  /** Array of tools to exclude from use (overrides default policies) */
+  /** Array of tools to exclude from use (--exclude) */
   exclude?: string[];
 }
 

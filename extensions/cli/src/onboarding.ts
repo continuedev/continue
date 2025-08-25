@@ -7,7 +7,7 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 import * as readlineSync from "readline-sync";
 
-import { processRule } from "./args.js";
+import { processPromptOrRule } from "./args.js";
 import { AuthConfig, isAuthenticated, login } from "./auth/workos.js";
 import { initialize } from "./config.js";
 import { env } from "./env.js";
@@ -239,7 +239,7 @@ async function injectRulesIntoConfig(
   const processedRules: string[] = [];
   for (const ruleSpec of rules) {
     try {
-      const processedRule = await processRule(ruleSpec);
+      const processedRule = await processPromptOrRule(ruleSpec);
       processedRules.push(processedRule);
     } catch (error: any) {
       console.warn(
@@ -257,16 +257,10 @@ async function injectRulesIntoConfig(
   // Clone the config to avoid mutating the original
   const modifiedConfig = { ...config };
 
-  // Combine processed rules with existing system message if the config has one
-  const existingSystemMessage = (modifiedConfig as any).systemMessage || "";
-  const rulesSection = processedRules.join("\n\n");
-
-  if (existingSystemMessage) {
-    (modifiedConfig as any).systemMessage =
-      `${existingSystemMessage}\n\n${rulesSection}`;
-  } else {
-    (modifiedConfig as any).systemMessage = rulesSection;
-  }
+  // Add processed rules to the config's rules array
+  // Each processed rule is a string, which is a valid Rule type
+  const existingRules = modifiedConfig.rules || [];
+  modifiedConfig.rules = [...existingRules, ...processedRules];
 
   return modifiedConfig;
 }
