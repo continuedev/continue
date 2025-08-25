@@ -56,44 +56,26 @@ export async function streamChatResponseWithInterruption(
         currentStreamingItem = null;
       }
 
-      // Add tool call to the last assistant message or create new one
-      const lastItem = state.unifiedHistory[state.unifiedHistory.length - 1];
-      if (lastItem && lastItem.message.role === "assistant") {
-        if (!lastItem.toolCallStates) {
-          lastItem.toolCallStates = [];
-        }
-        lastItem.toolCallStates.push({
-          toolCallId: `tool_${Date.now()}`,
-          toolCall: {
-            id: `tool_${Date.now()}`,
-            type: "function",
-            function: {
-              name: toolName,
-              arguments: JSON.stringify(toolArgs || {}),
-            },
+      // Always create a new assistant message for each tool call
+      const toolCallState: ToolCallState = {
+        toolCallId: `tool_${Date.now()}`,
+        toolCall: {
+          id: `tool_${Date.now()}`,
+          type: "function",
+          function: {
+            name: toolName,
+            arguments: JSON.stringify(toolArgs || {}),
           },
-          status: "calling",
-          parsedArgs: toolArgs,
-        });
-      } else {
-        state.unifiedHistory.push({
-          message: { role: "assistant", content: "" },
-          contextItems: [],
-          toolCallStates: [{
-            toolCallId: `tool_${Date.now()}`,
-            toolCall: {
-              id: `tool_${Date.now()}`,
-              type: "function",
-              function: {
-                name: toolName,
-                arguments: JSON.stringify(toolArgs || {}),
-              },
-            },
-            status: "calling",
-            parsedArgs: toolArgs,
-          }],
-        });
-      }
+        },
+        status: "calling",
+        parsedArgs: toolArgs,
+      };
+      
+      state.unifiedHistory.push({
+        message: { role: "assistant", content: "" },
+        contextItems: [],
+        toolCallStates: [toolCallState],
+      });
     },
     onToolResult: (result: string, toolName: string) => {
       // Find and update the corresponding tool call state

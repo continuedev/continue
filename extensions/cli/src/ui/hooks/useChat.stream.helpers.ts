@@ -34,64 +34,38 @@ export function createStreamCallbacks(
     onToolStart: (toolName: string, toolArgs?: any) => {
       setChatHistory((prev) => {
         const newHistory = [...prev];
-        const lastItem = newHistory[newHistory.length - 1];
         
-        // If we have an assistant message, add tool call to it
-        if (lastItem?.message.role === "assistant") {
-          // Initialize tool call states if not present
-          if (!lastItem.toolCallStates) {
-            lastItem.toolCallStates = [];
-          }
-          
-          // Add new tool call state
-          const toolCallState: ToolCallState = {
-            toolCallId: `tool_${Date.now()}`,
-            toolCall: {
-              id: `tool_${Date.now()}`,
+        // Always create a new assistant message for each tool call
+        const toolCallState: ToolCallState = {
+          toolCallId: `tool_${Date.now()}`,
+          toolCall: {
+            id: `tool_${Date.now()}`,
+            type: "function",
+            function: {
+              name: toolName,
+              arguments: JSON.stringify(toolArgs || {}),
+            },
+          },
+          status: "calling",
+          parsedArgs: toolArgs,
+        };
+        
+        newHistory.push({
+          message: {
+            role: "assistant",
+            content: "",
+            toolCalls: [{
+              id: toolCallState.toolCallId,
               type: "function",
               function: {
                 name: toolName,
                 arguments: JSON.stringify(toolArgs || {}),
               },
-            },
-            status: "calling",
-            parsedArgs: toolArgs,
-          };
-          
-          lastItem.toolCallStates.push(toolCallState);
-        } else {
-          // Create new assistant message with tool call
-          const toolCallState: ToolCallState = {
-            toolCallId: `tool_${Date.now()}`,
-            toolCall: {
-              id: `tool_${Date.now()}`,
-              type: "function",
-              function: {
-                name: toolName,
-                arguments: JSON.stringify(toolArgs || {}),
-              },
-            },
-            status: "calling",
-            parsedArgs: toolArgs,
-          };
-          
-          newHistory.push({
-            message: {
-              role: "assistant",
-              content: "",
-              toolCalls: [{
-                id: toolCallState.toolCallId,
-                type: "function",
-                function: {
-                  name: toolName,
-                  arguments: JSON.stringify(toolArgs || {}),
-                },
-              }],
-            },
-            contextItems: [],
-            toolCallStates: [toolCallState],
-          });
-        }
+            }],
+          },
+          contextItems: [],
+          toolCallStates: [toolCallState],
+        });
         
         return newHistory;
       });
