@@ -9,7 +9,7 @@ import type { ChatHistoryItem, Session, SessionMetadata } from "../../../core/in
 // Re-export SessionMetadata for external consumers
 export type { SessionMetadata };
 
-import { logger } from "./util/logger.js";
+  import { logger } from "./util/logger.js";
 
 // Note: We now use UUID-based session IDs instead of terminal-based IDs.
 // Each new chat session gets a unique UUID.
@@ -87,13 +87,24 @@ export function saveSession(session: Session): void {
     // Store the session ID for future reference
     currentSessionId = session.sessionId;
     
+    // Filter out system messages except for the first one
+    // TODO: Properly handle system messages vs informational messages in the future
+    const filteredHistory = session.history.filter((item, index) => {
+      return index === 0 || item.message.role !== "system";
+    });
+    
+    const sessionToSave: Session = {
+      ...session,
+      history: filteredHistory
+    };
+    
     const sessionFilePath = path.join(getSessionDir(), `${session.sessionId}.json`);
     
     // Write the session file
-    fs.writeFileSync(sessionFilePath, JSON.stringify(session, null, 2));
+    fs.writeFileSync(sessionFilePath, JSON.stringify(sessionToSave, null, 2));
     
     // Update the sessions list
-    updateSessionsList(session);
+    updateSessionsList(sessionToSave);
   } catch (error) {
     logger.error("Error saving session:", error);
   }
