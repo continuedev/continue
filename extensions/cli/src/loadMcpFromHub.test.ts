@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loadMcpFromHub } from "./args.js";
 
-// Mock fetch globally
+// Store original fetch to restore later
+const originalFetch = global.fetch;
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
 
 // Mock JSZip
 vi.mock("jszip", () => {
@@ -18,10 +18,17 @@ describe("loadMcpFromHub", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Set mock fetch for each test
+    global.fetch = mockFetch;
 
     // Get the mocked JSZip constructor
     const JSZip = (await import("jszip")).default;
     mockJSZip = new JSZip();
+  });
+
+  afterEach(() => {
+    // Restore original fetch after each test
+    global.fetch = originalFetch;
   });
 
   it("should validate slug format", async () => {

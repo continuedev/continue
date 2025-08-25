@@ -71,7 +71,6 @@ describe("hubLoader", () => {
         }));
       } else {
         // If mock doesn't work, skip this test
-        console.log("JSZip mock not working, skipping test");
         return;
       }
 
@@ -121,7 +120,6 @@ describe("hubLoader", () => {
         }));
       } else {
         // If mock doesn't work, skip this test
-        console.log("JSZip mock not working, skipping test");
         return;
       }
 

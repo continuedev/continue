@@ -231,9 +231,11 @@ export async function processRule(ruleSpec: string): Promise<string> {
 
   // If it looks like a file path
   if (
-    ruleSpec.includes(".") ||
+    ruleSpec.startsWith(".") ||
+    ruleSpec.startsWith("/") ||
     ruleSpec.includes("/") ||
-    ruleSpec.includes("\\")
+    ruleSpec.includes("\\") ||
+    /\.[a-zA-Z]+$/.test(ruleSpec) // Has file extension at the end
   ) {
     const fs = await import("fs");
     const path = await import("path");

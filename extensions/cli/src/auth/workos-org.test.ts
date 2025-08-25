@@ -13,6 +13,10 @@ vi.mock("../config.js", () => ({
   })),
 }));
 
+vi.mock("../init.js", () => ({
+  safeStderr: vi.fn(),
+}));
+
 vi.mock("fs", () => ({
   default: {
     existsSync: vi.fn(() => false),
@@ -91,7 +95,8 @@ describe("ensureOrganization with CLI organization slug", () => {
 
   describe("Mode restriction", () => {
     test("should reject --org flag in interactive mode", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error");
+      const { safeStderr } = await import("../init.js");
+      const safeStderrSpy = vi.mocked(safeStderr);
       const processExitSpy = vi
         .spyOn(process, "exit")
         .mockImplementation(() => {
@@ -102,9 +107,9 @@ describe("ensureOrganization with CLI organization slug", () => {
         ensureOrganization(mockAuthConfig, false, "org-one"),
       ).rejects.toThrow("Process exit");
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(safeStderrSpy).toHaveBeenCalledWith(
         chalk.red(
-          "The --org flag is only supported in headless mode (with -p/--print flag)",
+          "The --org flag is only supported in headless mode (with -p/--print flag)\n",
         ),
       );
       expect(processExitSpy).toHaveBeenCalledWith(1);
