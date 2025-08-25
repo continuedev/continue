@@ -96,19 +96,18 @@ jobs:
           cd extensions/cli
           npm run test:smoke
 
-      # e2e tests are failing on Windows specifically - likely due to stdout flush issues
       - name: Run tests
-        if: matrix.os != 'windows-latest'
         run: |
           cd extensions/cli
           npm test
 
-      - name: Run tests (excluding e2e on Windows)
-        if: matrix.os == 'windows-latest'
-        shell: bash
+      # e2e tests are failing on Windows specifically - likely due to stdout flush issues
+      - name: Run e2e tests
+        if: matrix.os != 'windows-latest'
         run: |
           cd extensions/cli
-          npm test -- --exclude='**/*.e2e.*' --exclude='**/e2e/**'
+          npm run test:e2e
+
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
