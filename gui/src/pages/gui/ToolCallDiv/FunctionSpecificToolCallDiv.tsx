@@ -33,9 +33,9 @@ function FunctionSpecificToolCallDiv({
         />
       );
     case BuiltInToolNames.SearchAndReplaceInFile:
-      const changes = args.diffs
+      const changes = args?.diffs
         ? Array.isArray(args.diffs)
-          ? args.diffs.join("\n\n---\n\n")
+          ? args.diffs?.join("\n\n---\n\n")
           : args.diffs
         : "";
 
@@ -45,6 +45,45 @@ function FunctionSpecificToolCallDiv({
           status={toolCallState.status}
           relativeFilePath={args?.filepath ?? ""}
           changes={changes}
+          toolCallId={toolCall.id}
+          historyIndex={historyIndex}
+        />
+      );
+    case BuiltInToolNames.SingleFindAndReplace:
+      const fakeSearchReplaceBlock = `===== SEARCH
+${args?.old_string ?? ""}
+=====
+${args?.new_string ?? ""}
+===== REPLACE`;
+
+      return (
+        <EditFile
+          showToolCallStatusIcon={true}
+          status={toolCallState.status}
+          relativeFilePath={args?.filepath ?? ""}
+          changes={fakeSearchReplaceBlock}
+          toolCallId={toolCall.id}
+          historyIndex={historyIndex}
+        />
+      );
+    case BuiltInToolNames.MultiEdit:
+      const fakeSearchReplaceBlocks =
+        (args?.edits as { old_string: string; new_string: string }[])
+          ?.map(
+            (edit) => `===== SEARCH
+${edit?.old_string ?? ""}
+=====
+${edit?.new_string ?? ""}
+===== REPLACE`,
+          )
+          ?.join("\n\n---\n\n") ?? "";
+
+      return (
+        <EditFile
+          showToolCallStatusIcon={true}
+          status={toolCallState.status}
+          relativeFilePath={args?.filepath ?? ""}
+          changes={fakeSearchReplaceBlocks}
           toolCallId={toolCall.id}
           historyIndex={historyIndex}
         />

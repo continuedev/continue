@@ -282,6 +282,8 @@ export default async function doLoadConfig(options: {
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
       isSignedIn,
+      isRemote: await ide.isWorkspaceRemote(),
+      modelName: newConfig.selectedModelByRole.chat?.model,
     }),
   );
 

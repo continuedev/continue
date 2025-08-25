@@ -1112,6 +1112,8 @@ export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
   enableExperimentalTools: boolean;
   isSignedIn: boolean;
+  isRemote: boolean;
+  modelName: string | undefined;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;

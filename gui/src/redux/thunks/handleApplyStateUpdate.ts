@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ApplyState } from "core";
+import { ApplyState, ApplyToFilePayload } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { logAgentModeEditOutcome } from "../../util/editOutcomeLogger";
 import {
@@ -105,13 +105,30 @@ export const handleApplyStateUpdate = createAsyncThunk<
   },
 );
 
-export const handleEditToolApplyError = createAsyncThunk<
+export const applyForEditTool = createAsyncThunk<
   void,
-  { toolCallId: string },
+  ApplyToFilePayload & { toolCallId: string },
   ThunkApiType
->(
-  "apply/handleEditError",
-  async ({ toolCallId }, { dispatch, getState, extra }) => {
+>("apply/editTool", async (payload, { dispatch, getState, extra }) => {
+  const { toolCallId, streamId } = payload;
+  dispatch(
+    updateApplyState({
+      streamId,
+      toolCallId,
+      status: "not-started",
+    }),
+  );
+
+  let didError = false;
+  try {
+    const response = await extra.ideMessenger.request("applyToFile", payload);
+    if (response.status === "error") {
+      didError = true;
+    }
+  } catch (e) {
+    didError = true;
+  }
+  if (didError) {
     const state = getState();
 
     const toolCallState = selectToolCallById(state, toolCallId);
@@ -149,5 +166,5 @@ export const handleEditToolApplyError = createAsyncThunk<
         }),
       );
     }
-  },
-);
+  }
+});
