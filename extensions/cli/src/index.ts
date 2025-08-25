@@ -187,7 +187,7 @@ program
 
 // Remote subcommand
 program
-  .command("remote [prompt]")
+  .command("remote [prompt]", { hidden: true })
   .description("Launch a remote instance of the cn agent")
   .option(
     "--url <url>",
