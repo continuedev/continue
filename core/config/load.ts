@@ -277,11 +277,12 @@ async function intermediateToFinalConfig({
             const modelNames = await llm.listModels();
             const detectedModels = await Promise.all(
               modelNames.map(async (modelName) => {
+                const autodetectTitle = `${desc.title || desc.model} (auto-detected)`;
                 return await llmFromDescription(
                   {
                     ...desc,
                     model: modelName,
-                    title: modelName,
+                    title: autodetectTitle,
                   },
                   ide.readFile.bind(ide),
                   getUriFromPath,

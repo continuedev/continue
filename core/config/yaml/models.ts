@@ -173,12 +173,12 @@ async function autodetectModels({
         if (modelName === AUTODETECT) {
           return undefined;
         }
-
+        const autodetectTitle = `${modelName} (auto-detected)`;
         return await modelConfigToBaseLLM({
           model: {
             ...model,
             model: modelName,
-            name: modelName,
+            name: autodetectTitle,
           },
           uniqueId,
           ideSettings,
