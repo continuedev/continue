@@ -4,7 +4,6 @@ import { NextEditOutcome } from "core/nextEdit/types";
 import svgBuilder from "svg-builder";
 import * as vscode from "vscode";
 import { getTheme } from "../util/getTheme";
-import { InlineTipManager } from "./InlineTipManager";
 import {
   HandlerPriority,
   SelectionChangeManager,
@@ -131,7 +130,10 @@ export class JumpManager {
     };
 
     try {
-      const svgContent = svgBuilder
+      const builder = svgBuilder.newInstance
+        ? svgBuilder.newInstance()
+        : svgBuilder;
+      const svgContent = builder
         .width(SVG_CONFIG.getTipWidth())
         .height(SVG_CONFIG.getTipHeight())
         .text(
@@ -292,8 +294,6 @@ export class JumpManager {
     // Clean up any existing decoration beforehand.
     await this.clearJumpDecoration();
 
-    InlineTipManager.getInstance().hideTemporarily();
-
     // Create a decoration for jump.
     // this._jumpDecoration = vscode.window.createTextEditorDecorationType({
     //   before: {
@@ -347,8 +347,6 @@ export class JumpManager {
       false,
     );
     this._jumpDecorationVisible = false;
-
-    InlineTipManager.getInstance().restoreVisibility();
   }
 
   private async registerKeyListeners(
