@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.FimResult
+import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.`continue`.ProfileInfoService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.components.service
@@ -39,6 +40,16 @@ sealed class NextEditModelMatcher {
 object NextEditUtils {
     suspend fun isNextEditSupported(project: Project): Boolean {
         return try {
+            // NOTE: Quick filter for non-continue users.
+            // Remove this once we have a FIM - Next Edit toggle UI.
+            val authService = project.service<ContinueAuthService>()
+            val sessionInfo = authService.loadControlPlaneSessionInfo()
+            val userEmail = sessionInfo?.account?.id
+
+            if (userEmail == null || !userEmail.endsWith("@continue.dev")) {
+                return false
+            }
+
             val profileInfoService = project.service<ProfileInfoService>()
             val selectedModelByRole = profileInfoService.fetchSelectedModelByRoleOrNull()
 
