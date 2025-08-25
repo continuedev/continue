@@ -9,7 +9,6 @@ import {
 import Handlebars from "handlebars";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
-import { Logger } from "../util/Logger.js";
 import { DataLogger } from "../data/log.js";
 import {
   CacheBehavior,
@@ -31,10 +30,11 @@ import {
   TemplateType,
   Usage,
 } from "../index.js";
+import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
-import { Telemetry } from "../util/posthog.js";
+import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
 import {
@@ -343,15 +343,11 @@ export abstract class BaseLLM implements ILLM {
     let generatedTokens = this.countTokens(completion);
     let thinkingTokens = thinking ? this.countTokens(thinking) : 0;
 
-    void Telemetry.capture(
-      "tokens_generated",
-      {
-        model: model,
-        provider: this.providerName,
-        promptTokens: promptTokens,
-        generatedTokens: generatedTokens,
-      },
-      true,
+    TokensBatchingService.getInstance().addTokens(
+      model,
+      this.providerName,
+      promptTokens,
+      generatedTokens,
     );
 
     void DevDataSqliteDb.logTokensGenerated(
