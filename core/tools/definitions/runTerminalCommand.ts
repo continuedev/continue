@@ -1,5 +1,5 @@
 import os from "os";
-import { Tool } from "../..";
+import { Tool, ToolPolicy } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 /**
@@ -56,6 +56,22 @@ export const runTerminalCommandTool: Tool = {
     },
   },
   defaultToolPolicy: "allowedWithPermission",
+  evaluateToolCallPolicy: (basePolicy: ToolPolicy, parsedArgs: Record<string, unknown>): ToolPolicy => {
+    // If tool is disabled, keep it disabled
+    if (basePolicy === "disabled") {
+      return "disabled";
+    }
+    
+    const command = parsedArgs.command as string;
+    
+    // Always require permission for echo commands
+    if (command && command.trim().toLowerCase().startsWith("echo")) {
+      return "allowedWithPermission";
+    }
+    
+    // For all other commands, use the base policy
+    return basePolicy;
+  },
   systemMessageDescription: {
     prefix: `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
 ${RUN_COMMAND_NOTES}
