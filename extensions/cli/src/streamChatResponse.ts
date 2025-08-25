@@ -7,6 +7,9 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
+import type { ChatHistoryItem } from "../../../core/index.js";
+
+import { convertFromUnifiedHistory } from "./messageConversion.js";
 import { filterExcludedTools } from "./permissions/index.js";
 import {
   getServiceSync,
@@ -445,12 +448,15 @@ export async function processStreamingResponse(
 
 // Main function that handles the conversation loop
 export async function streamChatResponse(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
   abortController: AbortController,
   callbacks?: StreamCallbacks,
 ) {
+  // Convert to legacy format for processing
+  const legacyHistory = convertFromUnifiedHistory(chatHistory);
+  
   logger.debug("streamChatResponse called", {
     model,
     historyLength: chatHistory.length,
@@ -479,7 +485,7 @@ export async function streamChatResponse(
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
-        chatHistory,
+        chatHistory: legacyHistory,
         model,
         llmApi,
         abortController,
@@ -504,7 +510,7 @@ export async function streamChatResponse(
     // Handle tool calls and check for early return
     const shouldReturn = await handleToolCalls(
       toolCalls,
-      chatHistory,
+      legacyHistory,
       content,
       callbacks,
       isHeadless,
@@ -517,7 +523,7 @@ export async function streamChatResponse(
     // Check for auto-compaction after tool execution
     if (shouldContinue) {
       const { chatHistory: updatedChatHistory, compactionIndex } =
-        await handleAutoCompaction(chatHistory, model, llmApi, {
+        await handleAutoCompaction(legacyHistory, model, llmApi, {
           isHeadless,
           callbacks: {
             onSystemMessage: callbacks?.onSystemMessage,
@@ -526,9 +532,9 @@ export async function streamChatResponse(
         });
 
       // Only update chat history if compaction actually occurred
-      if (compactionIndex !== null && updatedChatHistory !== chatHistory) {
-        chatHistory.length = 0;
-        chatHistory.push(...updatedChatHistory);
+      if (compactionIndex !== null && updatedChatHistory !== legacyHistory) {
+        legacyHistory.length = 0;
+        legacyHistory.push(...updatedChatHistory);
       }
     }
 
@@ -540,7 +546,7 @@ export async function streamChatResponse(
 
   logger.debug("streamChatResponse complete", {
     totalResponseLength: fullResponse.length,
-    totalMessages: chatHistory.length,
+    totalMessages: legacyHistory.length,
   });
 
   // For headless mode, we return only the final response

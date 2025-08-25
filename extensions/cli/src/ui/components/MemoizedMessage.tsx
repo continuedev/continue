@@ -20,6 +20,13 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     
     // Handle system messages
     if (isSystem) {
+      // TODO: Properly separate LLM system messages from UI informational messages
+      // using discriminated union types. For now, skip displaying the first system
+      // message which is typically the LLM's system prompt.
+      if (index === 0) {
+        return null;
+      }
+      
       return (
         <Box key={index} marginLeft={1} marginBottom={1}>
           <Text color="gray" italic>

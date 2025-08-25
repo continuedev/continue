@@ -1,4 +1,4 @@
-import { saveSession, hasSession, clearSession } from "./session.js";
+import { saveSession, hasSession, clearSession, createSession } from "./session.js";
 
 describe("Session Management", () => {
   let originalEnv: NodeJS.ProcessEnv;
@@ -28,13 +28,19 @@ describe("Session Management", () => {
     it("should create unique sessions for different TMUX_PANE values", () => {
       // Test first session
       process.env.TMUX_PANE = "%1";
-      saveSession([{ role: "user", content: "test1" }]);
+      const session1 = createSession([
+        { message: { role: "user", content: "test1" }, contextItems: [] }
+      ]);
+      saveSession(session1);
       expect(hasSession()).toBe(true);
       clearSession();
 
       // Test second session with different TMUX_PANE
       process.env.TMUX_PANE = "%2";
-      saveSession([{ role: "user", content: "test2" }]);
+      const session2 = createSession([
+        { message: { role: "user", content: "test2" }, contextItems: [] }
+      ]);
+      saveSession(session2);
       expect(hasSession()).toBe(true);
       clearSession();
     });
@@ -42,7 +48,10 @@ describe("Session Management", () => {
     it("should use TERM_SESSION_ID when TMUX_PANE is not available", () => {
       process.env.TERM_SESSION_ID = "w1t0s0:0.0";
 
-      saveSession([{ role: "user", content: "test" }]);
+      const session = createSession([
+        { message: { role: "user", content: "test" }, contextItems: [] }
+      ]);
+      saveSession(session);
       expect(hasSession()).toBe(true);
       clearSession();
     });
@@ -50,7 +59,10 @@ describe("Session Management", () => {
     it("should use SSH_TTY when other env vars are not available", () => {
       process.env.SSH_TTY = "/dev/pts/0";
 
-      saveSession([{ role: "user", content: "test" }]);
+      const session = createSession([
+        { message: { role: "user", content: "test" }, contextItems: [] }
+      ]);
+      saveSession(session);
       expect(hasSession()).toBe(true);
       clearSession();
     });
@@ -60,7 +72,10 @@ describe("Session Management", () => {
 
       // Should not throw error despite special characters
       expect(() => {
-        saveSession([{ role: "user", content: "test" }]);
+        const session = createSession([
+          { message: { role: "user", content: "test" }, contextItems: [] }
+        ]);
+        saveSession(session);
       }).not.toThrow();
 
       expect(hasSession()).toBe(true);
@@ -72,7 +87,10 @@ describe("Session Management", () => {
     it("should use test session ID when provided", () => {
       process.env.CONTINUE_CLI_TEST_SESSION_ID = "test-123";
 
-      saveSession([{ role: "user", content: "test" }]);
+      const session = createSession([
+        { message: { role: "user", content: "test" }, contextItems: [] }
+      ]);
+      saveSession(session);
       expect(hasSession()).toBe(true);
       clearSession();
     });
@@ -84,7 +102,10 @@ describe("Session Management", () => {
 
       // Should fall back to TTY path, process tree, or PID
       expect(() => {
-        saveSession([{ role: "user", content: "fallback test" }]);
+        const session = createSession([
+          { message: { role: "user", content: "fallback test" }, contextItems: [] }
+        ]);
+        saveSession(session);
       }).not.toThrow();
 
       expect(hasSession()).toBe(true);
@@ -95,12 +116,13 @@ describe("Session Management", () => {
       process.env.TMUX_PANE = "%test";
 
       const testHistory = [
-        { role: "user" as const, content: "Hello" },
-        { role: "assistant" as const, content: "Hi there!" },
+        { message: { role: "user" as const, content: "Hello" }, contextItems: [] },
+        { message: { role: "assistant" as const, content: "Hi there!" }, contextItems: [] },
       ];
 
       // Save session
-      saveSession(testHistory);
+      const session = createSession(testHistory);
+      saveSession(session);
       expect(hasSession()).toBe(true);
 
       // Clear and verify it's gone
@@ -115,7 +137,10 @@ describe("Session Management", () => {
       process.env.CONTINUE_CLI_TEST_SESSION_ID = "test-with-various-chars";
 
       expect(() => {
-        saveSession([{ role: "user", content: "test" }]);
+        const session = createSession([
+          { message: { role: "user", content: "test" }, contextItems: [] }
+        ]);
+        saveSession(session);
       }).not.toThrow();
 
       clearSession();

@@ -1,5 +1,4 @@
 import type { ChatHistoryItem, ToolCallState } from "../../../../../core/index.js";
-import { convertFromUnifiedHistory } from "../../messageConversion.js";
 
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
@@ -191,19 +190,16 @@ export async function executeStreaming({
   const { getHistoryForLLM } = await import("../../compaction.js");
   const { streamChatResponse } = await import("../../streamChatResponse.js");
   
-  // Convert to legacy format for LLM
-  const legacyHistory = convertFromUnifiedHistory(chatHistory);
-  
   if (model && llmApi) {
     if (
       currentCompactionIndex !== null &&
       currentCompactionIndex !== undefined
     ) {
       const historyForLLM = getHistoryForLLM(
-        legacyHistory,
+        chatHistory,
         currentCompactionIndex,
       );
-      const originalLength = historyForLLM.length;
+      const _originalLength = historyForLLM.length;
       
       await streamChatResponse(
         historyForLLM,
@@ -213,11 +209,11 @@ export async function executeStreaming({
         streamCallbacks,
       );
       
-      const newMessages = historyForLLM.slice(originalLength);
-      legacyHistory.push(...newMessages);
+      // streamChatResponse modifies the array in place
+      // The new messages are already in historyForLLM
     } else {
       await streamChatResponse(
-        legacyHistory,
+        chatHistory,
         model,
         llmApi,
         controller,

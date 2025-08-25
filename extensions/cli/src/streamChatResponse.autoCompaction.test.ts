@@ -1,6 +1,7 @@
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { convertToUnifiedHistory } from "./messageConversion.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 
 // Mock dependencies
@@ -9,6 +10,7 @@ vi.mock("./compaction.js", () => ({
 }));
 
 vi.mock("./session.js", () => ({
+  createSession: vi.fn((history) => ({ sessionId: "test", title: "Test", workspaceDirectory: "/test", history })),
   saveSession: vi.fn(),
 }));
 
@@ -82,16 +84,16 @@ describe("handleAutoCompaction", () => {
     vi.mocked(getAutoCompactMessage).mockReturnValue("Auto-compacting...");
 
     const mockCompactionResult = {
-      compactedHistory: [
+      compactedHistory: convertToUnifiedHistory([
         {
           role: "system",
           content: "You are a helpful assistant.",
-        } as ChatCompletionMessageParam,
+        },
         {
           role: "assistant",
           content: "[COMPACTED HISTORY]\nConversation summary...",
-        } as ChatCompletionMessageParam,
-      ],
+        },
+      ]),
       compactionIndex: 1,
       compactionContent: "Conversation summary...",
     };
@@ -188,9 +190,9 @@ describe("handleAutoCompaction", () => {
     vi.mocked(getAutoCompactMessage).mockReturnValue("Auto-compacting...");
 
     const mockCompactionResult = {
-      compactedHistory: [
-        { role: "system", content: "System" } as ChatCompletionMessageParam,
-      ],
+      compactedHistory: convertToUnifiedHistory([
+        { role: "system", content: "System" },
+      ]),
       compactionIndex: 0,
       compactionContent: "Summary",
     };

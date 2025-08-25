@@ -3,8 +3,10 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React from "react";
 
+
 import { compactChatHistory } from "./compaction.js";
-import { saveSession } from "./session.js";
+import { convertFromUnifiedHistory, convertToUnifiedHistory } from "./messageConversion.js";
+import { createSession, saveSession } from "./session.js";
 import { formatError } from "./util/formatError.js";
 import { logger } from "./util/logger.js";
 import { getAutoCompactMessage, shouldAutoCompact } from "./util/tokenizer.js";
@@ -139,9 +141,12 @@ export async function handleAutoCompaction(
   notifyCompactionStart(getAutoCompactMessage(model), isHeadless, callbacks);
 
   try {
+    // Convert to unified format for compaction
+    const unifiedHistory = convertToUnifiedHistory(chatHistory);
+    
     // Compact the history
     const result = await compactChatHistory(
-      chatHistory,
+      unifiedHistory,
       model,
       llmApi,
       isHeadless
@@ -153,13 +158,17 @@ export async function handleAutoCompaction(
     );
 
     // Save the compacted session
-    saveSession(result.compactedHistory);
+    const session = createSession(result.compactedHistory);
+    saveSession(session);
 
     // Handle success notification
     handleCompactionSuccess(result, isHeadless, callbacks);
 
+    // Convert back to legacy format for return
+    const compactedLegacyHistory = convertFromUnifiedHistory(result.compactedHistory);
+    
     return {
-      chatHistory: result.compactedHistory,
+      chatHistory: compactedLegacyHistory,
       compactionIndex: result.compactionIndex,
     };
   } catch (error: any) {

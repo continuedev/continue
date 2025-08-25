@@ -1,12 +1,11 @@
 import { useApp } from "ink";
 import { useEffect, useState } from "react";
 
-import type { ChatHistoryItem } from "../../../../../core/index.js";
+import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { findCompactionIndex } from "../../compaction.js";
-import { convertToUnifiedHistory, convertFromUnifiedHistory } from "../../messageConversion.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
-import { loadSession, saveSession } from "../../session.js";
+import { loadSession, saveSession, createSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
@@ -54,25 +53,27 @@ export function useChat({
 }: UseChatProps) {
   const { exit } = useApp();
 
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
-    () => {
-      // In remote mode, start with empty history (will be populated by polling)
-      if (isRemoteMode) {
-        return [];
-      }
+  // Store the current session
+  const [currentSession, setCurrentSession] = useState<Session>(() => {
+    // In remote mode, start with empty session (will be populated by polling)
+    if (isRemoteMode) {
+      return createSession([]);
+    }
 
-      // Synchronously initialize chat history to prevent race conditions
-      // Load previous session if resume flag is used
-      // If no session loaded or not resuming, we'll need to add system message
-      // We can't make this async, so we'll handle it in the useEffect
-      if (resume) {
-        const savedHistory = loadSession();
-        if (savedHistory) {
-          return convertToUnifiedHistory(savedHistory);
-        }
+    // Load previous session if resume flag is used
+    if (resume) {
+      const savedSession = loadSession();
+      if (savedSession) {
+        return savedSession;
       }
-      return [];
-    },
+    }
+    
+    // Create new session
+    return createSession([]);
+  });
+
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
+    () => currentSession.history
   );
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
@@ -85,7 +86,7 @@ export function useChat({
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && loadSession() !== null),
+    isRemoteMode || (resume && currentSession.history.length > 0),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
@@ -95,11 +96,8 @@ export function useChat({
     useState<ActivePermissionRequest | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
     // When resuming, check for compaction markers in the loaded history
-    if (resume) {
-      const savedHistory = loadSession();
-      if (savedHistory) {
-        return findCompactionIndex(savedHistory);
-      }
+    if (resume && currentSession.history.length > 0) {
+      return findCompactionIndex(currentSession.history);
     }
     return null;
   });
@@ -212,10 +210,14 @@ export function useChat({
         currentCompactionIndex,
       });
 
-      // Save the updated history to session
+      // Save the updated session
       logger.debug("Saving session", { historyLength: newHistory.length });
-      const legacyHistory = convertFromUnifiedHistory(newHistory);
-      saveSession(legacyHistory);
+      const updatedSession: Session = {
+        ...currentSession,
+        history: newHistory,
+      };
+      saveSession(updatedSession);
+      setCurrentSession(updatedSession);
       logger.debug("Session saved");
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
@@ -264,6 +266,8 @@ export function useChat({
             llmApi,
             setChatHistory,
             setCompactionIndex,
+            currentSession,
+            setCurrentSession,
           });
           return;
         }

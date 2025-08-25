@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 
+import type { ChatHistoryItem, Session } from "../../../../core/index.js";
 import { getDisplayableAsciiArt } from "../asciiArt.js";
 import {
   compactChatHistory,
@@ -13,11 +14,12 @@ import { processCommandFlags } from "../flags/flagProcessor.js";
 import { safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
+import { convertFromUnifiedHistory, convertToUnifiedHistory } from "../messageConversion.js";
 import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
-import { loadSession, saveSession } from "../session.js";
+import { loadSession, saveSession, createSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
@@ -83,30 +85,32 @@ export interface ChatOptions extends ExtendedCommandOptions {
 
 export async function initializeChatHistory(
   options: ChatOptions,
-): Promise<ChatCompletionMessageParam[]> {
-  let chatHistory: ChatCompletionMessageParam[] = [];
+): Promise<ChatHistoryItem[]> {
+  let session: Session | null = null;
 
   // Load previous session if --resume flag is used
   if (options.resume) {
-    const savedHistory = loadSession();
-    if (savedHistory) {
-      chatHistory = savedHistory;
+    session = loadSession();
+    if (session) {
       logger.info(chalk.yellow("Resuming previous session..."));
+      return session.history;
     } else {
       logger.info(chalk.yellow("No previous session found, starting fresh..."));
     }
   }
 
   // If no session loaded or not resuming, initialize with system message
-  if (chatHistory.length === 0) {
-    const systemMessage = await constructSystemMessage(
-      options.rule,
-      options.format,
-      options.headless,
-    );
-    if (systemMessage) {
-      chatHistory.push({ role: "system", content: systemMessage });
-    }
+  const chatHistory: ChatHistoryItem[] = [];
+  const systemMessage = await constructSystemMessage(
+    options.rule,
+    options.format,
+    options.headless,
+  );
+  if (systemMessage) {
+    chatHistory.push({
+      message: { role: "system", content: systemMessage },
+      contextItems: [],
+    });
   }
 
   return chatHistory;
@@ -114,7 +118,7 @@ export async function initializeChatHistory(
 
 // Helper function to handle manual compaction
 async function handleManualCompaction(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: any,
   isHeadless: boolean,
@@ -131,7 +135,8 @@ async function handleManualCompaction(
     chatHistory.push(...result.compactedHistory);
 
     // Save the compacted session
-    saveSession(chatHistory);
+    const session = createSession(chatHistory);
+    saveSession(session);
 
     if (isHeadless) {
       safeStdout(
@@ -259,7 +264,8 @@ async function processMessage(
   let compactionIndex = initialCompactionIndex;
   // Check for slash commands in headless mode
   if (userInput.trim() === "/compact") {
-    return handleManualCompaction(chatHistory, model, llmApi, isHeadless);
+    const unifiedHistory = convertToUnifiedHistory(chatHistory);
+    return handleManualCompaction(unifiedHistory, model, llmApi, isHeadless);
   }
 
   // Track user prompt
@@ -294,7 +300,8 @@ async function processMessage(
     let finalResponse;
     if (compactionIndex !== null && compactionIndex !== undefined) {
       // When using compaction, we need to send a subset but capture the full history
-      const historyForLLM = getHistoryForLLM(chatHistory, compactionIndex);
+      const unifiedHistory = convertToUnifiedHistory(chatHistory);
+      const historyForLLM = getHistoryForLLM(unifiedHistory, compactionIndex);
       const originalLength = historyForLLM.length;
 
       finalResponse = await streamChatResponse(
@@ -306,15 +313,22 @@ async function processMessage(
 
       // Append any new messages (assistant/tool) that were added by streamChatResponse
       const newMessages = historyForLLM.slice(originalLength);
-      chatHistory.push(...newMessages);
+      const legacyNewMessages = convertFromUnifiedHistory(newMessages);
+      chatHistory.push(...legacyNewMessages);
     } else {
       // No compaction - just pass the full history directly
+      const unifiedHistory = convertToUnifiedHistory(chatHistory);
+      const originalLength = unifiedHistory.length;
       finalResponse = await streamChatResponse(
-        chatHistory,
+        unifiedHistory,
         model,
         llmApi,
         abortController,
       );
+      // Sync back any new messages added by streamChatResponse
+      const newMessages = unifiedHistory.slice(originalLength);
+      const legacyNewMessages = convertFromUnifiedHistory(newMessages);
+      chatHistory.push(...legacyNewMessages);
     }
 
     // In headless mode, only print the final response using safe stdout
@@ -336,7 +350,9 @@ async function processMessage(
     }
 
     // Save session after each successful response
-    saveSession(chatHistory);
+    const unifiedHistory = convertToUnifiedHistory(chatHistory);
+    const session = createSession(unifiedHistory);
+    saveSession(session);
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
 
@@ -383,12 +399,13 @@ async function runHeadlessMode(
   }
 
   // Initialize chat history
-  const chatHistory = await initializeChatHistory(options);
+  const unifiedChatHistory = await initializeChatHistory(options);
+  const chatHistory = convertFromUnifiedHistory(unifiedChatHistory);
 
   // Track compaction index if resuming with compacted history
   let compactionIndex: number | null = null;
   if (options.resume) {
-    compactionIndex = findCompactionIndex(chatHistory);
+    compactionIndex = findCompactionIndex(unifiedChatHistory);
   }
 
   // Handle additional prompts from --prompt flags

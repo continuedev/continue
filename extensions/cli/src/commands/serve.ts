@@ -3,12 +3,10 @@ import { promisify } from "util";
 
 import chalk from "chalk";
 import express, { Request, Response } from "express";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
-import type { ChatHistoryItem } from "../../../../core/index.js";
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
-import { convertToUnifiedHistory, convertFromUnifiedHistory } from "../messageConversion.js";
+import { convertFromUnifiedHistory } from "../messageConversion.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
   getService,
@@ -20,7 +18,7 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { saveSession } from "../session.js";
+import { saveSession, createSession } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { formatError } from "../util/formatError.js";
@@ -28,7 +26,7 @@ import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
-import { streamChatResponseWithInterruption, type PendingPermission } from "./serve.helpers.js";
+import { streamChatResponseWithInterruption, type ServerState } from "./serve.helpers.js";
 
 const execAsync = promisify(exec);
 
@@ -37,19 +35,6 @@ interface ServeOptions extends ExtendedCommandOptions {
   port?: string;
 }
 
-interface ServerState {
-  chatHistory: ChatCompletionMessageParam[];
-  unifiedHistory: ChatHistoryItem[]; // Unified format for display
-  config: any;
-  model: any;
-  isProcessing: boolean;
-  lastActivity: number;
-  messageQueue: string[];
-  currentAbortController: AbortController | null;
-  shouldInterrupt: boolean;
-  serverRunning: boolean;
-  pendingPermission: PendingPermission | null;
-}
 
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Check if prompt should come from stdin instead of parameter
@@ -118,21 +103,26 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.dim(`  Config file: ${options.config}`));
   }
 
-  // Initialize chat history
-  const chatHistory: ChatCompletionMessageParam[] = [];
+  // Initialize session with system message
   const systemMessage = await constructSystemMessage(
     options.rule,
     undefined,
     true,
   );
+  
+  const initialHistory = [];
   if (systemMessage) {
-    chatHistory.push({ role: "system", content: systemMessage });
+    initialHistory.push({
+      message: { role: "system" as const, content: systemMessage },
+      contextItems: [],
+    });
   }
+  
+  const session = createSession(initialHistory);
 
   // Initialize server state
   const state: ServerState = {
-    chatHistory,
-    unifiedHistory: convertToUnifiedHistory(chatHistory), // Convert to unified format
+    session,
     config,
     model,
     isProcessing: false,
@@ -155,7 +145,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
     res.json({
-      chatHistory: convertFromUnifiedHistory(state.unifiedHistory), // Convert back to legacy format for API
+      chatHistory: convertFromUnifiedHistory(state.session.history), // Convert back to legacy format for API
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
       pendingPermission: state.pendingPermission,
@@ -344,8 +334,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.lastActivity = Date.now();
 
       // Add user message to history
-      state.chatHistory.push({ role: "user", content: userMessage });
-      state.unifiedHistory.push({
+      state.session.history.push({
         message: { role: "user", content: userMessage },
         contextItems: [],
       });
@@ -363,35 +352,26 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         );
 
         // Save session after successful response
-        saveSession(state.chatHistory);
+        saveSession(state.session);
 
         state.lastActivity = Date.now();
       } catch (e: any) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
           // Remove the partial assistant message if it exists
-          const lastMessage = state.chatHistory[state.chatHistory.length - 1];
-          if (lastMessage.role === "assistant" && !lastMessage.content) {
-            state.chatHistory.pop();
-          }
-          // Also remove partial unified messages
-          const lastUnifiedMessage = state.unifiedHistory[state.unifiedHistory.length - 1];
+          const lastMessage = state.session.history[state.session.history.length - 1];
           if (
-            lastUnifiedMessage &&
-            lastUnifiedMessage.message.role === "assistant" &&
-            !lastUnifiedMessage.message.content
+            lastMessage &&
+            lastMessage.message.role === "assistant" &&
+            !lastMessage.message.content
           ) {
-            state.unifiedHistory.pop();
+            state.session.history.pop();
           }
         } else {
           logger.error(`Error: ${formatError(e)}`);
           // Add error message to chat history and display messages
           const errorMessage = `Error: ${formatError(e)}`;
-          state.chatHistory.push({
-            role: "assistant",
-            content: errorMessage,
-          });
-          state.unifiedHistory.push({
+          state.session.history.push({
             message: { role: "assistant", content: errorMessage },
             contextItems: [],
           });

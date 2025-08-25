@@ -1,7 +1,7 @@
-import type { ChatHistoryItem } from "../../../../../core/index.js";
+import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
-import { convertToUnifiedHistory, convertFromUnifiedHistory } from "../../messageConversion.js";
+import { convertFromUnifiedHistory, convertToUnifiedHistory } from "../../messageConversion.js";
 import { loadSession, saveSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
@@ -18,9 +18,9 @@ export async function initChatHistory(
   additionalRules?: string[],
 ): Promise<ChatHistoryItem[]> {
   if (resume) {
-    const savedHistory = loadSession();
-    if (savedHistory) {
-      return convertToUnifiedHistory(savedHistory);
+    const savedSession = loadSession();
+    if (savedSession) {
+      return savedSession.history;
     }
   }
 
@@ -28,7 +28,7 @@ export async function initChatHistory(
     resume,
     rule: additionalRules,
   });
-  return convertToUnifiedHistory(history);
+  return history;
 }
 
 /**
@@ -49,6 +49,8 @@ interface HandleCompactCommandOptions {
     React.SetStateAction<ChatHistoryItem[]>
   >;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  currentSession: Session;
+  setCurrentSession: React.Dispatch<React.SetStateAction<Session>>;
 }
 
 /**
@@ -60,6 +62,8 @@ export async function handleCompactCommand({
   llmApi,
   setChatHistory,
   setCompactionIndex,
+  currentSession,
+  setCurrentSession,
 }: HandleCompactCommandOptions): Promise<void> {
   // Add compacting message
   setChatHistory((prev) => [
@@ -74,19 +78,20 @@ export async function handleCompactCommand({
   ]);
 
   try {
-    // Convert to legacy format for compaction
-    const legacyHistory = convertFromUnifiedHistory(chatHistory);
-    const result = await compactChatHistory(legacyHistory, model, llmApi);
-
-    // Convert compacted history back to unified format
-    const compactedUnifiedHistory = convertToUnifiedHistory(result.compactedHistory);
+    // Compact the chat history directly (already in unified format)
+    const result = await compactChatHistory(chatHistory, model, llmApi);
     
     // Replace chat history with compacted version
-    setChatHistory(compactedUnifiedHistory);
+    setChatHistory(result.compactedHistory);
     setCompactionIndex(result.compactionIndex);
 
     // Save the compacted session
-    saveSession(result.compactedHistory);
+    const updatedSession: Session = {
+      ...currentSession,
+      history: result.compactedHistory,
+    };
+    saveSession(updatedSession);
+    setCurrentSession(updatedSession);
 
     setChatHistory((prev) => [
       ...prev,

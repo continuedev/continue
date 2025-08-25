@@ -1,6 +1,4 @@
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
-
-import type { ChatHistoryItem, ToolCallState } from "../../../../core/index.js";
+import type { ChatHistoryItem, Session, ToolCallState } from "../../../../core/index.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { StreamCallbacks } from "../streamChatResponse.types.js";
 
@@ -33,7 +31,7 @@ export async function streamChatResponseWithInterruption(
           message: { role: "assistant", content: "" },
           contextItems: [],
         };
-        state.unifiedHistory.push(currentStreamingItem);
+        state.session.history.push(currentStreamingItem);
       }
       currentStreamingItem.message.content = 
         (currentStreamingItem.message.content as string) + content;
@@ -44,7 +42,7 @@ export async function streamChatResponseWithInterruption(
         currentStreamingItem = null;
       } else {
         // Add complete assistant message
-        state.unifiedHistory.push({
+        state.session.history.push({
           message: { role: "assistant", content: content },
           contextItems: [],
         });
@@ -72,7 +70,7 @@ export async function streamChatResponseWithInterruption(
         parsedArgs: toolArgs,
       };
       
-      state.unifiedHistory.push({
+      state.session.history.push({
         message: { role: "assistant", content: "" },
         contextItems: [],
         toolCallStates: [toolCallState],
@@ -80,8 +78,8 @@ export async function streamChatResponseWithInterruption(
     },
     onToolResult: (result: string, toolName: string) => {
       // Find and update the corresponding tool call state
-      for (let i = state.unifiedHistory.length - 1; i >= 0; i--) {
-        const item = state.unifiedHistory[i];
+      for (let i = state.session.history.length - 1; i >= 0; i--) {
+        const item = state.session.history[i];
         if (item.toolCallStates) {
           const toolState = item.toolCallStates.find(
             (ts: ToolCallState) => ts.toolCall.function.name === toolName && ts.status === "calling"
@@ -101,8 +99,8 @@ export async function streamChatResponseWithInterruption(
     onToolError: (error: string, toolName?: string) => {
       if (toolName) {
         // Find and update the corresponding tool call state
-        for (let i = state.unifiedHistory.length - 1; i >= 0; i--) {
-          const item = state.unifiedHistory[i];
+        for (let i = state.session.history.length - 1; i >= 0; i--) {
+          const item = state.session.history[i];
           if (item.toolCallStates) {
             const toolState = item.toolCallStates.find(
               (ts: ToolCallState) => ts.toolCall.function.name === toolName && ts.status === "calling"
@@ -120,7 +118,7 @@ export async function streamChatResponseWithInterruption(
         }
       }
       // Generic error if tool not found
-      state.unifiedHistory.push({
+      state.session.history.push({
         message: { role: "system", content: error },
         contextItems: [],
       });
@@ -139,7 +137,7 @@ export async function streamChatResponseWithInterruption(
       };
 
       // Add a system message indicating permission is needed
-      state.unifiedHistory.push({
+      state.session.history.push({
         message: { 
           role: "system", 
           content: `⚠️ Tool ${toolName} requires permission`
@@ -153,7 +151,7 @@ export async function streamChatResponseWithInterruption(
 
   try {
     const response = await streamChatResponse(
-      state.chatHistory,
+      state.session.history,
       state.model,
       llmApi,
       abortController,
@@ -177,8 +175,7 @@ export interface PendingPermission {
 }
 
 export interface ServerState {
-  chatHistory: ChatCompletionMessageParam[];
-  unifiedHistory: ChatHistoryItem[];
+  session: Session;
   config: any;
   model: any;
   isProcessing: boolean;

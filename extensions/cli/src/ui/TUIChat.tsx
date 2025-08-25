@@ -59,13 +59,12 @@ async function loadAndSetSession(
     // Close the session selector
     closeCurrentScreen();
 
-    // Import session functions and conversion utilities
+    // Import session functions
     const { loadSessionById } = await import("../session.js");
-    const { convertToUnifiedHistory } = await import("../messageConversion.js");
 
-    // Load the session history
-    const sessionHistory = loadSessionById(sessionId);
-    if (!sessionHistory) {
+    // Load the session
+    const session = loadSessionById(sessionId);
+    if (!session) {
       logger.error(`Session ${sessionId} could not be loaded.`);
       return;
     }
@@ -76,9 +75,8 @@ async function loadAndSetSession(
       "",
     );
 
-    // Convert to unified format and set the chat history
-    const unifiedHistory = convertToUnifiedHistory(sessionHistory);
-    setChatHistory(unifiedHistory);
+    // Set the chat history from the session
+    setChatHistory(session.history);
 
     // Clear the intro message since we're now showing a resumed session
     setShowIntroMessage(false);
