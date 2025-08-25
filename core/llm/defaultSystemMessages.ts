@@ -46,6 +46,8 @@ export const EDIT_CODE_INSTRUCTIONS = `\
   of changes unless the user specifically asks for code only.
 `;
 
+const BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks (>20 lines), use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'`;
+
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in chat mode.
@@ -64,6 +66,11 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
   If you need to use multiple tools, you can call multiple read only tools simultaneously.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
+
+${BRIEF_LAZY_INSTRUCTIONS}
+
+However, only output codeblocks for suggestion and demonstration purposes, for example, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
+
 </important_rules>`;
 
 // The note about read-only tools is for MCP servers
@@ -75,7 +82,10 @@ export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
   If the user wants to make changes, offer that they can switch to Agent mode to give you access to write tools to make the suggested updates.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
-${EDIT_CODE_INSTRUCTIONS}
+
+${BRIEF_LAZY_INSTRUCTIONS}
+
+However, only output codeblocks for suggestion and planning purposes. When ready to implement changes, request to switch to Agent mode.
 
   In plan mode, only write code when directly suggesting changes. Prioritize understanding and developing a plan.
 </important_rules>`;

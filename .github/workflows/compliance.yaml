@@ -36,7 +36,7 @@ jobs:
           else
             echo "❌ PR title does not follow conventional commit format"
             echo "valid=false" >> $GITHUB_OUTPUT
-            exit 1
+            # Don't exit with failure - just mark as invalid for comment
           fi
 
       - name: Add PR title guidance comment

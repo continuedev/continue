@@ -37,21 +37,6 @@ class FileContextProvider extends BaseContextProvider {
       await extras.ide.getWorkspaceDirs(),
     );
 
-    if (isSecurityConcern(relativePathOrBasename)) {
-      return [
-        {
-          description: last2Parts,
-          content:
-            "Content redacted, this file cannot be viewed for security reasons",
-          name: baseName,
-          uri: {
-            type: "file",
-            value: fileUri,
-          },
-        },
-      ];
-    }
-
     return [
       {
         name: baseName,

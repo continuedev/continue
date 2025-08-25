@@ -21,7 +21,6 @@ export enum LLMConfigurationStatuses {
 
 export enum NEXT_EDIT_MODELS {
   MERCURY_CODER = "mercury-coder",
-  MERCURY_CODER_NEXTEDIT = "mercury-coder-nextedit",
   INSTINCT = "instinct",
 }
 

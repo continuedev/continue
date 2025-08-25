@@ -12,10 +12,6 @@ export const MODEL_WINDOW_SIZES: Record<
     topMargin: 0,
     bottomMargin: 5,
   }, // mercury coder uses full file diff, so this should be unnecessary
-  "mercury-coder-nextedit": {
-    topMargin: 0,
-    bottomMargin: 5,
-  }, // mercury coder nextedit uses full file diff, so this should be unnecessary
   instinct: { topMargin: 1, bottomMargin: 5 },
 };
 

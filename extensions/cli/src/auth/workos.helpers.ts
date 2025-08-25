@@ -1,6 +1,7 @@
 import chalk from "chalk";
 
 import { getApiClient } from "../config.js";
+import { safeStderr } from "../init.js";
 
 import type {
   AuthConfig,
@@ -70,9 +71,9 @@ export async function handleCliOrgForEnvironmentAuth(
 ): Promise<AuthConfig> {
   // Only allow --org flag in headless mode
   if (!isHeadless) {
-    console.error(
+    safeStderr(
       chalk.red(
-        "The --org flag is only supported in headless mode (with -p/--print flag)",
+        "The --org flag is only supported in headless mode (with -p/--print flag)\n",
       ),
     );
     process.exit(1);
@@ -101,9 +102,9 @@ export async function handleCliOrgForAuthenticatedConfig(
 ): Promise<AuthConfig> {
   // Only allow --org flag in headless mode
   if (!isHeadless) {
-    console.error(
+    safeStderr(
       chalk.red(
-        "The --org flag is only supported in headless mode (with -p/--print flag)",
+        "The --org flag is only supported in headless mode (with -p/--print flag)\n",
       ),
     );
     process.exit(1);

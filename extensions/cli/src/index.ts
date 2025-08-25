@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// MUST be the first import - intercepts console/stdout/stderr before any dependencies load
+import "./init.js";
+
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
@@ -10,12 +13,12 @@ import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
 import {
-  validateFlags,
   handleValidationErrors,
+  validateFlags,
 } from "./flags/flagValidator.js";
+import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
-import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
@@ -139,13 +142,13 @@ addCommonOptions(program)
 
     // In headless mode, ensure we have a prompt
     if (options.print && !prompt) {
-      console.error(
-        "Error: A prompt is required when using the -p/--print flag.\n",
+      safeStderr(
+        "Error: A prompt is required when using the -p/--print flag.\n\n",
       );
-      console.error("Usage examples:");
-      console.error('  cn -p "please review my current git diff"');
-      console.error('  echo "hello" | cn -p');
-      console.error('  cn -p "analyze the code in src/"');
+      safeStderr("Usage examples:\n");
+      safeStderr('  cn -p "please review my current git diff"\n');
+      safeStderr('  echo "hello" | cn -p\n');
+      safeStderr('  cn -p "analyze the code in src/"\n');
       process.exit(1);
     }
 
