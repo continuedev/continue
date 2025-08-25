@@ -547,36 +547,6 @@ Response
 [  {    "name": "",    "description": "",    "content": ""  }]// OR{  "name": "",  "description": "",  "content": ""}
 ```
 
-### @Greptile Context Provider – Query Greptile Index of Repo/Branch
-
-Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: greptile
-    params:
-      greptileToken: "..."
-      githubToken: "..."
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "greptile",
-      "params": { "GreptileToken": "...", "GithubToken": "..." }
-    }
-  ]
-}
-```
-
 ### How to Request a New Context Provider in Continue
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.
