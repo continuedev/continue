@@ -161,6 +161,15 @@ export class VerticalDiffManager {
       index = 0;
     }
 
+    console.log(
+      "debug1 fileuritocodelens",
+      Array.from(this.fileUriToCodeLens.entries()),
+      "and accept",
+      accept,
+      "and index",
+      index,
+    );
+
     const blocks = this.fileUriToCodeLens.get(fileUri);
     const block = blocks?.[index];
     if (!blocks || !block) {
@@ -169,6 +178,7 @@ export class VerticalDiffManager {
 
     const handler = this.getHandlerForFile(fileUri);
     if (!handler) {
+      console.log("debug1 no handler found", fileUri);
       return;
     }
 

@@ -35,6 +35,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private addedLineDecorations: AddedLineDecorationManager;
   private _diffLinesQueue: DiffLine[] = [];
   private _queueLock = false;
+  private firstAcceptedLine: number | null = null;
 
   constructor(
     private startLine: number,
@@ -97,6 +98,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
       false,
     );
 
+    if (accept && this.firstAcceptedLine === null) {
+      this.storeFirstAcceptedLine();
+    }
+
     const removedRanges = this.removedLineDecorations.ranges;
     if (accept) {
       // Accept all: delete all the red ranges and clear green decorations
@@ -117,6 +122,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
       this.editor.document.getText(),
     );
+
+    if (accept && this.firstAcceptedLine !== null) {
+      const position = new vscode.Position(this.firstAcceptedLine, 0);
+      this.editor.selection = new vscode.Selection(position, position);
+      this.editor.revealRange(
+        new vscode.Range(position, position),
+        vscode.TextEditorRevealType.InCenter,
+      );
+    }
 
     this.cancelled = true;
     this.refreshCodeLens();
@@ -229,6 +243,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
           deleted.map((r) => r.line).join("\n"),
         );
       }
+    }
+
+    if (accept) {
+      this.storeFirstAcceptedLine();
     }
 
     // Shift everything below upward
@@ -575,5 +593,22 @@ export class VerticalDiffHandler implements vscode.Disposable {
       }
     }
     return null;
+  }
+
+  /**
+   * Store the first line where the diff was "accepted"
+   * so that it scrolls to after all diffs are decided
+   */
+  private storeFirstAcceptedLine() {
+    if (this.firstAcceptedLine !== null) {
+      return;
+    }
+
+    const diffBlocks =
+      this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
+    if (diffBlocks.length > 0) {
+      const sortedBlocks = diffBlocks.sort((a, b) => a.start - b.start);
+      this.firstAcceptedLine = sortedBlocks[0].start;
+    }
   }
 }
