@@ -666,6 +666,7 @@ export interface LLMOptions {
   env?: Record<string, string | number | boolean>;
 
   sourceFile?: string;
+  isFromAutoDetect?: boolean;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -1177,6 +1178,7 @@ export interface ModelDescription {
   configurationStatus?: LLMConfigurationStatuses;
 
   sourceFile?: string;
+  isFromAutoDetect?: boolean;
 }
 
 export interface JSONEmbedOptions {
@@ -1607,6 +1609,7 @@ export interface JSONModelDescription {
   aiGatewaySlug?: string;
   useLegacyCompletionsEndpoint?: boolean;
   deploymentId?: string;
+  isFromAutoDetect?: boolean;
 }
 
 // config.json

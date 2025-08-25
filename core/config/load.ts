@@ -282,6 +282,7 @@ async function intermediateToFinalConfig({
                     ...desc,
                     model: modelName,
                     title: modelName,
+                    isFromAutoDetect: true,
                   },
                   ide.readFile.bind(ide),
                   getUriFromPath,
@@ -319,6 +320,7 @@ async function intermediateToFinalConfig({
                     ...desc.options,
                     model: modelName,
                     logger: llmLogger,
+                    isFromAutoDetect: true,
                   },
                 }),
             );
@@ -626,6 +628,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     apiKeyLocation: llm.apiKeyLocation,
     envSecretLocations: llm.envSecretLocations,
     sourceFile: llm.sourceFile,
+    isFromAutoDetect: llm.isFromAutoDetect,
   };
 }
 
