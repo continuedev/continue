@@ -1,4 +1,5 @@
 import type { ChatHistoryItem } from "../../../core/index.js";
+
 import { convertFromUnifiedHistory } from "./messageConversion.js";
 
 describe("convertFromUnifiedHistory", () => {
@@ -32,7 +33,8 @@ describe("convertFromUnifiedHistory", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       role: "user",
-      content: "Please review @test-file.txt\n\n<file path=\"test-file.txt\">\nconsole.log('Hello, world!');\n</file>",
+      content:
+        "Please review @test-file.txt\n\n<file path=\"test-file.txt\">\nconsole.log('Hello, world!');\n</file>",
     });
   });
 
@@ -99,7 +101,8 @@ describe("convertFromUnifiedHistory", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
       role: "user",
-      content: "Compare @file1.js and @file2.js\n\n<file path=\"file1.js\">\nconst a = 1;\n</file>\n\n<file path=\"file2.js\">\nconst b = 2;\n</file>",
+      content:
+        'Compare @file1.js and @file2.js\n\n<file path="file1.js">\nconst a = 1;\n</file>\n\n<file path="file2.js">\nconst b = 2;\n</file>',
     });
   });
 

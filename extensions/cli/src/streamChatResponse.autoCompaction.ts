@@ -3,6 +3,8 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React from "react";
 
+import type { ChatHistoryItem } from "../../../core/index.js";
+
 import { compactChatHistory } from "./compaction.js";
 import {
   convertFromUnifiedHistory,
@@ -19,7 +21,7 @@ interface AutoCompactionCallbacks {
   onContent?: (content: string) => void;
 
   // For TUI mode
-  setMessages?: React.Dispatch<React.SetStateAction<any>>; // Generic for compatibility
+  setMessages?: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setChatHistory?: React.Dispatch<
     React.SetStateAction<ChatCompletionMessageParam[]>
   >;
@@ -72,12 +74,14 @@ function handleCompactionSuccess(
   ) {
     callbacks.setChatHistory(result.compactedHistory);
     callbacks.setCompactionIndex(result.compactionIndex);
-    callbacks.setMessages((prev: any) => [
+    callbacks.setMessages((prev: ChatHistoryItem[]) => [
       ...prev,
       {
-        role: "system",
-        content: successMessage,
-        messageType: "system" as const,
+        message: {
+          role: "system",
+          content: successMessage,
+        },
+        contextItems: [],
       },
     ]);
   }
@@ -101,12 +105,14 @@ function handleCompactionError(
   if (callbacks?.onSystemMessage) {
     callbacks.onSystemMessage(warningMessage);
   } else if (callbacks?.setMessages) {
-    callbacks.setMessages((prev: any) => [
+    callbacks.setMessages((prev: ChatHistoryItem[]) => [
       ...prev,
       {
-        role: "system",
-        content: warningMessage,
-        messageType: "system" as const,
+        message: {
+          role: "system",
+          content: warningMessage,
+        },
+        contextItems: [],
       },
     ]);
   }

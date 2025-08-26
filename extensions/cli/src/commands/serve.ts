@@ -4,6 +4,7 @@ import { promisify } from "util";
 import chalk from "chalk";
 import express, { Request, Response } from "express";
 
+import type { ChatHistoryItem } from "../../../../core/index.js";
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { convertFromUnifiedHistory } from "../messageConversion.js";
@@ -112,7 +113,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     true,
   );
 
-  const initialHistory = [];
+  const initialHistory: ChatHistoryItem[] = [];
   if (systemMessage) {
     initialHistory.push({
       message: { role: "system" as const, content: systemMessage },

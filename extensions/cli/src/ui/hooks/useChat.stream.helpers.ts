@@ -39,7 +39,7 @@ export function createStreamCallbacks(
         const newHistory = [...prev];
 
         // Always create a new assistant message for each tool call
-        const toolCallId = `tool_${Date.now()}`;
+        const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         const toolCallState: ToolCallState = {
           toolCallId: toolCallId,
           toolCall: {

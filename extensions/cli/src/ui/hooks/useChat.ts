@@ -211,15 +211,19 @@ export function useChat({
         currentCompactionIndex,
       });
 
-      // Save the updated session
-      logger.debug("Saving session", { historyLength: newHistory.length });
-      const updatedSession: Session = {
-        ...currentSession,
-        history: newHistory,
-      };
-      saveSession(updatedSession);
-      setCurrentSession(updatedSession);
-      logger.debug("Session saved");
+      // Save the updated session with the latest chat history that includes the assistant's reply
+      // The streamCallbacks update setChatHistory during streaming, so we need to get the current state
+      setChatHistory((currentHistory) => {
+        logger.debug("Saving session", { historyLength: currentHistory.length });
+        const updatedSession: Session = {
+          ...currentSession,
+          history: currentHistory,
+        };
+        saveSession(updatedSession);
+        setCurrentSession(updatedSession);
+        logger.debug("Session saved");
+        return currentHistory;
+      });
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
       setChatHistory((prev) => [

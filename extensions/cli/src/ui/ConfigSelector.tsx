@@ -81,7 +81,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
                 return assistants.map((assistant) => {
                   const name =
                     (assistant.configResult.config as any)?.name ??
-                    `${assistant.ownerSlug}/${assistant.configResult.config}`;
+                    `${assistant.ownerSlug}/${assistant.packageSlug}`;
                   const displayName = `[${org.name}] ${name}`;
                   // Create unique ID that includes org info to avoid conflicts
                   const uniqueId = `${org.id || "personal"}-${assistant.packageSlug}`;

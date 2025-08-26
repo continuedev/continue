@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import { pruneLastMessage } from "./compaction.js";
 import { convertToUnifiedHistory } from "./messageConversion.js";
+import { logger } from "./util/logger.js";
 
 describe("pruneLastMessage", () => {
   it("should return empty array for empty input", () => {
@@ -76,10 +77,10 @@ describe("pruneLastMessage", () => {
     // The test data will be converted differently by the message converter
     // Since assistant message with tool_calls gets combined with tool result
     // We need to check what actually gets generated
-    console.log("Converted history:", JSON.stringify(history, null, 2));
+    logger.debug("Converted history:", { history });
 
     const result = pruneLastMessage(history);
-    console.log("Pruned result:", JSON.stringify(result, null, 2));
+    logger.debug("Pruned result:", { result });
 
     // For now, just check that it returns the expected structure
     expect(result).toEqual([
@@ -142,12 +143,12 @@ describe("pruneLastMessage", () => {
     const result = pruneLastMessage(history);
 
     // Check what we actually got
-    console.log("Result length:", result.length);
+    logger.debug("Result length:", { length: result.length });
     if (result.length > 0) {
-      console.log("First item role:", result[0].message.role);
+      logger.debug("First item role:", { role: result[0].message.role });
     }
     if (result.length > 1) {
-      console.log("Second item role:", result[1].message.role);
+      logger.debug("Second item role:", { role: result[1].message.role });
     }
 
     // Adjust based on actual behavior

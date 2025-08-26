@@ -313,17 +313,17 @@ export async function handleAutoCompaction({
   currentChatHistory: ChatHistoryItem[];
   currentCompactionIndex: number | null;
 }> {
-  // Check if auto-compaction is needed
-  // Convert to legacy format for token counting
-  const legacyHistory = convertFromUnifiedHistory(chatHistory);
-  if (!model || !shouldAutoCompact(legacyHistory, model)) {
-    return {
-      currentChatHistory: chatHistory,
-      currentCompactionIndex: _compactionIndex,
-    };
-  }
-
   try {
+    // Check if auto-compaction is needed
+    // Convert to legacy format for token counting
+    const legacyHistory = convertFromUnifiedHistory(chatHistory);
+    if (!model || !shouldAutoCompact(legacyHistory, model)) {
+      return {
+        currentChatHistory: chatHistory,
+        currentCompactionIndex: _compactionIndex,
+      };
+    }
+
     logger.info("Auto-compaction triggered for TUI mode");
 
     // Add compacting message

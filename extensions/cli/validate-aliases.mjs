@@ -4,6 +4,21 @@ import { existsSync, readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
+// Import CLI logger for consistent logging
+let logger;
+try {
+  // Try to import the compiled logger
+  const loggerModule = await import('./dist/util/logger.js');
+  logger = loggerModule.logger;
+} catch {
+  // Fallback to console if logger not available (e.g., not built yet)
+  logger = {
+    info: console.log,
+    warn: console.warn,
+    error: console.error
+  };
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Colors for output
@@ -25,7 +40,7 @@ function getDefinedAliases() {
   // Find the alias object in the build file
   const aliasMatch = buildContent.match(/alias:\s*{([^}]+)}/s);
   if (!aliasMatch) {
-    console.warn(
+    logger.warn(
       `${colors.yellow}Warning: No aliases found in build.mjs${colors.reset}`,
     );
     return new Set();
@@ -104,7 +119,7 @@ function findLocalPackages(startPath, visited = new Set()) {
         }
       }
     } catch (error) {
-      console.error(
+      logger.error(
         `${colors.red}Error reading ${packageJsonPath}: ${error.message}${colors.reset}`,
       );
     }
@@ -120,7 +135,7 @@ function findLocalPackages(startPath, visited = new Set()) {
  * Main validation function
  */
 function validateAliases() {
-  console.log(
+  logger.info(
     `${colors.blue}🔍 Validating esbuild aliases...${colors.reset}\n`,
   );
 
@@ -159,51 +174,51 @@ function validateAliases() {
 
   // Report results
   if (missingAliases.length > 0) {
-    console.log(
+    logger.error(
       `${colors.red}❌ Missing aliases (WILL CAUSE RUNTIME ERRORS):${colors.reset}`,
     );
     missingAliases.forEach((pkg) => {
-      console.log(`  ✗ ${pkg}`);
+      logger.error(`  ✗ ${pkg}`);
     });
-    console.log();
-    console.log(
+    logger.error("");
+    logger.error(
       `${colors.red}Add these to the alias section in build.mjs:${colors.reset}`,
     );
     missingAliases.forEach((pkg) => {
       const packageName = pkg.replace("@continuedev/", "").replace(/-/g, "_");
-      console.log(
+      logger.error(
         `  "${pkg}": resolve(__dirname, "../../packages/${pkg.replace("@continuedev/", "")}/dist/index.js"),`,
       );
     });
-    console.log();
+    logger.error("");
   }
 
   if (unnecessaryAliases.length > 0) {
-    console.log(
+    logger.warn(
       `${colors.yellow}⚠️  Potentially unnecessary aliases:${colors.reset}`,
     );
     unnecessaryAliases.forEach((alias) => {
-      console.log(`  ? ${alias}`);
+      logger.warn(`  ? ${alias}`);
     });
-    console.log();
+    logger.warn("");
   }
 
   // Exit with appropriate code
   if (missingAliases.length > 0) {
-    console.log(
+    logger.error(
       `${colors.red}✗ Validation failed! Missing ${missingAliases.length} required alias(es).${colors.reset}`,
     );
-    console.log(
+    logger.error(
       `${colors.red}This would cause runtime errors in the bundled CLI.${colors.reset}`,
     );
     process.exit(1);
   } else if (unnecessaryAliases.length > 0) {
-    console.log(
+    logger.warn(
       `${colors.yellow}✓ Validation passed with warnings.${colors.reset}`,
     );
     process.exit(0);
   } else {
-    console.log(
+    logger.info(
       `${colors.green}✅ All aliases are correctly configured!${colors.reset}`,
     );
     process.exit(0);
