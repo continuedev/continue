@@ -18,6 +18,8 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
       [".continue/assistants/assistant2.yml", "yaml content 2"],
       [".continue/assistants/assistant3.md", "markdown content 1"],
       [".continue/assistants/assistant4.txt", "txt content"],
+      [".continue/assistants/config.yaml", "txt content"],
+      [".continue/assistants/config.yml", "txt content"],
     ]);
   });
 
@@ -38,9 +40,14 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
       options,
       "assistants",
     );
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(4);
     expect(result.map((f) => f.path.split("/").pop())).toEqual(
-      expect.arrayContaining(["assistant1.yaml", "assistant2.yml"]),
+      expect.arrayContaining([
+        "assistant1.yaml",
+        "assistant2.yml",
+        "config.yaml",
+        "config.yml",
+      ]),
     );
     expect(result.map((f) => f.path.split("/").pop())).not.toContain(
       "assistant3.md",
@@ -69,6 +76,12 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
     expect(result.map((f) => f.path.split("/").pop())).not.toContain(
       "assistant2.yml",
     );
+    expect(result.map((f) => f.path.split("/").pop())).not.toContain(
+      "config.yml",
+    );
+    expect(result.map((f) => f.path.split("/").pop())).not.toContain(
+      "config.yaml",
+    );
   });
 
   it("should return all supported files when fileExtType is not specified", async () => {
@@ -83,11 +96,13 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
       options,
       "assistants",
     );
-    expect(result).toHaveLength(3);
+    expect(result).toHaveLength(5);
     expect(result.map((f) => f.path.split("/").pop())).toEqual(
       expect.arrayContaining([
         "assistant1.yaml",
         "assistant2.yml",
+        "config.yml",
+        "config.yaml",
         "assistant3.md",
       ]),
     );
@@ -124,9 +139,14 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
       workspaceOnOptions,
       "assistants",
     );
-    expect(workspaceResult).toHaveLength(2);
+    expect(workspaceResult).toHaveLength(4);
     expect(workspaceResult.map((f) => f.path.split("/").pop())).toEqual(
-      expect.arrayContaining(["assistant1.yaml", "assistant2.yml"]),
+      expect.arrayContaining([
+        "assistant1.yaml",
+        "assistant2.yml",
+        "config.yaml",
+        "config.yml",
+      ]),
     );
   });
 
@@ -187,7 +207,7 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
       options,
       "assistants",
     );
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(4);
     const yamlFile = result.find((f) => f.path.includes("assistant1.yaml"));
     expect(yamlFile?.content).toBe("yaml content 1");
   });
@@ -212,9 +232,14 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
       "assistants",
     );
     // Should only get lowercase extensions (current implementation)
-    expect(yamlResult).toHaveLength(2);
+    expect(yamlResult).toHaveLength(4);
     expect(yamlResult.map((f) => f.path.split("/").pop())).toEqual(
-      expect.arrayContaining(["assistant1.yaml", "assistant2.yml"]),
+      expect.arrayContaining([
+        "assistant1.yaml",
+        "assistant2.yml",
+        "config.yaml",
+        "config.yml",
+      ]),
     );
     expect(yamlResult.map((f) => f.path.split("/").pop())).not.toContain(
       "assistant5.YAML",
