@@ -86,8 +86,25 @@ function getCurrentSessionId(): string {
 /**
  * Save session to file
  */
-export function saveSession(session: Session): void {
+export function saveSession(sessionOrHistory: Session | ChatHistoryItem[]): void {
   try {
+    let session: Session;
+    
+    // Handle both Session objects and ChatHistoryItem[] arrays
+    if (Array.isArray(sessionOrHistory)) {
+      // If it's a ChatHistoryItem array, create/update the session
+      const sessionId = getCurrentSessionId();
+      session = {
+        sessionId,
+        title: "Untitled Session",
+        workspaceDirectory: process.cwd(),
+        history: sessionOrHistory,
+      };
+    } else {
+      // It's already a Session object
+      session = sessionOrHistory;
+    }
+
     // Store the session ID for future reference
     currentSessionId = session.sessionId;
 

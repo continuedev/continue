@@ -22,7 +22,7 @@ import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
-import { loadSession, saveSession, createSession } from "../session.js";
+import { loadSession, saveSession } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
@@ -138,8 +138,7 @@ async function handleManualCompaction(
     chatHistory.push(...result.compactedHistory);
 
     // Save the compacted session
-    const session = createSession(chatHistory);
-    saveSession(session);
+    saveSession(chatHistory);
 
     if (isHeadless) {
       safeStdout(
@@ -242,7 +241,7 @@ async function handleAutoCompaction(
 
 interface ProcessMessageOptions {
   userInput: string;
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: ModelConfig;
   llmApi: any;
   isHeadless: boolean;
@@ -267,17 +266,17 @@ async function processMessage(
   let compactionIndex = initialCompactionIndex;
   // Check for slash commands in headless mode
   if (userInput.trim() === "/compact") {
-    const unifiedHistory = convertToUnifiedHistory(chatHistory);
-    return handleManualCompaction(unifiedHistory, model, llmApi, isHeadless);
+    return handleManualCompaction(chatHistory, model, llmApi, isHeadless);
   }
 
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
 
   // Check if auto-compacting is needed BEFORE adding user message
-  if (shouldAutoCompact(chatHistory, model)) {
+  const chatHistoryForTokenCheck = convertFromUnifiedHistory(chatHistory);
+  if (shouldAutoCompact(chatHistoryForTokenCheck, model)) {
     const newIndex = await handleAutoCompaction(
-      chatHistory,
+      chatHistoryForTokenCheck,
       model,
       llmApi,
       isHeadless,
@@ -285,11 +284,17 @@ async function processMessage(
     );
     if (newIndex !== null) {
       compactionIndex = newIndex;
+      // Replace chatHistory with compacted version
+      chatHistory.length = 0;
+      chatHistory.push(...convertToUnifiedHistory(chatHistoryForTokenCheck));
     }
   }
 
   // Add user message to history AFTER potential compaction
-  chatHistory.push({ role: "user", content: userInput });
+  chatHistory.push({
+    message: { role: "user", content: userInput },
+    contextItems: [],
+  });
 
   // Get AI response with potential tool usage
   if (!isHeadless) {
@@ -303,8 +308,7 @@ async function processMessage(
     let finalResponse;
     if (compactionIndex !== null && compactionIndex !== undefined) {
       // When using compaction, we need to send a subset but capture the full history
-      const unifiedHistory = convertToUnifiedHistory(chatHistory);
-      const historyForLLM = getHistoryForLLM(unifiedHistory, compactionIndex);
+      const historyForLLM = getHistoryForLLM(chatHistory, compactionIndex);
       const originalLength = historyForLLM.length;
 
       finalResponse = await streamChatResponse(
@@ -316,22 +320,16 @@ async function processMessage(
 
       // Append any new messages (assistant/tool) that were added by streamChatResponse
       const newMessages = historyForLLM.slice(originalLength);
-      const legacyNewMessages = convertFromUnifiedHistory(newMessages);
-      chatHistory.push(...legacyNewMessages);
+      chatHistory.push(...newMessages);
     } else {
       // No compaction - just pass the full history directly
-      const unifiedHistory = convertToUnifiedHistory(chatHistory);
-      const originalLength = unifiedHistory.length;
       finalResponse = await streamChatResponse(
-        unifiedHistory,
+        chatHistory,
         model,
         llmApi,
         abortController,
       );
-      // Sync back any new messages added by streamChatResponse
-      const newMessages = unifiedHistory.slice(originalLength);
-      const legacyNewMessages = convertFromUnifiedHistory(newMessages);
-      chatHistory.push(...legacyNewMessages);
+      // No need to sync back - streamChatResponse modifies chatHistory in place
     }
 
     // In headless mode, only print the final response using safe stdout
@@ -353,9 +351,7 @@ async function processMessage(
     }
 
     // Save session after each successful response
-    const unifiedHistory = convertToUnifiedHistory(chatHistory);
-    const session = createSession(unifiedHistory);
-    saveSession(session);
+    saveSession(chatHistory);
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
 
@@ -402,13 +398,12 @@ async function runHeadlessMode(
   }
 
   // Initialize chat history
-  const unifiedChatHistory = await initializeChatHistory(options);
-  const chatHistory = convertFromUnifiedHistory(unifiedChatHistory);
+  const chatHistory = await initializeChatHistory(options);
 
   // Track compaction index if resuming with compacted history
   let compactionIndex: number | null = null;
   if (options.resume) {
-    compactionIndex = findCompactionIndex(unifiedChatHistory);
+    compactionIndex = findCompactionIndex(chatHistory);
   }
 
   // Handle additional prompts from --prompt flags

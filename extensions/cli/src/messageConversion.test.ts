@@ -34,7 +34,7 @@ describe("convertFromUnifiedHistory", () => {
     expect(result[0]).toEqual({
       role: "user",
       content:
-        "Please review @test-file.txt\n\n<file path=\"test-file.txt\">\nconsole.log('Hello, world!');\n</file>",
+        "<context name=\"test-file.txt\">\nconsole.log('Hello, world!');\n</context>\n\nPlease review @test-file.txt",
     });
   });
 
@@ -102,7 +102,7 @@ describe("convertFromUnifiedHistory", () => {
     expect(result[0]).toEqual({
       role: "user",
       content:
-        'Compare @file1.js and @file2.js\n\n<file path="file1.js">\nconst a = 1;\n</file>\n\n<file path="file2.js">\nconst b = 2;\n</file>',
+        '<context name="file1.js">\nconst a = 1;\n</context>\n\n<context name="file2.js">\nconst b = 2;\n</context>\n\nCompare @file1.js and @file2.js',
     });
   });
 
