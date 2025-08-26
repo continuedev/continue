@@ -106,7 +106,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
           <Text bold color="blue">
             MCP Servers:
           </Text>
-          {config.mcpServers.map((server: any, index: number) => (
+          {config?.mcpServers?.map((server: any, index: number) => (
             <Text key={index}>
               - <Text color="white">{server?.name}</Text>
             </Text>
