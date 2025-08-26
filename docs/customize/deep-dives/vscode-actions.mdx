@@ -26,19 +26,3 @@ The highlighted code you’ve selected will be included in your prompt alongside
 Right click actions that generate inline diffs use the same prompt and response processing logic as [Edit](../../features/edit/how-it-works).
 
 ![context-menu](/images/context-menu.png)
-
-## How to Use the Debug Action Shortcut
-
-The debug action is a special built-in keyboard shortcut in the VS Code extension. Use <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>R</kbd> to instantly copy the contents of the most recent terminal output into the chat sidebar and get debugging advice. There is no additional, non-visible information sent to the language model.
-
-```
-I got the following error, can you please help explain how to fix it?
-
-[ERROR_MESSAGE]
-```
-
-## How to Use Quick Fixes for Code Errors
-
-Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> again and Continue will attempt to help solve the problem.
-
-Similarly to the debug action, quick actions transparently inject a prompt into the chat window. When you select “Ask Continue”, the 3 lines above and below the error are sent to the chat followed by the question “How do I fix the following problem in the above code?: [ERROR_MESSAGE]”.
