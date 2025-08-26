@@ -2,6 +2,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
+import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
 import type {
@@ -9,7 +10,6 @@ import type {
   Session,
   SessionMetadata,
 } from "../../../core/index.js";
-import historyManager from "../../../core/util/history.js";
 
 // Re-export SessionMetadata for external consumers
 export type { SessionMetadata };
