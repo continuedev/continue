@@ -198,7 +198,7 @@ export function loadSession(): Session | null {
 
     const files = fs
       .readdirSync(sessionDir)
-      .filter((f) => f.endsWith(".json") && !f.includes("sessions-list"))
+      .filter((f) => f.endsWith(".json") && f !== "sessions.json")
       .map((f) => ({
         name: f,
         path: path.join(sessionDir, f),
