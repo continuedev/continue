@@ -314,14 +314,12 @@ class NextEditWindowManager(private val project: Project) {
             }
 
             val visibleLines = diffLines.filter { it.type != "old" }
-            val linesToDisplay = if (visibleLines.isEmpty()) {
+            val linesToDisplay = visibleLines.ifEmpty {
                 if (code.isNotEmpty()) {
                     code.split("\n").map { DiffLine(type = "new", line = it) }
                 } else {
                     listOf(DiffLine(type = "new", line = " "))
                 }
-            } else {
-                visibleLines
             }
 
             // Create syntax-highlighted labels for each line
@@ -329,7 +327,7 @@ class NextEditWindowManager(private val project: Project) {
                 val displayText = if (diffLine.line.isEmpty()) " " else diffLine.line
 
                 val backgroundColor = when (diffLine.type) {
-                    "new" -> JBColor(0x2D4A2D, 0x2D4A2D)
+                    "new" -> JBColor(Color(0xD1F2D1), Color(0x1B4D1B))
                     "same" -> scheme.defaultBackground
                     else -> scheme.defaultBackground
                 }
@@ -630,23 +628,53 @@ class NextEditWindowManager(private val project: Project) {
 
         val diffChars = calculateCharDiff(oldCode, newCode)
 
-        deletionHighlighters = diffChars.filter { it.type == "old" }.map { diff ->
-            val lineStartOffset = editor.document.getLineStartOffset(startLine + diff.oldLineIndex!!)
-            val startOffset = lineStartOffset + diff.oldCharIndexInLine!!
-            val endOffset = startOffset + diff.char.length
+        // Group consecutive deletion characters to create continuous ranges
+        val deletionRanges = mutableListOf<Pair<Int, Int>>()
+        var currentRangeStart: Int? = null
 
+        diffChars.filter { it.type == "old" }.forEach { diff ->
+            val lineStartOffset = editor.document.getLineStartOffset(startLine + diff.oldLineIndex!!)
+            val charOffset = lineStartOffset + diff.oldCharIndexInLine!!
+
+            if (currentRangeStart == null) {
+                currentRangeStart = charOffset
+            }
+
+            // Check if this is consecutive with the previous character
+            val nextDiff = diffChars.getOrNull(diffChars.indexOf(diff) + 1)
+            if (nextDiff?.type != "old" ||
+                nextDiff.oldLineIndex != diff.oldLineIndex ||
+                nextDiff.oldCharIndexInLine != diff.oldCharIndexInLine!! + diff.char.length
+            ) {
+                // End of consecutive deletions
+                deletionRanges.add(currentRangeStart!! to (charOffset + diff.char.length))
+                currentRangeStart = null
+            }
+        }
+
+        // Create highlighters for each deletion range
+        deletionHighlighters = deletionRanges.map { (startOffset, endOffset) ->
             editor.markupModel.addRangeHighlighter(
                 startOffset,
                 endOffset,
-                HighlighterLayer.SELECTION - 1,
+                HighlighterLayer.LAST + 1, // higher layer to ensure visibility
                 TextAttributes().apply {
-                    backgroundColor =
-                        JBColor.namedColor("Editor.DiffDeletedLines.background", JBColor(0xFFE6E6, 0x484A4A))
+                    backgroundColor = JBColor(
+                        Color(0xFFEAEA),  // light theme: more visible light red
+                        Color(0x4D1B1B)   // dark theme: dark red
+                    )
+                    foregroundColor = null
                     effectType = EffectType.STRIKEOUT
-                    effectColor = JBColor.namedColor("Editor.DiffDeletedLines.border", JBColor(0xD32F2F, 0xB71C1C))
+                    effectColor = JBColor(
+                        Color(0xDC3545),
+                        Color(0xDC3545)
+                    )
                 },
                 HighlighterTargetArea.EXACT_RANGE
-            )
+            ).also { highlighter ->
+                highlighter.isGreedyToLeft = false
+                highlighter.isGreedyToRight = false
+            }
         }
     }
 
