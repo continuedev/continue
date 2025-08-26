@@ -138,6 +138,7 @@ class NextEditWindowManager(private val project: Project) {
             .setCancelOnClickOutside(false)
             .setCancelOnWindowDeactivation(false)
             .setCancelKeyEnabled(false)
+            .setModalContext(true)
             .setCancelCallback {
                 onAction(PopupAction.REJECT)
                 true
@@ -145,6 +146,18 @@ class NextEditWindowManager(private val project: Project) {
             .createPopup()
 
         currentPopup = popup
+
+        popup.content.addFocusListener(object : java.awt.event.FocusAdapter() {
+            override fun focusLost(e: java.awt.event.FocusEvent?) {
+                if (e?.isTemporary == false && popup.isVisible && !isAccepted) {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (popup.isVisible && !popup.isDisposed) {
+                            popupComponent.requestFocusInWindow()
+                        }
+                    }
+                }
+            }
+        })
 
         // Show popup and ensure focus
         ApplicationManager.getApplication().invokeLater {
@@ -220,6 +233,8 @@ class NextEditWindowManager(private val project: Project) {
 //            border = JBUI.Borders.empty(8, 12)
             border = null
             background = EditorColorsManager.getInstance().globalScheme.defaultBackground
+            isFocusable = true
+            isFocusCycleRoot = true
             // No custom paintComponent - just use regular panel
         }
 
