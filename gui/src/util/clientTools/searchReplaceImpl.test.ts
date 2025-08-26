@@ -2,6 +2,7 @@ import { findSearchMatch } from "core/edit/searchAndReplace/findSearchMatch";
 import { parseAllSearchReplaceBlocks } from "core/edit/searchAndReplace/parseSearchReplaceBlock";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolExtras } from "./callClientTool";
 import { searchReplaceToolImpl } from "./searchReplaceImpl";
 
@@ -12,10 +13,14 @@ vi.mock("core/util/ideUtils");
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "test-stream-id"),
 }));
+vi.mock("../../redux/thunks/handleApplyStateUpdate", () => ({
+  applyForEditTool: vi.fn(),
+}));
 
 const mockFindSearchMatch = vi.mocked(findSearchMatch);
 const mockParseAllSearchReplaceBlocks = vi.mocked(parseAllSearchReplaceBlocks);
 const mockResolveRelativePathInDir = vi.mocked(resolveRelativePathInDir);
+const mockApplyForEditTool = vi.mocked(applyForEditTool);
 
 describe("searchReplaceToolImpl", () => {
   let mockExtras: ClientToolExtras;
@@ -144,8 +149,6 @@ describe("searchReplaceToolImpl", () => {
         endIndex,
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
-
       const result = await searchReplaceToolImpl(
         { filepath: "test.js", diffs: ["mock diff content"] },
         "tool-call-id",
@@ -159,7 +162,7 @@ describe("searchReplaceToolImpl", () => {
       });
 
       // Verify applyToFile was called with correct parameters
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.js",
@@ -202,8 +205,6 @@ describe("searchReplaceToolImpl", () => {
         endIndex,
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
-
       const result = await searchReplaceToolImpl(
         { filepath: "test.js", diffs: ["mock diff content"] },
         "tool-call-id",
@@ -217,7 +218,7 @@ describe("searchReplaceToolImpl", () => {
       });
 
       // Verify applyToFile was called with correct parameters
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.js",
@@ -283,8 +284,6 @@ const c = 3;`;
           strategyName: "exactMatch",
         });
 
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
-
       const result = await searchReplaceToolImpl(
         { filepath: "test.js", diffs: ["mock diff content"] },
         "tool-call-id",
@@ -310,7 +309,7 @@ const c = 3;`;
         "const b = 2;",
       );
       // Verify final applyToFile call
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.js",
@@ -379,8 +378,6 @@ const c = 3;`;
           strategyName: "exactMatch",
         });
 
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
-
       const result = await searchReplaceToolImpl(
         { filepath: "test.js", diffs: ["first diff", "second diff"] },
         "tool-call-id",
@@ -405,7 +402,7 @@ const c = 3;`;
       );
 
       // Verify final applyToFile call
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.js",
@@ -440,7 +437,6 @@ keep this too`;
         endIndex: 26, // End of "remove this line"
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       const result = await searchReplaceToolImpl(
         { filepath: "test.txt", diffs: ["mock diff content"] },
@@ -453,7 +449,7 @@ keep this too`;
         output: undefined,
       });
 
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
@@ -480,15 +476,13 @@ keep this too`;
         endIndex: 11,
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
-
       await searchReplaceToolImpl(
         { filepath: "test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
 
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
@@ -581,32 +575,6 @@ keep this too`;
         ),
       ).rejects.toThrow("Failed to apply search and replace: File read error");
     });
-
-    it("should handle applyToFile errors", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/resolved/path/test.txt");
-      mockParseAllSearchReplaceBlocks.mockReturnValue([
-        {
-          isComplete: true,
-          searchContent: "content",
-          replaceContent: "replacement",
-        },
-      ]);
-      mockIdeMessenger.ide.readFile.mockResolvedValue("content");
-      mockFindSearchMatch.mockReturnValue({
-        startIndex: 0,
-        endIndex: 7,
-        strategyName: "exactMatch",
-      });
-      mockIdeMessenger.request.mockRejectedValue(new Error("Apply failed"));
-
-      await expect(
-        searchReplaceToolImpl(
-          { filepath: "test.txt", diffs: ["mock diff content"] },
-          "tool-call-id",
-          mockExtras,
-        ),
-      ).rejects.toThrow("Failed to apply search and replace: Apply failed");
-    });
   });
 
   describe("edge cases", () => {
@@ -628,15 +596,13 @@ keep this too`;
         endIndex: 0,
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
-
       await searchReplaceToolImpl(
         { filepath: "test.txt", diffs: ["mock diff content"] },
         "tool-call-id",
         mockExtras,
       );
 
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
@@ -663,7 +629,6 @@ keep this too`;
         endIndex: originalContent.length,
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       await searchReplaceToolImpl(
         { filepath: "test.txt", diffs: ["mock diff content"] },
@@ -671,7 +636,7 @@ keep this too`;
         mockExtras,
       );
 
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: expectedFinalContent,
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",
@@ -699,7 +664,6 @@ keep this too`;
         endIndex: 4,
         strategyName: "exactMatch",
       });
-      mockIdeMessenger.request.mockResolvedValue({ status: "success" });
 
       await searchReplaceToolImpl(
         { filepath: "relative/test.txt", diffs: ["mock diff content"] },
@@ -719,7 +683,7 @@ keep this too`;
         "/resolved/path/test.txt",
       );
       expect(mockFindSearchMatch).toHaveBeenCalledWith(originalContent, "test");
-      expect(mockIdeMessenger.request).toHaveBeenCalledWith("applyToFile", {
+      expect(mockApplyForEditTool).toHaveBeenCalledWith({
         text: "updated content",
         streamId: "test-stream-id",
         filepath: "/resolved/path/test.txt",

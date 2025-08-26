@@ -27,14 +27,20 @@ export abstract class BaseService<TState> extends EventEmitter {
    * Public initialization method that wraps the implementation
    */
   async initialize(...args: any[]): Promise<TState> {
-    logger.debug(`Initializing ${this.serviceName}`);
+    logger.debug(`Initializing ${this.serviceName}`, {
+      wasInitialized: this.isInitialized,
+      hadPreviousState: !!this.currentState,
+    });
     this.emit("initializing");
 
     try {
       const state = await this.doInitialize(...args);
       this.currentState = state;
       this.isInitialized = true;
-      logger.debug(`${this.serviceName} initialized successfully`);
+      logger.debug(`${this.serviceName} initialized successfully`, {
+        stateKeys: state ? Object.keys(state as any) : [],
+        isNowInitialized: this.isInitialized,
+      });
       this.emit("initialized", state);
       return state;
     } catch (error: any) {
