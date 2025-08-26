@@ -8,14 +8,14 @@
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 import type {
+  AssistantChatMessage,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
   MessageContent,
+  ToolCall,
   ToolCallState,
   ToolStatus,
-  AssistantChatMessage,
-  ToolCall,
 } from "../../../core/index.js";
 
 /**
@@ -303,6 +303,26 @@ export function convertFromUnifiedHistory(
 
   for (const item of historyItems) {
     const baseMessage = convertFromUnifiedMessage(item.message);
+
+    // If this is a user message with context items, expand the content
+    if (
+      item.message.role === "user" &&
+      item.contextItems &&
+      item.contextItems.length > 0
+    ) {
+      const contextContent = item.contextItems
+        .map(
+          (contextItem) =>
+            `<context name="${contextItem.name}">\n${contextItem.content}\n</context>\n\n`,
+        )
+        .join("");
+
+      baseMessage.content =
+        typeof baseMessage.content === "string"
+          ? contextContent + baseMessage.content
+          : baseMessage.content; // Keep array format if it's already an array
+    }
+
     messages.push(baseMessage);
 
     // Add tool result messages if there are completed tool calls

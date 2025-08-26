@@ -211,21 +211,33 @@ export function processSlashCommandResult({
 }
 
 /**
- * Format message with attached files
+ * Format message with attached files - returns message text and context items separately
  */
 export function formatMessageWithFiles(
   message: string,
   attachedFiles: Array<{ path: string; content: string }>,
-): string {
+): { messageText: string; contextItems: import("../../../../../core/index.js").ContextItemWithId[] } {
   if (attachedFiles.length === 0) {
-    return message;
+    return { messageText: message, contextItems: [] };
   }
 
-  const fileContents = attachedFiles
-    .map((file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`)
-    .join("");
+  // Convert attached files to context items
+  const contextItems = attachedFiles.map((file, index) => ({
+    id: {
+      providerTitle: "file",
+      itemId: `attached-file-${index}`,
+    },
+    content: file.content,
+    name: file.path,
+    description: `File: ${file.path}`,
+    uri: {
+      type: "file" as const,
+      value: file.path,
+    },
+  }));
 
-  return message + fileContents;
+  // Keep the original message text unchanged (preserving @filename references)
+  return { messageText: message, contextItems };
 }
 
 /**

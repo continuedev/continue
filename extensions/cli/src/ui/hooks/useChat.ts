@@ -297,7 +297,7 @@ export function useChat({
     trackUserMessage(message, model);
 
     // Add user message to history and display
-    const messageContent = formatMessageWithFiles(message, attachedFiles);
+    const { messageText, contextItems } = formatMessageWithFiles(message, attachedFiles);
     if (attachedFiles.length > 0) {
       setAttachedFiles([]);
     }
@@ -306,7 +306,7 @@ export function useChat({
     if (isRemoteMode && remoteUrl) {
       await handleRemoteMessage({
         remoteUrl,
-        messageContent,
+        messageContent: messageText,
         setChatHistory,
       });
       return;
@@ -323,13 +323,13 @@ export function useChat({
         setCompactionIndex,
       });
 
-    // NOW add user message to history
+    // NOW add user message to history with context items
     const newUserMessage: ChatHistoryItem = {
       message: {
         role: "user",
-        content: messageContent,
+        content: messageText,
       },
-      contextItems: [],
+      contextItems,
     };
     const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
