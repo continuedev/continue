@@ -53,7 +53,7 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     // const { query, warning } = prepareQueryForRipgrep(rawQuery);
     // queryWarning = warning;
     const query: string = rawQuery;
-    
+
     const ripgrepArgs = buildRipgrepArgs(query, {
       extraArgs,
       maxResults: DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
