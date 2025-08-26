@@ -110,7 +110,7 @@ export function useSelectors(
       setChatHistory((prev) => [
         ...prev,
         {
-          message: { role: "system", content: message.content },
+          message: { role: message.role, content: message.content },
           contextItems: [],
         },
       ]);
