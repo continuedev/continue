@@ -288,23 +288,29 @@ class NextEditWindowManager(private val project: Project) {
             val actualFontSize = getActualFontSizeFromEditor(editor)
             val fontFamily = editorFont.family
 
-            // Also get the line height from editor for consistent spacing
-            val editorLineHeight = editor.lineHeight
-            val uiScale = JBUI.scale(1f)
-//            val adjustedLineHeight = if (uiScale > 1f) (editorLineHeight / uiScale).toInt() else editorLineHeight
+            // Get the line spacing from editor
+            val lineSpacing = editor.colorsScheme.lineSpacing
 
-//            val adjustedLineHeight = actualFontSize
-            val adjustedLineHeight = editor.colorsScheme.lineSpacing
+            // Calculate actual line height based on font metrics
+            val lineHeightPixels = editor.lineHeight
 
             // Get file type for proper syntax highlighting
             val fileType = getCurrentFileType(editor)
 
-            // Create panel with proper layout
-            val panel = JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            // Create panel with GridBagLayout for better control
+            val panel = JPanel(GridBagLayout()).apply {
                 background = scheme.defaultBackground
                 border = null
                 isOpaque = true
+            }
+
+            val gbc = GridBagConstraints().apply {
+                gridx = 0
+                gridy = 0
+                weightx = 1.0
+                fill = GridBagConstraints.HORIZONTAL
+                anchor = GridBagConstraints.NORTHWEST
+                insets = Insets(0, 0, 0, 0)
             }
 
             val visibleLines = diffLines.filter { it.type != "old" }
@@ -318,10 +324,8 @@ class NextEditWindowManager(private val project: Project) {
                 visibleLines
             }
 
-            var maxWidth = 200
-
             // Create syntax-highlighted labels for each line
-            linesToDisplay.forEach { diffLine ->
+            linesToDisplay.forEachIndexed { index, diffLine ->
                 val displayText = if (diffLine.line.isEmpty()) " " else diffLine.line
 
                 val backgroundColor = when (diffLine.type) {
@@ -336,32 +340,31 @@ class NextEditWindowManager(private val project: Project) {
                     scheme,
                     fontFamily,
                     actualFontSize,
-                    adjustedLineHeight, // Pass the adjusted line height
                     backgroundColor
                 )
 
                 val label = JLabel(highlightedHtml).apply {
                     background = backgroundColor
                     isOpaque = true
-                    border = JBUI.Borders.empty(1, 6)
-                    alignmentX = Component.LEFT_ALIGNMENT
+                    border = null
 
-                    // Create font with correct size
-//                    font = Font(fontFamily, editorFont.style, actualFontSize)
+                    // Control line height through component sizing
+                    preferredSize = Dimension(preferredSize.width, lineHeightPixels)
+                    minimumSize = Dimension(minimumSize.width, lineHeightPixels)
+                    maximumSize = Dimension(Integer.MAX_VALUE, lineHeightPixels)
                 }
 
-                maxWidth = maxOf(maxWidth, label.preferredSize.width + 12)
-                panel.add(label)
+                gbc.gridy = index
+                panel.add(label, gbc)
             }
 
-            panel.revalidate()
-            val contentHeight = maxOf(panel.preferredSize.height, 20)
+            // Add a final glue component to push everything up
+            gbc.gridy = linesToDisplay.size
+            gbc.weighty = 1.0
+            panel.add(Box.createVerticalGlue(), gbc)
 
             return JScrollPane(panel).apply {
                 border = null
-                preferredSize = Dimension(maxWidth, contentHeight)
-                minimumSize = Dimension(200, 20)
-                maximumSize = Dimension(800, 300)
                 horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
                 verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
                 viewport.background = scheme.defaultBackground
@@ -377,37 +380,22 @@ class NextEditWindowManager(private val project: Project) {
         }
     }
 
-    private fun createSyntaxHighlightedHtml(
+    private fun createSyntaxHighlightedLine(
         text: String,
         fileType: FileType,
         scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
-        fontFamily: String,
-        fontSize: Int,
-        lineHeight: Float,
         backgroundColor: Color
     ): String {
-        // Convert background color to hex
-        val backgroundHex =
-            String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
-
         if (text.trim().isEmpty()) {
-            return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}pt; line-height:${lineHeight}; background-color:$backgroundHex;'>&nbsp;</div>" +
-                    "</body></html>"
+            // Return a non-breaking space to maintain line height
+            return "&nbsp;"
         }
 
         try {
             // Get the syntax highlighter for the file type
             val syntaxHighlighter =
                 com.intellij.openapi.fileTypes.SyntaxHighlighterFactory.getSyntaxHighlighter(fileType, project, null)
-                    ?: return createBasicHtml(
-                        text,
-                        fontFamily,
-                        fontSize,
-                        lineHeight,
-                        scheme,
-                        backgroundColor
-                    ) // Updated call
+                    ?: return escapeHtml(text)
 
             val lexer = syntaxHighlighter.highlightingLexer
             lexer.start(text)
@@ -424,16 +412,9 @@ class NextEditWindowManager(private val project: Project) {
                 // Add any text between tokens
                 if (tokenStart > lastOffset) {
                     val defaultColor = scheme.defaultForeground
-                    val defaultColorHex =
-                        String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
                     highlightedText.append(
-                        "<span style='color:$defaultColorHex'>${
-                            escapeHtml(
-                                text.substring(
-                                    lastOffset,
-                                    tokenStart
-                                )
-                            )
+                        "<span style='color:${colorToHex(defaultColor)}'>${
+                            escapeHtml(text.substring(lastOffset, tokenStart))
                         }</span>"
                     )
                 }
@@ -446,9 +427,7 @@ class NextEditWindowManager(private val project: Project) {
                     val textAttributes = scheme.getAttributes(textAttributesKeys[0])
                     val color = textAttributes?.foregroundColor ?: scheme.defaultForeground
 
-                    val colorHex = String.format("#%02x%02x%02x", color.red, color.green, color.blue)
-
-                    var styledToken = "<span style='color:$colorHex"
+                    var styledToken = "<span style='color:${colorToHex(color)}"
 
                     // Add font style if needed
                     if (textAttributes != null && textAttributes.fontType != 0) {
@@ -465,9 +444,7 @@ class NextEditWindowManager(private val project: Project) {
                 } else {
                     // No specific highlighting, use default color
                     val defaultColor = scheme.defaultForeground
-                    val defaultColorHex =
-                        String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
-                    highlightedText.append("<span style='color:$defaultColorHex'>${escapeHtml(tokenText)}</span>")
+                    highlightedText.append("<span style='color:${colorToHex(defaultColor)}'>${escapeHtml(tokenText)}</span>")
                 }
 
                 lastOffset = tokenEnd
@@ -477,43 +454,69 @@ class NextEditWindowManager(private val project: Project) {
             // Add any remaining text
             if (lastOffset < text.length) {
                 val defaultColor = scheme.defaultForeground
-                val defaultColorHex =
-                    String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
-                highlightedText.append("<span style='color:$defaultColorHex'>${escapeHtml(text.substring(lastOffset))}</span>")
+                highlightedText.append(
+                    "<span style='color:${colorToHex(defaultColor)}'>${escapeHtml(text.substring(lastOffset))}</span>"
+                )
             }
 
-            val toReturn = "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}pt; line-height:${lineHeight}; background-color:$backgroundHex;'>$highlightedText</div>" +
-                    "</body></html>"
-            return toReturn
+            return highlightedText.toString()
 
         } catch (e: Exception) {
             println("DEBUG: Syntax highlighting failed: ${e.message}")
-            return createBasicHtml(text, fontFamily, fontSize, lineHeight, scheme, backgroundColor) // Updated call
+            return escapeHtml(text)
         }
+    }
+
+    private fun colorToHex(color: Color): String {
+        return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+    }
+
+    private fun createSyntaxHighlightedHtml(
+        text: String,
+        fileType: FileType,
+        scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
+        fontFamily: String,
+        fontSize: Int,
+        backgroundColor: Color
+    ): String {
+        // Get the syntax-highlighted content
+        val highlightedContent = createSyntaxHighlightedLine(text, fileType, scheme, backgroundColor)
+
+        // Convert background color to hex
+        val bgColorHex = colorToHex(backgroundColor)
+
+        // Convert fontSize to pt
+        val fontSizePt = "${fontSize}pt"
+
+        // Build proper HTML structure without line-height (controlled by JLabel sizing)
+        val html = StringBuilder()
+        html.append("<html>")
+        html.append("<body style='margin:0; padding:0; background-color:$bgColorHex;'>")
+        html.append("<div style='")
+        html.append("font-family:\"$fontFamily\"; ")
+        html.append("font-size:$fontSizePt; ")
+        html.append("background-color:$bgColorHex; ")
+        html.append("padding: 0 16px 0 0; ")  // add more padding to the right
+        html.append("white-space:nowrap;")
+        html.append("'>")
+        html.append(highlightedContent)
+        html.append("</div>")
+        html.append("</body>")
+        html.append("</html>")
+
+        return html.toString()
     }
 
     private fun createBasicHtml(
         text: String,
         fontFamily: String,
         fontSize: Int,
-        lineHeight: Float, // Added lineHeight parameter
+        lineSpacing: Float,
         scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
         backgroundColor: Color
     ): String {
-        val foregroundColor = scheme.defaultForeground
-        val foregroundHex =
-            String.format("#%02x%02x%02x", foregroundColor.red, foregroundColor.green, foregroundColor.blue)
-        val backgroundHex =
-            String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
-
-        return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}pt; line-height:${lineHeight}; color:$foregroundHex; background-color:$backgroundHex;'>${
-                    escapeHtml(
-                        text
-                    )
-                }</div>" +
-                "</body></html>"
+        // This can also be simplified or removed
+        return escapeHtml(text)
     }
 
     private fun escapeHtml(text: String): String {
