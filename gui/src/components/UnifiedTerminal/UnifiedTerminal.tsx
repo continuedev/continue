@@ -97,10 +97,6 @@ const StyledTerminalContainer = styled.div<{
 const TerminalContent = styled.div`
   pre {
     white-space: pre-wrap;
-    background-color: ${vscEditorBackground};
-    border-radius: ${defaultBorderRadius};
-    border: 1px solid
-      var(--vscode-editorWidget-border, rgba(127, 127, 127, 0.3));
     max-width: calc(100vw - 24px);
     overflow-x: scroll;
     overflow-y: hidden;
@@ -474,7 +470,7 @@ export function UnifiedTerminalCommand({
         {/* Content */}
         {isExpanded && (
           <TerminalContent>
-            <pre>
+            <pre className="bg-editor">
               <code>
                 {/* Command is always visible */}
                 <div

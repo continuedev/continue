@@ -198,7 +198,7 @@ export function FindAndReplaceDisplay({
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
     >
       <pre
-        className={`m-0 text-xs leading-tight ${config?.ui?.codeWrap ? "w-full whitespace-pre-wrap" : "w-min whitespace-pre"}`}
+        className={`bg-editor m-0 w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
         {diffResult.diff.map((part, index) => {
           if (part.removed) {
@@ -245,7 +245,7 @@ export function FindAndReplaceDisplay({
             );
           } else {
             return (
-              <div key={index} className="bg-background">
+              <div key={index}>
                 {part.value.split("\n").map((line, lineIndex) => {
                   if (
                     line === "" &&
