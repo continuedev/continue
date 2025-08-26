@@ -86,10 +86,12 @@ function getCurrentSessionId(): string {
 /**
  * Save session to file
  */
-export function saveSession(sessionOrHistory: Session | ChatHistoryItem[]): void {
+export function saveSession(
+  sessionOrHistory: Session | ChatHistoryItem[],
+): void {
   try {
     let session: Session;
-    
+
     // Handle both Session objects and ChatHistoryItem[] arrays
     if (Array.isArray(sessionOrHistory)) {
       // If it's a ChatHistoryItem array, create/update the session

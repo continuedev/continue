@@ -61,7 +61,13 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
             <Box marginLeft={1} marginBottom={1}>
               <Text color="white">●</Text>
               <Text> </Text>
-              <MarkdownRenderer content={typeof message.content === "string" ? message.content : JSON.stringify(message.content)} />
+              <MarkdownRenderer
+                content={
+                  typeof message.content === "string"
+                    ? message.content
+                    : JSON.stringify(message.content)
+                }
+              />
             </Box>
           )}
 
