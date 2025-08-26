@@ -9,14 +9,28 @@ interface ControlKeysOptions {
   showSlashCommands: boolean;
   showFileSearch: boolean;
   cycleModes: () => Promise<PermissionMode>;
+  clearInput?: () => void;
 }
 
 export function handleControlKeys(options: ControlKeysOptions): boolean {
-  const { input, key, exit, showSlashCommands, showFileSearch, cycleModes } =
-    options;
+  const {
+    input,
+    key,
+    exit,
+    showSlashCommands,
+    showFileSearch,
+    cycleModes,
+    clearInput,
+  } = options;
 
-  // Handle Ctrl+C and Ctrl+D
-  if (key.ctrl && (input === "c" || input === "d")) {
+  // Handle Ctrl+C to clear input
+  if (key.ctrl && input === "c" && clearInput) {
+    clearInput();
+    return true;
+  }
+
+  // Handle Ctrl+D to exit
+  if (key.ctrl && input === "d") {
     exit();
     return true;
   }

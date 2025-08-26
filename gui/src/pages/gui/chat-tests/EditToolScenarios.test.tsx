@@ -1,19 +1,16 @@
 import { BuiltInToolNames } from "core/tools/builtIn";
+import { generateToolCallButtonTestId } from "../../../components/mainInput/Lump/LumpToolbar/PendingToolCallToolbar";
 import {
   addAndSelectMockLlm,
   triggerConfigUpdate,
 } from "../../../util/test/config";
 import { renderWithProviders } from "../../../util/test/render";
 import { Chat } from "../Chat";
-import { generateToolCallButtonTestId } from "../../../components/mainInput/Lump/LumpToolbar/PendingToolCallToolbar";
 
 import { waitFor } from "@testing-library/dom";
 import { act } from "@testing-library/react";
 import { ChatMessage } from "core";
-import {
-  setToolPolicy,
-  toggleToolSetting,
-} from "../../../redux/slices/uiSlice";
+import { setToolPolicy } from "../../../redux/slices/uiSlice";
 import {
   getElementByTestId,
   getElementByText,
@@ -63,6 +60,7 @@ test(
 
     ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
     const messengerPostSpy = vi.spyOn(ideMessenger, "post");
+    const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
 
     addAndSelectMockLlm(store, ideMessenger);
 
@@ -92,7 +90,7 @@ test(
 
     // Tool call, check that applyToFile was called for edit
     await waitFor(() => {
-      expect(messengerPostSpy).toHaveBeenCalledWith("applyToFile", {
+      expect(messengerRequestSpy).toHaveBeenCalledWith("applyToFile", {
         streamId: expect.any(String),
         filepath: EDIT_FILE_URI,
         text: EDIT_CHANGES,
@@ -101,7 +99,7 @@ test(
     });
 
     // Extract stream ID and initiate mock streaming
-    const streamId = messengerPostSpy.mock.calls.find(
+    const streamId = messengerRequestSpy.mock.calls.find(
       (call) => call[0] === "applyToFile",
     )?.[1]?.streamId;
     expect(streamId).toBeDefined();
@@ -172,6 +170,7 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
 
   ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
   const messengerPostSpy = vi.spyOn(ideMessenger, "post");
+  const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
 
   addAndSelectMockLlm(store, ideMessenger);
 
@@ -219,7 +218,7 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   );
   // Tool call, check that applyToFile was called for edit
   await waitFor(() => {
-    expect(messengerPostSpy).toHaveBeenCalledWith("applyToFile", {
+    expect(messengerRequestSpy).toHaveBeenCalledWith("applyToFile", {
       streamId: expect.any(String),
       filepath: EDIT_FILE_URI,
       text: EDIT_CHANGES,
@@ -228,7 +227,7 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   });
 
   // Extract stream ID and initiate mock streaming
-  const streamId = messengerPostSpy.mock.calls.find(
+  const streamId = messengerRequestSpy.mock.calls.find(
     (call) => call[0] === "applyToFile",
   )?.[1]?.streamId;
   expect(streamId).toBeDefined();
