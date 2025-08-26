@@ -1,7 +1,7 @@
+import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
 import { useEffect, useState } from "react";
 
-import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";

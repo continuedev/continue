@@ -5,8 +5,6 @@
  * format and the unified ChatHistoryItem format from the core package.
  */
 
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
-
 import type {
   AssistantChatMessage,
   ChatHistoryItem,
@@ -16,7 +14,8 @@ import type {
   ToolCall,
   ToolCallState,
   ToolStatus,
-} from "../../../core/index.js";
+} from "core/index.js";
+import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 /**
  * Convert ChatCompletionMessageParam to ChatMessage

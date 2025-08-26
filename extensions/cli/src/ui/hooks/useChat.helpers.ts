@@ -1,9 +1,9 @@
 import * as path from "node:path";
 
+import type { ChatHistoryItem, Session } from "core/index.js";
+import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
-import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
-import { getLastNPathParts } from "../../../../../core/util/uri.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
 import { convertFromUnifiedHistory } from "../../messageConversion.js";
@@ -223,7 +223,7 @@ export function formatMessageWithFiles(
   attachedFiles: Array<{ path: string; content: string }>,
 ): {
   messageText: string;
-  contextItems: import("../../../../../core/index.js").ContextItemWithId[];
+  contextItems: import("core/index.js").ContextItemWithId[];
 } {
   if (attachedFiles.length === 0) {
     return { messageText: message, contextItems: [] };

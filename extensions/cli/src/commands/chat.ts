@@ -1,9 +1,9 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import chalk from "chalk";
+import type { ChatHistoryItem, Session } from "core/index.js";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 
-import type { ChatHistoryItem, Session } from "../../../../core/index.js";
 import { getDisplayableAsciiArt } from "../asciiArt.js";
 import {
   compactChatHistory,

@@ -1,7 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-
-import type { ChatHistoryItem } from "../../../core/index.js";
+import type { ChatHistoryItem } from "core/index.js";
 
 import { convertFromUnifiedHistory } from "./messageConversion.js";
 import { streamChatResponse } from "./streamChatResponse.js";

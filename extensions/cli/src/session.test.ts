@@ -1,8 +1,9 @@
 import fs from "fs";
 import os from "os";
-import path from "path";
+
+import type { ChatHistoryItem, Session } from "core/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ChatHistoryItem, Session } from "../../../core/index.js";
+
 import {
   clearSession,
   createSession,
@@ -24,7 +25,7 @@ vi.mock("fs");
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "test-uuid-123"),
 }));
-vi.mock("../../../core/util/history.js", () => ({
+vi.mock("../../core/util/history.js", () => ({
   default: {
     save: vi.fn(),
     load: vi.fn(() => ({

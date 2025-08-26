@@ -1,6 +1,5 @@
+import type { ChatHistoryItem } from "core/index.js";
 import { describe, expect, it, vi } from "vitest";
-
-import type { ChatHistoryItem } from "../../../../../core/index.js";
 
 import { createStreamCallbacks } from "./useChat.stream.helpers.js";
 

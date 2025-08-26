@@ -1,14 +1,13 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { describe, it, expect, vi } from "vitest";
-
-import type { ChatHistoryItem } from "../../../core/index.js";
+import type { ChatHistoryItem } from "core/index.js";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   compactChatHistory,
+  COMPACTION_MARKER,
   findCompactionIndex,
   getHistoryForLLM,
-  COMPACTION_MARKER,
 } from "./compaction.js";
 import { convertToUnifiedHistory } from "./messageConversion.js";
 import { streamChatResponse } from "./streamChatResponse.js";

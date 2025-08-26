@@ -2,9 +2,9 @@ import { exec } from "child_process";
 import { promisify } from "util";
 
 import chalk from "chalk";
+import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
-import type { ChatHistoryItem } from "../../../../core/index.js";
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { convertFromUnifiedHistory } from "../messageConversion.js";

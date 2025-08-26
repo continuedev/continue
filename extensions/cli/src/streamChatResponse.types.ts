@@ -1,7 +1,6 @@
 import { CompletionOptions } from "@continuedev/config-yaml";
+import type { ToolStatus } from "core/index.js";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
-
-import type { ToolStatus } from "../../../core/index.js";
 
 import { ToolCallPreview } from "./tools/types.js";
 

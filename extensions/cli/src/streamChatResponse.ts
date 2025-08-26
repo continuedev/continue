@@ -1,13 +1,12 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import type { ChatHistoryItem } from "core/index.js";
 import * as dotenv from "dotenv";
 import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources.mjs";
-
-import type { ChatHistoryItem } from "../../../core/index.js";
 
 import { convertFromUnifiedHistory } from "./messageConversion.js";
 import { filterExcludedTools } from "./permissions/index.js";

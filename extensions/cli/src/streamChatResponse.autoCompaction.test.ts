@@ -1,5 +1,5 @@
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { convertToUnifiedHistory } from "./messageConversion.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
@@ -39,7 +39,7 @@ vi.mock("./util/logger.js", () => ({
 }));
 
 vi.mock("os", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = (await importOriginal()) as object;
   return {
     ...actual,
     homedir: vi.fn(() => "/home/test"),

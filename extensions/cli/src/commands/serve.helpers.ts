@@ -3,7 +3,8 @@ import type {
   Session,
   ToolCallState,
   ToolStatus,
-} from "../../../../core/index.js";
+} from "core/index.js";
+
 import { streamChatResponse } from "../streamChatResponse.js";
 import { StreamCallbacks } from "../streamChatResponse.types.js";
 

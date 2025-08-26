@@ -1,8 +1,4 @@
-import type {
-  ChatHistoryItem,
-  ToolCallState,
-  ToolStatus,
-} from "../../../../../core/index.js";
+import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;

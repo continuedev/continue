@@ -1,9 +1,8 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import type { ChatHistoryItem } from "core/index.js";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React from "react";
-
-import type { ChatHistoryItem } from "../../../core/index.js";
 
 import { compactChatHistory } from "./compaction.js";
 import {
