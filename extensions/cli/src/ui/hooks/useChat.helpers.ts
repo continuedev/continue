@@ -1,15 +1,13 @@
 import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
-import {
-  convertFromUnifiedHistory,
-  convertToUnifiedHistory,
-} from "../../messageConversion.js";
+import { convertFromUnifiedHistory } from "../../messageConversion.js";
 import { loadSession, saveSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
+import { shouldAutoCompact } from "../../util/tokenizer.js";
 
 import { SlashCommandResult } from "./useChat.types.js";
 
@@ -303,43 +301,91 @@ export async function handleAutoCompaction({
   currentChatHistory: ChatHistoryItem[];
   currentCompactionIndex: number | null;
 }> {
-  const { handleAutoCompaction: coreAutoCompaction } = await import(
-    "../../streamChatResponse.autoCompaction.js"
-  );
-
-  // Convert to legacy format for compaction
+  // Check if auto-compaction is needed
+  // Convert to legacy format for token counting
   const legacyHistory = convertFromUnifiedHistory(chatHistory);
+  if (!model || !shouldAutoCompact(legacyHistory, model)) {
+    return {
+      currentChatHistory: chatHistory,
+      currentCompactionIndex: _compactionIndex,
+    };
+  }
 
-  const result = await coreAutoCompaction(legacyHistory, model, llmApi, {
-    isHeadless: false,
-    callbacks: {
-      setMessages: (updater: any) => {
-        // Convert messages updates to chat history updates
-        if (typeof updater === "function") {
-          setChatHistory((prev) => {
-            // For now, just return prev - compaction messages will be handled separately
-            return prev;
-          });
-        }
+  try {
+    logger.info("Auto-compaction triggered for TUI mode");
+    
+    // Add compacting message
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        message: {
+          role: "system",
+          content: "Auto-compacting chat history...",
+        },
+        contextItems: [],
       },
-      setChatHistory: (updater: any) => {
-        // Handle chat history updates
-        if (typeof updater === "function") {
-          setChatHistory((prev) => {
-            const legacyPrev = convertFromUnifiedHistory(prev);
-            const updated = updater(legacyPrev);
-            return convertToUnifiedHistory(updated);
-          });
-        } else {
-          setChatHistory(convertToUnifiedHistory(updater));
-        }
-      },
-      setCompactionIndex,
-    },
-  });
+    ]);
 
-  return {
-    currentChatHistory: convertToUnifiedHistory(result.chatHistory),
-    currentCompactionIndex: result.compactionIndex,
-  };
+    // Compact the unified history
+    const result = await compactChatHistory(chatHistory, model, llmApi);
+    
+    // Keep the system message and append the compaction summary
+    // This replaces the old messages with a summary to reduce context size
+    const systemMessage = chatHistory.find(
+      (item) => item.message.role === "system"
+    );
+    
+    const compactedMessage: ChatHistoryItem = {
+      message: {
+        role: "assistant" as const,
+        content: result.compactionContent,
+      },
+      contextItems: [],
+      conversationSummary: result.compactionContent, // Mark this as a summary
+    };
+    
+    // Create new history with system message (if exists) and compaction summary
+    const updatedHistory: ChatHistoryItem[] = systemMessage
+      ? [systemMessage, compactedMessage]
+      : [compactedMessage];
+
+    setChatHistory(updatedHistory);
+    setCompactionIndex(updatedHistory.length - 1);
+
+    // Add success message
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        message: {
+          role: "system",
+          content: "✓ Chat history auto-compacted successfully.",
+        },
+        contextItems: [],
+      },
+    ]);
+
+    return {
+      currentChatHistory: updatedHistory,
+      currentCompactionIndex: updatedHistory.length - 1,
+    };
+  } catch (error) {
+    logger.error("Auto-compaction failed:", error);
+
+    // Add error message
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        message: {
+          role: "system",
+          content: `Auto-compaction failed: ${formatError(error)}. Continuing without compaction...`,
+        },
+        contextItems: [],
+      },
+    ]);
+
+    return {
+      currentChatHistory: chatHistory,
+      currentCompactionIndex: null,
+    };
+  }
 }

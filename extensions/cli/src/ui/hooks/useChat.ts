@@ -5,7 +5,7 @@ import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
-import { loadSession, saveSession, createSession } from "../../session.js";
+import { createSession, loadSession, saveSession } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";

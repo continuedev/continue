@@ -242,13 +242,11 @@ function processChunk(options: ProcessChunkOptions): {
   } = options;
   // Safety check: ensure chunk has the expected structure
   if (!chunk.choices || !chunk.choices[0]) {
-    logger.warn("Malformed chunk received - missing choices", { chunk });
     return { aiResponse, shouldContinue: true };
   }
 
   const choice = chunk.choices[0];
   if (!choice.delta) {
-    logger.warn("Malformed chunk received - missing delta", { chunk });
     return { aiResponse, shouldContinue: true };
   }
 
