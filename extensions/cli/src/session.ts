@@ -70,70 +70,69 @@ export function getSessionFilePath(): string {
   return path.join(sessionDir, `${sessionId}.json`);
 }
 
-// Singleton for current session ID
-class SessionIdManager {
-  private static instance: SessionIdManager;
-  private sessionId: string | null = null;
+// Singleton for current session management
+class SessionManager {
+  private static instance: SessionManager;
+  private currentSession: Session | null = null;
 
   private constructor() {}
 
-  static getInstance(): SessionIdManager {
-    if (!SessionIdManager.instance) {
-      SessionIdManager.instance = new SessionIdManager();
+  static getInstance(): SessionManager {
+    if (!SessionManager.instance) {
+      SessionManager.instance = new SessionManager();
     }
-    return SessionIdManager.instance;
+    return SessionManager.instance;
   }
 
-  get(): string {
-    if (!this.sessionId) {
-      this.sessionId = uuidv4();
+  getCurrentSession(): Session {
+    if (!this.currentSession) {
+      this.currentSession = {
+        sessionId: uuidv4(),
+        title: "Untitled Session",
+        workspaceDirectory: process.cwd(),
+        history: [],
+      };
     }
-    return this.sessionId;
+    return this.currentSession;
   }
 
-  set(id: string): void {
-    this.sessionId = id;
+  setSession(session: Session): void {
+    this.currentSession = session;
+  }
+
+  updateHistory(history: ChatHistoryItem[]): void {
+    const session = this.getCurrentSession();
+    session.history = history;
+  }
+
+  updateTitle(title: string): void {
+    const session = this.getCurrentSession();
+    session.title = title;
   }
 
   clear(): void {
-    this.sessionId = null;
+    this.currentSession = null;
   }
 
-  has(): boolean {
-    return this.sessionId !== null;
+  hasSession(): boolean {
+    return this.currentSession !== null;
+  }
+
+  getSessionId(): string {
+    return this.getCurrentSession().sessionId;
   }
 }
 
 function getCurrentSessionId(): string {
-  return SessionIdManager.getInstance().get();
+  return SessionManager.getInstance().getSessionId();
 }
 
 /**
- * Save session to file
+ * Save the current session to file
  */
-export function saveSession(
-  sessionOrHistory: Session | ChatHistoryItem[],
-): void {
+export function saveSession(): void {
   try {
-    let session: Session;
-
-    // Handle both Session objects and ChatHistoryItem[] arrays
-    if (Array.isArray(sessionOrHistory)) {
-      // If it's a ChatHistoryItem array, create/update the session
-      const sessionId = getCurrentSessionId();
-      session = {
-        sessionId,
-        title: "Untitled Session",
-        workspaceDirectory: process.cwd(),
-        history: sessionOrHistory,
-      };
-    } else {
-      // It's already a Session object
-      session = sessionOrHistory;
-    }
-
-    // Store the session ID for future reference
-    SessionIdManager.getInstance().set(session.sessionId);
+    const session = SessionManager.getInstance().getCurrentSession();
 
     // Filter out system messages except for the first one
     // TODO: Properly handle system messages vs informational messages in the future
@@ -257,7 +256,7 @@ export function loadSession(): Session | null {
     // Load the most recent session
     const session: Session = JSON.parse(fs.readFileSync(files[0].path, "utf8"));
     // Set this as the current session for future saves
-    SessionIdManager.getInstance().set(session.sessionId);
+    SessionManager.getInstance().setSession(session);
     return session;
   } catch (error) {
     logger.error("Error loading session:", error);
@@ -269,14 +268,14 @@ export function loadSession(): Session | null {
  * Create a new session
  */
 export function createSession(history: ChatHistoryItem[] = []): Session {
-  const sessionId = uuidv4();
-  SessionIdManager.getInstance().set(sessionId);
-  return {
-    sessionId,
+  const session: Session = {
+    sessionId: uuidv4(),
     title: "Untitled Session",
     workspaceDirectory: process.cwd(),
     history,
   };
+  SessionManager.getInstance().setSession(session);
+  return session;
 }
 
 /**
@@ -284,11 +283,11 @@ export function createSession(history: ChatHistoryItem[] = []): Session {
  */
 export function clearSession(): void {
   try {
-    const manager = SessionIdManager.getInstance();
-    if (manager.has()) {
+    const manager = SessionManager.getInstance();
+    if (manager.hasSession()) {
       const sessionFilePath = path.join(
         getSessionDir(),
-        `${manager.get()}.json`,
+        `${manager.getSessionId()}.json`,
       );
       if (fs.existsSync(sessionFilePath)) {
         fs.unlinkSync(sessionFilePath);
@@ -304,13 +303,13 @@ export function clearSession(): void {
  * Check if a session exists for the current terminal
  */
 export function hasSession(): boolean {
-  const manager = SessionIdManager.getInstance();
-  if (!manager.has()) {
+  const manager = SessionManager.getInstance();
+  if (!manager.hasSession()) {
     return false;
   }
   const sessionFilePath = path.join(
     getSessionDir(),
-    `${manager.get()}.json`,
+    `${manager.getSessionId()}.json`,
   );
   return fs.existsSync(sessionFilePath);
 }
@@ -420,4 +419,25 @@ export function loadSessionById(sessionId: string): Session | null {
     logger.error("Error loading session by ID:", error);
     return null;
   }
+}
+
+/**
+ * Update the current session's history
+ */
+export function updateSessionHistory(history: ChatHistoryItem[]): void {
+  SessionManager.getInstance().updateHistory(history);
+}
+
+/**
+ * Update the current session's title
+ */
+export function updateSessionTitle(title: string): void {
+  SessionManager.getInstance().updateTitle(title);
+}
+
+/**
+ * Get the current session
+ */
+export function getCurrentSession(): Session {
+  return SessionManager.getInstance().getCurrentSession();
 }
