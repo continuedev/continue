@@ -44,7 +44,7 @@ class DiscordContextProvider extends BaseContextProvider {
   }
 
   get deprecationMessage() {
-    return "The Discord context provider is nwo deprecated. Please consider using the Discord MCP (hub.docker.com/r/mcp/mcp-discord) instead.";
+    return "The Discord context provider is now deprecated and may be removed in a later version. Please consider using the Discord MCP (hub.docker.com/r/mcp/mcp-discord) instead.";
   }
 
   async fetchMessages(

@@ -21,7 +21,7 @@ class GoogleContextProvider extends BaseContextProvider {
   }
 
   get deprecationMessage() {
-    return "The Google context provider is now deprecated and will be removed in a later version. Please consider using other alternatives like github.com/jae-jae/g-search-mcp instead.";
+    return "The Google context provider is now deprecated and will be removed in a later version. Please consider using github.com/jae-jae/g-search-mcp instead.";
   }
 
   async getContextItems(
