@@ -253,11 +253,11 @@ function MCPSection() {
     }));
   }, [servers, selectedProfile]);
 
-  if (true) {
+  if (disableMcp) {
     return (
       <div className="flex flex-col items-center justify-center p-2">
         <span className="text-description">
-          MCP Servers are disabled in your organization.
+          MCP servers are disabled in your organization
         </span>
       </div>
     );
