@@ -141,7 +141,9 @@ export function buildRipgrepArgs(
 
   // Determine search target (path or current directory)
   const searchTarget = path ? validateSearchPath(path) : ".";
-  console.log(`[DEBUG] Final ripgrep args: ${JSON.stringify(args.concat(["-e", validatedQuery, searchTarget]))}`);
+  console.log(
+    `[DEBUG] Final ripgrep args: ${JSON.stringify(args.concat(["-e", validatedQuery, searchTarget]))}`,
+  );
   args.push("-e", validatedQuery, searchTarget);
   return args;
 }
@@ -171,16 +173,19 @@ export function formatGrepSearchResults(
 
   // Check if this looks like a simple file list (only file paths, no content)
   const lines = results.split("\n").filter((l) => !!l);
-  
+
   // File list only if:
   // 1. All non-empty lines start with ./ (file paths)
   // 2. There are no content lines (lines that don't start with ./)
-  const filePathLines = lines.filter(line => line.startsWith("./"));
-  const contentLines = lines.filter(line => !line.startsWith("./") && line !== "--");
+  const filePathLines = lines.filter((line) => line.startsWith("./"));
+  const contentLines = lines.filter(
+    (line) => !line.startsWith("./") && line !== "--",
+  );
   const isFileListOnly = filePathLines.length > 0 && contentLines.length === 0;
-  
+
   // Handle single-file results (no file path headers)
-  const isSingleFileResult = filePathLines.length === 0 && contentLines.length > 0;
+  const isSingleFileResult =
+    filePathLines.length === 0 && contentLines.length > 0;
 
   if (isFileListOnly) {
     // Handle simple file list output (e.g., from -l flag)
