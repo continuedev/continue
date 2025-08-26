@@ -9,7 +9,6 @@ import {
 import Handlebars from "handlebars";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
-import { Logger } from "../util/Logger.js";
 import { DataLogger } from "../data/log.js";
 import {
   CacheBehavior,
@@ -31,6 +30,7 @@ import {
   TemplateType,
   Usage,
 } from "../index.js";
+import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
@@ -191,6 +191,8 @@ export abstract class BaseLLM implements ILLM {
   //URI to local block defining this LLM
   sourceFile?: string;
 
+  isFromAutoDetect?: boolean;
+
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
@@ -294,6 +296,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
+    this.isFromAutoDetect = options.isFromAutoDetect;
   }
 
   get contextLength() {
