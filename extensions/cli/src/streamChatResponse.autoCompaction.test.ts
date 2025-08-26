@@ -17,6 +17,7 @@ vi.mock("./session.js", () => ({
     history,
   })),
   saveSession: vi.fn(),
+  updateSessionHistory: vi.fn(),
 }));
 
 vi.mock("./util/tokenizer.js", () => ({
@@ -36,6 +37,14 @@ vi.mock("./util/logger.js", () => ({
     warn: vi.fn(),
   },
 }));
+
+vi.mock("os", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    homedir: vi.fn(() => "/home/test"),
+  };
+});
 
 describe("handleAutoCompaction", () => {
   const mockModel = {
@@ -83,7 +92,7 @@ describe("handleAutoCompaction", () => {
       "./util/tokenizer.js"
     );
     const { compactChatHistory } = await import("./compaction.js");
-    const { saveSession } = await import("./session.js");
+    const { updateSessionHistory } = await import("./session.js");
 
     vi.mocked(shouldAutoCompact).mockReturnValue(true);
     vi.mocked(getAutoCompactMessage).mockReturnValue("Auto-compacting...");
@@ -127,10 +136,8 @@ describe("handleAutoCompaction", () => {
       mockLlmApi,
       expect.any(Object),
     );
-    expect(saveSession).toHaveBeenCalledWith(
-      expect.objectContaining({
-        history: mockCompactionResult.compactedHistory,
-      }),
+    expect(updateSessionHistory).toHaveBeenCalledWith(
+      mockCompactionResult.compactedHistory,
     );
 
     expect(mockCallbacks.onSystemMessage).toHaveBeenCalledWith(
