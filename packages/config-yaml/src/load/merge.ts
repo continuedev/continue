@@ -14,6 +14,7 @@ export function mergePackages(
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
     env: { ...current.env, ...incoming.env },
+    // TODO decide how to merge request options from two agents. For now making non-overridable
   };
 }
 
@@ -31,5 +32,6 @@ export function mergeUnrolledAssistants(
     mcpServers: [...(current.mcpServers ?? []), ...(incoming.mcpServers ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     env: { ...current.env, ...incoming.env },
+    // TODO decide how to merge request options from two agents. For now making non-overridable
   };
 }
