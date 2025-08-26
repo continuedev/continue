@@ -313,7 +313,7 @@ export async function handleAutoCompaction({
 
   try {
     logger.info("Auto-compaction triggered for TUI mode");
-    
+
     // Add compacting message
     setChatHistory((prev) => [
       ...prev,
@@ -328,13 +328,13 @@ export async function handleAutoCompaction({
 
     // Compact the unified history
     const result = await compactChatHistory(chatHistory, model, llmApi);
-    
+
     // Keep the system message and append the compaction summary
     // This replaces the old messages with a summary to reduce context size
     const systemMessage = chatHistory.find(
-      (item) => item.message.role === "system"
+      (item) => item.message.role === "system",
     );
-    
+
     const compactedMessage: ChatHistoryItem = {
       message: {
         role: "assistant" as const,
@@ -343,7 +343,7 @@ export async function handleAutoCompaction({
       contextItems: [],
       conversationSummary: result.compactionContent, // Mark this as a summary
     };
-    
+
     // Create new history with system message (if exists) and compaction summary
     const updatedHistory: ChatHistoryItem[] = systemMessage
       ? [systemMessage, compactedMessage]

@@ -92,19 +92,22 @@ describe("compaction", () => {
       const history: ChatHistoryItem[] = [
         {
           message: { role: "system", content: "System message" },
-          contextItems: []
+          contextItems: [],
         },
         {
           message: { role: "assistant", content: null as any },
-          contextItems: []
+          contextItems: [],
         },
         {
           message: { role: "assistant", content: undefined as any },
-          contextItems: []
+          contextItems: [],
         },
         {
-          message: { role: "assistant", content: `${COMPACTION_MARKER}\\nValid compaction` },
-          contextItems: []
+          message: {
+            role: "assistant",
+            content: `${COMPACTION_MARKER}\\nValid compaction`,
+          },
+          contextItems: [],
         },
       ];
 
@@ -152,18 +155,18 @@ describe("compaction", () => {
       expect(result).toEqual([
         {
           message: { role: "system", content: "System message" },
-          contextItems: []
+          contextItems: [],
         },
         {
           message: {
             role: "assistant",
             content: `${COMPACTION_MARKER}\nThis is a summary`,
           },
-          contextItems: []
+          contextItems: [],
         },
         {
           message: { role: "user", content: "Another message" },
-          contextItems: []
+          contextItems: [],
         },
       ]);
     });
@@ -200,10 +203,12 @@ describe("compaction", () => {
       const result = getHistoryForLLM(history, -1);
       // Negative index with slice means "from the end", so -1 gives us only the last message
       // Since compactionIndex is not > 0, system message is not included
-      expect(result).toEqual([{
-        message: { role: "user", content: "Hello" },
-        contextItems: []
-      }]);
+      expect(result).toEqual([
+        {
+          message: { role: "user", content: "Hello" },
+          contextItems: [],
+        },
+      ]);
     });
 
     it("should handle empty history", () => {
@@ -231,12 +236,15 @@ describe("compaction", () => {
       const result = getHistoryForLLM(history, 1);
       expect(result).toEqual([
         {
-          message: { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-          contextItems: []
+          message: {
+            role: "assistant",
+            content: `${COMPACTION_MARKER}\nSummary`,
+          },
+          contextItems: [],
         },
         {
           message: { role: "user", content: "New message" },
-          contextItems: []
+          contextItems: [],
         },
       ]);
     });
@@ -253,12 +261,15 @@ describe("compaction", () => {
       const result = getHistoryForLLM(history, 2);
       expect(result).toEqual([
         {
-          message: { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-          contextItems: []
+          message: {
+            role: "assistant",
+            content: `${COMPACTION_MARKER}\nSummary`,
+          },
+          contextItems: [],
         },
         {
           message: { role: "user", content: "New message" },
-          contextItems: []
+          contextItems: [],
         },
       ]);
     });
@@ -278,23 +289,26 @@ describe("compaction", () => {
       expect(result).toEqual([
         {
           message: { role: "system", content: "System" },
-          contextItems: []
+          contextItems: [],
         },
         {
-          message: { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-          contextItems: []
+          message: {
+            role: "assistant",
+            content: `${COMPACTION_MARKER}\nSummary`,
+          },
+          contextItems: [],
         },
         {
           message: { role: "user", content: "New 1" },
-          contextItems: []
+          contextItems: [],
         },
         {
           message: { role: "assistant", content: "New 2" },
-          contextItems: []
+          contextItems: [],
         },
         {
           message: { role: "user", content: "New 3" },
-          contextItems: []
+          contextItems: [],
         },
       ]);
     });
@@ -327,7 +341,7 @@ describe("compaction", () => {
           role: "system",
           content: "System message",
         },
-        contextItems: []
+        contextItems: [],
       });
       expect(result.compactedHistory[1]).toEqual({
         message: {
@@ -335,7 +349,7 @@ describe("compaction", () => {
           content: `${COMPACTION_MARKER}\n${mockContent}`,
         },
         contextItems: [],
-        conversationSummary: mockContent
+        conversationSummary: mockContent,
       });
       expect(result.compactionIndex).toBe(1);
       expect(result.compactionContent).toBe(mockContent);

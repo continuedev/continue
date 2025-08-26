@@ -123,7 +123,7 @@ export function saveSession(session: Session): void {
 function updateSessionsList(session: Session): void {
   try {
     const sessionsListFilePath = getSessionsListPath();
-    
+
     // Read and update the sessions list (following core/util/history.ts pattern)
     try {
       const rawSessionsList = fs.readFileSync(sessionsListFilePath, "utf-8");
@@ -149,7 +149,8 @@ function updateSessionsList(session: Session): void {
       for (const sessionMetadata of sessionsList) {
         if (sessionMetadata.sessionId === session.sessionId) {
           sessionMetadata.title = session.title || "Untitled Session";
-          sessionMetadata.workspaceDirectory = session.workspaceDirectory || process.cwd();
+          sessionMetadata.workspaceDirectory =
+            session.workspaceDirectory || process.cwd();
           found = true;
           break;
         }

@@ -143,7 +143,10 @@ describe("handleAutoCompaction", () => {
     expect(result).toEqual({
       chatHistory: [
         { role: "system", content: "You are a helpful assistant." },
-        { role: "assistant", content: "[COMPACTED HISTORY]\nConversation summary..." },
+        {
+          role: "assistant",
+          content: "[COMPACTED HISTORY]\nConversation summary...",
+        },
       ],
       compactionIndex: mockCompactionResult.compactionIndex,
     });
