@@ -178,7 +178,7 @@
       {
         "command": "continue.focusEdit",
         "category": "Continue",
-        "title": "Edit Highlighted Code",
+        "title": "Add to Edit",
         "group": "Continue"
       },
       {
@@ -190,7 +190,7 @@
       {
         "command": "continue.focusContinueInputWithoutClear",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context",
+        "title": "Add to Chat",
         "group": "Continue"
       },
       {
@@ -532,31 +532,6 @@
           "command": "continue.focusEdit",
           "group": "Continue",
           "when": "editorHasSelection && !editorReadonly"
-        },
-        {
-          "command": "continue.writeCommentsForCode",
-          "group": "Continue",
-          "when": "editorHasSelection && !editorReadonly"
-        },
-        {
-          "command": "continue.writeDocstringForCode",
-          "group": "Continue",
-          "when": "editorHasSelection && !editorReadonly"
-        },
-        {
-          "command": "continue.fixCode",
-          "group": "Continue",
-          "when": "editorHasSelection && !editorReadonly"
-        },
-        {
-          "command": "continue.optimizeCode",
-          "group": "Continue",
-          "when": "editorHasSelection && !editorReadonly"
-        },
-        {
-          "command": "continue.fixGrammar",
-          "group": "Continue",
-          "when": "editorHasSelection && editorLangId == 'markdown' && !editorReadonly"
         }
       ],
       "explorer/context": [
