@@ -42,15 +42,26 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 }
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
+  const rawQuery = getStringArg(args, "query");
+  const extraArgs = getOptionalStringArrayArg(args, "args");
+  const path = args.path as string | undefined;
+
+  let results: string;
+  let queryWarning: string | undefined;
 
   try {
-    const rawQuery = getStringArg(args, "query");
+    // const { query, warning } = prepareQueryForRipgrep(rawQuery);
+    // queryWarning = warning;
+    const query: string = rawQuery;
+    
+    const ripgrepArgs = buildRipgrepArgs(query, {
+      extraArgs,
+      maxResults: DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
+      path,
+    });
 
-    const { query, warning } = prepareQueryForRipgrep(rawQuery);
-
-    let results: string;
     results = await extras.ide.getSearchResults(
-      query,
+      ripgrepArgs,
       DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
     );
   } catch (error) {
@@ -62,27 +73,13 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
         {
           name: "Search error",
           description: "The search query could not be processed",
-          content: `The search failed due to an invalid regex pattern.\n\nOriginal query: ${rawQuery}\nProcessed query: ${query}\n\nError: ${errorMessage}\n\nTip: If you're searching for literal text with special characters, the query was automatically escaped. If you need regex patterns, ensure they use proper regex syntax.`,
+          content: `The search failed due to an invalid regex pattern.\n\nOriginal query: ${rawQuery}\n\nError: ${errorMessage}\n\nTip: If you're searching for literal text with special characters, the query was automatically escaped. If you need regex patterns, ensure they use proper regex syntax.`,
         },
       ];
     }
 
     throw error;
   }
-
-  const query = getStringArg(args, "query");
-  const extraArgs = getOptionalStringArrayArg(args, "args");
-  const path = args.path as string | undefined;
-  const ripgrepArgs = buildRipgrepArgs(query, {
-    extraArgs,
-    maxResults: DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
-    path,
-  });
-
-  const results = await extras.ide.getSearchResults(
-    ripgrepArgs,
-    DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
-  );
   const { formatted, numResults, truncated } = formatGrepSearchResults(
     results,
     DEFAULT_GREP_SEARCH_CHAR_LIMIT,
@@ -126,14 +123,12 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
   }
 
   // Add warnings about query modifications or truncation
-  const warnings: string[] = [];
-  if (warning) {
-    warnings.push(warning);
-  }
-  if (truncationReasons.length > 0) {
-    warnings.push(
-      `Results were truncated because ${truncationReasons.join(" and ")}`,
-    );
+  if (queryWarning) {
+    contextItems.push({
+      name: "Query warning",
+      description: "Information about query processing",
+      content: queryWarning,
+    });
   }
 
   if (truncationReasons.length > 0) {

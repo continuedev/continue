@@ -89,6 +89,7 @@ export function buildRipgrepArgs(
 
   let before = DEFAULT_CONTEXT_BEFORE;
   let after = DEFAULT_CONTEXT_AFTER;
+  let useLineNumbers = false;
   const remaining: string[] = [];
 
   for (let i = 0; i < sanitized.length; i++) {
@@ -111,6 +112,12 @@ export function buildRipgrepArgs(
         continue;
       }
     }
+    // Detect line number flag
+    if (arg === "-n" || arg === "--line-number") {
+      useLineNumbers = true;
+      remaining.push(arg);
+      continue;
+    }
     remaining.push(arg);
   }
 
@@ -120,7 +127,11 @@ export function buildRipgrepArgs(
     args.push("-A", after.toString(), "-B", before.toString());
   }
 
-  args.push(HEADING_FLAG);
+  // Only use --heading if line numbers are NOT requested
+  // --heading and -n are mutually exclusive in ripgrep
+  if (!useLineNumbers) {
+    args.push(HEADING_FLAG);
+  }
 
   if (typeof maxResults === "number") {
     args.push("-m", maxResults.toString());
@@ -130,6 +141,7 @@ export function buildRipgrepArgs(
 
   // Determine search target (path or current directory)
   const searchTarget = path ? validateSearchPath(path) : ".";
+  console.log(`[DEBUG] Final ripgrep args: ${JSON.stringify(args.concat(["-e", validatedQuery, searchTarget]))}`);
   args.push("-e", validatedQuery, searchTarget);
   return args;
 }
@@ -157,17 +169,44 @@ export function formatGrepSearchResults(
   let numResults = 0;
   const keepLines: string[] = [];
 
-  // Check if this looks like a simple file list (all lines start with ./ and no content)
+  // Check if this looks like a simple file list (only file paths, no content)
   const lines = results.split("\n").filter((l) => !!l);
-  const isFileListOnly =
-    lines.length > 0 &&
-    lines.every((line) => line.startsWith("./") || line === "No matches found");
+  
+  // File list only if:
+  // 1. All non-empty lines start with ./ (file paths)
+  // 2. There are no content lines (lines that don't start with ./)
+  const filePathLines = lines.filter(line => line.startsWith("./"));
+  const contentLines = lines.filter(line => !line.startsWith("./") && line !== "--");
+  const isFileListOnly = filePathLines.length > 0 && contentLines.length === 0;
+  
+  // Handle single-file results (no file path headers)
+  const isSingleFileResult = filePathLines.length === 0 && contentLines.length > 0;
 
   if (isFileListOnly) {
     // Handle simple file list output (e.g., from -l flag)
     const fileLines = lines.filter((line) => line.startsWith("./"));
     numResults = fileLines.length;
     const formatted = fileLines.join("\n");
+
+    if (maxChars && formatted.length > maxChars) {
+      return {
+        formatted: formatted.substring(0, maxChars),
+        numResults,
+        truncated: true,
+      };
+    } else {
+      return {
+        formatted,
+        numResults,
+        truncated: false,
+      };
+    }
+  }
+
+  if (isSingleFileResult) {
+    // Handle single-file results (no file path headers)
+    numResults = 1;
+    const formatted = lines.join("\n");
 
     if (maxChars && formatted.length > maxChars) {
       return {
@@ -238,8 +277,8 @@ export function formatGrepSearchResults(
       continue;
     }
 
-    // Exclude leading zero- or single-char lines
-    if (resultLines.length === 1 && line.trim().length <= 1) {
+    // Skip completely empty lines, but keep single-char content that might be meaningful
+    if (resultLines.length === 1 && line.trim().length === 0) {
       continue;
     }
 
