@@ -1052,10 +1052,11 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
+    const llm = config.selectedModelByRole.chat;
     const result = await callTool(tool, toolCall, {
       config,
       ide: this.ide,
-      llm: config.selectedModelByRole.chat,
+      llm,
       fetch: (url, init) =>
         fetchwithRequestOptions(url, init, config.requestOptions),
       tool,
@@ -1301,6 +1302,8 @@ export class Core {
         selectedCode,
         reranker: config.selectedModelByRole.rerank,
         fetch: (url, init) =>
+          // Important note: context providers fetch uses global request options not LLM request options
+          // Because LLM calls are handled separately
           fetchwithRequestOptions(url, init, config.requestOptions),
         isInAgentMode: msg.data.isInAgentMode,
       });

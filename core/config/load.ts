@@ -214,8 +214,8 @@ function applyRequestOptionsToModels(
   // Prepare models
   for (const model of models) {
     model.requestOptions = {
-      ...model.requestOptions,
       ...config.requestOptions,
+      ...model.requestOptions,
     };
     if (roles !== undefined) {
       model.roles = model.roles ?? roles;

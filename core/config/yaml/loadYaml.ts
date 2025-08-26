@@ -4,6 +4,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   isAssistantUnrolledNonNullable,
+  mergeConfigYamlRequestOptions,
   mergeUnrolledAssistants,
   ModelRole,
   PackageIdentifier,
@@ -190,6 +191,7 @@ async function configYamlToContinueConfig(options: {
       summarize: null,
     },
     rules: [],
+    requestOptions: { ...config.requestOptions },
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
@@ -210,7 +212,13 @@ async function configYamlToContinueConfig(options: {
     continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
   }
 
-  continueConfig.data = config.data;
+  continueConfig.data = config.data?.map((d) => ({
+    ...d,
+    requestOptions: mergeConfigYamlRequestOptions(
+      d.requestOptions,
+      continueConfig.requestOptions,
+    ),
+  }));
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -386,6 +394,10 @@ async function configYamlToContinueConfig(options: {
       transport: {
         type: "stdio",
         args: [],
+        requestOptions: mergeConfigYamlRequestOptions(
+          server.requestOptions,
+          config.requestOptions,
+        ),
         ...(server as any), // TODO: fix the types on mcpServers in config-yaml
       },
       timeout: server.connectionTimeout,

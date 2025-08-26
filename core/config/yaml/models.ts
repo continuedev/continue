@@ -1,4 +1,7 @@
-import { ModelConfig } from "@continuedev/config-yaml";
+import {
+  mergeConfigYamlRequestOptions,
+  ModelConfig,
+} from "@continuedev/config-yaml";
 
 import {
   ContinueConfig,
@@ -209,8 +212,15 @@ export async function llmsFromModelConfig({
   llmLogger: ILLMLogger;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
+  const requestOptions = mergeConfigYamlRequestOptions(
+    model.requestOptions,
+    config.requestOptions,
+  );
   const baseLlm = await modelConfigToBaseLLM({
-    model,
+    model: {
+      ...model,
+      requestOptions,
+    },
     uniqueId,
     ideSettings,
     llmLogger,

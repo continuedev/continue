@@ -1,3 +1,4 @@
+import { RequestOptions } from "../browser.js";
 import { AssistantUnrolled, ConfigYaml } from "../schemas/index.js";
 
 export function mergePackages(
@@ -33,5 +34,31 @@ export function mergeUnrolledAssistants(
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     env: { ...current.env, ...incoming.env },
     // TODO decide how to merge request options from two agents. For now making non-overridable
+  };
+}
+
+export function mergeConfigYamlRequestOptions(
+  base: RequestOptions | undefined,
+  global: RequestOptions | undefined,
+): RequestOptions | undefined {
+  if (!base && !global) {
+    return undefined;
+  }
+  if (!base) {
+    return global;
+  }
+  if (!global) {
+    return base;
+  }
+
+  const headers = {
+    ...global.headers,
+    ...base.headers,
+  };
+
+  return {
+    ...global,
+    ...base, // base overrides for simple values as well as noProxy and extraBodyProperties
+    headers: Object.keys(headers).length === 0 ? undefined : headers, // headers are the only thing that really merge
   };
 }

@@ -95,7 +95,7 @@ export async function* llmStreamChat(
               ...init,
               signal: abortController.signal,
             },
-            config.requestOptions,
+            model.requestOptions,
           ),
         completionOptions,
         abortController,
