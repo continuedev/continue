@@ -11,7 +11,10 @@ import { Tool } from "./types.js";
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
-  description: "Executes a terminal command and returns the output",
+  description: `Executes a terminal command and returns the output
+
+The command will be executed from the current working directory: ${process.cwd()}
+`,
   parameters: {
     command: {
       type: "string",
