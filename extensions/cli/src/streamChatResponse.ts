@@ -452,8 +452,8 @@ export async function streamChatResponse(
   abortController: AbortController,
   callbacks?: StreamCallbacks,
 ) {
-  // Convert to legacy format for processing
-  const legacyHistory = convertFromUnifiedHistory(chatHistory);
+  // Convert to OpenAI format for processing
+  const openaiHistory = convertFromUnifiedHistory(chatHistory);
 
   logger.debug("streamChatResponse called", {
     model,
@@ -483,7 +483,7 @@ export async function streamChatResponse(
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
-        chatHistory: legacyHistory,
+        chatHistory: openaiHistory,
         model,
         llmApi,
         abortController,
@@ -508,7 +508,7 @@ export async function streamChatResponse(
     // Handle tool calls and check for early return
     const shouldReturn = await handleToolCalls(
       toolCalls,
-      legacyHistory,
+      openaiHistory,
       content,
       callbacks,
       isHeadless,
@@ -521,7 +521,7 @@ export async function streamChatResponse(
     // Check for auto-compaction after tool execution
     if (shouldContinue) {
       const { chatHistory: updatedChatHistory, compactionIndex } =
-        await handleAutoCompaction(legacyHistory, model, llmApi, {
+        await handleAutoCompaction(openaiHistory, model, llmApi, {
           isHeadless,
           callbacks: {
             onSystemMessage: callbacks?.onSystemMessage,
@@ -530,9 +530,9 @@ export async function streamChatResponse(
         });
 
       // Only update chat history if compaction actually occurred
-      if (compactionIndex !== null && updatedChatHistory !== legacyHistory) {
-        legacyHistory.length = 0;
-        legacyHistory.push(...updatedChatHistory);
+      if (compactionIndex !== null && updatedChatHistory !== openaiHistory) {
+        openaiHistory.length = 0;
+        openaiHistory.push(...updatedChatHistory);
       }
     }
 
@@ -544,7 +544,7 @@ export async function streamChatResponse(
 
   logger.debug("streamChatResponse complete", {
     totalResponseLength: fullResponse.length,
-    totalMessages: legacyHistory.length,
+    totalMessages: openaiHistory.length,
   });
 
   // For headless mode, we return only the final response

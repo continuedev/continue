@@ -31,7 +31,7 @@ describe("E2E: Authentication", () => {
         JSON.stringify({
           accessToken: "test-token",
           user: { id: "test-user", email: "test@example.com" },
-        })
+        }),
       );
 
       // Run logout
