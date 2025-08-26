@@ -198,6 +198,7 @@ class NextEditJumpManager(private val project: Project) {
             .setCancelOnClickOutside(false)
             .setCancelOnWindowDeactivation(false)
             .setCancelKeyEnabled(false)
+            .setModalContext(true)
             .setCancelCallback {
                 if (jumpState.inProgress && !jumpState.justAccepted) {
                     rejectJump()
@@ -205,6 +206,18 @@ class NextEditJumpManager(private val project: Project) {
                 true
             }
             .createPopup()
+
+        jumpPopup?.content?.addFocusListener(object : java.awt.event.FocusAdapter() {
+            override fun focusLost(e: java.awt.event.FocusEvent?) {
+                if (e?.isTemporary == false && jumpPopup?.isVisible == true && jumpState.inProgress && !jumpState.justAccepted) {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (jumpPopup?.isVisible == true && !jumpPopup!!.isDisposed) {
+                            popupComponent.requestFocusInWindow()
+                        }
+                    }
+                }
+            }
+        })
 
         // Show popup and ensure focus
         ApplicationManager.getApplication().invokeLater {
