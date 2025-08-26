@@ -293,7 +293,8 @@ class NextEditWindowManager(private val project: Project) {
             val uiScale = JBUI.scale(1f)
 //            val adjustedLineHeight = if (uiScale > 1f) (editorLineHeight / uiScale).toInt() else editorLineHeight
 
-            val adjustedLineHeight = actualFontSize
+//            val adjustedLineHeight = actualFontSize
+            val adjustedLineHeight = editor.colorsScheme.lineSpacing
 
             // Get file type for proper syntax highlighting
             val fileType = getCurrentFileType(editor)
@@ -346,7 +347,7 @@ class NextEditWindowManager(private val project: Project) {
                     alignmentX = Component.LEFT_ALIGNMENT
 
                     // Create font with correct size
-                    font = Font(fontFamily, editorFont.style, actualFontSize)
+//                    font = Font(fontFamily, editorFont.style, actualFontSize)
                 }
 
                 maxWidth = maxOf(maxWidth, label.preferredSize.width + 12)
@@ -382,7 +383,7 @@ class NextEditWindowManager(private val project: Project) {
         scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
         fontFamily: String,
         fontSize: Int,
-        lineHeight: Int,
+        lineHeight: Float,
         backgroundColor: Color
     ): String {
         // Convert background color to hex
@@ -391,7 +392,7 @@ class NextEditWindowManager(private val project: Project) {
 
         if (text.trim().isEmpty()) {
             return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; background-color:$backgroundHex;'>&nbsp;</div>" +
+                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}pt; line-height:${lineHeight}; background-color:$backgroundHex;'>&nbsp;</div>" +
                     "</body></html>"
         }
 
@@ -482,7 +483,7 @@ class NextEditWindowManager(private val project: Project) {
             }
 
             val toReturn = "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; background-color:$backgroundHex;'>$highlightedText</div>" +
+                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}pt; line-height:${lineHeight}; background-color:$backgroundHex;'>$highlightedText</div>" +
                     "</body></html>"
             return toReturn
 
@@ -496,7 +497,7 @@ class NextEditWindowManager(private val project: Project) {
         text: String,
         fontFamily: String,
         fontSize: Int,
-        lineHeight: Int, // Added lineHeight parameter
+        lineHeight: Float, // Added lineHeight parameter
         scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
         backgroundColor: Color
     ): String {
@@ -507,7 +508,7 @@ class NextEditWindowManager(private val project: Project) {
             String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
 
         return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; color:$foregroundHex; background-color:$backgroundHex;'>${
+                "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}pt; line-height:${lineHeight}; color:$foregroundHex; background-color:$backgroundHex;'>${
                     escapeHtml(
                         text
                     )
