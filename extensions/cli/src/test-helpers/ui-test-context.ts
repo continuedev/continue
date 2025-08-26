@@ -72,7 +72,7 @@ export function createUITestContext(
     responseStartTime: null,
     inputMode: true,
     attachedFiles: [],
-    handleUserMessage: vi.fn(),
+    handleUserMessage: vi.fn().mockResolvedValue(undefined),
     handleInterrupt: vi.fn(),
     handleFileAttached: vi.fn(),
     resetChatHistory: vi.fn(),

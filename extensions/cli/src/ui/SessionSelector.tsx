@@ -64,7 +64,7 @@ export function SessionSelector({
       if (displaySessions[selectedIndex]) {
         onSelect(displaySessions[selectedIndex].id);
       }
-    } else if (key.escape || (key.ctrl && input === "c")) {
+    } else if (key.escape || (key.ctrl && input === "d")) {
       onExit();
     }
   });

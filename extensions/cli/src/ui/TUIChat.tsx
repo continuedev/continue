@@ -1,5 +1,11 @@
 import { Box, Text } from "ink";
-import React, { useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { useServices } from "../hooks/useService.js";
 import {
@@ -9,8 +15,10 @@ import {
   MCPServiceState,
   ModelServiceState,
 } from "../services/types.js";
+import { logger } from "../util/logger.js";
 
 import { BottomStatusBar } from "./components/BottomStatusBar.js";
+import { ResourceDebugBar } from "./components/ResourceDebugBar.js";
 import { ScreenContent } from "./components/ScreenContent.js";
 import { StaticChatContent } from "./components/StaticChatContent.js";
 import { useNavigation } from "./context/NavigationContext.js";
@@ -36,23 +44,61 @@ interface TUIChatProps {
   initialPrompt?: string;
   resume?: boolean;
   additionalRules?: string[];
+  additionalPrompts?: string[];
 }
 
-const TUIChat: React.FC<TUIChatProps> = ({
-  remoteUrl,
-  configPath,
-  initialPrompt,
-  resume,
-  additionalRules,
-}) => {
-  // Check if we're in remote mode
-  const isRemoteMode = useMemo(() => {
-    return !!remoteUrl;
-  }, [remoteUrl]);
+// Helper function to load and set session
+async function loadAndSetSession(
+  sessionId: string,
+  closeCurrentScreen: () => void,
+  setChatHistory: (history: any) => void,
+  setMessages: (messages: any) => void,
+  setShowIntroMessage: (show: boolean) => void,
+) {
+  try {
+    // Close the session selector
+    closeCurrentScreen();
 
-  const repoURlText = useMemo(() => getRepoUrlText(remoteUrl), [remoteUrl]);
+    // Import session functions
+    const { loadSessionById } = await import("../session.js");
 
-  // Get all services reactively - only in normal mode
+    // Load the session history
+    const sessionHistory = loadSessionById(sessionId);
+    if (!sessionHistory) {
+      logger.error(`Session ${sessionId} could not be loaded.`);
+      return;
+    }
+
+    // Set the session ID so future operations use this session
+    process.env.CONTINUE_CLI_TEST_SESSION_ID = sessionId.replace(
+      "continue-cli-",
+      "",
+    );
+
+    // Directly set the chat history and messages to the loaded session
+    setChatHistory(sessionHistory);
+
+    // Convert chat history to display messages (exclude system messages)
+    const displayMessages = sessionHistory
+      .filter((msg: any) => msg.role !== "system")
+      .map((msg: any) => ({
+        role: msg.role,
+        content: msg.content as string,
+      }));
+
+    setMessages(displayMessages);
+
+    // Clear the intro message since we're now showing a resumed session
+    setShowIntroMessage(false);
+  } catch (error) {
+    console.error("Error loading session:", error);
+  }
+}
+
+// Custom hook to manage services
+function useTUIChatServices(remoteUrl?: string) {
+  const isRemoteMode = useMemo(() => !!remoteUrl, [remoteUrl]);
+
   const { services, allReady: allServicesReady } = useServices<{
     auth: AuthServiceState;
     config: ConfigServiceState;
@@ -60,6 +106,57 @@ const TUIChat: React.FC<TUIChatProps> = ({
     mcp: MCPServiceState;
     apiClient: ApiClientServiceState;
   }>(["auth", "config", "model", "mcp", "apiClient"]);
+
+  return { services, allServicesReady, isRemoteMode };
+}
+
+// Custom hook for chat handlers
+function useChatHandlers(
+  setShowIntroMessage: (show: boolean) => void,
+  setStaticRefreshTrigger: React.Dispatch<React.SetStateAction<number>>,
+) {
+  // Temporary refs to avoid circular dependency
+  const resetChatHistoryRef = useRef<(() => void) | null>(null);
+
+  // Handle clearing chat and resetting intro message
+  const handleClear = useCallback(() => {
+    setShowIntroMessage(true);
+    // Trigger static content refresh by incrementing the trigger
+    setStaticRefreshTrigger((prev) => prev + 1);
+  }, [setShowIntroMessage, setStaticRefreshTrigger]);
+
+  // Service reload handlers - these will trigger reactive updates
+  const handleReload = useCallback(async () => {
+    // Services will automatically update the UI when they reload
+    // We just need to reset chat history, intro message, and clear the screen
+    if (resetChatHistoryRef.current) {
+      resetChatHistoryRef.current();
+    }
+    setShowIntroMessage(false);
+    process.stdout.write("\x1b[2J\x1b[H");
+  }, [setShowIntroMessage]);
+
+  return {
+    handleClear,
+    handleReload,
+    resetChatHistoryRef,
+  };
+}
+
+// eslint-disable-next-line complexity
+const TUIChat: React.FC<TUIChatProps> = ({
+  remoteUrl,
+  configPath,
+  initialPrompt,
+  resume,
+  additionalRules,
+  additionalPrompts,
+}) => {
+  // Use custom hook for services
+  const { services, allServicesReady, isRemoteMode } =
+    useTUIChatServices(remoteUrl);
+
+  const repoURlText = useMemo(() => getRepoUrlText(remoteUrl), [remoteUrl]);
 
   // Use navigation context
   const {
@@ -86,24 +183,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
     closeCurrentScreen,
   );
 
-  // Service reload handlers - these will trigger reactive updates
-  const handleReload = async () => {
-    // Services will automatically update the UI when they reload
-    // We just need to reset chat history, intro message, and clear the screen
-    resetChatHistory();
-    setShowIntroMessage(false);
-    process.stdout.write("\x1b[2J\x1b[H");
-  };
-
   // State to trigger static content refresh for /clear command
   const [staticRefreshTrigger, setStaticRefreshTrigger] = useState(0);
 
-  // Handle clearing chat and resetting intro message
-  const handleClear = () => {
-    setShowIntroMessage(true);
-    // Trigger static content refresh by incrementing the trigger
-    setStaticRefreshTrigger((prev) => prev + 1);
-  };
+  // Use chat handlers hook
+  const { handleClear, handleReload, resetChatHistoryRef } = useChatHandlers(
+    setShowIntroMessage,
+    setStaticRefreshTrigger,
+  );
 
   const {
     messages,
@@ -126,6 +213,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     initialPrompt,
     resume,
     additionalRules,
+    additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
     onShowModelSelector: () => navigateTo("model"),
     onShowMCPSelector: () => navigateTo("mcp"),
@@ -137,6 +225,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isRemoteMode,
     remoteUrl,
   });
+
+  // Update ref after useChat returns
+  useEffect(() => {
+    resetChatHistoryRef.current = resetChatHistory;
+  }, [resetChatHistory]);
 
   // Calculate context percentage
   const contextData = useContextPercentage({
@@ -153,51 +246,26 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 
   // Session selection handler
-  const handleSessionSelect = async (sessionId: string) => {
-    try {
-      // Close the session selector
-      closeCurrentScreen();
-
-      // Import session functions
-      const { loadSessionById } = await import("../session.js");
-
-      // Load the session history
-      const sessionHistory = loadSessionById(sessionId);
-      if (!sessionHistory) {
-        console.error(`Session ${sessionId} could not be loaded.`);
-        return;
-      }
-
-      // Set the session ID so future operations use this session
-      process.env.CONTINUE_CLI_TEST_SESSION_ID = sessionId.replace(
-        "continue-cli-",
-        "",
+  const handleSessionSelect = useCallback(
+    async (sessionId: string) => {
+      await loadAndSetSession(
+        sessionId,
+        closeCurrentScreen,
+        setChatHistory,
+        setMessages,
+        setShowIntroMessage,
       );
-
-      // Directly set the chat history and messages to the loaded session
-      setChatHistory(sessionHistory);
-
-      // Convert chat history to display messages (exclude system messages)
-      const displayMessages = sessionHistory
-        .filter((msg) => msg.role !== "system")
-        .map((msg) => ({
-          role: msg.role,
-          content: msg.content as string,
-        }));
-
-      setMessages(displayMessages);
-
-      // Clear the intro message since we're now showing a resumed session
-      setShowIntroMessage(false);
-    } catch (error) {
-      console.error("Error loading session:", error);
-    }
-  };
+    },
+    [closeCurrentScreen, setChatHistory, setMessages, setShowIntroMessage],
+  );
 
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
     navState.currentScreen !== "chat" || !!activePermissionRequest;
+
+  // Check if verbose mode is enabled for resource debugging
+  const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
 
   return (
     <Box flexDirection="column" height="100%">
@@ -264,6 +332,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isInputDisabled={isInputDisabled}
           isRemoteMode={isRemoteMode}
         />
+
+        {/* Resource debug bar - only in verbose mode */}
+        {isVerboseMode && !isRemoteMode && (
+          <ResourceDebugBar visible={navState.currentScreen === "chat"} />
+        )}
 
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar

@@ -44,6 +44,7 @@ runs:
     - name: Setup FFmpeg
       uses: AnimMouse/setup-ffmpeg@v1
       with:
+        version: 7.1
         token: ${{ inputs.github-token }}
 
     - name: Setup Gradle
@@ -135,14 +136,22 @@ runs:
       shell: bash
       run: |
         cd extensions/intellij
-        mv video build/reports
+        if [ -d "video" ]; then
+          mv video build/reports
+        else
+          echo "No video directory found to move"
+        fi
 
     - name: Copy logs
       if: ${{ failure() }}
       shell: bash
       run: |
         cd extensions/intellij
-        mv build/idea-sandbox/system/log/ build/reports
+        if [ -d "build/idea-sandbox/system/log/" ]; then
+          mv build/idea-sandbox/system/log/ build/reports
+        else
+          echo "No log directory found to copy"
+        fi
 
     - name: Save fails report
       if: ${{ failure() }}

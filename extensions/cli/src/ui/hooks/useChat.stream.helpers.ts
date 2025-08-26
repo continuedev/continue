@@ -111,6 +111,16 @@ export function createStreamCallbacks(
         toolCallPreview,
       });
     },
+    onSystemMessage: (message: string) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content: message,
+          messageType: "system" as const,
+        },
+      ]);
+    },
   };
 }
 

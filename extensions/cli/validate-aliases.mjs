@@ -42,10 +42,14 @@ function getDefinedAliases() {
     }
     
     // Look for package names in non-commented lines
-    // Match both @continuedev/* packages and simple package names like "core"
-    const packageMatch = line.match(/"(@continuedev\/[^"]+|[^"@\/]+)":/);
-    if (packageMatch) {
-      aliases.add(packageMatch[1]);
+    // Match both quoted and unquoted keys
+    const quotedMatch = line.match(/"([^"]+)":/);
+    const unquotedMatch = line.match(/\s+([a-zA-Z@][a-zA-Z0-9@\/_-]*)\s*:/);
+    
+    if (quotedMatch) {
+      aliases.add(quotedMatch[1]);
+    } else if (unquotedMatch && !unquotedMatch[1].includes('__dirname') && unquotedMatch[1] !== 'js') {
+      aliases.add(unquotedMatch[1]);
     }
   }
   
