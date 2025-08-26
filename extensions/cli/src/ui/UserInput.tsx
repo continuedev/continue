@@ -294,8 +294,10 @@ const UserInput: React.FC<UserInputProps> = ({
       if (onFileAttached) {
         try {
           const fs = await import("fs/promises");
-          const content = await fs.readFile(filePath, "utf-8");
-          onFileAttached(filePath, content);
+          const path = await import("path");
+          const absolutePath = path.resolve(filePath);
+          const content = await fs.readFile(absolutePath, "utf-8");
+          onFileAttached(absolutePath, content);
         } catch (error) {
           console.error(`Error reading file ${filePath}:`, error);
         }

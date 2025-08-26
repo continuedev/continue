@@ -5,7 +5,11 @@ import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
-import { createSession, loadSession, saveSession } from "../../session.js";
+import {
+  createSession,
+  loadSession,
+  updateSessionHistory,
+} from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
@@ -221,7 +225,7 @@ export function useChat({
           ...currentSession,
           history: currentHistory,
         };
-        saveSession(updatedSession);
+        updateSessionHistory(currentHistory);
         setCurrentSession(updatedSession);
         logger.debug("Session saved");
         return currentHistory;

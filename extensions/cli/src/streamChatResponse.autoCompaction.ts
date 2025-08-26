@@ -10,7 +10,7 @@ import {
   convertFromUnifiedHistory,
   convertToUnifiedHistory,
 } from "./messageConversion.js";
-import { createSession, saveSession } from "./session.js";
+import { updateSessionHistory } from "./session.js";
 import { formatError } from "./util/formatError.js";
 import { logger } from "./util/logger.js";
 import { getAutoCompactMessage, shouldAutoCompact } from "./util/tokenizer.js";
@@ -166,8 +166,7 @@ export async function handleAutoCompaction(
     );
 
     // Save the compacted session
-    const session = createSession(result.compactedHistory);
-    saveSession(session);
+    updateSessionHistory(result.compactedHistory);
 
     // Handle success notification
     handleCompactionSuccess(result, isHeadless, callbacks);

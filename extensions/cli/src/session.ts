@@ -9,6 +9,7 @@ import type {
   Session,
   SessionMetadata,
 } from "../../../core/index.js";
+import historyManager from "../../../core/util/history.js";
 
 // Re-export SessionMetadata for external consumers
 export type { SessionMetadata };
@@ -44,21 +45,6 @@ function getSessionDir(): string {
   }
 
   return sessionDir;
-}
-
-/**
- * Get the sessions list file path
- */
-function getSessionsListPath(): string {
-  const sessionDir = getSessionDir();
-  const listPath = path.join(sessionDir, "sessions.json");
-
-  // Initialize with empty array if doesn't exist
-  if (!fs.existsSync(listPath)) {
-    fs.writeFileSync(listPath, JSON.stringify([]));
-  }
-
-  return listPath;
 }
 
 /**
@@ -103,11 +89,13 @@ class SessionManager {
   updateHistory(history: ChatHistoryItem[]): void {
     const session = this.getCurrentSession();
     session.history = history;
+    saveSession();
   }
 
   updateTitle(title: string): void {
     const session = this.getCurrentSession();
     session.title = title;
+    saveSession();
   }
 
   clear(): void {
@@ -127,104 +115,38 @@ function getCurrentSessionId(): string {
   return SessionManager.getInstance().getSessionId();
 }
 
+function modifySessionBeforeSave(session: Session): Session {
+  const filteredHistory = session.history.filter((item) => {
+    return item.message.role !== "system";
+  });
+
+  const modifiedHistory = filteredHistory.map((item) => {
+    if (item.message.role === "user") {
+      return {
+        ...item,
+        editorState: item.message.content,
+      };
+    }
+
+    return item;
+  });
+
+  return {
+    ...session,
+    history: modifiedHistory,
+  };
+}
+
 /**
  * Save the current session to file
  */
 export function saveSession(): void {
   try {
     const session = SessionManager.getInstance().getCurrentSession();
-
-    // Filter out system messages except for the first one
-    // TODO: Properly handle system messages vs informational messages in the future
-    const filteredHistory = session.history.filter((item, index) => {
-      return index === 0 || item.message.role !== "system";
-    });
-
-    const sessionToSave: Session = {
-      ...session,
-      history: filteredHistory,
-    };
-
-    const sessionFilePath = path.join(
-      getSessionDir(),
-      `${session.sessionId}.json`,
-    );
-
-    // Write the session file
-    fs.writeFileSync(sessionFilePath, JSON.stringify(sessionToSave, null, 2));
-
-    // Update the sessions list
-    updateSessionsList(sessionToSave);
+    const sessionToSave = modifySessionBeforeSave(session);
+    historyManager.save(sessionToSave);
   } catch (error) {
     logger.error("Error saving session:", error);
-  }
-}
-
-/**
- * Update the sessions list file
- */
-function updateSessionsList(session: Session): void {
-  try {
-    const sessionsListFilePath = getSessionsListPath();
-
-    // Read and update the sessions list (following core/util/history.ts pattern)
-    try {
-      const rawSessionsList = fs.readFileSync(sessionsListFilePath, "utf-8");
-
-      let sessionsList: SessionMetadata[];
-      try {
-        sessionsList = JSON.parse(rawSessionsList);
-      } catch (e) {
-        if (rawSessionsList.trim() === "") {
-          fs.writeFileSync(sessionsListFilePath, JSON.stringify([]));
-          sessionsList = [];
-        } else {
-          throw e;
-        }
-      }
-
-      // Filter out old format sessions (safety measure)
-      sessionsList = sessionsList.filter((sessionItem: any) => {
-        return typeof sessionItem.session_id !== "string";
-      });
-
-      let found = false;
-      for (const sessionMetadata of sessionsList) {
-        if (sessionMetadata.sessionId === session.sessionId) {
-          sessionMetadata.title = session.title || "Untitled Session";
-          sessionMetadata.workspaceDirectory =
-            session.workspaceDirectory || process.cwd();
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        const sessionMetadata: SessionMetadata = {
-          sessionId: session.sessionId,
-          title: session.title || "Untitled Session",
-          dateCreated: new Date().toISOString(),
-          workspaceDirectory: session.workspaceDirectory || process.cwd(),
-        };
-        sessionsList.push(sessionMetadata);
-      }
-
-      fs.writeFileSync(
-        sessionsListFilePath,
-        JSON.stringify(sessionsList, undefined, 2),
-      );
-    } catch (error) {
-      if (error instanceof SyntaxError) {
-        throw new Error(
-          `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session.`,
-        );
-      }
-      throw new Error(
-        `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`,
-      );
-    }
-  } catch (error) {
-    logger.error("Error updating sessions list:", error);
   }
 }
 
@@ -366,33 +288,31 @@ export function listSessions(
   limit: number = 10,
 ): (SessionMetadata & { firstUserMessage?: string })[] {
   try {
-    const sessionDir = getSessionDir();
+    const sessions = historyManager.list({ limit });
 
-    if (!fs.existsSync(sessionDir)) {
-      return [];
-    }
+    // Add first user message preview to each session
+    const sessionsWithPreview: (SessionMetadata & {
+      firstUserMessage?: string;
+    })[] = [];
 
-    const files = fs
-      .readdirSync(sessionDir)
-      .filter((file) => file.endsWith(".json") && file !== "sessions.json")
-      .map((file) => path.join(sessionDir, file));
+    for (const sessionMeta of sessions) {
+      const sessionFilePath = path.join(
+        getSessionDir(),
+        `${sessionMeta.sessionId}.json`,
+      );
 
-    const sessions: (SessionMetadata & { firstUserMessage?: string })[] = [];
-
-    for (const filePath of files) {
-      const metadata = getSessionMetadataWithPreview(filePath);
-      if (metadata) {
-        sessions.push(metadata);
+      if (fs.existsSync(sessionFilePath)) {
+        const metadata = getSessionMetadataWithPreview(sessionFilePath);
+        if (metadata) {
+          sessionsWithPreview.push(metadata);
+        }
+      } else {
+        // Fall back to basic metadata if file doesn't exist
+        sessionsWithPreview.push(sessionMeta);
       }
     }
 
-    // Sort by date created (most recent first) and limit results
-    return sessions
-      .sort(
-        (a, b) =>
-          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime(),
-      )
-      .slice(0, limit);
+    return sessionsWithPreview;
   } catch (error) {
     logger.error("Error listing sessions:", error);
     return [];
@@ -404,16 +324,7 @@ export function listSessions(
  */
 export function loadSessionById(sessionId: string): Session | null {
   try {
-    const sessionDir = getSessionDir();
-    const sessionFilePath = path.join(sessionDir, `${sessionId}.json`);
-
-    if (!fs.existsSync(sessionFilePath)) {
-      return null;
-    }
-
-    const session: Session = JSON.parse(
-      fs.readFileSync(sessionFilePath, "utf8"),
-    );
+    const session = historyManager.load(sessionId);
     return session;
   } catch (error) {
     logger.error("Error loading session by ID:", error);

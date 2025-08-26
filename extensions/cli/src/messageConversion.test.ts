@@ -14,14 +14,14 @@ describe("convertFromUnifiedHistory", () => {
           {
             id: {
               providerTitle: "file",
-              itemId: "attached-file-0",
+              itemId: "550e8400-e29b-41d4-a716-446655440000",
             },
             content: "console.log('Hello, world!');",
             name: "test-file.txt",
             description: "File: test-file.txt",
             uri: {
               type: "file",
-              value: "test-file.txt",
+              value: "file:///Users/user/test-file.txt",
             },
           },
         ],
@@ -69,27 +69,27 @@ describe("convertFromUnifiedHistory", () => {
           {
             id: {
               providerTitle: "file",
-              itemId: "attached-file-0",
+              itemId: "550e8400-e29b-41d4-a716-446655440000",
             },
             content: "const a = 1;",
             name: "file1.js",
             description: "File: file1.js",
             uri: {
               type: "file",
-              value: "file1.js",
+              value: "file:///Users/user/file1.js",
             },
           },
           {
             id: {
               providerTitle: "file",
-              itemId: "attached-file-1",
+              itemId: "550e8400-e29b-41d4-a716-446655440001",
             },
             content: "const b = 2;",
             name: "file2.js",
             description: "File: file2.js",
             uri: {
               type: "file",
-              value: "file2.js",
+              value: "file:///Users/user/file2.js",
             },
           },
         ],
@@ -117,14 +117,14 @@ describe("convertFromUnifiedHistory", () => {
           {
             id: {
               providerTitle: "file",
-              itemId: "attached-file-0",
+              itemId: "550e8400-e29b-41d4-a716-446655440000",
             },
             content: "some content",
             name: "file.txt",
             description: "File: file.txt",
             uri: {
               type: "file",
-              value: "file.txt",
+              value: "file:///Users/user/file.txt",
             },
           },
         ],

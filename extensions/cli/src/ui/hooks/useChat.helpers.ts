@@ -1,8 +1,13 @@
+import * as path from "node:path";
+
+import { v4 as uuidv4 } from "uuid";
+
 import type { ChatHistoryItem, Session } from "../../../../../core/index.js";
+import { getLastNPathParts } from "../../../../../core/util/uri.js";
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
 import { convertFromUnifiedHistory } from "../../messageConversion.js";
-import { loadSession, saveSession } from "../../session.js";
+import { loadSession, updateSessionHistory } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
@@ -89,7 +94,7 @@ export async function handleCompactCommand({
       ...currentSession,
       history: result.compactedHistory,
     };
-    saveSession(updatedSession);
+    updateSessionHistory(result.compactedHistory);
     setCurrentSession(updatedSession);
 
     setChatHistory((prev) => [
@@ -225,17 +230,17 @@ export function formatMessageWithFiles(
   }
 
   // Convert attached files to context items
-  const contextItems = attachedFiles.map((file, index) => ({
+  const contextItems = attachedFiles.map((file) => ({
     id: {
       providerTitle: "file",
-      itemId: `attached-file-${index}`,
+      itemId: uuidv4(),
     },
     content: file.content,
-    name: file.path,
-    description: `File: ${file.path}`,
+    name: path.basename(file.path),
+    description: getLastNPathParts(file.path, 2),
     uri: {
       type: "file" as const,
-      value: file.path,
+      value: `file://${file.path}`,
     },
   }));
 

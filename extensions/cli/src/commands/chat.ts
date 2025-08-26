@@ -22,7 +22,7 @@ import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
-import { loadSession, saveSession } from "../session.js";
+import { loadSession, updateSessionHistory } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
@@ -138,7 +138,7 @@ async function handleManualCompaction(
     chatHistory.push(...result.compactedHistory);
 
     // Save the compacted session
-    saveSession(chatHistory);
+    updateSessionHistory(chatHistory);
 
     if (isHeadless) {
       safeStdout(
@@ -351,7 +351,7 @@ async function processMessage(
     }
 
     // Save session after each successful response
-    saveSession(chatHistory);
+    updateSessionHistory(chatHistory);
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
 

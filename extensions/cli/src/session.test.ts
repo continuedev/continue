@@ -14,11 +14,27 @@ import {
   updateSessionTitle,
 } from "./session.js";
 
-// Mock dependencies
+// Mock dependencies first, before any imports
+vi.mock("os", () => ({
+  default: {
+    homedir: vi.fn(() => "/home/test"),
+  },
+}));
 vi.mock("fs");
-vi.mock("os");
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "test-uuid-123"),
+}));
+vi.mock("../../../core/util/history.js", () => ({
+  default: {
+    save: vi.fn(),
+    load: vi.fn(() => ({
+      sessionId: "test-session-id",
+      title: "Test Session",
+      workspaceDirectory: "/test/workspace",
+      history: [],
+    })),
+    list: vi.fn(() => []),
+  },
 }));
 
 const mockFs = vi.mocked(fs);
@@ -84,6 +100,7 @@ describe("SessionManager", () => {
             role: "user",
             content: "Hello",
           },
+          contextItems: [],
         },
       ];
       
@@ -109,6 +126,7 @@ describe("SessionManager", () => {
             role: "user",
             content: "New message",
           },
+          contextItems: [],
         },
       ];
       
@@ -138,6 +156,7 @@ describe("SessionManager", () => {
             role: "user",
             content: "Hello",
           },
+          contextItems: [],
         },
       ];
 
@@ -157,18 +176,21 @@ describe("SessionManager", () => {
             role: "system",
             content: "System message 1",
           },
+          contextItems: [],
         },
         {
           message: {
             role: "user",
             content: "User message",
           },
+          contextItems: [],
         },
         {
           message: {
             role: "system",
             content: "System message 2",
           },
+          contextItems: [],
         },
       ];
 
@@ -209,9 +231,9 @@ describe("SessionManager", () => {
       };
       
       mockFs.readdirSync.mockReturnValue([
-        "old-session.json",
-        "sessions.json", // Should be filtered out
-        "recent-session.json",
+        "old-session.json" as any,
+        "sessions.json" as any, // Should be filtered out
+        "recent-session.json" as any,
       ]);
       
       mockFs.statSync
@@ -309,6 +331,7 @@ describe("SessionManager", () => {
             role: "user",
             content: "Test message",
           },
+          contextItems: [],
         },
       ]);
       

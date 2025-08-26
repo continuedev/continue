@@ -19,7 +19,7 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { saveSession, createSession } from "../session.js";
+import { createSession, updateSessionHistory } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { formatError } from "../util/formatError.js";
@@ -355,7 +355,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         );
 
         // Save session after successful response
-        saveSession(state.session);
+        updateSessionHistory(state.session.history);
 
         state.lastActivity = Date.now();
       } catch (e: any) {
