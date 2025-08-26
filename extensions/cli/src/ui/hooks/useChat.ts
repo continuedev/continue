@@ -214,7 +214,9 @@ export function useChat({
       // Save the updated session with the latest chat history that includes the assistant's reply
       // The streamCallbacks update setChatHistory during streaming, so we need to get the current state
       setChatHistory((currentHistory) => {
-        logger.debug("Saving session", { historyLength: currentHistory.length });
+        logger.debug("Saving session", {
+          historyLength: currentHistory.length,
+        });
         const updatedSession: Session = {
           ...currentSession,
           history: currentHistory,
@@ -301,7 +303,10 @@ export function useChat({
     trackUserMessage(message, model);
 
     // Add user message to history and display
-    const { messageText, contextItems } = formatMessageWithFiles(message, attachedFiles);
+    const { messageText, contextItems } = formatMessageWithFiles(
+      message,
+      attachedFiles,
+    );
     if (attachedFiles.length > 0) {
       setAttachedFiles([]);
     }

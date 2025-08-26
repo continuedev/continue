@@ -216,7 +216,10 @@ export function processSlashCommandResult({
 export function formatMessageWithFiles(
   message: string,
   attachedFiles: Array<{ path: string; content: string }>,
-): { messageText: string; contextItems: import("../../../../../core/index.js").ContextItemWithId[] } {
+): {
+  messageText: string;
+  contextItems: import("../../../../../core/index.js").ContextItemWithId[];
+} {
   if (attachedFiles.length === 0) {
     return { messageText: message, contextItems: [] };
   }

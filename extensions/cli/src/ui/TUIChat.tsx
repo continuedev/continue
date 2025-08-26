@@ -219,9 +219,15 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resetChatHistoryRef.current = resetChatHistory;
   }, [resetChatHistory]);
 
+  // Memoize the chat history conversion to avoid expensive recalculation on every render
+  const convertedChatHistory = useMemo(
+    () => convertFromUnifiedHistory(chatHistory),
+    [chatHistory],
+  );
+
   // Calculate context percentage
   const contextData = useContextPercentage({
-    chatHistory: convertFromUnifiedHistory(chatHistory),
+    chatHistory: convertedChatHistory,
     model: services.model?.model || undefined,
   });
 

@@ -66,7 +66,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
           )}
 
           {/* Render tool calls */}
-          {toolCallStates.map((toolState, toolIndex) => {
+          {toolCallStates.map((toolState) => {
             const toolName = toolState.toolCall.function.name;
             const toolArgs = toolState.parsedArgs;
             const isCompleted = toolState.status === "done";
@@ -74,7 +74,11 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               toolState.status === "errored" || toolState.status === "canceled";
 
             return (
-              <Box key={toolIndex} flexDirection="column" marginBottom={1}>
+              <Box
+                key={toolState.toolCallId}
+                flexDirection="column"
+                marginBottom={1}
+              >
                 <Box marginLeft={1}>
                   <Text
                     color={isErrored ? "red" : isCompleted ? "green" : "white"}
