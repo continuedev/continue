@@ -70,17 +70,42 @@ export function getSessionFilePath(): string {
   return path.join(sessionDir, `${sessionId}.json`);
 }
 
-// Store the current session ID for the terminal
-let currentSessionId: string | null = null;
+// Singleton for current session ID
+class SessionIdManager {
+  private static instance: SessionIdManager;
+  private sessionId: string | null = null;
 
-/**
- * Get or create a session ID for the current terminal
- */
-function getCurrentSessionId(): string {
-  if (!currentSessionId) {
-    currentSessionId = uuidv4();
+  private constructor() {}
+
+  static getInstance(): SessionIdManager {
+    if (!SessionIdManager.instance) {
+      SessionIdManager.instance = new SessionIdManager();
+    }
+    return SessionIdManager.instance;
   }
-  return currentSessionId;
+
+  get(): string {
+    if (!this.sessionId) {
+      this.sessionId = uuidv4();
+    }
+    return this.sessionId;
+  }
+
+  set(id: string): void {
+    this.sessionId = id;
+  }
+
+  clear(): void {
+    this.sessionId = null;
+  }
+
+  has(): boolean {
+    return this.sessionId !== null;
+  }
+}
+
+function getCurrentSessionId(): string {
+  return SessionIdManager.getInstance().get();
 }
 
 /**
@@ -108,7 +133,7 @@ export function saveSession(
     }
 
     // Store the session ID for future reference
-    currentSessionId = session.sessionId;
+    SessionIdManager.getInstance().set(session.sessionId);
 
     // Filter out system messages except for the first one
     // TODO: Properly handle system messages vs informational messages in the future
@@ -232,7 +257,7 @@ export function loadSession(): Session | null {
     // Load the most recent session
     const session: Session = JSON.parse(fs.readFileSync(files[0].path, "utf8"));
     // Set this as the current session for future saves
-    currentSessionId = session.sessionId;
+    SessionIdManager.getInstance().set(session.sessionId);
     return session;
   } catch (error) {
     logger.error("Error loading session:", error);
@@ -245,7 +270,7 @@ export function loadSession(): Session | null {
  */
 export function createSession(history: ChatHistoryItem[] = []): Session {
   const sessionId = uuidv4();
-  currentSessionId = sessionId; // Store for future reference
+  SessionIdManager.getInstance().set(sessionId);
   return {
     sessionId,
     title: "Untitled Session",
@@ -259,15 +284,16 @@ export function createSession(history: ChatHistoryItem[] = []): Session {
  */
 export function clearSession(): void {
   try {
-    if (currentSessionId) {
+    const manager = SessionIdManager.getInstance();
+    if (manager.has()) {
       const sessionFilePath = path.join(
         getSessionDir(),
-        `${currentSessionId}.json`,
+        `${manager.get()}.json`,
       );
       if (fs.existsSync(sessionFilePath)) {
         fs.unlinkSync(sessionFilePath);
       }
-      currentSessionId = null;
+      manager.clear();
     }
   } catch (error) {
     logger.error("Error clearing session:", error);
@@ -278,12 +304,13 @@ export function clearSession(): void {
  * Check if a session exists for the current terminal
  */
 export function hasSession(): boolean {
-  if (!currentSessionId) {
+  const manager = SessionIdManager.getInstance();
+  if (!manager.has()) {
     return false;
   }
   const sessionFilePath = path.join(
     getSessionDir(),
-    `${currentSessionId}.json`,
+    `${manager.get()}.json`,
   );
   return fs.existsSync(sessionFilePath);
 }
