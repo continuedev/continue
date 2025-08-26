@@ -43,7 +43,7 @@ const mockOs = vi.mocked(os);
 describe("SessionManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset the singleton between tests
     // @ts-ignore - accessing private static property for testing
     const SessionManager = (globalThis as any).SessionManager;
@@ -64,7 +64,7 @@ describe("SessionManager", () => {
   describe("getCurrentSession", () => {
     it("should create a new session if none exists", () => {
       const session = getCurrentSession();
-      
+
       expect(session).toEqual({
         sessionId: "test-uuid-123",
         title: "Untitled Session",
@@ -76,7 +76,7 @@ describe("SessionManager", () => {
     it("should return the same session on subsequent calls", () => {
       const session1 = getCurrentSession();
       const session2 = getCurrentSession();
-      
+
       expect(session1).toBe(session2); // Same reference
     });
   });
@@ -84,7 +84,7 @@ describe("SessionManager", () => {
   describe("createSession", () => {
     it("should create a new session with default values", () => {
       const session = createSession();
-      
+
       expect(session).toEqual({
         sessionId: "test-uuid-123",
         title: "Untitled Session",
@@ -103,16 +103,16 @@ describe("SessionManager", () => {
           contextItems: [],
         },
       ];
-      
+
       const session = createSession(history);
-      
+
       expect(session.history).toBe(history);
     });
 
     it("should set the created session as current", () => {
       const session = createSession();
       const currentSession = getCurrentSession();
-      
+
       expect(currentSession).toBe(session);
     });
   });
@@ -129,9 +129,9 @@ describe("SessionManager", () => {
           contextItems: [],
         },
       ];
-      
+
       updateSessionHistory(newHistory);
-      
+
       expect(session.history).toBe(newHistory);
     });
   });
@@ -139,9 +139,9 @@ describe("SessionManager", () => {
   describe("updateSessionTitle", () => {
     it("should update the current session's title", () => {
       const session = getCurrentSession();
-      
+
       updateSessionTitle("My New Title");
-      
+
       expect(session.title).toBe("My New Title");
     });
   });
@@ -208,17 +208,17 @@ describe("SessionManager", () => {
   describe("loadSession", () => {
     it("should return null if session directory doesn't exist", () => {
       mockFs.existsSync.mockReturnValue(false);
-      
+
       const result = loadSession();
-      
+
       expect(result).toBeNull();
     });
 
     it("should return null if no session files exist", () => {
       mockFs.readdirSync.mockReturnValue([]);
-      
+
       const result = loadSession();
-      
+
       expect(result).toBeNull();
     });
 
@@ -229,21 +229,21 @@ describe("SessionManager", () => {
         workspaceDirectory: "/test/workspace",
         history: [],
       };
-      
+
       mockFs.readdirSync.mockReturnValue([
         "old-session.json" as any,
         "sessions.json" as any, // Should be filtered out
         "recent-session.json" as any,
       ]);
-      
+
       mockFs.statSync
         .mockReturnValueOnce({ mtime: new Date("2023-01-01") } as any)
         .mockReturnValueOnce({ mtime: new Date("2023-01-02") } as any);
-      
+
       mockFs.readFileSync.mockReturnValue(JSON.stringify(mockSession));
-      
+
       const result = loadSession();
-      
+
       expect(result).toEqual(mockSession);
       expect(getCurrentSession()).toEqual(mockSession);
     });
@@ -255,9 +255,9 @@ describe("SessionManager", () => {
       createSession();
       mockFs.existsSync.mockReturnValue(true);
       mockFs.unlinkSync.mockReturnValue(undefined);
-      
+
       clearSession();
-      
+
       expect(mockFs.unlinkSync).toHaveBeenCalledWith(
         expect.stringContaining("test-uuid-123.json"),
       );
@@ -266,17 +266,17 @@ describe("SessionManager", () => {
     it("should not delete file if it doesn't exist", () => {
       createSession();
       mockFs.existsSync.mockReturnValue(false);
-      
+
       clearSession();
-      
+
       expect(mockFs.unlinkSync).not.toHaveBeenCalled();
     });
 
     it("should clear the current session from memory", () => {
       createSession();
-      
+
       clearSession();
-      
+
       // Getting session after clear should create a new one
       const newSession = getCurrentSession();
       expect(newSession.sessionId).toBe("test-uuid-123"); // New UUID
@@ -287,27 +287,27 @@ describe("SessionManager", () => {
     it("should return false if no current session exists", () => {
       // Clear any existing session
       clearSession();
-      
+
       const result = hasSession();
-      
+
       expect(result).toBe(false);
     });
 
     it("should return false if session file doesn't exist", () => {
       createSession();
       mockFs.existsSync.mockReturnValue(false);
-      
+
       const result = hasSession();
-      
+
       expect(result).toBe(false);
     });
 
     it("should return true if session exists and file exists", () => {
       createSession();
       mockFs.existsSync.mockReturnValue(true);
-      
+
       const result = hasSession();
-      
+
       expect(result).toBe(true);
     });
   });
@@ -317,7 +317,7 @@ describe("SessionManager", () => {
       const session1 = getCurrentSession();
       updateSessionTitle("Modified Title");
       const session2 = getCurrentSession();
-      
+
       expect(session1).toBe(session2);
       expect(session2.title).toBe("Modified Title");
     });
@@ -334,9 +334,9 @@ describe("SessionManager", () => {
           contextItems: [],
         },
       ]);
-      
+
       const session = getCurrentSession();
-      
+
       expect(session.title).toBe("Test Title");
       expect(session.history).toHaveLength(1);
       expect(session.history[0].message.content).toBe("Test message");
