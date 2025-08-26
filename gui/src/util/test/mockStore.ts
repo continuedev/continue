@@ -39,6 +39,16 @@ export const createMockStore = (initialState?: Partial<RootState>) => {
         contextPercentage: 0,
         isPruned: false,
         isInEdit: false,
+        isSessionMetadataLoading: false,
+        allSessionMetadata: [],
+        symbols: {},
+        codeBlockApplyStates: {
+          states: [],
+          curIndex: 0,
+        },
+        newestToolbarPreviewForInput: {},
+        compactionLoading: {},
+        inlineErrorMessage: undefined,
         ...initialState?.session,
       },
       ui: {

@@ -237,6 +237,12 @@ describe("streamResponseThunk - tool calls", () => {
               contextPercentage: 0.9,
             },
           });
+        } else if (endpoint === "tools/evaluatePolicy") {
+          // Mock dynamic policy evaluation - return auto-approve for this test
+          return Promise.resolve({
+            status: "success",
+            content: { policy: "allowedWithoutPermission" },
+          });
         } else if (endpoint === "tools/call") {
           // Mock server-side tool call response
           return Promise.resolve({
@@ -376,7 +382,7 @@ describe("streamResponseThunk - tool calls", () => {
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
     const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
 
-    // Verify exact action sequence by comparing action types
+    // Verify exact action sequence
     const actionTypes = dispatchedActions.map((action: any) => action.type);
     expect(actionTypes).toEqual([
       "chat/streamResponse/pending",
@@ -572,6 +578,16 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState();
+    
+    // Check that the tool was executed (status should be 'done' if auto-approved and executed)
+    const toolCallState = finalState.session.history.find(
+      item => item.toolCallStates && item.toolCallStates.length > 0
+    )?.toolCallStates?.[0];
+    
+    // With proper mocking, the tool should be auto-executed
+    expect(toolCallState?.status).toBe("done");
+    expect(toolCallState?.output).toBeDefined();
+    
     expect(finalState).toEqual({
       session: {
         history: [
@@ -2937,6 +2953,433 @@ describe("streamResponseThunk - tool calls", () => {
       profiles: {
         profiles: [],
       },
+    });
+  });
+
+  describe("dynamic policy evaluation", () => {
+    it("should call tools/evaluatePolicy with correct parameters", async () => {
+      const mockStore = createMockStore({
+        session: {
+          history: [
+            {
+              message: { id: "1", role: "user", content: "Run echo hello" },
+              contextItems: [],
+            },
+          ],
+          hasReasoningEnabled: false,
+          isStreaming: true,
+          id: "session-123",
+          mode: "chat",
+          streamAborter: new AbortController(),
+          contextPercentage: 0,
+          isPruned: false,
+          isInEdit: false,
+          title: "",
+          lastSessionId: undefined,
+          isSessionMetadataLoading: false,
+          allSessionMetadata: [],
+          symbols: {},
+          codeBlockApplyStates: {
+            states: [],
+            curIndex: 0,
+          },
+          newestToolbarPreviewForInput: {},
+          compactionLoading: {},
+          inlineErrorMessage: undefined,
+        },
+        config: {
+          config: {
+            tools: [],
+            rules: [],
+            tabAutocompleteModel: undefined,
+            selectedModelByRole: {
+              chat: mockClaudeModel,
+              apply: null,
+              edit: null,
+              summarize: null,
+              autocomplete: null,
+              rerank: null,
+              embed: null,
+            },
+            experimental: {
+              onlyUseSystemMessageTools: false,
+            },
+          } as any,
+          lastSelectedModelByRole: {
+            chat: mockClaudeModel.title,
+          },
+        } as any,
+        ui: {
+          toolSettings: {
+            run_terminal_command: "allowedWithoutPermission",
+          },
+          ruleSettings: {},
+          showDialog: false,
+          dialogMessage: undefined,
+        } as any,
+      } as any);
+
+      const mockIdeMessenger = mockStore.mockIdeMessenger;
+
+      // Simple mock - just return a different policy for testing
+      mockIdeMessenger.request.mockImplementation((endpoint: string, data: any) => {
+        if (endpoint === "tools/evaluatePolicy") {
+          // For this test, simulate that echo commands require permission
+          if (data.args.command?.toLowerCase().startsWith("echo")) {
+            return Promise.resolve({
+              status: "success",
+              content: { policy: "allowedWithPermission" },
+            });
+          }
+          return Promise.resolve({
+            status: "success",
+            content: { policy: data.basePolicy },
+          });
+        } else if (endpoint === "llm/compileChat") {
+          return Promise.resolve({
+            status: "success",
+            content: {
+              compiledChatMessages: [{ role: "user", content: "Run echo hello" }],
+              didPrune: false,
+              contextPercentage: 0.5,
+            },
+          });
+        } else if (endpoint === "history/save") {
+          return Promise.resolve({ status: "success" });
+        } else if (endpoint === "history/list") {
+          return Promise.resolve({ status: "success", content: [] });
+        }
+        return Promise.resolve({ status: "success", content: {} });
+      });
+
+      // Setup streaming with echo command (should require permission despite auto-approve base)
+      async function* mockStreamWithEcho() {
+        yield [{ role: "assistant", content: "I'll run the echo command." }];
+        yield [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-echo-1",
+                type: "function",
+                function: {
+                  name: "run_terminal_command",
+                  arguments: JSON.stringify({ command: "echo hello" }),
+                },
+              },
+            ],
+          },
+        ];
+        return {
+          prompt: "Run echo hello",
+          completion: "I'll run the echo command.",
+          modelProvider: "anthropic",
+        };
+      }
+
+      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamWithEcho());
+
+      // Execute thunk
+      await mockStore.dispatch(
+        streamResponseThunk({
+          editorState: mockEditorState,
+          modifiers: mockModifiers,
+        }) as any,
+      );
+
+      // Just verify the call was made with correct params
+      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
+        "tools/evaluatePolicy",
+        expect.objectContaining({
+          toolName: "run_terminal_command",
+          basePolicy: "allowedWithoutPermission",
+          args: { command: "echo hello" },
+        }),
+      );
+
+      // Verify tool wasn't auto-executed (policy changed to require permission)
+      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+        "tools/call",
+        expect.any(Object),
+      );
+    });
+
+    it("should respect disabled policy", async () => {
+      const mockStore = createMockStore({
+        session: {
+          history: [
+            {
+              message: { id: "1", role: "user", content: "Run ls" },
+              contextItems: [],
+            },
+          ],
+          hasReasoningEnabled: false,
+          isStreaming: true,
+          id: "session-123",
+          mode: "chat",
+          streamAborter: new AbortController(),
+          contextPercentage: 0,
+          isPruned: false,
+          isInEdit: false,
+          title: "",
+          lastSessionId: undefined,
+          isSessionMetadataLoading: false,
+          allSessionMetadata: [],
+          symbols: {},
+          codeBlockApplyStates: {
+            states: [],
+            curIndex: 0,
+          },
+          newestToolbarPreviewForInput: {},
+          compactionLoading: {},
+          inlineErrorMessage: undefined,
+        },
+        config: {
+          config: {
+            tools: [],
+            rules: [],
+            tabAutocompleteModel: undefined,
+            selectedModelByRole: {
+              chat: mockClaudeModel,
+              apply: null,
+              edit: null,
+              summarize: null,
+              autocomplete: null,
+              rerank: null,
+              embed: null,
+            },
+            experimental: {
+              onlyUseSystemMessageTools: false,
+            },
+          } as any,
+          lastSelectedModelByRole: {
+            chat: mockClaudeModel.title,
+          },
+        } as any,
+        ui: {
+          toolSettings: {
+            run_terminal_command: "disabled", // Tool is disabled
+          },
+          ruleSettings: {},
+          showDialog: false,
+          dialogMessage: undefined,
+        } as any,
+      } as any);
+
+      const mockIdeMessenger = mockStore.mockIdeMessenger;
+
+      // Simple mock - just return disabled policy
+      mockIdeMessenger.request.mockImplementation((endpoint: string, data: any) => {
+        if (endpoint === "tools/evaluatePolicy") {
+          // Backend should respect disabled state
+          return Promise.resolve({
+            status: "success",
+            content: { policy: "disabled" },
+          });
+        } else if (endpoint === "llm/compileChat") {
+          return Promise.resolve({
+            status: "success",
+            content: {
+              compiledChatMessages: [{ role: "user", content: "Run ls" }],
+              didPrune: false,
+              contextPercentage: 0.5,
+            },
+          });
+        } else if (endpoint === "history/save") {
+          return Promise.resolve({ status: "success" });
+        } else if (endpoint === "history/list") {
+          return Promise.resolve({ status: "success", content: [] });
+        }
+        return Promise.resolve({ status: "success", content: {} });
+      });
+
+      // Setup streaming with regular command
+      async function* mockStreamWithLs() {
+        yield [{ role: "assistant", content: "I'll list the files." }];
+        yield [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-ls-1",
+                type: "function",
+                function: {
+                  name: "run_terminal_command",
+                  arguments: JSON.stringify({ command: "ls" }),
+                },
+              },
+            ],
+          },
+        ];
+        return {
+          prompt: "Run ls",
+          completion: "I'll list the files.",
+          modelProvider: "anthropic",
+        };
+      }
+
+      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamWithLs());
+
+      // Execute thunk
+      await mockStore.dispatch(
+        streamResponseThunk({
+          editorState: mockEditorState,
+          modifiers: mockModifiers,
+        }) as any,
+      );
+
+      // Verify tools/evaluatePolicy was called
+      expect(mockIdeMessenger.request).toHaveBeenCalledWith(
+        "tools/evaluatePolicy",
+        expect.objectContaining({
+          toolName: "run_terminal_command",
+          basePolicy: "disabled",
+          args: { command: "ls" },
+        }),
+      );
+
+      // Tool should NOT be executed since it's disabled
+      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+        "tools/call",
+        expect.any(Object),
+      );
+    });
+
+    it("should handle evaluation errors gracefully", async () => {
+      const mockStore = createMockStore({
+        session: {
+          history: [
+            {
+              message: { id: "1", role: "user", content: "Do something" },
+              contextItems: [],
+            },
+          ],
+          hasReasoningEnabled: false,
+          isStreaming: true,
+          id: "session-123",
+          mode: "chat",
+          streamAborter: new AbortController(),
+          contextPercentage: 0,
+          isPruned: false,
+          isInEdit: false,
+          title: "",
+          lastSessionId: undefined,
+          isSessionMetadataLoading: false,
+          allSessionMetadata: [],
+          symbols: {},
+          codeBlockApplyStates: {
+            states: [],
+            curIndex: 0,
+          },
+          newestToolbarPreviewForInput: {},
+          compactionLoading: {},
+          inlineErrorMessage: undefined,
+        },
+        config: {
+          config: {
+            tools: [],
+            rules: [],
+            tabAutocompleteModel: undefined,
+            selectedModelByRole: {
+              chat: mockClaudeModel,
+              apply: null,
+              edit: null,
+              summarize: null,
+              autocomplete: null,
+              rerank: null,
+              embed: null,
+            },
+            experimental: {
+              onlyUseSystemMessageTools: false,
+            },
+          } as any,
+          lastSelectedModelByRole: {
+            chat: mockClaudeModel.title,
+          },
+        } as any,
+        ui: {
+          toolSettings: {
+            some_tool: "allowedWithoutPermission",
+          },
+          ruleSettings: {},
+          showDialog: false,
+          dialogMessage: undefined,
+        } as any,
+      } as any);
+
+      const mockIdeMessenger = mockStore.mockIdeMessenger;
+
+      // Mock evaluation failure
+      mockIdeMessenger.request.mockImplementation((endpoint: string) => {
+        if (endpoint === "tools/evaluatePolicy") {
+          // Simulate evaluation error
+          return Promise.resolve({
+            status: "error",
+            error: "Failed to evaluate policy",
+          });
+        } else if (endpoint === "llm/compileChat") {
+          return Promise.resolve({
+            status: "success",
+            content: {
+              compiledChatMessages: [{ role: "user", content: "Do something" }],
+              didPrune: false,
+              contextPercentage: 0.5,
+            },
+          });
+        } else if (endpoint === "history/save") {
+          return Promise.resolve({ status: "success" });
+        } else if (endpoint === "history/list") {
+          return Promise.resolve({ status: "success", content: [] });
+        }
+        return Promise.resolve({ status: "success", content: {} });
+      });
+
+      // Setup streaming with tool call
+      async function* mockStreamWithTool() {
+        yield [{ role: "assistant", content: "I'll help you." }];
+        yield [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-1",
+                type: "function",
+                function: {
+                  name: "some_tool",
+                  arguments: JSON.stringify({ arg: "value" }),
+                },
+              },
+            ],
+          },
+        ];
+        return {
+          prompt: "Do something",
+          completion: "I'll help you.",
+          modelProvider: "anthropic",
+        };
+      }
+
+      mockIdeMessenger.llmStreamChat.mockReturnValue(mockStreamWithTool());
+
+      // Execute thunk - should handle error gracefully
+      const result = await mockStore.dispatch(
+        streamResponseThunk({
+          editorState: mockEditorState,
+          modifiers: mockModifiers,
+        }) as any,
+      );
+
+      // Should complete successfully despite evaluation error
+      expect(result.type).toBe("chat/streamResponse/fulfilled");
+
+      // Tool should be treated as disabled due to evaluation error
+      expect(mockIdeMessenger.request).not.toHaveBeenCalledWith(
+        "tools/call",
+        expect.any(Object),
+      );
     });
   });
 });
