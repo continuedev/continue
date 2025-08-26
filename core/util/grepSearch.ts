@@ -184,10 +184,10 @@ export function formatGrepSearchResults(
   const isFileListOnly = filePathLines.length > 0 && contentLines.length === 0;
 
   // Handle "no matches found" type messages
-  const isNoMatchesMessage = 
-    lines.length === 1 && 
-    (lines[0].toLowerCase().includes("no matches") || 
-     lines[0].toLowerCase().includes("no results"));
+  const isNoMatchesMessage =
+    lines.length === 1 &&
+    (lines[0].toLowerCase().includes("no matches") ||
+      lines[0].toLowerCase().includes("no results"));
 
   if (isNoMatchesMessage) {
     return {
