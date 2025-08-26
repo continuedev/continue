@@ -49,8 +49,6 @@ class IdeProtocolClient(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val limitedDispatcher = Dispatchers.IO.limitedParallelism(4)
 
-    init {}
-
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(limitedDispatcher) {
             val message = Gson().fromJson(msg, Message::class.java)
@@ -68,8 +66,7 @@ class IdeProtocolClient(
                     }
 
                     "jetbrains/isOSREnabled" -> {
-                        val isOSREnabled = service<ContinueExtensionSettings>().continueState.enableOSR
-                        respond(isOSREnabled)
+                        respond(true)
                     }
 
                     "jetbrains/getColors" -> {

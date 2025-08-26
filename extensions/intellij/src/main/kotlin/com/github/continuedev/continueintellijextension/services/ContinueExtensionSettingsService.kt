@@ -30,7 +30,6 @@ class ContinueSettingsComponent : DumbAware {
     val remoteConfigSyncPeriod: JTextField = JTextField()
     val userToken: JTextField = JTextField()
     val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
-    val enableOSR: JCheckBox = JCheckBox("Enable Off-Screen Rendering")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
     val showIDECompletionSideBySide: JCheckBox = JCheckBox("Show IDE completions side-by-side")
 
@@ -57,8 +56,6 @@ class ContinueSettingsComponent : DumbAware {
         panel.add(userToken, constraints)
         constraints.gridy++
         panel.add(enableTabAutocomplete, constraints)
-        constraints.gridy++
-        panel.add(enableOSR, constraints)
         constraints.gridy++
         panel.add(displayEditorTooltip, constraints)
         constraints.gridy++
@@ -90,7 +87,6 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var remoteConfigSyncPeriod: Int = 60
         var userToken: String? = null
         var enableTabAutocomplete: Boolean = true
-        var enableOSR: Boolean = true
         var displayEditorTooltip: Boolean = true
         var showIDECompletionSideBySide: Boolean = false
         var continueTestEnvironment: String = "production"
@@ -177,7 +173,6 @@ class ContinueExtensionConfigurable : Configurable {
                     mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
                     mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
                     mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
-                    mySettingsComponent?.enableOSR?.isSelected != settings.continueState.enableOSR ||
                     mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip ||
                     mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide
         return modified
@@ -189,7 +184,6 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
         settings.continueState.enableTabAutocomplete = mySettingsComponent?.enableTabAutocomplete?.isSelected ?: false
-        settings.continueState.enableOSR = mySettingsComponent?.enableOSR?.isSelected ?: true
         settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
         settings.continueState.showIDECompletionSideBySide =
             mySettingsComponent?.showIDECompletionSideBySide?.isSelected ?: false
@@ -205,7 +199,6 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.remoteConfigSyncPeriod?.text = settings.continueState.remoteConfigSyncPeriod.toString()
         mySettingsComponent?.userToken?.text = settings.continueState.userToken
         mySettingsComponent?.enableTabAutocomplete?.isSelected = settings.continueState.enableTabAutocomplete
-        mySettingsComponent?.enableOSR?.isSelected = settings.continueState.enableOSR
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
         mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
             settings.continueState.showIDECompletionSideBySide

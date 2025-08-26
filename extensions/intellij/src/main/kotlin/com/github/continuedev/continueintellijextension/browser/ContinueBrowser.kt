@@ -17,9 +17,7 @@ import javax.swing.JComponent
 class ContinueBrowser(private val project: Project) {
 
     private val log = Logger.getInstance(ContinueBrowser::class.java.simpleName)
-    private val browser: JBCefBrowser = JBCefBrowser.createBuilder()
-        .setOffScreenRendering(service<ContinueExtensionSettings>().continueState.enableOSR)
-        .build()
+    private val browser: JBCefBrowser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
 
     init {
         CefApp.getInstance().registerSchemeHandlerFactory("http", "continue", CustomSchemeHandlerFactory())
