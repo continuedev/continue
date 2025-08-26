@@ -101,7 +101,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       )}
 
       {/* MCP Servers */}
-      {config?.mcpServers?.length && (
+      {(config?.mcpServers?.length ?? 0) > 0 && (
         <>
           <Text bold color="blue">
             MCP Servers:
