@@ -33,6 +33,11 @@ export const readFileTool: Tool = {
   },
   run: async (args: { filepath: string }): Promise<string> => {
     try {
+      let { filepath } = args;
+      if (filepath.startsWith("./")) {
+        filepath = filepath.slice(2);
+      }
+
       if (!fs.existsSync(args.filepath)) {
         return `Error: File does not exist: ${args.filepath}`;
       }
