@@ -106,32 +106,30 @@
                     "group": "Popular Providers",
                     "pages": [
                       "customize/model-providers/top-level/anthropic",
-                      "customize/model-providers/top-level/openai",
                       "customize/model-providers/top-level/azure",
                       "customize/model-providers/top-level/bedrock",
-                      "customize/model-providers/top-level/ollama",
                       "customize/model-providers/top-level/gemini",
-                      "customize/model-providers/top-level/deepseek",
-                      "customize/model-providers/top-level/mistral",
-                      "customize/model-providers/top-level/xAI",
-                      "customize/model-providers/top-level/vertexai",
-                      "customize/model-providers/top-level/inception"
+                      "customize/model-providers/top-level/inception",
+                      "customize/model-providers/top-level/lmstudio",
+                      "customize/model-providers/top-level/ollama",
+                      "customize/model-providers/top-level/openrouter",
+                      "customize/model-providers/top-level/openai",
+                      "customize/model-providers/top-level/vertexai"
                     ]
                   },
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/deepseek",
+                      "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
-                      "customize/model-providers/more/together",
-                      "customize/model-providers/more/lmstudio",
+                      "customize/model-providers/more/huggingfaceinferenceapi",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
-                      "customize/model-providers/more/openrouter",
-                      "customize/model-providers/more/huggingfaceinferenceapi",
-                      "customize/model-providers/more/cohere",
+                      "customize/model-providers/more/mistral",
                       "customize/model-providers/more/nvidia",
-                      "customize/model-providers/more/cloudflare",
-                      "customize/model-providers/more/deepinfra"
+                      "customize/model-providers/more/together",
+                      "customize/model-providers/more/xAI"
                     ]
                   }
                 ]
