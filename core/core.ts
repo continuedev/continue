@@ -1052,11 +1052,10 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
-    const llm = config.selectedModelByRole.chat;
     const result = await callTool(tool, toolCall, {
       config,
       ide: this.ide,
-      llm,
+      llm: config.selectedModelByRole.chat,
       fetch: (url, init) =>
         fetchwithRequestOptions(url, init, config.requestOptions),
       tool,

@@ -548,6 +548,7 @@ async function intermediateToFinalConfig({
         id: `continue-mcp-server-${index + 1}`,
         name: `MCP Server`,
         ...server,
+        requestOptions: config.requestOptions,
       }),
     ),
     false,
