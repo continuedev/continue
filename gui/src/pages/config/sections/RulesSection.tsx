@@ -2,9 +2,10 @@ import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
   BookmarkIcon as BookmarkOutline,
+  CheckIcon,
+  ChevronDownIcon,
   EyeIcon,
   PencilIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import {
@@ -19,11 +20,20 @@ import {
   DEFAULT_PLAN_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
 import Switch from "../../../components/gui/Switch";
+import InfoHover from "../../../components/InfoHover";
 import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
-import { Button, Card, EmptyState, useFontSize } from "../../../components/ui";
+import {
+  Card,
+  EmptyState,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  useFontSize,
+} from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
@@ -427,24 +437,39 @@ function addDefaultSystemMessage(
   }
 }
 
+// Define dropdown options for global rules
+const globalRulesOptions = [
+  { value: "workspace", label: "Current workspace" },
+  { value: "global", label: "Global" },
+];
+
 function RulesSubSection() {
   const { selectedProfile } = useAuth();
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
   const ideMessenger = useContext(IdeMessengerContext);
   const isLocal = selectedProfile?.profileType === "local";
+  const [globalRulesMode, setGlobalRulesMode] = useState<string>("workspace");
 
   const handleAddRule = () => {
     if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "rules",
-      });
+      if (globalRulesMode === "global") {
+        void ideMessenger.request("config/addGlobalRule", undefined);
+      } else {
+        void ideMessenger.request("config/addLocalWorkspaceBlock", {
+          blockType: "rules",
+        });
+      }
     } else {
       void ideMessenger.request("controlPlane/openUrl", {
         path: "?type=rules",
         orgSlug: undefined,
       });
     }
+  };
+
+  const handleGlobalRulesModeChange = (value: string | null) => {
+    setGlobalRulesMode(value || "workspace");
   };
 
   const sortedRules: RuleWithSource[] = useMemo(() => {
@@ -497,15 +522,82 @@ function RulesSubSection() {
       />
 
       <Card>
-        {sortedRules.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {sortedRules.map((rule, index) => (
-              <RuleCard key={index} rule={rule} />
-            ))}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex flex-row items-center gap-1">
+              <span
+                className="text-foreground"
+                style={{ fontSize: fontSize(-2) }}
+              >
+                Rules scope
+              </span>
+              <InfoHover
+                size="3"
+                id="rules-scope"
+                msg="Choose to add rules to the current workspace or globally"
+              />
+            </div>
+            <Listbox
+              value={globalRulesMode}
+              onChange={handleGlobalRulesModeChange}
+            >
+              <div className="relative">
+                <ListboxButton className="text-description bg-lightgray/20 gap-1 rounded-full border-none px-2 py-1 transition-colors duration-200 hover:brightness-110">
+                  <span className="block truncate">
+                    {
+                      globalRulesOptions.find(
+                        (option) => option.value === globalRulesMode,
+                      )?.label
+                    }
+                  </span>
+                  <ChevronDownIcon
+                    className="h-2 w-2 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                </ListboxButton>
+                <ListboxOptions className="min-w-32 max-w-48">
+                  {globalRulesOptions.map((option) => (
+                    <ListboxOption
+                      key={option.value}
+                      value={option.value}
+                      className={({
+                        active,
+                        selected,
+                      }: {
+                        active: boolean;
+                        selected: boolean;
+                      }) =>
+                        `relative cursor-default select-none py-2 pl-4 pr-4 ${
+                          active
+                            ? "bg-list-active text-list-active-foreground"
+                            : "text-foreground"
+                        } ${selected ? "font-medium" : ""}`
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span className="block truncate">{option.label}</span>
+                          {selected && (
+                            <CheckIcon className="ml-auto h-3 w-3" />
+                          )}
+                        </>
+                      )}
+                    </ListboxOption>
+                  ))}
+                </ListboxOptions>
+              </div>
+            </Listbox>
           </div>
-        ) : (
-          <EmptyState message="No rules configured. Click the + button to add your first rule." />
-        )}
+          {sortedRules.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {sortedRules.map((rule, index) => (
+                <RuleCard key={index} rule={rule} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState message="No rules configured. Click the + button to add your first rule." />
+          )}
+        </div>
       </Card>
     </div>
   );
