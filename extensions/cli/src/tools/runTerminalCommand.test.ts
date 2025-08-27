@@ -213,5 +213,13 @@ describe("runTerminalCommandTool", () => {
       });
       expect(result.trim()).toBe("hello");
     });
+
+    it("should execute commands with the system default shell", async () => {
+      const result = await runTerminalCommandTool.run({
+        command: "echo $0",
+      });
+      const shellName = process.env.SHELL || /bash|zsh|fish|sh/;
+      expect(result.trim()).toMatch(shellName);
+    });
   });
 });

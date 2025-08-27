@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import os from "os";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -7,6 +8,29 @@ import {
 } from "../telemetry/utils.js";
 
 import { Tool } from "./types.js";
+
+function getShellCommand(command: string): { shell: string; args: string[] } {
+  if (process.platform === "win32") {
+    // Windows: Use PowerShell
+    return {
+      shell: "powershell.exe",
+      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command"],
+    };
+  } else {
+    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+    const userShell = process.env.SHELL || "/bin/bash";
+    return { shell: userShell, args: ["-l", "-c", command] };
+  }
+}
+
+const getColorEnv = () => ({
+  ...process.env,
+  FORCE_COLOR: "1",
+  COLORTERM: "truecolor",
+  TERM: "xterm-256color",
+  CLICOLOR: "1",
+  CLICOLOR_FORCE: "1",
+});
 
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
@@ -40,7 +64,19 @@ export const runTerminalCommandTool: Tool = {
   },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const child = spawn("sh", ["-c", command]);
+      let cwd: string;
+      // Default to cwd
+      try {
+        cwd = process.cwd();
+      } catch (error) {
+        //Fallback if process.cwd() fails
+        cwd = process.env.HOME || process.env.USERPROFILE || os.tmpdir();
+      }
+      const { shell, args } = getShellCommand(command);
+      const child = spawn(shell, args, {
+        cwd,
+        env: getColorEnv(), // Add enhanced environment for colors
+      });
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
