@@ -114,6 +114,7 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
                         oldEditRangeSlice,
                         nextEditOutcome.completion,
                         nextEditOutcome.diffLines,
+                        lastUuid
                     )
                     return InlineCompletionSuggestion.Empty
                 }
