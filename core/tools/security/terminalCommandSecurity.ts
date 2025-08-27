@@ -13,7 +13,11 @@ interface GlobPattern {
   pattern: string;
 }
 
-type ParsedToken = string | ShellOperator | GlobPattern;
+interface CommentToken {
+  comment: string;
+}
+
+type ParsedToken = string | ShellOperator | GlobPattern | CommentToken;
 
 /**
  * Evaluates the security policy for a terminal command.
@@ -70,6 +74,13 @@ function isOperator(token: ParsedToken): token is ShellOperator {
  */
 function isGlob(token: ParsedToken): token is GlobPattern {
   return typeof token === "object" && "op" in token && token.op === "glob";
+}
+
+/**
+ * Checks if a token is a comment
+ */
+function isComment(token: ParsedToken): token is CommentToken {
+  return typeof token === "object" && "comment" in token;
 }
 
 /**
@@ -134,6 +145,11 @@ function evaluateTokens(
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
 
+    // Skip comments - they don't affect execution
+    if (isComment(token)) {
+      continue;
+    }
+
     // Check if token is an operator
     if (isOperator(token)) {
       // Evaluate the current command before the operator
@@ -167,11 +183,11 @@ function evaluateTokens(
           return "disabled";
         }
       }
-    } else if (typeof token === "string") {
-      currentCommand.push(token);
     } else if (isGlob(token)) {
       // Handle glob patterns
       currentCommand.push(token.pattern);
+    } else if (typeof token === "string") {
+      currentCommand.push(token);
     }
   }
 
@@ -260,8 +276,13 @@ function evaluatePipeChain(
     i < tokens.length && !isOperator(tokens[i]);
     i++
   ) {
-    if (typeof tokens[i] === "string") {
-      nextCommand.push(tokens[i] as string);
+    const token = tokens[i];
+    if (isComment(token)) {
+      continue;
+    } else if (isGlob(token)) {
+      nextCommand.push(token.pattern);
+    } else if (typeof token === "string") {
+      nextCommand.push(token);
     }
   }
 

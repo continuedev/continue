@@ -34,6 +34,7 @@
     "@types/pg": "^8.11.6",
     "@types/plist": "^3.0.5",
     "@types/request": "^2.48.12",
+    "@types/shell-quote": "^1.7.5",
     "@types/tar": "^6.1.13",
     "@types/uuid": "^9.0.7",
     "@types/win-ca": "^3.5.4",
