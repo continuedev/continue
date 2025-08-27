@@ -14,7 +14,7 @@ describe("runTerminalCommandTool", () => {
   describe("basic command execution", () => {
     it("should execute simple echo command and return stdout", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "node -e \"console.log('hello world')\"",
+        command: "node -p \"'hello world'\"",
       });
       expect(result.trim()).toBe("hello world");
     });
@@ -38,7 +38,7 @@ describe("runTerminalCommandTool", () => {
 
     it("should handle commands with multiple arguments", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "node -e \"console.log('arg1', 'arg2', 'arg3')\"",
+        command: "node -p \"['arg1', 'arg2', 'arg3'].join(' ')\"",
       });
       expect(result.trim()).toBe("arg1 arg2 arg3");
     });
@@ -166,7 +166,7 @@ describe("runTerminalCommandTool", () => {
   describe("output handling", () => {
     it("should preserve line breaks in output", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "node -e \"console.log('line1\\nline2\\nline3')\"",
+        command: "node -p \"'line1\\nline2\\nline3'\"",
       });
       expect(result).toContain("line1\nline2\nline3");
     });
@@ -219,7 +219,7 @@ describe("runTerminalCommandTool", () => {
   describe("command types", () => {
     it("should handle shell built-ins", async () => {
       const result = await runTerminalCommandTool.run({
-        command: 'node -e "console.log(process.cwd())"',
+        command: 'node -p "process.cwd()"',
       });
       // Should contain a path - either Unix-style or Windows-style
       expect(result.trim()).toMatch(/(?:^\/.*$)|(?:^[A-Za-z]:\\.*$)/);
@@ -228,7 +228,7 @@ describe("runTerminalCommandTool", () => {
     it("should handle commands with pipes", async () => {
       const result = await runTerminalCommandTool.run({
         command:
-          "FORCE_COLOR=0 NO_COLOR=1 node -e \"console.log('hello world'.split(' ').length)\"",
+          "FORCE_COLOR=0 NO_COLOR=1 node -p \"'hello world'.split(' ').length\"",
       });
       expect(result.trim()).toBe("2");
     });
@@ -243,8 +243,7 @@ describe("runTerminalCommandTool", () => {
 
     it("should handle commands with environment variables", async () => {
       const result = await runTerminalCommandTool.run({
-        command:
-          "node -e \"process.env.TEST_VAR='hello'; console.log(process.env.TEST_VAR)\"",
+        command: 'TEST_VAR=hello node -p "process.env.TEST_VAR"',
       });
       expect(result.trim()).toBe("hello");
     });
