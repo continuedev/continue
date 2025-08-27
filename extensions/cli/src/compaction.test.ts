@@ -5,7 +5,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   compactChatHistory,
-  COMPACTION_MARKER,
   findCompactionIndex,
   getHistoryForLLM,
 } from "./compaction.js";
@@ -34,10 +33,13 @@ describe("compaction", () => {
         { role: "assistant", content: "Hi there" },
         {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          content: `\nThis is a summary`,
         },
         { role: "user", content: "Another message" },
       ]);
+
+      // Add conversationSummary to mark this as a compaction message
+      history[3].conversationSummary = "This is a summary";
 
       const index = findCompactionIndex(history);
       expect(index).toBe(3);
@@ -57,10 +59,14 @@ describe("compaction", () => {
     it("should return first compaction marker when multiple exist", () => {
       const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nFirst summary` },
+        { role: "assistant", content: `\nFirst summary` },
         { role: "user", content: "Hello" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSecond summary` },
+        { role: "assistant", content: `\nSecond summary` },
       ]);
+
+      // Add conversationSummary to mark these as compaction messages
+      history[1].conversationSummary = "First summary";
+      history[3].conversationSummary = "Second summary";
 
       const index = findCompactionIndex(history);
       expect(index).toBe(1);
@@ -77,11 +83,12 @@ describe("compaction", () => {
         { role: "system", content: "System message" },
         {
           role: "assistant",
-          content: `Some text ${COMPACTION_MARKER} in the middle`,
+          content: `Some text  in the middle`,
         },
         { role: "user", content: "Hello" },
       ]);
 
+      // Don't add conversationSummary - this should not be found
       const index = findCompactionIndex(history);
       expect(index).toBeNull();
     });
@@ -104,9 +111,10 @@ describe("compaction", () => {
         {
           message: {
             role: "assistant",
-            content: `${COMPACTION_MARKER}\\nValid compaction`,
+            content: `\\nValid compaction`,
           },
           contextItems: [],
+          conversationSummary: "Valid compaction",
         },
       ];
 
@@ -114,12 +122,15 @@ describe("compaction", () => {
       expect(index).toBe(3);
     });
 
-    it("should only match assistant role messages", () => {
+    it("should only match messages with conversationSummary", () => {
       const history = convertToUnifiedHistory([
-        { role: "system", content: `${COMPACTION_MARKER}\nSystem compaction?` },
-        { role: "user", content: `${COMPACTION_MARKER}\nUser compaction?` },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nReal compaction` },
+        { role: "system", content: `\nSystem compaction?` },
+        { role: "user", content: `\nUser compaction?` },
+        { role: "assistant", content: `\nReal compaction` },
       ]);
+
+      // Only add conversationSummary to the assistant message
+      history[2].conversationSummary = "Real compaction";
 
       const index = findCompactionIndex(history);
       expect(index).toBe(2);
@@ -145,7 +156,7 @@ describe("compaction", () => {
         { role: "assistant", content: "Hi there" },
         {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          content: `\nThis is a summary`,
         },
         { role: "user", content: "Another message" },
       ]);
@@ -159,7 +170,7 @@ describe("compaction", () => {
         {
           message: {
             role: "assistant",
-            content: `${COMPACTION_MARKER}\nThis is a summary`,
+            content: `\nThis is a summary`,
           },
           contextItems: [],
         },
@@ -174,7 +185,7 @@ describe("compaction", () => {
       const history = convertToUnifiedHistory([
         {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          content: `\nThis is a summary`,
         },
         { role: "user", content: "Another message" },
       ]);
@@ -228,7 +239,7 @@ describe("compaction", () => {
     it("should handle history without system message but with compaction", () => {
       const history = convertToUnifiedHistory([
         { role: "user", content: "First message" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+        { role: "assistant", content: `\nSummary` },
         { role: "user", content: "New message" },
       ]);
 
@@ -237,7 +248,7 @@ describe("compaction", () => {
         {
           message: {
             role: "assistant",
-            content: `${COMPACTION_MARKER}\nSummary`,
+            content: `\nSummary`,
           },
           contextItems: [],
         },
@@ -252,7 +263,7 @@ describe("compaction", () => {
       const history = convertToUnifiedHistory([
         { role: "user", content: "First user message" },
         { role: "system", content: "System message in wrong position" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+        { role: "assistant", content: `\nSummary` },
         { role: "user", content: "New message" },
       ]);
 
@@ -262,7 +273,7 @@ describe("compaction", () => {
         {
           message: {
             role: "assistant",
-            content: `${COMPACTION_MARKER}\nSummary`,
+            content: `\nSummary`,
           },
           contextItems: [],
         },
@@ -278,7 +289,7 @@ describe("compaction", () => {
         { role: "system", content: "System" },
         { role: "user", content: "Old 1" },
         { role: "assistant", content: "Old 2" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+        { role: "assistant", content: `\nSummary` },
         { role: "user", content: "New 1" },
         { role: "assistant", content: "New 2" },
         { role: "user", content: "New 3" },
@@ -293,7 +304,7 @@ describe("compaction", () => {
         {
           message: {
             role: "assistant",
-            content: `${COMPACTION_MARKER}\nSummary`,
+            content: `\nSummary`,
           },
           contextItems: [],
         },
@@ -345,7 +356,7 @@ describe("compaction", () => {
       expect(result.compactedHistory[1]).toEqual({
         message: {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\n${mockContent}`,
+          content: mockContent,
         },
         contextItems: [],
         conversationSummary: mockContent,
@@ -425,7 +436,7 @@ describe("compaction", () => {
         content: "You are a helpful assistant",
       });
       expect(result.compactedHistory[1].message.content).toContain(
-        COMPACTION_MARKER,
+        "Summary of system setup",
       );
     });
 
@@ -447,9 +458,7 @@ describe("compaction", () => {
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactionContent).toBe("");
-      expect(result.compactedHistory[0].message.content).toBe(
-        `${COMPACTION_MARKER}\n`,
-      );
+      expect(result.compactedHistory[0].message.content).toBe("");
     });
 
     it("should correctly construct prompt for compaction", async () => {
@@ -622,14 +631,14 @@ describe("compaction", () => {
           history: convertToUnifiedHistory([
             { role: "system", content: "System" },
             { role: "user", content: "User 1" },
-            { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+            { role: "assistant", content: `\nSummary` },
           ]),
           compactionIndex: 2,
         },
         {
           history: convertToUnifiedHistory([
             { role: "system", content: "System" },
-            { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+            { role: "assistant", content: `\nSummary` },
           ]),
           compactionIndex: 1,
         },
@@ -686,7 +695,7 @@ describe("compaction", () => {
   });
 
   describe("invariant tests", () => {
-    it("compactionIndex should always point to a message with COMPACTION_MARKER", async () => {
+    it("compactionIndex should always point to a message with conversationSummary", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
 
       mockStreamResponse.mockImplementation(
@@ -712,14 +721,11 @@ describe("compaction", () => {
       for (const history of histories) {
         const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-        // The message at compactionIndex should contain the marker
+        // The message at compactionIndex should have a conversationSummary
         const compactionMessage =
           result.compactedHistory[result.compactionIndex];
         expect(compactionMessage.message.role).toBe("assistant");
-        expect(
-          typeof compactionMessage.message.content === "string" &&
-            compactionMessage.message.content.startsWith(COMPACTION_MARKER),
-        ).toBe(true);
+        expect(compactionMessage.conversationSummary).toBeDefined();
       }
     });
 

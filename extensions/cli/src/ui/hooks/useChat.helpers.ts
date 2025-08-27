@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
-import { convertFromUnifiedHistory } from "../../messageConversion.js";
 import { loadSession, updateSessionHistory } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
@@ -323,9 +322,8 @@ export async function handleAutoCompaction({
 }> {
   try {
     // Check if auto-compaction is needed
-    // Convert to legacy format for token counting
-    const legacyHistory = convertFromUnifiedHistory(chatHistory);
-    if (!model || !shouldAutoCompact(legacyHistory, model)) {
+    // Check if auto-compaction is needed using ChatHistoryItem directly
+    if (!model || !shouldAutoCompact(chatHistory, model)) {
       return {
         currentChatHistory: chatHistory,
         currentCompactionIndex: _compactionIndex,

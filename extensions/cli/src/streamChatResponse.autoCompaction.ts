@@ -1,14 +1,9 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import React from "react";
 
 import { compactChatHistory } from "./compaction.js";
-import {
-  convertFromUnifiedHistory,
-  convertToUnifiedHistory,
-} from "./messageConversion.js";
 import { updateSessionHistory } from "./session.js";
 import { formatError } from "./util/formatError.js";
 import { logger } from "./util/logger.js";
@@ -21,9 +16,7 @@ interface AutoCompactionCallbacks {
 
   // For TUI mode
   setMessages?: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
-  setChatHistory?: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
-  >;
+  setChatHistory?: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setCompactionIndex?: React.Dispatch<React.SetStateAction<number | null>>;
 
   // For headless mode - no callbacks needed, just return values
@@ -126,18 +119,19 @@ function handleCompactionError(
  * @returns Updated chat history and compaction index, or original if no compaction needed
  */
 export async function handleAutoCompaction(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: BaseLlmApi,
   options: AutoCompactionOptions = {},
 ): Promise<{
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   compactionIndex: number | null;
+  wasCompacted: boolean;
 }> {
   const { isHeadless = false, callbacks } = options;
 
   if (!model || !shouldAutoCompact(chatHistory, model)) {
-    return { chatHistory, compactionIndex: null };
+    return { chatHistory, compactionIndex: null, wasCompacted: false };
   }
 
   logger.info(
@@ -148,12 +142,9 @@ export async function handleAutoCompaction(
   notifyCompactionStart(getAutoCompactMessage(model), isHeadless, callbacks);
 
   try {
-    // Convert to unified format for compaction
-    const unifiedHistory = convertToUnifiedHistory(chatHistory);
-
     // Compact the history
     const result = await compactChatHistory(
-      unifiedHistory,
+      chatHistory,
       model,
       llmApi,
       isHeadless
@@ -170,20 +161,16 @@ export async function handleAutoCompaction(
     // Handle success notification
     handleCompactionSuccess(result, isHeadless, callbacks);
 
-    // Convert back to legacy format for return
-    const compactedLegacyHistory = convertFromUnifiedHistory(
-      result.compactedHistory,
-    );
-
     return {
-      chatHistory: compactedLegacyHistory,
+      chatHistory: result.compactedHistory,
       compactionIndex: result.compactionIndex,
+      wasCompacted: true,
     };
   } catch (error: any) {
     // Handle error notification
     handleCompactionError(error, isHeadless, callbacks);
 
     // Continue without compaction on error
-    return { chatHistory, compactionIndex: null };
+    return { chatHistory, compactionIndex: null, wasCompacted: false };
   }
 }

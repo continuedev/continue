@@ -1,7 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import chalk from "chalk";
 import type { ChatHistoryItem, Session } from "core/index.js";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 
 import { getDisplayableAsciiArt } from "../asciiArt.js";
@@ -14,10 +13,6 @@ import { processCommandFlags } from "../flags/flagProcessor.js";
 import { safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
-import {
-  convertFromUnifiedHistory,
-  convertToUnifiedHistory,
-} from "../messageConversion.js";
 import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
@@ -166,7 +161,7 @@ async function handleManualCompaction(
 
 // Helper function to handle auto-compaction for headless mode
 async function handleAutoCompaction(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: any,
   isHeadless: boolean,
@@ -273,10 +268,9 @@ async function processMessage(
   telemetryService.logUserPrompt(userInput.length, userInput);
 
   // Check if auto-compacting is needed BEFORE adding user message
-  const chatHistoryForTokenCheck = convertFromUnifiedHistory(chatHistory);
-  if (shouldAutoCompact(chatHistoryForTokenCheck, model)) {
+  if (shouldAutoCompact(chatHistory, model)) {
     const newIndex = await handleAutoCompaction(
-      chatHistoryForTokenCheck,
+      chatHistory,
       model,
       llmApi,
       isHeadless,
@@ -286,7 +280,7 @@ async function processMessage(
       compactionIndex = newIndex;
       // Replace chatHistory with compacted version
       chatHistory.length = 0;
-      chatHistory.push(...convertToUnifiedHistory(chatHistoryForTokenCheck));
+      chatHistory.push(...chatHistory);
     }
   }
 
