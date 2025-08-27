@@ -2,11 +2,13 @@ package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerManager
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -51,10 +53,13 @@ class NextEditWindowManager(private val project: Project) {
         editableRegionEndLine: Int,
         oldCode: String,
         newCode: String,
-        diffLines: List<DiffLine>
+        diffLines: List<DiffLine>,
+        completionId: String? = null
     ) {
         // Clear existing decorations first
         hideAllNextEditWindows()
+
+        currentCompletionId = completionId
 
         // Register active handler for this window
         val cursorPosition = LogicalPosition(currCursorPos.line, currCursorPos.character)
@@ -785,9 +790,13 @@ class NextEditWindowManager(private val project: Project) {
             e.printStackTrace()
         }
 
-        // Log acceptance (placeholder)
+        // Log acceptance
         currentCompletionId?.let {
-            // project.getService(NextEditService::class.java).acceptEdit(it)
+            project.service<ContinuePluginService>().coreMessenger?.request(
+                "nextEdit/accept",
+                mapOf("completionId" to currentCompletionId),
+                null
+            ) {}
         }
 
         isAccepted = false
@@ -798,9 +807,13 @@ class NextEditWindowManager(private val project: Project) {
 
         hideAllNextEditWindows()
 
-        // Log rejection and delete chain (placeholder)
+        // Log rejection and delete chain
         currentCompletionId?.let {
-            // project.getService(NextEditService::class.java).rejectEdit(it)
+            project.service<ContinuePluginService>().coreMessenger?.request(
+                "nextEdit/reject",
+                mapOf("completionId" to currentCompletionId),
+                null
+            ) {}
         }
     }
 
