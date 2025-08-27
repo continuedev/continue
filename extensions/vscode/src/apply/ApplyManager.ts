@@ -51,7 +51,6 @@ export class ApplyManager {
     });
 
     const hasExistingDocument = !!activeTextEditor.document.getText().trim();
-
     if (hasExistingDocument) {
       // Currently `isSearchAndReplace` will always provide a full file rewrite
       // as the contents of `text`, so we can just instantly apply

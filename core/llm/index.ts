@@ -30,6 +30,7 @@ import {
   TemplateType,
   Usage,
 } from "../index.js";
+import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
@@ -190,6 +191,8 @@ export abstract class BaseLLM implements ILLM {
   //URI to local block defining this LLM
   sourceFile?: string;
 
+  isFromAutoDetect?: boolean;
+
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
@@ -293,6 +296,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
+    this.isFromAutoDetect = options.isFromAutoDetect;
   }
 
   get contextLength() {
@@ -471,6 +475,15 @@ export abstract class BaseLLM implements ILLM {
 
         return resp;
       } catch (e: any) {
+        // Capture all fetch errors to Sentry for monitoring
+        Logger.error(e, {
+          context: "llm_fetch",
+          url: String(input),
+          method: init?.method || "GET",
+          model: this.model,
+          provider: this.providerName,
+        });
+
         // Errors to ignore
         if (e.message.includes("/api/tags")) {
           throw new Error(`Error fetching tags: ${e.message}`);
@@ -635,6 +648,14 @@ export abstract class BaseLLM implements ILLM {
         undefined,
       );
     } catch (e) {
+      // Capture FIM (Fill-in-the-Middle) completion failures to Sentry
+      Logger.error(e as Error, {
+        context: "llm_stream_fim",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("streamFim"),
+      });
+
       status = this._logEnd(
         completionOptions.model,
         fimLog,
@@ -753,6 +774,15 @@ export abstract class BaseLLM implements ILLM {
         undefined,
       );
     } catch (e) {
+      // Capture streaming completion failures to Sentry
+      Logger.error(e as Error, {
+        context: "llm_stream_complete",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("streamComplete"),
+        streamEnabled: completionOptions.stream !== false,
+      });
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
@@ -779,6 +809,7 @@ export abstract class BaseLLM implements ILLM {
 
     return {
       modelTitle: this.title ?? completionOptions.model,
+      modelProvider: this.underlyingProviderName,
       prompt,
       completion,
       completionOptions,
@@ -850,6 +881,14 @@ export abstract class BaseLLM implements ILLM {
         undefined,
       );
     } catch (e) {
+      // Capture completion failures to Sentry
+      Logger.error(e as Error, {
+        context: "llm_complete",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("complete"),
+      });
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
@@ -1059,6 +1098,16 @@ export abstract class BaseLLM implements ILLM {
         usage,
       );
     } catch (e) {
+      // Capture chat streaming failures to Sentry
+      Logger.error(e as Error, {
+        context: "llm_stream_chat",
+        model: completionOptions.model,
+        provider: this.providerName,
+        useOpenAIAdapter: this.shouldUseOpenAIAdapter("streamChat"),
+        streamEnabled: completionOptions.stream !== false,
+        templateMessages: !!this.templateMessages,
+      });
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
@@ -1094,9 +1143,9 @@ export abstract class BaseLLM implements ILLM {
 
     return {
       modelTitle: this.title ?? completionOptions.model,
+      modelProvider: this.underlyingProviderName,
       prompt,
       completion,
-      completionOptions,
     };
   }
 

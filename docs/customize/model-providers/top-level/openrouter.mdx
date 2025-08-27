@@ -1,5 +1,7 @@
 ---
-title: "OpenRouter"
+title: "How to Configure OpenRouter with Continue"
+sidebarTitle: "OpenRouter"
+description: "Configure OpenRouter with Continue to access various commercial and open-source models through a unified interface, including model capability configuration and advanced request options"
 ---
 
 <Tip>
@@ -85,7 +87,10 @@ For example, to prevent extra long prompts from being compressed, you can explic
 OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the function calling support of the original model. 
 
 <Info>
-  Continue automatically uses system message tools for models that don't support native function calling, so Agent mode should work even without explicit capability configuration. However, you can still override capabilities if needed.
+  Continue automatically uses system message tools for models that don't support
+  native function calling, so Agent mode should work even without explicit
+  capability configuration. However, you can still override capabilities if
+  needed.
 </Info>
 
 If you're experiencing issues with Agent mode or tools not working, you can add the capabilities field:

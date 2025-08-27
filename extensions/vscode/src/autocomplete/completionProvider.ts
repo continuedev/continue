@@ -132,6 +132,15 @@ export class ContinueCompletionProvider
     return config.selectedModelByRole.rerank ?? undefined;
   }
 
+  /**
+   * Updates this class and the prefetch queue's usingFullFileDiff flag.
+   * @param usingFullFileDiff New value to set.
+   */
+  public updateUsingFullFileDiff(usingFullFileDiff: boolean) {
+    this.usingFullFileDiff = usingFullFileDiff;
+    this.prefetchQueue.initialize(this.usingFullFileDiff);
+  }
+
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
@@ -190,7 +199,18 @@ export class ContinueCompletionProvider
     try {
       const abortController = new AbortController();
       const signal = abortController.signal;
-      token.onCancellationRequested(() => abortController.abort());
+      const completionId = uuidv4();
+
+      if (this.isNextEditActive) {
+        this.nextEditLoggingService.trackPendingCompletion(completionId);
+      }
+
+      token.onCancellationRequested(() => {
+        abortController.abort();
+        if (this.isNextEditActive) {
+          this.nextEditLoggingService.handleAbort(completionId);
+        }
+      });
 
       // Handle notebook cells
       let pos = {
@@ -243,7 +263,7 @@ export class ContinueCompletionProvider
       const wasManuallyTriggered =
         context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
-      const completionId = uuidv4();
+      // const completionId = uuidv4();
       const filepath = document.uri.toString();
       const recentlyVisitedRanges = this.recentlyVisitedRanges.getSnippets();
       let recentlyEditedRanges =

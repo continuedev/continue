@@ -21,6 +21,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
+import { isContinueTeamMember } from "../../util/isContinueTeamMember";
 import { setLocalStorage } from "../../util/localStorage";
 import { ContinueFeaturesMenu } from "./ContinueFeaturesMenu";
 
@@ -81,6 +82,8 @@ export function UserSettingsForm() {
 
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
   const showSessionTabs = config.ui?.showSessionTabs ?? false;
+  const continueAfterToolRejection =
+    config.ui?.continueAfterToolRejection ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
@@ -132,8 +135,8 @@ export function UserSettingsForm() {
       });
   }, [ideMessenger]);
 
-  const hasContinueEmail = (session as HubSessionInfo)?.account?.id.includes(
-    "@continue.dev",
+  const hasContinueEmail = isContinueTeamMember(
+    (session as HubSessionInfo)?.account?.id,
   );
 
   const disableTelemetryToggle =
@@ -446,6 +449,16 @@ export function UserSettingsForm() {
                     })
                   }
                   text="@Codebase: use tool calling only"
+                />
+
+                <ToggleSwitch
+                  isToggled={continueAfterToolRejection}
+                  onToggle={() =>
+                    handleUpdate({
+                      continueAfterToolRejection: !continueAfterToolRejection,
+                    })
+                  }
+                  text="Stream after tool rejection"
                 />
 
                 {hasContinueEmail && (

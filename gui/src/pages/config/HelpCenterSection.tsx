@@ -40,7 +40,7 @@ export function HelpCenterSection() {
       <div className="-mx-4 flex flex-col">
         <MoreHelpRow
           title="Continue Hub"
-          description="Visit hub.continue.dev to explore custom assistants and blocks"
+          description="Visit hub.continue.dev to explore custom agents and blocks"
           Icon={ArrowTopRightOnSquareIcon}
           onClick={() =>
             ideMessenger.post("openUrl", "https://hub.continue.dev/")

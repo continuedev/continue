@@ -10,12 +10,12 @@ import {
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
+import { Logger } from "../util/Logger.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { Telemetry } from "../util/posthog.js";
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
 import { ConfigResult } from "@continuedev/config-yaml";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import { ContinueServerClient } from "../continueServer/stubs/client";
 import { LLMError } from "../llm/index.js";
 import { getRootCause } from "../util/errors.js";
@@ -126,12 +126,20 @@ export class CodebaseIndexer {
     try {
       await fs.unlink(sqliteFilepath);
     } catch (error) {
+      // Capture indexer system failures to Sentry
+      Logger.error(error, {
+        filepath: sqliteFilepath,
+      });
       console.error(`Error deleting ${sqliteFilepath} folder: ${error}`);
     }
 
     try {
       await fs.rm(lanceDbFolder, { recursive: true, force: true });
     } catch (error) {
+      // Capture indexer system failures to Sentry
+      Logger.error(error, {
+        folderPath: lanceDbFolder,
+      });
       console.error(`Error deleting ${lanceDbFolder}: ${error}`);
     }
   }
@@ -795,11 +803,9 @@ export class CodebaseIndexer {
     return this.codebaseIndexingState;
   }
 
-  private hasCodebaseContextProvider() {
+  private hasIndexingContextProvider() {
     return !!this.config.contextProviders?.some(
-      (provider) =>
-        provider.description.title ===
-        CodebaseContextProvider.description.title,
+      ({ description: { dependsOnIndexing } }) => dependsOnIndexing,
     );
   }
 
@@ -828,8 +834,8 @@ export class CodebaseIndexer {
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
 
       // No point in indexing if no codebase context provider
-      const hasCodebaseContextProvider = this.hasCodebaseContextProvider();
-      if (!hasCodebaseContextProvider) {
+      const hasIndexingProviders = this.hasIndexingContextProvider();
+      if (!hasIndexingProviders) {
         return;
       }
 

@@ -1,6 +1,8 @@
 ---
-title: Amazon Bedrock
+title: "How to Configure Amazon Bedrock with Continue"
 slug: ../bedrock
+description: "Configure Amazon Bedrock with Continue to access foundation models like Claude 3.7 Sonnet for chat, Titan for embeddings, and Cohere for reranking, with AWS credential authentication"
+sidebarTitle: "Amazon Bedrock"
 ---
 
 <Tip>
@@ -48,7 +50,7 @@ slug: ../bedrock
   **Check out a more advanced configuration [here](https://hub.continue.dev/amazon/us-anthropic-claude-sonnet-4-20250514-v1?view=config)**
 </Info>
 
-## Prompt caching
+## How to Enable Prompt Caching with Amazon Bedrock
 
 Bedrock allows Claude models to cache tool payloads, system messages, and chat
 messages between requests. Enable this behavior by adding
@@ -66,7 +68,7 @@ models:
 
 Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
-## Authentication
+## How to Set Up Authentication for Amazon Bedrock
 
 Authentication will be through temporary or long-term credentials in
 `~/.aws/credentials` under a configured profile (e.g. "bedrock").
@@ -113,7 +115,7 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
   </Tab>
 </Tabs>
 
-## Custom Imported Models
+## How to Configure Custom Imported Models with Amazon Bedrock
 
 To setup Bedrock using custom imported models, add the following to your config file:
 

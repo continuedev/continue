@@ -12,6 +12,7 @@ import {
   IDE,
 } from "../index.js";
 
+import { Logger } from "../util/Logger.js";
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 
@@ -98,6 +99,11 @@ export class ProfileLifecycleManager {
         try {
           result = await this.profileLoader.doLoadConfig();
         } catch (e) {
+          // Capture config loading system failures to Sentry
+          Logger.error(e, {
+            context: "profile_config_loading",
+          });
+
           const message =
             e instanceof Error
               ? `${e.message}\n${e.stack ? e.stack : ""}`
