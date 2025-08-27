@@ -33,7 +33,8 @@ export class HistoryManager {
     sessions = sessions.filter((session: any) => {
       // Filter out old format
       return typeof session.session_id !== "string";
-    });
+    // We apply reverse() because they are in reverse chronological order
+    }).reverse();
 
     // Apply limit and offset
     if (options.limit) {
