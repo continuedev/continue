@@ -301,16 +301,7 @@ async function unrollAssistantWithConfig(
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       onPremProxyUrl: null,
-      injectBlocks: [
-        {
-          uriType: "slug",
-          fullSlug: {
-            ownerSlug: "openai",
-            packageSlug: "gpt-5",
-            versionSlug: "latest",
-          },
-        },
-      ],
+      injectBlocks: [],
     },
   );
 

@@ -94,12 +94,12 @@ runTest("Help command", () => {
 // Test 5: Check bundle size
 runTest("Bundle size is reasonable", () => {
   const isWindows = process.platform === "win32";
-  const command = isWindows 
-    ? `powershell -Command "(Get-Item dist/index.js).length / 1MB"` 
+  const command = isWindows
+    ? `powershell -Command "(Get-Item dist/index.js).length / 1MB"`
     : `ls -lh dist/index.js`;
-  
+
   let sizeInMB;
-  
+
   if (isWindows) {
     try {
       const output = execCommand(command);

@@ -48,7 +48,7 @@ models:
 
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr).toContain(
-        "--org flag is only supported in headless mode (with -p/--print flag)"
+        "--org flag is only supported in headless mode (with -p/--print flag)",
       );
     });
 
@@ -71,7 +71,7 @@ models:
 
       // Should fail for a different reason (no actual auth/API), not because of flag validation
       expect(result.stderr).not.toContain(
-        "--org flag is only supported in headless mode (with -p/--print flag)"
+        "--org flag is only supported in headless mode (with -p/--print flag)",
       );
     });
   });
@@ -97,7 +97,7 @@ models:
 
       // The org flag should be inherited and work in headless mode
       expect(result.stderr).not.toContain(
-        "--org flag is only supported in headless mode (with -p/--print flag)"
+        "--org flag is only supported in headless mode (with -p/--print flag)",
       );
     });
   });

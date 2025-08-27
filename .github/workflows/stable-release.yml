@@ -152,6 +152,11 @@ jobs:
           component: core
           include-root: true
 
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Prepare package for direct stable release
         if: ${{ inputs.release_type == 'direct-stable' }}
         working-directory: extensions/cli

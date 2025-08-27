@@ -39,6 +39,11 @@ jobs:
           component: core
           include-root: true
 
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Install dependencies
         run: |
           cd extensions/cli
@@ -81,6 +86,11 @@ jobs:
           component: core
           include-root: true
 
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Install dependencies
         run: |
           cd extensions/cli
@@ -107,7 +117,6 @@ jobs:
         run: |
           cd extensions/cli
           npm run test:e2e
-
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
