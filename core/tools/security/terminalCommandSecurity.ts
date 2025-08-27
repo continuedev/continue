@@ -339,10 +339,7 @@ function evaluateSingleCommand(
 /**
  * Checks if a command is critical and should always be disabled
  */
-function isCriticalCommand(
-  baseCommand: string,
-  args: string[],
-): boolean {
+function isCriticalCommand(baseCommand: string, args: string[]): boolean {
   // System destruction commands - check if base command starts with mkfs
   if (baseCommand.startsWith("mkfs")) {
     return true;
@@ -505,7 +502,10 @@ function isCriticalCommand(
 /**
  * Checks if command is a package manager install
  */
-function isHighRiskPackageManager(baseCommand: string, args: string[]): boolean {
+function isHighRiskPackageManager(
+  baseCommand: string,
+  args: string[],
+): boolean {
   const packageManagers = [
     "npm",
     "yarn",
@@ -562,7 +562,10 @@ function isHighRiskNetworkTool(baseCommand: string): boolean {
 /**
  * Checks if command is a script interpreter
  */
-function isHighRiskScriptInterpreter(baseCommand: string, args: string[]): boolean {
+function isHighRiskScriptInterpreter(
+  baseCommand: string,
+  args: string[],
+): boolean {
   const scriptInterpreters = [
     "sh",
     "bash",
@@ -628,7 +631,10 @@ function isHighRiskDirectScript(baseCommand: string): boolean {
 /**
  * Checks if command modifies environment variables
  */
-function isHighRiskEnvironmentModifier(baseCommand: string, args: string[]): boolean {
+function isHighRiskEnvironmentModifier(
+  baseCommand: string,
+  args: string[],
+): boolean {
   if (
     baseCommand === "export" ||
     baseCommand === "setx" ||
@@ -714,7 +720,10 @@ function isHighRiskRmCommand(baseCommand: string, args: string[]): boolean {
 /**
  * Checks if command is archive extraction to system directories
  */
-function isHighRiskArchiveExtraction(baseCommand: string, args: string[]): boolean {
+function isHighRiskArchiveExtraction(
+  baseCommand: string,
+  args: string[],
+): boolean {
   if (
     baseCommand === "tar" ||
     baseCommand === "unzip" ||
@@ -806,9 +815,7 @@ function isHighRiskWindowsRegistry(baseCommand: string): boolean {
  */
 function isHighRiskWindowsManagement(baseCommand: string): boolean {
   return (
-    baseCommand === "wmic" ||
-    baseCommand === "net" ||
-    baseCommand === "netsh"
+    baseCommand === "wmic" || baseCommand === "net" || baseCommand === "netsh"
   );
 }
 
@@ -829,7 +836,10 @@ function isHighRiskSourceCommand(baseCommand: string): boolean {
 /**
  * Checks if command manipulates history
  */
-function isHighRiskHistoryManipulation(baseCommand: string, args: string[]): boolean {
+function isHighRiskHistoryManipulation(
+  baseCommand: string,
+  args: string[],
+): boolean {
   if (baseCommand === "history" && args.includes("-c")) {
     return true;
   }
@@ -881,7 +891,8 @@ function isHighRiskCommand(
   if (isHighRiskDirectScript(baseCommand)) return true;
   if (isHighRiskEnvironmentModifier(baseCommand, args)) return true;
   if (baseCommand === "alias") return true;
-  if (isFunctionDefinition([baseCommand, ...args], originalCommand)) return true;
+  if (isFunctionDefinition([baseCommand, ...args], originalCommand))
+    return true;
   if (isHighRiskProcessCommand(baseCommand)) return true;
   if (isHighRiskSystemService(baseCommand)) return true;
   if (isHighRiskFileOperation(baseCommand, args)) return true;
@@ -905,10 +916,7 @@ function isHighRiskCommand(
 /**
  * Checks if a command is safe and can be auto-approved
  */
-function isSafeCommand(
-  baseCommand: string,
-  args: string[],
-): boolean {
+function isSafeCommand(baseCommand: string, args: string[]): boolean {
   // Information commands
   const infoCommands = [
     "ls",

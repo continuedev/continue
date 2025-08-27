@@ -1007,27 +1007,30 @@ export class Core {
       this.handleToolCall(toolCall),
     );
 
-    on("tools/evaluatePolicy", async ({ data: { toolName, basePolicy, args } }) => {
-      const { config } = await this.configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-      
-      const tool = config.tools.find((t) => t.function.name === toolName);
-      if (!tool) {
-        // Tool not found, return base policy
+    on(
+      "tools/evaluatePolicy",
+      async ({ data: { toolName, basePolicy, args } }) => {
+        const { config } = await this.configHandler.loadConfig();
+        if (!config) {
+          throw new Error("Config not loaded");
+        }
+
+        const tool = config.tools.find((t) => t.function.name === toolName);
+        if (!tool) {
+          // Tool not found, return base policy
+          return { policy: basePolicy };
+        }
+
+        // If tool has evaluateToolCallPolicy function, use it
+        if (tool.evaluateToolCallPolicy) {
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          return { policy: evaluatedPolicy };
+        }
+
+        // Otherwise return base policy unchanged
         return { policy: basePolicy };
-      }
-      
-      // If tool has evaluateToolCallPolicy function, use it
-      if (tool.evaluateToolCallPolicy) {
-        const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
-        return { policy: evaluatedPolicy };
-      }
-      
-      // Otherwise return base policy unchanged
-      return { policy: basePolicy };
-    });
+      },
+    );
 
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);

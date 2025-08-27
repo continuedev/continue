@@ -578,16 +578,16 @@ describe("streamResponseThunk - tool calls", () => {
 
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState();
-    
+
     // Check that the tool was executed (status should be 'done' if auto-approved and executed)
     const toolCallState = finalState.session.history.find(
-      item => item.toolCallStates && item.toolCallStates.length > 0
+      (item) => item.toolCallStates && item.toolCallStates.length > 0,
     )?.toolCallStates?.[0];
-    
+
     // With proper mocking, the tool should be auto-executed
     expect(toolCallState?.status).toBe("done");
     expect(toolCallState?.output).toBeDefined();
-    
+
     expect(finalState).toEqual({
       session: {
         history: [
@@ -3054,35 +3054,39 @@ describe("streamResponseThunk - tool calls", () => {
       const mockIdeMessenger = mockStore.mockIdeMessenger;
 
       // Simple mock - just return a different policy for testing
-      mockIdeMessenger.request.mockImplementation((endpoint: string, data: any) => {
-        if (endpoint === "tools/evaluatePolicy") {
-          // For this test, simulate that echo commands require permission
-          if (data.args.command?.toLowerCase().startsWith("echo")) {
+      mockIdeMessenger.request.mockImplementation(
+        (endpoint: string, data: any) => {
+          if (endpoint === "tools/evaluatePolicy") {
+            // For this test, simulate that echo commands require permission
+            if (data.args.command?.toLowerCase().startsWith("echo")) {
+              return Promise.resolve({
+                status: "success",
+                content: { policy: "allowedWithPermission" },
+              });
+            }
             return Promise.resolve({
               status: "success",
-              content: { policy: "allowedWithPermission" },
+              content: { policy: data.basePolicy },
             });
+          } else if (endpoint === "llm/compileChat") {
+            return Promise.resolve({
+              status: "success",
+              content: {
+                compiledChatMessages: [
+                  { role: "user", content: "Run echo hello" },
+                ],
+                didPrune: false,
+                contextPercentage: 0.5,
+              },
+            });
+          } else if (endpoint === "history/save") {
+            return Promise.resolve({ status: "success" });
+          } else if (endpoint === "history/list") {
+            return Promise.resolve({ status: "success", content: [] });
           }
-          return Promise.resolve({
-            status: "success",
-            content: { policy: data.basePolicy },
-          });
-        } else if (endpoint === "llm/compileChat") {
-          return Promise.resolve({
-            status: "success",
-            content: {
-              compiledChatMessages: [{ role: "user", content: "Run echo hello" }],
-              didPrune: false,
-              contextPercentage: 0.5,
-            },
-          });
-        } else if (endpoint === "history/save") {
-          return Promise.resolve({ status: "success" });
-        } else if (endpoint === "history/list") {
-          return Promise.resolve({ status: "success", content: [] });
-        }
-        return Promise.resolve({ status: "success", content: {} });
-      });
+          return Promise.resolve({ status: "success", content: {} });
+        },
+      );
 
       // Setup streaming with echo command (should require permission despite auto-approve base)
       async function* mockStreamWithEcho() {
@@ -3202,29 +3206,31 @@ describe("streamResponseThunk - tool calls", () => {
       const mockIdeMessenger = mockStore.mockIdeMessenger;
 
       // Simple mock - just return disabled policy
-      mockIdeMessenger.request.mockImplementation((endpoint: string, data: any) => {
-        if (endpoint === "tools/evaluatePolicy") {
-          // Backend should respect disabled state
-          return Promise.resolve({
-            status: "success",
-            content: { policy: "disabled" },
-          });
-        } else if (endpoint === "llm/compileChat") {
-          return Promise.resolve({
-            status: "success",
-            content: {
-              compiledChatMessages: [{ role: "user", content: "Run ls" }],
-              didPrune: false,
-              contextPercentage: 0.5,
-            },
-          });
-        } else if (endpoint === "history/save") {
-          return Promise.resolve({ status: "success" });
-        } else if (endpoint === "history/list") {
-          return Promise.resolve({ status: "success", content: [] });
-        }
-        return Promise.resolve({ status: "success", content: {} });
-      });
+      mockIdeMessenger.request.mockImplementation(
+        (endpoint: string, data: any) => {
+          if (endpoint === "tools/evaluatePolicy") {
+            // Backend should respect disabled state
+            return Promise.resolve({
+              status: "success",
+              content: { policy: "disabled" },
+            });
+          } else if (endpoint === "llm/compileChat") {
+            return Promise.resolve({
+              status: "success",
+              content: {
+                compiledChatMessages: [{ role: "user", content: "Run ls" }],
+                didPrune: false,
+                contextPercentage: 0.5,
+              },
+            });
+          } else if (endpoint === "history/save") {
+            return Promise.resolve({ status: "success" });
+          } else if (endpoint === "history/list") {
+            return Promise.resolve({ status: "success", content: [] });
+          }
+          return Promise.resolve({ status: "success", content: {} });
+        },
+      );
 
       // Setup streaming with regular command
       async function* mockStreamWithLs() {

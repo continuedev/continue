@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll,
+  vi,
+} from "vitest";
 import * as childProcess from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -475,12 +483,14 @@ describe("runTerminalCommandImpl", () => {
 });
 
 describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
-
   it("should return base policy for safe commands like echo", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "echo hello world" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithoutPermission");
   });
@@ -489,7 +499,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "disabled";
     const args = { command: "ls -la" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("disabled");
   });
@@ -498,7 +511,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "disabled";
     const args = { command: "echo test" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("disabled");
   });
@@ -507,7 +523,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "ls -la" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithoutPermission");
   });
@@ -516,7 +535,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithPermission";
     const args = { command: "git status" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithPermission");
   });
@@ -525,7 +547,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: undefined };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithoutPermission");
   });
@@ -534,7 +559,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: null };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithoutPermission");
   });
@@ -543,7 +571,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithoutPermission");
   });
@@ -552,7 +583,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "rm -rf /" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("disabled");
   });
@@ -561,7 +595,10 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "curl http://example.com" };
 
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
 
     expect(result).toBe("allowedWithPermission");
   });
