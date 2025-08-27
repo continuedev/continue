@@ -46,6 +46,83 @@ export class ChatDescriber {
     return removeQuotesAndEscapes(renderChatMessage(titleResponse));
   }
 
+  // CLI-specific method that works with BaseLlmApi
+  static async describeWithBaseLlmApi(
+    llmApi: any, // BaseLlmApi - using any to avoid import issues
+    modelConfig: any, // ModelConfig - using any to avoid import issues
+    message: string,
+  ): Promise<string | undefined> {
+    if (!ChatDescriber.prompt) {
+      return;
+    }
+
+    // Clean up and distill the message we want to send to the LLM
+    message = removeCodeBlocksAndTrim(message);
+
+    if (!message) {
+      return;
+    }
+
+    try {
+      // Create the chat message in the unified format
+      const chatMessage = {
+        role: "user" as const,
+        content: ChatDescriber.prompt + message,
+      };
+
+      // Convert to OpenAI format - use a simple fallback to avoid import issues
+      let openaiMessages;
+      let defaultOptions = {};
+      
+      try {
+        // Try to import CLI dependencies dynamically
+        const { convertFromUnifiedHistory } = await import("../../extensions/cli/src/messageConversion.js");
+        const { getDefaultCompletionOptions } = await import("../../extensions/cli/src/streamChatResponse.types.js");
+        
+        openaiMessages = convertFromUnifiedHistory([{
+          message: chatMessage,
+          contextItems: [],
+        }]);
+        defaultOptions = getDefaultCompletionOptions(modelConfig.defaultCompletionOptions);
+      } catch {
+        // Fallback: use direct OpenAI format if imports fail
+        openaiMessages = [chatMessage];
+        defaultOptions = {};
+      }
+
+      // Set up completion options for non-streaming
+      const completionOptions = {
+        model: modelConfig.model,
+        messages: openaiMessages,
+        max_tokens: ChatDescriber.maxTokens,
+        stream: false as const,
+        temperature: (defaultOptions as any)?.temperature,
+        frequency_penalty: (defaultOptions as any)?.frequency_penalty,
+        presence_penalty: (defaultOptions as any)?.presence_penalty,
+        top_p: (defaultOptions as any)?.top_p,
+      };
+
+      // Call the LLM
+      const titleResponse = await llmApi.chatCompletionNonStream(
+        completionOptions,
+        new AbortController().signal,
+      );
+
+      // Extract and clean up the response
+      if (titleResponse.choices && titleResponse.choices.length > 0) {
+        const content = titleResponse.choices[0].message.content;
+        if (content) {
+          return removeQuotesAndEscapes(content);
+        }
+      }
+
+      return undefined;
+    } catch (error) {
+      console.debug("Error generating chat title:", error);
+      return undefined;
+    }
+  }
+
   //   // TODO: Allow the user to manually set specific/tailored prompts to generate their titles
   //   static async setup() {
   //     if(config?.prompt) {

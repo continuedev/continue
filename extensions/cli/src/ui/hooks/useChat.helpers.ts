@@ -407,3 +407,41 @@ export async function handleAutoCompaction({
     };
   }
 }
+
+/**
+ * Generate a title for the session based on the first assistant response
+ */
+export async function generateSessionTitle(
+  assistantResponse: string,
+  llmApi: any,
+  model: any,
+  currentSessionTitle?: string,
+): Promise<string | undefined> {
+  // Only generate title for untitled sessions
+  if (currentSessionTitle && currentSessionTitle !== "Untitled Session") {
+    return undefined;
+  }
+
+  if (!assistantResponse || !llmApi || !model) {
+    return undefined;
+  }
+
+  try {
+    const { ChatDescriber } = await import("core/util/chatDescriber.js");
+    const generatedTitle = await ChatDescriber.describeWithBaseLlmApi(
+      llmApi,
+      model,
+      assistantResponse,
+    );
+    
+    logger.debug("Generated session title", {
+      original: currentSessionTitle,
+      generated: generatedTitle,
+    });
+
+    return generatedTitle;
+  } catch (error) {
+    logger.error("Failed to generate session title:", error);
+    return undefined;
+  }
+}

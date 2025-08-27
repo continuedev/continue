@@ -1,8 +1,14 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
+import { getCurrentSession, updateSessionTitle } from "../../session.js";
+
+import { generateSessionTitle } from "./useChat.helpers.js";
+
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setActivePermissionRequest: React.Dispatch<React.SetStateAction<any>>;
+  llmApi?: any;
+  model?: any;
 }
 
 /**
@@ -11,12 +17,12 @@ interface CreateStreamCallbacksOptions {
 export function createStreamCallbacks(
   options: CreateStreamCallbacksOptions,
 ): any {
-  const { setChatHistory, setActivePermissionRequest } = options;
+  const { setChatHistory, setActivePermissionRequest, llmApi, model } = options;
 
   return {
     onContent: (_: string) => {},
 
-    onContentComplete: (content: string) => {
+    onContentComplete: async (content: string) => {
       setChatHistory((prev) => [
         ...prev,
         {
@@ -28,6 +34,21 @@ export function createStreamCallbacks(
           },
         },
       ]);
+
+      // Generate session title after first assistant response
+      if (content && llmApi && model) {
+        const currentSession = getCurrentSession();
+        const generatedTitle = await generateSessionTitle(
+          content,
+          llmApi,
+          model,
+          currentSession.title,
+        );
+        
+        if (generatedTitle) {
+          updateSessionTitle(generatedTitle);
+        }
+      }
     },
 
     onToolStart: (toolName: string, toolArgs?: any) => {
