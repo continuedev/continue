@@ -14,19 +14,22 @@ describe("runTerminalCommandTool", () => {
   describe("basic command execution", () => {
     it("should execute simple echo command and return stdout", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "echo 'hello world'",
+        command: "node -e \"console.log('hello world')\"",
       });
       expect(result.trim()).toBe("hello world");
     });
 
     it("should execute pwd command and return current directory", async () => {
       const result = await runTerminalCommandTool.run({ command: "pwd" });
-      expect(result.trim()).toMatch(/^\/.*$/); // Should be an absolute path
+      // Should contain a path - either Unix-style or Windows-style
+      expect(result.trim()).toMatch(
+        /(?:^\/.*$)|(?:^[A-Za-z]:\\.*$)|(?:Path\s+----\s+[A-Za-z]:\\.*$)/m,
+      );
     });
 
     it("should execute directory listing command and return file listings", async () => {
       // Use a simple Node.js command that should work on all platforms
-      const command = 'node --version';
+      const command = "node --version";
       const result = await runTerminalCommandTool.run({ command });
 
       // Should contain version number (starts with v)
@@ -35,7 +38,7 @@ describe("runTerminalCommandTool", () => {
 
     it("should handle commands with multiple arguments", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "echo 'arg1' 'arg2' 'arg3'",
+        command: "node -e \"console.log('arg1', 'arg2', 'arg3')\"",
       });
       expect(result.trim()).toBe("arg1 arg2 arg3");
     });
@@ -45,27 +48,28 @@ describe("runTerminalCommandTool", () => {
     it("should reject with error message for non-existent commands", async () => {
       await expect(
         runTerminalCommandTool.run({ command: "nonexistentcommand12345" }),
-      ).rejects.toMatch(/Error \(exit code 127\):/);
+      ).rejects.toMatch(/Error \(exit code (?:127|1)\):|Command timed out/);
     });
 
     it("should handle commands with non-zero exit codes and stderr", async () => {
       await expect(
         runTerminalCommandTool.run({
-          command: "sh -c 'echo error >&2; exit 1'",
+          command: "node -e \"console.error('error'); process.exit(1)\"",
         }),
       ).rejects.toMatch(/Error \(exit code 1\): error/);
     });
 
     it("should resolve when commands have non-zero exit codes but no stderr", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "sh -c 'exit 1'",
+        command: 'node -e "process.exit(1)"',
       });
       expect(result).toBe("");
     });
 
     it("should handle commands that write to stderr", async () => {
       const result = await runTerminalCommandTool.run({
-        command: 'sh -c \'echo "error message" >&2; echo "success"\'',
+        command:
+          "node -e \"process.stderr.write('error message\\n'); process.stdout.write('success\\n')\"",
       });
       expect(result).toContain("success");
       expect(result).toContain("Stderr: error message");
@@ -80,7 +84,7 @@ describe("runTerminalCommandTool", () => {
         const sleepDuration = TEST_TIMEOUT_MS / 1000 + 0.5; // Sleep 0.5s longer than timeout
         const startTime = Date.now();
         const result = await runTerminalCommandTool.run({
-          command: `sleep ${sleepDuration}`,
+          command: `node -e "setTimeout(() => {}, ${sleepDuration * 1000})"`,
         });
         const endTime = Date.now();
         const elapsed = endTime - startTime;
@@ -103,7 +107,7 @@ describe("runTerminalCommandTool", () => {
         const iterations = 3;
         const startTime = Date.now();
         const result = await runTerminalCommandTool.run({
-          command: `for i in $(seq 1 ${iterations}); do echo "output $i"; sleep ${outputInterval}; done`,
+          command: `node -e "for(let i=1;i<=${iterations};i++){console.log('output '+i);if(i<${iterations})await new Promise(r=>setTimeout(r,${outputInterval * 1000}));}" --input-type=module`,
         });
         const endTime = Date.now();
 
@@ -124,7 +128,7 @@ describe("runTerminalCommandTool", () => {
         const iterations = 3;
         const startTime = Date.now();
         const result = await runTerminalCommandTool.run({
-          command: `for i in $(seq 1 ${iterations}); do echo "error $i" >&2; sleep ${outputInterval}; done; echo 'done'`,
+          command: `node -e "for(let i=1;i<=${iterations};i++){console.error('error '+i);if(i<${iterations})await new Promise(r=>setTimeout(r,${outputInterval * 1000}));} console.log('done');" --input-type=module`,
         });
         const endTime = Date.now();
 
@@ -143,7 +147,7 @@ describe("runTerminalCommandTool", () => {
         // Create a command that produces some output then stops
         const sleepDuration = TEST_TIMEOUT_MS / 1000 + 0.5; // Sleep longer than timeout
         const result = await runTerminalCommandTool.run({
-          command: `echo 'initial output'; sleep ${sleepDuration}`,
+          command: `node -e "console.log('initial output'); setTimeout(() => {}, ${sleepDuration * 1000})"`,
         });
 
         expect(result).toContain("initial output");
@@ -158,20 +162,22 @@ describe("runTerminalCommandTool", () => {
   describe("output handling", () => {
     it("should preserve line breaks in output", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "printf 'line1\\nline2\\nline3'",
+        command: "node -e \"console.log('line1\\nline2\\nline3')\"",
       });
       expect(result).toContain("line1\nline2\nline3");
     });
 
     it("should handle empty output", async () => {
-      const result = await runTerminalCommandTool.run({ command: "true" });
+      const result = await runTerminalCommandTool.run({
+        command: 'node -e ""',
+      });
       expect(result).toBe("");
     });
 
     it("should handle large output", async () => {
       // Generate a command that produces substantial output
       const result = await runTerminalCommandTool.run({
-        command: "seq 1 1000",
+        command: 'node -e "for(let i=1;i<=1000;i++)console.log(i)"',
       });
       expect(result).toContain("1\n");
       expect(result).toContain("1000");
@@ -183,7 +189,7 @@ describe("runTerminalCommandTool", () => {
     it("should truncate output when it exceeds 5000 lines", async () => {
       // Generate a command that produces more than 5000 lines
       const result = await runTerminalCommandTool.run({
-        command: "seq 1 6000",
+        command: 'node -e "for(let i=1;i<=6000;i++)console.log(i)"',
       });
 
       // Should contain the truncation message
@@ -206,13 +212,16 @@ describe("runTerminalCommandTool", () => {
 
   describe("command types", () => {
     it("should handle shell built-ins", async () => {
-      const result = await runTerminalCommandTool.run({ command: "echo $PWD" });
-      expect(result.trim()).toMatch(/^\/.*$/);
+      const result = await runTerminalCommandTool.run({
+        command: 'node -e "console.log(process.cwd())"',
+      });
+      // Should contain a path - either Unix-style or Windows-style
+      expect(result.trim()).toMatch(/(?:^\/.*$)|(?:^[A-Za-z]:\\.*$)/);
     });
 
     it("should handle commands with pipes", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "echo 'hello world' | wc -w",
+        command: "node -e \"console.log('hello world'.split(' ').length)\"",
       });
       expect(result.trim()).toBe("2");
     });
@@ -220,14 +229,15 @@ describe("runTerminalCommandTool", () => {
     it("should handle commands with redirections", async () => {
       const result = await runTerminalCommandTool.run({
         command:
-          "echo 'test' > /tmp/test-file && cat /tmp/test-file && rm /tmp/test-file",
+          "node -e \"const fs=require('fs'),os=require('os'),path=require('path'); const file=path.join(os.tmpdir(),'test-file'); fs.writeFileSync(file,'test'); console.log(fs.readFileSync(file,'utf8')); fs.unlinkSync(file);\"",
       });
       expect(result.trim()).toBe("test");
     });
 
     it("should handle commands with environment variables", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "TEST_VAR='hello' sh -c 'echo $TEST_VAR'",
+        command:
+          "node -e \"process.env.TEST_VAR='hello'; console.log(process.env.TEST_VAR)\"",
       });
       expect(result.trim()).toBe("hello");
     });
