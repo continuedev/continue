@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { handleSlashCommands } from "./slashCommands.js";
-import { services } from "./services/index.js";
+
 import * as workosModule from "./auth/workos.js";
-import * as versionModule from "./version.js";
+import { services } from "./services/index.js";
 import * as sessionModule from "./session.js";
+import { handleSlashCommands } from "./slashCommands.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import * as versionModule from "./version.js";
 
 // Mock all dependencies
 vi.mock("./auth/workos.js");
@@ -39,7 +40,7 @@ describe("handleSlashCommands - /info", () => {
     vi.spyOn(process, "cwd").mockReturnValue("/test/working/directory");
 
     // Mock posthog
-    vi.mocked(posthogService.capture).mockReturnValue(undefined);
+    vi.mocked(posthogService.capture).mockReturnValue(Promise.resolve());
 
     // Mock version
     vi.mocked(versionModule.getVersion).mockReturnValue("1.2.3");
@@ -56,7 +57,7 @@ describe("handleSlashCommands - /info", () => {
 
     // Mock config service
     const mockConfigState = {
-      config: { name: "test-config" },
+      config: { name: "test-config", version: "1.0.0" } as any,
       configPath: "/test/config.yaml",
     };
     vi.mocked(services.config.getState).mockReturnValue(mockConfigState);
@@ -65,7 +66,7 @@ describe("handleSlashCommands - /info", () => {
       name: "gpt-4",
     });
 
-    const result = await handleSlashCommands("/info", mockAssistant);
+    const result = await handleSlashCommands("/info", mockAssistant as any);
 
     expect(result).toBeDefined();
     expect(result?.output).toContain("CLI Information:");
@@ -74,7 +75,7 @@ describe("handleSlashCommands - /info", () => {
       "Working Directory: /test/working/directory",
     );
     expect(result?.output).toContain("Configuration:");
-    expect(result?.output).toContain("Model: openai/gpt-4");
+    expect(result?.output).toContain("Model: gpt-4");
     expect(result?.exit).toBe(false);
   });
 
@@ -89,7 +90,7 @@ describe("handleSlashCommands - /info", () => {
 
     // Mock config service
     const mockConfigState = {
-      config: { name: "test-config" },
+      config: { name: "test-config", version: "1.0.0" } as any,
       configPath: "/test/config.yaml",
     };
     vi.mocked(services.config.getState).mockReturnValue(mockConfigState);
@@ -98,11 +99,11 @@ describe("handleSlashCommands - /info", () => {
       name: "claude-3-sonnet",
     });
 
-    const result = await handleSlashCommands("/info", mockAssistant);
+    const result = await handleSlashCommands("/info", mockAssistant as any);
 
     expect(result?.output).toContain("Authentication:");
     expect(result?.output).toContain("Email: test@example.com");
-    expect(result?.output).toContain("Model: anthropic/claude-3-sonnet");
+    expect(result?.output).toContain("Model: claude-3-sonnet");
   });
 
   it("should handle missing model info gracefully", async () => {
@@ -111,13 +112,13 @@ describe("handleSlashCommands - /info", () => {
 
     // Mock config service with no model info
     const mockConfigState = {
-      config: { name: "test-config" },
+      config: { name: "test-config", version: "1.0.0" } as any,
       configPath: "/test/config.yaml",
     };
     vi.mocked(services.config.getState).mockReturnValue(mockConfigState);
     vi.mocked(services.model.getModelInfo).mockReturnValue(null);
 
-    const result = await handleSlashCommands("/info", mockAssistant);
+    const result = await handleSlashCommands("/info", mockAssistant as any);
 
     expect(result?.output).toContain("Model: Not available");
   });
@@ -131,7 +132,7 @@ describe("handleSlashCommands - /info", () => {
       throw new Error("Service not available");
     });
 
-    const result = await handleSlashCommands("/info", mockAssistant);
+    const result = await handleSlashCommands("/info", mockAssistant as any);
 
     expect(result?.output).toContain("Configuration service not available");
   });

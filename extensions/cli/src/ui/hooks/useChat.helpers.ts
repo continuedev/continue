@@ -4,7 +4,6 @@ import type { ChatHistoryItem, Session } from "core/index.js";
 import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
-import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
 import {
   loadSession,
@@ -20,11 +19,11 @@ import { shouldAutoCompact } from "../../util/tokenizer.js";
 import { SlashCommandResult } from "./useChat.types.js";
 
 /**
- * Initialize chat history with proper system message
+ * Initialize chat history
  */
 export async function initChatHistory(
   resume?: boolean,
-  additionalRules?: string[],
+  _additionalRules?: string[],
 ): Promise<ChatHistoryItem[]> {
   if (resume) {
     const savedSession = loadSession();
@@ -33,11 +32,8 @@ export async function initChatHistory(
     }
   }
 
-  const history = await initializeChatHistory({
-    resume,
-    rule: additionalRules,
-  });
-  return history;
+  // Start with empty history - system message will be injected when needed
+  return [];
 }
 
 /**

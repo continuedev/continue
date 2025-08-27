@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 import type { ChatCompletionTool } from "openai/resources.mjs";
 
 import {
-  convertFromUnifiedHistory,
+  convertFromUnifiedHistoryWithSystemMessage,
   createHistoryItem,
 } from "./messageConversion.js";
 import { filterExcludedTools } from "./permissions/index.js";
@@ -16,6 +16,7 @@ import {
   MCPTool,
   SERVICE_NAMES,
 } from "./services/index.js";
+import { systemMessageService } from "./services/SystemMessageService.js";
 import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 import {
@@ -355,7 +356,13 @@ export async function processStreamingResponse(
     isHeadless,
     tools,
   } = options;
-  const openaiChatHistory = convertFromUnifiedHistory(chatHistory);
+
+  // Get fresh system message and inject it
+  const systemMessage = await systemMessageService.getSystemMessage();
+  const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
+    chatHistory,
+    systemMessage,
+  );
   const requestStartTime = Date.now();
 
   const streamFactory = async (retryAbortSignal: AbortSignal) => {

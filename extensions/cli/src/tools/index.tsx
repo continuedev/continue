@@ -1,3 +1,7 @@
+// @ts-ignore
+import { Text } from "ink";
+import * as React from "react";
+
 import {
   getServiceSync,
   MCPServiceState,
@@ -207,13 +211,13 @@ export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
  * Formats a tool call with its arguments for display
  * @param toolName The name of the tool
  * @param args The tool arguments
- * @returns A formatted string like "ToolName(arg)" or just "ToolName" if no args
+ * @returns A React node with bolded tool name like "<b>ToolName</b>(arg)" or just "<b>ToolName</b>" if no args
  */
-export function formatToolCall(toolName: string, args?: any): string {
+export function formatToolCall(toolName: string, args?: any): React.ReactNode {
   const displayName = getToolDisplayName(toolName);
 
   if (!args || Object.keys(args).length === 0) {
-    return displayName;
+    return <Text bold>{displayName}</Text>;
   }
 
   // Get the first argument value if it's a simple one
@@ -238,5 +242,9 @@ export function formatToolCall(toolName: string, args?: any): string {
     }
   }
 
-  return `${displayName}(${formattedValue})`;
+  return (
+    <Text>
+      <Text bold>{displayName}</Text>({formattedValue})
+    </Text>
+  );
 }

@@ -342,6 +342,30 @@ export function convertFromUnifiedHistory(
 }
 
 /**
+ * Convert ChatHistoryItem array to ChatCompletionMessageParam array with injected system message
+ * @param historyItems - The chat history items
+ * @param systemMessage - The system message to inject at the beginning
+ */
+export function convertFromUnifiedHistoryWithSystemMessage(
+  historyItems: ChatHistoryItem[],
+  systemMessage: string,
+): ChatCompletionMessageParam[] {
+  const messages: ChatCompletionMessageParam[] = [];
+
+  // Inject system message at the beginning
+  messages.push({
+    role: "system",
+    content: systemMessage,
+  });
+
+  // Convert the rest of the history
+  const convertedMessages = convertFromUnifiedHistory(historyItems);
+  messages.push(...convertedMessages);
+
+  return messages;
+}
+
+/**
  * Extract tool call information from a ChatHistoryItem
  */
 export function extractToolCallInfo(historyItem: ChatHistoryItem): {

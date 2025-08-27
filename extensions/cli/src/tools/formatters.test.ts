@@ -1,4 +1,6 @@
-import { vi } from "vitest";
+import { render } from "ink-testing-library";
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { formatToolArgument } from "./formatters.js";
 
@@ -15,74 +17,144 @@ describe("formatToolCall", () => {
   });
 
   it("should format tool name without arguments", () => {
-    expect(formatToolCall("Write")).toBe("Write");
-    expect(formatToolCall("Read", {})).toBe("Read");
-    expect(formatToolCall("non_existent_tool", null)).toBe("non_existent_tool");
+    const writeResult = render(
+      React.createElement(() => formatToolCall("Write") as React.ReactElement),
+    );
+    expect(writeResult.lastFrame()).toBe("Write");
+
+    const readResult = render(
+      React.createElement(
+        () => formatToolCall("Read", {}) as React.ReactElement,
+      ),
+    );
+    expect(readResult.lastFrame()).toBe("Read");
+
+    const nonExistentResult = render(
+      React.createElement(
+        () => formatToolCall("non_existent_tool", null) as React.ReactElement,
+      ),
+    );
+    expect(nonExistentResult.lastFrame()).toBe("non_existent_tool");
   });
 
   it("should format tool name with relative path argument", () => {
-    expect(formatToolCall("Write", { filepath: "README.md" })).toBe(
-      "Write(README.md)",
+    const writeResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Write", {
+            filepath: "README.md",
+          }) as React.ReactElement,
+      ),
     );
-    expect(formatToolCall("Read", { filepath: "src/index.ts" })).toBe(
-      "Read(src/index.ts)",
+    expect(writeResult.lastFrame()).toBe("Write(README.md)");
+
+    const readResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Read", {
+            filepath: "src/index.ts",
+          }) as React.ReactElement,
+      ),
     );
+    expect(readResult.lastFrame()).toBe("Read(src/index.ts)");
   });
 
   it("should convert absolute paths to relative paths", () => {
-    expect(
-      formatToolCall("Write", {
-        filepath: "/Users/test/project/README.md",
-      }),
-    ).toBe("Write(README.md)");
+    const writeResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Write", {
+            filepath: "/Users/test/project/README.md",
+          }) as React.ReactElement,
+      ),
+    );
+    expect(writeResult.lastFrame()).toBe("Write(README.md)");
 
-    expect(
-      formatToolCall("Read", {
-        filepath: "/Users/test/project/src/components/App.tsx",
-      }),
-    ).toBe("Read(src/components/App.tsx)");
+    const readResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Read", {
+            filepath: "/Users/test/project/src/components/App.tsx",
+          }) as React.ReactElement,
+      ),
+    );
+    expect(readResult.lastFrame()).toBe("Read(src/components/App.tsx)");
   });
 
   it("should handle absolute paths outside the project", () => {
-    expect(formatToolCall("Write", { filepath: "/Users/other/file.txt" })).toBe(
-      "Write(../../other/file.txt)",
+    const result = render(
+      React.createElement(
+        () =>
+          formatToolCall("Write", {
+            filepath: "/Users/other/file.txt",
+          }) as React.ReactElement,
+      ),
     );
+    expect(result.lastFrame()).toBe("Write(../../other/file.txt)");
   });
 
   it("should handle non-path arguments", () => {
-    expect(formatToolCall("Search", { pattern: "TODO" })).toBe("Search(TODO)");
-    expect(formatToolCall("Search", { pattern: 123 })).toBe("Search(123)");
+    const stringResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Search", { pattern: "TODO" }) as React.ReactElement,
+      ),
+    );
+    expect(stringResult.lastFrame()).toBe("Search(TODO)");
+
+    const numberResult = render(
+      React.createElement(
+        () => formatToolCall("Search", { pattern: 123 }) as React.ReactElement,
+      ),
+    );
+    expect(numberResult.lastFrame()).toBe("Search(123)");
   });
 
   it("should use first argument when multiple are provided", () => {
-    expect(
-      formatToolCall("Write", {
-        filepath: "test.txt",
-        content: "Hello world",
-      }),
-    ).toBe("Write(test.txt)");
+    const result = render(
+      React.createElement(
+        () =>
+          formatToolCall("Write", {
+            filepath: "test.txt",
+            content: "Hello world",
+          }) as React.ReactElement,
+      ),
+    );
+    expect(result.lastFrame()).toBe("Write(test.txt)");
   });
 
   it("should handle multi-line string arguments with ellipsis", () => {
-    expect(
-      formatToolCall("Bash", {
-        command: "echo 'first line'\necho 'second line'\necho 'third line'",
-      }),
-    ).toBe("Bash(echo 'first line'...)");
+    const bashResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Bash", {
+            command: "echo 'first line'\necho 'second line'\necho 'third line'",
+          }) as React.ReactElement,
+      ),
+    );
+    expect(bashResult.lastFrame()).toBe("Bash(echo 'first line'...)");
 
-    expect(
-      formatToolCall("Edit", {
-        old_string: "line 1\nline 2\nline 3",
-        new_string: "updated content",
-      }),
-    ).toBe("Edit(line 1...)");
+    const editResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Edit", {
+            old_string: "line 1\nline 2\nline 3",
+            new_string: "updated content",
+          }) as React.ReactElement,
+      ),
+    );
+    expect(editResult.lastFrame()).toBe("Edit(line 1...)");
 
     // Test with empty first line
-    expect(
-      formatToolCall("Write", {
-        content: "\nSecond line\nThird line",
-      }),
-    ).toBe("Write(...)");
+    const writeResult = render(
+      React.createElement(
+        () =>
+          formatToolCall("Write", {
+            content: "\nSecond line\nThird line",
+          }) as React.ReactElement,
+      ),
+    );
+    expect(writeResult.lastFrame()).toBe("Write(...)");
   });
 });
 

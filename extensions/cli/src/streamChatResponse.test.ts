@@ -6,8 +6,8 @@ import { vi } from "vitest";
 
 import { toolPermissionManager } from "./permissions/permissionManager.js";
 import {
-  preprocessStreamedToolCalls,
   executeStreamedToolCalls,
+  preprocessStreamedToolCalls,
 } from "./streamChatResponse.helpers.js";
 import { processStreamingResponse } from "./streamChatResponse.js";
 import { ToolCall } from "./tools/index.js";

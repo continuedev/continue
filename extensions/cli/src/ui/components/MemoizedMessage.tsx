@@ -1,8 +1,9 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
 
+import { formatToolCall } from "src/tools/index.js";
+
 import type { ChatHistoryItem } from "../../../../../core/index.js";
-import { formatToolCall } from "../../tools/index.js";
 import { MarkdownRenderer } from "../MarkdownRenderer.js";
 import { ToolResultSummary } from "../ToolResultSummary.js";
 

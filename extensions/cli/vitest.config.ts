@@ -21,6 +21,11 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 30000,
   },
+  esbuild: {
+    jsx: "transform",
+    jsxFactory: "React.createElement",
+    jsxFragment: "React.Fragment",
+  },
   resolve: {
     extensions: [".js", ".ts", ".tsx", ".json"],
   },

@@ -4,7 +4,6 @@ import type { ChatHistoryItem, Session } from "core/index.js";
 import { ChatDescriber } from "core/util/chatDescriber.js";
 import * as readlineSync from "readline-sync";
 
-import { getDisplayableAsciiArt } from "../asciiArt.js";
 import {
   compactChatHistory,
   findCompactionIndex,
@@ -24,7 +23,6 @@ import {
   updateSessionTitle,
 } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
-import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
@@ -102,21 +100,7 @@ export async function initializeChatHistory(
     }
   }
 
-  // If no session loaded or not resuming, initialize with system message
-  const chatHistory: ChatHistoryItem[] = [];
-  const systemMessage = await constructSystemMessage(
-    options.rule,
-    options.format,
-    options.headless,
-  );
-  if (systemMessage) {
-    chatHistory.push({
-      message: { role: "system", content: systemMessage },
-      contextItems: [],
-    });
-  }
-
-  return chatHistory;
+  return [];
 }
 
 // Helper function to handle manual compaction

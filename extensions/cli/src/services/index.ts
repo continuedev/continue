@@ -11,6 +11,7 @@ import { ModelService } from "./ModelService.js";
 import { modeService } from "./ModeService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { systemMessageService } from "./SystemMessageService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -109,6 +110,18 @@ export async function initializeServices(
   serviceContainer.registerValue(
     SERVICE_NAMES.TOOL_PERMISSIONS,
     toolPermissionState,
+  );
+
+  // Initialize SystemMessageService with command options
+  serviceContainer.register(
+    SERVICE_NAMES.SYSTEM_MESSAGE,
+    () =>
+      systemMessageService.initialize({
+        additionalRules: commandOptions.rule,
+        format: undefined, // format is not part of BaseCommandOptions
+        headless: initOptions.headless,
+      }),
+    [], // No dependencies
   );
 
   serviceContainer.register(
@@ -293,6 +306,7 @@ export const services = {
   fileIndex: fileIndexService,
   mode: modeService,
   resourceMonitoring: resourceMonitoringService,
+  systemMessage: systemMessageService,
 } as const;
 
 // Export the service container for advanced usage
