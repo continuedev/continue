@@ -62,6 +62,28 @@ describe("formatToolCall", () => {
       }),
     ).toBe("Write(test.txt)");
   });
+
+  it("should handle multi-line string arguments with ellipsis", () => {
+    expect(
+      formatToolCall("Bash", {
+        command: "echo 'first line'\necho 'second line'\necho 'third line'",
+      }),
+    ).toBe("Bash(echo 'first line'...)");
+
+    expect(
+      formatToolCall("Edit", {
+        old_string: "line 1\nline 2\nline 3",
+        new_string: "updated content",
+      }),
+    ).toBe("Edit(line 1...)");
+
+    // Test with empty first line
+    expect(
+      formatToolCall("Write", {
+        content: "\nSecond line\nThird line",
+      }),
+    ).toBe("Write(...)");
+  });
 });
 
 describe("formatToolArgument", () => {

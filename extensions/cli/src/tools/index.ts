@@ -229,6 +229,10 @@ export function formatToolCall(toolName: string, args?: any): string {
     const valueLines = value.split("\n");
     if (valueLines.length === 1) {
       formattedValue = formatToolArgument(value);
+    } else {
+      // For multi-line strings, show first line with ellipsis
+      const firstLine = valueLines[0].trim();
+      formattedValue = firstLine ? `${formatToolArgument(firstLine)}...` : "...";
     }
   }
 
