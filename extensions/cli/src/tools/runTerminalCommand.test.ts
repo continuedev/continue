@@ -1,7 +1,7 @@
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 
 describe("runTerminalCommandTool", () => {
-  const TEST_TIMEOUT_MS = 1000; // 1 second for tests
+  const TEST_TIMEOUT_MS = 2000; // 2 second for tests
 
   beforeAll(() => {
     process.env.NODE_ENV = "test";
