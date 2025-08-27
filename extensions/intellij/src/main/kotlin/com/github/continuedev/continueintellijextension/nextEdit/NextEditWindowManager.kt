@@ -2,11 +2,13 @@ package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.listeners.ActiveHandlerManager
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.InlineCompletionUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -44,17 +46,20 @@ class NextEditWindowManager(private val project: Project) {
     // Handler management
     private var windowHandler: NextEditWindowHandler? = null
 
-    suspend fun showNextEditWindow(
+    fun showNextEditWindow(
         editor: Editor,
         currCursorPos: Position,
         editableRegionStartLine: Int,
         editableRegionEndLine: Int,
         oldCode: String,
         newCode: String,
-        diffLines: List<DiffLine>
+        diffLines: List<DiffLine>,
+        completionId: String? = null
     ) {
         // Clear existing decorations first
         hideAllNextEditWindows()
+
+        currentCompletionId = completionId
 
         // Register active handler for this window
         val cursorPosition = LogicalPosition(currCursorPos.line, currCursorPos.character)
@@ -112,7 +117,6 @@ class NextEditWindowManager(private val project: Project) {
             return false
         }
 
-        // Fix: Use the correct method to get line text
         val startOffset = editor.document.getLineStartOffset(editableRegionStartLine)
         val endOffset = editor.document.getLineEndOffset(editableRegionStartLine)
         val line = editor.document.getText(TextRange(startOffset, endOffset))
@@ -138,6 +142,7 @@ class NextEditWindowManager(private val project: Project) {
             .setCancelOnClickOutside(false)
             .setCancelOnWindowDeactivation(false)
             .setCancelKeyEnabled(false)
+            .setModalContext(true)
             .setCancelCallback {
                 onAction(PopupAction.REJECT)
                 true
@@ -145,6 +150,18 @@ class NextEditWindowManager(private val project: Project) {
             .createPopup()
 
         currentPopup = popup
+
+        popup.content.addFocusListener(object : java.awt.event.FocusAdapter() {
+            override fun focusLost(e: java.awt.event.FocusEvent?) {
+                if (e?.isTemporary == false && popup.isVisible && !isAccepted) {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (popup.isVisible && !popup.isDisposed) {
+                            popupComponent.requestFocusInWindow()
+                        }
+                    }
+                }
+            }
+        })
 
         // Show popup and ensure focus
         ApplicationManager.getApplication().invokeLater {
@@ -163,38 +180,38 @@ class NextEditWindowManager(private val project: Project) {
                 val endOfLinePoint = editor.logicalPositionToXY(endOfLinePosition)
 
                 val editorComponent = editor.contentComponent
-                val screenPoint = java.awt.Point(endOfLinePoint.x, endOfLinePoint.y)
-                javax.swing.SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
+                val screenPoint = Point(endOfLinePoint.x, endOfLinePoint.y)
+                SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
 
                 popup.showInScreenCoordinates(editorComponent, screenPoint)
 
                 // Add ONLY the popup content border with rounded corners
                 val content = popup.content
-                if (content is JComponent) {
-                    content.border = object : AbstractBorder() {
-                        override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
-                            val g2 = g.create() as Graphics2D
-                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-                            val arc = 6f
-                            g2.color = Color(0x999998)
-                            g2.stroke = BasicStroke(1f)
-                            g2.draw(
-                                RoundRectangle2D.Float(
-                                    x.toFloat(),
-                                    y.toFloat(),
-                                    width.toFloat() - 1f,
-                                    height.toFloat() - 1f,
-                                    arc,
-                                    arc
-                                )
+                content.border = object : AbstractBorder() {
+                    override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+                        val g2 = g.create() as Graphics2D
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+                        val arc = 6f
+                        g2.color = JBColor(Color(0x666667), Color(0x999998))
+                        g2.stroke = BasicStroke(1f)
+                        g2.draw(
+                            RoundRectangle2D.Float(
+                                x.toFloat(),
+                                y.toFloat(),
+                                width.toFloat() - 1f,
+                                height.toFloat() - 1f,
+                                arc,
+                                arc
                             )
-                            g2.dispose()
-                        }
-
-                        override fun getBorderInsets(c: Component): Insets = JBUI.insets(1)
+                        )
+                        g2.dispose()
                     }
+
+                    override fun getBorderInsets(c: Component): Insets = JBUI.insets(1)
                 }
+
 
                 // Force focus after popup is shown
                 ApplicationManager.getApplication().invokeLater {
@@ -217,10 +234,10 @@ class NextEditWindowManager(private val project: Project) {
     ): JComponent {
         val panel = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
-//            border = JBUI.Borders.empty(8, 12)
             border = null
             background = EditorColorsManager.getInstance().globalScheme.defaultBackground
-            // No custom paintComponent - just use regular panel
+            isFocusable = true
+            isFocusCycleRoot = true
         }
 
         // Create syntax-highlighted code display
@@ -233,30 +250,11 @@ class NextEditWindowManager(private val project: Project) {
         return panel
     }
 
-    private fun getActualFontSizeFromEditor(editor: Editor): Int {
+    private fun getFontSizeFromEditor(editor: Editor): Int {
         try {
             val component = editor.contentComponent
             val font = component.font
-            val graphics = component.graphics
-
-            if (graphics != null) {
-                val fontMetrics = graphics.getFontMetrics(font)
-                val height = fontMetrics.height
-                val ascent = fontMetrics.ascent
-
-                // Check for DPI scaling
-                val scale = JBUI.scale(1f)
-
-                // Adjust for DPI scaling
-                val adjustedFontSize = if (scale > 1f) {
-                    (font.size / scale).toInt()
-                } else {
-                    font.size
-                }
-
-                return adjustedFontSize
-            }
-
+            return font.size
         } catch (e: Exception) {
             println("DEBUG: Error getting font size: ${e.message}")
         }
@@ -269,21 +267,15 @@ class NextEditWindowManager(private val project: Project) {
             val scheme = EditorColorsManager.getInstance().globalScheme
             val editorFont = editor.colorsScheme.getFont(com.intellij.openapi.editor.colors.EditorFontType.PLAIN)
 
-            // Get the actual font size accounting for DPI scaling
-            val actualFontSize = getActualFontSizeFromEditor(editor)
+            val fontSize = getFontSizeFromEditor(editor)
             val fontFamily = editorFont.family
 
-            // Also get the line height from editor for consistent spacing
-            val editorLineHeight = editor.lineHeight
-            val uiScale = JBUI.scale(1f)
-//            val adjustedLineHeight = if (uiScale > 1f) (editorLineHeight / uiScale).toInt() else editorLineHeight
-
-            val adjustedLineHeight = actualFontSize
+            val lineHeightPixels = editor.lineHeight
 
             // Get file type for proper syntax highlighting
             val fileType = getCurrentFileType(editor)
 
-            // Create panel with proper layout
+            // Create panel with BoxLayout for stacking lines
             val panel = JPanel().apply {
                 layout = BoxLayout(this, BoxLayout.Y_AXIS)
                 background = scheme.defaultBackground
@@ -292,24 +284,20 @@ class NextEditWindowManager(private val project: Project) {
             }
 
             val visibleLines = diffLines.filter { it.type != "old" }
-            val linesToDisplay = if (visibleLines.isEmpty()) {
+            val linesToDisplay = visibleLines.ifEmpty {
                 if (code.isNotEmpty()) {
                     code.split("\n").map { DiffLine(type = "new", line = it) }
                 } else {
                     listOf(DiffLine(type = "new", line = " "))
                 }
-            } else {
-                visibleLines
             }
 
-            var maxWidth = 200
-
             // Create syntax-highlighted labels for each line
-            linesToDisplay.forEach { diffLine ->
+            linesToDisplay.forEachIndexed { index, diffLine ->
                 val displayText = if (diffLine.line.isEmpty()) " " else diffLine.line
 
                 val backgroundColor = when (diffLine.type) {
-                    "new" -> JBColor(0x2D4A2D, 0x2D4A2D)
+                    "new" -> JBColor(Color(0xD1F2D1), Color(0x1B4D1B))
                     "same" -> scheme.defaultBackground
                     else -> scheme.defaultBackground
                 }
@@ -319,33 +307,29 @@ class NextEditWindowManager(private val project: Project) {
                     fileType,
                     scheme,
                     fontFamily,
-                    actualFontSize,
-                    adjustedLineHeight, // Pass the adjusted line height
+                    fontSize,
                     backgroundColor
                 )
 
                 val label = JLabel(highlightedHtml).apply {
                     background = backgroundColor
                     isOpaque = true
-                    border = JBUI.Borders.empty(1, 6)
-                    alignmentX = Component.LEFT_ALIGNMENT
+                    border = null
 
-                    // Create font with correct size
-                    font = Font(fontFamily, editorFont.style, actualFontSize)
+                    // Control line height through component sizing
+                    preferredSize = Dimension(preferredSize.width, lineHeightPixels)
+                    minimumSize = Dimension(minimumSize.width, lineHeightPixels)
+                    maximumSize = Dimension(Integer.MAX_VALUE, lineHeightPixels)
                 }
 
-                maxWidth = maxOf(maxWidth, label.preferredSize.width + 12)
                 panel.add(label)
             }
 
-            panel.revalidate()
-            val contentHeight = maxOf(panel.preferredSize.height, 20)
+            // Add a final glue component to push everything up
+            panel.add(Box.createVerticalGlue())
 
             return JScrollPane(panel).apply {
                 border = null
-                preferredSize = Dimension(maxWidth, contentHeight)
-                minimumSize = Dimension(200, 20)
-                maximumSize = Dimension(800, 300)
                 horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
                 verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
                 viewport.background = scheme.defaultBackground
@@ -361,37 +345,21 @@ class NextEditWindowManager(private val project: Project) {
         }
     }
 
-    private fun createSyntaxHighlightedHtml(
+    private fun createSyntaxHighlightedLine(
         text: String,
         fileType: FileType,
         scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
-        fontFamily: String,
-        fontSize: Int,
-        lineHeight: Int,
-        backgroundColor: Color
     ): String {
-        // Convert background color to hex
-        val backgroundHex =
-            String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
-
         if (text.trim().isEmpty()) {
-            return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; background-color:$backgroundHex;'>&nbsp;</div>" +
-                    "</body></html>"
+            // Return a non-breaking space to maintain line height
+            return "&nbsp;"
         }
 
         try {
             // Get the syntax highlighter for the file type
             val syntaxHighlighter =
                 com.intellij.openapi.fileTypes.SyntaxHighlighterFactory.getSyntaxHighlighter(fileType, project, null)
-                    ?: return createBasicHtml(
-                        text,
-                        fontFamily,
-                        fontSize,
-                        lineHeight,
-                        scheme,
-                        backgroundColor
-                    ) // Updated call
+                    ?: return escapeHtml(text)
 
             val lexer = syntaxHighlighter.highlightingLexer
             lexer.start(text)
@@ -408,16 +376,9 @@ class NextEditWindowManager(private val project: Project) {
                 // Add any text between tokens
                 if (tokenStart > lastOffset) {
                     val defaultColor = scheme.defaultForeground
-                    val defaultColorHex =
-                        String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
                     highlightedText.append(
-                        "<span style='color:$defaultColorHex'>${
-                            escapeHtml(
-                                text.substring(
-                                    lastOffset,
-                                    tokenStart
-                                )
-                            )
+                        "<span style='color:${colorToHex(defaultColor)}'>${
+                            escapeHtml(text.substring(lastOffset, tokenStart))
                         }</span>"
                     )
                 }
@@ -430,9 +391,7 @@ class NextEditWindowManager(private val project: Project) {
                     val textAttributes = scheme.getAttributes(textAttributesKeys[0])
                     val color = textAttributes?.foregroundColor ?: scheme.defaultForeground
 
-                    val colorHex = String.format("#%02x%02x%02x", color.red, color.green, color.blue)
-
-                    var styledToken = "<span style='color:$colorHex"
+                    var styledToken = "<span style='color:${colorToHex(color)}"
 
                     // Add font style if needed
                     if (textAttributes != null && textAttributes.fontType != 0) {
@@ -449,9 +408,7 @@ class NextEditWindowManager(private val project: Project) {
                 } else {
                     // No specific highlighting, use default color
                     val defaultColor = scheme.defaultForeground
-                    val defaultColorHex =
-                        String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
-                    highlightedText.append("<span style='color:$defaultColorHex'>${escapeHtml(tokenText)}</span>")
+                    highlightedText.append("<span style='color:${colorToHex(defaultColor)}'>${escapeHtml(tokenText)}</span>")
                 }
 
                 lastOffset = tokenEnd
@@ -461,43 +418,57 @@ class NextEditWindowManager(private val project: Project) {
             // Add any remaining text
             if (lastOffset < text.length) {
                 val defaultColor = scheme.defaultForeground
-                val defaultColorHex =
-                    String.format("#%02x%02x%02x", defaultColor.red, defaultColor.green, defaultColor.blue)
-                highlightedText.append("<span style='color:$defaultColorHex'>${escapeHtml(text.substring(lastOffset))}</span>")
+                highlightedText.append(
+                    "<span style='color:${colorToHex(defaultColor)}'>${escapeHtml(text.substring(lastOffset))}</span>"
+                )
             }
 
-            val toReturn = "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                    "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; background-color:$backgroundHex;'>$highlightedText</div>" +
-                    "</body></html>"
-            return toReturn
+            return highlightedText.toString()
 
         } catch (e: Exception) {
             println("DEBUG: Syntax highlighting failed: ${e.message}")
-            return createBasicHtml(text, fontFamily, fontSize, lineHeight, scheme, backgroundColor) // Updated call
+            return escapeHtml(text)
         }
     }
 
-    private fun createBasicHtml(
+    private fun colorToHex(color: Color): String {
+        return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+    }
+
+    private fun createSyntaxHighlightedHtml(
         text: String,
+        fileType: FileType,
+        scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
         fontFamily: String,
         fontSize: Int,
-        lineHeight: Int, // Added lineHeight parameter
-        scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
         backgroundColor: Color
     ): String {
-        val foregroundColor = scheme.defaultForeground
-        val foregroundHex =
-            String.format("#%02x%02x%02x", foregroundColor.red, foregroundColor.green, foregroundColor.blue)
-        val backgroundHex =
-            String.format("#%02x%02x%02x", backgroundColor.red, backgroundColor.green, backgroundColor.blue)
+        // Get the syntax-highlighted content
+        val highlightedContent = createSyntaxHighlightedLine(text, fileType, scheme)
 
-        return "<html><body style='margin:0; padding:2px 6px; background-color:$backgroundHex;'>" +
-                "<div style='font-family:\"$fontFamily\"; font-size:${fontSize}px; line-height:${lineHeight}px; color:$foregroundHex; background-color:$backgroundHex;'>${
-                    escapeHtml(
-                        text
-                    )
-                }</div>" +
-                "</body></html>"
+        // Convert background color to hex
+        val bgColorHex = colorToHex(backgroundColor)
+
+        // Convert fontSize to pt
+        val fontSizePt = "${fontSize}pt"
+
+        // Build proper HTML structure without line-height (controlled by JLabel sizing)
+        val html = StringBuilder()
+        html.append("<html>")
+        html.append("<body style='margin:0; padding:0; background-color:$bgColorHex;'>")
+        html.append("<div style='")
+        html.append("font-family:\"$fontFamily\"; ")
+        html.append("font-size:$fontSizePt; ")
+        html.append("background-color:$bgColorHex; ")
+        html.append("padding: 0 16px 0 0; ")  // add more padding to the right
+        html.append("white-space:nowrap;")
+        html.append("'>")
+        html.append(highlightedContent)
+        html.append("</div>")
+        html.append("</body>")
+        html.append("</html>")
+
+        return html.toString()
     }
 
     private fun escapeHtml(text: String): String {
@@ -511,7 +482,6 @@ class NextEditWindowManager(private val project: Project) {
             .replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
     }
 
-    // Then update getCurrentFileType to use it
     private fun getCurrentFileType(editor: Editor): FileType {
         // Method 1: Use the current editor's virtual file (most reliable)
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
@@ -531,51 +501,7 @@ class NextEditWindowManager(private val project: Project) {
         return FileTypeManager.getInstance().getFileTypeByExtension("txt")
     }
 
-    private fun createBasicHighlightedHtml(text: String, font: java.awt.Font): String {
-        if (text.trim()
-                .isEmpty()
-        ) return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:2px 4px;'>&nbsp;</div></html>"
-
-        // Basic syntax highlighting patterns (you can extend this)
-        var highlightedText = text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace(" ", "&nbsp;") // Preserve spaces
-            .replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;") // Convert tabs to spaces
-
-        // Simple keyword highlighting (extend based on your needs)
-        val keywords = arrayOf(
-            "function", "const", "let", "var", "return", "if", "else", "for", "while",
-            "class", "public", "private", "static", "void", "int", "String", "boolean",
-            "def", "import", "from", "as", "try", "except", "finally", "with"
-        )
-
-        keywords.forEach { keyword ->
-            highlightedText = highlightedText.replace(
-                Regex("\\b$keyword\\b"),
-                "<span style='color:#569CD6'>$keyword</span>"
-            )
-        }
-
-        // String highlighting
-        highlightedText = highlightedText.replace(
-            Regex("\"([^\"]*)\"|'([^']*)'"),
-            "<span style='color:#CE9178'>$0</span>"
-        )
-
-        // Comment highlighting
-        highlightedText = highlightedText.replace(
-            Regex("//.*$", RegexOption.MULTILINE),
-            "<span style='color:#6A9955'>$0</span>"
-        )
-
-        // Use div instead of pre for better control over spacing
-        return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:0; white-space:nowrap;'>$highlightedText</div></html>"
-    }
-
     private fun addKeyboardShortcuts(panel: JComponent, onAction: (PopupAction) -> Unit) {
-        // CRITICAL FIX: Disable focus traversal for Tab key
         panel.setFocusTraversalKeysEnabled(false)
 
         val inputMap = panel.getInputMap(JComponent.WHEN_FOCUSED)
@@ -611,23 +537,53 @@ class NextEditWindowManager(private val project: Project) {
 
         val diffChars = calculateCharDiff(oldCode, newCode)
 
-        deletionHighlighters = diffChars.filter { it.type == "old" }.map { diff ->
-            val lineStartOffset = editor.document.getLineStartOffset(startLine + diff.oldLineIndex!!)
-            val startOffset = lineStartOffset + diff.oldCharIndexInLine!!
-            val endOffset = startOffset + diff.char.length
+        // Group consecutive deletion characters to create continuous ranges
+        val deletionRanges = mutableListOf<Pair<Int, Int>>()
+        var currentRangeStart: Int? = null
 
+        diffChars.filter { it.type == "old" }.forEach { diff ->
+            val lineStartOffset = editor.document.getLineStartOffset(startLine + diff.oldLineIndex!!)
+            val charOffset = lineStartOffset + diff.oldCharIndexInLine!!
+
+            if (currentRangeStart == null) {
+                currentRangeStart = charOffset
+            }
+
+            // Check if this is consecutive with the previous character
+            val nextDiff = diffChars.getOrNull(diffChars.indexOf(diff) + 1)
+            if (nextDiff?.type != "old" ||
+                nextDiff.oldLineIndex != diff.oldLineIndex ||
+                nextDiff.oldCharIndexInLine != diff.oldCharIndexInLine!! + diff.char.length
+            ) {
+                // End of consecutive deletions
+                deletionRanges.add(currentRangeStart!! to (charOffset + diff.char.length))
+                currentRangeStart = null
+            }
+        }
+
+        // Create highlighters for each deletion range
+        deletionHighlighters = deletionRanges.map { (startOffset, endOffset) ->
             editor.markupModel.addRangeHighlighter(
                 startOffset,
                 endOffset,
-                HighlighterLayer.SELECTION - 1,
+                HighlighterLayer.LAST + 1, // higher layer to ensure visibility
                 TextAttributes().apply {
-                    backgroundColor =
-                        JBColor.namedColor("Editor.DiffDeletedLines.background", JBColor(0xFFE6E6, 0x484A4A))
+                    backgroundColor = JBColor(
+                        Color(0xFFEAEA),  // light theme: more visible light red
+                        Color(0x4D1B1B)   // dark theme: dark red
+                    )
+                    foregroundColor = null
                     effectType = EffectType.STRIKEOUT
-                    effectColor = JBColor.namedColor("Editor.DiffDeletedLines.border", JBColor(0xD32F2F, 0xB71C1C))
+                    effectColor = JBColor(
+                        Color(0xDC3545),
+                        Color(0xDC3545)
+                    )
                 },
                 HighlighterTargetArea.EXACT_RANGE
-            )
+            ).also { highlighter ->
+                highlighter.isGreedyToLeft = false
+                highlighter.isGreedyToRight = false
+            }
         }
     }
 
@@ -777,11 +733,9 @@ class NextEditWindowManager(private val project: Project) {
 
         // Clear handler before making document changes that move cursor
         clearActiveHandler()
-
         hideAllNextEditWindows()
 
         try {
-            // Fix: Use the simpler WriteCommandAction.runWriteCommandAction
             WriteCommandAction.runWriteCommandAction(project) {
                 val document = editor.document
 
@@ -799,17 +753,14 @@ class NextEditWindowManager(private val project: Project) {
                 if (isLineDelete) {
                     // Handle line deletion - include the newline character
                     val startOffset = document.getLineStartOffset(startLine)
-                    var endOffset: Int
 
                     // If this isn't the last line, extend to include the newline character
-                    if (startLine < document.lineCount - 1) {
-                        endOffset = document.getLineStartOffset(startLine + 1)
+                    val endOffset = if (startLine < document.lineCount - 1) {
+                        document.getLineStartOffset(startLine + 1)
                     } else {
                         // If it's the last line, just delete to end of line
-                        endOffset = document.getLineEndOffset(startLine)
+                        document.getLineEndOffset(startLine)
                     }
-
-                    val oldText = document.getText(TextRange(startOffset, endOffset))
 
                     // Delete the entire line including newline
                     document.deleteString(startOffset, endOffset)
@@ -822,9 +773,6 @@ class NextEditWindowManager(private val project: Project) {
                     if (startOffset < 0 || endOffset > document.textLength || startOffset > endOffset) {
                         return@runWriteCommandAction
                     }
-
-                    // Show what we're replacing
-                    val oldText = document.getText(TextRange(startOffset, endOffset))
 
                     // Perform the replacement
                     document.replaceString(startOffset, endOffset, newText)
@@ -842,9 +790,13 @@ class NextEditWindowManager(private val project: Project) {
             e.printStackTrace()
         }
 
-        // Log acceptance (placeholder)
+        // Log acceptance
         currentCompletionId?.let {
-            // project.getService(NextEditService::class.java).acceptEdit(it)
+            project.service<ContinuePluginService>().coreMessenger?.request(
+                "nextEdit/accept",
+                mapOf("completionId" to currentCompletionId),
+                null
+            ) {}
         }
 
         isAccepted = false
@@ -855,9 +807,13 @@ class NextEditWindowManager(private val project: Project) {
 
         hideAllNextEditWindows()
 
-        // Log rejection and delete chain (placeholder)
+        // Log rejection and delete chain
         currentCompletionId?.let {
-            // project.getService(NextEditService::class.java).rejectEdit(it)
+            project.service<ContinuePluginService>().coreMessenger?.request(
+                "nextEdit/reject",
+                mapOf("completionId" to currentCompletionId),
+                null
+            ) {}
         }
     }
 
@@ -865,10 +821,8 @@ class NextEditWindowManager(private val project: Project) {
         currentPopup?.let { popup ->
             // Clear keyboard shortcuts before closing popup
             val content = popup.content
-            if (content is JComponent) {
-                content.inputMap.clear()
-                content.actionMap.clear()
-            }
+            content.inputMap.clear()
+            content.actionMap.clear()
 
             popup.cancel()
             currentPopup = null
@@ -878,7 +832,7 @@ class NextEditWindowManager(private val project: Project) {
         clearAllDeletionDecorations()
         deletionHighlighters = emptyList()
 
-        clearActiveHandler() // TODO: might be redundant
+        clearActiveHandler()
     }
 
     private fun clearAllDeletionDecorations() {
@@ -902,19 +856,6 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     fun hasAccepted(): Boolean = isAccepted
-
-    fun setAccepted(accepted: Boolean) {
-        isAccepted = accepted
-    }
-
-    fun updateCurrentCompletionId(completionId: String) {
-        currentCompletionId = completionId
-    }
-
-    fun cleanup() {
-        hideAllNextEditWindows()
-        currentCompletionId = null
-    }
 }
 
 enum class PopupAction {
