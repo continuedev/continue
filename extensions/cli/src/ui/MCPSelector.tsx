@@ -3,11 +3,18 @@ import React, { useState } from "react";
 import { quote } from "shell-quote";
 
 import { useServices } from "../hooks/useService.js";
-import { MCPServiceState, SERVICE_NAMES } from "../services/types.js";
+import {
+  MCPConnectionInfo,
+  MCPServerStatus,
+  MCPServiceState,
+  SERVICE_NAMES,
+} from "../services/types.js";
 import { logger } from "../util/logger.js";
 
+import { defaultBoxStyles } from "./styles.js";
+
 // Utility function to get status icon and color based on server connection
-const getServerStatusDisplay = (conn: any) => {
+const getServerStatusDisplay = (conn: MCPConnectionInfo) => {
   let icon = "⚪️"; // note, white circle causes extra blank line bug
   let color: "green" | "yellow" | "red" | "white" | "dim" = "white";
   let statusText = conn.status;
@@ -22,7 +29,7 @@ const getServerStatusDisplay = (conn: any) => {
     if (conn.warnings && conn.warnings.length > 0) {
       icon = "🟡";
       color = "yellow";
-      statusText = "connected (with warnings)";
+      statusText = "connected (with warnings)" as MCPServerStatus;
     } else {
       icon = "🟢";
       color = "green";
@@ -170,7 +177,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         {/* Add prompts if any */}
         {serverInfo.prompts.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
-            <Text color="cyan">📝 Prompts: {serverInfo.prompts.length}</Text>
+            <Text color="blue">📝 Prompts: {serverInfo.prompts.length}</Text>
             {serverInfo.prompts.map((prompt, index) => (
               <Text key={index} color="dim">
                 • {prompt.name}
@@ -182,7 +189,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
         {/* Add tools if any */}
         {serverInfo.tools.length > 0 && (
           <Box flexDirection="column" marginBottom={1}>
-            <Text color="cyan">🔧 Tools: {serverInfo.tools.length}</Text>
+            <Text color="blue">🔧 Tools: {serverInfo.tools.length}</Text>
             {serverInfo.tools.map((tool, index) => (
               <Text key={index} color="dim">
                 • {tool.name}
@@ -210,12 +217,13 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const maxIndex = Math.max(0, items.length - 1);
 
   useInput(async (input, key) => {
-    if (isLoading) return;
-
-    if (key.escape) {
+    // Always allow escape/Ctrl+C so users can cancel even when loading
+    if (key.escape || (key.ctrl && input === "c")) {
       handleBack();
       return;
     }
+
+    if (isLoading) return;
 
     if (key.upArrow) {
       setSelectedIndex(selectedIndex <= 0 ? maxIndex : selectedIndex - 1);
@@ -302,7 +310,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   const renderHeader = () => {
     return (
       <Box flexDirection="column" marginBottom={1}>
-        <Text bold color="cyan">
+        <Text bold color="blue">
           {menuState === "server-detail" && selectedServer
             ? `Server: ${selectedServer}`
             : "MCP Servers"}
@@ -336,13 +344,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
   };
 
   return (
-    <Box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor="cyan"
-      padding={1}
-      minHeight={10}
-    >
+    <Box {...defaultBoxStyles("blue", { minHeight: 10 })}>
       {renderHeader()}
 
       {message && (
@@ -369,9 +371,8 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
                 key={`${item.value}-${index}`}
                 color={isSelected ? "blue" : "white"}
                 bold={isSelected}
-                inverse={isSelected}
               >
-                {isSelected ? "> " : "  "}
+                {isSelected ? "➤ " : "  "}
                 {item.label}
               </Text>
             );
@@ -381,7 +382,7 @@ export const MCPSelector: React.FC<MCPSelectorProps> = ({ onCancel }) => {
 
       <Box marginTop={1}>
         <Text color="dim">
-          Use ↑/↓ to navigate, Enter to select, Esc to go back
+          ↑/↓ to navigate, Enter to select, Esc to go back
         </Text>
       </Box>
     </Box>
