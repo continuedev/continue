@@ -65,7 +65,17 @@ const StyledTerminalContainer = styled.div<{
   fontSize?: number;
 }>`
   background-color: var(--background);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   color: var(--foreground);
   line-height: 1.5;
@@ -93,11 +103,15 @@ const TerminalContent = styled.div`
     border-radius: 0.5rem;
     background-color: var(--editor-background);
     font-size: ${getFontSize() - 2}px;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-family:
+      ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono",
+      Menlo, monospace;
   }
 
   code:not(pre > code) {
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-family:
+      ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono",
+      Menlo, monospace;
     color: var(--input-placeholder);
   }
 `;
@@ -404,10 +418,7 @@ export function UnifiedTerminalCommand({
   }, [command, output, hasOutput]);
 
   return (
-    <StyledTerminalContainer
-      fontSize={getFontSize()}
-      className="mb-4"
-    >
+    <StyledTerminalContainer fontSize={getFontSize()} className="mb-4">
       <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
         {/* Toolbar */}
         <div
@@ -444,11 +455,7 @@ export function UnifiedTerminalCommand({
             <pre className="bg-editor">
               <code>
                 {/* Command is always visible */}
-                <div
-                  className="pb-2 text-terminal"
-                >
-                  $ {command}
-                </div>
+                <div className="text-terminal pb-2">$ {command}</div>
 
                 {/* Running state with cursor */}
                 {isRunning && !hasOutput && (
@@ -498,9 +505,12 @@ export function UnifiedTerminalCommand({
 
         {/* Status information */}
         {(statusMessage || isRunning) && (
-          <div 
+          <div
             className="text-description flex items-center px-2 pb-2 pt-2 text-xs"
-            style={{ borderTop: '1px solid var(--vscode-commandCenter-inactiveBorder, #555555)' }}
+            style={{
+              borderTop:
+                "1px solid var(--vscode-commandCenter-inactiveBorder, #555555)",
+            }}
           >
             <StatusIcon status={statusType} />
             {isRunning ? "Running" : statusMessage}
