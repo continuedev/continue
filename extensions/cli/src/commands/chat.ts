@@ -514,9 +514,6 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         console.log(chalk.green("✓ Setup complete! Starting chat..."));
       }
 
-      // Show ASCII art and version for TUI mode
-      console.log(getDisplayableAsciiArt());
-
       // Start TUI with skipOnboarding since we already handled it
       const tuiOptions: any = {
         initialPrompt: prompt,
