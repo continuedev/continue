@@ -14,6 +14,10 @@ class CodeOutlineContextProvider extends BaseContextProvider {
     renderInlineAs: "",
   };
 
+  get deprecationMessage() {
+    return "The Code Outline context provider is now deprecated and may be removed in a later version.";
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,
