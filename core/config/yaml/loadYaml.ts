@@ -33,10 +33,7 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-import {
-  convertYamlMcpToContinueMcp,
-  convertYamlRuleToContinueRule,
-} from "./yamlToContinueConfig";
+import { convertYamlRuleToContinueRule } from "./yamlToContinueConfig";
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
@@ -154,7 +151,7 @@ async function loadConfigYaml(options: {
   };
 }
 
-async function configYamlToContinueConfig(options: {
+export async function configYamlToContinueConfig(options: {
   config: AssistantUnrolled;
   ide: IDE;
   ideSettings: IdeSettings;
@@ -241,12 +238,6 @@ async function configYamlToContinueConfig(options: {
       message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
     });
   });
-
-  continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map(
-      convertYamlMcpToContinueMcp,
-    ),
-  };
 
   // Prompt files -
   try {

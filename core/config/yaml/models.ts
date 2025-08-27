@@ -212,10 +212,12 @@ export async function llmsFromModelConfig({
   llmLogger: ILLMLogger;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
+  console.log(model.requestOptions, config.requestOptions);
   const requestOptions = mergeConfigYamlRequestOptions(
     model.requestOptions,
     config.requestOptions,
   );
+  console.log("MERGED", model.model, requestOptions);
   const baseLlm = await modelConfigToBaseLLM({
     model: {
       ...model,
