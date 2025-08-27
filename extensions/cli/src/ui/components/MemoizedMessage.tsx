@@ -28,7 +28,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       }
 
       return (
-        <Box key={index} marginLeft={1} marginBottom={1}>
+        <Box key={index} marginBottom={1}>
           <Text color="gray" italic>
             {message.content}
           </Text>
@@ -41,7 +41,6 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
       return (
         <Box
           key={index}
-          marginLeft={1}
           marginBottom={1}
           borderStyle="single"
           borderBottom={false}
@@ -58,7 +57,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         <Box key={index} flexDirection="column">
           {/* Render assistant message content if any */}
           {message.content && (
-            <Box marginLeft={1} marginBottom={1}>
+            <Box marginBottom={1}>
               <Text color="white">●</Text>
               <Text> </Text>
               <MarkdownRenderer
@@ -85,7 +84,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                 flexDirection="column"
                 marginBottom={1}
               >
-                <Box marginLeft={1}>
+                <Box>
                   <Text
                     color={isErrored ? "red" : isCompleted ? "green" : "white"}
                   >
@@ -98,7 +97,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                 </Box>
 
                 {isErrored ? (
-                  <Box marginLeft={3}>
+                  <Box marginLeft={2}>
                     <Text color="red">
                       {toolState.output?.[0].content ?? "Tool execution failed"}
                     </Text>
@@ -106,7 +105,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                 ) : (
                   toolState.output &&
                   toolState.output.length > 0 && (
-                    <Box marginLeft={3}>
+                    <Box marginLeft={2}>
                       <ToolResultSummary
                         toolName={toolName}
                         content={toolState.output
@@ -127,7 +126,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     const isStreaming = isAssistant && !message.content && !toolCallStates;
 
     return (
-      <Box key={index} marginLeft={1} marginBottom={1}>
+      <Box key={index} marginBottom={1}>
         <Text color={isUser ? "blue" : "white"}>●</Text>
         <Text> </Text>
         {isUser ? (
