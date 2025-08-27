@@ -144,9 +144,6 @@ class NextEditJumpManager(private val project: Project) {
                 try {
                     showJumpDecoration(editor, nextJumpLocation)
 
-                    // Scroll to show jump location
-                    editor.scrollingModel.scrollTo(nextJumpLocation, ScrollType.CENTER)
-
                     result = true
                 } catch (e: Exception) {
                     // Reset state on error
@@ -375,6 +372,9 @@ class NextEditJumpManager(private val project: Project) {
         ApplicationManager.getApplication().invokeLater {
             // Move cursor to jump position
             state.editor.caretModel.moveToLogicalPosition(state.jumpPosition)
+
+            // Scroll to show jump location
+            editor.scrollingModel.scrollTo(state.jumpPosition, ScrollType.CENTER)
 
             // Clear decorations (this will cancel popup, but won't trigger reject due to state check)
             clearJumpDecoration()
