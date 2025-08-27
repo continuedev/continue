@@ -47,8 +47,12 @@ describe("runTerminalCommandTool", () => {
   describe("error handling", () => {
     it("should reject with error message for non-existent commands", async () => {
       await expect(
-        runTerminalCommandTool.run({ command: "nonexistentcommand12345" }),
-      ).rejects.toMatch(/Error \(exit code (?:127|1)\):|Command timed out/);
+        runTerminalCommandTool.run({
+          command: "definitely-not-a-real-command-xyz123",
+        }),
+      ).rejects.toMatch(
+        /Error \(exit code (?:127|1|9009)\):|Command timed out|not found|not recognized/,
+      );
     });
 
     it("should handle commands with non-zero exit codes and stderr", async () => {
@@ -169,7 +173,7 @@ describe("runTerminalCommandTool", () => {
 
     it("should handle empty output", async () => {
       const result = await runTerminalCommandTool.run({
-        command: 'node -e ""',
+        command: 'node -e "undefined"',
       });
       expect(result).toBe("");
     });
@@ -177,7 +181,8 @@ describe("runTerminalCommandTool", () => {
     it("should handle large output", async () => {
       // Generate a command that produces substantial output
       const result = await runTerminalCommandTool.run({
-        command: 'node -e "for(let i=1;i<=1000;i++)console.log(i)"',
+        command:
+          'FORCE_COLOR=0 NO_COLOR=1 node -e "for(let i=1;i<=1000;i++)console.log(i)"',
       });
       expect(result).toContain("1\n");
       expect(result).toContain("1000");
@@ -189,7 +194,8 @@ describe("runTerminalCommandTool", () => {
     it("should truncate output when it exceeds 5000 lines", async () => {
       // Generate a command that produces more than 5000 lines
       const result = await runTerminalCommandTool.run({
-        command: 'node -e "for(let i=1;i<=6000;i++)console.log(i)"',
+        command:
+          'FORCE_COLOR=0 NO_COLOR=1 node -e "for(let i=1;i<=6000;i++)console.log(i)"',
       });
 
       // Should contain the truncation message
@@ -221,7 +227,8 @@ describe("runTerminalCommandTool", () => {
 
     it("should handle commands with pipes", async () => {
       const result = await runTerminalCommandTool.run({
-        command: "node -e \"console.log('hello world'.split(' ').length)\"",
+        command:
+          "FORCE_COLOR=0 NO_COLOR=1 node -e \"console.log('hello world'.split(' ').length)\"",
       });
       expect(result.trim()).toBe("2");
     });
