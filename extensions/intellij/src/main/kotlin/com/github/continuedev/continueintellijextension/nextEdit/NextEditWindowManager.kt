@@ -189,7 +189,7 @@ class NextEditWindowManager(private val project: Project) {
                         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
                         val arc = 6f
-                        g2.color = Color(0x999998)
+                        g2.color = JBColor(Color(0x666667), Color(0x999998))
                         g2.stroke = BasicStroke(1f)
                         g2.draw(
                             RoundRectangle2D.Float(

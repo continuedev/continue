@@ -57,10 +57,6 @@ class NextEditJumpManager(private val project: Project) {
     private var editorHighlighter: RangeHighlighter? = null
     private var keyboardShortcutsPanel: JComponent? = null
 
-    // Callbacks
-    private var triggerInlineSuggestCallback: (() -> Unit)? = null
-    private var deleteChainCallback: (() -> Unit)? = null
-
     private data class JumpState(
         val inProgress: Boolean = false,
         val justAccepted: Boolean = false,
@@ -70,10 +66,6 @@ class NextEditJumpManager(private val project: Project) {
         val completionAfterJump: CompletionDataForAfterJump? = null
     )
 
-    init {
-//        registerSelectionChangeHandler()
-    }
-
     // Public API
     fun isJumpInProgress(): Boolean = jumpState.inProgress
 
@@ -82,14 +74,6 @@ class NextEditJumpManager(private val project: Project) {
     }
 
     fun wasJumpJustAccepted(): Boolean = jumpState.justAccepted
-
-    fun setTriggerInlineSuggestCallback(callback: () -> Unit) {
-        triggerInlineSuggestCallback = callback
-    }
-
-    fun setDeleteChainCallback(callback: () -> Unit) {
-        deleteChainCallback = callback
-    }
 
     fun setCompletionAfterJump(completionData: CompletionDataForAfterJump) {
         jumpState = jumpState.copy(completionAfterJump = completionData)
@@ -111,7 +95,7 @@ class NextEditJumpManager(private val project: Project) {
     }
 
     // Main entry point
-    suspend fun suggestJump(
+    fun suggestJump(
         editor: Editor,
         currentPosition: LogicalPosition,
         nextJumpLocation: LogicalPosition,
@@ -174,7 +158,13 @@ class NextEditJumpManager(private val project: Project) {
             lineEndOffset,
             HighlighterLayer.SELECTION - 1,
             TextAttributes().apply {
-                backgroundColor = JBColor.namedColor("InfoPopup.background", JBColor(0xE6F3FF, 0x2D3142))
+                backgroundColor = JBColor.namedColor(
+                    "InfoPopup.background",
+                    JBColor(
+                        0xE6F3FF,
+                        0x2D3142
+                    )
+                )
             },
             HighlighterTargetArea.LINES_IN_RANGE
         )
@@ -248,8 +238,7 @@ class NextEditJumpManager(private val project: Project) {
                             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
                             val arc = 6f
-                            // g2.color = JBColor.border()
-                            g2.color = Color(0x999998)
+                            g2.color = JBColor(Color(0x666667), Color(0x999998))
                             g2.stroke = BasicStroke(1f)
                             g2.draw(
                                 RoundRectangle2D.Float(
@@ -390,9 +379,6 @@ class NextEditJumpManager(private val project: Project) {
 
                 // Clear the active handler after jump is complete
                 clearActiveHandler()
-
-                // Trigger inline suggestion
-                triggerInlineSuggestCallback?.invoke()
             }
         }
     }
@@ -401,9 +387,6 @@ class NextEditJumpManager(private val project: Project) {
         if (!jumpState.inProgress) {
             return
         }
-
-        // Delete the chain
-        deleteChainCallback?.invoke()
 
         // Clear state
         clearJumpState()
@@ -469,12 +452,6 @@ class NextEditJumpManager(private val project: Project) {
             println("Error checking content at jump location: $error")
             false
         }
-    }
-
-    fun cleanup() {
-        clearJumpState()
-        triggerInlineSuggestCallback = null
-        deleteChainCallback = null
     }
 
     private fun clearActiveHandler() {
