@@ -60,7 +60,7 @@ test(
 
     ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
     ideMessenger.responses["tools/evaluatePolicy"] = {
-      policy: "allowedWithPermission"
+      policy: "allowedWithPermission",
     };
     const messengerPostSpy = vi.spyOn(ideMessenger, "post");
     const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
@@ -173,7 +173,7 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
 
   ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
   ideMessenger.responses["tools/evaluatePolicy"] = {
-    policy: "allowedWithoutPermission"
+    policy: "allowedWithoutPermission",
   };
   const messengerPostSpy = vi.spyOn(ideMessenger, "post");
   const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
