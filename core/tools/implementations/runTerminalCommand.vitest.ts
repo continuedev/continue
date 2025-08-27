@@ -476,31 +476,13 @@ describe("runTerminalCommandImpl", () => {
 
 describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
 
-  it("should require permission for echo commands regardless of base policy", () => {
+  it("should return base policy for safe commands like echo", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "echo hello world" };
 
     const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
 
-    expect(result).toBe("allowedWithPermission");
-  });
-
-  it("should require permission for ECHO commands (case insensitive)", () => {
-    const basePolicy = "allowedWithoutPermission";
-    const args = { command: "ECHO HELLO" };
-
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
-
-    expect(result).toBe("allowedWithPermission");
-  });
-
-  it("should require permission for echo commands with leading spaces", () => {
-    const basePolicy = "allowedWithoutPermission";
-    const args = { command: "  echo test" };
-
-    const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
-
-    expect(result).toBe("allowedWithPermission");
+    expect(result).toBe("allowedWithoutPermission");
   });
 
   it("should respect disabled policy even for non-echo commands", () => {
@@ -512,7 +494,7 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     expect(result).toBe("disabled");
   });
 
-  it("should respect disabled policy even for echo commands", () => {
+  it("should respect disabled policy even for safe commands", () => {
     const basePolicy = "disabled";
     const args = { command: "echo test" };
 
@@ -566,23 +548,21 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     expect(result).toBe("allowedWithoutPermission");
   });
 
-  it("should not match echo in middle of command", () => {
+  it("should disable dangerous commands like rm -rf /", () => {
     const basePolicy = "allowedWithoutPermission";
-    const args = { command: "npm run echo-test" };
+    const args = { command: "rm -rf /" };
 
     const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
 
-    // Should use base policy since "echo" is not at the start
-    expect(result).toBe("allowedWithoutPermission");
+    expect(result).toBe("disabled");
   });
 
-  it("should handle commands that contain echo but don't start with it", () => {
+  it("should require permission for high-risk network commands", () => {
     const basePolicy = "allowedWithoutPermission";
-    const args = { command: "grep echo file.txt" };
+    const args = { command: "curl http://example.com" };
 
     const result = runTerminalCommandTool.evaluateToolCallPolicy!(basePolicy, args);
 
-    // Should use base policy since command doesn't start with echo
-    expect(result).toBe("allowedWithoutPermission");
+    expect(result).toBe("allowedWithPermission");
   });
 });
