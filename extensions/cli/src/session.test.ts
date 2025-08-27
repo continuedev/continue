@@ -20,10 +20,19 @@ vi.mock("os", () => ({
   default: {
     homedir: vi.fn(() => "/home/test"),
   },
+  homedir: vi.fn(() => "/home/test"),
 }));
 vi.mock("fs");
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "test-uuid-123"),
+}));
+vi.mock("./util/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 vi.mock("../../core/util/history.js", () => ({
   default: {
@@ -200,9 +209,9 @@ describe("SessionManager", () => {
       const savedData = JSON.parse(
         (mockFs.writeFileSync as any).mock.calls[0][1],
       );
-      expect(savedData.history).toHaveLength(2);
-      expect(savedData.history[0].message.role).toBe("system");
-      expect(savedData.history[1].message.role).toBe("user");
+      // After modification, system messages are filtered out
+      expect(savedData.history).toHaveLength(1);
+      expect(savedData.history[0].message.role).toBe("user");
     });
   });
 

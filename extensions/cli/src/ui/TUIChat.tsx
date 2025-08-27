@@ -8,7 +8,6 @@ import React, {
 } from "react";
 
 import { useServices } from "../hooks/useService.js";
-import { convertFromUnifiedHistory } from "../messageConversion.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
@@ -220,14 +219,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
   }, [resetChatHistory]);
 
   // Memoize the chat history conversion to avoid expensive recalculation on every render
-  const convertedChatHistory = useMemo(
-    () => convertFromUnifiedHistory(chatHistory),
-    [chatHistory],
-  );
 
   // Calculate context percentage
   const contextData = useContextPercentage({
-    chatHistory: convertedChatHistory,
+    chatHistory,
     model: services.model?.model || undefined,
   });
 

@@ -1,14 +1,12 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import type { ChatHistoryItem } from "core/index.js";
+import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import * as dotenv from "dotenv";
 import type {
-  ChatCompletionMessageParam,
-  ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { convertFromUnifiedHistory } from "./messageConversion.js";
+import { convertFromUnifiedHistory, createHistoryItem } from "./messageConversion.js";
 import { filterExcludedTools } from "./permissions/index.js";
 import {
   getServiceSync,
@@ -72,41 +70,68 @@ function handleContentDisplay(
 
 async function handleToolCalls(
   toolCalls: ToolCall[],
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   content: string,
   callbacks: StreamCallbacks | undefined,
   isHeadless: boolean,
 ): Promise<boolean> {
   if (toolCalls.length === 0) {
     if (content) {
-      chatHistory.push({ role: "assistant", content });
+      chatHistory.push(
+        createHistoryItem({
+          role: "assistant",
+          content,
+        }),
+      );
     }
     return false;
   }
 
-  const toolCallsForHistory: ChatCompletionMessageToolCall[] = toolCalls.map(
-    (tc) => ({
+  // Create tool call states for the ChatHistoryItem
+  const toolCallStates = toolCalls.map((tc) => ({
+    toolCallId: tc.id,
+    toolCall: {
       id: tc.id,
-      type: "function",
+      type: "function" as const,
       function: {
         name: tc.name,
         arguments: JSON.stringify(tc.arguments),
       },
-    }),
-  );
+    },
+    status: "generated" as ToolStatus,
+    parsedArgs: tc.arguments,
+  }));
 
-  chatHistory.push({
-    role: "assistant",
-    content: content || null,
-    tool_calls: toolCallsForHistory,
-  });
+  // Create assistant message with tool calls
+  const assistantMessage = {
+    role: "assistant" as const,
+    content: content || "",
+    toolCalls: toolCalls.map((tc) => ({
+      id: tc.id,
+      type: "function" as const,
+      function: {
+        name: tc.name,
+        arguments: JSON.stringify(tc.arguments),
+      },
+    })),
+  };
+
+  chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
 
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
     await preprocessStreamedToolCalls(toolCalls, callbacks);
 
   // Add any preprocessing errors to chat history
-  chatHistory.push(...errorChatEntries);
+  // Convert error entries from OpenAI format to ChatHistoryItem format
+  errorChatEntries.forEach((errorEntry) => {
+    chatHistory.push(
+      createHistoryItem({
+        role: "assistant",
+        content: errorEntry.content || "",
+      }),
+    );
+  });
 
   // Execute the valid preprocessed tool calls
   const { chatHistoryEntries: toolResults, hasRejection } =
@@ -119,7 +144,30 @@ async function handleToolCalls(
     return true; // Signal early return needed
   }
 
-  chatHistory.push(...toolResults);
+  // Update tool call states with results
+  toolResults.forEach((result, _index) => {
+    // Find the most recent assistant message with tool calls
+    const lastAssistantIndex = chatHistory.findLastIndex(
+      (item) => item.message.role === "assistant" && item.toolCallStates
+    );
+    
+    if (lastAssistantIndex >= 0 && chatHistory[lastAssistantIndex].toolCallStates) {
+      const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
+        (ts) => ts.toolCallId === result.tool_call_id
+      );
+      
+      if (toolState) {
+        toolState.status = hasRejection ? "canceled" : "done";
+        toolState.output = [
+          {
+            content: typeof result.content === "string" ? result.content : "",
+            name: `Tool Result`,
+            description: "Tool execution result",
+          },
+        ];
+      }
+    }
+  });
   return false;
 }
 
@@ -272,7 +320,7 @@ function processChunk(options: ProcessChunkOptions): {
 }
 
 interface ProcessStreamingResponseOptions {
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: ModelConfig;
   llmApi: BaseLlmApi;
   abortController: AbortController;
@@ -299,6 +347,7 @@ export async function processStreamingResponse(
     isHeadless,
     tools,
   } = options;
+  const openaiChatHistory = convertFromUnifiedHistory(chatHistory);
   const requestStartTime = Date.now();
 
   const streamFactory = async (retryAbortSignal: AbortSignal) => {
@@ -311,7 +360,7 @@ export async function processStreamingResponse(
       llmApi,
       {
         model: model.model,
-        messages: chatHistory,
+        messages: openaiChatHistory,
         stream: true,
         tools,
         ...getDefaultCompletionOptions(model.defaultCompletionOptions),
@@ -451,9 +500,6 @@ export async function streamChatResponse(
   abortController: AbortController,
   callbacks?: StreamCallbacks,
 ) {
-  // Convert to OpenAI format for processing
-  const openaiHistory = convertFromUnifiedHistory(chatHistory);
-
   logger.debug("streamChatResponse called", {
     model,
     historyLength: chatHistory.length,
@@ -482,7 +528,7 @@ export async function streamChatResponse(
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
-        chatHistory: openaiHistory,
+        chatHistory,
         model,
         llmApi,
         abortController,
@@ -507,7 +553,7 @@ export async function streamChatResponse(
     // Handle tool calls and check for early return
     const shouldReturn = await handleToolCalls(
       toolCalls,
-      openaiHistory,
+      chatHistory,
       content,
       callbacks,
       isHeadless,
@@ -519,8 +565,8 @@ export async function streamChatResponse(
 
     // Check for auto-compaction after tool execution
     if (shouldContinue) {
-      const { chatHistory: updatedChatHistory, compactionIndex } =
-        await handleAutoCompaction(openaiHistory, model, llmApi, {
+      const { wasCompacted, chatHistory: updatedChatHistory } =
+        await handleAutoCompaction(chatHistory, model, llmApi, {
           isHeadless,
           callbacks: {
             onSystemMessage: callbacks?.onSystemMessage,
@@ -529,9 +575,8 @@ export async function streamChatResponse(
         });
 
       // Only update chat history if compaction actually occurred
-      if (compactionIndex !== null && updatedChatHistory !== openaiHistory) {
-        openaiHistory.length = 0;
-        openaiHistory.push(...updatedChatHistory);
+      if (wasCompacted) {
+        chatHistory = [...updatedChatHistory];
       }
     }
 
@@ -543,7 +588,7 @@ export async function streamChatResponse(
 
   logger.debug("streamChatResponse complete", {
     totalResponseLength: fullResponse.length,
-    totalMessages: openaiHistory.length,
+    totalMessages: chatHistory.length,
   });
 
   // For headless mode, we return only the final response
