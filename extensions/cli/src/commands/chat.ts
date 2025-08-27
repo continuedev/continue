@@ -18,7 +18,11 @@ import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
-import { loadSession, updateSessionHistory, updateSessionTitle } from "../session.js";
+import {
+  loadSession,
+  updateSessionHistory,
+  updateSessionTitle,
+} from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";

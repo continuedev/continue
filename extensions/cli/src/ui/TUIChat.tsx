@@ -231,7 +231,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const { handleConfigSelect, handleModelSelect } = useSelectors(
     configPath,
     setChatHistory,
-    handleClear
+    handleClear,
   );
 
   // Session selection handler

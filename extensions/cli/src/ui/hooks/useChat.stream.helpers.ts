@@ -44,7 +44,7 @@ export function createStreamCallbacks(
           model,
           currentSession.title,
         );
-        
+
         if (generatedTitle) {
           updateSessionTitle(generatedTitle);
         }

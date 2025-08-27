@@ -6,7 +6,6 @@ import { startNewSession } from "../../session.js";
 
 import { processSlashCommandResult } from "./useChat.helpers.js";
 
-
 // Mock the session module
 vi.mock("../../session.js", () => ({
   loadSession: vi.fn(),

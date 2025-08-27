@@ -73,17 +73,25 @@ export class ChatDescriber {
       // Convert to OpenAI format - use a simple fallback to avoid import issues
       let openaiMessages;
       let defaultOptions = {};
-      
+
       try {
         // Try to import CLI dependencies dynamically
-        const { convertFromUnifiedHistory } = await import("../../extensions/cli/src/messageConversion.js");
-        const { getDefaultCompletionOptions } = await import("../../extensions/cli/src/streamChatResponse.types.js");
-        
-        openaiMessages = convertFromUnifiedHistory([{
-          message: chatMessage,
-          contextItems: [],
-        }]);
-        defaultOptions = getDefaultCompletionOptions(modelConfig.defaultCompletionOptions);
+        const { convertFromUnifiedHistory } = await import(
+          "../../extensions/cli/src/messageConversion.js"
+        );
+        const { getDefaultCompletionOptions } = await import(
+          "../../extensions/cli/src/streamChatResponse.types.js"
+        );
+
+        openaiMessages = convertFromUnifiedHistory([
+          {
+            message: chatMessage,
+            contextItems: [],
+          },
+        ]);
+        defaultOptions = getDefaultCompletionOptions(
+          modelConfig.defaultCompletionOptions,
+        );
       } catch {
         // Fallback: use direct OpenAI format if imports fail
         openaiMessages = [chatMessage];

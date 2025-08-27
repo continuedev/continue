@@ -27,7 +27,7 @@ const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
 export function useConfigSelector({
   onMessage,
-  handleClear
+  handleClear,
 }: UseConfigSelectorProps) {
   const { closeCurrentScreen } = useNavigation();
 
@@ -105,7 +105,7 @@ export function useConfigSelector({
         // This avoids the double reload issue
         await services.config.updateConfigPath(targetConfigPath);
       }
-      
+
       handleClear();
 
       // Show success message
