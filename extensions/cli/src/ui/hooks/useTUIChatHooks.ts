@@ -98,7 +98,7 @@ export function useCurrentMode() {
 export function useSelectors(
   configPath: string | undefined,
   setChatHistory: React.Dispatch<React.SetStateAction<any[]>>,
-  resetChatHistory: () => void,
+  handleClear: () => void,
 ): {
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
@@ -115,7 +115,7 @@ export function useSelectors(
         },
       ]);
     },
-    onChatReset: resetChatHistory,
+    handleClear,
   });
 
   const { handleModelSelect } = useModelSelector({
