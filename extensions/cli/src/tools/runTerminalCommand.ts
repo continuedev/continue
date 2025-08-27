@@ -68,7 +68,7 @@ export const runTerminalCommandTool: Tool = {
       // Default to cwd
       try {
         cwd = process.cwd();
-      } catch (error) {
+      } catch (_error) {
         //Fallback if process.cwd() fails
         cwd = process.env.HOME || process.env.USERPROFILE || os.tmpdir();
       }
