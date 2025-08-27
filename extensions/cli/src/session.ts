@@ -347,3 +347,24 @@ export function updateSessionTitle(title: string): void {
 export function getCurrentSession(): Session {
   return SessionManager.getInstance().getCurrentSession();
 }
+
+/**
+ * Start a new session with a new sessionId
+ */
+export function startNewSession(history: ChatHistoryItem[] = []): Session {
+  const manager = SessionManager.getInstance();
+  
+  // Clear the current session from memory (don't delete the file)
+  manager.clear();
+  
+  // Create a new session with a new sessionId
+  const newSession: Session = {
+    sessionId: uuidv4(),
+    title: "Untitled Session",
+    workspaceDirectory: process.cwd(),
+    history,
+  };
+  
+  manager.setSession(newSession);
+  return newSession;
+}

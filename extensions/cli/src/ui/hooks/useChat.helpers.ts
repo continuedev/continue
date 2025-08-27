@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
-import { loadSession, updateSessionHistory } from "../../session.js";
+import { loadSession, updateSessionHistory, startNewSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
@@ -177,6 +177,10 @@ export function processSlashCommandResult({
       (item) => item.message.role === "system",
     );
     const newHistory = systemMessage ? [systemMessage] : [];
+    
+    // Start a new session with a new sessionId
+    startNewSession(newHistory);
+    
     setChatHistory(newHistory);
 
     // Reset intro message state to show it again after clearing
