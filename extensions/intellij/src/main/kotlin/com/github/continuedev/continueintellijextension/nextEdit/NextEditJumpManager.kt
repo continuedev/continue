@@ -324,7 +324,6 @@ class NextEditJumpManager(private val project: Project) {
     }
 
     private fun addKeyboardShortcuts(panel: JComponent, editor: Editor) {
-        // CRITICAL: Disable focus traversal for Tab key
         panel.setFocusTraversalKeysEnabled(false)
 
         val inputMap = panel.getInputMap(JComponent.WHEN_FOCUSED)
@@ -398,10 +397,8 @@ class NextEditJumpManager(private val project: Project) {
     private fun clearJumpDecoration() {
         // Clear keyboard shortcuts first
         keyboardShortcutsPanel?.let { panel ->
-            if (panel is JComponent) {
-                panel.inputMap?.clear()
-                panel.actionMap?.clear()
-            }
+            panel.inputMap?.clear()
+            panel.actionMap?.clear()
         }
         keyboardShortcutsPanel = null
 
