@@ -111,6 +111,11 @@
           "default": true,
           "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
         },
+        "continue.enableNextEdit": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
+        },
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
@@ -336,6 +341,10 @@
         "group": "Continue"
       },
       {
+        "command": "continue.toggleNextEditEnabled",
+        "title": "Continue: Toggle Next Edit"
+      },
+      {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",
         "category": "Continue",
         "title": "Hide Next Edit Suggestion"
@@ -457,6 +466,12 @@
         "command": "continue.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
+      },
+      {
+        "command": "continue.toggleNextEditEnabled",
+        "key": "ctrl+k ctrl+n",
+        "mac": "cmd+k cmd+n",
+        "when": "editorTextFocus"
       },
       {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",

@@ -311,7 +311,11 @@ export class NextEditProvider {
         input.completionId,
       );
       token = controller.signal;
+    } else {
+      // Token was provided externally, just track the completion.
+      this.loggingService.trackPendingCompletion(input.completionId);
     }
+
     const startTime = Date.now();
     const options = await this._getAutocompleteOptions();
 
@@ -324,6 +328,13 @@ export class NextEditProvider {
     if (!llm) {
       return { token, startTime, helper: undefined };
     }
+
+    // Update pending completion with model info.
+    this.loggingService.updatePendingCompletion(input.completionId, {
+      modelName: llm.model,
+      modelProvider: llm.providerName,
+      filepath: input.filepath,
+    });
 
     // Check model capabilities
     if (!modelSupportsNextEdit(llm.capabilities, llm.model, llm.title)) {
