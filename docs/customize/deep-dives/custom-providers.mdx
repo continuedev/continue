@@ -1,13 +1,11 @@
 ---
 title: "Context Providers"
-description: "Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider."
+description: "Context Providers allow you to type '@' and see a dropdown of content that can all be provided to the model as context."
 ---
 
-As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
+Context Providers allow you to type '@' and see a dropdown of content that can all be provided to the model as context.
 
 ![Context Items](/images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
-
-
 
 ## Built-in Context Providers
 
@@ -131,7 +129,6 @@ config.json
 ```json
 { "contextProviders": [{ "name": "open", "params": { "onlyPinned": true } }] }
 ```
-
 
 ### `@Clipboard`
 
@@ -267,49 +264,6 @@ config.json
 { "contextProviders": [{ "name": "os" }] }
 ```
 
-### Model Context Protocol
-
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-mcpServers:
-  - name: My MCP Server
-    command: uvx
-    args:
-      - mcp-server-sqlite
-      - --db-path
-      - /Users/NAME/test.db
-```
-
-config.json
-
-```json
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
-        }
-      }
-    ]
-  }
-}
-```
-
-You'll then be able to type "@" and see "MCP" in the context providers dropdown.
-
-
-
-
-
 ### `@HTTP`
 
 The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
@@ -352,9 +306,50 @@ Response
 [  {    "name": "",    "description": "",    "content": ""  }]// OR{  "name": "",  "description": "",  "content": ""}
 ```
 
+### Model Context Protocol
 
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
+
+- YAML
+- JSON
+
+config.yaml
+
+```
+mcpServers:
+  - name: My MCP Server
+    command: uvx
+    args:
+      - mcp-server-sqlite
+      - --db-path
+      - /Users/NAME/test.db
+```
+
+config.json
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
+  }
+}
+```
+
+You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
 ## Deprecated Context Providers
+
+<Note>
+  To provide conext beyond the built-in context providers, we now recommend using [MCP Servers](/customization/mcp-tools)
+</Note>
 
 View the [deprecated context providers](/reference/deprecated-context-providers) for documentation on:
 

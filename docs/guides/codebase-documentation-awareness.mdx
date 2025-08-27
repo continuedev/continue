@@ -6,7 +6,7 @@ keywords: [agent, codebase, documentation, MCP, context, RAG, tools]
 
 # How to make your agent aware of codebases and documentation
 
-Modern AI agents work best when they understand the context of your project. This guide shows you how to give your agent access to codebases and documentation, making it more helpful and accurate.
+AI coding agents work best when they understand the context of your project. This guide shows you how to give your agent access to codebases and documentation, making it more helpful and accurate.
 
 ## Make your agent aware of your open codebase
 
@@ -39,7 +39,7 @@ This is a React application with:
 ```
 
 <Tip>
-Place rules files at different levels of your project hierarchy.
+    Place rules files at different levels of your project hierarchy to scope when they trigger
 </Tip>
 
 Learn more about [rules configuration](/reference/config/continuerules).
@@ -52,14 +52,19 @@ Sometimes you need your agent to understand code beyond your current project.
 
 For open-source projects and public repositories, you have several options:
 
-#### DeepWiki MCP
+#### Rules with hyperlinks
 
-[DeepWiki MCP](hub.continue.dev/deepwiki/deepwiki-mcp) lets your agent explore any public GitHub repository.
+Create rules that point to external codebases:
+
+```markdown
+# External Dependencies
+
+Our authentication system is based on:
+- [Auth.js documentation](https://authjs.dev/)
+- [Example implementation](https://github.com/nextauthjs/next-auth-example)
+
+When implementing auth features, reference these patterns.
 ```
-
-Once configured, your agent can explore repositories like:
-- "Explore the React repository structure"
-- "Find how authentication is implemented in NextAuth.js"
 
 #### GitHub and GitLab CLIs
 
@@ -76,19 +81,14 @@ You can use the `gh` CLI to:
 - Clone repositories: `gh repo clone owner/repo`
 ```
 
-#### Rules with hyperlinks
+#### DeepWiki MCP
 
-Create rules that point to external codebases:
-
-```markdown
-# External Dependencies
-
-Our authentication system is based on:
-- [Auth.js documentation](https://authjs.dev/)
-- [Example implementation](https://github.com/nextauthjs/next-auth-example)
-
-When implementing auth features, reference these patterns.
+[DeepWiki MCP](hub.continue.dev/deepwiki/deepwiki-mcp) lets your agent explore any public GitHub repository.
 ```
+
+Once configured, your agent can explore repositories like:
+- "Explore the React repository structure"
+- "Find how authentication is implemented in NextAuth.js"
 
 ### Internal codebases
 
@@ -108,14 +108,6 @@ Documentation provides crucial context for your agent to understand APIs, framew
 
 ### Public documentation
 
-#### Context7 MCP
-
-[Context7 MCP](https://hub.continue.dev/upstash/context7-mcp) enables your agent to search and retrieve information from public documentation:
-
-Your agent can then answer questions like:
-- "How do I use React hooks?"
-- "What's the syntax for Tailwind CSS animations?"
-
 #### Rules with documentation links
 
 Guide your agent to relevant documentation:
@@ -131,13 +123,17 @@ For framework-specific questions, refer to:
 Always cite documentation when explaining concepts.
 ```
 
+#### Context7 MCP
+
+[Context7 MCP](https://hub.continue.dev/upstash/context7-mcp) enables your agent to search and retrieve information from public documentation:
+
+Your agent can then answer questions like:
+- "How do I use React hooks?"
+- "What's the syntax for Tailwind CSS animations?"
+
 ### Internal documentation
 
 For private documentation and wikis:
-
-#### Custom MCP servers for docs
-
-Create an MCP server that accesses your internal documentation.
 
 #### Rules with internal links
 
@@ -153,6 +149,10 @@ Our team documentation is available at:
 
 Always follow our internal standards when suggesting code.
 ```
+
+#### Custom MCP servers for docs
+
+Create an MCP server that accesses your internal documentation.
 
 ## Migrating from deprecated context providers
 
