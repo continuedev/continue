@@ -966,6 +966,10 @@ export class Core {
     on("docs/getDetails", async (msg) => {
       return await this.docsService.getDetails(msg.data.startUrl);
     });
+    on("docs/getIndexedPages", async (msg) => {
+      const pages = await this.docsService.getIndexedPages(msg.data.startUrl);
+      return Array.from(pages);
+    });
 
     on("didChangeSelectedProfile", async (msg) => {
       if (msg.data.id) {
