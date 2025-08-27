@@ -1,6 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
+import { stripImages } from "core/util/messageContent.js";
 import * as dotenv from "dotenv";
 import type { ChatCompletionTool } from "openai/resources.mjs";
 
@@ -128,8 +129,9 @@ async function handleToolCalls(
   errorChatEntries.forEach((errorEntry) => {
     chatHistory.push(
       createHistoryItem({
-        role: "assistant",
-        content: errorEntry.content || "",
+        role: "tool",
+        content: stripImages(errorEntry.content) || "",
+        toolCallId: errorEntry.tool_call_id,
       }),
     );
   });
