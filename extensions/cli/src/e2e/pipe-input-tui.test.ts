@@ -45,7 +45,9 @@ models:
 
       // With explicit -p flag, should be in headless mode
       // Should show headless mode error (no prompt provided when input is ignored in test)
-      expect(result.stderr).toContain("A prompt is required when using the -p/--print flag");
+      expect(result.stderr).toContain(
+        "A prompt is required when using the -p/--print flag",
+      );
       expect(result.exitCode).not.toBe(0);
     });
 
@@ -62,9 +64,11 @@ models:
       // With explicit -p flag and prompt, should attempt headless mode
       // Will fail due to missing LLM configuration, but that's expected
       expect(result.exitCode).not.toBe(0);
-      
+
       // Should not show the "prompt required" error since we provided one
-      expect(result.stderr).not.toContain("A prompt is required when using the -p/--print flag");
+      expect(result.stderr).not.toContain(
+        "A prompt is required when using the -p/--print flag",
+      );
     });
 
     it("should try to start TUI mode when no explicit flags are provided", async () => {
@@ -81,8 +85,10 @@ models:
       // Without -p flag, should attempt TUI mode
       // In test environment, this will likely fail quickly due to stdin/TTY issues
       // but the important thing is that it doesn't immediately error about missing prompt
-      expect(result.stderr).not.toContain("A prompt is required when using the -p/--print flag");
-      
+      expect(result.stderr).not.toContain(
+        "A prompt is required when using the -p/--print flag",
+      );
+
       // Should exit with error due to test environment limitations
       expect(result.exitCode).not.toBe(0);
     });
@@ -103,10 +109,12 @@ models:
       expect(result.exitCode).toBeDefined();
       expect(typeof result.stdout).toBe("string");
       expect(typeof result.stderr).toBe("string");
-      
+
       // On any platform, should not show headless-mode specific errors
       // when no -p flag is provided
-      expect(result.stderr).not.toContain("A prompt is required when using the -p/--print flag");
+      expect(result.stderr).not.toContain(
+        "A prompt is required when using the -p/--print flag",
+      );
     });
   });
 
@@ -210,17 +218,17 @@ models:
  * Note: This test suite focuses on testing the CLI behavior within the constraints
  * of the test environment. The actual pipe input detection cannot be fully tested
  * here because:
- * 
+ *
  * 1. readStdinSync() returns null when CONTINUE_CLI_TEST=true to prevent hanging
  * 2. TUI mode requires real TTY access which isn't available in test subprocesses
  * 3. Cross-platform TTY behavior varies significantly
- * 
+ *
  * However, we test:
  * - Backward compatibility with explicit flags
  * - Proper argument processing
  * - Error handling for various scenarios
  * - Platform-agnostic behavior
- * 
+ *
  * For manual testing of the full pipe functionality, use:
  * npm run build && echo "test" | node dist/index.js
  */

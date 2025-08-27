@@ -39,9 +39,10 @@ export async function listSessionsCommand(
       JSON.stringify(
         {
           sessions: sessions.map((session) => ({
-            id: session.id,
-            timestamp: session.timestamp.toISOString(),
-            messageCount: session.messageCount,
+            id: session.sessionId,
+            timestamp: session.dateCreated,
+            workspaceDirectory: session.workspaceDirectory,
+            title: session.title,
             firstUserMessage: session.firstUserMessage,
           })),
         },

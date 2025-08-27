@@ -39,6 +39,11 @@ jobs:
           component: core
           include-root: true
 
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Install CLI dependencies
         working-directory: extensions/cli
         run: npm ci
