@@ -2,11 +2,12 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import * as dotenv from "dotenv";
-import type {
-  ChatCompletionTool,
-} from "openai/resources.mjs";
+import type { ChatCompletionTool } from "openai/resources.mjs";
 
-import { convertFromUnifiedHistory, createHistoryItem } from "./messageConversion.js";
+import {
+  convertFromUnifiedHistory,
+  createHistoryItem,
+} from "./messageConversion.js";
 import { filterExcludedTools } from "./permissions/index.js";
 import {
   getServiceSync,
@@ -148,14 +149,17 @@ async function handleToolCalls(
   toolResults.forEach((result, _index) => {
     // Find the most recent assistant message with tool calls
     const lastAssistantIndex = chatHistory.findLastIndex(
-      (item) => item.message.role === "assistant" && item.toolCallStates
+      (item) => item.message.role === "assistant" && item.toolCallStates,
     );
-    
-    if (lastAssistantIndex >= 0 && chatHistory[lastAssistantIndex].toolCallStates) {
+
+    if (
+      lastAssistantIndex >= 0 &&
+      chatHistory[lastAssistantIndex].toolCallStates
+    ) {
       const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
-        (ts) => ts.toolCallId === result.tool_call_id
+        (ts) => ts.toolCallId === result.tool_call_id,
       );
-      
+
       if (toolState) {
         toolState.status = hasRejection ? "canceled" : "done";
         toolState.output = [

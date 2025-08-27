@@ -1,9 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
-import type {
-  ChatCompletionChunk,
-} from "openai/resources/chat/completions.mjs";
+import type { ChatCompletionChunk } from "openai/resources/chat/completions.mjs";
 import { vi } from "vitest";
 
 import { toolPermissionManager } from "./permissions/permissionManager.js";

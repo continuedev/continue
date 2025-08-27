@@ -214,9 +214,7 @@ describe("tokenizer", () => {
       },
     });
 
-    const createChatHistory = (
-      tokenCount: number,
-    ): ChatHistoryItem[] => {
+    const createChatHistory = (tokenCount: number): ChatHistoryItem[] => {
       // Create a message that will result in approximately the desired token count
       const content = "x".repeat(tokenCount * 4); // 4 chars per token
       return [
