@@ -44,8 +44,10 @@ describe("E2E: Resume Flag", () => {
     expect(firstResult.stdout).toContain("Hello! Nice to meet you.");
 
     // Verify that a session file was created
-    const sessionDir = path.join(context.testDir, ".continue", "cli-sessions");
-    const sessionFiles = await fs.readdir(sessionDir);
+    const sessionDir = path.join(context.testDir, ".continue", "sessions");
+    const sessionFiles = (await fs.readdir(sessionDir)).filter(
+      f => f.endsWith('.json') && f !== 'sessions.json'
+    );
     expect(sessionFiles).toHaveLength(1);
 
     // Read the session file to verify it contains our conversation
@@ -54,19 +56,19 @@ describe("E2E: Resume Flag", () => {
     const sessionContent = await fs.readFile(sessionPath, "utf-8");
     const sessionData = JSON.parse(sessionContent);
 
-    expect(sessionData.chatHistory).toBeDefined();
-    expect(sessionData.chatHistory.length).toBeGreaterThan(0);
+    expect(sessionData.history).toBeDefined();
+    expect(sessionData.history.length).toBeGreaterThan(0);
 
     // Should contain the user message and assistant response
-    const userMessage = sessionData.chatHistory.find(
-      (msg: any) => msg.role === "user",
+    const userMessage = sessionData.history.find(
+      (msg: any) => msg.message?.role === "user",
     );
-    const assistantMessage = sessionData.chatHistory.find(
-      (msg: any) => msg.role === "assistant",
+    const assistantMessage = sessionData.history.find(
+      (msg: any) => msg.message?.role === "assistant",
     );
 
-    expect(userMessage?.content).toBe("hello");
-    expect(assistantMessage?.content).toBe("Hello! Nice to meet you.");
+    expect(userMessage?.message?.content).toBe("hello");
+    expect(assistantMessage?.message?.content).toBe("Hello! Nice to meet you.");
 
     // Now run with --resume flag using the same session ID
     const resumeResult = await runCLI(context, {
@@ -135,8 +137,10 @@ describe("E2E: Resume Flag", () => {
     expect(firstResult.stdout).toContain("First response");
 
     // Verify the first session was saved correctly
-    const sessionDir = path.join(context.testDir, ".continue", "cli-sessions");
-    let sessionFiles = await fs.readdir(sessionDir);
+    const sessionDir = path.join(context.testDir, ".continue", "sessions");
+    let sessionFiles = (await fs.readdir(sessionDir)).filter(
+      f => f.endsWith('.json') && f !== 'sessions.json'
+    );
     expect(sessionFiles).toHaveLength(1);
 
     let sessionFile = sessionFiles[0];
@@ -167,24 +171,26 @@ describe("E2E: Resume Flag", () => {
     expect(mockServer.requests).toHaveLength(2);
 
     // Check that the session file contains both messages
-    sessionFiles = await fs.readdir(sessionDir);
+    sessionFiles = (await fs.readdir(sessionDir)).filter(
+      f => f.endsWith('.json') && f !== 'sessions.json'
+    );
     sessionFile = sessionFiles[0];
     sessionPath = path.join(sessionDir, sessionFile);
     sessionContent = await fs.readFile(sessionPath, "utf-8");
     sessionData = JSON.parse(sessionContent);
 
-    const userMessages = sessionData.chatHistory.filter(
-      (msg: any) => msg.role === "user",
+    const userMessages = sessionData.history.filter(
+      (msg: any) => msg.message?.role === "user",
     );
-    const assistantMessages = sessionData.chatHistory.filter(
-      (msg: any) => msg.role === "assistant",
+    const assistantMessages = sessionData.history.filter(
+      (msg: any) => msg.message?.role === "assistant",
     );
 
     expect(userMessages).toHaveLength(2);
     expect(assistantMessages).toHaveLength(2);
-    expect(userMessages[0].content).toBe("first message");
-    expect(userMessages[1].content).toBe("second message");
-    expect(assistantMessages[0].content).toBe("First response");
-    expect(assistantMessages[1].content).toBe("Second response");
+    expect(userMessages[0].message?.content).toBe("first message");
+    expect(userMessages[1].message?.content).toBe("second message");
+    expect(assistantMessages[0].message?.content).toBe("First response");
+    expect(assistantMessages[1].message?.content).toBe("Second response");
   }, 30000);
 });
