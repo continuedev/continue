@@ -59,6 +59,9 @@ test(
     const { ideMessenger, store, user } = await renderWithProviders(<Chat />);
 
     ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
+    ideMessenger.responses["tools/evaluatePolicy"] = {
+      policy: "allowedWithPermission"
+    };
     const messengerPostSpy = vi.spyOn(ideMessenger, "post");
     const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
 
@@ -169,6 +172,9 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   const { ideMessenger, store, user } = await renderWithProviders(<Chat />);
 
   ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
+  ideMessenger.responses["tools/evaluatePolicy"] = {
+    policy: "allowedWithoutPermission"
+  };
   const messengerPostSpy = vi.spyOn(ideMessenger, "post");
   const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
 
@@ -213,7 +219,7 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   await getElementByText(EDIT_CHANGES);
 
   // Make sure there's no pending tool call
-  verifyNotPresentByTestId(
+  await verifyNotPresentByTestId(
     generateToolCallButtonTestId("accept", EDIT_TOOL_CALL_ID),
   );
   // Tool call, check that applyToFile was called for edit
