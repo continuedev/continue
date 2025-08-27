@@ -1,4 +1,5 @@
 import { CompletionOptions } from "@continuedev/config-yaml";
+import type { ToolStatus } from "core/index.js";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
 
 import { ToolCallPreview } from "./tools/types.js";
@@ -7,7 +8,7 @@ export interface StreamCallbacks {
   onContent?: (content: string) => void;
   onContentComplete?: (content: string) => void;
   onToolStart?: (toolName: string, toolArgs?: any) => void;
-  onToolResult?: (result: string, toolName: string) => void;
+  onToolResult?: (result: string, toolName: string, status: ToolStatus) => void;
   onToolError?: (error: string, toolName?: string) => void;
   onToolPermissionRequest?: (
     toolName: string,

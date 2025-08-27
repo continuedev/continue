@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.ApplyState
 import com.github.continuedev.continueintellijextension.ApplyStateStatus
 import com.github.continuedev.continueintellijextension.IDE
 import com.github.continuedev.continueintellijextension.ToastType
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
@@ -114,7 +115,7 @@ class ApplyToFileHandler(
             toolCallId = params.toolCallId.toString()
         )
 
-        continuePluginService.sendToWebview("updateApplyState", payload)
+        project.getBrowser()?.sendToWebview("updateApplyState", payload)
     }
 
     private suspend fun fetchApplyLLMConfig(): Any? {

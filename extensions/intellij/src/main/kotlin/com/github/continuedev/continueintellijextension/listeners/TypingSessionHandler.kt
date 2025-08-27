@@ -47,7 +47,7 @@ class TypingSessionHandler(
     }
 
     override fun onDeactivated() {
-        println("TypingSessionHandler: Deactivated")
+        //println("TypingSessionHandler: Deactivated")
     }
 
     override fun dispose() {

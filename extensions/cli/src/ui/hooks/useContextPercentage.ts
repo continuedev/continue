@@ -1,5 +1,5 @@
 import { ModelConfig } from "@continuedev/config-yaml";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem } from "core/index.js";
 import { useMemo } from "react";
 
 import {
@@ -8,7 +8,7 @@ import {
 } from "../../util/tokenizer.js";
 
 interface UseContextPercentageProps {
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model?: ModelConfig;
 }
 

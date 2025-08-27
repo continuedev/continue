@@ -19,7 +19,12 @@
     "declaration": true,
     "sourceMap": true,
     "inlineSources": true,
-    "jsx": "react"
+    "jsx": "react",
+    "baseUrl": ".",
+    "paths": {
+      "core/*": ["../../core/dist/*"],
+      "core": ["../../core/dist/index.js"]
+    }
   },
   "include": ["src/**/*", "vitest.setup.ts"]
 }

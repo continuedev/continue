@@ -7,7 +7,8 @@
     "vitest": "vitest run",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage && open ./coverage/lcov-report/index.html",
     "tsc:check": "tsc -p ./ --noEmit",
-    "build:npm": "tsc -p ./tsconfig.npm.json && npm run sentry:sourcemaps",
+    "build": "tsc -p ./tsconfig.npm.json",
+    "build:npm": "npm run build && npm run sentry:sourcemaps",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org continue-xd --project continue ./dist && sentry-cli sourcemaps upload --org continue-xd --project continue ./dist"

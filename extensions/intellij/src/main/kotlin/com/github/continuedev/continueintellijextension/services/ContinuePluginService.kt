@@ -22,7 +22,6 @@ import kotlin.properties.Delegates
 @Service(Service.Level.PROJECT)
 class ContinuePluginService(private val project: Project) : DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
-    var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
     var listener: (() -> Unit)? = null
     var ideProtocolClient: IdeProtocolClient? by Delegates.observable(null) { _, _, _ ->
         synchronized(this) { listener?.also { listener = null }?.invoke() }
@@ -64,14 +63,6 @@ class ContinuePluginService(private val project: Project) : DumbAware {
             it.cancel()
             coreMessenger?.close()
         }
-    }
-
-    fun sendToWebview(
-        messageType: String,
-        data: Any?,
-        messageId: String = uuid()
-    ) {
-        continuePluginWindow?.browser?.sendToWebview(messageType, data, messageId)
     }
 
     /**
