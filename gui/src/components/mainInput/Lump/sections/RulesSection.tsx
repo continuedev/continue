@@ -10,7 +10,7 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -21,7 +21,7 @@ import {
   toggleRuleSetting,
 } from "../../../../redux/slices/uiSlice";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
-import Switch from "../../../gui/Switch";
+import ToggleSwitch from "../../../gui/Switch";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
@@ -126,7 +126,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
           <div className="flex flex-row items-center gap-2">
             {rule.name && policy && (
               <div className="flex cursor-pointer flex-row items-center justify-end gap-1 px-2 py-0.5">
-                <Switch
+                <ToggleSwitch
                   isToggled={policy === "on"}
                   onToggle={() => handleTogglePolicy()}
                   size={10}
@@ -184,6 +184,8 @@ export function RulesSection() {
   const { selectedProfile } = useAuth();
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
+  const [isGlobalMode, setIsGlobalMode] = useState(false);
+
   const sortedRules: RuleWithSource[] = useMemo(() => {
     const rules = [...config.rules.map((rule) => ({ ...rule }))];
 
@@ -264,10 +266,23 @@ export function RulesSection() {
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between px-1">
+        <span
+          className={`text-xs ${isGlobalMode ? "text-vsc-foreground" : "text-gray-500"}`}
+        >
+          Create global rules
+        </span>
+        <ToggleSwitch
+          isToggled={isGlobalMode}
+          onToggle={() => setIsGlobalMode(!isGlobalMode)}
+          text=""
+          size={12}
+        />
+      </div>
       {sortedRules.map((rule, index) => (
         <RuleCard key={index} rule={rule} />
       ))}
-      <ExploreBlocksButton blockType="rules" />
+      <ExploreBlocksButton blockType="rules" isGlobalMode={isGlobalMode} />
     </div>
   );
 }

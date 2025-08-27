@@ -6,6 +6,7 @@ import {
 } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
+import { getContinueGlobalPath } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 
 const BLOCK_TYPE_CONFIG: Record<
@@ -142,4 +143,25 @@ export async function createNewWorkspaceBlockFile(
 
   await ide.writeFile(fileUri, fileContent);
   await ide.openFile(fileUri);
+}
+
+export async function createNewGlobalRuleFile(ide: IDE): Promise<void> {
+  try {
+    const globalDir = getContinueGlobalPath();
+
+    // Create the rule file directly in the global directory
+    const fileUri = await findAvailableFilename(
+      globalDir,
+      "rules",
+      ide.fileExists.bind(ide),
+    );
+
+    const fileContent = getFileContent("rules");
+
+    await ide.writeFile(fileUri, fileContent);
+
+    await ide.openFile(fileUri);
+  } catch (error) {
+    throw error;
+  }
 }
