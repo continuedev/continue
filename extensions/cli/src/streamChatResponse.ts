@@ -165,7 +165,8 @@ async function handleToolCalls(
         toolState.status = hasRejection ? "canceled" : "done";
         toolState.output = [
           {
-            content: typeof toolResult.content === "string" ? toolResult.content : "",
+            content:
+              typeof toolResult.content === "string" ? toolResult.content : "",
             name: `Tool Result`,
             description: "Tool execution result",
           },
@@ -173,7 +174,7 @@ async function handleToolCalls(
       }
     }
   });
-  
+
   return false;
 }
 
