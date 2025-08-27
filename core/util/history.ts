@@ -34,7 +34,7 @@ export class HistoryManager {
       .filter((session: any) => {
         // Filter out old format
         return typeof session.session_id !== "string";
-        // We apply reverse() because they are in reverse chronological order
+        // Reverse to show newest first; sessions.json is chronological by creation
       })
       .reverse();
 
