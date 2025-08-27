@@ -1,27 +1,28 @@
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { convertToUnifiedHistory } from "../../messageConversion.js";
+
 import { processSlashCommandResult } from "./useChat.helpers.js";
 
 describe("useChat clear command", () => {
   let mockSetChatHistory: ReturnType<typeof vi.fn>;
-  let mockSetMessages: ReturnType<typeof vi.fn>;
   let mockExit: ReturnType<typeof vi.fn>;
   let mockOnClear: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     mockSetChatHistory = vi.fn();
-    mockSetMessages = vi.fn();
     mockExit = vi.fn();
     mockOnClear = vi.fn();
   });
 
   it("should call onClear callback when processing clear command", () => {
-    const chatHistory: ChatCompletionMessageParam[] = [
+    const legacyHistory: ChatCompletionMessageParam[] = [
       { role: "system", content: "You are a helpful assistant" },
       { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there!" },
     ];
+    const chatHistory = convertToUnifiedHistory(legacyHistory);
 
     const result = {
       clear: true,
@@ -32,7 +33,6 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      setMessages: mockSetMessages,
       exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
@@ -43,18 +43,27 @@ describe("useChat clear command", () => {
 
     // Verify that chat history was reset (keeping only system message)
     expect(mockSetChatHistory).toHaveBeenCalledWith([
-      { role: "system", content: "You are a helpful assistant" },
+      chatHistory[0], // The system message ChatHistoryItem
     ]);
 
-    // Verify that messages were cleared
-    expect(mockSetMessages).toHaveBeenCalledWith([]);
+    // Second call should be with the "Chat history cleared" message
+    expect(mockSetChatHistory).toHaveBeenLastCalledWith([
+      {
+        message: {
+          role: "system",
+          content: "Chat history cleared",
+        },
+        contextItems: [],
+      },
+    ]);
   });
 
   it("should not call onClear if callback is not provided", () => {
-    const chatHistory: ChatCompletionMessageParam[] = [
+    const legacyHistory: ChatCompletionMessageParam[] = [
       { role: "system", content: "You are a helpful assistant" },
       { role: "user", content: "Hello" },
     ];
+    const chatHistory = convertToUnifiedHistory(legacyHistory);
 
     const result = {
       clear: true,
@@ -66,18 +75,16 @@ describe("useChat clear command", () => {
         result,
         chatHistory,
         setChatHistory: mockSetChatHistory,
-        setMessages: mockSetMessages,
         exit: mockExit,
         onShowConfigSelector: vi.fn(),
         // onClear is not provided
       });
     }).not.toThrow();
 
-    // Verify that history and messages are still reset
+    // Verify that history is still reset
     expect(mockSetChatHistory).toHaveBeenCalledWith([
-      { role: "system", content: "You are a helpful assistant" },
+      chatHistory[0], // The system message ChatHistoryItem
     ]);
-    expect(mockSetMessages).toHaveBeenCalledWith([]);
   });
 
   it("should preserve system message when clearing", () => {
@@ -85,11 +92,13 @@ describe("useChat clear command", () => {
       role: "system",
       content: "Custom system message",
     };
-    const chatHistory: ChatCompletionMessageParam[] = [
+    const legacyHistory: ChatCompletionMessageParam[] = [
       systemMessage,
       { role: "user", content: "Test message" },
       { role: "assistant", content: "Test response" },
     ];
+    const chatHistory = convertToUnifiedHistory(legacyHistory);
+    const systemHistoryItem = chatHistory[0];
 
     const result = { clear: true };
 
@@ -97,26 +106,25 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      setMessages: mockSetMessages,
       exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });
 
     // Should keep only the system message
-    expect(mockSetChatHistory).toHaveBeenCalledWith([systemMessage]);
+    expect(mockSetChatHistory).toHaveBeenCalledWith([systemHistoryItem]);
     expect(mockOnClear).toHaveBeenCalledOnce();
   });
 
   it("should handle clear with empty chat history", () => {
-    const chatHistory: ChatCompletionMessageParam[] = [];
+    const legacyHistory: ChatCompletionMessageParam[] = [];
+    const chatHistory = convertToUnifiedHistory(legacyHistory);
     const result = { clear: true };
 
     processSlashCommandResult({
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      setMessages: mockSetMessages,
       exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
@@ -124,7 +132,6 @@ describe("useChat clear command", () => {
 
     // Should set empty history when no system message exists
     expect(mockSetChatHistory).toHaveBeenCalledWith([]);
-    expect(mockSetMessages).toHaveBeenCalledWith([]);
     expect(mockOnClear).toHaveBeenCalledOnce();
   });
 });

@@ -1,9 +1,12 @@
+/* eslint-disable max-lines */
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useCallback, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
+import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
+import type { FileIndexServiceState } from "../services/FileIndexService.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
@@ -71,6 +74,11 @@ const UserInput: React.FC<UserInputProps> = ({
     Array<{ path: string; displayName: string }>
   >([]);
   const { exit } = useApp();
+
+  // Get file index service
+  const { services } = useServices<{
+    fileIndex: FileIndexServiceState;
+  }>(["fileIndex"]);
 
   const getSlashCommands = () => {
     if (assistant || isRemoteMode) {
@@ -191,7 +199,27 @@ const UserInput: React.FC<UserInputProps> = ({
       if (afterAt.includes(" ") || afterAt.includes("\n")) {
         setShowFileSearch(false);
       } else {
-        // We're in a file search context
+        // We're in a file search context - check if there are matching files
+        const fileIndexService = services.fileIndex;
+        if (fileIndexService) {
+          const filteredFiles = fileIndexService.files.filter((file) => {
+            if (afterAt.length === 0) {
+              return true;
+            }
+            const lowerFilter = afterAt.toLowerCase();
+            return (
+              file.displayName.toLowerCase().includes(lowerFilter) ||
+              file.path.toLowerCase().includes(lowerFilter)
+            );
+          });
+
+          // If no files match, hide the dropdown to allow normal Enter behavior
+          if (filteredFiles.length === 0 && afterAt.length > 0) {
+            setShowFileSearch(false);
+            return;
+          }
+        }
+
         setShowFileSearch(true);
         setFileSearchFilter(afterAt);
         setSelectedFileIndex(0);
@@ -266,8 +294,10 @@ const UserInput: React.FC<UserInputProps> = ({
       if (onFileAttached) {
         try {
           const fs = await import("fs/promises");
-          const content = await fs.readFile(filePath, "utf-8");
-          onFileAttached(filePath, content);
+          const path = await import("path");
+          const absolutePath = path.resolve(filePath);
+          const content = await fs.readFile(absolutePath, "utf-8");
+          onFileAttached(absolutePath, content);
         } catch (error) {
           console.error(`Error reading file ${filePath}:`, error);
         }
@@ -594,7 +624,7 @@ const UserInput: React.FC<UserInputProps> = ({
         paddingX={1}
         borderColor={isRemoteMode ? "cyan" : "gray"}
       >
-        <Text color={isRemoteMode ? "cyan" : "green"} bold>
+        <Text color={isRemoteMode ? "cyan" : "blue"} bold>
           {isRemoteMode ? "◉" : "●"}{" "}
         </Text>
         {renderInputText()}

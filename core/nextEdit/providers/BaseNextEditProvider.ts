@@ -298,7 +298,7 @@ export abstract class BaseNextEditProvider {
     return {
       elapsed: Date.now() - outcomeCtx.startTime,
       modelProvider: outcomeCtx.llm.underlyingProviderName,
-      modelName: outcomeCtx.llm.model + ":zetaDataset",
+      modelName: outcomeCtx.llm.model,
       completionOptions: null,
       completionId:
         outcomeCtx.completionId || outcomeCtx.helper.input.completionId,
