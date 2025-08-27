@@ -8,9 +8,9 @@ import { isModelCapable } from "../utils/modelCapability.js";
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
 
 interface IntroMessageProps {
-  config: AssistantUnrolled;
-  model: ModelConfig;
-  mcpService: MCPService;
+  config?: AssistantUnrolled;
+  model?: ModelConfig;
+  mcpService?: MCPService;
 }
 
 const IntroMessage: React.FC<IntroMessageProps> = ({
@@ -19,45 +19,51 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   mcpService,
 }) => {
   // Get MCP prompts directly (not memoized since they can change after first render)
-  const mcpPrompts = mcpService.getState().prompts ?? [];
+  const mcpPrompts = mcpService?.getState().prompts ?? [];
 
   // Memoize expensive operations to avoid running on every resize
   const { allRules, modelCapable } = useMemo(() => {
     // Show all rules from config (command-line rules are already merged into config)
     const configRules =
-      config.rules?.map((rule: any) =>
+      config?.rules?.map((rule: any) =>
         typeof rule === "string" ? rule : rule?.name || "Unknown",
       ) || [];
 
     const allRules = configRules;
 
     // Check if model is capable - now checking both name and model properties
-    const modelCapable = isModelCapable(
-      model.provider,
-      model.name,
-      model.model,
-    );
+    const modelCapable = model
+      ? isModelCapable(model.provider, model.name, model.model)
+      : true; // Default to true if model not loaded yet
 
     return { allRules, modelCapable };
-  }, [config.rules, model.provider, model.name, model.model]);
+  }, [config?.rules, model?.provider, model?.name, model?.model]);
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
       {/* Agent name */}
-      <Text color="blue">
-        <Text bold>Agent:</Text> <Text color="white">{config.name}</Text>
-      </Text>
+      {config && (
+        <Text color="blue">
+          <Text bold>Agent:</Text> <Text color="white">{config.name}</Text>
+        </Text>
+      )}
 
       {/* Model */}
-      <Text color="blue">
-        <Text bold>Model:</Text>{" "}
-        <Text color="white">{model.name.split("/").pop()}</Text>
-      </Text>
+      {model ? (
+        <Text color="blue">
+          <Text bold>Model:</Text>{" "}
+          <Text color="white">{model.name.split("/").pop()}</Text>
+        </Text>
+      ) : (
+        <Text color="blue">
+          <Text bold>Model:</Text> <Text color="gray">Loading...</Text>
+        </Text>
+      )}
 
       <Text> </Text>
 
       {/* Model capability warning */}
-      {!modelCapable && (
+      {model && !modelCapable && (
         <>
           <ModelCapabilityWarning
             modelName={model.name.split("/").pop() || model.name}
@@ -95,12 +101,12 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       )}
 
       {/* MCP Servers */}
-      {config.mcpServers?.length && (
+      {(config?.mcpServers?.length ?? 0) > 0 && (
         <>
           <Text bold color="blue">
             MCP Servers:
           </Text>
-          {config.mcpServers.map((server: any, index: number) => (
+          {config?.mcpServers?.map((server: any, index: number) => (
             <Text key={index}>
               - <Text color="white">{server?.name}</Text>
             </Text>

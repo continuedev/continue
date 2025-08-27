@@ -1,6 +1,7 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { ChatHistoryItem } from "core/index.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { convertToUnifiedHistory } from "./messageConversion.js";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 
 // Mock dependencies
@@ -9,7 +10,14 @@ vi.mock("./compaction.js", () => ({
 }));
 
 vi.mock("./session.js", () => ({
+  createSession: vi.fn((history) => ({
+    sessionId: "test",
+    title: "Test",
+    workspaceDirectory: "/test",
+    history,
+  })),
   saveSession: vi.fn(),
+  updateSessionHistory: vi.fn(),
 }));
 
 vi.mock("./util/tokenizer.js", () => ({
@@ -30,6 +38,14 @@ vi.mock("./util/logger.js", () => ({
   },
 }));
 
+vi.mock("os", async (importOriginal) => {
+  const actual = (await importOriginal()) as object;
+  return {
+    ...actual,
+    homedir: vi.fn(() => "/home/test"),
+  };
+});
+
 describe("handleAutoCompaction", () => {
   const mockModel = {
     provider: "openai",
@@ -42,11 +58,11 @@ describe("handleAutoCompaction", () => {
   } as any;
 
   const mockLlmApi = {} as any;
-  const mockChatHistory: ChatCompletionMessageParam[] = [
+  const mockChatHistory: ChatHistoryItem[] = convertToUnifiedHistory([
     { role: "system", content: "You are a helpful assistant." },
     { role: "user", content: "Hello" },
     { role: "assistant", content: "Hi there!" },
-  ];
+  ]);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -66,6 +82,7 @@ describe("handleAutoCompaction", () => {
     expect(result).toEqual({
       chatHistory: mockChatHistory,
       compactionIndex: null,
+      wasCompacted: false,
     });
 
     expect(shouldAutoCompact).toHaveBeenCalledWith(mockChatHistory, mockModel);
@@ -76,22 +93,22 @@ describe("handleAutoCompaction", () => {
       "./util/tokenizer.js"
     );
     const { compactChatHistory } = await import("./compaction.js");
-    const { saveSession } = await import("./session.js");
+    const { updateSessionHistory } = await import("./session.js");
 
     vi.mocked(shouldAutoCompact).mockReturnValue(true);
     vi.mocked(getAutoCompactMessage).mockReturnValue("Auto-compacting...");
 
     const mockCompactionResult = {
-      compactedHistory: [
+      compactedHistory: convertToUnifiedHistory([
         {
           role: "system",
           content: "You are a helpful assistant.",
-        } as ChatCompletionMessageParam,
+        },
         {
           role: "assistant",
           content: "[COMPACTED HISTORY]\nConversation summary...",
-        } as ChatCompletionMessageParam,
-      ],
+        },
+      ]),
       compactionIndex: 1,
       compactionContent: "Conversation summary...",
     };
@@ -120,7 +137,7 @@ describe("handleAutoCompaction", () => {
       mockLlmApi,
       expect.any(Object),
     );
-    expect(saveSession).toHaveBeenCalledWith(
+    expect(updateSessionHistory).toHaveBeenCalledWith(
       mockCompactionResult.compactedHistory,
     );
 
@@ -134,6 +151,7 @@ describe("handleAutoCompaction", () => {
     expect(result).toEqual({
       chatHistory: mockCompactionResult.compactedHistory,
       compactionIndex: mockCompactionResult.compactionIndex,
+      wasCompacted: true,
     });
   });
 
@@ -172,9 +190,11 @@ describe("handleAutoCompaction", () => {
     );
 
     // Should return original history on error
+    expect(result.wasCompacted).toBe(false);
     expect(result).toEqual({
       chatHistory: mockChatHistory,
       compactionIndex: null,
+      wasCompacted: false,
     });
   });
 
@@ -188,9 +208,9 @@ describe("handleAutoCompaction", () => {
     vi.mocked(getAutoCompactMessage).mockReturnValue("Auto-compacting...");
 
     const mockCompactionResult = {
-      compactedHistory: [
-        { role: "system", content: "System" } as ChatCompletionMessageParam,
-      ],
+      compactedHistory: convertToUnifiedHistory([
+        { role: "system", content: "System" },
+      ]),
       compactionIndex: 0,
       compactionContent: "Summary",
     };
@@ -220,6 +240,7 @@ describe("handleAutoCompaction", () => {
     expect(result).toEqual({
       chatHistory: mockChatHistory,
       compactionIndex: null,
+      wasCompacted: false,
     });
   });
 });

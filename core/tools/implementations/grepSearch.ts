@@ -1,17 +1,14 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
 import { formatGrepSearchResults } from "../../util/grepSearch";
+import { prepareQueryForRipgrep } from "../../util/regexValidator";
 import { getStringArg } from "../parseArgs";
 
 const DEFAULT_GREP_SEARCH_RESULTS_LIMIT = 100;
-const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 5000; // ~1000 tokens, will keep truncation simply for now
+const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 7500; // ~1500 tokens, will keep truncation simply for now
 
 function splitGrepResultsByFile(content: string): ContextItem[] {
   const matches = [...content.matchAll(/^\.\/([^\n]+)$/gm)];
-
-  if (matches.length === 0) {
-    return [];
-  }
 
   const contextItems: ContextItem[] = [];
 
@@ -42,16 +39,48 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 }
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
-  const query = getStringArg(args, "query");
+  const rawQuery = getStringArg(args, "query");
 
-  const results = await extras.ide.getSearchResults(
-    query,
-    DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
-  );
+  const { query, warning } = prepareQueryForRipgrep(rawQuery);
+
+  let results: string;
+  try {
+    results = await extras.ide.getSearchResults(
+      query,
+      DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Helpful error for common ripgrep exit code
+    if (errorMessage.includes("Process exited with code 2")) {
+      return [
+        {
+          name: "Search error",
+          description: "The search query could not be processed",
+          content: `The search failed due to an invalid regex pattern.\n\nOriginal query: ${rawQuery}\nProcessed query: ${query}\n\nError: ${errorMessage}\n\nTip: If you're searching for literal text with special characters, the query was automatically escaped. If you need regex patterns, ensure they use proper regex syntax.`,
+        },
+      ];
+    }
+
+    throw error;
+  }
+
   const { formatted, numResults, truncated } = formatGrepSearchResults(
     results,
     DEFAULT_GREP_SEARCH_CHAR_LIMIT,
   );
+
+  if (numResults === 0) {
+    return [
+      {
+        name: "Search results",
+        description: "Results from grep search",
+        content: "The search returned no results.",
+      },
+    ];
+  }
+
   const truncationReasons: string[] = [];
   if (numResults === DEFAULT_GREP_SEARCH_RESULTS_LIMIT) {
     truncationReasons.push(
@@ -64,7 +93,7 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     );
   }
 
-  let contextItems: ContextItem[] = [];
+  let contextItems: ContextItem[];
 
   const splitByFile: boolean = args?.splitByFile || false;
   if (splitByFile) {
@@ -79,10 +108,21 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
     ];
   }
 
+  // Add warnings about query modifications or truncation
+  const warnings: string[] = [];
+  if (warning) {
+    warnings.push(warning);
+  }
+  if (truncationReasons.length > 0) {
+    warnings.push(
+      `Results were truncated because ${truncationReasons.join(" and ")}`,
+    );
+  }
+
   if (truncationReasons.length > 0) {
     contextItems.push({
-      name: "Search truncation warning",
-      description: "Informs the model that search results were truncated",
+      name: "Truncation warning",
+      description: "",
       content: `The above search results were truncated because ${truncationReasons.join(" and ")}. If the results are not satisfactory, try refining your search query.`,
     });
   }
