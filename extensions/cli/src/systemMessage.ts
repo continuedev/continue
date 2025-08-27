@@ -175,7 +175,7 @@ export async function constructSystemMessage(
   // Add plan mode specific instructions if in plan mode
   if (currentMode === "plan") {
     systemMessage +=
-      '\n<context name="planMode">You are operating in plan mode, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files.</context>\n';
+      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
   }
 
   // In headless mode, add instructions to be concise and only provide final answers
