@@ -44,7 +44,7 @@ class NextEditWindowManager(private val project: Project) {
     // Handler management
     private var windowHandler: NextEditWindowHandler? = null
 
-    suspend fun showNextEditWindow(
+    fun showNextEditWindow(
         editor: Editor,
         currCursorPos: Position,
         editableRegionStartLine: Int,
@@ -176,38 +176,38 @@ class NextEditWindowManager(private val project: Project) {
                 val endOfLinePoint = editor.logicalPositionToXY(endOfLinePosition)
 
                 val editorComponent = editor.contentComponent
-                val screenPoint = java.awt.Point(endOfLinePoint.x, endOfLinePoint.y)
-                javax.swing.SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
+                val screenPoint = Point(endOfLinePoint.x, endOfLinePoint.y)
+                SwingUtilities.convertPointToScreen(screenPoint, editorComponent)
 
                 popup.showInScreenCoordinates(editorComponent, screenPoint)
 
                 // Add ONLY the popup content border with rounded corners
                 val content = popup.content
-                if (content is JComponent) {
-                    content.border = object : AbstractBorder() {
-                        override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
-                            val g2 = g.create() as Graphics2D
-                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-                            val arc = 6f
-                            g2.color = Color(0x999998)
-                            g2.stroke = BasicStroke(1f)
-                            g2.draw(
-                                RoundRectangle2D.Float(
-                                    x.toFloat(),
-                                    y.toFloat(),
-                                    width.toFloat() - 1f,
-                                    height.toFloat() - 1f,
-                                    arc,
-                                    arc
-                                )
+                content.border = object : AbstractBorder() {
+                    override fun paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int) {
+                        val g2 = g.create() as Graphics2D
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+                        val arc = 6f
+                        g2.color = Color(0x999998)
+                        g2.stroke = BasicStroke(1f)
+                        g2.draw(
+                            RoundRectangle2D.Float(
+                                x.toFloat(),
+                                y.toFloat(),
+                                width.toFloat() - 1f,
+                                height.toFloat() - 1f,
+                                arc,
+                                arc
                             )
-                            g2.dispose()
-                        }
-
-                        override fun getBorderInsets(c: Component): Insets = JBUI.insets(1)
+                        )
+                        g2.dispose()
                     }
+
+                    override fun getBorderInsets(c: Component): Insets = JBUI.insets(1)
                 }
+
 
                 // Force focus after popup is shown
                 ApplicationManager.getApplication().invokeLater {
@@ -230,12 +230,10 @@ class NextEditWindowManager(private val project: Project) {
     ): JComponent {
         val panel = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
-//            border = JBUI.Borders.empty(8, 12)
             border = null
             background = EditorColorsManager.getInstance().globalScheme.defaultBackground
             isFocusable = true
             isFocusCycleRoot = true
-            // No custom paintComponent - just use regular panel
         }
 
         // Create syntax-highlighted code display
@@ -248,30 +246,11 @@ class NextEditWindowManager(private val project: Project) {
         return panel
     }
 
-    private fun getActualFontSizeFromEditor(editor: Editor): Int {
+    private fun getFontSizeFromEditor(editor: Editor): Int {
         try {
             val component = editor.contentComponent
             val font = component.font
-            val graphics = component.graphics
-
-            if (graphics != null) {
-                val fontMetrics = graphics.getFontMetrics(font)
-                val height = fontMetrics.height
-                val ascent = fontMetrics.ascent
-
-                // Check for DPI scaling
-                val scale = JBUI.scale(1f)
-
-                // Adjust for DPI scaling
-                val adjustedFontSize = if (scale > 1f) {
-                    (font.size / scale).toInt()
-                } else {
-                    font.size
-                }
-
-                return adjustedFontSize
-            }
-
+            return font.size
         } catch (e: Exception) {
             println("DEBUG: Error getting font size: ${e.message}")
         }
@@ -284,14 +263,9 @@ class NextEditWindowManager(private val project: Project) {
             val scheme = EditorColorsManager.getInstance().globalScheme
             val editorFont = editor.colorsScheme.getFont(com.intellij.openapi.editor.colors.EditorFontType.PLAIN)
 
-            // Get the actual font size accounting for DPI scaling
-            val actualFontSize = getActualFontSizeFromEditor(editor)
+            val fontSize = getFontSizeFromEditor(editor)
             val fontFamily = editorFont.family
 
-            // Get the line spacing from editor
-            val lineSpacing = editor.colorsScheme.lineSpacing
-
-            // Calculate actual line height based on font metrics
             val lineHeightPixels = editor.lineHeight
 
             // Get file type for proper syntax highlighting
@@ -337,7 +311,7 @@ class NextEditWindowManager(private val project: Project) {
                     fileType,
                     scheme,
                     fontFamily,
-                    actualFontSize,
+                    fontSize,
                     backgroundColor
                 )
 
