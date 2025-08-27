@@ -174,7 +174,6 @@ async function handleToolCalls(
       }
     }
   });
-
   return false;
 }
 
