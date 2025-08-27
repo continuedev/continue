@@ -172,6 +172,12 @@ export async function constructSystemMessage(
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
+  // Add plan mode specific instructions if in plan mode
+  if (currentMode === "plan") {
+    systemMessage +=
+      '\n<context name="planMode">You are operating in plan mode, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files.</context>\n';
+  }
+
   // In headless mode, add instructions to be concise and only provide final answers
   if (headless) {
     systemMessage += `
@@ -189,13 +195,6 @@ Example response format:
 {
   "property": "value"
 }`;
-  }
-
-  // Add plan mode specific instructions if in plan mode
-  if (currentMode === "plan") {
-    systemMessage += `
-
-PLAN MODE: You are operating in plan mode, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files.`;
   }
 
   // Add rules section if we have any rules or agent content
