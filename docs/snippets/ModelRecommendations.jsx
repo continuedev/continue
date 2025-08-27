@@ -54,7 +54,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
     },
     autocomplete: {
       open: ["[QwenCoder2.5 (1.5B)](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)", "QwenCoder2.5 (7B)"],
-      closed: ["[Codestral](https://hub.continue.dev/mistral/codestral)", "Mercury Coder"],
+      closed: ["[Codestral](https://hub.continue.dev/mistral/codestral)", "[Mercury Coder](https://hub.continue.dev/inceptionlabs/mercury-coder)"],
       notes: "Closed models are slightly better than open models"
     },
     apply: {
@@ -74,7 +74,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
     },
     next_edit: {
       open: ["Zeta"],
-      closed: ["Mercury Coder"],
+      closed: ["[Mercury Coder](https://hub.continue.dev/inceptionlabs/mercury-coder)"],
       notes: "Closed models are significantly better than open models"
     }
   };
