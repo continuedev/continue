@@ -235,7 +235,7 @@ export class InlineTipManager {
   }
 
   private createSvgTooltipDecoration() {
-    var backgroundColour = 0;
+    var backgroundColour = "#333333";
     if (this.theme) {
       backgroundColour = this.theme.colors["editor.background"];
     }
@@ -258,12 +258,15 @@ export class InlineTipManager {
       "font-size": SVG_CONFIG.fontSize,
     };
 
-    if (!this.theme) {
-      return;
-    }
+    // if (!this.theme) {
+    //   return;
+    // }
 
     try {
-      const svgContent = svgBuilder
+      const builder = svgBuilder.newInstance
+        ? svgBuilder.newInstance()
+        : svgBuilder;
+      const svgContent = builder
         .width(SVG_CONFIG.tipWidth)
         .height(SVG_CONFIG.tipHeight)
         // Chat
@@ -271,7 +274,7 @@ export class InlineTipManager {
           {
             ...baseTextConfig,
             x: SVG_CONFIG.chatLabelX,
-            fill: this.theme.colors["editor.foreground"],
+            fill: this.theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.chatLabel,
         )
@@ -288,7 +291,7 @@ export class InlineTipManager {
           {
             ...baseTextConfig,
             x: SVG_CONFIG.editLabelX,
-            fill: this.theme.colors["editor.foreground"],
+            fill: this.theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.editLabel,
         )

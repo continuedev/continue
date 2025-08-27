@@ -20,8 +20,11 @@ import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
+  getNextEditMenuItems,
   getStatusBarStatus,
   getStatusBarStatusFromQuickPickItemLabel,
+  handleNextEditToggle,
+  isNextEditToggleLabel,
   quickPickStatusText,
   setupStatusBar,
   StatusBarStatus,
@@ -639,6 +642,8 @@ const getCommandsMap: (
             : StatusBarStatus.Disabled;
       }
 
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+
       quickPick.items = [
         {
           label: "$(gear) Open settings",
@@ -657,6 +662,7 @@ const getCommandsMap: (
           description:
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
+        ...getNextEditMenuItems(currentStatus, nextEditEnabled),
         {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
@@ -678,6 +684,8 @@ const getCommandsMap: (
             targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );
+        } else if (isNextEditToggleLabel(selectedOption)) {
+          handleNextEditToggle(selectedOption, config);
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
@@ -791,6 +799,30 @@ const getCommandsMap: (
           `Failed to set enterprise license key: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    },
+    "continue.toggleNextEditEnabled": async () => {
+      captureCommandTelemetry("toggleNextEditEnabled");
+
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
+      const tabAutocompleteEnabled = config.get<boolean>(
+        "enableTabAutocomplete",
+      );
+
+      if (!tabAutocompleteEnabled) {
+        vscode.window.showInformationMessage(
+          "Please enable tab autocomplete first to use Next Edit",
+        );
+        return;
+      }
+
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+
+      // updateNextEditState in VsCodeExtension.ts will handle the validation.
+      config.update(
+        "enableNextEdit",
+        !nextEditEnabled,
+        vscode.ConfigurationTarget.Global,
+      );
     },
     "continue.forceNextEdit": async () => {
       captureCommandTelemetry("forceNextEdit");
