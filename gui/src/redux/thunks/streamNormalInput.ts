@@ -102,8 +102,7 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // Get tools and filter them based on the selected model
-    const allActiveTools = selectActiveTools(state);
-    const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
+    const activeTools = selectActiveTools(state);
 
     // Use the centralized selector to determine if system message tools should be used
     const useNativeTools = state.config.config.experimental
