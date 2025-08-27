@@ -40,7 +40,7 @@ export const runTerminalCommandTool: Tool = {
   },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const child = spawn("sh", ["-c", command]);
+      const child = spawn("bash", ["-i", "-c", command]);
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
