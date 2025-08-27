@@ -56,6 +56,17 @@
             <override-text place="GoToAction" text="Continue: Edit Code"/>
         </action>
 
+        <action class="com.github.continuedev.continueintellijextension.editor.CloseInlineEditAction"
+                id="explore.closeInlineEdit"
+                description="close Inline Edit"
+                text="close Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ESCAPE"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="ESCAPE"/>
+            <override-text place="GoToAction" text="Continue: Close Inline Edit"/>
+        </action>
+
         <action id="continue.acceptDiff"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
