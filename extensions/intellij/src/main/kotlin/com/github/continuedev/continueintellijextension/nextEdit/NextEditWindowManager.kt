@@ -112,7 +112,6 @@ class NextEditWindowManager(private val project: Project) {
             return false
         }
 
-        // Fix: Use the correct method to get line text
         val startOffset = editor.document.getLineStartOffset(editableRegionStartLine)
         val endOffset = editor.document.getLineEndOffset(editableRegionStartLine)
         val line = editor.document.getText(TextRange(startOffset, endOffset))
@@ -271,20 +270,12 @@ class NextEditWindowManager(private val project: Project) {
             // Get file type for proper syntax highlighting
             val fileType = getCurrentFileType(editor)
 
-            // Create panel with GridBagLayout for better control
-            val panel = JPanel(GridBagLayout()).apply {
+            // Create panel with BoxLayout for stacking lines
+            val panel = JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
                 background = scheme.defaultBackground
                 border = null
                 isOpaque = true
-            }
-
-            val gbc = GridBagConstraints().apply {
-                gridx = 0
-                gridy = 0
-                weightx = 1.0
-                fill = GridBagConstraints.HORIZONTAL
-                anchor = GridBagConstraints.NORTHWEST
-                insets = Insets(0, 0, 0, 0)
             }
 
             val visibleLines = diffLines.filter { it.type != "old" }
@@ -326,14 +317,11 @@ class NextEditWindowManager(private val project: Project) {
                     maximumSize = Dimension(Integer.MAX_VALUE, lineHeightPixels)
                 }
 
-                gbc.gridy = index
-                panel.add(label, gbc)
+                panel.add(label)
             }
 
             // Add a final glue component to push everything up
-            gbc.gridy = linesToDisplay.size
-            gbc.weighty = 1.0
-            panel.add(Box.createVerticalGlue(), gbc)
+            panel.add(Box.createVerticalGlue())
 
             return JScrollPane(panel).apply {
                 border = null
@@ -356,7 +344,6 @@ class NextEditWindowManager(private val project: Project) {
         text: String,
         fileType: FileType,
         scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
-        backgroundColor: Color
     ): String {
         if (text.trim().isEmpty()) {
             // Return a non-breaking space to maintain line height
@@ -452,7 +439,7 @@ class NextEditWindowManager(private val project: Project) {
         backgroundColor: Color
     ): String {
         // Get the syntax-highlighted content
-        val highlightedContent = createSyntaxHighlightedLine(text, fileType, scheme, backgroundColor)
+        val highlightedContent = createSyntaxHighlightedLine(text, fileType, scheme)
 
         // Convert background color to hex
         val bgColorHex = colorToHex(backgroundColor)
@@ -479,18 +466,6 @@ class NextEditWindowManager(private val project: Project) {
         return html.toString()
     }
 
-    private fun createBasicHtml(
-        text: String,
-        fontFamily: String,
-        fontSize: Int,
-        lineSpacing: Float,
-        scheme: com.intellij.openapi.editor.colors.EditorColorsScheme,
-        backgroundColor: Color
-    ): String {
-        // This can also be simplified or removed
-        return escapeHtml(text)
-    }
-
     private fun escapeHtml(text: String): String {
         return text
             .replace("&", "&amp;")
@@ -502,7 +477,6 @@ class NextEditWindowManager(private val project: Project) {
             .replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
     }
 
-    // Then update getCurrentFileType to use it
     private fun getCurrentFileType(editor: Editor): FileType {
         // Method 1: Use the current editor's virtual file (most reliable)
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
@@ -522,51 +496,7 @@ class NextEditWindowManager(private val project: Project) {
         return FileTypeManager.getInstance().getFileTypeByExtension("txt")
     }
 
-    private fun createBasicHighlightedHtml(text: String, font: java.awt.Font): String {
-        if (text.trim()
-                .isEmpty()
-        ) return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:2px 4px;'>&nbsp;</div></html>"
-
-        // Basic syntax highlighting patterns (you can extend this)
-        var highlightedText = text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace(" ", "&nbsp;") // Preserve spaces
-            .replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;") // Convert tabs to spaces
-
-        // Simple keyword highlighting (extend based on your needs)
-        val keywords = arrayOf(
-            "function", "const", "let", "var", "return", "if", "else", "for", "while",
-            "class", "public", "private", "static", "void", "int", "String", "boolean",
-            "def", "import", "from", "as", "try", "except", "finally", "with"
-        )
-
-        keywords.forEach { keyword ->
-            highlightedText = highlightedText.replace(
-                Regex("\\b$keyword\\b"),
-                "<span style='color:#569CD6'>$keyword</span>"
-            )
-        }
-
-        // String highlighting
-        highlightedText = highlightedText.replace(
-            Regex("\"([^\"]*)\"|'([^']*)'"),
-            "<span style='color:#CE9178'>$0</span>"
-        )
-
-        // Comment highlighting
-        highlightedText = highlightedText.replace(
-            Regex("//.*$", RegexOption.MULTILINE),
-            "<span style='color:#6A9955'>$0</span>"
-        )
-
-        // Use div instead of pre for better control over spacing
-        return "<html><div style='font-family:${font.family}; font-size:${font.size}px; line-height:1.2; margin:0; padding:0; white-space:nowrap;'>$highlightedText</div></html>"
-    }
-
     private fun addKeyboardShortcuts(panel: JComponent, onAction: (PopupAction) -> Unit) {
-        // CRITICAL FIX: Disable focus traversal for Tab key
         panel.setFocusTraversalKeysEnabled(false)
 
         val inputMap = panel.getInputMap(JComponent.WHEN_FOCUSED)
@@ -798,11 +728,9 @@ class NextEditWindowManager(private val project: Project) {
 
         // Clear handler before making document changes that move cursor
         clearActiveHandler()
-
         hideAllNextEditWindows()
 
         try {
-            // Fix: Use the simpler WriteCommandAction.runWriteCommandAction
             WriteCommandAction.runWriteCommandAction(project) {
                 val document = editor.document
 
@@ -820,17 +748,14 @@ class NextEditWindowManager(private val project: Project) {
                 if (isLineDelete) {
                     // Handle line deletion - include the newline character
                     val startOffset = document.getLineStartOffset(startLine)
-                    var endOffset: Int
 
                     // If this isn't the last line, extend to include the newline character
-                    if (startLine < document.lineCount - 1) {
-                        endOffset = document.getLineStartOffset(startLine + 1)
+                    val endOffset = if (startLine < document.lineCount - 1) {
+                        document.getLineStartOffset(startLine + 1)
                     } else {
                         // If it's the last line, just delete to end of line
-                        endOffset = document.getLineEndOffset(startLine)
+                        document.getLineEndOffset(startLine)
                     }
-
-                    val oldText = document.getText(TextRange(startOffset, endOffset))
 
                     // Delete the entire line including newline
                     document.deleteString(startOffset, endOffset)
@@ -843,9 +768,6 @@ class NextEditWindowManager(private val project: Project) {
                     if (startOffset < 0 || endOffset > document.textLength || startOffset > endOffset) {
                         return@runWriteCommandAction
                     }
-
-                    // Show what we're replacing
-                    val oldText = document.getText(TextRange(startOffset, endOffset))
 
                     // Perform the replacement
                     document.replaceString(startOffset, endOffset, newText)
@@ -886,10 +808,8 @@ class NextEditWindowManager(private val project: Project) {
         currentPopup?.let { popup ->
             // Clear keyboard shortcuts before closing popup
             val content = popup.content
-            if (content is JComponent) {
-                content.inputMap.clear()
-                content.actionMap.clear()
-            }
+            content.inputMap.clear()
+            content.actionMap.clear()
 
             popup.cancel()
             currentPopup = null
@@ -899,7 +819,7 @@ class NextEditWindowManager(private val project: Project) {
         clearAllDeletionDecorations()
         deletionHighlighters = emptyList()
 
-        clearActiveHandler() // TODO: might be redundant
+        clearActiveHandler()
     }
 
     private fun clearAllDeletionDecorations() {
@@ -923,19 +843,6 @@ class NextEditWindowManager(private val project: Project) {
     }
 
     fun hasAccepted(): Boolean = isAccepted
-
-    fun setAccepted(accepted: Boolean) {
-        isAccepted = accepted
-    }
-
-    fun updateCurrentCompletionId(completionId: String) {
-        currentCompletionId = completionId
-    }
-
-    fun cleanup() {
-        hideAllNextEditWindows()
-        currentCompletionId = null
-    }
 }
 
 enum class PopupAction {
