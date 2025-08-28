@@ -11,7 +11,7 @@ describe("runTerminalCommandTool", () => {
       let expectedOutput: string;
 
       if (isWindows) {
-        command = "echo hello world";
+        command = 'Write-Output "hello world"';
         expectedOutput = "hello world";
       } else {
         command = 'echo "hello world"';
@@ -26,7 +26,7 @@ describe("runTerminalCommandTool", () => {
       let command: string;
 
       if (isWindows) {
-        command = "cd";
+        command = "Get-Location | Select-Object -ExpandProperty Path";
       } else {
         command = "pwd";
       }
@@ -34,10 +34,8 @@ describe("runTerminalCommandTool", () => {
       const result = await runTerminalCommandTool.run({ command });
 
       if (isWindows) {
-        // Windows paths like C:\path\to\dir or with PowerShell output format
-        expect(result.trim()).toMatch(
-          /^([A-Za-z]:\\.*|Path\s+----\s+[A-Za-z]:\\.*)/m,
-        );
+        // Windows paths like C:\path\to\dir
+        expect(result.trim()).toMatch(/^[A-Za-z]:\\.*/);
       } else {
         // Unix paths like /path/to/dir
         expect(result.trim()).toMatch(/^\/.*$/);
@@ -48,7 +46,7 @@ describe("runTerminalCommandTool", () => {
       let command: string;
 
       if (isWindows) {
-        command = "dir /b";
+        command = "Get-ChildItem | Select-Object -ExpandProperty Name";
       } else {
         command = "ls";
       }
@@ -82,7 +80,7 @@ describe("runTerminalCommandTool", () => {
     if (isWindows) {
       it("should work with Windows commands", async () => {
         const result = await runTerminalCommandTool.run({
-          command: "echo %OS%",
+          command: "Write-Output $env:OS",
         });
         expect(result.trim()).toBe("Windows_NT");
       });
