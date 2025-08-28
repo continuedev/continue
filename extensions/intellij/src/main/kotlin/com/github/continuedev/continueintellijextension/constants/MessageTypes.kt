@@ -144,10 +144,9 @@ class MessageTypes {
             "tools/evaluatePolicy",
             "controlPlane/openUrl",
             "isItemTooBig",
-            "controlPlane/openUrl",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
-            "process/cancelTerminalCommand",
+            "process/killTerminalProcess"
         )
     }
 }

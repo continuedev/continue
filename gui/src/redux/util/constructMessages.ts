@@ -17,26 +17,24 @@ import {
 import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
 import { SystemMessageToolsFramework } from "core/tools/systemMessageTools/types";
 import { findLast, findLastIndex } from "core/util/findLast";
-import {
-  normalizeToMessageParts,
-  renderContextItems,
-} from "core/util/messageContent";
+import { normalizeToMessageParts } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
 
 // Helper function to render context items and append status information
+// Helper function to render context items and append status information
 function renderContextItemsWithStatus(contextItems: any[]): string {
-  const content = renderContextItems(contextItems);
+  return contextItems
+    .map((item) => {
+      let result = item.content;
 
-  // Check if any context items have status information
-  const statusItems = contextItems
-    .filter((item) => item.status)
-    .map((item) => `Status: ${item.status}`);
+      // If this item has a status, append it directly after the content
+      if (item.status) {
+        result += `\n[Status: ${item.status}]`;
+      }
 
-  if (statusItems.length > 0) {
-    return `${content}\n\n${statusItems.join("\n")}`;
-  }
-
-  return content;
+      return result;
+    })
+    .join("\n\n");
 }
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];

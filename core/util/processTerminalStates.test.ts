@@ -1,13 +1,14 @@
 import { ChildProcess } from "child_process";
 import {
-  cancelAllRunningTerminalCommands,
-  cancelMultipleTerminalCommands,
-  cancelTerminalCommand,
+  clearAllBackgroundProcesses,
   getAllBackgroundedProcessIds,
   getAllRunningProcessIds,
   getRunningProcess,
   isProcessBackgrounded,
   isProcessRunning,
+  killAllRunningTerminalProcesses,
+  killMultipleTerminalProcesses,
+  killTerminalProcess,
   markProcessAsBackgrounded,
   markProcessAsRunning,
   removeBackgroundedProcess,
@@ -205,7 +206,7 @@ describe("processTerminalStates", () => {
       markProcessAsRunning(toolCallId, mockProcess);
       expect(isProcessRunning(toolCallId)).toBe(true);
 
-      await cancelTerminalCommand(toolCallId);
+      await killTerminalProcess(toolCallId);
 
       expect(mockProcess.kill).toHaveBeenCalledWith("SIGTERM");
       expect(isProcessRunning(toolCallId)).toBe(false);
@@ -214,7 +215,7 @@ describe("processTerminalStates", () => {
     test("should handle cancelling non-existent process", async () => {
       const toolCallId = "non-existent";
 
-      await expect(cancelTerminalCommand(toolCallId)).resolves.not.toThrow();
+      await expect(killTerminalProcess(toolCallId)).resolves.not.toThrow();
     });
 
     test("should handle cancelling already killed process", async () => {
@@ -223,7 +224,7 @@ describe("processTerminalStates", () => {
 
       markProcessAsRunning(toolCallId, mockProcess);
 
-      await cancelTerminalCommand(toolCallId);
+      await killTerminalProcess(toolCallId);
 
       expect(mockProcess.kill).not.toHaveBeenCalled();
     });
@@ -242,7 +243,7 @@ describe("processTerminalStates", () => {
 
       markProcessAsRunning(toolCallId, mockProcess);
 
-      const cancelPromise = cancelTerminalCommand(toolCallId);
+      const cancelPromise = killTerminalProcess(toolCallId);
 
       // Fast-forward time to trigger the timeout
       jest.advanceTimersByTime(5000);
@@ -259,7 +260,7 @@ describe("processTerminalStates", () => {
 
       markProcessAsRunning(toolCallId, mockProcess);
 
-      const cancelPromise = cancelTerminalCommand(toolCallId);
+      const cancelPromise = killTerminalProcess(toolCallId);
 
       // Fast-forward time to trigger the timeout
       jest.advanceTimersByTime(5000);
@@ -314,7 +315,7 @@ describe("processTerminalStates", () => {
       markProcessAsRunning(toolCallId1, mockProcess1);
       markProcessAsRunning(toolCallId2, mockProcess2);
 
-      await cancelMultipleTerminalCommands([toolCallId1, toolCallId2]);
+      await killMultipleTerminalProcesses([toolCallId1, toolCallId2]);
 
       expect(mockProcess1.kill).toHaveBeenCalledWith("SIGTERM");
       expect(mockProcess2.kill).toHaveBeenCalledWith("SIGTERM");
@@ -331,7 +332,7 @@ describe("processTerminalStates", () => {
       markProcessAsRunning(toolCallId1, mockProcess1);
       markProcessAsRunning(toolCallId2, mockProcess2);
 
-      const cancelledIds = await cancelAllRunningTerminalCommands();
+      const cancelledIds = await killAllRunningTerminalProcesses();
 
       expect(cancelledIds).toContain(toolCallId1);
       expect(cancelledIds).toContain(toolCallId2);
@@ -343,8 +344,24 @@ describe("processTerminalStates", () => {
     });
 
     test("should return empty array when no running commands to cancel", async () => {
-      const cancelledIds = await cancelAllRunningTerminalCommands();
+      const cancelledIds = await killAllRunningTerminalProcesses();
       expect(cancelledIds).toEqual([]);
+    });
+
+    test("should clear all background processes", () => {
+      const toolCallId1 = "test-123";
+      const toolCallId2 = "test-456";
+
+      markProcessAsBackgrounded(toolCallId1);
+      markProcessAsBackgrounded(toolCallId2);
+
+      expect(getAllBackgroundedProcessIds()).toHaveLength(2);
+
+      clearAllBackgroundProcesses();
+
+      expect(getAllBackgroundedProcessIds()).toEqual([]);
+      expect(isProcessBackgrounded(toolCallId1)).toBe(false);
+      expect(isProcessBackgrounded(toolCallId2)).toBe(false);
     });
   });
 });

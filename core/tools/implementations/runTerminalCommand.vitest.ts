@@ -39,12 +39,8 @@ describe("runTerminalCommandImpl", () => {
     vi.resetAllMocks();
 
     // Setup backgrounded processes handling - don't mock, just make sure it's empty
-    // Get any processes that might be already tracked and clear them
-    const processMap = (processTerminalStates as any)
-      .processTerminalBackgroundStates;
-    if (processMap && typeof processMap.clear === "function") {
-      processMap.clear();
-    }
+    // Clear any processes that might be already tracked
+    processTerminalStates.clearAllBackgroundProcesses();
 
     // Setup IDE mocks
     mockGetIdeInfo.mockReturnValue(Promise.resolve({ remoteName: "local" }));

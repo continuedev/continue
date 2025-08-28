@@ -1056,11 +1056,11 @@ export class Core {
       },
     );
 
-    on("process/cancelTerminalCommand", async ({ data: { toolCallId } }) => {
-      const { cancelTerminalCommand } = await import(
+    on("process/killTerminalProcess", async ({ data: { toolCallId } }) => {
+      const { killTerminalProcess } = await import(
         "./util/processTerminalStates.js"
       );
-      await cancelTerminalCommand(toolCallId);
+      await killTerminalProcess(toolCallId);
     });
 
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
