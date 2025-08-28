@@ -101,15 +101,17 @@ export function toChatBody(
   };
 
   if (options.tools?.length) {
-    params.tools = options.tools.map((tool) => ({
-      type: tool.type,
-      function: {
-        name: tool.function.name,
-        description: tool.function.description,
-        parameters: tool.function.parameters,
-        strict: tool.function.strict,
-      },
-    }));
+    params.tools = options.tools
+      .filter((tool) => !tool.type || tool.type === "function")
+      .map((tool) => ({
+        type: tool.type,
+        function: {
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: tool.function.parameters,
+          strict: tool.function.strict,
+        },
+      }));
   }
 
   return params;
@@ -158,7 +160,16 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage {
     return {
       role: "assistant",
       content: "",
-      toolCalls: message.tool_calls,
+      toolCalls: message.tool_calls
+        ?.filter((tc) => !tc.type || tc.type === "function")
+        .map((tc) => ({
+          id: tc.id,
+          type: "function" as const,
+          function: {
+            name: (tc as any).function?.name,
+            arguments: (tc as any).function?.arguments,
+          },
+        })),
     };
   }
 
@@ -179,18 +190,24 @@ export function fromChatCompletionChunk(
       content: delta.content,
     };
   } else if (delta?.tool_calls) {
-    return {
-      role: "assistant",
-      content: "",
-      toolCalls: delta?.tool_calls.map((tool_call) => ({
+    const toolCalls = delta?.tool_calls
+      .filter((tool_call) => !tool_call.type || tool_call.type === "function")
+      .map((tool_call) => ({
         id: tool_call.id,
-        type: tool_call.type,
+        type: "function" as const,
         function: {
-          name: tool_call.function?.name,
-          arguments: tool_call.function?.arguments,
+          name: (tool_call as any).function?.name,
+          arguments: (tool_call as any).function?.arguments,
         },
-      })),
-    };
+      }));
+
+    if (toolCalls.length > 0) {
+      return {
+        role: "assistant",
+        content: "",
+        toolCalls,
+      };
+    }
   }
 
   return undefined;

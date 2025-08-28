@@ -9,6 +9,7 @@ import {
   CompletionOptions,
   LLMOptions,
   ModelInstaller,
+  ThinkingChatMessage,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
@@ -18,6 +19,7 @@ type OllamaChatMessage = {
   role: ChatMessageRole;
   content: string;
   images?: string[] | null;
+  thinking?: string;
   tool_calls?: {
     function: {
       name: string;
@@ -148,7 +150,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
   constructor(options: LLMOptions) {
     super(options);
 
-    if (options.model === "AUTODETECT") {
+    if (options.isFromAutoDetect) {
       return;
     }
     const headers: Record<string, string> = {
@@ -430,6 +432,13 @@ class Ollama extends BaseLLM implements ModelInstaller {
         );
       }
       if (res.message.role === "assistant") {
+        if (res.message.thinking) {
+          const thinkingMessage: ThinkingChatMessage = {
+            role: "thinking",
+            content: res.message.thinking,
+          };
+          return thinkingMessage;
+        }
         const chatMessage: ChatMessage = {
           role: "assistant",
           content: res.message.content,

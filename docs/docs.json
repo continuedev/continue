@@ -290,6 +290,11 @@
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
           "icon": "newspaper"
+        },
+        {
+          "anchor": "Release Notes",
+          "href": "https://changelog.continue.dev/",
+          "icon": "bullhorn"
         }
       ]
     }
@@ -363,6 +368,10 @@
     {
       "source": "/hub/blocks",
       "destination": "/hub/blocks/intro"
+    },
+    {
+      "source": "/hub/agents/intro",
+      "destination": "/hub/assistants/intro"
     },
     {
       "source": "/customize",
@@ -1099,6 +1108,10 @@
     {
       "source": "/customize/model-providers",
       "destination": "/customize/model-providers/overview"
+    },
+    {
+      "source": "/features/edit/next-edit",
+      "destination": "/features/autocomplete/next-edit"
     }
   ]
 }

@@ -145,6 +145,11 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
 export function convertOpenAIToolToGeminiFunction(
   tool: ChatCompletionTool,
 ): GeminiToolFunctionDeclaration {
+  // Type guard for function tools
+  if (tool.type !== "function" || !tool.function) {
+    throw new Error(`Unsupported tool type: ${tool.type}`);
+  }
+
   if (!tool.function.name) {
     throw new Error("Function name required");
   }
