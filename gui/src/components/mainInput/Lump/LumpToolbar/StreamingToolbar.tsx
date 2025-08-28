@@ -1,26 +1,19 @@
-import { useAppDispatch } from "../../../../redux/hooks";
-import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { GeneratingIndicator } from "./GeneratingIndicator";
 
 interface StreamingToolbarProps {
-  onStop?: () => void;
+  onStop: () => void;
   displayText?: string;
 }
 
 export function StreamingToolbar({
   onStop,
   displayText = "Stop",
-}: StreamingToolbarProps = {}) {
+}: StreamingToolbarProps) {
   const jetbrains = isJetBrains();
-  const dispatch = useAppDispatch();
 
   const handleStop = () => {
-    if (onStop) {
-      onStop();
-    } else {
-      void dispatch(cancelStream());
-    }
+    onStop();
   };
 
   return (

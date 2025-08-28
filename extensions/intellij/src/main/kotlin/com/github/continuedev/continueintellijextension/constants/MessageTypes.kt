@@ -141,11 +141,12 @@ class MessageTypes {
             "addAutocompleteModel",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
-            "tools/call","controlPlane/openUrl",
-      "isItemTooBig",
-      "process/markAsBackgrounded",
-      "process/isBackgrounded",
-      "process/cancelTerminalCommand",
-  )
+            "tools/call",
+            "controlPlane/openUrl",
+            "isItemTooBig",
+            "process/markAsBackgrounded",
+            "process/isBackgrounded",
+            "process/killTerminalProcess"
+        )
     }
 }

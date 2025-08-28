@@ -67,7 +67,7 @@ export function removeRunningProcess(toolCallId: string): void {
   processTerminalForegroundStates.delete(toolCallId);
 }
 
-export async function cancelTerminalCommand(toolCallId: string): Promise<void> {
+export async function killTerminalProcess(toolCallId: string): Promise<void> {
   const processInfo = processTerminalForegroundStates.get(toolCallId);
   if (processInfo && !processInfo.process.killed) {
     const { process } = processInfo;
@@ -86,20 +86,20 @@ export async function cancelTerminalCommand(toolCallId: string): Promise<void> {
 }
 
 // Function to cancel multiple terminal commands at once
-export async function cancelMultipleTerminalCommands(
+export async function killMultipleTerminalProcesses(
   toolCallIds: string[],
 ): Promise<void> {
   const cancelPromises = toolCallIds.map((toolCallId) =>
-    cancelTerminalCommand(toolCallId),
+    killTerminalProcess(toolCallId),
   );
   await Promise.all(cancelPromises);
 }
 
 // Function to cancel ALL currently running terminal commands
-export async function cancelAllRunningTerminalCommands(): Promise<string[]> {
+export async function killAllRunningTerminalProcesses(): Promise<string[]> {
   const runningIds = getAllRunningProcessIds();
   if (runningIds.length > 0) {
-    await cancelMultipleTerminalCommands(runningIds);
+    await killMultipleTerminalProcesses(runningIds);
   }
   return runningIds; // Return the IDs that were cancelled
 }
@@ -111,4 +111,9 @@ export function getAllRunningProcessIds(): string[] {
 
 export function getAllBackgroundedProcessIds(): string[] {
   return Array.from(processTerminalBackgroundStates.keys());
+}
+
+// Utility function for testing - clears all background process states
+export function clearAllBackgroundProcesses(): void {
+  processTerminalBackgroundStates.clear();
 }

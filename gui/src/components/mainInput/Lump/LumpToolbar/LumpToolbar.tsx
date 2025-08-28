@@ -19,6 +19,7 @@ import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
 import { TtsActiveToolbar } from "./TtsActiveToolbar";
+import { BuiltInToolNames } from "core/tools/builtIn";
 
 // Keyboard shortcut detection utilities
 const isExecuteToolCallShortcut = (event: KeyboardEvent) => {
@@ -38,11 +39,7 @@ const isCancelToolCallShortcut = (
 
 // Check if a tool call is a terminal command
 const isTerminalCommand = (toolCallState: any) => {
-  return (
-    toolCallState?.toolCall?.function?.name === "run_terminal_command" ||
-    toolCallState?.toolCall?.function?.name === "Bash" ||
-    toolCallState?.toolCall?.function?.name === "runTerminalCommand"
-  );
+  return BuiltInToolNames.RunTerminalCommand;
 };
 
 export function LumpToolbar() {
@@ -82,7 +79,7 @@ export function LumpToolbar() {
     const stopPromises = runningTerminalCalls.map(async (terminalCall) => {
       try {
         // Cancel the process on the backend
-        await ideMessenger.request("process/cancelTerminalCommand", {
+        await ideMessenger.request("process/killTerminalProcess", {
           toolCallId: terminalCall.toolCallId,
         });
 
