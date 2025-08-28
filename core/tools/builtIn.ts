@@ -1,7 +1,6 @@
 export enum BuiltInToolNames {
   ReadFile = "read_file",
   ReadFileRange = "read_file_range",
-  ReadFileHead = "read_file_head",
   EditExistingFile = "edit_existing_file",
   SearchAndReplaceInFile = "search_and_replace_in_file",
   SingleFindAndReplace = "single_find_and_replace",

@@ -12,7 +12,7 @@ import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
-import { readFileHeadImpl } from "./implementations/readFileHead";
+
 import { readFileRangeImpl } from "./implementations/readFileRange";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
@@ -149,8 +149,6 @@ export async function callBuiltInTool(
       return await readFileImpl(args, extras);
     case BuiltInToolNames.ReadFileRange:
       return await readFileRangeImpl(args, extras);
-    case BuiltInToolNames.ReadFileHead:
-      return await readFileHeadImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.GrepSearch:
