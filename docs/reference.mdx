@@ -40,6 +40,10 @@ For example, the following assistant imports an Anthropic model and defines an O
 Assistant models section
 
 ```yaml
+name: Team Agent
+version: 1.0.0
+schema: v1
+
 models:
   - uses: anthropic/claude-3.5-sonnet # an imported model block
   - model: deepseek-reasoner # an explicit model block
@@ -82,6 +86,9 @@ Blocks can be passed user inputs, including hub secrets and raw text values. To 
 
 ```yaml title="config.yaml"
 name: myprofile/custom-model
+version: 1.0.0
+schema: v1
+
 models:
   - name: My Favorite Model
     provider: anthropic
@@ -94,6 +101,9 @@ Which can then be imported like this:
 
 ```yaml title="config.yaml"
 name: myprofile/custom-assistant
+version: 1.0.0
+schema: v1
+
 models:
   - uses: myprofile/custom-model
     with:
@@ -109,6 +119,9 @@ Block properties can be also be directly overriden using `override`. For example
 
 ```yaml title="config.yaml"
 name: myprofile/custom-assistant
+version: 1.0.0
+schema: v1
+
 models:
   - uses: myprofile/custom-model
     with:

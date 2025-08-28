@@ -96,7 +96,7 @@ export function StepContainerPreToolbar({
       toolCallState?.status === "errored" ||
       toolCallState?.status === "done") ? (
       <div
-        className={`mr-1 h-4 w-4 ${toolCallState.output ? "cursor-pointer" : ""}`}
+        className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
         onClick={() => {
           if (toolCallState.output) {
             ideMessenger.post("showVirtualFile", {

@@ -16,7 +16,7 @@ import {
   handleValidationErrors,
   validateFlags,
 } from "./flags/flagValidator.js";
-import { configureConsoleForHeadless } from "./init.js";
+import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { logger } from "./util/logger.js";
@@ -142,13 +142,13 @@ addCommonOptions(program)
 
     // In headless mode, ensure we have a prompt
     if (options.print && !prompt) {
-      console.error(
-        "Error: A prompt is required when using the -p/--print flag.\n",
+      safeStderr(
+        "Error: A prompt is required when using the -p/--print flag.\n\n",
       );
-      console.error("Usage examples:");
-      console.error('  cn -p "please review my current git diff"');
-      console.error('  echo "hello" | cn -p');
-      console.error('  cn -p "analyze the code in src/"');
+      safeStderr("Usage examples:\n");
+      safeStderr('  cn -p "please review my current git diff"\n');
+      safeStderr('  echo "hello" | cn -p\n');
+      safeStderr('  cn -p "analyze the code in src/"\n');
       process.exit(1);
     }
 
@@ -187,7 +187,7 @@ program
 
 // Remote subcommand
 program
-  .command("remote [prompt]")
+  .command("remote [prompt]", { hidden: true })
   .description("Launch a remote instance of the cn agent")
   .option(
     "--url <url>",
@@ -215,7 +215,7 @@ program
 
 // Serve subcommand
 program
-  .command("serve [prompt]")
+  .command("serve [prompt]", { hidden: true })
   .description("Start an HTTP server with /state and /message endpoints")
   .option(
     "--timeout <seconds>",

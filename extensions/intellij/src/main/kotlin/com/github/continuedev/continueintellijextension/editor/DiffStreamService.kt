@@ -12,7 +12,7 @@ class DiffStreamService {
             handlers[editor]?.rejectAll()
         }
         handlers[editor] = handler
-        println("Registered handler for editor")
+        //println("Registered handler for editor")
     }
 
     fun reject(editor: Editor) {

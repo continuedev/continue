@@ -25,6 +25,26 @@ export function addCommonOptions(command: Command): Command {
       [] as string[],
     )
     .option(
+      "--mcp <slug>",
+      "Add an MCP server from the hub (slug in format 'owner/package'). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[],
+    )
+    .option(
+      "--model <slug>",
+      "Add a model from the hub (slug in format 'owner/package'). Can be specified multiple times.",
+      (value: string, previous: string[] | undefined) => {
+        const array = Array.isArray(previous) ? previous : [];
+        array.push(value);
+        return array;
+      },
+      [] as string[],
+    )
+    .option(
       "--prompt <prompt>",
       "Add to the initial user message (can be a file path, hub slug, or string content). Can be specified multiple times.",
       (value: string, previous: string[] | undefined) => {
@@ -80,6 +100,8 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "tools",
     "verbose",
     "rule",
+    "mcp",
+    "model",
     "prompt",
     "allow",
     "ask",
