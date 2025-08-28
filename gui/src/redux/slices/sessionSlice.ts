@@ -7,7 +7,6 @@ import {
 } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
-    AppliedRule,
   ApplyState,
   AssistantChatMessage,
   ChatHistoryItem,
