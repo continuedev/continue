@@ -1,10 +1,10 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { describe, it, expect, vi } from "vitest";
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
+import { describe, expect, it, vi } from "vitest";
 
 import { compactChatHistory } from "./compaction.js";
-import { convertToUnifiedHistory } from "./messageConversion.js";
-import { streamChatResponse } from "./streamChatResponse.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the dependencies
 vi.mock("./streamChatResponse.js", () => ({

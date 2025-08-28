@@ -1,12 +1,13 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
-  serviceContainer,
   SERVICE_NAMES,
   initializeServices,
-} from "./services/index.js";
-import { modeService } from "./services/ModeService.js";
-import { getAllTools } from "./streamChatResponse.js";
+  serviceContainer,
+} from "../services/index.js";
+import { modeService } from "../services/ModeService.js";
+
+import { getAllTools } from "./handleToolCalls.js";
 
 describe("streamChatResponse - Mode Switch During Streaming", () => {
   beforeEach(async () => {

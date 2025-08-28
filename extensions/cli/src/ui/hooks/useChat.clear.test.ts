@@ -1,7 +1,7 @@
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { convertToUnifiedHistory } from "../../messageConversion.js";
 import { startNewSession } from "../../session.js";
 
 import { processSlashCommandResult } from "./useChat.helpers.js";

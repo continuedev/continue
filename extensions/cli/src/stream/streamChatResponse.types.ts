@@ -2,7 +2,7 @@ import { CompletionOptions } from "@continuedev/config-yaml";
 import type { ToolStatus } from "core/index.js";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
 
-import { ToolCallPreview } from "./tools/types.js";
+import { ToolCallPreview } from "../tools/types.js";
 
 export interface StreamCallbacks {
   onContent?: (content: string) => void;

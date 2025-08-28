@@ -3,11 +3,11 @@ import { promisify } from "util";
 
 import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
+import { convertFromUnifiedHistory } from "core/util/messageConversion.js";
 import express, { Request, Response } from "express";
 
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
-import { convertFromUnifiedHistory } from "../messageConversion.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
   getService,

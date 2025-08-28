@@ -5,6 +5,7 @@ import { removeCodeBlocksAndTrim, removeQuotesAndEscapes } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "../protocol/messenger";
 import { renderChatMessage } from "./messageContent";
+import { convertFromUnifiedHistory } from "./messageConversion";
 
 export class ChatDescriber {
   static maxTokens = 12;
@@ -71,32 +72,12 @@ export class ChatDescriber {
       };
 
       // Convert to OpenAI format - use a simple fallback to avoid import issues
-      let openaiMessages;
-      let defaultOptions = {};
-
-      try {
-        // Try to import CLI dependencies dynamically
-        const { convertFromUnifiedHistory } = await import(
-          "../../extensions/cli/src/messageConversion.js"
-        );
-        const { getDefaultCompletionOptions } = await import(
-          "../../extensions/cli/src/streamChatResponse.types.js"
-        );
-
-        openaiMessages = convertFromUnifiedHistory([
-          {
-            message: chatMessage,
-            contextItems: [],
-          },
-        ]);
-        defaultOptions = getDefaultCompletionOptions(
-          modelConfig.defaultCompletionOptions,
-        );
-      } catch {
-        // Fallback: use direct OpenAI format if imports fail
-        openaiMessages = [chatMessage];
-        defaultOptions = {};
-      }
+      const openaiMessages = convertFromUnifiedHistory([
+        {
+          message: chatMessage,
+          contextItems: [],
+        },
+      ]);
 
       // Set up completion options for non-streaming
       const completionOptions = {
@@ -104,10 +85,6 @@ export class ChatDescriber {
         messages: openaiMessages,
         max_tokens: ChatDescriber.maxTokens,
         stream: false as const,
-        temperature: (defaultOptions as any)?.temperature,
-        frequency_penalty: (defaultOptions as any)?.frequency_penalty,
-        presence_penalty: (defaultOptions as any)?.presence_penalty,
-        top_p: (defaultOptions as any)?.top_p,
       };
 
       // Call the LLM

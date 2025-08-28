@@ -5,6 +5,7 @@
  * format and the unified ChatHistoryItem format from the core package.
  */
 
+import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import type {
   AssistantChatMessage,
   ChatHistoryItem,
@@ -14,8 +15,7 @@ import type {
   ToolCall,
   ToolCallState,
   ToolStatus,
-} from "core/index.js";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
+} from "../index.js";
 
 /**
  * Convert ChatCompletionMessageParam to ChatMessage
@@ -230,7 +230,7 @@ function handleToolResult(
   if (!historyItems[lastAssistantIndex].toolCallStates) return;
 
   const toolState = historyItems[lastAssistantIndex].toolCallStates?.find(
-    (ts) => ts.toolCallId === unifiedMessage.toolCallId,
+    (ts: ToolCallState) => ts.toolCallId === unifiedMessage.toolCallId,
   );
 
   if (toolState) {
@@ -311,7 +311,7 @@ export function convertFromUnifiedHistory(
     ) {
       const contextContent = item.contextItems
         .map(
-          (contextItem) =>
+          (contextItem: ContextItemWithId) =>
             `<context name="${contextItem.name}">\n${contextItem.content}\n</context>\n\n`,
         )
         .join("");

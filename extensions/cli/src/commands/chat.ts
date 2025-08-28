@@ -22,7 +22,7 @@ import {
   updateSessionHistory,
   updateSessionTitle,
 } from "../session.js";
-import { streamChatResponse } from "../streamChatResponse.js";
+import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
@@ -157,7 +157,7 @@ async function handleAutoCompaction(
   format?: "json",
 ): Promise<number | null> {
   const { handleAutoCompaction: coreAutoCompaction } = await import(
-    "../streamChatResponse.autoCompaction.js"
+    "../stream/streamChatResponse.autoCompaction.js"
   );
 
   // Custom callbacks for headless mode console output
