@@ -26,7 +26,7 @@ import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { PrefetchQueue } from "./NextEditPrefetchQueue.js";
 import { NextEditProviderFactory } from "./NextEditProviderFactory.js";
-import { BaseNextEditProvider } from "./providers/BaseNextEditProvider.js";
+import { BaseNextEditModelProvider } from "./providers/BaseNextEditProvider.js";
 import {
   ModelSpecificContext,
   NextEditOutcome,
@@ -65,7 +65,7 @@ export class NextEditProvider {
   // private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
 
   // Model-specific provider instance.
-  private modelProvider: BaseNextEditProvider | null = null;
+  private modelProvider: BaseNextEditModelProvider | null = null;
 
   private constructor(
     private readonly configHandler: ConfigHandler,

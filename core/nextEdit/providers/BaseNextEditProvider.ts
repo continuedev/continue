@@ -19,7 +19,7 @@ import {
 } from "../types.js";
 import { isWhitespaceOnlyDeletion } from "../utils.js";
 
-export abstract class BaseNextEditProvider {
+export abstract class BaseNextEditModelProvider {
   protected readonly modelName: string;
 
   constructor(modelName: string) {
