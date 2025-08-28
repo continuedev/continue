@@ -2,6 +2,7 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
 
+import { getDisplayableAsciiArt } from "../asciiArt.js";
 import { MCPService } from "../services/MCPService.js";
 import { isModelCapable } from "../utils/modelCapability.js";
 
@@ -41,6 +42,10 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
+      {/* ASCII Art */}
+      <Text>{getDisplayableAsciiArt()}</Text>
+      <Text> </Text>
+
       {/* Agent name */}
       {config && (
         <Text color="blue">

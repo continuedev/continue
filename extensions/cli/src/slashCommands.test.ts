@@ -44,11 +44,30 @@ vi.mock("./commands/commands.js", () => ({
   getAllSlashCommands: vi.fn(() => []),
 }));
 
+// Mock logger to avoid file system operations
+vi.mock("./util/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+// Mock env.js to avoid file operations
+vi.mock("./env.js", () => ({
+  env: {
+    continueHome: "/home/test/.continue",
+    appUrl: "https://hub.continue.dev",
+  },
+}));
+
 // Mock os and path
 vi.mock("os", () => ({
   default: {
     homedir: vi.fn(() => "/home/test"),
   },
+  homedir: vi.fn(() => "/home/test"),
 }));
 
 vi.mock("path", () => ({

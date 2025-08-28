@@ -1,3 +1,4 @@
+// @ts-ignore
 import {
   getServiceSync,
   MCPServiceState,
@@ -11,7 +12,6 @@ import { logger } from "../util/logger.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
-import { formatToolArgument } from "./formatters.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
@@ -201,36 +201,4 @@ export function validateToolCallArgsPresent(toolCall: ToolCall, tool: Tool) {
       );
     }
   }
-}
-
-/**
- * Formats a tool call with its arguments for display
- * @param toolName The name of the tool
- * @param args The tool arguments
- * @returns A formatted string like "ToolName(arg)" or just "ToolName" if no args
- */
-export function formatToolCall(toolName: string, args?: any): string {
-  const displayName = getToolDisplayName(toolName);
-
-  if (!args || Object.keys(args).length === 0) {
-    return displayName;
-  }
-
-  // Get the first argument value if it's a simple one
-  let formattedValue = "";
-  const [key, value] = Object.entries(args)[0];
-  if (
-    key.toLowerCase().includes("path") ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    formattedValue = formatToolArgument(value);
-  } else if (typeof value === "string") {
-    const valueLines = value.split("\n");
-    if (valueLines.length === 1) {
-      formattedValue = formatToolArgument(value);
-    }
-  }
-
-  return `${displayName}(${formattedValue})`;
 }

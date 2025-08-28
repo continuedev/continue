@@ -5,6 +5,7 @@
  * format and the unified ChatHistoryItem format from the core package.
  */
 
+import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import type {
   AssistantChatMessage,
   ChatHistoryItem,
@@ -14,8 +15,7 @@ import type {
   ToolCall,
   ToolCallState,
   ToolStatus,
-} from "core/index.js";
-import type { ChatCompletionMessageParam } from "openai/resources.mjs";
+} from "../index.js";
 
 /**
  * Convert ChatCompletionMessageParam to ChatMessage
@@ -222,15 +222,18 @@ function handleToolResult(
   if (!toolCall) return;
 
   // Add tool result as context to the previous assistant message
-  const lastAssistantIndex = historyItems.findLastIndex(
-    (item) => item.message.role === "assistant",
-  );
-
+  let lastAssistantIndex = -1;
+  for (let i = historyItems.length - 1; i >= 0; i--) {
+    if (historyItems[i].message.role === "assistant") {
+      lastAssistantIndex = i;
+      break;
+    }
+  }
   if (lastAssistantIndex < 0) return;
   if (!historyItems[lastAssistantIndex].toolCallStates) return;
 
   const toolState = historyItems[lastAssistantIndex].toolCallStates?.find(
-    (ts) => ts.toolCallId === unifiedMessage.toolCallId,
+    (ts: ToolCallState) => ts.toolCallId === unifiedMessage.toolCallId,
   );
 
   if (toolState) {
@@ -311,7 +314,7 @@ export function convertFromUnifiedHistory(
     ) {
       const contextContent = item.contextItems
         .map(
-          (contextItem) =>
+          (contextItem: ContextItemWithId) =>
             `<context name="${contextItem.name}">\n${contextItem.content}\n</context>\n\n`,
         )
         .join("");
@@ -337,6 +340,30 @@ export function convertFromUnifiedHistory(
       }
     }
   }
+
+  return messages;
+}
+
+/**
+ * Convert ChatHistoryItem array to ChatCompletionMessageParam array with injected system message
+ * @param historyItems - The chat history items
+ * @param systemMessage - The system message to inject at the beginning
+ */
+export function convertFromUnifiedHistoryWithSystemMessage(
+  historyItems: ChatHistoryItem[],
+  systemMessage: string,
+): ChatCompletionMessageParam[] {
+  const messages: ChatCompletionMessageParam[] = [];
+
+  // Inject system message at the beginning
+  messages.push({
+    role: "system",
+    content: systemMessage,
+  });
+
+  // Convert the rest of the history
+  const convertedMessages = convertFromUnifiedHistory(historyItems);
+  messages.push(...convertedMessages);
 
   return messages;
 }

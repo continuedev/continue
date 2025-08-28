@@ -6,10 +6,11 @@ import type { ChatHistoryItem, Session, SessionMetadata } from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
+import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
+import { logger } from "./util/logger.js";
+
 // Re-export SessionMetadata for external consumers
 export type { SessionMetadata };
-
-import { logger } from "./util/logger.js";
 
 // Note: We now use UUID-based session IDs instead of terminal-based IDs.
 // Each new chat session gets a unique UUID.
@@ -31,8 +32,10 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  const homeDir = os.homedir();
-  const sessionDir = path.join(homeDir, ".continue", "sessions");
+  // Use CONTINUE_GLOBAL_DIR if set (for testing)
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {
@@ -67,9 +70,14 @@ class SessionManager {
 
   getCurrentSession(): Session {
     if (!this.currentSession) {
+      // Use test session ID for testing consistency
+      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID
+        ? process.env.CONTINUE_CLI_TEST_SESSION_ID
+        : uuidv4();
+
       this.currentSession = {
-        sessionId: uuidv4(),
-        title: "Untitled Session",
+        sessionId,
+        title: DEFAULT_SESSION_TITLE,
         workspaceDirectory: process.cwd(),
         history: [],
       };
@@ -187,7 +195,7 @@ export function loadSession(): Session | null {
 export function createSession(history: ChatHistoryItem[] = []): Session {
   const session: Session = {
     sessionId: uuidv4(),
-    title: "Untitled Session",
+    title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
   };
@@ -265,7 +273,7 @@ function getSessionMetadataWithPreview(
 
     return {
       sessionId: sessionData.sessionId,
-      title: sessionData.title || "Untitled Session",
+      title: sessionData.title || DEFAULT_SESSION_TITLE,
       dateCreated: stats.birthtime.toISOString(),
       workspaceDirectory: sessionData.workspaceDirectory || "",
       firstUserMessage,
@@ -346,4 +354,25 @@ export function updateSessionTitle(title: string): void {
  */
 export function getCurrentSession(): Session {
   return SessionManager.getInstance().getCurrentSession();
+}
+
+/**
+ * Start a new session with a new sessionId
+ */
+export function startNewSession(history: ChatHistoryItem[] = []): Session {
+  const manager = SessionManager.getInstance();
+
+  // Clear the current session from memory (don't delete the file)
+  manager.clear();
+
+  // Create a new session with a new sessionId
+  const newSession: Session = {
+    sessionId: uuidv4(),
+    title: DEFAULT_SESSION_TITLE,
+    workspaceDirectory: process.cwd(),
+    history,
+  };
+
+  manager.setSession(newSession);
+  return newSession;
 }

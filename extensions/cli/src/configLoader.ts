@@ -18,6 +18,7 @@ import {
   getConfigUri,
   getOrganizationId,
   isEnvironmentAuthConfig,
+  loadAuthConfig,
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
@@ -352,13 +353,13 @@ async function loadAssistantSlug(
   }
 
   // Unroll locally if not logged in
-  if (!(apiClient as any).configuration.apiKey) {
+  if (!(apiClient as any).configuration.accessToken) {
     return await unrollAssistantWithConfig(
       {
         uriType: "slug",
         fullSlug: { ownerSlug, packageSlug, versionSlug: "latest" },
       },
-      null,
+      getAccessToken(loadAuthConfig()),
       organizationId,
       apiClient,
     );

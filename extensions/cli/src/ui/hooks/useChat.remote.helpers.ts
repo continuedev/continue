@@ -1,6 +1,6 @@
 import type { ChatHistoryItem } from "core/index.js";
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
 
-import { convertToUnifiedHistory } from "../../messageConversion.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { logger } from "../../util/logger.js";
 

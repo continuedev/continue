@@ -386,6 +386,27 @@ const UserInput: React.FC<UserInputProps> = ({
 
   const handleEnterKey = (key: any): boolean => {
     if (key.return && !key.shift) {
+      // Check for backslash continuation
+      const beforeCursor = textBuffer.text.slice(0, cursorPosition);
+      const trimmedBeforeCursor = beforeCursor.trimEnd();
+
+      if (trimmedBeforeCursor.endsWith("\\")) {
+        // Handle backslash continuation: remove the trailing "\" and add newline
+        const beforeBackslash = trimmedBeforeCursor.slice(0, -1);
+        const afterCursor = textBuffer.text.slice(cursorPosition);
+        const newText = beforeBackslash + "\n" + afterCursor;
+        const newCursorPos = beforeBackslash.length + 1;
+
+        textBuffer.setText(newText);
+        textBuffer.setCursor(newCursorPos);
+        setInputText(newText);
+        setCursorPosition(newCursorPos);
+        updateSlashCommandState(newText, newCursorPos);
+        updateFileSearchState(newText, newCursorPos);
+        return true;
+      }
+
+      // Normal Enter behavior - submit if there's content
       if (textBuffer.text.trim() && !isWaitingForResponse) {
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();

@@ -5,8 +5,9 @@ import {
   initializeServices,
   SERVICE_NAMES,
   serviceContainer,
-} from "./services/index.js";
-import type { ToolPermissionServiceState } from "./services/ToolPermissionService.js";
+} from "../services/index.js";
+import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+
 import { getAllTools } from "./streamChatResponse.js";
 
 describe("getAllTools - Tool Filtering", () => {
