@@ -59,27 +59,17 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private llmLogger: ILLMLogger,
-    sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
+    initialSessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
   ) {
-    this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
-
     this.controlPlaneClient = new ControlPlaneClient(
-      sessionInfoPromise,
-      ideSettingsPromise,
-      this.ide.getIdeInfo(),
+      initialSessionInfoPromise,
+      this.ide,
     );
 
     // This profile manager will always be available
     this.globalLocalProfileManager = new ProfileLifecycleManager(
-      new LocalProfileLoader(
-        ide,
-        ideSettingsPromise,
-        this.controlPlaneClient,
-        this.llmLogger,
-      ),
+      new LocalProfileLoader(ide, this.controlPlaneClient, this.llmLogger),
       this.ide,
     );
 
@@ -97,6 +87,7 @@ export class ConfigHandler {
   }
 
   private workspaceDirs: string[] | null = null;
+
   async getWorkspaceId() {
     if (!this.workspaceDirs) {
       this.workspaceDirs = await this.ide.getWorkspaceDirs();
@@ -112,6 +103,13 @@ export class ConfigHandler {
   private async cascadeInit(reason: string) {
     const signal = this.cascadeAbortController.signal;
     this.workspaceDirs = null; // forces workspace dirs reload
+
+    // Always update globalLocalProfileManager before recreating all the loaders
+    // during every cascadeInit so it holds the most recent controlPlaneClient.
+    this.globalLocalProfileManager = new ProfileLifecycleManager(
+      new LocalProfileLoader(this.ide, this.controlPlaneClient, this.llmLogger),
+      this.ide,
+    );
 
     try {
       const { orgs, errors } = await this.getOrgs();
@@ -246,7 +244,6 @@ export class ConfigHandler {
           versionSlug: assistant.configResult.config?.version ?? "latest",
           controlPlaneClient: this.controlPlaneClient,
           ide: this.ide,
-          ideSettingsPromise: this.ideSettingsPromise,
           llmLogger: this.llmLogger,
           rawYaml: assistant.rawYaml,
           orgScopeId: orgScopeId,
@@ -367,7 +364,6 @@ export class ConfigHandler {
       const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
-          this.ideSettingsPromise,
           this.controlPlaneClient,
           this.llmLogger,
           assistant,
@@ -392,7 +388,6 @@ export class ConfigHandler {
 
   // Ide settings change: refresh session and cascade refresh from the top
   async updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
     this.abortCascade();
     await this.cascadeInit("IDE settings update");
   }
@@ -430,8 +425,7 @@ export class ConfigHandler {
     if (reload) {
       this.controlPlaneClient = new ControlPlaneClient(
         Promise.resolve(sessionInfo),
-        this.ideSettingsPromise,
-        this.ide.getIdeInfo(),
+        this.ide,
       );
       this.abortCascade();
       await this.cascadeInit("Control plane session info update");
