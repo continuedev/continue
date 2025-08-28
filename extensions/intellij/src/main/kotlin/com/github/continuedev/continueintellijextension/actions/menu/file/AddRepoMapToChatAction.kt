@@ -1,14 +1,14 @@
 package com.github.continuedev.continueintellijextension.actions.menu.file
 
-import com.github.continuedev.continueintellijextension.actions.getContinuePluginService
 import com.github.continuedev.continueintellijextension.actions.getSelectedFiles
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
 class AddRepoMapToChatAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
+        val browser = e.project?.getBrowser() ?: return
         val selectedFiles = e.getSelectedFiles()
 
         val requestData = selectedFiles.map { vFile ->
@@ -22,7 +22,7 @@ class AddRepoMapToChatAction : AnAction() {
             "data" to requestData
         )
 
-        continuePluginService.sendToWebview("addChatMention", requestParams)
+        browser.sendToWebview("addChatMention", requestParams)
     }
 
     override fun update(e: AnActionEvent) {
