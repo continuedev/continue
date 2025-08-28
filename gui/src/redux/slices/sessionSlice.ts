@@ -17,6 +17,7 @@ import {
   FileSymbolMap,
   MessageModes,
   PromptLog,
+  RuleWithSource,
   Session,
   SessionMetadata,
   ThinkingChatMessage,
@@ -503,7 +504,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: ChatHistoryItem["appliedRules"];
+        appliedRules: Omit<RuleWithSource, "rule">[];
       }>,
     ) => {
       if (state.history[payload.index]) {

@@ -34,7 +34,7 @@ export function constructMessages(
   useSystemToolsFramework?: SystemMessageToolsFramework,
 ): {
   messages: ChatMessage[];
-  appliedRules: RuleWithSource[];
+  appliedRules: Omit<RuleWithSource, "rule">[];
   appliedRuleIndex: number;
 } {
   // Find the most recent conversation summary and filter history accordingly

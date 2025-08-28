@@ -207,7 +207,7 @@ export const streamNormalInput = createAsyncThunk<
     dispatch(
       setAppliedRulesAtIndex({
         index: appliedRuleIndex,
-        appliedRules: { ...appliedRules },
+        appliedRules: appliedRules,
       }),
     );
 
@@ -282,7 +282,7 @@ export const streamNormalInput = createAsyncThunk<
             ...(appliedRules.length > 0 && {
               rules: appliedRules.map((rule) => ({
                 id: getRuleId(rule),
-                rule: rule.rule,
+                rule: "", // TODO: remove rule key from type. The contents should be present in the prompt
                 slug: rule.slug,
               })),
             }),

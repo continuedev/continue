@@ -324,7 +324,7 @@ export const getApplicableRules = (
   return applicableRules;
 };
 
-export function getRuleId(rule: RuleWithSource): string {
+export function getRuleId(rule: Omit<RuleWithSource, "rule">): string {
   return rule.slug ?? rule.ruleFile ?? rule.name ?? rule.source;
 }
 
@@ -342,9 +342,9 @@ export const getSystemMessageWithRules = ({
   rulePolicies?: RulePolicies;
 }): {
   systemMessage: string;
-  appliedRules: RuleWithSource[];
+  appliedRules: Omit<RuleWithSource, "rule">[];
 } => {
-  const appliedRules = getApplicableRules(
+  const rules = getApplicableRules(
     userMessage,
     availableRules,
     contextItems,
@@ -352,7 +352,7 @@ export const getSystemMessageWithRules = ({
   );
   let systemMessage = baseSystemMessage ?? "";
 
-  for (const rule of appliedRules) {
+  for (const rule of rules) {
     if (systemMessage) {
       systemMessage += "\n\n";
     }
@@ -361,6 +361,9 @@ export const getSystemMessageWithRules = ({
 
   return {
     systemMessage,
-    appliedRules,
+    appliedRules: rules.map(fullRule => {
+      const { rule, ...rest } = fullRule // destruct rule key
+      return rest;
+    }),
   };
 };
