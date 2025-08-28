@@ -849,6 +849,21 @@ export const sessionSlice = createSlice({
         );
       }
     },
+    setToolCallArgs: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+        newArgs: Record<string, any>;
+      }>,
+    ) => {
+      const toolCallState = findToolCallById(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.parsedArgs = action.payload.newArgs;
+      }
+    },
     cancelToolCall: (
       state,
       action: PayloadAction<{
@@ -1024,6 +1039,7 @@ export const {
   acceptToolCall,
   setToolGenerated,
   updateToolCallOutput,
+  setToolCallArgs,
   setMode,
   setIsSessionMetadataLoading,
   setAllSessionMetadata,

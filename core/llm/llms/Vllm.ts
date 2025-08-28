@@ -25,7 +25,7 @@ class Vllm extends OpenAI {
   constructor(options: LLMOptions) {
     super(options);
 
-    if (options.model === "AUTODETECT") {
+    if (options.isFromAutoDetect) {
       this._setupCompletionOptions();
     }
   }
@@ -45,7 +45,7 @@ class Vllm extends OpenAI {
       // vLLM uses 'results' array instead of 'data'
       if (results.results && Array.isArray(results.results)) {
         const sortedResults = results.results.sort((a, b) => a.index - b.index);
-        return sortedResults.map((result) => result.index);
+        return sortedResults.map((result) => result.relevance_score);
       }
 
       throw new Error(

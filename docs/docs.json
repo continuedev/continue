@@ -290,6 +290,11 @@
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
           "icon": "newspaper"
+        },
+        {
+          "anchor": "Release Notes",
+          "href": "https://changelog.continue.dev/",
+          "icon": "bullhorn"
         }
       ]
     }

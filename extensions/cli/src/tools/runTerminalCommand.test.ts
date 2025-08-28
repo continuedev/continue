@@ -184,6 +184,29 @@ describe("runTerminalCommandTool", () => {
       const lines = result.trim().split("\n");
       expect(lines).toHaveLength(1000);
     });
+
+    it("should truncate output when it exceeds 5000 lines", async () => {
+      // Generate a command that produces more than 5000 lines
+      const result = await runTerminalCommandTool.run({
+        command: "seq 1 6000",
+      });
+
+      // Should contain the truncation message
+      expect(result).toContain(
+        "[Output truncated to first 5000 lines of 6001 total]",
+      );
+
+      // Should contain first line
+      expect(result).toContain("1\n");
+
+      // Should contain line 5000 but not line 6000
+      expect(result).toContain("5000");
+      expect(result).not.toContain("6000");
+
+      // Count lines in the result - should be 5000 content lines + 2 truncation message lines
+      const lines = result.split("\n");
+      expect(lines).toHaveLength(5002); // 5000 content lines + empty line + truncation message
+    });
   });
 
   describe("command types", () => {

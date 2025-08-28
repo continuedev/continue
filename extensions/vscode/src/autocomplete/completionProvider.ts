@@ -199,7 +199,18 @@ export class ContinueCompletionProvider
     try {
       const abortController = new AbortController();
       const signal = abortController.signal;
-      token.onCancellationRequested(() => abortController.abort());
+      const completionId = uuidv4();
+
+      if (this.isNextEditActive) {
+        this.nextEditLoggingService.trackPendingCompletion(completionId);
+      }
+
+      token.onCancellationRequested(() => {
+        abortController.abort();
+        if (this.isNextEditActive) {
+          this.nextEditLoggingService.handleAbort(completionId);
+        }
+      });
 
       // Handle notebook cells
       let pos = {
@@ -252,7 +263,7 @@ export class ContinueCompletionProvider
       const wasManuallyTriggered =
         context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
-      const completionId = uuidv4();
+      // const completionId = uuidv4();
       const filepath = document.uri.toString();
       const recentlyVisitedRanges = this.recentlyVisitedRanges.getSnippets();
       let recentlyEditedRanges =

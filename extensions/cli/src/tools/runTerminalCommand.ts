@@ -11,7 +11,10 @@ import { Tool } from "./types.js";
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
-  description: "Executes a terminal command and returns the output",
+  description: `Executes a terminal command and returns the output
+
+The command will be executed from the current working directory: ${process.cwd()}
+`,
   parameters: {
     command: {
       type: "string",
@@ -59,11 +62,21 @@ export const runTerminalCommandTool: Tool = {
           if (isResolved) return;
           isResolved = true;
           child.kill();
-          const output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
-          resolve(
-            output +
-              `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`,
-          );
+          let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
+          output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
+
+          // Truncate output if it has too many lines
+          const lines = output.split("\n");
+          if (lines.length > 5000) {
+            const truncatedOutput = lines.slice(0, 5000).join("\n");
+            resolve(
+              truncatedOutput +
+                `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
+            );
+            return;
+          }
+
+          resolve(output);
         }, TIMEOUT_MS);
       };
 
@@ -103,11 +116,23 @@ export const runTerminalCommandTool: Tool = {
           }
         }
 
+        let output = stdout;
         if (stderr) {
-          resolve(stdout + `\nStderr: ${stderr}`);
+          output = stdout + `\nStderr: ${stderr}`;
+        }
+
+        // Truncate output if it has too many lines
+        const lines = output.split("\n");
+        if (lines.length > 5000) {
+          const truncatedOutput = lines.slice(0, 5000).join("\n");
+          resolve(
+            truncatedOutput +
+              `\n\n[Output truncated to first 5000 lines of ${lines.length} total]`,
+          );
           return;
         }
-        resolve(stdout);
+
+        resolve(output);
       });
 
       child.on("error", (error) => {

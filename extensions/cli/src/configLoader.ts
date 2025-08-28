@@ -18,6 +18,7 @@ import {
   getConfigUri,
   getOrganizationId,
   isEnvironmentAuthConfig,
+  loadAuthConfig,
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
@@ -301,16 +302,7 @@ async function unrollAssistantWithConfig(
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       onPremProxyUrl: null,
-      injectBlocks: [
-        {
-          uriType: "slug",
-          fullSlug: {
-            ownerSlug: "openai",
-            packageSlug: "gpt-5",
-            versionSlug: "latest",
-          },
-        },
-      ],
+      injectBlocks: [],
     },
   );
 
@@ -367,7 +359,7 @@ async function loadAssistantSlug(
         uriType: "slug",
         fullSlug: { ownerSlug, packageSlug, versionSlug: "latest" },
       },
-      null,
+      getAccessToken(loadAuthConfig()),
       organizationId,
       apiClient,
     );

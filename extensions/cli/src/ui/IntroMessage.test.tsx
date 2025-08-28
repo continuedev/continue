@@ -163,4 +163,33 @@ The UI should only show the slug 'org/complex-rule'.`,
     expect(output).not.toContain("alwaysApply");
     expect(output).not.toContain("Short content");
   });
+
+  it("should handle partial loading gracefully", () => {
+    // Test with no config, no model, no mcpService
+    const { lastFrame: frame1 } = render(<IntroMessage />);
+    let output = frame1();
+    expect(output).toContain("Loading...");
+
+    // Test with only model missing
+    const config: AssistantUnrolled = {
+      name: "Test Assistant",
+      rules: ["Rule 1"],
+    } as any;
+
+    const { lastFrame: frame2 } = render(
+      <IntroMessage config={config} mcpService={mockMcpService} />,
+    );
+    output = frame2();
+    expect(output).toContain("Test Assistant");
+    expect(output).toContain("Loading...");
+    expect(output).toContain("Rule 1");
+
+    // Test with only config missing
+    const { lastFrame: frame3 } = render(
+      <IntroMessage model={mockModel} mcpService={mockMcpService} />,
+    );
+    output = frame3();
+    expect(output).toContain("claude-3-sonnet");
+    expect(output).not.toContain("Rules:");
+  });
 });

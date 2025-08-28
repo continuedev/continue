@@ -15,7 +15,6 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.7.2"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("org.jetbrains.kotlinx.kover") version "0.7.3"
     id("io.sentry.jvm.gradle") version "5.8.0"
 }
 
@@ -78,12 +77,6 @@ qodana {
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
 }
 
-koverReport {
-    defaults {
-        xml { onCheck = true }
-    }
-}
-
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
@@ -103,8 +96,7 @@ intellijPlatformTesting {
                         "-Dapple.laf.useScreenMenuBar=false",
                         "-Didea.trust.all.projects=true",
                         "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.jsQueryPoolSize=10000",
-                        "-Dide.browser.jcef.contextMenu.devTools.enabled=true"
+                        "-Dide.browser.jcef.sandbox.enable=false"
                     )
                 }
             }
@@ -152,5 +144,6 @@ tasks {
 
     test {
         useJUnitPlatform()
+        jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
     }
 }

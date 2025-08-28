@@ -106,6 +106,7 @@ export const SERVICE_NAMES = {
   TOOL_PERMISSIONS: "toolPermissions",
   FILE_INDEX: "fileIndex",
   RESOURCE_MONITORING: "resourceMonitoring",
+  SYSTEM_MESSAGE: "systemMessage",
 } as const;
 
 /**

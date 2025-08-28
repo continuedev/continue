@@ -1,11 +1,14 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
-import { formatToolCall } from "../../tools/index.js";
-import { DisplayMessage } from "../types.js";
+import { getCurrentSession, updateSessionTitle } from "../../session.js";
+
+import { generateSessionTitle } from "./useChat.helpers.js";
 
 interface CreateStreamCallbacksOptions {
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setActivePermissionRequest: React.Dispatch<React.SetStateAction<any>>;
+  llmApi?: any;
+  model?: any;
 }
 
 /**
@@ -13,91 +16,159 @@ interface CreateStreamCallbacksOptions {
  */
 export function createStreamCallbacks(
   options: CreateStreamCallbacksOptions,
-  currentStreamingMessageRef: { current: any },
 ): any {
-  const { setMessages, setActivePermissionRequest } = options;
+  const { setChatHistory, setActivePermissionRequest, llmApi, model } = options;
 
   return {
-    onContent: (content: string) => {
-      if (!currentStreamingMessageRef.current) {
-        currentStreamingMessageRef.current = {
-          role: "assistant",
-          content: "",
-          isStreaming: true,
-        };
-      }
-      currentStreamingMessageRef.current.content += content;
-    },
-    onContentComplete: (content: string) => {
-      if (currentStreamingMessageRef.current) {
-        setMessages((prev) => [
-          ...prev,
-          {
+    onContent: (_: string) => {},
+
+    onContentComplete: async (content: string) => {
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          contextItems: [],
+          message: {
             role: "assistant",
             content: content,
             isStreaming: false,
           },
-        ]);
-        currentStreamingMessageRef.current = null;
-      }
-    },
-    onToolStart: (toolName: string, toolArgs?: any) => {
-      if (
-        currentStreamingMessageRef.current &&
-        currentStreamingMessageRef.current.content
-      ) {
-        const messageContent = currentStreamingMessageRef.current.content;
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: messageContent,
-            isStreaming: false,
-          },
-        ]);
-        currentStreamingMessageRef.current = null;
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: formatToolCall(toolName, toolArgs),
-          messageType: "tool-start",
-          toolName,
         },
       ]);
-    },
-    onToolResult: (result: string, toolName: string) => {
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        for (let i = newMessages.length - 1; i >= 0; i--) {
-          if (
-            newMessages[i].messageType === "tool-start" &&
-            newMessages[i].toolName === toolName
-          ) {
-            newMessages[i] = {
-              ...newMessages[i],
-              messageType: "tool-result",
-              toolResult: result,
-            };
-            break;
-          }
+
+      // Generate session title after first assistant response
+      if (content && llmApi && model) {
+        const currentSession = getCurrentSession();
+        const generatedTitle = await generateSessionTitle(
+          content,
+          llmApi,
+          model,
+          currentSession.title,
+        );
+
+        if (generatedTitle) {
+          updateSessionTitle(generatedTitle);
         }
-        return newMessages;
+      }
+    },
+
+    onToolStart: (toolName: string, toolArgs?: any) => {
+      setChatHistory((prev) => {
+        const newHistory = [...prev];
+
+        // Always create a new assistant message for each tool call
+        const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        const toolCallState: ToolCallState = {
+          toolCallId: toolCallId,
+          toolCall: {
+            id: toolCallId,
+            type: "function",
+            function: {
+              name: toolName,
+              arguments: JSON.stringify(toolArgs || {}),
+            },
+          },
+          status: "calling",
+          parsedArgs: toolArgs,
+        };
+
+        newHistory.push({
+          message: {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: toolCallId,
+                type: "function",
+                function: {
+                  name: toolName,
+                  arguments: JSON.stringify(toolArgs || {}),
+                },
+              },
+            ],
+          },
+          contextItems: [],
+          toolCallStates: [toolCallState],
+        });
+
+        return newHistory;
       });
     },
-    onToolError: (error: string, toolName?: string) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: error,
-          messageType: "tool-error",
-          toolName,
-        },
-      ]);
+
+    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
+      setChatHistory((prev) => {
+        const newHistory = [...prev];
+
+        // Find the tool call state and update it
+        for (let i = newHistory.length - 1; i >= 0; i--) {
+          const item = newHistory[i];
+          if (item.toolCallStates) {
+            const toolState = item.toolCallStates.find(
+              (ts) =>
+                ts.toolCall.function.name === toolName &&
+                ts.status === "calling",
+            );
+
+            if (toolState) {
+              toolState.status = status;
+              toolState.output = [
+                {
+                  content: result,
+                  name: `Tool Result: ${toolName}`,
+                  description: "Tool execution result",
+                },
+              ];
+              break;
+            }
+          }
+        }
+
+        return newHistory;
+      });
     },
+
+    onToolError: (error: string, toolName?: string) => {
+      setChatHistory((prev) => {
+        const newHistory = [...prev];
+
+        // Find the tool call state and mark it as errored
+        if (toolName) {
+          for (let i = newHistory.length - 1; i >= 0; i--) {
+            const item = newHistory[i];
+            if (item.toolCallStates) {
+              const toolState = item.toolCallStates.find(
+                (ts) =>
+                  ts.toolCall.function.name === toolName &&
+                  ts.status === "calling",
+              );
+
+              if (toolState) {
+                toolState.status = "errored";
+                toolState.output = [
+                  {
+                    content: error,
+                    name: `Tool Error: ${toolName}`,
+                    description: "Tool execution error",
+                  },
+                ];
+                break;
+              }
+            }
+          }
+        } else {
+          // General error message
+          newHistory.push({
+            message: {
+              role: "system",
+              content: error,
+            },
+            contextItems: [],
+          });
+        }
+
+        return newHistory;
+      });
+    },
+
     onToolPermissionRequest: (
       toolName: string,
       toolArgs: any,
@@ -111,13 +182,16 @@ export function createStreamCallbacks(
         toolCallPreview,
       });
     },
+
     onSystemMessage: (message: string) => {
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: message,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: message,
+          },
+          contextItems: [],
         },
       ]);
     },
@@ -125,7 +199,7 @@ export function createStreamCallbacks(
 }
 
 interface ExecuteStreamingOptions {
-  newHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: any;
   llmApi: any;
   controller: AbortController;
@@ -137,7 +211,7 @@ interface ExecuteStreamingOptions {
  * Execute streaming chat response
  */
 export async function executeStreaming({
-  newHistory,
+  chatHistory,
   model,
   llmApi,
   controller,
@@ -145,7 +219,9 @@ export async function executeStreaming({
   currentCompactionIndex,
 }: ExecuteStreamingOptions): Promise<void> {
   const { getHistoryForLLM } = await import("../../compaction.js");
-  const { streamChatResponse } = await import("../../streamChatResponse.js");
+  const { streamChatResponse } = await import(
+    "../../stream/streamChatResponse.js"
+  );
 
   if (model && llmApi) {
     if (
@@ -153,10 +229,10 @@ export async function executeStreaming({
       currentCompactionIndex !== undefined
     ) {
       const historyForLLM = getHistoryForLLM(
-        newHistory,
+        chatHistory,
         currentCompactionIndex,
       );
-      const originalLength = historyForLLM.length;
+      const _originalLength = historyForLLM.length;
 
       await streamChatResponse(
         historyForLLM,
@@ -166,11 +242,11 @@ export async function executeStreaming({
         streamCallbacks,
       );
 
-      const newMessages = historyForLLM.slice(originalLength);
-      newHistory.push(...newMessages);
+      // streamChatResponse modifies the array in place
+      // The new messages are already in historyForLLM
     } else {
       await streamChatResponse(
-        newHistory,
+        chatHistory,
         model,
         llmApi,
         controller,

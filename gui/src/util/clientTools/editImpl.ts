@@ -1,7 +1,6 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
-import { updateApplyState } from "../../redux/slices/sessionSlice";
-import { handleEditToolApplyError } from "../../redux/thunks/handleApplyStateUpdate";
+import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 export const editToolImpl: ClientToolImpl = async (
   args,
@@ -21,29 +20,15 @@ export const editToolImpl: ClientToolImpl = async (
     throw new Error(`${args.filepath} does not exist`);
   }
   const streamId = uuid();
-  extras.dispatch(
-    updateApplyState({
-      streamId,
-      toolCallId,
-      status: "not-started",
-    }),
-  );
-  void extras.ideMessenger
-    .request("applyToFile", {
+  void extras.dispatch(
+    applyForEditTool({
       streamId,
       text: args.changes,
       toolCallId,
       filepath: firstUriMatch,
-    })
-    .then((res) => {
-      if (res.status === "error") {
-        void extras.dispatch(
-          handleEditToolApplyError({
-            toolCallId,
-          }),
-        );
-      }
-    });
+    }),
+  );
+
   return {
     respondImmediately: false,
     output: undefined, // No immediate output.

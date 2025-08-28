@@ -130,7 +130,10 @@ export class JumpManager {
     };
 
     try {
-      const svgContent = svgBuilder
+      const builder = svgBuilder.newInstance
+        ? svgBuilder.newInstance()
+        : svgBuilder;
+      const svgContent = builder
         .width(SVG_CONFIG.getTipWidth())
         .height(SVG_CONFIG.getTipHeight())
         .text(
