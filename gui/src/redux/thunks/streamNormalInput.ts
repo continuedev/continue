@@ -335,12 +335,12 @@ export const streamNormalInput = createAsyncThunk<
       );
       const policies = await Promise.all(policyPromises);
 
-      // Check if any are disabled and handle them
+      // Process all tool calls based on their policies
       policies.forEach((policy, index) => {
+        const toolCallId = generatingToolCalls[index].toolCallId;
+        const toolCall = generatingToolCalls[index].toolCall;
+        
         if (policy === "disabled") {
-          const toolCallId = generatingToolCalls[index].toolCallId;
-          const toolCall = generatingToolCalls[index].toolCall;
-
           // Get the actual command from parsed arguments if it's runTerminalCommand
           let command = toolCall.function.name;
           try {
@@ -371,6 +371,14 @@ export const streamNormalInput = createAsyncThunk<
                   hidden: false,
                 },
               ],
+            }),
+          );
+        } else {
+          // For non-disabled tools, set them to generated status
+          dispatch(
+            setToolGenerated({
+              toolCallId,
+              tools: newState.config.config.tools,
             }),
           );
         }
