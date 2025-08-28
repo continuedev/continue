@@ -246,6 +246,7 @@
               "guides/overview",
               "guides/understanding-assistants",
               "guides/cli",
+              "guides/continuous-ai",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/llama3.1",
