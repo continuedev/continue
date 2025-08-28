@@ -32,8 +32,9 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  const homeDir = os.homedir();
-  const sessionDir = path.join(homeDir, ".continue", "sessions");
+  // Use CONTINUE_GLOBAL_DIR if set (for testing)
+  const continueHome = process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {
@@ -68,8 +69,13 @@ class SessionManager {
 
   getCurrentSession(): Session {
     if (!this.currentSession) {
+      // Use test session ID for testing consistency
+      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID ? 
+        process.env.CONTINUE_CLI_TEST_SESSION_ID : 
+        uuidv4();
+      
       this.currentSession = {
-        sessionId: uuidv4(),
+        sessionId,
         title: DEFAULT_SESSION_TITLE,
         workspaceDirectory: process.cwd(),
         history: [],

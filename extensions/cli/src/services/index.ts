@@ -118,7 +118,7 @@ export async function initializeServices(
     () =>
       systemMessageService.initialize({
         additionalRules: commandOptions.rule,
-        format: undefined, // format is not part of BaseCommandOptions
+        format: (commandOptions as any).format, // format option from CLI
         headless: initOptions.headless,
       }),
     [], // No dependencies
