@@ -1,6 +1,6 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import chalk from "chalk";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem, Session } from "core/index.js";
 import * as readlineSync from "readline-sync";
 
 import { getDisplayableAsciiArt } from "../asciiArt.js";
@@ -17,7 +17,7 @@ import { sentryService } from "../sentry.js";
 import { initializeServices } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
-import { loadSession, saveSession } from "../session.js";
+import { loadSession, updateSessionHistory } from "../session.js";
 import { streamChatResponse } from "../streamChatResponse.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
@@ -77,39 +77,38 @@ function stripThinkTags(response: string): string {
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
-  rule?: string[]; // Array of rule specifications
-  prompt?: string[]; // Array of prompt specifications
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
-  org?: string; // Organization slug to use for this session
 }
 
 export async function initializeChatHistory(
   options: ChatOptions,
-): Promise<ChatCompletionMessageParam[]> {
-  let chatHistory: ChatCompletionMessageParam[] = [];
+): Promise<ChatHistoryItem[]> {
+  let session: Session | null = null;
 
   // Load previous session if --resume flag is used
   if (options.resume) {
-    const savedHistory = loadSession();
-    if (savedHistory) {
-      chatHistory = savedHistory;
+    session = loadSession();
+    if (session) {
       logger.info(chalk.yellow("Resuming previous session..."));
+      return session.history;
     } else {
       logger.info(chalk.yellow("No previous session found, starting fresh..."));
     }
   }
 
   // If no session loaded or not resuming, initialize with system message
-  if (chatHistory.length === 0) {
-    const systemMessage = await constructSystemMessage(
-      options.rule,
-      options.format,
-      options.headless,
-    );
-    if (systemMessage) {
-      chatHistory.push({ role: "system", content: systemMessage });
-    }
+  const chatHistory: ChatHistoryItem[] = [];
+  const systemMessage = await constructSystemMessage(
+    options.rule,
+    options.format,
+    options.headless,
+  );
+  if (systemMessage) {
+    chatHistory.push({
+      message: { role: "system", content: systemMessage },
+      contextItems: [],
+    });
   }
 
   return chatHistory;
@@ -117,7 +116,7 @@ export async function initializeChatHistory(
 
 // Helper function to handle manual compaction
 async function handleManualCompaction(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: any,
   isHeadless: boolean,
@@ -134,7 +133,7 @@ async function handleManualCompaction(
     chatHistory.push(...result.compactedHistory);
 
     // Save the compacted session
-    saveSession(chatHistory);
+    updateSessionHistory(chatHistory);
 
     if (isHeadless) {
       safeStdout(
@@ -162,7 +161,7 @@ async function handleManualCompaction(
 
 // Helper function to handle auto-compaction for headless mode
 async function handleAutoCompaction(
-  chatHistory: ChatCompletionMessageParam[],
+  chatHistory: ChatHistoryItem[],
   model: ModelConfig,
   llmApi: any,
   isHeadless: boolean,
@@ -237,7 +236,7 @@ async function handleAutoCompaction(
 
 interface ProcessMessageOptions {
   userInput: string;
-  chatHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: ModelConfig;
   llmApi: any;
   isHeadless: boolean;
@@ -279,11 +278,17 @@ async function processMessage(
     );
     if (newIndex !== null) {
       compactionIndex = newIndex;
+      // Replace chatHistory with compacted version
+      chatHistory.length = 0;
+      chatHistory.push(...chatHistory);
     }
   }
 
   // Add user message to history AFTER potential compaction
-  chatHistory.push({ role: "user", content: userInput });
+  chatHistory.push({
+    message: { role: "user", content: userInput },
+    contextItems: [],
+  });
 
   // Get AI response with potential tool usage
   if (!isHeadless) {
@@ -318,6 +323,7 @@ async function processMessage(
         llmApi,
         abortController,
       );
+      // No need to sync back - streamChatResponse modifies chatHistory in place
     }
 
     // In headless mode, only print the final response using safe stdout
@@ -339,7 +345,7 @@ async function processMessage(
     }
 
     // Save session after each successful response
-    saveSession(chatHistory);
+    updateSessionHistory(chatHistory);
   } catch (e: any) {
     const error = e instanceof Error ? e : new Error(String(e));
 
@@ -370,9 +376,7 @@ async function runHeadlessMode(
   const { permissionOverrides } = processCommandFlags(options);
 
   await initializeServices({
-    configPath: options.config,
-    organizationSlug: options.org,
-    rules: options.rule,
+    options,
     headless: true,
     toolPermissionOverrides: permissionOverrides,
   });
@@ -460,9 +464,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
 
       // Initialize services with onboarding handled internally
       const initResult = await initializeServices({
-        configPath: options.config,
-        organizationSlug: options.org,
-        rules: options.rule,
+        options,
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
@@ -479,10 +481,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const tuiOptions: any = {
         initialPrompt: prompt,
         resume: options.resume,
-        configPath: options.config,
-        organizationSlug: options.org,
-        additionalRules: options.rule,
-        additionalPrompts: options.prompt,
+        config: options.config,
+        org: options.org,
+        rule: options.rule,
+        prompt: options.prompt,
         toolPermissionOverrides: permissionOverrides,
         skipOnboarding: true,
       };

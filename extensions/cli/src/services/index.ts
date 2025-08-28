@@ -34,27 +34,28 @@ const resourceMonitoringService = new ResourceMonitoringService();
  * Handles onboarding internally for TUI mode unless skipOnboarding is true
  */
 export async function initializeServices(
-  options: ServiceInitOptions = {},
+  initOptions: ServiceInitOptions = {},
 ): Promise<ServiceInitResult> {
   logger.debug("Initializing service registry");
 
   let wasOnboarded = false;
+  const commandOptions = initOptions.options || {};
 
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
-  if (!options.headless && !options.skipOnboarding) {
+  if (!initOptions.headless && !initOptions.skipOnboarding) {
     const authConfig = loadAuthConfig();
     const onboardingResult = await initializeWithOnboarding(
       authConfig,
-      options.configPath,
-      options.rules,
+      commandOptions.config,
+      commandOptions.rule,
     );
     wasOnboarded = onboardingResult.wasOnboarded;
   }
 
   // Handle ANTHROPIC_API_KEY in headless mode when no config path is provided
   if (
-    options.headless &&
-    !options.configPath &&
+    initOptions.headless &&
+    !commandOptions.config &&
     process.env.ANTHROPIC_API_KEY
   ) {
     const { createOrUpdateConfig } = await import("../onboarding.js");
@@ -65,19 +66,19 @@ export async function initializeServices(
     await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
 
     // Update options to use the created config
-    options.configPath = CONFIG_PATH;
+    commandOptions.config = CONFIG_PATH;
   }
 
   // Initialize mode service with tool permission overrides
-  if (options.toolPermissionOverrides) {
-    const overrides = { ...options.toolPermissionOverrides };
+  if (initOptions.toolPermissionOverrides) {
+    const overrides = { ...initOptions.toolPermissionOverrides };
 
     // Convert mode to boolean flags for ModeService
     const initArgs: Parameters<typeof modeService.initialize>[0] = {
       allow: overrides.allow,
       ask: overrides.ask,
       exclude: overrides.exclude,
-      isHeadless: options.headless,
+      isHeadless: initOptions.headless,
     };
 
     // Only set the boolean flag that corresponds to the mode
@@ -92,7 +93,7 @@ export async function initializeServices(
   } else {
     // Even if no overrides, we need to initialize with defaults
     await modeService.initialize({
-      isHeadless: options.headless,
+      isHeadless: initOptions.headless,
     });
   }
 
@@ -139,8 +140,8 @@ export async function initializeServices(
       let finalAuthState = authState;
       if (authState.authConfig) {
         finalAuthState = await authService.ensureOrganization(
-          options.headless ?? false,
-          options.organizationSlug,
+          initOptions.headless ?? false,
+          commandOptions.org,
         );
         // Update the auth service state in container
         serviceContainer.set(SERVICE_NAMES.AUTH, finalAuthState);
@@ -151,11 +152,11 @@ export async function initializeServices(
       }
 
       // Use current config path from ConfigService state if available (for reloads),
-      // otherwise use initial options.configPath (for first initialization)
+      // otherwise use initial options.config (for first initialization)
       // IMPORTANT: Always prefer explicit --config flag over saved state
       const currentState = configService.getState();
       let configPath =
-        options.configPath ||
+        commandOptions.config ||
         (currentState.configPath === undefined
           ? undefined
           : currentState.configPath);
@@ -177,7 +178,7 @@ export async function initializeServices(
         configPath,
         finalAuthState.organizationId || null,
         apiClientState.apiClient,
-        options.rules,
+        commandOptions,
       );
     },
     [SERVICE_NAMES.AUTH, SERVICE_NAMES.API_CLIENT], // Depends on auth and API client
@@ -210,7 +211,7 @@ export async function initializeServices(
       if (!configState.config) {
         throw new Error("Config not available for MCP service");
       }
-      return mcpService.initialize(configState.config, options.headless);
+      return mcpService.initialize(configState.config, initOptions.headless);
     },
     [SERVICE_NAMES.CONFIG], // Depends on config
   );

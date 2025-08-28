@@ -191,6 +191,8 @@ export abstract class BaseLLM implements ILLM {
   //URI to local block defining this LLM
   sourceFile?: string;
 
+  isFromAutoDetect?: boolean;
+
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
@@ -294,6 +296,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
+    this.isFromAutoDetect = options.isFromAutoDetect;
   }
 
   get contextLength() {
@@ -1139,7 +1142,6 @@ export abstract class BaseLLM implements ILLM {
       modelProvider: this.underlyingProviderName,
       prompt,
       completion,
-      completionOptions,
     };
   }
 

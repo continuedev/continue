@@ -301,6 +301,7 @@ async function unrollAssistantWithConfig(
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       onPremProxyUrl: null,
+      injectBlocks: [],
     },
   );
 

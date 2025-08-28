@@ -1,9 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import type {
-  ChatCompletionChunk,
-  ChatCompletionMessageParam,
-} from "openai/resources/chat/completions.mjs";
+import type { ChatHistoryItem } from "core/index.js";
+import type { ChatCompletionChunk } from "openai/resources/chat/completions.mjs";
 import { vi } from "vitest";
 
 import { toolPermissionManager } from "./permissions/permissionManager.js";
@@ -25,7 +23,7 @@ describe("processStreamingResponse - content preservation", () => {
   let mockAbortController: AbortController;
   let mockModel: ModelConfig;
   let chunks: ChatCompletionChunk[];
-  let chatHistory: ChatCompletionMessageParam[];
+  let chatHistory: ChatHistoryItem[];
 
   // Helper to create a content chunk
   function contentChunk(content: string): ChatCompletionChunk {
@@ -112,7 +110,12 @@ describe("processStreamingResponse - content preservation", () => {
   beforeEach(() => {
     // Reset chunks for each test
     chunks = [];
-    chatHistory = [{ role: "user", content: "Test prompt" }];
+    chatHistory = [
+      {
+        message: { role: "user", content: "Test prompt" },
+        contextItems: [],
+      },
+    ];
 
     // Create a mock LLM API that returns our predefined chunks
     mockLlmApi = {
@@ -549,6 +552,7 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Tool execution successful",
       "Read",
+      "done",
     );
     expect(mockedExecuteToolCall).toHaveBeenCalledWith(preprocessedCalls[0]);
   });
@@ -630,6 +634,7 @@ describe.skip("executeStreamedToolCalls", () => {
     expect(callbacks.onToolResult).toHaveBeenCalledWith(
       "Permission denied by user",
       "Write",
+      "canceled",
     );
     expect(callbacks.onToolPermissionRequest).toHaveBeenCalledWith(
       "Write",

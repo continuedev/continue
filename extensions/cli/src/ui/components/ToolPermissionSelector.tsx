@@ -115,7 +115,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       </Text>
 
       {/* Show preview of what the tool will do */}
-      <Box marginTop={1}>
+      <Box>
         <ToolPreview
           toolName={toolName}
           toolArgs={toolArgs}

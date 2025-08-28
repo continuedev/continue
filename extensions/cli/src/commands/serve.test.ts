@@ -137,7 +137,9 @@ describe("serve command", () => {
     expect(initializeServicesSpy).toHaveBeenCalled();
     expect(initializeServicesSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        organizationSlug: "test-organization-slug",
+        options: expect.objectContaining({
+          org: "test-organization-slug",
+        }),
       }),
     );
 

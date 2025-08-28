@@ -25,8 +25,18 @@
 
         <projectService serviceInterface="com.github.continuedev.continueintellijextension.autocomplete.CompletionService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueCompletionService"/>
-        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        <projectService
+                serviceInterface="com.github.continuedev.continueintellijextension.nextEdit.NextEditService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.ContinueNextEditService"/>
 
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManager"/>
+
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager"/>
+
+        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
         <actionPromoter order="last"
