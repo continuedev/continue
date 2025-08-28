@@ -102,7 +102,7 @@ export class ModelService
                 env: {
                   apiKeyLocation: (selectedModel as any).apiKeyLocation,
                   orgScopeId: organizationId,
-                  proxyUrl: undefined,
+                  proxyUrl: (selectedModel as any).onPremProxyUrl ?? undefined,
                 },
               }
             : {
@@ -301,7 +301,7 @@ export class ModelService
               env: {
                 apiKeyLocation: (selectedModel as any).apiKeyLocation,
                 orgScopeId: organizationId,
-                proxyUrl: undefined,
+                proxyUrl: (selectedModel as any).onPremProxyUrl ?? undefined,
               },
             }
           : {
