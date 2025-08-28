@@ -2,6 +2,10 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { vi } from "vitest";
 
+import type {
+  ToolCallState,
+  ChatHistoryItem,
+} from "../../../../../core/index.js";
 import { ToolPermissionSelector } from "../components/ToolPermissionSelector.js";
 
 describe("TUIChat - Tool Permission Tests", () => {
@@ -306,35 +310,63 @@ describe("TUIChat - Tool Permission Tests", () => {
     const summary = summaryFrame();
     expect(summary).toContain("Cancelled by user");
 
-    // Test the MemoizedMessage component with a tool-result message
-    const message = {
-      role: "assistant",
-      content: "Edit",
-      messageType: "tool-result" as const,
-      toolName: "Edit",
-      toolResult: "Permission denied by user",
+    // Test the MemoizedMessage component with a proper tool result in ChatHistoryItem
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-tool-call",
+      toolCall: {
+        id: "test-tool-call",
+        type: "function",
+        function: {
+          name: "Edit",
+          arguments: JSON.stringify({ file_path: "test.txt" }),
+        },
+      },
+      status: "errored", // Set to errored to show red dot
+      parsedArgs: { file_path: "test.txt" },
+      output: [
+        {
+          name: "tool_result",
+          content: "Permission denied by user",
+          description: "Tool execution denied",
+        },
+      ],
+    };
+
+    const historyItem: ChatHistoryItem = {
+      message: {
+        role: "assistant",
+        content: "",
+        toolCalls: [
+          {
+            id: "test-tool-call",
+            function: {
+              name: "Edit",
+              arguments: JSON.stringify({ file_path: "test.txt" }),
+            },
+            type: "function",
+          },
+        ],
+      },
+      contextItems: [],
+      toolCallStates: [toolCallState],
     };
 
     const { lastFrame: messageFrame } = render(
-      <MemoizedMessage message={message} index={0} />,
+      <MemoizedMessage item={historyItem} index={0} />,
     );
 
     await vi.advanceTimersByTimeAsync(100);
 
     const messageOutput = messageFrame();
 
-    // Verify the red dot appears
+    // Verify the red dot appears (for failed tool call)
     expect(messageOutput).toContain("●");
 
     // Verify the tool name appears
     expect(messageOutput).toContain("Edit");
 
     // The MemoizedMessage component correctly identifies this as a failure
-    // because message.toolResult includes "Permission denied"
+    // because the tool result includes "Permission denied"
     // This causes the red dot to be shown
-
-    // Verify the correct data is passed to the component
-    expect(message.toolResult).toBe("Permission denied by user");
-    expect(message.messageType).toBe("tool-result");
   });
 });

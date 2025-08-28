@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run Continue" type="CompoundRunConfigurationType">
-    <toRun name="Run Extension" type="GradleRunConfiguration" />
+    <toRun name="Run Extension (use TCP)" type="GradleRunConfiguration" />
     <toRun name="Start Core Dev Server" type="NodeJSConfigurationType" />
     <toRun name="IDE Logs" type="ShConfigurationType" />
     <toRun name="Prompt Logs" type="ShConfigurationType" />

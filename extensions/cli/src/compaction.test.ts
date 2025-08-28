@@ -1,18 +1,18 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { describe, it, expect, vi } from "vitest";
+import type { ChatHistoryItem } from "core/index.js";
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   compactChatHistory,
   findCompactionIndex,
   getHistoryForLLM,
-  COMPACTION_MARKER,
 } from "./compaction.js";
-import { streamChatResponse } from "./streamChatResponse.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the streamChatResponse function
-vi.mock("./streamChatResponse.js", () => ({
+vi.mock("./stream/streamChatResponse.js", () => ({
   streamChatResponse: vi.fn(),
 }));
 
@@ -27,82 +27,110 @@ describe("compaction", () => {
 
   describe("findCompactionIndex", () => {
     it("should find compaction marker in chat history", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
         {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          content: `\nThis is a summary`,
         },
         { role: "user", content: "Another message" },
-      ];
+      ]);
+
+      // Add conversationSummary to mark this as a compaction message
+      history[3].conversationSummary = "This is a summary";
 
       const index = findCompactionIndex(history);
       expect(index).toBe(3);
     });
 
     it("should return null if no compaction marker found", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
-      ];
+      ]);
 
       const index = findCompactionIndex(history);
       expect(index).toBeNull();
     });
 
     it("should return first compaction marker when multiple exist", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nFirst summary` },
+        { role: "assistant", content: `\nFirst summary` },
         { role: "user", content: "Hello" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSecond summary` },
-      ];
+        { role: "assistant", content: `\nSecond summary` },
+      ]);
+
+      // Add conversationSummary to mark these as compaction messages
+      history[1].conversationSummary = "First summary";
+      history[3].conversationSummary = "Second summary";
 
       const index = findCompactionIndex(history);
       expect(index).toBe(1);
     });
 
     it("should return null for empty chat history", () => {
-      const history: ChatCompletionMessageParam[] = [];
+      const history = convertToUnifiedHistory([]);
       const index = findCompactionIndex(history);
       expect(index).toBeNull();
     });
 
     it("should not match marker in middle of content", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         {
           role: "assistant",
-          content: `Some text ${COMPACTION_MARKER} in the middle`,
+          content: `Some text  in the middle`,
         },
         { role: "user", content: "Hello" },
-      ];
+      ]);
 
+      // Don't add conversationSummary - this should not be found
       const index = findCompactionIndex(history);
       expect(index).toBeNull();
     });
 
     it("should handle non-string content", () => {
-      const history: ChatCompletionMessageParam[] = [
-        { role: "system", content: "System message" },
-        { role: "assistant", content: null as any },
-        { role: "assistant", content: undefined as any },
-        { role: "assistant", content: 123 as any },
+      // Create history items manually since convertToUnifiedHistory will throw on invalid content
+      const history: ChatHistoryItem[] = [
+        {
+          message: { role: "system", content: "System message" },
+          contextItems: [],
+        },
+        {
+          message: { role: "assistant", content: null as any },
+          contextItems: [],
+        },
+        {
+          message: { role: "assistant", content: undefined as any },
+          contextItems: [],
+        },
+        {
+          message: {
+            role: "assistant",
+            content: `\\nValid compaction`,
+          },
+          contextItems: [],
+          conversationSummary: "Valid compaction",
+        },
       ];
 
       const index = findCompactionIndex(history);
-      expect(index).toBeNull();
+      expect(index).toBe(3);
     });
 
-    it("should only match assistant role messages", () => {
-      const history: ChatCompletionMessageParam[] = [
-        { role: "system", content: `${COMPACTION_MARKER}\nSystem compaction?` },
-        { role: "user", content: `${COMPACTION_MARKER}\nUser compaction?` },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nReal compaction` },
-      ];
+    it("should only match messages with conversationSummary", () => {
+      const history = convertToUnifiedHistory([
+        { role: "system", content: `\nSystem compaction?` },
+        { role: "user", content: `\nUser compaction?` },
+        { role: "assistant", content: `\nReal compaction` },
+      ]);
+
+      // Only add conversationSummary to the assistant message
+      history[2].conversationSummary = "Real compaction";
 
       const index = findCompactionIndex(history);
       expect(index).toBe(2);
@@ -111,137 +139,187 @@ describe("compaction", () => {
 
   describe("getHistoryForLLM", () => {
     it("should return full history when no compaction index", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, null);
       expect(result).toEqual(history);
     });
 
     it("should return compacted history with system message", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
         {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          content: `\nThis is a summary`,
         },
         { role: "user", content: "Another message" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, 3);
       expect(result).toEqual([
-        { role: "system", content: "System message" },
         {
-          role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          message: { role: "system", content: "System message" },
+          contextItems: [],
         },
-        { role: "user", content: "Another message" },
+        {
+          message: {
+            role: "assistant",
+            content: `\nThis is a summary`,
+          },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "Another message" },
+          contextItems: [],
+        },
       ]);
     });
 
     it("should return compacted history without system message when compaction is at index 0", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         {
           role: "assistant",
-          content: `${COMPACTION_MARKER}\nThis is a summary`,
+          content: `\nThis is a summary`,
         },
         { role: "user", content: "Another message" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, 0);
       expect(result).toEqual(history);
     });
 
     it("should return full history when compactionIndex is out of bounds", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, 10);
       expect(result).toEqual(history);
     });
 
     it("should handle negative compactionIndex", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, -1);
       // Negative index with slice means "from the end", so -1 gives us only the last message
       // Since compactionIndex is not > 0, system message is not included
-      expect(result).toEqual([{ role: "user", content: "Hello" }]);
+      expect(result).toEqual([
+        {
+          message: { role: "user", content: "Hello" },
+          contextItems: [],
+        },
+      ]);
     });
 
     it("should handle empty history", () => {
-      const history: ChatCompletionMessageParam[] = [];
+      const history = convertToUnifiedHistory([]);
       const result = getHistoryForLLM(history, 0);
       expect(result).toEqual([]);
     });
 
     it("should handle history with only system message", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, 0);
       expect(result).toEqual(history);
     });
 
     it("should handle history without system message but with compaction", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "First message" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+        { role: "assistant", content: `\nSummary` },
         { role: "user", content: "New message" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, 1);
       expect(result).toEqual([
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-        { role: "user", content: "New message" },
+        {
+          message: {
+            role: "assistant",
+            content: `\nSummary`,
+          },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "New message" },
+          contextItems: [],
+        },
       ]);
     });
 
     it("should include system message when first message is not system", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "First user message" },
         { role: "system", content: "System message in wrong position" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+        { role: "assistant", content: `\nSummary` },
         { role: "user", content: "New message" },
-      ];
+      ]);
 
       // Since system message is not at index 0, it's not included
       const result = getHistoryForLLM(history, 2);
       expect(result).toEqual([
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-        { role: "user", content: "New message" },
+        {
+          message: {
+            role: "assistant",
+            content: `\nSummary`,
+          },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "New message" },
+          contextItems: [],
+        },
       ]);
     });
 
     it("should preserve message order from compaction point", () => {
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System" },
         { role: "user", content: "Old 1" },
         { role: "assistant", content: "Old 2" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
+        { role: "assistant", content: `\nSummary` },
         { role: "user", content: "New 1" },
         { role: "assistant", content: "New 2" },
         { role: "user", content: "New 3" },
-      ];
+      ]);
 
       const result = getHistoryForLLM(history, 3);
       expect(result).toEqual([
-        { role: "system", content: "System" },
-        { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-        { role: "user", content: "New 1" },
-        { role: "assistant", content: "New 2" },
-        { role: "user", content: "New 3" },
+        {
+          message: { role: "system", content: "System" },
+          contextItems: [],
+        },
+        {
+          message: {
+            role: "assistant",
+            content: `\nSummary`,
+          },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "New 1" },
+          contextItems: [],
+        },
+        {
+          message: { role: "assistant", content: "New 2" },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "New 3" },
+          contextItems: [],
+        },
       ]);
     });
   });
@@ -259,22 +337,29 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System message" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi there" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactedHistory).toHaveLength(2);
       expect(result.compactedHistory[0]).toEqual({
-        role: "system",
-        content: "System message",
+        message: {
+          role: "system",
+          content: "System message",
+        },
+        contextItems: [],
       });
       expect(result.compactedHistory[1]).toEqual({
-        role: "assistant",
-        content: `${COMPACTION_MARKER}\n${mockContent}`,
+        message: {
+          role: "assistant",
+          content: mockContent,
+        },
+        contextItems: [],
+        conversationSummary: mockContent,
       });
       expect(result.compactionIndex).toBe(1);
       expect(result.compactionContent).toBe(mockContent);
@@ -295,9 +380,9 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "Hello" },
-      ];
+      ]);
 
       await compactChatHistory(history, mockModel, mockLlmApi, {
         onStreamContent,
@@ -316,9 +401,9 @@ describe("compaction", () => {
 
       mockStreamResponse.mockRejectedValue(mockError);
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "Hello" },
-      ];
+      ]);
 
       await expect(
         compactChatHistory(history, mockModel, mockLlmApi, { onError }),
@@ -339,18 +424,20 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "You are a helpful assistant" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactedHistory).toHaveLength(2);
-      expect(result.compactedHistory[0]).toEqual({
+      expect(result.compactedHistory[0].message).toEqual({
         role: "system",
         content: "You are a helpful assistant",
       });
-      expect(result.compactedHistory[1].content).toContain(COMPACTION_MARKER);
+      expect(result.compactedHistory[1].message.content).toContain(
+        "Summary of system setup",
+      );
     });
 
     it("should handle empty content from stream", async () => {
@@ -364,19 +451,19 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "Hello" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactionContent).toBe("");
-      expect(result.compactedHistory[0].content).toBe(`${COMPACTION_MARKER}\n`);
+      expect(result.compactedHistory[0].message.content).toBe("");
     });
 
     it("should correctly construct prompt for compaction", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
-      let capturedHistory: ChatCompletionMessageParam[] = [];
+      let capturedHistory: ChatHistoryItem[] = [];
 
       mockStreamResponse.mockImplementation(
         async (history, model, api, controller, callbacks) => {
@@ -387,17 +474,17 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi" },
-      ];
+      ]);
 
       await compactChatHistory(history, mockModel, mockLlmApi);
 
       // Should have original history plus the compaction prompt
       expect(capturedHistory).toHaveLength(4);
-      expect(capturedHistory[3]).toEqual({
+      expect(capturedHistory[3].message).toEqual({
         role: "user",
         content: expect.stringContaining("provide a concise summary"),
       });
@@ -415,13 +502,13 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System" },
         { role: "user", content: "Do something" },
         { role: "assistant", content: "I'll help", tool_calls: [{} as any] },
         { role: "tool", content: "Tool result", tool_call_id: "123" },
         { role: "assistant", content: "Done" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
@@ -441,13 +528,19 @@ describe("compaction", () => {
       );
 
       // Create a very long history
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "system", content: "System" },
-      ];
+      ]);
 
       for (let i = 0; i < 100; i++) {
-        history.push({ role: "user", content: `User message ${i}` });
-        history.push({ role: "assistant", content: `Assistant response ${i}` });
+        history.push({
+          message: { role: "user", content: `User message ${i}` },
+          contextItems: [],
+        });
+        history.push({
+          message: { role: "assistant", content: `Assistant response ${i}` },
+          contextItems: [],
+        });
       }
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
@@ -468,15 +561,15 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactedHistory).toHaveLength(1); // Only compaction
-      expect(result.compactedHistory[0].role).toBe("assistant");
+      expect(result.compactedHistory[0].message.role).toBe("assistant");
       expect(result.compactionIndex).toBe(0);
     });
   });
@@ -484,23 +577,23 @@ describe("compaction", () => {
   describe("property-based tests", () => {
     it("getHistoryForLLM should always return a subset of the original history", () => {
       const testCases: Array<{
-        history: ChatCompletionMessageParam[];
+        history: ChatHistoryItem[];
         compactionIndex: number | null;
       }> = [
         {
-          history: [
+          history: convertToUnifiedHistory([
             { role: "system", content: "System" },
             { role: "user", content: "User 1" },
             { role: "assistant", content: "Assistant 1" },
-          ],
+          ]),
           compactionIndex: 1,
         },
         {
-          history: [
+          history: convertToUnifiedHistory([
             { role: "user", content: "User 1" },
             { role: "assistant", content: "Assistant 1" },
             { role: "user", content: "User 2" },
-          ],
+          ]),
           compactionIndex: 2,
         },
         {
@@ -523,27 +616,30 @@ describe("compaction", () => {
     });
 
     it("getHistoryForLLM should always include system message if it exists at index 0", () => {
-      const systemMessage: ChatCompletionMessageParam = {
-        role: "system",
-        content: "System",
+      const systemMessage: ChatHistoryItem = {
+        message: {
+          role: "system",
+          content: "System",
+        },
+        contextItems: [],
       };
       const testCases: Array<{
-        history: ChatCompletionMessageParam[];
+        history: ChatHistoryItem[];
         compactionIndex: number | null;
       }> = [
         {
-          history: [
-            systemMessage,
+          history: convertToUnifiedHistory([
+            { role: "system", content: "System" },
             { role: "user", content: "User 1" },
-            { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-          ],
+            { role: "assistant", content: `\nSummary` },
+          ]),
           compactionIndex: 2,
         },
         {
-          history: [
-            systemMessage,
-            { role: "assistant", content: `${COMPACTION_MARKER}\nSummary` },
-          ],
+          history: convertToUnifiedHistory([
+            { role: "system", content: "System" },
+            { role: "assistant", content: `\nSummary` },
+          ]),
           compactionIndex: 1,
         },
       ];
@@ -552,11 +648,11 @@ describe("compaction", () => {
         const result = getHistoryForLLM(history, compactionIndex);
 
         if (
-          history[0]?.role === "system" &&
+          history[0]?.message?.role === "system" &&
           compactionIndex !== null &&
           compactionIndex > 0
         ) {
-          expect(result[0]).toEqual(systemMessage);
+          expect(result[0]).toEqual(history[0]);
         }
       });
     });
@@ -572,19 +668,19 @@ describe("compaction", () => {
         },
       );
 
-      const testHistories: ChatCompletionMessageParam[][] = [
-        [
+      const testHistories: ChatHistoryItem[][] = [
+        convertToUnifiedHistory([
           { role: "system", content: "System" },
           { role: "user", content: "User 1" },
           { role: "assistant", content: "Assistant 1" },
           { role: "user", content: "User 2" },
           { role: "assistant", content: "Assistant 2" },
-        ],
-        [
+        ]),
+        convertToUnifiedHistory([
           { role: "user", content: "User 1" },
           { role: "assistant", content: "Assistant 1" },
           { role: "user", content: "User 2" },
-        ],
+        ]),
       ];
 
       for (const history of testHistories) {
@@ -599,7 +695,7 @@ describe("compaction", () => {
   });
 
   describe("invariant tests", () => {
-    it("compactionIndex should always point to a message with COMPACTION_MARKER", async () => {
+    it("compactionIndex should always point to a message with conversationSummary", async () => {
       const mockStreamResponse = vi.mocked(streamChatResponse);
 
       mockStreamResponse.mockImplementation(
@@ -610,29 +706,26 @@ describe("compaction", () => {
         },
       );
 
-      const histories: ChatCompletionMessageParam[][] = [
-        [
+      const histories: ChatHistoryItem[][] = [
+        convertToUnifiedHistory([
           { role: "system", content: "System" },
           { role: "user", content: "Hello" },
-        ],
-        [
+        ]),
+        convertToUnifiedHistory([
           { role: "user", content: "Hello" },
           { role: "assistant", content: "Hi" },
-        ],
-        [{ role: "system", content: "System" }],
+        ]),
+        convertToUnifiedHistory([{ role: "system", content: "System" }]),
       ];
 
       for (const history of histories) {
         const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-        // The message at compactionIndex should contain the marker
+        // The message at compactionIndex should have a conversationSummary
         const compactionMessage =
           result.compactedHistory[result.compactionIndex];
-        expect(compactionMessage.role).toBe("assistant");
-        expect(
-          typeof compactionMessage.content === "string" &&
-            compactionMessage.content.startsWith(COMPACTION_MARKER),
-        ).toBe(true);
+        expect(compactionMessage.message.role).toBe("assistant");
+        expect(compactionMessage.conversationSummary).toBeDefined();
       }
     });
 
@@ -647,20 +740,16 @@ describe("compaction", () => {
         },
       );
 
-      const systemMessage: ChatCompletionMessageParam = {
-        role: "system",
-        content: "You are helpful",
-      };
-      const history: ChatCompletionMessageParam[] = [
-        systemMessage,
+      const history = convertToUnifiedHistory([
+        { role: "system", content: "You are helpful" },
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       // System message should still be at index 0
-      expect(result.compactedHistory[0]).toEqual(systemMessage);
+      expect(result.compactedHistory[0]).toEqual(history[0]);
     });
 
     it("findCompactionIndex should be consistent with compactChatHistory result", async () => {
@@ -674,10 +763,10 @@ describe("compaction", () => {
         },
       );
 
-      const history: ChatCompletionMessageParam[] = [
+      const history = convertToUnifiedHistory([
         { role: "user", content: "Hello" },
         { role: "assistant", content: "Hi" },
-      ];
+      ]);
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
