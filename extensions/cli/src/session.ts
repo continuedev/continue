@@ -33,7 +33,8 @@ function getSessionDir(): string {
   }
 
   // Use CONTINUE_GLOBAL_DIR if set (for testing)
-  const continueHome = process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+  const continueHome =
+    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
   const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist
@@ -70,10 +71,10 @@ class SessionManager {
   getCurrentSession(): Session {
     if (!this.currentSession) {
       // Use test session ID for testing consistency
-      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID ? 
-        process.env.CONTINUE_CLI_TEST_SESSION_ID : 
-        uuidv4();
-      
+      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID
+        ? process.env.CONTINUE_CLI_TEST_SESSION_ID
+        : uuidv4();
+
       this.currentSession = {
         sessionId,
         title: DEFAULT_SESSION_TITLE,

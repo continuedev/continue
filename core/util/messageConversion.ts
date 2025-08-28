@@ -222,10 +222,13 @@ function handleToolResult(
   if (!toolCall) return;
 
   // Add tool result as context to the previous assistant message
-  const lastAssistantIndex = historyItems.findLastIndex(
-    (item) => item.message.role === "assistant",
-  );
-
+  let lastAssistantIndex = -1;
+  for (let i = historyItems.length - 1; i >= 0; i--) {
+    if (historyItems[i].message.role === "assistant") {
+      lastAssistantIndex = i;
+      break;
+    }
+  }
   if (lastAssistantIndex < 0) return;
   if (!historyItems[lastAssistantIndex].toolCallStates) return;
 
