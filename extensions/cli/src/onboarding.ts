@@ -92,10 +92,11 @@ async function runOnboardingFlow(
     return { ...result, wasOnboarded: false };
   }
 
-  // Step 3: Present user with two options
+  // Step 3: Present user with three options
   console.log(chalk.yellow("How do you want to get started?"));
   console.log(chalk.white("1. ⏩ Log in with Continue"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
+  console.log(chalk.white("3. ☁️  Use AWS credentials"));
 
   const choice = await questionWithChoices(
     chalk.yellow("\nEnter choice (1): "),
@@ -128,8 +129,15 @@ async function runOnboardingFlow(
 
     const result = await initialize(authConfig, CONFIG_PATH);
     return { ...result, wasOnboarded: true };
+  } else if (choice === "3") {
+    console.log(chalk.blue("✓ Using AWS credentials"));
+
+    const result = await initialize(authConfig, CONFIG_PATH);
+    return { ...result, wasOnboarded: true };
   } else {
-    throw new Error("Invalid choice. Please select 1 or 2.");
+    throw new Error(
+      `Invalid choice. Please select "1, 2, or 3"`,
+    );
   }
 }
 
