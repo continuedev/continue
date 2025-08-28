@@ -85,6 +85,9 @@ export class TokensBatchingService {
     this.flushTimer = setInterval(() => {
       this.flushAllBatches();
     }, this.FLUSH_INTERVAL_MS);
+    // Allow the process to exit if this timer is the only thing keeping it alive
+    // This prevents test hangs and allows graceful shutdown
+    this.flushTimer.unref();
   }
 
   private flushAllBatches(): void {
