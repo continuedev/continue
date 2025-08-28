@@ -1,3 +1,4 @@
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { useContext, useEffect } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -19,7 +20,6 @@ import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
 import { TtsActiveToolbar } from "./TtsActiveToolbar";
-import { BuiltInToolNames } from "core/tools/builtIn";
 
 // Keyboard shortcut detection utilities
 const isExecuteToolCallShortcut = (event: KeyboardEvent) => {
@@ -39,7 +39,10 @@ const isCancelToolCallShortcut = (
 
 // Check if a tool call is a terminal command
 const isTerminalCommand = (toolCallState: any) => {
-  return BuiltInToolNames.RunTerminalCommand;
+  return (
+    toolCallState?.toolCall?.function?.name ===
+    BuiltInToolNames.RunTerminalCommand
+  );
 };
 
 export function LumpToolbar() {
@@ -170,16 +173,18 @@ export function LumpToolbar() {
     return <TtsActiveToolbar />;
   }
 
-  // Show streaming toolbar for any streaming activity
-  if (isStreaming || hasRunningTerminalCommand) {
+  // Only show terminal streaming for actual terminal commands
+  if (hasRunningTerminalCommand) {
     const count = runningTerminalCalls.length;
-    const stopText = hasRunningTerminalCommand
-      ? `Stop Terminal${count > 1 ? ` (${count})` : ""}`
-      : "Stop";
-
+    const stopText = `Stop Terminal${count > 1 ? ` (${count})` : ""}`;
     return (
       <StreamingToolbar onStop={handleStopAction} displayText={stopText} />
     );
+  }
+
+  // Regular streaming (non-terminal)
+  if (isStreaming) {
+    return <StreamingToolbar onStop={() => dispatch(cancelStream())} />;
   }
 
   if (pendingToolCalls.length > 0) {
