@@ -135,7 +135,7 @@ export function FindAndReplaceDisplay({
           {statusIcon}
           <ChevronDownIcon
             data-testid="toggle-find-and-replace-diff"
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer transition-all hover:brightness-125 ${
+            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
               showContent ? "rotate-0" : "-rotate-90"
             }`}
           />

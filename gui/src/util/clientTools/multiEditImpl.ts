@@ -11,15 +11,8 @@ import {
   validateSingleEdit,
 } from "./findAndReplaceUtils";
 
-export const multiEditImpl: ClientToolImpl = async (
-  args,
-  toolCallId,
-  extras,
-) => {
-  const { filepath, edits, editingFileContents } = args;
-
-  const streamId = uuid();
-
+export function validateMultiEditArgs(args: Record<string, any>) {
+  const { filepath, edits } = args;
   // Validate arguments
   if (!filepath) {
     throw new Error("filepath is required");
@@ -29,15 +22,31 @@ export const multiEditImpl: ClientToolImpl = async (
       "edits array is required and must contain at least one edit",
     );
   }
-
   // Validate each edit operation
   for (let i = 0; i < edits.length; i++) {
     const edit = edits[i];
     validateSingleEdit(edit.old_string, edit.new_string, i);
   }
 
-  // Check if this is creating a new file (first edit has empty old_string)
   const isCreatingNewFile = validateCreatingForMultiEdit(edits);
+
+  return {
+    isCreatingNewFile,
+    filepath,
+    edits,
+  };
+}
+
+export const multiEditImpl: ClientToolImpl = async (
+  args,
+  toolCallId,
+  extras,
+) => {
+  const { filepath, edits, editingFileContents, isCreatingNewFile } = args;
+
+  const streamId = uuid();
+
+  // Check if this is creating a new file (first edit has empty old_string)
   const resolvedUri = await resolveRelativePathInDir(
     filepath,
     extras.ideMessenger.ide,
