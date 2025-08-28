@@ -7,6 +7,9 @@ export interface ProcessedItem {
   outcome: NextEditOutcome; // Result from the model
 }
 
+/**
+ * Keeps a queue of the broken down diffs from a changed editable range, as determined in core/nextEdit/diff.ts
+ */
 export class PrefetchQueue {
   private static instance: PrefetchQueue | null = null;
 
