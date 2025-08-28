@@ -339,7 +339,7 @@ export const streamNormalInput = createAsyncThunk<
       policies.forEach((policy, index) => {
         const toolCallId = generatingToolCalls[index].toolCallId;
         const toolCall = generatingToolCalls[index].toolCall;
-        
+
         if (policy === "disabled") {
           // Get the actual command from parsed arguments if it's runTerminalCommand
           let command = toolCall.function.name;
