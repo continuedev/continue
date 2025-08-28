@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleAutoCompaction } from "./streamChatResponse.autoCompaction.js";
 
 // Mock dependencies
-vi.mock("./compaction.js", () => ({
+vi.mock("../compaction.js", () => ({
   compactChatHistory: vi.fn(),
 }));
 
-vi.mock("./session.js", () => ({
+vi.mock("../session.js", () => ({
   createSession: vi.fn((history) => ({
     sessionId: "test",
     title: "Test",
@@ -20,16 +20,16 @@ vi.mock("./session.js", () => ({
   updateSessionHistory: vi.fn(),
 }));
 
-vi.mock("./util/tokenizer.js", () => ({
+vi.mock("../util/tokenizer.js", () => ({
   shouldAutoCompact: vi.fn(),
   getAutoCompactMessage: vi.fn(),
 }));
 
-vi.mock("./util/formatError.js", () => ({
+vi.mock("../util/formatError.js", () => ({
   formatError: vi.fn((error) => error.message || String(error)),
 }));
 
-vi.mock("./util/logger.js", () => ({
+vi.mock("../util/logger.js", () => ({
   logger: {
     info: vi.fn(),
     debug: vi.fn(),
@@ -70,7 +70,8 @@ describe("handleAutoCompaction", () => {
 
   it("should return original history when auto-compaction is not needed", async () => {
     const { shouldAutoCompact } = await import("../util/tokenizer.js");
-    vi.mocked(shouldAutoCompact).mockReturnValue(false);
+    const mockedShouldAutoCompact = shouldAutoCompact as any;
+    mockedShouldAutoCompact.mockReturnValue(false);
 
     const result = await handleAutoCompaction(
       mockChatHistory,
@@ -113,7 +114,8 @@ describe("handleAutoCompaction", () => {
       compactionContent: "Conversation summary...",
     };
 
-    vi.mocked(compactChatHistory).mockResolvedValue(mockCompactionResult);
+    const mockedCompactChatHistory = compactChatHistory as any;
+    mockedCompactChatHistory.mockResolvedValue(mockCompactionResult);
 
     const mockCallbacks = {
       onSystemMessage: vi.fn(),
@@ -215,7 +217,8 @@ describe("handleAutoCompaction", () => {
       compactionContent: "Summary",
     };
 
-    vi.mocked(compactChatHistory).mockResolvedValue(mockCompactionResult);
+    const mockedCompactChatHistory = compactChatHistory as any;
+    mockedCompactChatHistory.mockResolvedValue(mockCompactionResult);
 
     const mockCallbacks = {
       onSystemMessage: vi.fn(),

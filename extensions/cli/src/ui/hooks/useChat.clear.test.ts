@@ -19,6 +19,9 @@ describe("useChat clear command", () => {
   let mockOnClear: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    // Clear all mocks to prevent call history leaking between tests
+    vi.clearAllMocks();
+
     mockSetChatHistory = vi.fn();
     mockExit = vi.fn();
     mockOnClear = vi.fn();

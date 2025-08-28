@@ -12,7 +12,7 @@ import {
 import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the streamChatResponse function
-vi.mock("./streamChatResponse.js", () => ({
+vi.mock("./stream/streamChatResponse.js", () => ({
   streamChatResponse: vi.fn(),
 }));
 

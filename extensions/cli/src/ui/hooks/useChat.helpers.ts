@@ -5,6 +5,7 @@ import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
 import { compactChatHistory } from "../../compaction.js";
+import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
 import {
   loadSession,
   updateSessionHistory,
@@ -422,7 +423,7 @@ export async function generateSessionTitle(
   currentSessionTitle?: string,
 ): Promise<string | undefined> {
   // Only generate title for untitled sessions
-  if (currentSessionTitle && currentSessionTitle !== "Untitled Session") {
+  if (currentSessionTitle && currentSessionTitle !== DEFAULT_SESSION_TITLE) {
     return undefined;
   }
 

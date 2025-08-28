@@ -6,10 +6,11 @@ import type { ChatHistoryItem, Session, SessionMetadata } from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
+import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
+import { logger } from "./util/logger.js";
+
 // Re-export SessionMetadata for external consumers
 export type { SessionMetadata };
-
-import { logger } from "./util/logger.js";
 
 // Note: We now use UUID-based session IDs instead of terminal-based IDs.
 // Each new chat session gets a unique UUID.
@@ -69,7 +70,7 @@ class SessionManager {
     if (!this.currentSession) {
       this.currentSession = {
         sessionId: uuidv4(),
-        title: "Untitled Session",
+        title: DEFAULT_SESSION_TITLE,
         workspaceDirectory: process.cwd(),
         history: [],
       };
@@ -187,7 +188,7 @@ export function loadSession(): Session | null {
 export function createSession(history: ChatHistoryItem[] = []): Session {
   const session: Session = {
     sessionId: uuidv4(),
-    title: "Untitled Session",
+    title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
   };
@@ -265,7 +266,7 @@ function getSessionMetadataWithPreview(
 
     return {
       sessionId: sessionData.sessionId,
-      title: sessionData.title || "Untitled Session",
+      title: sessionData.title || DEFAULT_SESSION_TITLE,
       dateCreated: stats.birthtime.toISOString(),
       workspaceDirectory: sessionData.workspaceDirectory || "",
       firstUserMessage,
@@ -360,7 +361,7 @@ export function startNewSession(history: ChatHistoryItem[] = []): Session {
   // Create a new session with a new sessionId
   const newSession: Session = {
     sessionId: uuidv4(),
-    title: "Untitled Session",
+    title: DEFAULT_SESSION_TITLE,
     workspaceDirectory: process.cwd(),
     history,
   };

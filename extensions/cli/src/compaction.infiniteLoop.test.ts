@@ -7,7 +7,7 @@ import { compactChatHistory } from "./compaction.js";
 import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the dependencies
-vi.mock("./streamChatResponse.js", () => ({
+vi.mock("./stream/streamChatResponse.js", () => ({
   streamChatResponse: vi.fn(),
 }));
 
