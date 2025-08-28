@@ -107,7 +107,9 @@ describe("Many sessions created", () => {
 
     const sessions = historyManager.list({ limit: limit });
     // Sessions are now reversed, so newest (99) comes first
-    const sessionIds = Array.from({ length: limit }, (_, i) => (99 - i).toString());
+    const sessionIds = Array.from({ length: limit }, (_, i) =>
+      (99 - i).toString(),
+    );
 
     const isSessionIdInList = (sessionId: string) =>
       sessions.some((session) => session.sessionId === sessionId);
