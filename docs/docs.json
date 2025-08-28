@@ -248,9 +248,9 @@
             "icon": "code",
             "pages": [
               "reference",
-              "reference/json-reference",
               "reference/yaml-migration",
               "reference/continue-mcp",
+              "reference/json-reference",
               "reference/deprecated-context-providers",
               "reference/deprecated-codebase",
               "reference/deprecated-docs"
