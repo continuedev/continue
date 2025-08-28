@@ -1,22 +1,23 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { AppliedRule } from "core";
 import { getLastNPathParts } from "core/util/uri";
-import { ComponentType, useContext, useMemo, useState } from "react";
+import { ComponentType, useContext, useMemo } from "react";
 import ToggleDiv from "../../ToggleDiv";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { DEFAULT_SYSTEM_MESSAGES_URL } from "core/llm/defaultSystemMessages";
+import { RuleWithSource } from "core";
+import { openRules } from "../Lump/sections/RulesSection";
 
 interface RulesPeekProps {
-  appliedRules?: AppliedRule[];
+  appliedRules?: Omit<RuleWithSource, "rule">[];
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 interface RulesPeekItemProps {
-  rule: AppliedRule;
+  rule: Omit<RuleWithSource, "rule">;
 }
 
 // Convert technical source to user-friendly text
-const getSourceLabel = (rule: AppliedRule): string => {
+const getSourceLabel = (rule: Omit<RuleWithSource, "rule">): string => {
   switch (rule.source) {
     case "default-chat":
       return "Default Chat";
@@ -47,37 +48,11 @@ const getSourceLabel = (rule: AppliedRule): string => {
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const isGlobal = rule.alwaysApply ?? !rule.globs;
-
-  const ideMessenger = useContext(IdeMessengerContext);
-  const handleOpen = async () => {
-    if (rule.slug) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: `${rule.slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else if (rule.ruleFile) {
-      ideMessenger.post("openFile", {
-        path: rule.ruleFile,
-      });
-    } else if (
-      rule.source === "default-chat" ||
-      rule.source === "default-plan" ||
-      rule.source === "default-agent"
-    ) {
-      ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
-    } else {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-        element: { sourceFile: (rule as any).sourceFile },
-      });
-    }
-  };
-
   return (
     <div
       className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10`}
       data-testid="rules-peek-item"
-      onClick={handleOpen}
+      onClick={() => openRules(rule)}
     >
       <div className="flex w-full items-center">
         {isGlobal ? (

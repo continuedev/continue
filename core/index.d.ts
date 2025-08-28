@@ -497,19 +497,8 @@ export interface ChatHistoryItem {
   toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
-  appliedRules?: AppliedRule[];
+  appliedRules?: Omit<RuleWithSource, "rule">[];
   conversationSummary?: string;
-}
-
-export interface AppliedRule {
-  name?: string;
-  slug?: string;
-  source: RuleSource;
-  globs?: string | string[];
-  regex?: string | string[];
-  description?: string;
-  ruleFile?: string;
-  alwaysApply?: boolean;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {

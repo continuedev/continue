@@ -503,7 +503,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: AppliedRule[];
+        appliedRules: ChatHistoryItem["appliedRules"];
       }>,
     ) => {
       if (state.history[payload.index]) {

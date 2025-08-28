@@ -29,10 +29,33 @@ interface RuleCardProps {
   rule: RuleWithSource;
 }
 
+export const openRules = async (rule: Omit<RuleWithSource, "rule">) => {
+  const ideMessenger = useContext(IdeMessengerContext);
+  if (rule.slug) {
+    void ideMessenger.request("controlPlane/openUrl", {
+      path: `${rule.slug}/new-version`,
+      orgSlug: undefined,
+    });
+  } else if (rule.ruleFile) {
+    ideMessenger.post("openFile", {
+      path: rule.ruleFile,
+    });
+  } else if (
+    rule.source === "default-chat" ||
+    rule.source === "default-plan" ||
+    rule.source === "default-agent"
+  ) {
+    ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
+  } else {
+    ideMessenger.post("config/openProfile", {
+      profileId: undefined,
+      element: { sourceFile: (rule as any).sourceFile },
+    });
+  }
+};
+
 const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
-  const mode = useAppSelector((store) => store.session.mode);
   const policy = useAppSelector((state) =>
     rule.name
       ? state.ui.ruleSettings[rule.name] || DEFAULT_RULE_SETTING
@@ -41,29 +64,6 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
   const isDisabled = policy === "off";
 
-  const handleOpen = async () => {
-    if (rule.slug) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: `${rule.slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else if (rule.ruleFile) {
-      ideMessenger.post("openFile", {
-        path: rule.ruleFile,
-      });
-    } else if (
-      rule.source === "default-chat" ||
-      rule.source === "default-plan" ||
-      rule.source === "default-agent"
-    ) {
-      ideMessenger.post("openUrl", DEFAULT_SYSTEM_MESSAGES_URL);
-    } else {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-        element: { sourceFile: (rule as any).sourceFile },
-      });
-    }
-  };
 
   const handleTogglePolicy = () => {
     if (rule.name) {
@@ -139,12 +139,12 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
                 <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>{" "}
               {rule.source === "default-chat" ||
-              rule.source === "default-agent" ? (
-                <HeaderButtonWithToolTip onClick={handleOpen} text="View">
+                rule.source === "default-agent" ? (
+                <HeaderButtonWithToolTip onClick={() => openRules(rule)} text="View">
                   <EyeIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               ) : (
-                <HeaderButtonWithToolTip onClick={handleOpen} text="Edit">
+                <HeaderButtonWithToolTip onClick={() => openRules(rule)} text="Edit">
                   <PencilIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               )}
