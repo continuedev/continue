@@ -28,6 +28,18 @@
             "icon": "star",
             "pages": [
               {
+                "group": "Agent",
+                "icon": "robot",
+                "pages": [
+                  "features/agent/quick-start",
+                  "features/agent/how-it-works",
+                  "features/agent/plan-mode",
+                  "features/agent/model-setup",
+                  "features/agent/how-to-customize",
+                  "features/agent/context-selection"
+                ]
+              },
+              {
                 "group": "Chat",
                 "icon": "messages",
                 "pages": [
@@ -59,18 +71,6 @@
                   "features/edit/model-setup",
                   "features/edit/how-to-customize",
                   "features/edit/context-selection"
-                ]
-              },
-              {
-                "group": "Agent",
-                "icon": "robot",
-                "pages": [
-                  "features/agent/quick-start",
-                  "features/agent/how-it-works",
-                  "features/agent/plan-mode",
-                  "features/agent/model-setup",
-                  "features/agent/how-to-customize",
-                  "features/agent/context-selection"
                 ]
               }
             ]
