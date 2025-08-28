@@ -5,8 +5,8 @@ import type {
   ToolStatus,
 } from "core/index.js";
 
-import { streamChatResponse } from "../streamChatResponse.js";
-import { StreamCallbacks } from "../streamChatResponse.types.js";
+import { streamChatResponse } from "../stream/streamChatResponse.js";
+import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
 
 // Modified version of streamChatResponse that supports interruption
 export async function streamChatResponseWithInterruption(

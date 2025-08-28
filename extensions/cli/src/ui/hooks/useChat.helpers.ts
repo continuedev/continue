@@ -4,9 +4,13 @@ import type { ChatHistoryItem, Session } from "core/index.js";
 import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
-import { initializeChatHistory } from "../../commands/chat.js";
 import { compactChatHistory } from "../../compaction.js";
-import { loadSession, updateSessionHistory } from "../../session.js";
+import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
+import {
+  loadSession,
+  updateSessionHistory,
+  startNewSession,
+} from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
@@ -16,11 +20,11 @@ import { shouldAutoCompact } from "../../util/tokenizer.js";
 import { SlashCommandResult } from "./useChat.types.js";
 
 /**
- * Initialize chat history with proper system message
+ * Initialize chat history
  */
 export async function initChatHistory(
   resume?: boolean,
-  additionalRules?: string[],
+  _additionalRules?: string[],
 ): Promise<ChatHistoryItem[]> {
   if (resume) {
     const savedSession = loadSession();
@@ -29,11 +33,8 @@ export async function initChatHistory(
     }
   }
 
-  const history = await initializeChatHistory({
-    resume,
-    rule: additionalRules,
-  });
-  return history;
+  // Start with empty history - system message will be injected when needed
+  return [];
 }
 
 /**
@@ -177,6 +178,10 @@ export function processSlashCommandResult({
       (item) => item.message.role === "system",
     );
     const newHistory = systemMessage ? [systemMessage] : [];
+
+    // Start a new session with a new sessionId
+    startNewSession(newHistory);
+
     setChatHistory(newHistory);
 
     // Reset intro message state to show it again after clearing
@@ -405,5 +410,43 @@ export async function handleAutoCompaction({
       currentChatHistory: chatHistory,
       currentCompactionIndex: null,
     };
+  }
+}
+
+/**
+ * Generate a title for the session based on the first assistant response
+ */
+export async function generateSessionTitle(
+  assistantResponse: string,
+  llmApi: any,
+  model: any,
+  currentSessionTitle?: string,
+): Promise<string | undefined> {
+  // Only generate title for untitled sessions
+  if (currentSessionTitle && currentSessionTitle !== DEFAULT_SESSION_TITLE) {
+    return undefined;
+  }
+
+  if (!assistantResponse || !llmApi || !model) {
+    return undefined;
+  }
+
+  try {
+    const { ChatDescriber } = await import("core/util/chatDescriber.js");
+    const generatedTitle = await ChatDescriber.describeWithBaseLlmApi(
+      llmApi,
+      model,
+      assistantResponse,
+    );
+
+    logger.debug("Generated session title", {
+      original: currentSessionTitle,
+      generated: generatedTitle,
+    });
+
+    return generatedTitle;
+  } catch (error) {
+    logger.error("Failed to generate session title:", error);
+    return undefined;
   }
 }

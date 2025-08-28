@@ -18,6 +18,7 @@ import {
   getConfigUri,
   getOrganizationId,
   isEnvironmentAuthConfig,
+  loadAuthConfig,
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
@@ -358,7 +359,7 @@ async function loadAssistantSlug(
         uriType: "slug",
         fullSlug: { ownerSlug, packageSlug, versionSlug: "latest" },
       },
-      null,
+      getAccessToken(loadAuthConfig()),
       organizationId,
       apiClient,
     );

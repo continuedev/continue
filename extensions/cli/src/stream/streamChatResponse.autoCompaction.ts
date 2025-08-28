@@ -3,11 +3,11 @@ import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import React from "react";
 
-import { compactChatHistory } from "./compaction.js";
-import { updateSessionHistory } from "./session.js";
-import { formatError } from "./util/formatError.js";
-import { logger } from "./util/logger.js";
-import { getAutoCompactMessage, shouldAutoCompact } from "./util/tokenizer.js";
+import { compactChatHistory } from "../compaction.js";
+import { updateSessionHistory } from "../session.js";
+import { formatError } from "../util/formatError.js";
+import { logger } from "../util/logger.js";
+import { getAutoCompactMessage, shouldAutoCompact } from "../util/tokenizer.js";
 
 interface AutoCompactionCallbacks {
   // For streaming mode

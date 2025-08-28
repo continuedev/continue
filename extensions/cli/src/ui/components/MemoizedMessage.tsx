@@ -1,8 +1,9 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
 
+import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
+
 import type { ChatHistoryItem } from "../../../../../core/index.js";
-import { formatToolCall } from "../../tools/index.js";
 import { MarkdownRenderer } from "../MarkdownRenderer.js";
 import { ToolResultSummary } from "../ToolResultSummary.js";
 
@@ -92,7 +93,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
                   </Text>
                   <Text color="white">
                     {" "}
-                    {formatToolCall(toolName, toolArgs)}
+                    <ToolCallTitle toolName={toolName} args={toolArgs} />
                   </Text>
                 </Box>
 

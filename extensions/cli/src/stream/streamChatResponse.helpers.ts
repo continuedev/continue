@@ -2,21 +2,22 @@
 
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
-import { checkToolPermission } from "./permissions/permissionChecker.js";
-import { toolPermissionManager } from "./permissions/permissionManager.js";
-import { ToolCallRequest } from "./permissions/types.js";
-import { StreamCallbacks } from "./streamChatResponse.types.js";
-import { telemetryService } from "./telemetry/telemetryService.js";
-import { calculateTokenCost } from "./telemetry/utils.js";
+import { checkToolPermission } from "../permissions/permissionChecker.js";
+import { toolPermissionManager } from "../permissions/permissionManager.js";
+import { ToolCallRequest } from "../permissions/types.js";
+import { telemetryService } from "../telemetry/telemetryService.js";
+import { calculateTokenCost } from "../telemetry/utils.js";
 import {
   executeToolCall,
   getAllBuiltinTools,
   getAvailableTools,
   Tool,
   validateToolCallArgsPresent,
-} from "./tools/index.js";
-import { PreprocessedToolCall, ToolCall } from "./tools/types.js";
-import { logger } from "./util/logger.js";
+} from "../tools/index.js";
+import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
+import { logger } from "../util/logger.js";
+
+import { StreamCallbacks } from "./streamChatResponse.types.js";
 
 // Helper function to handle permission denied
 export function handlePermissionDenied(

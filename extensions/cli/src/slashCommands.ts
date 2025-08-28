@@ -11,6 +11,7 @@ import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getSessionFilePath } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
+import { getVersion } from "./version.js";
 
 type CommandHandler = (
   args: string[],
@@ -102,22 +103,33 @@ async function handleInfo() {
 
   const infoLines = [];
 
+  // Version and working directory info
+  const version = getVersion();
+  const cwd = process.cwd();
+
+  infoLines.push(chalk.white("CLI Information:"));
+  infoLines.push(`  Version: ${chalk.green(version)}`);
+  infoLines.push(`  Working Directory: ${chalk.blue(cwd)}`);
+
   // Auth info
   if (isAuthenticated()) {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
       const email = config.userEmail || config.userId;
       const org = "(no org)"; // Organization info not available in AuthenticatedConfig
+      infoLines.push("");
       infoLines.push(chalk.white("Authentication:"));
       infoLines.push(`  Email: ${chalk.green(email)}`);
       infoLines.push(`  Organization: ${chalk.cyan(org)}`);
     } else {
+      infoLines.push("");
       infoLines.push(chalk.white("Authentication:"));
       infoLines.push(
         `  ${chalk.yellow("Authenticated via environment variable")}`,
       );
     }
   } else {
+    infoLines.push("");
     infoLines.push(chalk.white("Authentication:"));
     infoLines.push(`  ${chalk.red("Not logged in")}`);
   }
@@ -134,6 +146,18 @@ async function handleInfo() {
     }
     if (configState.configPath) {
       infoLines.push(`  Path: ${chalk.blue(configState.configPath)}`);
+    }
+
+    // Add current model info
+    try {
+      const modelInfo = services.model?.getModelInfo();
+      if (modelInfo) {
+        infoLines.push(`  Model: ${chalk.cyan(modelInfo.name)}`);
+      } else {
+        infoLines.push(`  Model: ${chalk.red("Not available")}`);
+      }
+    } catch {
+      infoLines.push(`  Model: ${chalk.red("Error retrieving model info")}`);
     }
   } catch {
     infoLines.push("");

@@ -203,6 +203,8 @@ export function useChat({
       const streamCallbacks = createStreamCallbacks({
         setChatHistory,
         setActivePermissionRequest,
+        llmApi,
+        model,
       });
 
       // Execute streaming chat response
