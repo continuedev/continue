@@ -3419,5 +3419,154 @@ describe("streamResponseThunk - tool calls", () => {
         expect.any(Object),
       );
     });
+
+    it("should properly handle disabled commands and show error status", async () => {
+      const { mockStore, mockIdeMessenger } = setupTest();
+      
+      // Setup store with runTerminalCommand tool
+      const mockStoreWithTerminalTool = createMockStore({
+        ...mockStore.getState(),
+        config: {
+          ...mockStore.getState().config,
+          config: {
+            ...mockStore.getState().config.config,
+            tools: [
+              {
+                type: "function",
+                displayTitle: "Run Terminal Command",
+                function: {
+                  name: "runTerminalCommand",
+                  description: "Execute a terminal command",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      command: {
+                        type: "string",
+                        description: "The command to execute"
+                      }
+                    },
+                    required: ["command"]
+                  }
+                },
+                defaultToolPolicy: "allowedWithPermission",
+                readonly: false,
+                group: "code"
+              }
+            ]
+          }
+        },
+        ui: {
+          ...mockStore.getState().ui,
+          toolSettings: {
+            runTerminalCommand: "allowedWithPermission"
+          }
+        }
+      });
+
+      const mockTerminalIdeMessenger = mockStoreWithTerminalTool.mockIdeMessenger;
+
+      // Setup compilation and policy evaluation responses
+      mockTerminalIdeMessenger.request.mockImplementation(
+        (endpoint: string, data: any) => {
+          if (endpoint === "llm/compileChat") {
+            return Promise.resolve({
+              status: "success",
+              content: {
+                compiledChatMessages: [
+                  { role: "user", content: "Run eval command" }
+                ],
+                didPrune: false,
+                contextPercentage: 0.9
+              }
+            });
+          } else if (endpoint === "tools/evaluatePolicy") {
+            // Return disabled for eval command
+            const args = data.args || {};
+            if (args.command && args.command.includes("eval")) {
+              return Promise.resolve({
+                status: "success",
+                content: { policy: "disabled" }
+              });
+            }
+            return Promise.resolve({
+              status: "success",
+              content: { policy: "allowedWithPermission" }
+            });
+          } else if (endpoint === "history/save") {
+            return Promise.resolve({ status: "success" });
+          } else if (endpoint === "history/list") {
+            return Promise.resolve({ status: "success", content: [] });
+          }
+          return Promise.resolve({ status: "success", content: {} });
+        }
+      );
+
+      // Setup streaming with eval command tool call
+      async function* mockStreamWithEvalCommand() {
+        yield [
+          { role: "assistant", content: "I'll run the eval command for you." }
+        ];
+        yield [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-call-eval",
+                type: "function",
+                function: {
+                  name: "runTerminalCommand",
+                  arguments: JSON.stringify({ command: 'eval "echo hello"' })
+                }
+              }
+            ]
+          }
+        ];
+        return {
+          prompt: "Run eval command",
+          completion: "I'll run the eval command for you.",
+          modelProvider: "anthropic"
+        };
+      }
+
+      mockTerminalIdeMessenger.llmStreamChat.mockReturnValue(
+        mockStreamWithEvalCommand()
+      );
+
+      // Execute thunk
+      await mockStoreWithTerminalTool.dispatch(
+        streamResponseThunk({
+          editorState: mockEditorState,
+          modifiers: mockModifiers
+        }) as any
+      );
+
+      // Get final state
+      const finalState = mockStoreWithTerminalTool.getState();
+      const toolCallStates = finalState.session.history.flatMap(
+        (item) => item.toolCallStates || []
+      );
+
+      // Find the eval command tool call
+      const evalToolCall = toolCallStates.find(
+        (t) => t.toolCallId === "tool-call-eval"
+      );
+
+      expect(evalToolCall).toBeDefined();
+      
+      // The tool call should have an errored status (not "generated")
+      expect(evalToolCall?.status).toBe("errored");
+      
+      // The tool call should have an error message explaining it's disabled
+      // Errors are stored as ContextItems with the error in the content
+      const errorOutput = evalToolCall?.output?.[0];
+      expect(errorOutput?.content).toContain("disabled");
+      
+      // Verify the command was NOT executed (no tool/call request)
+      const toolCallRequests = mockTerminalIdeMessenger.request.mock.calls.filter(
+        call => call[0] === "tools/call"
+      );
+      expect(toolCallRequests).toHaveLength(0);
+    });
   });
 });

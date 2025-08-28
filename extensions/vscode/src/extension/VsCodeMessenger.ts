@@ -255,7 +255,7 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("tools/evaluatePolicy", async (msg) => {
-      return this.inProcessMessenger.invoke("tools/evaluatePolicy", msg.data);
+      return this.inProcessMessenger.externalRequest("tools/evaluatePolicy", msg.data, msg.messageId);
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

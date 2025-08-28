@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, Tool, ToolPolicy } from "core";
+import { ContextItem, LLMFullCompletionOptions, Tool, ToolPolicy } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -8,6 +8,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
   setContextPercentage,
@@ -16,6 +17,7 @@ import {
   setIsPruned,
   setToolGenerated,
   streamUpdate,
+  updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
@@ -54,7 +56,6 @@ async function evaluateToolPolicy(
     // If parsing fails, use empty object
   }
 
-  console.log("HERE HELLO WORLD");
 
   let result;
   try {
@@ -71,7 +72,6 @@ async function evaluateToolPolicy(
 
   // Evaluate the policy dynamically
 
-  console.log("RESULT ZZZ", result);
 
   if (!result || result.status === "error") {
     // If evaluation fails, treat as disabled
@@ -340,11 +340,25 @@ export const streamNormalInput = createAsyncThunk<
       // Check if any are disabled and handle them
       policies.forEach((policy, index) => {
         if (policy === "disabled") {
-          // Mark disabled tools as generated but they won't be executed
+          const toolCallId = generatingToolCalls[index].toolCallId;
+          const toolName = generatingToolCalls[index].toolCall.function.name;
+          
+          // Mark as errored instead of generated
+          dispatch(errorToolCall({ toolCallId }));
+          
+          // Add error message explaining why it's disabled
           dispatch(
-            setToolGenerated({
-              toolCallId: generatingToolCalls[index].toolCallId,
-              tools: newState.config.config.tools,
+            updateToolCallOutput({
+              toolCallId,
+              contextItems: [
+                {
+                  icon: "problems",
+                  name: "Tool Call Disabled",
+                  description: "Security Policy Violation",
+                  content: `The command '${toolName}' has been disabled by security policy. This command cannot be executed as it may pose a security risk.`,
+                  hidden: false,
+                },
+              ],
             }),
           );
         }
