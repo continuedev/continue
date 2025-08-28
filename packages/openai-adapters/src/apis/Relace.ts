@@ -16,13 +16,20 @@ import {
 import { Model } from "openai/resources/models.mjs";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { chatChunk, chatCompletion, customFetch } from "../util.js";
+import {
+  chatChunk,
+  chatCompletion,
+  customFetch,
+  usageChatChunk,
+} from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
+
+type UsageInfo = { total_tokens: number; completion_tokens: number; prompt_tokens: number };
 
 // Relace only supports apply through a /v1/apply endpoint
 export class RelaceApi implements BaseLlmApi {
@@ -41,6 +48,7 @@ export class RelaceApi implements BaseLlmApi {
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
     let content = "";
+    let usage: UsageInfo | undefined = undefined;
 
     // Convert the non-streaming params to streaming params
     const streamingBody: ChatCompletionCreateParamsStreaming = {
@@ -52,12 +60,18 @@ export class RelaceApi implements BaseLlmApi {
       streamingBody,
       signal,
     )) {
-      content += chunk.choices[0]?.delta?.content || "";
+      if (chunk.choices.length > 0) {
+        content += chunk.choices[0]?.delta?.content || "";
+      }
+      if (chunk.usage) {
+        usage = chunk.usage;
+      }
     }
 
     return chatCompletion({
       content,
       model: body.model,
+      usage,
     });
   }
 
@@ -114,6 +128,15 @@ export class RelaceApi implements BaseLlmApi {
     yield chatChunk({
       content: mergedCode,
       model: body.model,
+    });
+
+    yield usageChatChunk({
+      model: body.model,
+      usage: {
+        prompt_tokens: result.usage.prompt_tokens || 0,
+        completion_tokens: result.usage.completion_tokens || 0,
+        total_tokens: result.usage.total_tokens,
+      },
     });
   }
 
