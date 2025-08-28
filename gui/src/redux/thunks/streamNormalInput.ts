@@ -56,7 +56,6 @@ async function evaluateToolPolicy(
     // If parsing fails, use empty object
   }
 
-
   let result;
   try {
     result = await ideMessenger.request("tools/evaluatePolicy", {
@@ -71,7 +70,6 @@ async function evaluateToolPolicy(
   }
 
   // Evaluate the policy dynamically
-
 
   if (!result || result.status === "error") {
     // If evaluation fails, treat as disabled
@@ -342,21 +340,24 @@ export const streamNormalInput = createAsyncThunk<
         if (policy === "disabled") {
           const toolCallId = generatingToolCalls[index].toolCallId;
           const toolCall = generatingToolCalls[index].toolCall;
-          
+
           // Get the actual command from parsed arguments if it's runTerminalCommand
           let command = toolCall.function.name;
           try {
             const args = JSON.parse(toolCall.function.arguments);
-            if (toolCall.function.name === "runTerminalCommand" && args.command) {
+            if (
+              toolCall.function.name === "runTerminalCommand" &&
+              args.command
+            ) {
               command = args.command;
             }
           } catch {
             // Use function name if parsing fails
           }
-          
+
           // Mark as errored instead of generated
           dispatch(errorToolCall({ toolCallId }));
-          
+
           // Add error message explaining why it's disabled
           dispatch(
             updateToolCallOutput({

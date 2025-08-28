@@ -11,11 +11,9 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   // For errored status, show any output (error messages)
   // Otherwise look for terminal output specifically
   const isErrored = props.toolCallState.status === "errored";
-  const outputItem = isErrored 
+  const outputItem = isErrored
     ? props.toolCallState.output?.[0] // Get first output item for errors
-    : props.toolCallState.output?.find(
-        (item) => item.name === "Terminal",
-      );
+    : props.toolCallState.output?.find((item) => item.name === "Terminal");
 
   const terminalContent = outputItem?.content || "";
   const statusMessage = outputItem?.status || "";
