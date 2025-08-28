@@ -341,7 +341,18 @@ export const streamNormalInput = createAsyncThunk<
       policies.forEach((policy, index) => {
         if (policy === "disabled") {
           const toolCallId = generatingToolCalls[index].toolCallId;
-          const toolName = generatingToolCalls[index].toolCall.function.name;
+          const toolCall = generatingToolCalls[index].toolCall;
+          
+          // Get the actual command from parsed arguments if it's runTerminalCommand
+          let command = toolCall.function.name;
+          try {
+            const args = JSON.parse(toolCall.function.arguments);
+            if (toolCall.function.name === "runTerminalCommand" && args.command) {
+              command = args.command;
+            }
+          } catch {
+            // Use function name if parsing fails
+          }
           
           // Mark as errored instead of generated
           dispatch(errorToolCall({ toolCallId }));
@@ -353,9 +364,9 @@ export const streamNormalInput = createAsyncThunk<
               contextItems: [
                 {
                   icon: "problems",
-                  name: "Tool Call Disabled",
-                  description: "Security Policy Violation",
-                  content: `The command '${toolName}' has been disabled by security policy. This command cannot be executed as it may pose a security risk.`,
+                  name: "Security Policy Violation",
+                  description: "Command Disabled",
+                  content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
                   hidden: false,
                 },
               ],
