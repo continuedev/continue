@@ -72,9 +72,9 @@ You can add models to your `config.yaml` file like this:
 
 ```yaml
 models:
-  - name: My Model
-    provider: openai # Choose provider from the lists above
-    model: gpt-4o # Specific model name
+  - name: Claude 4 Sonnet
+    provider: anthropic # Choose provider from the lists above
+    model: claude-sonnet-4-20250514 # Specific model name
     apiKey: ${{ secrets.OPENAI_API_KEY }}
     roles:
       - chat
