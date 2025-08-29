@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, Tool } from "core";
+import { ChatMessage, LLMFullCompletionOptions, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -26,29 +26,26 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
+import { renderContextItems } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 import { validateAndEnhanceToolCallArgs } from "./enhanceParsedArgs";
-/**
- * Handles the execution of tool calls that may be automatically accepted.
- * Sets all tools as generated first, then executes auto-approved tool calls.
- */
-async function handleToolCallExecution(
+
+async function preprocessToolCalls(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
   ideMessenger: IIdeMessenger,
-  activeTools: Tool[],
 ): Promise<void> {
   const state = getState();
-  const toolSettings = state.ui.toolSettings;
-  const allToolCallStates = selectCurrentToolCalls(state);
+  const toolCalls = selectCurrentToolCalls(state);
+  const generatingCalls = toolCalls.filter((tc) => tc.status === "generating");
 
   // Tool call pre-processing
   await Promise.all(
-    allToolCallStates.map(async (tcState) => {
+    generatingCalls.map(async (tcState) => {
       try {
         const changedArgs = await validateAndEnhanceToolCallArgs(
           ideMessenger,
@@ -87,75 +84,70 @@ async function handleToolCallExecution(
       }
     }),
   );
+}
 
-  const preprocessedState = getState();
-  const preprocessedCalls = selectCurrentToolCalls(preprocessedState);
-  const generatingToolCalls = preprocessedCalls.filter(
+/**
+ * Handles the execution of tool calls that may be automatically accepted.
+ * Sets all tools as generated first, then executes auto-approved tool calls.
+ */
+async function executeToolCalls(
+  dispatch: AppThunkDispatch,
+  getState: () => RootState,
+  activeTools: Tool[],
+): Promise<void> {
+  const state = getState();
+  const toolSettings = state.ui.toolSettings;
+  const toolCalls = selectCurrentToolCalls(state);
+
+  const generatingToolCalls = toolCalls.filter(
     (toolCallState) => toolCallState.status === "generating",
   );
 
-  // Check if ALL generating tool calls are auto-approved
-  const allAutoApproved =
-    generatingToolCalls.length > 0 &&
-    generatingToolCalls.every((toolCallState) => {
-      const toolPolicy =
-        toolSettings[toolCallState.toolCall.function.name] ??
-        activeTools.find(
-          (tool) => tool.function.name === toolCallState.toolCall.function.name,
-        )?.defaultToolPolicy ??
-        DEFAULT_TOOL_SETTING;
-      return toolPolicy == "allowedWithoutPermission";
-    });
-
-  // Only set inactive if:
-  // 1. There are no tool calls, OR
-  // 2. There are tool calls but they require manual approval
-  // This prevents UI flashing for auto-approved tools while still showing approval UI for others
-  if (generatingToolCalls.length === 0 || !allAutoApproved) {
-    dispatch(setInactive());
-  }
-
-  // Only process tool calls that are in "generating" status (newly created during this streaming session)
-  const toolCallStates = allToolCallStates.filter(
-    (toolCallState) => toolCallState.status === "generating",
-  );
-
-  // If no generating tool calls, nothing to process
-  if (toolCallStates.length === 0) {
-    return;
-  }
-
-  // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every((toolCallState) => {
+  // We will stop streaming only if any need approval
+  const anyNeedApproval = generatingToolCalls.find((toolCallState) => {
     const toolPolicy =
       toolSettings[toolCallState.toolCall.function.name] ??
       activeTools.find(
         (tool) => tool.function.name === toolCallState.toolCall.function.name,
       )?.defaultToolPolicy ??
       DEFAULT_TOOL_SETTING;
-    return toolPolicy == "allowedWithoutPermission";
+    return toolPolicy !== "allowedWithoutPermission";
   });
 
   // Set all tools as generated first
-  toolCallStates.forEach((toolCallState) => {
+  generatingToolCalls.forEach((toolCallState) => {
     dispatch(
       setToolGenerated({
         toolCallId: toolCallState.toolCallId,
-        tools: newState.config.config.tools,
+        tools: state.config.config.tools,
       }),
     );
   });
 
-  // Only run if we have auto-approve for all
-  if (allAutoApproved && toolCallStates.length > 0) {
-    const toolCallPromises = toolCallStates.map(async (toolCallState) => {
+  // Case 1: No tool calls OR tool calls require approval -> stop streaming
+  // This prevents UI flashing for auto-approved tools while still showing approval UI for others
+  if (toolCalls.length === 0 || anyNeedApproval) {
+    dispatch(setInactive());
+  } else if (generatingToolCalls.length > 0) {
+    // Case 2: All auto approved -> call them!
+    const toolCallPromises = generatingToolCalls.map(async ({ toolCallId }) => {
       const response = await dispatch(
-        callToolById({ toolCallId: toolCallState.toolCallId }),
+        callToolById({ toolCallId, autoApproved: true }),
       );
       unwrapResult(response);
     });
-
     await Promise.all(toolCallPromises);
+  } else {
+    // Case 3: All errored -> stream on!
+    for (const { output, toolCallId } of toolCalls) {
+      const newMessage: ChatMessage = {
+        role: "tool",
+        content: output ? renderContextItems(output) : "",
+        toolCallId,
+      };
+      dispatch(streamUpdate([newMessage]));
+    }
+    unwrapResult(await dispatch(streamNormalInput({})));
   }
 }
 
@@ -231,6 +223,7 @@ export const streamNormalInput = createAsyncThunk<
       state.ui.ruleSettings,
       systemToolsFramework,
     );
+    console.log(messages);
 
     // TODO parallel tool calls will cause issues with this
     // because there will be multiple tool messages, so which one should have applied rules?
@@ -323,11 +316,7 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-    await handleToolCallExecution(
-      dispatch,
-      getState,
-      extra.ideMessenger,
-      activeTools,
-    );
+    await preprocessToolCalls(dispatch, getState, extra.ideMessenger);
+    await executeToolCalls(dispatch, getState, activeTools);
   },
 );

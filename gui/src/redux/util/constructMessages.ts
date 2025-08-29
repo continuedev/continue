@@ -12,6 +12,7 @@ import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRu
 import { RulePolicies } from "core/llm/rules/types";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
+  ERRORED_TOOL_CALL_OUTPUT_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
 } from "core/tools/constants";
 import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
@@ -120,20 +121,17 @@ export function constructMessages(
       });
 
       // Add a tool message for each tool call
-      if (item.message.toolCalls?.length) {
+      if (item.toolCallStates?.length) {
         // If the assistant message has tool calls, we need to insert tool messages
-        for (const toolCall of item.message.toolCalls) {
+        for (const toolCallState of item.toolCallStates) {
           let content: string = NO_TOOL_CALL_OUTPUT_MESSAGE;
 
-          // Find the corresponding tool call state for this specific tool call
-          const toolCallState = item.toolCallStates?.find(
-            (state) => state.toolCallId === toolCall.id,
-          );
-
-          if (toolCallState?.status === "canceled") {
+          if (toolCallState.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (toolCallState?.output) {
+          } else if (toolCallState.output) {
             content = renderContextItems(toolCallState.output);
+          } else if (toolCallState.status === "errored") {
+            content = ERRORED_TOOL_CALL_OUTPUT_MESSAGE;
           }
 
           msgs.push({
@@ -141,7 +139,7 @@ export function constructMessages(
             message: {
               role: "tool",
               content,
-              toolCallId: toolCall.id!,
+              toolCallId: toolCallState.toolCallId,
             },
           });
         }
