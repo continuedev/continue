@@ -41,6 +41,7 @@ export async function validateAndEnhanceSingleEditArgs(
   );
 
   return {
+    filepath,
     old_string,
     new_string,
     replace_all,
