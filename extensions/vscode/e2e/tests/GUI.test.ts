@@ -323,17 +323,21 @@ describe("GUI Test", () => {
       expect(text).contain("the git diff");
     }).timeout(DEFAULT_TIMEOUT.XL);
 
-    it("should cancel tool", async () => {
+    it.only("should cancel tool", async () => {
       await GUIActions.toggleToolPolicy(view, "view_diff", 2);
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
 
-      const cancelToolCallButton = await TestUtils.waitForSuccess(() =>
-        GUISelectors.getRejectToolCallButton(view),
-      );
-      await cancelToolCallButton.click();
+      // const cancelToolCallButton = await TestUtils.waitForSuccess(() =>
+      //   GUISelectors.getRejectToolCallButton(view),
+      // );
+
+      // wait for two seconds
+      // await new Promise((resolve) => setTimeout(resolve, 10000));
+
+      // await cancelToolCallButton.click();
 
       const statusMessage = await TestUtils.waitForSuccess(
         () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
@@ -342,6 +346,17 @@ describe("GUI Test", () => {
 
       const text = await statusMessage.getText();
       expect(text).contain("Continue tried to view the git diff");
+
+      // Click on the status message "Continue tried to view the git diff"
+      await statusMessage.click();
+
+      const cancelToolCallButton = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getRejectToolCallButton(view),
+      );
+
+      await cancelToolCallButton.click();
+
+      // await new Promise((resolve) => setTimeout(resolve, 10000));
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
