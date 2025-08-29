@@ -57,6 +57,7 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
+import { PolicySingleton } from "../control-plane/PolicySingleton";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import { getBaseToolDefinitions } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
@@ -544,16 +545,21 @@ async function intermediateToFinalConfig({
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.experimental?.modelContextProtocolServers ?? []).map(
-      (server, index) => ({
-        id: `continue-mcp-server-${index + 1}`,
-        name: `MCP Server`,
-        ...server,
-      }),
-    ),
-    false,
-  );
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    mcpManager.setConnections(
+      (config.experimental?.modelContextProtocolServers ?? []).map(
+        (server, index) => ({
+          id: `continue-mcp-server-${index + 1}`,
+          name: `MCP Server`,
+          ...server,
+        }),
+      ),
+      false,
+    );
+  }
 
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;

@@ -141,6 +141,8 @@ export function UserSettingsForm() {
 
   const disableTelemetryToggle =
     currentOrg?.policy?.allowAnonymousTelemetry === false;
+  const disableIndexingToggle =
+    currentOrg?.policy?.allowCodebaseIndexing === false;
 
   return (
     <div className="flex flex-col">
@@ -245,6 +247,7 @@ export function UserSettingsForm() {
 
             <ToggleSwitch
               isToggled={!disableIndexing}
+              disabled={disableIndexingToggle}
               onToggle={() =>
                 handleUpdate({
                   disableIndexing: !disableIndexing,
