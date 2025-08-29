@@ -3,7 +3,6 @@ import { promisify } from "util";
 
 import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
-import { convertFromUnifiedHistory } from "core/util/messageConversion.js";
 import express, { Request, Response } from "express";
 
 import { getAssistantSlug } from "../auth/workos.js";
@@ -148,7 +147,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
     res.json({
-      chatHistory: convertFromUnifiedHistory(state.session.history), // Convert back to legacy format for API
+      session: state.session, // Return session directly instead of converting
       isProcessing: state.isProcessing,
       messageQueueLength: state.messageQueue.length,
       pendingPermission: state.pendingPermission,

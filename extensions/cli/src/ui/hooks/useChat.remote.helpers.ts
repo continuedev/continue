@@ -1,5 +1,4 @@
 import type { ChatHistoryItem } from "core/index.js";
-import { convertToUnifiedHistory } from "core/util/messageConversion.js";
 
 import { posthogService } from "../../telemetry/posthogService.js";
 import { logger } from "../../util/logger.js";
@@ -98,11 +97,11 @@ function updateStateFromRemote({
   responseStartTime,
   setResponseStartTime,
 }: UpdateStateFromRemoteOptions): void {
-  // Update chat history from server
-  if (state.chatHistory) {
+  // Update chat history from server - now using session.history directly
+  if (state.session && state.session.history) {
     setChatHistory((prevHistory) => {
-      // Convert server's legacy format to unified format
-      const newHistory = convertToUnifiedHistory(state.chatHistory);
+      // Use session history directly - no conversion needed
+      const newHistory = state.session.history as ChatHistoryItem[];
 
       // Quick length check first
       if (prevHistory.length !== newHistory.length) {
