@@ -220,8 +220,11 @@ declare global {
   export interface SiteIndexingConfig {
     title: string;
     startUrl: string;
+    rootUrl?: string;
     maxDepth?: number;
     faviconUrl?: string;
+    useLocalCrawling?: boolean;
+    sourceFile?: string;
   }
   
   export interface IContextProvider {

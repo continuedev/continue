@@ -21,6 +21,7 @@ export class ChromiumCrawler {
 
   constructor(
     private readonly startUrl: URL,
+    private readonly rootUrl: URL,
     private readonly maxRequestsPerCrawl: number,
     private readonly maxDepth: number,
   ) {}
@@ -155,9 +156,10 @@ export class ChromiumCrawler {
     }
   }
 
-  private isValidHostAndPath(newUrl: URL, curUrl: URL) {
+  private isValidHostAndPath(parsedUrl: URL) {
     return (
-      newUrl.pathname.startsWith(curUrl.pathname) && newUrl.host === curUrl.host
+      parsedUrl.hostname === this.rootUrl.hostname &&
+      parsedUrl.pathname.startsWith(this.rootUrl.pathname)
     );
   }
 
@@ -169,7 +171,7 @@ export class ChromiumCrawler {
       .filter(
         (newUrl) =>
           newUrl !== null &&
-          this.isValidHostAndPath(newUrl, curUrl) &&
+          this.isValidHostAndPath(newUrl) &&
           newUrl !== curUrl,
       )
       .map((newUrl) => (newUrl as URL).href);
