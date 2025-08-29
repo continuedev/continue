@@ -85,7 +85,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             <Text color="gray"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color={isStderr ? "red" : "white"}>{actualOutput}</Text>
+            <Text color={isStderr ? "red" : "white"}>
+              {actualOutput.trimEnd()}
+            </Text>
           </Box>
         </Box>
       );
@@ -99,7 +101,9 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
             <Text color="gray"> Terminal output:</Text>
           </Box>
           <Box paddingLeft={2}>
-            <Text color={isStderr ? "red" : "white"}>{firstLines}</Text>
+            <Text color={isStderr ? "red" : "white"}>
+              {firstLines.trimEnd()}
+            </Text>
           </Box>
           <Box paddingLeft={2}>
             <Text color="gray">

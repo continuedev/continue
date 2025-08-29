@@ -1,9 +1,4 @@
-import type {
-  ChatHistoryItem,
-  Session,
-  ToolCallState,
-  ToolStatus,
-} from "core/index.js";
+import type { Session, ToolCallState, ToolStatus } from "core/index.js";
 
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
@@ -27,85 +22,45 @@ export async function streamChatResponseWithInterruption(
   // Set up periodic interruption checks
   const interruptionChecker = setInterval(checkInterruption, 100);
 
-  let currentStreamingItem: ChatHistoryItem | null = null;
-
   // Create callbacks to capture tool events
   const callbacks: StreamCallbacks = {
-    onContent: (content: string) => {
-      if (!currentStreamingItem) {
-        currentStreamingItem = {
-          message: { role: "assistant", content: "" },
-          contextItems: [],
-        };
-        state.session.history.push(currentStreamingItem);
-      }
-      currentStreamingItem.message.content =
-        (currentStreamingItem.message.content as string) + content;
+    onContent: (_: string) => {
+      // onContent is empty - doesn't update history during streaming
+      // This is just for real-time display purposes
     },
-    onContentComplete: (content: string) => {
-      if (currentStreamingItem) {
-        currentStreamingItem.message.content = content;
-        currentStreamingItem = null;
-      } else {
-        // Add complete assistant message
-        state.session.history.push({
-          message: { role: "assistant", content: content },
-          contextItems: [],
-        });
-      }
+    onContentComplete: (_: string) => {
+      // Note: streamChatResponse already adds messages to history via handleToolCalls
+      // so we don't need to add them here - this callback is just for notification
+      // that content streaming is complete
     },
-    onToolStart: (toolName: string, toolArgs?: any) => {
-      // If there was streaming content, finalize it first
-      if (currentStreamingItem && currentStreamingItem.message.content) {
-        currentStreamingItem = null;
-      }
-
-      // Always create a new assistant message for each tool call
-      const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-      const toolCallState: ToolCallState = {
-        toolCallId: toolCallId,
-        toolCall: {
-          id: toolCallId,
-          type: "function",
-          function: {
-            name: toolName,
-            arguments: JSON.stringify(toolArgs || {}),
-          },
-        },
-        status: "calling",
-        parsedArgs: toolArgs,
-      };
-
-      state.session.history.push({
-        message: { role: "assistant", content: "" },
-        contextItems: [],
-        toolCallStates: [toolCallState],
-      });
+    onToolStart: (__: string, _?: any) => {
+      // Note: handleToolCalls already adds the tool call message to history
+      // This callback is just for notification/UI updates
+      // The tool call state is already created and added by handleToolCalls
     },
     onToolResult: (result: string, toolName: string, status: ToolStatus) => {
-      // Find and update the corresponding tool call state
+      // Update only the tool call state status
+      // The actual result is already added as a separate message by handleToolCalls
       for (let i = state.session.history.length - 1; i >= 0; i--) {
         const item = state.session.history[i];
         if (item.toolCallStates) {
           const toolState = item.toolCallStates.find(
             (ts: ToolCallState) =>
-              ts.toolCall.function.name === toolName && ts.status === "calling",
+              ts.toolCall.function.name === toolName &&
+              (ts.status === "calling" || ts.status === "generated"),
           );
           if (toolState) {
+            // Only update the status, not the output
             toolState.status = status;
-            toolState.output = [
-              {
-                content: result,
-                name: `Tool Result: ${toolName}`,
-                description: "Tool execution result",
-              },
-            ];
-            return;
+            break;
           }
         }
       }
     },
     onToolError: (error: string, toolName?: string) => {
+      // Only update the tool call state to errored status when tool name is provided
+      // The error message is already added as a separate tool result message
+      // by handleToolCalls/preprocessStreamedToolCalls/executeStreamedToolCalls
       if (toolName) {
         // Find and update the corresponding tool call state
         for (let i = state.session.history.length - 1; i >= 0; i--) {
@@ -114,32 +69,22 @@ export async function streamChatResponseWithInterruption(
             const toolState = item.toolCallStates.find(
               (ts: ToolCallState) =>
                 ts.toolCall.function.name === toolName &&
-                ts.status === "calling",
+                (ts.status === "calling" || ts.status === "generated"),
             );
             if (toolState) {
+              // Only update the status, not the output
               toolState.status = "errored";
-              toolState.output = [
-                {
-                  content: error,
-                  name: `Tool Error: ${toolName}`,
-                  description: "Tool execution error",
-                },
-              ];
-              return;
+              break;
             }
           }
         }
       }
-      // Generic error if tool not found
-      state.session.history.push({
-        message: { role: "system", content: error },
-        contextItems: [],
-      });
     },
     onToolPermissionRequest: (
       toolName: string,
       toolArgs: any,
       requestId: string,
+      toolCallPreview?: any[],
     ) => {
       // Set pending permission state
       state.pendingPermission = {
@@ -147,6 +92,7 @@ export async function streamChatResponseWithInterruption(
         toolArgs,
         requestId,
         timestamp: Date.now(),
+        toolCallPreview,
       };
 
       // Add a system message indicating permission is needed
@@ -159,6 +105,15 @@ export async function streamChatResponseWithInterruption(
       });
 
       // Don't wait here - the streamChatResponse will handle waiting
+    },
+    onSystemMessage: (message: string) => {
+      state.session.history.push({
+        message: {
+          role: "system",
+          content: message,
+        },
+        contextItems: [],
+      });
     },
   };
 
@@ -173,10 +128,6 @@ export async function streamChatResponseWithInterruption(
     return response || "";
   } finally {
     clearInterval(interruptionChecker);
-    // Ensure any streaming message is finalized
-    if (currentStreamingItem !== null) {
-      currentStreamingItem = null;
-    }
   }
 }
 
@@ -185,6 +136,7 @@ export interface PendingPermission {
   toolArgs: any;
   requestId: string;
   timestamp: number;
+  toolCallPreview?: any[];
 }
 
 export interface ServerState {
