@@ -231,6 +231,7 @@
               "guides/understanding-assistants",
               "guides/codebase-documentation-awareness",
               "guides/cli",
+              "guides/continuous-ai",
               "guides/plan-mode-guide",
               "guides/ollama-guide",
               "guides/running-continue-without-internet",
