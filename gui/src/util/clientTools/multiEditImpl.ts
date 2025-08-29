@@ -3,6 +3,7 @@ import {
   resolveRelativePathInDir,
 } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 import {
@@ -11,15 +12,11 @@ import {
   validateSingleEdit,
 } from "./findAndReplaceUtils";
 
-export const multiEditImpl: ClientToolImpl = async (
-  args,
-  toolCallId,
-  extras,
-) => {
-  const { filepath, edits, editingFileContents } = args;
-
-  const streamId = uuid();
-
+export async function validateAndEnhanceMultiEditArgs(
+  args: Record<string, any>,
+  ideMessenger: IIdeMessenger,
+): Promise<Record<string, any>> {
+  const { filepath, edits } = args;
   // Validate arguments
   if (!filepath) {
     throw new Error("filepath is required");
@@ -29,20 +26,21 @@ export const multiEditImpl: ClientToolImpl = async (
       "edits array is required and must contain at least one edit",
     );
   }
-
   // Validate each edit operation
   for (let i = 0; i < edits.length; i++) {
     const edit = edits[i];
     validateSingleEdit(edit.old_string, edit.new_string, i);
   }
 
-  // Check if this is creating a new file (first edit has empty old_string)
   const isCreatingNewFile = validateCreatingForMultiEdit(edits);
+
+  // Check if this is creating a new file (first edit has empty old_string)
   const resolvedUri = await resolveRelativePathInDir(
     filepath,
-    extras.ideMessenger.ide,
+    ideMessenger.ide,
   );
 
+  let editingFileContents: string;
   let newContent: string;
   let fileUri: string;
   if (isCreatingNewFile) {
@@ -51,11 +49,12 @@ export const multiEditImpl: ClientToolImpl = async (
         `file ${filepath} already exists, cannot create new file`,
       );
     }
+    editingFileContents = "";
     newContent = edits[0].new_string;
-    const dirs = await extras.ideMessenger.ide.getWorkspaceDirs();
+    const dirs = await ideMessenger.ide.getWorkspaceDirs();
     fileUri = await inferResolvedUriFromRelativePath(
       filepath,
-      extras.ideMessenger.ide,
+      ideMessenger.ide,
       dirs,
     );
   } else {
@@ -64,10 +63,10 @@ export const multiEditImpl: ClientToolImpl = async (
         `file ${filepath} does not exist. If you are trying to edit it, correct the filepath. If you are trying to create it, you must pass old_string=""`,
       );
     }
-    newContent =
-      editingFileContents ??
-      (await extras.ideMessenger.ide.readFile(resolvedUri));
     fileUri = resolvedUri;
+    editingFileContents = await ideMessenger.ide.readFile(resolvedUri);
+    newContent = editingFileContents;
+
     for (let i = 0; i < edits.length; i++) {
       const { old_string, new_string, replace_all } = edits[i];
       newContent = performFindAndReplace(
@@ -80,7 +79,24 @@ export const multiEditImpl: ClientToolImpl = async (
     }
   }
 
-  // Apply the changes to the file
+  return {
+    filepath,
+    edits,
+    fileUri,
+    editingFileContents,
+    newContent,
+  };
+}
+
+export const multiEditImpl: ClientToolImpl = async (
+  args,
+  toolCallId,
+  extras,
+) => {
+  const { fileUri, newContent } = args;
+
+  const streamId = uuid();
+
   void extras.dispatch(
     applyForEditTool({
       streamId,
@@ -91,7 +107,6 @@ export const multiEditImpl: ClientToolImpl = async (
     }),
   );
 
-  // Return success - applyToFile will handle the completion state
   return {
     respondImmediately: false, // Let apply state handle completion
     output: undefined,

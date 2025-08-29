@@ -18,21 +18,22 @@ import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceU
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
-  fileUri?: string;
-  editingFileContents?: string;
-  relativeFilePath?: string;
+  relativeFilePath: string;
   edits: EditOperation[];
   toolCallId: string;
-  historyIndex: number;
+  // These will be added when args are enhanced
+  fileUri?: string;
+  editingFileContents?: string;
+  newContent?: string;
 }
 
 export function FindAndReplaceDisplay({
   fileUri,
   relativeFilePath,
   editingFileContents,
+  newContent,
   edits,
   toolCallId,
-  historyIndex,
 }: FindAndReplaceDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
@@ -68,35 +69,34 @@ export function FindAndReplaceDisplay({
       return null;
     }
 
-    try {
-      // Apply all edits sequentially
-      let newContent = currentFileContent;
-      for (let i = 0; i < edits.length; i++) {
-        const {
-          old_string: oldString,
-          new_string: newString,
-          replace_all: replaceAll,
-        } = edits[i];
-        newContent = performFindAndReplace(
-          newContent,
-          oldString,
-          newString,
-          replaceAll,
-          i,
-        );
+    let liveNewContent = newContent;
+    if (typeof liveNewContent === "undefined") {
+      try {
+        liveNewContent = currentFileContent;
+        for (let i = 0; i < edits.length; i++) {
+          const {
+            old_string: oldString,
+            new_string: newString,
+            replace_all: replaceAll,
+          } = edits[i];
+          liveNewContent = performFindAndReplace(
+            liveNewContent,
+            oldString,
+            newString,
+            replaceAll,
+            i,
+          );
+        }
+      } catch (error) {
+        return {
+          diff: null,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
       }
-
-      // Generate diff between original and final content
-      const diff = diffLines(currentFileContent, newContent);
-      return { diff, newContent, error: null };
-    } catch (error) {
-      return {
-        diff: null,
-        newContent: null,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
     }
-  }, [currentFileContent, edits]);
+    const diff = diffLines(currentFileContent, liveNewContent);
+    return { diff, error: null };
+  }, [newContent, currentFileContent, edits]);
 
   const statusIcon = useMemo(() => {
     const status = toolCallState?.status;

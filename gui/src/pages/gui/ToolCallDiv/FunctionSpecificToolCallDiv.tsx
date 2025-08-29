@@ -62,22 +62,22 @@ function FunctionSpecificToolCallDiv({
       return (
         <FindAndReplaceDisplay
           editingFileContents={args?.editingFileContents}
-          fileUri={args?.fileUri}
-          relativeFilePath={args?.filepath ?? ""}
-          edits={edits}
           toolCallId={toolCall.id}
-          historyIndex={historyIndex}
+          relativeFilePath={args?.filepath ?? ""}
+          newContent={args?.newContent}
+          fileUri={args?.fileUri ?? ""}
+          edits={edits}
         />
       );
     case BuiltInToolNames.MultiEdit:
       return (
         <FindAndReplaceDisplay
           editingFileContents={args?.editingFileContents}
-          relativeFilePath={args?.filepath ?? ""}
-          fileUri={args?.fileUri}
-          edits={args?.edits ?? []}
           toolCallId={toolCall.id}
-          historyIndex={historyIndex}
+          relativeFilePath={args?.filepath ?? ""}
+          newContent={args?.newContent}
+          fileUri={args?.fileUri ?? ""}
+          edits={args?.edits ?? []}
         />
       );
     case BuiltInToolNames.RunTerminalCommand:
