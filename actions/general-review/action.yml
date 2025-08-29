@@ -159,8 +159,20 @@ runs:
 
         # Validate API key
         if [ -z "$CONTINUE_API_KEY" ]; then
-          echo "Error: CONTINUE_API_KEY environment variable is not set"
-          exit 1
+          echo "Warning: CONTINUE_API_KEY environment variable is not set"
+          # Create fallback review and continue
+          cat > code_review.md << 'EOF'
+## Code Review Summary
+
+⚠️ AI review skipped: CONTINUE_API_KEY not configured.
+
+### Configuration Required
+- Please set the CONTINUE_API_KEY secret in repository settings
+- Verify that the organization and config path are valid
+EOF
+          echo "SKIP_CLI=true" >> $GITHUB_ENV
+        else
+          echo "SKIP_CLI=false" >> $GITHUB_ENV
         fi
 
         # Validate inputs to prevent command injection
@@ -175,11 +187,26 @@ runs:
         fi
 
         # Test Continue CLI availability
-        echo "Testing Continue CLI..."
-        cn --version || { echo "Error: Continue CLI not found"; exit 1; }
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Testing Continue CLI..."
+          if ! cn --version; then
+            echo "Warning: Continue CLI not found or not working"
+            cat > code_review.md << 'EOF'
+## Code Review Summary
+
+⚠️ AI review skipped: Continue CLI installation failed.
+
+### Troubleshooting
+- Check that npm installation succeeded
+- Verify @continuedev/cli package is available
+EOF
+            echo "SKIP_CLI=true" >> $GITHUB_ENV
+          fi
+        fi
 
         # Run the CLI with validated config and error handling
-        echo "Executing Continue CLI with org: $CONTINUE_ORG, config: $CONTINUE_CONFIG"
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Executing Continue CLI with org: $CONTINUE_ORG, config: $CONTINUE_CONFIG"
         if ! cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md 2>cli_error.log; then
           echo "Error: Continue CLI command failed"
           echo "CLI error log:"
@@ -198,6 +225,7 @@ runs:
 EOF
         else
           echo "Review generated successfully"
+        fi
         fi
 
     - name: Upload Review Results

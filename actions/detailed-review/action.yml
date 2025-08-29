@@ -196,8 +196,17 @@ runs:
 
         # Validate API key
         if [ -z "$CONTINUE_API_KEY" ]; then
-          echo "Error: CONTINUE_API_KEY environment variable is not set"
-          exit 1
+          echo "Warning: CONTINUE_API_KEY environment variable is not set"
+          # Create fallback review and continue
+          cat > inline_review.json << 'EOF'
+        {
+          "review_summary": "AI review skipped: CONTINUE_API_KEY not configured.",
+          "comments": []
+        }
+        EOF
+          echo "SKIP_CLI=true" >> $GITHUB_ENV
+        else
+          echo "SKIP_CLI=false" >> $GITHUB_ENV
         fi
 
         # Log the prompt for debugging
@@ -208,13 +217,25 @@ runs:
         echo "===== END REVIEW PROMPT ====="
 
         # Test Continue CLI availability
-        echo "Testing Continue CLI..."
-        cn --version || { echo "Error: Continue CLI not found"; exit 1; }
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Testing Continue CLI..."
+          if ! cn --version; then
+            echo "Warning: Continue CLI not found or not working"
+            cat > inline_review.json << 'EOF'
+        {
+          "review_summary": "AI review skipped: Continue CLI installation failed.",
+          "comments": []
+        }
+        EOF
+            echo "SKIP_CLI=true" >> $GITHUB_ENV
+          fi
+        fi
 
         # Run the CLI and capture JSON output with error handling
-        echo "Executing Continue CLI with org: ${{ inputs.continue-org }}, config: ${{ inputs.continue-config }}"
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Executing Continue CLI with org: ${{ inputs.continue-org }}, config: ${{ inputs.continue-config }}"
         if ! cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p "$(cat inline_review_prompt.txt)" > inline_review_raw.json 2>cli_error.log; then
-          echo "Error: Continue CLI command failed"
+          echo "Warning: Continue CLI command failed"
           echo "CLI error log:"
           cat cli_error.log
           
@@ -225,7 +246,7 @@ runs:
           "comments": []
         }
         EOF
-          # Don't exit with failure to allow posting fallback comment
+          echo "Created fallback review due to CLI failure"
         else
           # Log the output for debugging
           echo "Initial Continue CLI output:"
@@ -246,6 +267,7 @@ runs:
             echo "Review output:"
             cat inline_review.json
           fi
+        fi
         fi
 
     - name: Post Inline Review Comments
