@@ -23,8 +23,24 @@ import {
   ProgressLocation,
   Uri,
   window,
-  workspace,
 } from "vscode";
+import * as vscode from "vscode";
+
+function getHttpConfigurationSafe(): { get<T>(key: string): T | undefined } | undefined {
+  try {
+    // Some test environments mock 'vscode' without exporting 'workspace'
+    // Accessing it may throw from the mock proxy; guard with try/catch
+    // and fall back to undefined, which means no proxy overrides.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ws = (vscode as any).workspace;
+    if (ws && typeof ws.getConfiguration === "function") {
+      return ws.getConfiguration("http");
+    }
+  } catch {
+    // ignore – return undefined
+  }
+  return undefined;
+}
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
@@ -329,9 +345,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     refreshToken: string;
     expiresInMs: number;
   }> {
-    const httpConfig = workspace.getConfiguration("http");
-    const proxyUrl = httpConfig.get<string>("proxy") || undefined;
-    const strictSSL = httpConfig.get<boolean>("proxyStrictSSL");
+    const httpConfig = getHttpConfigurationSafe();
+    const proxyUrl = httpConfig?.get<string>("proxy") || undefined;
+    const strictSSL = httpConfig?.get<boolean>("proxyStrictSSL");
 
     const response = await fetch(
       new URL("/auth/refresh", controlPlaneEnv.CONTROL_PLANE_URL),
@@ -584,9 +600,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     codeVerifier: string,
     hubEnv: HubEnv,
   ) {
-    const httpConfig = workspace.getConfiguration("http");
-    const proxyUrl = httpConfig.get<string>("proxy") || undefined;
-    const strictSSL = httpConfig.get<boolean>("proxyStrictSSL");
+    const httpConfig = getHttpConfigurationSafe();
+    const proxyUrl = httpConfig?.get<string>("proxy") || undefined;
+    const strictSSL = httpConfig?.get<boolean>("proxyStrictSSL");
 
     const resp = await fetch(
       "https://api.workos.com/user_management/authenticate",
