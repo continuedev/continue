@@ -76,6 +76,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
 import { getUriPathBasename } from "./util/uri";
 
@@ -321,6 +322,13 @@ export class Core {
 
     on("history/save", (msg) => {
       historyManager.save(msg.data);
+    });
+
+    on("history/share", async (msg) => {
+      const session = historyManager.load(msg.data.id);
+      const outputDir = msg.data.outputDir;
+      const history = session.history.map((msg) => msg.message);
+      await shareSession(this.ide, history, outputDir);
     });
 
     on("history/clear", (msg) => {
