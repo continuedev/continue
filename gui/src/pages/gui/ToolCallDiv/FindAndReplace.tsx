@@ -18,7 +18,7 @@ import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceU
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
-  relativeFilePath: string;
+  relativeFilePath?: string;
   edits: EditOperation[];
   toolCallId: string;
   // These will be added when args are enhanced
