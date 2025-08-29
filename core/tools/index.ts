@@ -36,8 +36,6 @@ export const getConfigDependentToolDefinitions = (
     );
   }
 
-  // OLD SEARCH AND REPLACE IS CURRENTLY NOT USED
-  // toolDefinitions.searchAndReplaceInFileTool
   if (modelName?.includes("claude") || modelName?.includes("gpt-5")) {
     tools.push(toolDefinitions.multiEditTool);
   } else {
