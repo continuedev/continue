@@ -1,4 +1,4 @@
-import type { Session, ToolStatus } from "core/index.js";
+import type { Session, ToolCallState, ToolStatus } from "core/index.js";
 
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
@@ -38,15 +38,48 @@ export async function streamChatResponseWithInterruption(
       // This callback is just for notification/UI updates
       // The tool call state is already created and added by handleToolCalls
     },
-    onToolResult: (_: string, __: string, ___: ToolStatus) => {
-      // Note: handleToolCalls already updates the tool call states in history
-      // This callback is just for notification/UI updates
+    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
+      // Update only the tool call state status
+      // The actual result is already added as a separate message by handleToolCalls
+      for (let i = state.session.history.length - 1; i >= 0; i--) {
+        const item = state.session.history[i];
+        if (item.toolCallStates) {
+          const toolState = item.toolCallStates.find(
+            (ts: ToolCallState) =>
+              ts.toolCall.function.name === toolName &&
+              (ts.status === "calling" || ts.status === "generated"),
+          );
+          if (toolState) {
+            // Only update the status, not the output
+            toolState.status = status;
+            break;
+          }
+        }
+      }
     },
     onToolError: (error: string, toolName?: string) => {
-      // Note: handleToolCalls and preprocessStreamedToolCalls already handle errors
-      // This callback is just for notification/UI updates
-      // If we need to display a generic error message (no tool name), add it
-      if (!toolName) {
+      // Update the tool call state to errored status
+      if (toolName) {
+        // Find and update the corresponding tool call state
+        for (let i = state.session.history.length - 1; i >= 0; i--) {
+          const item = state.session.history[i];
+          if (item.toolCallStates) {
+            const toolState = item.toolCallStates.find(
+              (ts: ToolCallState) =>
+                ts.toolCall.function.name === toolName &&
+                (ts.status === "calling" || ts.status === "generated"),
+            );
+            if (toolState) {
+              // Only update the status, not the output
+              // The error message is already added as a separate tool result message
+              // by handleToolCalls/preprocessStreamedToolCalls
+              toolState.status = "errored";
+              break;
+            }
+          }
+        }
+      } else {
+        // Generic error message when no tool name is provided
         state.session.history.push({
           message: { role: "system", content: error },
           contextItems: [],
