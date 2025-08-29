@@ -18,16 +18,25 @@ type CommandHandler = (
   assistant: AssistantConfig,
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
-async function handleHelp(args: string[], assistant: AssistantConfig) {
-  const allCommands = getAllSlashCommands(assistant);
+async function handleHelp() {
   const helpMessage = [
-    "Slash commands:",
-    ...allCommands
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map(
-        (cmd) =>
-          `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
-      ),
+    chalk.bold("Keyboard Shortcuts:"),
+    "",
+    chalk.white("Navigation:"),
+    `  ${chalk.cyan("↑/↓")}        Navigate previous messages`,
+    `  ${chalk.cyan("Enter")}      Submit message`,
+    `  ${chalk.cyan("\\+Enter")}   New line`,
+    "",
+    chalk.white("Controls:"),
+    `  ${chalk.cyan("Ctrl+C")}     Clear input`,
+    `  ${chalk.cyan("Ctrl+D")}     Exit application`,
+    `  ${chalk.cyan("Shift+Tab")}  Cycle modes`,
+    `  ${chalk.cyan("Esc")}        Interrupt`,
+    "",
+    chalk.white("Special Characters:"),
+    `  ${chalk.cyan("@")}          Attach files`,
+    `  ${chalk.cyan("/")}          Slash commands`,
+    "",
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
