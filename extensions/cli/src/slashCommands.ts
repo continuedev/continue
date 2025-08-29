@@ -18,25 +18,33 @@ type CommandHandler = (
   assistant: AssistantConfig,
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
-async function handleHelp() {
+async function handleHelp(
+  _args: string[],
+  _assistant: AssistantConfig,
+) {
   const helpMessage = [
     chalk.bold("Keyboard Shortcuts:"),
     "",
     chalk.white("Navigation:"),
-    `  ${chalk.cyan("↑/↓")}        Navigate previous messages`,
+    `  ${chalk.cyan("↑/↓")}        Navigate command/file suggestions or history`,
+    `  ${chalk.cyan("Tab")}        Complete command or file selection`,
     `  ${chalk.cyan("Enter")}      Submit message`,
-    `  ${chalk.cyan("\\+Enter")}   New line`,
+    `  ${chalk.cyan("Shift+Enter")} New line`,
+    `  ${chalk.cyan("\\")}          Line continuation (at end of line)`,
     "",
     chalk.white("Controls:"),
     `  ${chalk.cyan("Ctrl+C")}     Clear input`,
     `  ${chalk.cyan("Ctrl+D")}     Exit application`,
-    `  ${chalk.cyan("Shift+Tab")}  Cycle modes`,
-    `  ${chalk.cyan("Esc")}        Interrupt`,
+    `  ${chalk.cyan("Ctrl+L")}     Clear screen`,
+    `  ${chalk.cyan("Shift+Tab")}  Cycle permission modes (normal/plan/auto)`,
+    `  ${chalk.cyan("Esc")}        Cancel streaming or close suggestions`,
     "",
     chalk.white("Special Characters:"),
-    `  ${chalk.cyan("@")}          Attach files`,
-    `  ${chalk.cyan("/")}          Slash commands`,
+    `  ${chalk.cyan("@")}          Search and attach files for context`,
+    `  ${chalk.cyan("/")}          Access slash commands`,
     "",
+    chalk.white("Available Commands:"),
+    `  Type ${chalk.cyan("/")} to see available slash commands`,
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
