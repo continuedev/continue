@@ -110,18 +110,20 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
 
-      {shouldRenderResponseAction() && !isStreaming && (
+      {shouldRenderResponseAction() && (
         <div
           className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
         >
-          <ResponseActions
-            isTruncated={isTruncated}
-            onDelete={onDelete}
-            onContinueGeneration={onContinueGeneration}
-            index={props.index}
-            item={props.item}
-            isLast={props.isLast}
-          />
+          {!(isStreaming && props.isLast) && (
+            <ResponseActions
+              isTruncated={isTruncated}
+              onDelete={onDelete}
+              onContinueGeneration={onContinueGeneration}
+              index={props.index}
+              item={props.item}
+              isLast={props.isLast}
+            />
+          )}
         </div>
       )}
 
