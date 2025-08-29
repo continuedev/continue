@@ -8,13 +8,33 @@ import {
 
 import { Tool } from "./types.js";
 
+function getShellCommand(command: string): { shell: string; args: string[] } {
+  if (process.platform === "win32") {
+    // Windows: Use PowerShell
+    return {
+      shell: "powershell.exe",
+      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command"],
+    };
+  } else {
+    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+    const userShell = process.env.SHELL || "/bin/bash";
+    return { shell: userShell, args: ["-l", "-c", command] };
+  }
+}
+
+const getColorEnv = () => ({
+  ...process.env,
+  FORCE_COLOR: "1",
+  COLORTERM: "truecolor",
+  TERM: "xterm-256color",
+  CLICOLOR: "1",
+  CLICOLOR_FORCE: "1",
+});
+
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
-  description: `Executes a terminal command and returns the output
-
-The command will be executed from the current working directory: ${process.cwd()}
-`,
+  description: "Executes a terminal command and returns the output",
   parameters: {
     command: {
       type: "string",
@@ -43,7 +63,12 @@ The command will be executed from the current working directory: ${process.cwd()
   },
   run: async ({ command }: { command: string }): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const child = spawn("sh", ["-c", command]);
+      let cwd = process.cwd();
+      const { shell, args } = getShellCommand(command);
+      const child = spawn(shell, args, {
+        cwd,
+        env: getColorEnv(), // Add enhanced environment for colors
+      });
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
@@ -116,7 +141,6 @@ The command will be executed from the current working directory: ${process.cwd()
           }
         }
 
-        let output = stdout;
         if (stderr) {
           output = stdout + `\nStderr: ${stderr}`;
         }
