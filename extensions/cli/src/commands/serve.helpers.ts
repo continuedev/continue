@@ -58,7 +58,9 @@ export async function streamChatResponseWithInterruption(
       }
     },
     onToolError: (error: string, toolName?: string) => {
-      // Update the tool call state to errored status
+      // Only update the tool call state to errored status when tool name is provided
+      // The error message is already added as a separate tool result message
+      // by handleToolCalls/preprocessStreamedToolCalls/executeStreamedToolCalls
       if (toolName) {
         // Find and update the corresponding tool call state
         for (let i = state.session.history.length - 1; i >= 0; i--) {
@@ -71,19 +73,11 @@ export async function streamChatResponseWithInterruption(
             );
             if (toolState) {
               // Only update the status, not the output
-              // The error message is already added as a separate tool result message
-              // by handleToolCalls/preprocessStreamedToolCalls
               toolState.status = "errored";
               break;
             }
           }
         }
-      } else {
-        // Generic error message when no tool name is provided
-        state.session.history.push({
-          message: { role: "system", content: error },
-          contextItems: [],
-        });
       }
     },
     onToolPermissionRequest: (
