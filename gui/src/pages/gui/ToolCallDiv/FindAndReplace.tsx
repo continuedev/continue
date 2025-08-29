@@ -33,7 +33,7 @@ export function FindAndReplaceDisplay({
   toolCallId,
   historyIndex,
 }: FindAndReplaceDisplayProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
   const applyState: ApplyState | undefined = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, toolCallId),
@@ -135,12 +135,12 @@ export function FindAndReplaceDisplay({
           {statusIcon}
           <ChevronDownIcon
             data-testid="toggle-find-and-replace-diff"
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer transition-all hover:brightness-125 ${
+            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
               showContent ? "rotate-0" : "-rotate-90"
             }`}
           />
           <FileInfo
-            filepath={displayName}
+            filepath={displayName || "..."}
             onClick={(e) => {
               if (!fileUri) {
                 return;
@@ -177,7 +177,7 @@ export function FindAndReplaceDisplay({
   if (diffResult?.error) {
     return renderContainer(
       <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong> {diffResult.error}
+        <strong>Error generating diff</strong>
       </div>,
     );
   }
