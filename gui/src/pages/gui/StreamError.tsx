@@ -44,6 +44,23 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     apiKeyUrl,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
+  const isConnectionError = useMemo(() => {
+    const lowerParsed = (parsedError || "").toLowerCase();
+    const lowerMsg = (message || "").toLowerCase();
+    return (
+      lowerParsed.includes("connection error") ||
+      lowerMsg.includes("connection error") ||
+      lowerParsed.includes("fetch failed") ||
+      lowerMsg.includes("fetch failed") ||
+      lowerParsed.includes("networkerror") ||
+      lowerMsg.includes("networkerror") ||
+      lowerParsed.includes("ecconn") || // ECONNREFUSED, ECONNRESET
+      lowerMsg.includes("ecconn") ||
+      lowerParsed.includes("timed out") ||
+      lowerMsg.includes("timed out")
+    );
+  }, [parsedError, message]);
+
   const handleRefreshProfiles = () => {
     void refreshProfiles("Clicked reload config from stream error dialog");
     dispatch(setShowDialog(false));
@@ -144,6 +161,36 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       </div>
     </div>
   );
+
+  if (!statusCode && isConnectionError) {
+    errorContent = (
+      <div className="flex flex-col gap-2">
+        <span>Likely causes:</span>
+        <ul className="m-0">
+          <li>Temporary network error or model provider outage</li>
+          <li>
+            Proxy configured in your IDE could block connections.
+            <span className="ml-1">
+              Check Settings → Proxy (http.proxy, http.proxyStrictSSL) or NO_PROXY.
+            </span>
+          </li>
+          <li>
+            Invalid <code>apiBase</code>
+            {selectedModel && selectedModel.apiBase && (
+              <>
+                <span>{`: `}</span>
+                <code>{selectedModel.apiBase}</code>
+              </>
+            )}
+          </li>
+        </ul>
+        <div className="flex flex-row flex-wrap gap-2">
+          {configButton}
+          {resubmitButton}
+        </div>
+      </div>
+    );
+  }
 
   // Display components for specific errors
   if (statusCode === 429) {
