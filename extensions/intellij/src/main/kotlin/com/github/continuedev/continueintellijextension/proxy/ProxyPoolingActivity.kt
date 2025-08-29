@@ -28,7 +28,7 @@ class ProxyPoolingActivity : StartupActivity {
 
     private fun onSettingsChanged(project: Project) {
         log.warn("Proxy settings changed, restarting")
-        project.service<ContinuePluginService>().coreMessengerManager?.coreMessenger?.restart()
+        project.service<ContinuePluginService>().coreMessenger?.restart()
     }
 }
 

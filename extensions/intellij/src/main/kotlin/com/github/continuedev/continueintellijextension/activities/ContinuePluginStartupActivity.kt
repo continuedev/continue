@@ -266,8 +266,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 project.service<ContinuePluginDisposable>()
             )
 
-            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
-            continuePluginService.coreMessengerManager = coreMessengerManager
+            continuePluginService.coreMessenger = CoreMessenger(project, ideProtocolClient, coroutineScope)
         }
     }
 }
