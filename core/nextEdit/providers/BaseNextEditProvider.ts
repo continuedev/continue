@@ -24,7 +24,7 @@ import { isWhitespaceOnlyDeletion } from "../utils.js";
  * This and its children are responsible for pre/post processing of prompts and outcomes.
  * Different next edit models have very different requirements.
  */
-export abstract class BaseNextEditProvider {
+export abstract class BaseNextEditModelProvider {
   protected readonly modelName: string;
 
   constructor(modelName: string) {
