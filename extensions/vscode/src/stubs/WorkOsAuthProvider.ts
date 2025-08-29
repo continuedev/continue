@@ -9,7 +9,7 @@ import {
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import { Logger } from "core/util/Logger";
-import fetch from "node-fetch";
+import { fetchwithRequestOptions as fetch } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   authentication,
@@ -24,6 +24,23 @@ import {
   Uri,
   window,
 } from "vscode";
+import * as vscode from "vscode";
+
+function getHttpConfigurationSafe(): { get<T>(key: string): T | undefined } | undefined {
+  try {
+    // Some test environments mock 'vscode' without exporting 'workspace'
+    // Accessing it may throw from the mock proxy; guard with try/catch
+    // and fall back to undefined, which means no proxy overrides.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ws = (vscode as any).workspace;
+    if (ws && typeof ws.getConfiguration === "function") {
+      return ws.getConfiguration("http");
+    }
+  } catch {
+    // ignore – return undefined
+  }
+  return undefined;
+}
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
@@ -328,6 +345,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     refreshToken: string;
     expiresInMs: number;
   }> {
+    const httpConfig = getHttpConfigurationSafe();
+    const proxyUrl = httpConfig?.get<string>("proxy") || undefined;
+    const strictSSL = httpConfig?.get<boolean>("proxyStrictSSL");
+
     const response = await fetch(
       new URL("/auth/refresh", controlPlaneEnv.CONTROL_PLANE_URL),
       {
@@ -338,6 +359,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         body: JSON.stringify({
           refreshToken,
         }),
+      },
+      {
+        proxy: proxyUrl,
+        verifySsl: strictSSL,
       },
     );
     if (!response.ok) {
@@ -575,6 +600,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     codeVerifier: string,
     hubEnv: HubEnv,
   ) {
+    const httpConfig = getHttpConfigurationSafe();
+    const proxyUrl = httpConfig?.get<string>("proxy") || undefined;
+    const strictSSL = httpConfig?.get<boolean>("proxyStrictSSL");
+
     const resp = await fetch(
       "https://api.workos.com/user_management/authenticate",
       {
@@ -588,6 +617,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           grant_type: "authorization_code",
           code: token,
         }),
+      },
+      {
+        proxy: proxyUrl,
+        verifySsl: strictSSL,
       },
     );
     const text = await resp.text();
