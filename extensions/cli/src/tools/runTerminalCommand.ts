@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import os from "os";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -71,6 +72,7 @@ export const runTerminalCommandTool: Tool = {
       });
       let stdout = "";
       let stderr = "";
+      let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
 
@@ -87,7 +89,6 @@ export const runTerminalCommandTool: Tool = {
           if (isResolved) return;
           isResolved = true;
           child.kill();
-          let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
           // Truncate output if it has too many lines
