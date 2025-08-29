@@ -15,7 +15,6 @@ class OpenRouter extends OpenAI {
     },
     useLegacyCompletionsEndpoint: false,
   };
-  forceStreamChat = true;
 
   /**
    * Detect if the model is an Anthropic/Claude model
