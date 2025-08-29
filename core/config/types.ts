@@ -1104,6 +1104,7 @@ declare global {
   };
   
   interface ExperimentalConfig {
+    contextMenuPrompts?: ContextMenuConfig;
     modelRoles?: ExperimentalModelRoles;
     defaultContext?: DefaultContextProvider[];
     promptPath?: string;

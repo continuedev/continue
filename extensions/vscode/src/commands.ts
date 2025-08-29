@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as fs from "node:fs";
 
-import { ILLM, ModelInstaller } from "core";
+import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME } from "core/control-plane/env";
@@ -143,11 +143,16 @@ const getCommandsMap: (
    * increments the FTC count, and then streams an edit to the
    * vertical diff manager.
    *
-   * @param  input - The prompt to use if the configured prompt is not available.
+   * @param  promptName - The key for the prompt in the context menu configuration.
+   * @param  fallbackPrompt - The prompt to use if the configured prompt is not available.
    * @param  [range] - Optional. The range to edit if provided.
    * @returns
    */
-  async function streamInlineEdit(input: string, range?: vscode.Range) {
+  async function streamInlineEdit(
+    promptName: keyof ContextMenuConfig,
+    fallbackPrompt: string,
+    range?: vscode.Range,
+  ) {
     const { config } = await configHandler.loadConfig();
     if (!config) {
       throw new Error("Config not loaded");
@@ -163,7 +168,8 @@ const getCommandsMap: (
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
     await verticalDiffManager.streamEdit({
-      input,
+      input:
+        config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       llm,
       range,
       rulesToInclude: config.rules,
@@ -237,7 +243,7 @@ const getCommandsMap: (
     ) => {
       captureCommandTelemetry("customQuickActionStreamInlineEdit");
 
-      void streamInlineEdit(prompt, range);
+      streamInlineEdit("docstring", prompt, range);
     },
     "continue.codebaseForceReIndex": async () => {
       core.invoke("index/forceReIndex", undefined);
@@ -346,7 +352,8 @@ const getCommandsMap: (
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
-      void streamInlineEdit(
+      streamInlineEdit(
+        "comment",
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
@@ -354,23 +361,26 @@ const getCommandsMap: (
       captureCommandTelemetry("writeDocstringForCode");
 
       void streamInlineEdit(
+        "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
       );
     },
     "continue.fixCode": async () => {
       captureCommandTelemetry("fixCode");
 
-      void streamInlineEdit(
+      streamInlineEdit(
+        "fix",
         "Fix this code. If it is already 100% correct, simply rewrite the code.",
       );
     },
     "continue.optimizeCode": async () => {
       captureCommandTelemetry("optimizeCode");
-      void streamInlineEdit("Optimize this code");
+      streamInlineEdit("optimize", "Optimize this code");
     },
     "continue.fixGrammar": async () => {
       captureCommandTelemetry("fixGrammar");
-      void streamInlineEdit(
+      streamInlineEdit(
+        "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
     },
