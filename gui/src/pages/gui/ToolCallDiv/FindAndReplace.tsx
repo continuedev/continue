@@ -65,7 +65,6 @@ export function FindAndReplaceDisplay({
   }, [originalContent, edits]);
 
   const diffResult = useMemo(() => {
-    console.log("DIFF RESULT CALC", currentFileContent, edits, newContent);
     if (!currentFileContent) {
       return null;
     }
@@ -181,7 +180,6 @@ export function FindAndReplaceDisplay({
     );
   }
 
-  console.log("DIFF RESULT", diffResult);
   if (
     !diffResult?.diff ||
     (diffResult.diff.length === 1 &&
