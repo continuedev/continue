@@ -46,7 +46,7 @@ export const moveTerminalProcessToBackground = createAsyncThunk<
       {
         name: "Terminal",
         description: "Terminal command output",
-        content: existingContent + (existingContent ? "\n\n" : "") + status,
+        content: existingContent,
         status: status,
       },
     ];

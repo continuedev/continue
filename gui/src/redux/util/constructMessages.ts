@@ -17,11 +17,25 @@ import {
 import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
 import { SystemMessageToolsFramework } from "core/tools/systemMessageTools/types";
 import { findLast, findLastIndex } from "core/util/findLast";
-import {
-  normalizeToMessageParts,
-  renderContextItems,
-} from "core/util/messageContent";
+import { normalizeToMessageParts } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
+
+// Helper function to render context items and append status information
+// Helper function to render context items and append status information
+function renderContextItemsWithStatus(contextItems: any[]): string {
+  return contextItems
+    .map((item) => {
+      let result = item.content;
+
+      // If this item has a status, append it directly after the content
+      if (item.status) {
+        result += `\n[Status: ${item.status}]`;
+      }
+
+      return result;
+    })
+    .join("\n\n");
+}
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -133,7 +147,7 @@ export function constructMessages(
           if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
           } else if (toolCallState?.output) {
-            content = renderContextItems(toolCallState.output);
+            content = renderContextItemsWithStatus(toolCallState.output);
           }
 
           msgs.push({
