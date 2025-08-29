@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, Tool } from "core";
+import { ContextItem, LLMFullCompletionOptions, Tool, ToolPolicy } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -7,6 +7,7 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
   setContextPercentage,
@@ -15,6 +16,7 @@ import {
   setIsPruned,
   setToolGenerated,
   streamUpdate,
+  updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
@@ -28,6 +30,54 @@ import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 import { enhanceParsedArgs } from "./enhanceParsedArgs";
+
+/**
+ * Evaluates the tool policy for a tool call, including dynamic policy evaluation
+ */
+async function evaluateToolPolicy(
+  toolCallState: any,
+  toolSettings: any,
+  activeTools: Tool[],
+  ideMessenger: any,
+): Promise<ToolPolicy> {
+  const basePolicy =
+    toolSettings[toolCallState.toolCall.function.name] ??
+    activeTools.find(
+      (tool) => tool.function.name === toolCallState.toolCall.function.name,
+    )?.defaultToolPolicy ??
+    DEFAULT_TOOL_SETTING;
+
+  // Parse arguments for dynamic policy evaluation
+  let parsedArgs: Record<string, unknown> = {};
+  try {
+    parsedArgs = JSON.parse(toolCallState.toolCall.function.arguments);
+  } catch {
+    // If parsing fails, use empty object
+  }
+
+  let result;
+  try {
+    result = await ideMessenger.request("tools/evaluatePolicy", {
+      toolName: toolCallState.toolCall.function.name,
+      basePolicy,
+      args: parsedArgs,
+    });
+  } catch (error) {
+    console.log("ERROR ZZZ", error);
+    // If request fails, return disabled
+    return "disabled";
+  }
+
+  // Evaluate the policy dynamically
+
+  if (!result || result.status === "error") {
+    // If evaluation fails, treat as disabled
+    return "disabled";
+  }
+
+  return result.content.policy;
+}
+
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -36,7 +86,9 @@ async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
   activeTools: Tool[],
+  ideMessenger: any,
 ): Promise<void> {
+  console.log("HANDLE TOOL CALL EXECUTION");
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
@@ -51,16 +103,14 @@ async function handleToolCallExecution(
     return;
   }
 
-  // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every((toolCallState) => {
-    const toolPolicy =
-      toolSettings[toolCallState.toolCall.function.name] ??
-      activeTools.find(
-        (tool) => tool.function.name === toolCallState.toolCall.function.name,
-      )?.defaultToolPolicy ??
-      DEFAULT_TOOL_SETTING;
-    return toolPolicy == "allowedWithoutPermission";
-  });
+  // Check if ALL tool calls are auto-approved using dynamic evaluation
+  const policyPromises = toolCallStates.map((toolCallState) =>
+    evaluateToolPolicy(toolCallState, toolSettings, activeTools, ideMessenger),
+  );
+  const policies = await Promise.all(policyPromises);
+  const allAutoApproved = policies.every(
+    (policy) => policy === "allowedWithoutPermission",
+  );
 
   // Set all tools as generated first
   toolCallStates.forEach((toolCallState) => {
@@ -94,6 +144,7 @@ export const streamNormalInput = createAsyncThunk<
 >(
   "chat/streamNormalInput",
   async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
+    console.log("STREAMING ZZZZZZ ZZ");
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
@@ -270,19 +321,65 @@ export const streamNormalInput = createAsyncThunk<
       (toolCallState) => toolCallState.status === "generating",
     );
 
-    // Check if ALL generating tool calls are auto-approved
-    const allAutoApproved =
-      generatingToolCalls.length > 0 &&
-      generatingToolCalls.every((toolCallState) => {
-        const toolPolicy =
-          toolSettings[toolCallState.toolCall.function.name] ??
-          activeTools.find(
-            (tool) =>
-              tool.function.name === toolCallState.toolCall.function.name,
-          )?.defaultToolPolicy ??
-          DEFAULT_TOOL_SETTING;
-        return toolPolicy == "allowedWithoutPermission";
+    // Check if ALL generating tool calls are auto-approved using dynamic evaluation
+    let allAutoApproved = false;
+    if (generatingToolCalls.length > 0) {
+      const policyPromises = generatingToolCalls.map((toolCallState) =>
+        evaluateToolPolicy(
+          toolCallState,
+          toolSettings,
+          activeTools,
+          extra.ideMessenger,
+        ),
+      );
+      const policies = await Promise.all(policyPromises);
+
+      // Handle disabled tool calls
+      policies.forEach((policy, index) => {
+        if (policy === "disabled") {
+          const toolCallId = generatingToolCalls[index].toolCallId;
+          const toolCall = generatingToolCalls[index].toolCall;
+
+          // Get the actual command from parsed arguments if it's runTerminalCommand
+          let command = toolCall.function.name;
+          try {
+            const args = JSON.parse(toolCall.function.arguments);
+            if (
+              toolCall.function.name === "runTerminalCommand" &&
+              args.command
+            ) {
+              command = args.command;
+            }
+          } catch {
+            // Use function name if parsing fails
+          }
+
+          // Mark as errored instead of generated
+          dispatch(errorToolCall({ toolCallId }));
+
+          // Add error message explaining why it's disabled
+          dispatch(
+            updateToolCallOutput({
+              toolCallId,
+              contextItems: [
+                {
+                  icon: "problems",
+                  name: "Security Policy Violation",
+                  description: "Command Disabled",
+                  content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
+                  hidden: false,
+                },
+              ],
+            }),
+          );
+        }
+        // Non-disabled tools will be set to "generated" by handleToolCallExecution
       });
+
+      allAutoApproved = policies.every(
+        (policy) => policy === "allowedWithoutPermission",
+      );
+    }
 
     // Only set inactive if:
     // 1. There are no tool calls, OR
@@ -292,6 +389,11 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(setInactive());
     }
 
-    await handleToolCallExecution(dispatch, getState, activeTools);
+    await handleToolCallExecution(
+      dispatch,
+      getState,
+      activeTools,
+      extra.ideMessenger,
+    );
   },
 );
