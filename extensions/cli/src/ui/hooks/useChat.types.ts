@@ -1,5 +1,6 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
+import type { Session } from "core/index.js";
 
 import { ToolCallPreview } from "../../tools/types.js";
 
@@ -36,19 +37,7 @@ export interface ActivePermissionRequest {
 }
 
 export interface RemoteServerState {
-  session: {
-    history: Array<{
-      message: {
-        role: string;
-        content?: string;
-        tool_calls?: any[];
-      };
-      contextItems: any[];
-      toolCallStates?: any[];
-    }>;
-    id: string;
-    workspaceDirectory: string;
-  };
+  session: Session;
   isProcessing: boolean;
   messageQueueLength: number;
   pendingPermission?: {

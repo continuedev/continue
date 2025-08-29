@@ -18,10 +18,7 @@ type CommandHandler = (
   assistant: AssistantConfig,
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
-async function handleHelp(
-  _args: string[],
-  _assistant: AssistantConfig,
-) {
+async function handleHelp(_args: string[], _assistant: AssistantConfig) {
   const helpMessage = [
     chalk.bold("Keyboard Shortcuts:"),
     "",

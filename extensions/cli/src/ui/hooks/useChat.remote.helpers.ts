@@ -100,8 +100,8 @@ function updateStateFromRemote({
   // Update chat history from server - now using session.history directly
   if (state.session && state.session.history) {
     setChatHistory((prevHistory) => {
-      // Use session history directly - no conversion needed
-      const newHistory = state.session.history as ChatHistoryItem[];
+      // Use session history directly - it already has the correct type
+      const newHistory = state.session.history;
 
       // Quick length check first
       if (prevHistory.length !== newHistory.length) {
