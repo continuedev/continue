@@ -26,6 +26,7 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
@@ -38,11 +39,81 @@ import { validateAndEnhanceToolCallArgs } from "./enhanceParsedArgs";
 async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
+  ideMessenger: IIdeMessenger,
   activeTools: Tool[],
 ): Promise<void> {
-  const newState = getState();
-  const toolSettings = newState.ui.toolSettings;
-  const allToolCallStates = selectCurrentToolCalls(newState);
+  const state = getState();
+  const toolSettings = state.ui.toolSettings;
+  const allToolCallStates = selectCurrentToolCalls(state);
+
+  // Tool call pre-processing
+  await Promise.all(
+    allToolCallStates.map(async (tcState) => {
+      try {
+        const changedArgs = await validateAndEnhanceToolCallArgs(
+          ideMessenger,
+          tcState?.toolCall.function.name,
+          tcState.parsedArgs,
+        );
+        if (changedArgs) {
+          dispatch(
+            setToolCallArgs({
+              toolCallId: tcState.toolCallId,
+              newArgs: changedArgs,
+            }),
+          );
+        }
+      } catch (e) {
+        let errorMessage = e instanceof Error ? e.message : `Unknown error`;
+        dispatch(
+          errorToolCall({
+            toolCallId: tcState.toolCallId,
+          }),
+        );
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: tcState.toolCallId,
+            contextItems: [
+              {
+                icon: "problems",
+                name: "Invalid Tool Call",
+                description: "",
+                content: `${tcState.toolCall.function.name} failed because the arguments were invalid, with the following message: ${errorMessage}\n\nPlease try something else or request further instructions.`,
+                hidden: false,
+              },
+            ],
+          }),
+        );
+      }
+    }),
+  );
+
+  const preprocessedState = getState();
+  const preprocessedCalls = selectCurrentToolCalls(preprocessedState);
+  const generatingToolCalls = preprocessedCalls.filter(
+    (toolCallState) => toolCallState.status === "generating",
+  );
+
+  // Check if ALL generating tool calls are auto-approved
+  const allAutoApproved =
+    generatingToolCalls.length > 0 &&
+    generatingToolCalls.every((toolCallState) => {
+      const toolPolicy =
+        toolSettings[toolCallState.toolCall.function.name] ??
+        activeTools.find(
+          (tool) => tool.function.name === toolCallState.toolCall.function.name,
+        )?.defaultToolPolicy ??
+        DEFAULT_TOOL_SETTING;
+      return toolPolicy == "allowedWithoutPermission";
+    });
+
+  // Only set inactive if:
+  // 1. There are no tool calls, OR
+  // 2. There are tool calls but they require manual approval
+  // This prevents UI flashing for auto-approved tools while still showing approval UI for others
+  if (generatingToolCalls.length === 0 || !allAutoApproved) {
+    dispatch(setInactive());
+  }
 
   // Only process tool calls that are in "generating" status (newly created during this streaming session)
   const toolCallStates = allToolCallStates.filter(
@@ -252,80 +323,11 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-    // Check if we have any tool calls that were just generated
-    const allToolCallStates = selectCurrentToolCalls(getState());
-
-    // Tool call pre-processing
-    await Promise.all(
-      allToolCallStates.map(async (tcState) => {
-        try {
-          const changedArgs = await validateAndEnhanceToolCallArgs(
-            extra.ideMessenger,
-            tcState?.toolCall.function.name,
-            tcState.parsedArgs,
-          );
-          if (changedArgs) {
-            dispatch(
-              setToolCallArgs({
-                toolCallId: tcState.toolCallId,
-                newArgs: changedArgs,
-              }),
-            );
-          }
-        } catch (e) {
-          let errorMessage = e instanceof Error ? e.message : `Unknown error`;
-          dispatch(
-            errorToolCall({
-              toolCallId: tcState.toolCallId,
-            }),
-          );
-          dispatch(
-            updateToolCallOutput({
-              toolCallId: tcState.toolCallId,
-              contextItems: [
-                {
-                  icon: "problems",
-                  name: "Invalid Tool Call",
-                  description: "",
-                  content: `${tcState.toolCall.function.name} failed because the arguments were invalid, with the following message: ${errorMessage}\n\nPlease try something else or request further instructions.`,
-                  hidden: false,
-                },
-              ],
-            }),
-          );
-        }
-      }),
+    await handleToolCallExecution(
+      dispatch,
+      getState,
+      extra.ideMessenger,
+      activeTools,
     );
-
-    const preprocessedState = getState();
-    const preprocessedCalls = selectCurrentToolCalls(preprocessedState);
-    const generatingToolCalls = preprocessedCalls.filter(
-      (toolCallState) => toolCallState.status === "generating",
-    );
-    const toolSettings = preprocessedState.ui.toolSettings;
-
-    // Check if ALL generating tool calls are auto-approved
-    const allAutoApproved =
-      generatingToolCalls.length > 0 &&
-      generatingToolCalls.every((toolCallState) => {
-        const toolPolicy =
-          toolSettings[toolCallState.toolCall.function.name] ??
-          activeTools.find(
-            (tool) =>
-              tool.function.name === toolCallState.toolCall.function.name,
-          )?.defaultToolPolicy ??
-          DEFAULT_TOOL_SETTING;
-        return toolPolicy == "allowedWithoutPermission";
-      });
-
-    // Only set inactive if:
-    // 1. There are no tool calls, OR
-    // 2. There are tool calls but they require manual approval
-    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
-    if (generatingToolCalls.length === 0 || !allAutoApproved) {
-      dispatch(setInactive());
-    }
-
-    await handleToolCallExecution(dispatch, getState, activeTools);
   },
 );
