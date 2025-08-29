@@ -1,0 +1,375 @@
+name: 'Continue Detailed PR Review'
+description: 'Automated inline code review for pull requests using Continue CLI'
+author: 'Continue Dev, Inc.'
+
+inputs:
+  continue-api-key:
+    description: 'API key for Continue service'
+    required: true
+  continue-org:
+    description: 'Organization for Continue config'
+    required: true
+  continue-config:
+    description: 'Config path to use (e.g., "myorg/review-bot")'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Check Authorization
+      shell: bash
+      env:
+        # Only move the dangerous check to env to prevent shell injection
+        HAS_TRIGGER_PHRASE: ${{ contains(github.event.comment.body, '@continue-detailed-review') }}
+      run: |
+        # Check if this action should run based on event type and user permissions
+        SHOULD_RUN="false"
+        
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # Check if PR is a draft
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "::notice::Skipping review - PR is a draft"
+          else
+            # Check PR author association
+            AUTHOR_ASSOC="${{ github.event.pull_request.author_association }}"
+            if [ "$AUTHOR_ASSOC" = "OWNER" ] || [ "$AUTHOR_ASSOC" = "MEMBER" ] || [ "$AUTHOR_ASSOC" = "COLLABORATOR" ]; then
+              SHOULD_RUN="true"
+            else
+              echo "::notice::Skipping review - PR author is not a team member (association: $AUTHOR_ASSOC)"
+            fi
+          fi
+        elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+          # Check if it's a PR comment with the trigger phrase
+          if [ "${{ github.event.issue.pull_request }}" != "" ] && [ "$HAS_TRIGGER_PHRASE" = "true" ]; then
+            COMMENTER_ASSOC="${{ github.event.comment.author_association }}"
+            if [ "$COMMENTER_ASSOC" = "OWNER" ] || [ "$COMMENTER_ASSOC" = "MEMBER" ] || [ "$COMMENTER_ASSOC" = "COLLABORATOR" ]; then
+              SHOULD_RUN="true"
+            else
+              echo "::notice::Skipping review - Commenter is not a team member (association: $COMMENTER_ASSOC)"
+            fi
+          else
+            echo "::notice::Skipping review - Comment does not contain @continue-detailed-review trigger, or is not on a PR"
+          fi
+        else
+          echo "::notice::Skipping review - Event type ${{ github.event_name }} is not supported"
+        fi
+        
+        if [ "$SHOULD_RUN" != "true" ]; then
+          echo "SKIP_REVIEW=true" >> $GITHUB_ENV
+          exit 0
+        fi
+        
+        echo "SKIP_REVIEW=false" >> $GITHUB_ENV
+
+    - name: Setup Node.js
+      if: env.SKIP_REVIEW != 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Continue CLI
+      if: env.SKIP_REVIEW != 'true'
+      shell: bash
+      run: npm install -g @continuedev/cli@1.4.25
+
+    - name: Build Inline Review Prompt
+      if: env.SKIP_REVIEW != 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Get PR number based on event type
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          PR_NUMBER="${{ github.event.number }}"
+        else
+          # For issue_comment event on a PR
+          PR_NUMBER="${{ github.event.issue.number }}"
+        fi
+
+        # Get PR files with line numbers
+        gh api repos/${{ github.repository }}/pulls/$PR_NUMBER/files > pr_files.json
+
+        # Get PR diff with context
+        gh pr diff $PR_NUMBER --color=never > pr_diff.txt
+
+        # Annotate diff with GitHub API positions
+        node ${{ github.action_path }}/annotate-diff.js pr_diff.txt > pr_diff_annotated.txt
+        
+        # Debug: Show sample of annotated diff
+        echo "=== SAMPLE OF ANNOTATED DIFF ==="
+        head -100 pr_diff_annotated.txt | grep -E "^\[POS:|^@@|^diff --git" || head -50 pr_diff_annotated.txt
+        echo "=== END SAMPLE ==="
+
+        # Create review prompt for inline comments
+        cat > inline_review_prompt.txt << 'EOF'
+        You are conducting a detailed inline code review for a pull request. 
+
+        Your task is to analyze the code changes and generate specific, actionable review comments for individual lines or small sections of code.
+
+        IMPORTANT: The diff below has been annotated with [POS:N] markers showing the exact position for each line.
+
+        Example of how to use the position markers:
+        ```
+        diff --git a/src/app.js b/src/app.js
+        index abc123..def456 100644
+        --- a/src/app.js
+        +++ b/src/app.js
+        @@ -10,4 +10,6 @@ function example() {
+        [POS:1]     console.log("context");
+        [POS:2] -   const old = "remove this";
+        [POS:3] +   const new = "add this";
+        [POS:4] +   const risky = eval(userInput);    <-- To comment here, use position: 4
+        [POS:5]     return result;
+        [POS:6] +   console.log("done");
+        @@ -20,3 +22,4 @@ function another() {
+        [POS:1]     let x = 1;
+        [POS:2] +   let y = 2;                         <-- To comment here, use position: 2
+        ```
+
+        To comment on a line, simply use the number from its [POS:N] marker as the position value.
+        For example: {"path": "src/app.js", "position": 4, "body": "Avoid using eval with user input"}
+
+        Below is the annotated PR diff:
+
+        EOF
+
+        cat pr_diff_annotated.txt >> inline_review_prompt.txt
+
+        cat >> inline_review_prompt.txt << 'EOF'
+
+        Please analyze these changes and provide inline review comments in the following JSON format:
+
+        {
+          "review_summary": "Overall assessment of the PR",
+          "comments": [
+            {
+              "path": "path/to/file.js",
+              "position": 4,
+              "body": "Brief, specific comment about this line or section"
+            }
+          ]
+        }
+
+        Focus on:
+        1. **Critical Issues**: Security vulnerabilities, bugs that will break functionality
+        2. **High Priority**: Performance problems, incorrect logic, missing error handling
+        3. **Medium Priority**: Code style violations, potential edge cases, unclear code
+        4. **Low Priority**: Suggestions for improvement, refactoring opportunities
+
+        Guidelines for comments:
+        - Be specific and actionable
+        - Use the [POS:N] number shown in the diff as the position value
+        - Keep comments concise but informative
+        - Suggest concrete improvements when pointing out issues
+        - Only comment on actual problems or important improvements
+
+        Important: 
+        - Output ONLY valid JSON, no markdown code blocks or backticks
+        - Start your response with { and end with }
+        - Use the exact number from [POS:N] markers as the position
+        - Only comment on changed lines (lines with + or - prefix)
+        - Comment on the most important issues first
+        - Limit to maximum 20 most relevant comments
+        EOF
+
+    - name: Run Continue CLI Inline Review
+      if: env.SKIP_REVIEW != 'true'
+      shell: bash
+      env:
+        CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
+      run: |
+        echo "Running Continue CLI for inline review..."
+
+        # Validate required inputs
+        if [ -z "${{ inputs.continue-org }}" ]; then
+          echo "Error: continue-org input is required"
+          exit 1
+        fi
+        
+        if [ -z "${{ inputs.continue-config }}" ]; then
+          echo "Error: continue-config input is required"
+          exit 1
+        fi
+
+        # Log the prompt for debugging
+        echo "===== START REVIEW PROMPT ====="
+        head -n 50 inline_review_prompt.txt
+        echo "... [diff content] ..."
+        tail -n 20 inline_review_prompt.txt
+        echo "===== END REVIEW PROMPT ====="
+
+        # Run the CLI and capture JSON output
+        cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p "$(cat inline_review_prompt.txt)" > inline_review_raw.json
+
+        # Log the output for debugging
+        echo "Initial Continue CLI output:"
+        cat inline_review_raw.json
+
+        # Validate JSON output and use it directly
+        if ! jq empty inline_review_raw.json 2>/dev/null; then
+          echo "Error: Invalid JSON output from Continue CLI"
+          exit 1
+        fi
+        
+        # Use the JSON output directly
+        cp inline_review_raw.json inline_review.json
+        echo "Review output:"
+        cat inline_review.json
+
+    - name: Post Inline Review Comments
+      if: env.SKIP_REVIEW != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          try {
+            // Read the review output
+            let reviewData;
+            try {
+              const reviewContent = fs.readFileSync('inline_review.json', 'utf8');
+              reviewData = JSON.parse(reviewContent);
+            } catch (parseError) {
+              console.log('Failed to parse review JSON:', parseError);
+              reviewData = {
+                review_summary: 'AI review completed but failed to parse output',
+                comments: []
+              };
+            }
+            
+            // Get PR number
+            let prNumber;
+            if (context.eventName === 'pull_request') {
+              prNumber = context.payload.pull_request.number;
+            } else {
+              prNumber = context.payload.issue.number;
+            }
+            
+            // Get the latest commit SHA
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            const commitSha = pr.head.sha;
+            
+            // Prepare review comments - filter out comments without required fields
+            const allComments = reviewData.comments || [];
+            const validComments = allComments.filter(comment => 
+              comment.position && 
+              comment.path && 
+              comment.body &&
+              typeof comment.position === 'number' &&
+              comment.position > 0
+            );
+            
+            if (validComments.length < allComments.length) {
+              console.log(`Filtered out ${allComments.length - validComments.length} comments due to missing/invalid position, path, or body`);
+              const invalidComments = allComments.filter(c => !validComments.includes(c));
+              console.log('Invalid comments:', JSON.stringify(invalidComments, null, 2));
+            }
+            
+            // Deduplicate comments based on path + position + body
+            const uniqueComments = [];
+            const seen = new Set();
+            
+            for (const comment of validComments) {
+              const key = `${comment.path}:${comment.position}:${comment.body}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                uniqueComments.push(comment);
+              }
+            }
+            
+            if (uniqueComments.length < validComments.length) {
+              console.log(`Filtered out ${validComments.length - uniqueComments.length} duplicate comments (same path + position + body)`);
+            }
+            
+            const comments = uniqueComments.map(comment => ({
+              path: comment.path,
+              position: comment.position,
+              body: comment.body
+            }));
+            
+            // Debug: Log the positions we're trying to use
+            console.log('Attempting to post comments with positions:');
+            comments.forEach(c => {
+              console.log(`  ${c.path}: position ${c.position}`);
+            });
+            
+            // Create the review
+            if (comments.length > 0) {
+              try {
+                let reviewBody = `${reviewData.review_summary || 'AI Code Review'}\n\n---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+                
+                // Add triggered by note if from comment
+                if (context.eventName === 'issue_comment') {
+                  reviewBody = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewBody}`;
+                }
+                
+                await github.rest.pulls.createReview({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  commit_id: commitSha,
+                  body: reviewBody,
+                  event: 'COMMENT',
+                  comments: comments
+                });
+                console.log(`Successfully created review with ${comments.length} inline comments`);
+              } catch (reviewError) {
+                console.log('Failed to create review:', reviewError.message);
+                
+                // Fallback: post as a regular comment if review creation fails
+                const fallbackBody = `## AI Code Review\n\n${reviewData.review_summary}\n\n` +
+                  `*Failed to post ${comments.length} inline comments. Please review the changes manually.*\n\n` +
+                  `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+                
+                await github.rest.issues.createComment({
+                  issue_number: prNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: fallbackBody
+                });
+              }
+            } else {
+              // No inline comments, just post the summary
+              let summaryBody = `## AI Code Review\n\n${reviewData.review_summary}\n\n*No specific line comments generated.*\n\n` +
+                `---\n*💡 To request a new detailed review, comment \`@continue-detailed-review\`*`;
+              
+              // Add triggered by note if from comment
+              if (context.eventName === 'issue_comment') {
+                summaryBody = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${summaryBody}`;
+              }
+              
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summaryBody
+              });
+            }
+            
+          } catch (error) {
+            console.log('Failed to post review:', error.message);
+            console.log('Error details:', error);
+          }
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Upload Review Artifacts
+      if: env.SKIP_REVIEW != 'true' && always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: inline-review-results
+        path: |
+          inline_review_raw.json
+          inline_review.json
+          inline_review_prompt.txt
+          pr_diff.txt
+          pr_diff_annotated.txt
+        retention-days: 7

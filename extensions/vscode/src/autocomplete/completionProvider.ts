@@ -132,6 +132,15 @@ export class ContinueCompletionProvider
     return config.selectedModelByRole.rerank ?? undefined;
   }
 
+  /**
+   * Updates this class and the prefetch queue's usingFullFileDiff flag.
+   * @param usingFullFileDiff New value to set.
+   */
+  public updateUsingFullFileDiff(usingFullFileDiff: boolean) {
+    this.usingFullFileDiff = usingFullFileDiff;
+    this.prefetchQueue.initialize(this.usingFullFileDiff);
+  }
+
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
@@ -190,7 +199,18 @@ export class ContinueCompletionProvider
     try {
       const abortController = new AbortController();
       const signal = abortController.signal;
-      token.onCancellationRequested(() => abortController.abort());
+      const completionId = uuidv4();
+
+      if (this.isNextEditActive) {
+        this.nextEditLoggingService.trackPendingCompletion(completionId);
+      }
+
+      token.onCancellationRequested(() => {
+        abortController.abort();
+        if (this.isNextEditActive) {
+          this.nextEditLoggingService.handleAbort(completionId);
+        }
+      });
 
       // Handle notebook cells
       let pos = {
@@ -243,7 +263,7 @@ export class ContinueCompletionProvider
       const wasManuallyTriggered =
         context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
-      const completionId = uuidv4();
+      // const completionId = uuidv4();
       const filepath = document.uri.toString();
       const recentlyVisitedRanges = this.recentlyVisitedRanges.getSnippets();
       let recentlyEditedRanges =
@@ -261,18 +281,15 @@ export class ContinueCompletionProvider
 
       let outcome: AutocompleteOutcome | NextEditOutcome | undefined;
 
-      // console.log(
-      //   "chain exists?",
-      //   this.nextEditProvider.chainExists(),
-      //   ", length:",
-      //   this.nextEditProvider.getChainLength(),
-      //   ", next regions queue:",
-      //   this.nextEditProvider.getNextEditableRegionsInTheCurrentChainLength(),
-      // );
+      // TODO: We can probably decide here if we want to do the jumping logic.
+      // If we aren't going to jump anyways, then we should be not be using the prefetch queue or the jump manager.
+      // It would simplify the logic quite substantially.
 
       // Determine why this method was triggered.
       const isJumping = this.jumpManager.isJumpInProgress();
       const chainExists = this.nextEditProvider.chainExists();
+      console.log("isJumping:", isJumping, "/ chainExists:", chainExists);
+      this.prefetchQueue.peekThreeProcessed();
 
       if (isJumping && chainExists) {
         // Case 2: Jumping (chain exists, jump was taken)
@@ -340,7 +357,6 @@ export class ContinueCompletionProvider
 
           if (isJumpSuggested) {
             // Store completion to be rendered after a jump.
-            // TODO: setCompletionAfterJump must have a 1-1 correspondence to the jump location.
             this.jumpManager.setCompletionAfterJump({
               completionId: completionId,
               outcome,

@@ -220,7 +220,7 @@ describe("modelSupportsNextEdit", () => {
       expect(
         modelSupportsNextEdit(
           { nextEdit: false },
-          "mercury-coder-nextedit",
+          "mercury-coder",
           "Mercury Coder",
         ),
       ).toBe(false);
@@ -231,7 +231,7 @@ describe("modelSupportsNextEdit", () => {
       expect(
         modelSupportsNextEdit(
           { nextEdit: false },
-          "mercury-coder-nextedit",
+          "mercury-coder",
           "Mercury Coder",
         ),
       ).toBe(false);
@@ -239,21 +239,23 @@ describe("modelSupportsNextEdit", () => {
   });
 
   describe("when capabilities.nextEdit is undefined", () => {
-    it("should return true for mercury-coder-nextedit model (case insensitive)", () => {
-      expect(
-        modelSupportsNextEdit(undefined, "Mercury-Coder-Nextedit", undefined),
-      ).toBe(true);
+    it("should return true for mercury-coder model (case insensitive)", () => {
+      expect(modelSupportsNextEdit(undefined, "Mercury-Coder", undefined)).toBe(
+        true,
+      );
     });
 
-    it("should return true for model-1", () => {
-      expect(modelSupportsNextEdit(undefined, "model-1", undefined)).toBe(true);
+    it("should return true for instinct", () => {
+      expect(modelSupportsNextEdit(undefined, "instinct", undefined)).toBe(
+        true,
+      );
     });
 
     it("should return true when model contains supported model name as substring", () => {
       expect(
         modelSupportsNextEdit(
           undefined,
-          "provider/mercury-coder-nextedit-v2",
+          "provider/mercury-coder-v2",
           undefined,
         ),
       ).toBe(true);
@@ -264,14 +266,14 @@ describe("modelSupportsNextEdit", () => {
         modelSupportsNextEdit(
           undefined,
           "some-model",
-          "This is mercury-coder-nextedit model",
+          "This is mercury-coder model",
         ),
       ).toBe(true);
     });
 
-    it("should return true when title contains model-1", () => {
+    it("should return true when title contains instinct", () => {
       expect(
-        modelSupportsNextEdit(undefined, "some-model", "model-1 deployment"),
+        modelSupportsNextEdit(undefined, "some-model", "instinct deployment"),
       ).toBe(true);
     });
 
@@ -310,14 +312,14 @@ describe("modelSupportsNextEdit", () => {
     });
 
     it("should handle undefined title gracefully", () => {
-      expect(
-        modelSupportsNextEdit(undefined, "mercury-coder-nextedit", undefined),
-      ).toBe(true);
+      expect(modelSupportsNextEdit(undefined, "mercury-coder", undefined)).toBe(
+        true,
+      );
     });
 
     it("should handle case sensitivity correctly", () => {
       expect(
-        modelSupportsNextEdit(undefined, "MERCURY-CODER-NEXTEDIT", "MODEL-1"),
+        modelSupportsNextEdit(undefined, "MERCURY-CODER", "instinct"),
       ).toBe(true);
     });
 

@@ -4,6 +4,8 @@ import {
   MERCURY_CODE_TO_EDIT_CLOSE,
   MERCURY_CODE_TO_EDIT_OPEN,
   MERCURY_CURSOR,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE,
+  MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN,
 } from "../constants";
 import {
   currentFileContentBlock,
@@ -25,10 +27,14 @@ describe("mercuryCoderNextEdit", () => {
       const result = recentlyViewedCodeSnippetsBlock(snippets);
 
       const expected =
+        `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN}\n` +
         "code_snippet_file_path: /path/to/file1.ts\n" +
         "const a = 1;\n" +
+        `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE}\n` +
+        `${MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_OPEN}\n` +
         "code_snippet_file_path: /path/to/file2.ts\n" +
-        "function test() { return true; }";
+        "function test() { return true; }\n" +
+        MERCURY_RECENTLY_VIEWED_CODE_SNIPPET_CLOSE;
 
       expect(result).toBe(expected);
     });
@@ -108,12 +114,12 @@ describe("mercuryCoderNextEdit", () => {
     it("should return the edit diff history unchanged", () => {
       const diffHistory =
         "diff --git a/file.ts b/file.ts\n==============================\n@@ -1,3 +1,4 @@";
-      const result = editHistoryBlock(diffHistory);
+      const result = editHistoryBlock([diffHistory]);
       expect(result).toBe("@@ -1,3 +1,4 @@");
     });
 
     it("should handle empty diff history", () => {
-      const result = editHistoryBlock("");
+      const result = editHistoryBlock([]);
       expect(result).toBe("");
     });
   });

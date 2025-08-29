@@ -1,35 +1,37 @@
 ---
-title: Gemini
+title: "How to Configure Gemini with Continue"
 slug: ../gemini
+sidebarTitle: "Gemini"
 ---
 
+<Tip>
+  **Discover Google models [here](https://hub.continue.dev/?q=Gemini)**
+</Tip>
+
 <Info>
-  You can get an API key from the [Google AI
-  Studio](https://aistudio.google.com/).
+  Get an API key from [Google AI Studio](https://aistudio.google.com/)
 </Info>
 
-## Chat model
-
-We recommend configuring **Gemini 2.0 Flash** as your chat model.
+## Configuration
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Gemini 2.0 Flash
+    - name: <MODEL_NAME>
       provider: gemini
-      model: gemini-2.0-flash
+      model: <MODEL_ID>
       apiKey: <YOUR_GEMINI_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
-        "title": "Gemini 2.0 Flash", 
+        "title": "<MODEL_NAME>", 
         "provider": "gemini",
-        "model": "gemini-2.0-flash",
+        "model": "<MODEL_ID>",
         "apiKey": "<YOUR_GEMINI_API_KEY>"
       }
     ]
@@ -38,43 +40,6 @@ We recommend configuring **Gemini 2.0 Flash** as your chat model.
   </Tab>
 </Tabs>
 
-## Autocomplete model
-
-Gemini currently does not offer any autocomplete models.
-
-[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
-
-## Embeddings model
-
-We recommend configuring **text-embedding-004** as your embeddings model.
-
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  models:
-    - name: Gemini Embeddings
-      provider: gemini
-      model: models/text-embedding-004 
-      apiKey: <YOUR_GEMINI_API_KEY>
-      roles:
-        - embed
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "embeddingsProvider": {
-      "provider": "gemini",
-      "model": "models/text-embedding-004",
-      "apiKey": "<YOUR_GEMINI_API_KEY>"
-    }
-  }
-  ```
-  </Tab>
-</Tabs>
-
-## Reranking model
-
-Gemini currently does not offer any reranking models.
-
-[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/google/gemini-2.5-pro?view=config)**
+</Info>

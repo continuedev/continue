@@ -20,12 +20,12 @@ import {
 } from "../../";
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import CurrentFileContextProvider from "../../context/providers/CurrentFileContextProvider";
+import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
-import RulesContextProvider from "../../context/providers/RulesContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigDependentToolDefinitions } from "../../tools";
@@ -35,6 +35,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
+import { SentryLogger } from "../../util/sentry/SentryLogger";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
@@ -59,6 +60,11 @@ async function loadRules(ide: IDE) {
     await loadMarkdownRules(ide);
   rules.unshift(...markdownRules);
   errors.push(...markdownRulesErrors);
+
+  // Add colocated rules from CodebaseRulesCache
+  const codebaseRulesCache = CodebaseRulesCache.getInstance();
+  rules.unshift(...codebaseRulesCache.rules);
+  errors.push(...codebaseRulesCache.errors);
 
   return { rules, errors };
 }
@@ -91,6 +97,7 @@ export default async function doLoadConfig(options: {
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
+  const isSignedIn = await controlPlaneClient.isSignedIn();
 
   // Migrations for old config files
   // Removes
@@ -150,17 +157,13 @@ export default async function doLoadConfig(options: {
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
   newConfig.rules.unshift(...rules);
-  newConfig.contextProviders.push(new RulesContextProvider({}));
 
-  // Add current file as context if setting is enabled
-  if (
-    newConfig.experimental?.useCurrentFileAsContext === true &&
-    !newConfig.contextProviders.find(
-      (c) =>
-        c.description.title === CurrentFileContextProvider.description.title,
-    )
-  ) {
-    newConfig.contextProviders.push(new CurrentFileContextProvider({}));
+  const proxyContextProvider = newConfig.contextProviders?.find(
+    (cp) => cp.description.title === "continue-proxy",
+  );
+  if (proxyContextProvider) {
+    (proxyContextProvider as ContinueProxyContextProvider).workOsAccessToken =
+      workOsAccessToken;
   }
 
   // Show deprecation warnings for providers
@@ -179,11 +182,6 @@ export default async function doLoadConfig(options: {
       }
     }
   });
-
-  // Add rules from colocated rules.md files in the codebase
-  const codebaseRulesCache = CodebaseRulesCache.getInstance();
-  newConfig.rules.unshift(...codebaseRulesCache.rules);
-  errors.push(...codebaseRulesCache.errors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
@@ -283,6 +281,9 @@ export default async function doLoadConfig(options: {
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
+      isSignedIn,
+      isRemote: await ide.isWorkspaceRemote(),
+      modelName: newConfig.selectedModelByRole.chat?.model,
     }),
   );
 
@@ -325,14 +326,42 @@ export default async function doLoadConfig(options: {
     }
   });
 
-  newConfig.allowAnonymousTelemetry =
-    newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
+  if (newConfig.allowAnonymousTelemetry !== false) {
+    if ((await ide.isTelemetryEnabled()) === false) {
+      newConfig.allowAnonymousTelemetry = false;
+    }
+  }
+
+  if (
+    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
+    false
+  ) {
+    newConfig.allowAnonymousTelemetry = false;
+  }
 
   // Setup telemetry only after (and if) we know it is enabled
   await Telemetry.setup(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
     ideInfo,
+  );
+
+  // Setup Sentry logger with same telemetry settings
+  // TODO: Remove Continue team member check once Sentry is ready for all users
+  let userEmail: string | undefined;
+  try {
+    // Access the session info to get user email for Continue team member check
+    const sessionInfo = await (controlPlaneClient as any).sessionInfoPromise;
+    userEmail = sessionInfo?.account?.id;
+  } catch (error) {
+    // Ignore errors getting session info, will default to no Sentry
+  }
+
+  await SentryLogger.setup(
+    newConfig.allowAnonymousTelemetry ?? false,
+    await ide.getUniqueId(),
+    ideInfo,
+    userEmail,
   );
 
   // TODO: pass config to pre-load non-system TTS models

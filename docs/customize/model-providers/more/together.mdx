@@ -1,33 +1,44 @@
 ---
 title: "Together AI"
+sidebarTitle: "Together AI"
 ---
 
-The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/serverless-models). Change `~/.continue/config.json` to look like this:
+<Tip>
+  **Discover Together AI models [here](https://hub.continue.dev/togetherai)**
+</Tip>
+
+<Info>
+  Get an API key from the [Together AI](https://api.together.ai)
+</Info>
+
+## Configuration
 
 <Tabs>
-   <Tab title="YAML">
-   ```yaml title="config.yaml"
-   models:
-     - name: Together Qwen2.5 Coder
-       provider: together
-       model: Qwen/Qwen2.5-Coder-32B-Instruct
-       apiKey: <YOUR_TOGETHER_API_KEY>
-   ```
-   </Tab>
-   <Tab title="JSON">
-	```json title="config.json"
-	{
-      "models": [
-        {
-          "title": "Together Qwen2.5 Coder",
-          "provider": "together",
-          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
-          "apiKey": "<YOUR_TOGETHER_API_KEY>"
-        }
-      ]
-	}
-    ```
-   </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: <MODEL_NAME>
+      provider: together
+      model: <MODEL_ID>
+      apiKey: <YOUR_TOGETHER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "together",
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_TOGETHER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
 </Tabs>
 
-[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Together.ts)
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/togetherai/qwen3-coder-480b-a35b-instruct-fp8?view=config)**
+</Info>

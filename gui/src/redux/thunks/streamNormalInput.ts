@@ -1,11 +1,8 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, ModelDescription, Tool } from "core";
+import { LLMFullCompletionOptions, Tool } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
-import { BuiltInToolNames } from "core/tools/builtIn";
-import posthog from "posthog-js";
 import { selectActiveTools } from "../selectors/selectActiveTools";
-import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -27,9 +24,10 @@ import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTo
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
+import { enhanceParsedArgs } from "./enhanceParsedArgs";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -87,49 +85,6 @@ async function handleToolCallExecution(
   }
 }
 
-/**
- * Filters tools based on the selected model's capabilities.
- * Returns either the edit file tool or search and replace tool, but not both.
- */
-function filterToolsForModel(
-  tools: Tool[],
-  selectedModel: ModelDescription,
-): Tool[] {
-  const editFileTool = tools.find(
-    (tool) => tool.function.name === BuiltInToolNames.EditExistingFile,
-  );
-  const searchAndReplaceTool = tools.find(
-    (tool) => tool.function.name === BuiltInToolNames.SearchAndReplaceInFile,
-  );
-
-  // If we don't have both tools, return tools as-is
-  if (!editFileTool || !searchAndReplaceTool) {
-    return tools;
-  }
-
-  // Determine which tool to use based on the model
-  const shouldUseFindReplace = shouldUseFindReplaceEdits(selectedModel);
-
-  // Filter out the unwanted tool
-  return tools.filter((tool) => {
-    if (tool.function.name === BuiltInToolNames.EditExistingFile) {
-      return !shouldUseFindReplace;
-    }
-    if (tool.function.name === BuiltInToolNames.SearchAndReplaceInFile) {
-      return shouldUseFindReplace;
-    }
-    return true;
-  });
-}
-
-/**
- * Determines whether to use search and replace tool instead of edit file
- * Right now we only know that this is reliable with Claude models
- */
-function shouldUseFindReplaceEdits(model: ModelDescription): boolean {
-  return model.model.includes("claude");
-}
-
 export const streamNormalInput = createAsyncThunk<
   void,
   {
@@ -147,14 +102,14 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // Get tools and filter them based on the selected model
-    const allActiveTools = selectActiveTools(state);
-    const activeTools = filterToolsForModel(allActiveTools, selectedChatModel);
-    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
+    const activeTools = selectActiveTools(state);
 
     // Use the centralized selector to determine if system message tools should be used
-    const useSystemTools = selectUseSystemMessageTools(state);
-    const useNativeTools = !useSystemTools && supportsNativeTools;
-    const systemToolsFramework = useSystemTools
+    const useNativeTools = state.config.config.experimental
+      ?.onlyUseSystemMessageTools
+      ? false
+      : modelSupportsNativeTools(selectedChatModel);
+    const systemToolsFramework = !useNativeTools
       ? new SystemMessageToolCodeblocksFramework()
       : undefined;
 
@@ -274,6 +229,7 @@ export const streamNormalInput = createAsyncThunk<
             prompt: next.value.prompt,
             completion: next.value.completion,
             modelProvider: selectedChatModel.underlyingProviderName,
+            modelName: selectedChatModel.title,
             modelTitle: selectedChatModel.title,
             sessionId: state.session.id,
             ...(!!activeTools.length && {
@@ -297,6 +253,19 @@ export const streamNormalInput = createAsyncThunk<
     const newState = getState();
     const toolSettings = newState.ui.toolSettings;
     const allToolCallStates = selectCurrentToolCalls(newState);
+
+    await Promise.all(
+      allToolCallStates.map((tcState) =>
+        enhanceParsedArgs(
+          extra.ideMessenger,
+          dispatch,
+          tcState?.toolCall.function.name,
+          tcState.toolCallId,
+          tcState.parsedArgs,
+        ),
+      ),
+    );
+
     const generatingToolCalls = allToolCallStates.filter(
       (toolCallState) => toolCallState.status === "generating",
     );

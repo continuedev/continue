@@ -19,10 +19,8 @@ async function dudLLMCall(llm: ILLM, messages: ChatMessage[]) {
     await gen.next();
     await gen.return({
       completion: "",
-      completionOptions: {
-        model: "",
-      },
       modelTitle: "",
+      modelProvider: "",
       prompt: "",
     });
     abortController.abort();

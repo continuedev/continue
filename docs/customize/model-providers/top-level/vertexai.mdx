@@ -1,39 +1,36 @@
 ---
-title: Vertex AI
+title: "How to Configure Vertex AI with Continue"
 slug: ../vertexai
+sidebarTitle: "Vertex AI"
 ---
 
 <Info>
-  You need to enable the [Vertex AI
-  API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com)
-  and set up the [Google Application Default
-  Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).
+  Enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com)
+  and set up [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc)
 </Info>
 
-## Chat model
-
-We recommend configuring **Claude 3.5 Sonnet** as your chat model.
+## Configuration
 
 <Tabs>
     <Tab title="YAML">
     ```yaml title="config.yaml"
     models:
-      - name: Claude 3.5 Sonnet
+      - name: <MODEL_NAME>
         provider: vertexai
-        model: claude-3-5-sonnet-20240620
+        model: <MODEL_ID>
         env:
           projectId: <PROJECT_ID>
           region: us-east5
     ```
     </Tab>
-    <Tab title="JSON">
+    <Tab title="JSON (Deprecated)">
     ```json title="config.json"
     {
       "models": [
         {
-          "title": "Claude 3.5 Sonnet",
+          "title": "<MODEL_NAME>",
           "provider": "vertexai",
-          "model": "claude-3-5-sonnet-20240620",
+          "model": "<MODEL_ID>",
           "projectId": "[PROJECT_ID]",
           "region": "us-east5"
         }
@@ -43,104 +40,32 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     </Tab>
 </Tabs>
 
-## Autocomplete model
+## How to Enable Vertex AI Express Mode
 
-We recommend configuring **Codestral** or **code-gecko** as your autocomplete model.
-
-<Tabs>
-    <Tab title="YAML">
-    ```yaml title="config.yaml"
-    models:
-      - name: Codestral (Vertex AI)
-        provider: vertexai
-        model: codestral
-        roles:
-          - autocomplete
-        env:
-          projectId: <PROJECT_ID>
-          region: us-central1
-          
-    ```
-    </Tab>
-    <Tab title="JSON">
-    ```json title="config.json"
-    {
-      "tabAutocompleteModel": {
-          "title": "Codestral (Vertex AI)",
-          "provider": "vertexai",
-          "model": "codestral",
-          "projectId": "[PROJECT_ID]",
-          "region": "us-central1"
-      }
-    }
-    ```
-    </Tab>
-</Tabs>
-
-## Embeddings model
-
-We recommend configuring **text-embedding-004** as your embeddings model.
+You can use Vertex AI in [express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) by only providing an API Key. Only some Gemini models are supported in express mode for now.
 
 <Tabs>
     <Tab title="YAML">
     ```yaml title="config.yaml"
     models:
-      - name: Text Embedding-004
+      - name: <MODEL_NAME>
         provider: vertexai
-        model: text-embedding-004
-        env:
-          projectId: <PROJECT_ID>
-          region: us-central1
-        roles:
-          - embed
+        model: <MODEL_ID>
+        apiKey: <YOUR_GOOGLE_CLOUD_API_KEY>
     ```
     </Tab>
-    <Tab title="JSON">
-    ```json title="config.json"
-    {
-      "embeddingsProvider": {
-        "provider": "vertexai",
-        "model": "text-embedding-004",
-        "projectId": "[PROJECT_ID]",
-        "region": "us-central1"
-      }
-    }
-    ```
-    </Tab>
-</Tabs>
-
-## Reranking model
-
-Vertex AI currently does not offer any reranking models.
-
-[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
-
-## Express mode
-
-You can use VertexAI in [express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) by only providing an API Key. Only some Gemini models are supported in express mode for now.
-
-<Tabs groupId="config-example">
-    <TabItem value="yaml" label="YAML">
-    ```yaml title="config.yaml"
-    models:
-      - name: Gemini 2.5 Flash - VertexAI
-        provider: vertexai
-        model: gemini-2.5-flash
-        apiKey: ${{ secrets.GOOGLE_CLOUD_API_KEY }}
-    ```
-    </TabItem>
-    <TabItem value="json" label="JSON">
+    <Tab title="JSON (Deprecated)">
     ```json title="config.json"
     {
       "models": [
         {
-          "title": "Gemini 2.5 Flash - VertexAI",
+          "title": "<MODEL_NAME>",
           "provider": "vertexai",
-          "model": "gemini-2.5-flash",
-          "apiKey": "[YOUR_GOOGLE_CLOUD_API_KEY]",
+          "model": "<MODEL_ID>",
+          "apiKey": "<YOUR_GOOGLE_CLOUD_API_KEY>",
         }
       ]
     }
     ```
-    </TabItem>
+    </Tab>
 </Tabs>
