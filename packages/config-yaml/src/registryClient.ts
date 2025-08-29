@@ -26,7 +26,7 @@ export class RegistryClient implements Registry {
   async getContent(id: PackageIdentifier): Promise<string> {
     switch (id.uriType) {
       case "file":
-        return this.getContentFromFilePath(id.filePath);
+        return this.getContentFromFilePath(id.fileUri);
       case "slug":
         return this.getContentFromSlug(id.fullSlug);
       default:

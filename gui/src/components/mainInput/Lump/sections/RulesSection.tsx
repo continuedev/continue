@@ -90,7 +90,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       } else if (rule.source === "model-options-chat") {
         return "Base System Chat Message";
       } else {
-        return "Assistant rule";
+        return "Agent rule";
       }
     }
   }, [rule]);

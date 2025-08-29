@@ -1,15 +1,6 @@
-import * as path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import {
-  ChatMessage,
-  DiffLine,
-  IDE,
-  ILLM,
-  Position,
-  Range,
-  RangeInFile,
-} from "../index.js";
+import { ChatMessage, IDE, ILLM, Range, RangeInFile } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
@@ -18,10 +9,7 @@ import { ContextRetrievalService } from "../autocomplete/context/ContextRetrieva
 import { BracketMatchingService } from "../autocomplete/filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "../autocomplete/generation/CompletionStreamer.js";
 import { shouldPrefilter } from "../autocomplete/prefiltering/index.js";
-import {
-  getAllSnippetsWithoutRace,
-  SnippetPayload,
-} from "../autocomplete/snippets/index.js";
+import { getAllSnippetsWithoutRace } from "../autocomplete/snippets/index.js";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types.js";
 import { GetLspDefinitionsFunction } from "../autocomplete/types.js";
 import { getAst } from "../autocomplete/util/ast.js";
@@ -29,32 +17,18 @@ import { AutocompleteDebouncer } from "../autocomplete/util/AutocompleteDebounce
 import AutocompleteLruCache from "../autocomplete/util/AutocompleteLruCache.js";
 import { HelperVars } from "../autocomplete/util/HelperVars.js";
 import { AutocompleteInput } from "../autocomplete/util/types.js";
-import { myersDiff } from "../diff/myers.js";
+import { isSecurityConcern } from "../indexing/ignore.js";
 import { modelSupportsNextEdit } from "../llm/autodetect.js";
 import { countTokens } from "../llm/countTokens.js";
 import { localPathOrUriToPath } from "../util/pathToUri.js";
-import { replaceEscapedCharacters } from "../util/text.js";
-import {
-  MERCURY_CODE_TO_EDIT_OPEN,
-  MERCURY_SYSTEM_PROMPT,
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-} from "./constants.js";
 import { createDiff, DiffFormatType } from "./context/diffFormatting.js";
-import {
-  calculateFinalCursorPosition,
-  DiffGroup,
-  groupDiffLines,
-} from "./diff/diff.js";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker.js";
 import { NextEditLoggingService } from "./NextEditLoggingService.js";
 import { PrefetchQueue } from "./NextEditPrefetchQueue.js";
+import { NextEditProviderFactory } from "./NextEditProviderFactory.js";
+import { BaseNextEditProvider } from "./providers/BaseNextEditProvider.js";
 import {
-  renderDefaultSystemPrompt,
-  renderDefaultUserPrompt,
-  renderPrompt,
-} from "./templating/NextEditPromptEngine.js";
-import {
+  ModelSpecificContext,
   NextEditOutcome,
   Prompt,
   PromptMetadata,
@@ -82,12 +56,16 @@ export class NextEditProvider {
   private loggingService: NextEditLoggingService;
   private contextRetrievalService: ContextRetrievalService;
   private endpointType: "default" | "fineTuned";
-  private diffContext: string = "";
+  private diffContext: string[] = [];
+  private autocompleteContext: string = "";
   private promptMetadata: PromptMetadata | null = null;
   private currentEditChainId: string | null = null;
   private previousRequest: AutocompleteInput | null = null;
   private previousCompletions: NextEditOutcome[] = [];
   // private nextEditableRegionsInTheCurrentChain: RangeInFile[] = [];
+
+  // Model-specific provider instance.
+  private modelProvider: BaseNextEditProvider | null = null;
 
   private constructor(
     private readonly configHandler: ConfigHandler,
@@ -134,7 +112,14 @@ export class NextEditProvider {
   }
 
   public addDiffToContext(diff: string): void {
-    this.diffContext = diff;
+    this.diffContext.push(diff);
+    if (this.diffContext.length > 5) {
+      this.diffContext.shift();
+    }
+  }
+
+  public addAutocompleteContext(ctx: string): void {
+    this.autocompleteContext = ctx;
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -276,6 +261,9 @@ export class NextEditProvider {
       usingFullFileDiff: boolean;
     },
   ): Promise<NextEditOutcome | undefined> {
+    if (isSecurityConcern(input.filepath)) {
+      return undefined;
+    }
     try {
       this.previousRequest = input;
       const {
@@ -285,28 +273,23 @@ export class NextEditProvider {
       } = await this._initializeCompletionRequest(input, token);
       if (!helper) return undefined;
 
+      // Create model-specific provider based on the model name.
+      this.modelProvider = NextEditProviderFactory.createProvider(
+        helper.modelName,
+      );
+
       const { editableRegionStartLine, editableRegionEndLine, prompts } =
         await this._generatePrompts(helper, opts);
 
-      if (this.endpointType === "default") {
-        return await this._handleDefaultEndpointCompletion(
-          helper,
-          prompts,
-          abortToken,
-          startTime,
-          editableRegionEndLine,
-        );
-      } else {
-        return await this._handleFineTunedEndpointCompletion(
-          helper,
-          prompts,
-          abortToken,
-          startTime,
-          editableRegionStartLine,
-          editableRegionEndLine,
-          opts,
-        );
-      }
+      return await this._handleCompletion(
+        helper,
+        prompts,
+        abortToken,
+        startTime,
+        editableRegionStartLine,
+        editableRegionEndLine,
+        opts,
+      );
     } catch (e: any) {
       this.onError(e);
     } finally {
@@ -322,17 +305,21 @@ export class NextEditProvider {
     startTime: number;
     helper: HelperVars | undefined;
   }> {
-    // Create abort signal if not given.
+    // Create abort signal if not given
     if (!token) {
       const controller = this.loggingService.createAbortController(
         input.completionId,
       );
       token = controller.signal;
+    } else {
+      // Token was provided externally, just track the completion.
+      this.loggingService.trackPendingCompletion(input.completionId);
     }
+
     const startTime = Date.now();
     const options = await this._getAutocompleteOptions();
 
-    // Debounce.
+    // Debounce
     if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
       return { token, startTime, helper: undefined };
     }
@@ -342,9 +329,14 @@ export class NextEditProvider {
       return { token, startTime, helper: undefined };
     }
 
-    // In vscode, this check is done in extensions/vscode/src/extension/VsCodeExtension.ts.
-    // For other editors, this check should be done in their respective config reloaders.
-    // This is left for a final check.
+    // Update pending completion with model info.
+    this.loggingService.updatePendingCompletion(input.completionId, {
+      modelName: llm.model,
+      modelProvider: llm.providerName,
+      filepath: input.filepath,
+    });
+
+    // Check model capabilities
     if (!modelSupportsNextEdit(llm.capabilities, llm.model, llm.title)) {
       console.error(`${llm.model} is not capable of next edit.`);
       return { token, startTime, helper: undefined };
@@ -374,6 +366,10 @@ export class NextEditProvider {
     editableRegionEndLine: number;
     prompts: Prompt[];
   }> {
+    if (!this.modelProvider) {
+      throw new Error("Model provider not initialized");
+    }
+
     const [snippetPayload, workspaceDirs] = await Promise.all([
       getAllSnippetsWithoutRace({
         helper,
@@ -384,48 +380,118 @@ export class NextEditProvider {
       this.ide.getWorkspaceDirs(),
     ]);
 
+    // Calculate editable region based on model and options.
     const { editableRegionStartLine, editableRegionEndLine } =
-      opts?.usingFullFileDiff
-        ? this._calculateOptimalEditableRegion(helper, "tokenizer")
-        : {
-            editableRegionStartLine: Math.max(
-              helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-              0,
-            ),
-            editableRegionEndLine: Math.min(
-              helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-              helper.fileLines.length - 1,
-            ),
-          };
+      this.modelProvider.calculateEditableRegion(
+        helper,
+        opts?.usingFullFileDiff ?? false,
+      );
 
-    // const editableRegionStartLine = opts?.usingFullFileDiff
-    //   ? 0
-    //   : Math.max(helper.pos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN, 0);
+    // Build context for model-specific prompt generation.
+    const context: ModelSpecificContext = {
+      helper,
+      snippetPayload,
+      editableRegionStartLine,
+      editableRegionEndLine,
+      diffContext: this.diffContext,
+      autocompleteContext: this.autocompleteContext,
+      historyDiff: createDiff({
+        beforeContent:
+          DocumentHistoryTracker.getInstance().getMostRecentDocumentHistory(
+            localPathOrUriToPath(helper.filepath),
+          ) ?? "",
+        afterContent: helper.fileContents,
+        filePath: helper.filepath,
+        diffType: DiffFormatType.Unified,
+        contextLines: 3,
+      }),
+    };
 
-    // const editableRegionEndLine = opts?.usingFullFileDiff
-    //   ? helper.fileLines.length - 1
-    //   : Math.min(
-    //       helper.pos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-    //       helper.fileLines.length - 1,
-    //     );
+    const prompts = await this.modelProvider.generatePrompts(context);
 
-    const prompts: Prompt[] = [];
+    this.promptMetadata = this.modelProvider.buildPromptMetadata(context);
 
-    if (this.endpointType === "default") {
-      prompts.push(renderDefaultSystemPrompt());
-      prompts.push(renderDefaultUserPrompt(snippetPayload, helper));
+    return { editableRegionStartLine, editableRegionEndLine, prompts };
+  }
+
+  private async _handleCompletion(
+    helper: HelperVars,
+    prompts: Prompt[],
+    token: AbortSignal,
+    startTime: number,
+    editableRegionStartLine: number,
+    editableRegionEndLine: number,
+    opts?: {
+      withChain: boolean;
+      usingFullFileDiff: boolean;
+    },
+  ): Promise<NextEditOutcome | undefined> {
+    if (!this.modelProvider) {
+      throw new Error("Model provider not initialized");
+    }
+
+    const llm = await this._prepareLlm();
+    if (!llm) return undefined;
+
+    // Inject unique token if needed (for Mercury models).
+    if (this.modelProvider.shouldInjectUniqueToken()) {
+      const uniqueToken = this.modelProvider.getUniqueToken();
+      if (uniqueToken) {
+        const lastPrompt = prompts[prompts.length - 1];
+        if (lastPrompt && typeof lastPrompt.content === "string") {
+          lastPrompt.content += uniqueToken;
+        }
+      }
+    }
+
+    // Send prompts to LLM (using only user prompt for fine-tuned models).
+    const msg: ChatMessage = await llm.chat([prompts[1]], token, {
+      stream: false,
+    });
+
+    if (typeof msg.content !== "string") {
+      return undefined;
+    }
+
+    // Extract completion using model-specific logic.
+    const nextCompletion = this.modelProvider.extractCompletion(msg.content);
+
+    let outcome: NextEditOutcome | undefined;
+
+    // Handle based on diff type.
+    if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
+      outcome = await this.modelProvider.handlePartialFileDiff(
+        helper,
+        editableRegionStartLine,
+        editableRegionEndLine,
+        startTime,
+        llm,
+        nextCompletion,
+        this.promptMetadata!,
+        this.ide,
+      );
     } else {
-      prompts.push(
-        ...(await this._generateFineTunedPrompts(
-          helper,
-          snippetPayload,
-          editableRegionStartLine,
-          editableRegionEndLine,
-        )),
+      outcome = await this.modelProvider.handleFullFileDiff(
+        helper,
+        editableRegionStartLine,
+        editableRegionEndLine,
+        startTime,
+        llm,
+        nextCompletion,
+        this.promptMetadata!,
+        this.ide,
       );
     }
 
-    return { editableRegionStartLine, editableRegionEndLine, prompts };
+    if (outcome) {
+      // Handle NextEditProvider-specific state
+      this.previousCompletions.push(outcome);
+
+      // Mark as displayed for JetBrains
+      await this._markDisplayedIfJetBrains(helper.input.completionId, outcome);
+    }
+
+    return outcome;
   }
 
   private _calculateOptimalEditableRegion(
@@ -519,442 +585,6 @@ export class NextEditProvider {
     };
   }
 
-  private async _generateFineTunedPrompts(
-    helper: HelperVars,
-    snippetPayload: SnippetPayload,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
-  ): Promise<Prompt[]> {
-    const historyDiff = createDiff({
-      beforeContent:
-        DocumentHistoryTracker.getInstance().getMostRecentDocumentHistory(
-          localPathOrUriToPath(helper.filepath),
-        ) ?? "",
-      afterContent: helper.fileContents,
-      filePath: helper.filepath,
-      diffType: DiffFormatType.Unified,
-      contextLines: 3,
-    });
-
-    const modelName = helper.modelName;
-    let ctx: any;
-
-    if (modelName.includes("mercury-coder-nextedit")) {
-      ctx = {
-        recentlyViewedCodeSnippets:
-          snippetPayload.recentlyVisitedRangesSnippets.map((snip) => ({
-            filepath: snip.filepath,
-            content: snip.content,
-          })) ?? [],
-        currentFileContent: helper.fileContents,
-        editableRegionStartLine,
-        editableRegionEndLine,
-        editDiffHistory: this.diffContext,
-        currentFilePath: helper.filepath,
-      };
-    } else if (modelName.includes("model-1")) {
-      ctx = {
-        userEdits: historyDiff ?? this.diffContext,
-        languageShorthand: helper.lang.name,
-        userExcerpts: helper.fileContents,
-      };
-    } else {
-      ctx = {};
-    }
-
-    const promptMetadata = await renderPrompt(helper, ctx);
-    this.promptMetadata = promptMetadata;
-
-    const systemPrompt: Prompt = {
-      role: "system",
-      content: MERCURY_SYSTEM_PROMPT,
-    };
-
-    return [systemPrompt, promptMetadata.prompt];
-  }
-
-  private async _handleDefaultEndpointCompletion(
-    helper: HelperVars,
-    prompts: Prompt[],
-    token: AbortSignal,
-    startTime: number,
-    editableRegionEndLine: number,
-  ): Promise<NextEditOutcome | undefined> {
-    const llm = await this._prepareLlm();
-    if (!llm) return undefined;
-
-    const msg: ChatMessage = await llm.chat(prompts, token);
-
-    if (typeof msg.content === "string") {
-      const nextCompletion = JSON.parse(msg.content).newCode;
-      const finalCursorPos: Position = {
-        line: editableRegionEndLine,
-        character: 0,
-      };
-
-      const outcomeNext = await this._createNextEditOutcome({
-        helper,
-        startTime,
-        llm,
-        promptContent: prompts.join("\n"),
-        completion: nextCompletion,
-        finalCursorPosition: finalCursorPos,
-        editableRegionStartLine: 0,
-        editableRegionEndLine: 0,
-        userEdits: "",
-        userExcerpts: "",
-        originalEditableRange: "",
-        diffLines: [],
-      });
-
-      // Mark as displayed for JetBrains extension
-      await this._markDisplayedIfJetBrains(
-        helper.input.completionId,
-        outcomeNext,
-      );
-
-      return outcomeNext;
-    }
-
-    return undefined;
-  }
-
-  private async _handleFineTunedEndpointCompletion(
-    helper: HelperVars,
-    prompts: Prompt[],
-    token: AbortSignal,
-    startTime: number,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
-    opts?: {
-      withChain: boolean;
-      usingFullFileDiff: boolean;
-    },
-  ): Promise<NextEditOutcome | undefined> {
-    const llm = await this._prepareLlm();
-    if (!llm) return undefined;
-
-    const msg: ChatMessage = await llm.chat(prompts, token);
-
-    if (typeof msg.content !== "string") {
-      return undefined;
-    }
-
-    const nextCompletion = msg.content.split(
-      `${MERCURY_CODE_TO_EDIT_OPEN}\n`,
-    )[1]
-      ? replaceEscapedCharacters(
-          msg.content.split(`${MERCURY_CODE_TO_EDIT_OPEN}\n`)[1],
-        ).replace(/\n$/, "")
-      : "";
-
-    if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
-      return await this._handlePartialFileDiff(
-        helper,
-        startTime,
-        llm,
-        nextCompletion,
-        editableRegionStartLine,
-        editableRegionEndLine,
-      );
-    } else {
-      return await this._handleFullFileDiff(
-        helper,
-        editableRegionStartLine,
-        editableRegionEndLine,
-        startTime,
-        llm,
-        nextCompletion,
-      );
-    }
-  }
-
-  private async _handlePartialFileDiff(
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    nextCompletion: string,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
-  ): Promise<NextEditOutcome | undefined> {
-    const oldEditRangeSlice = helper.fileContents
-      .split("\n")
-      .slice(editableRegionStartLine, editableRegionEndLine + 1)
-      .join("\n");
-
-    const finalCursorPos = calculateFinalCursorPosition(
-      helper.pos,
-      editableRegionStartLine,
-      oldEditRangeSlice,
-      nextCompletion,
-    );
-
-    const outcomeNext = await this._createNextEditOutcome({
-      helper,
-      startTime,
-      llm,
-      promptContent: this.promptMetadata!.prompt.content,
-      completion: nextCompletion,
-      finalCursorPosition: finalCursorPos,
-      editableRegionStartLine,
-      editableRegionEndLine,
-      userEdits: this.promptMetadata!.userEdits,
-      userExcerpts: this.promptMetadata!.userExcerpts,
-      originalEditableRange: oldEditRangeSlice,
-      diffLines: [],
-    });
-
-    this.previousCompletions.push(outcomeNext);
-
-    // Mark as displayed for JetBrains extension
-    await this._markDisplayedIfJetBrains(
-      helper.input.completionId,
-      outcomeNext,
-    );
-
-    return outcomeNext;
-  }
-
-  private async _handleFullFileDiff(
-    helper: HelperVars,
-    editableRegionStartLine: number,
-    editableRegionEndLine: number,
-    startTime: number,
-    llm: ILLM,
-    nextCompletion: string,
-  ): Promise<NextEditOutcome | undefined> {
-    const fileSlice = helper.fileLines
-      .slice(editableRegionStartLine, editableRegionEndLine + 1)
-      .join("\n");
-    const diffLines = myersDiff(fileSlice, nextCompletion);
-    const diffGroups = groupDiffLines(diffLines, editableRegionStartLine, 5);
-    const currentLine = helper.pos.line;
-    let cursorLocalDiffGroup: DiffGroup | undefined;
-    const prefetchQueue = PrefetchQueue.getInstance();
-
-    // Process diff groups and find the one containing the cursor
-    await this._processDiffGroups(
-      diffGroups,
-      currentLine,
-      helper,
-      startTime,
-      llm,
-      prefetchQueue,
-    );
-
-    // Handle the diff group containing the cursor if found
-    if (cursorLocalDiffGroup) {
-      return await this._createOutcomeFromDiffGroup(
-        cursorLocalDiffGroup,
-        helper,
-        startTime,
-        llm,
-        helper.input.completionId,
-        true,
-      );
-    } else if (diffGroups.length > 0) {
-      // Fallback to first diff group if cursor's group not found
-      return await this._createOutcomeFromDiffGroup(
-        diffGroups[0],
-        helper,
-        startTime,
-        llm,
-        helper.input.completionId,
-        false,
-      );
-    }
-
-    return undefined;
-  }
-
-  private async _processDiffGroups(
-    diffGroups: DiffGroup[],
-    currentLine: number,
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    prefetchQueue: PrefetchQueue,
-  ): Promise<DiffGroup | undefined> {
-    let cursorGroup: DiffGroup | undefined;
-
-    console.log("diffGroups:");
-    console.log(diffGroups);
-
-    for (const group of diffGroups) {
-      if (currentLine >= group.startLine && currentLine <= group.endLine) {
-        cursorGroup = group;
-      } else {
-        // Add non-cursor groups to prefetch queue
-        await this._addDiffGroupToPrefetchQueue(
-          group,
-          helper,
-          startTime,
-          llm,
-          prefetchQueue,
-        );
-      }
-    }
-
-    return cursorGroup;
-  }
-
-  private async _addDiffGroupToPrefetchQueue(
-    group: DiffGroup,
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    prefetchQueue: PrefetchQueue,
-  ): Promise<void> {
-    const groupContent = group.lines
-      .filter((l) => l.type !== "old")
-      .map((l) => l.line)
-      .join("\n");
-
-    // Create a range for this diff group
-    const rangeInFile: RangeInFile = {
-      filepath: helper.filepath,
-      range: {
-        start: { line: group.startLine, character: 0 },
-        end: {
-          line: group.endLine,
-          character: group.lines[group.lines.length - 1].line.length,
-        },
-      },
-    };
-
-    const originalContent = group.lines
-      .filter((l) => l.type !== "new")
-      .map((l) => l.line)
-      .join("\n");
-
-    // Build outcome for this diff group
-    const groupOutcome = await this._createNextEditOutcome({
-      helper,
-      startTime,
-      llm,
-      promptContent: this.promptMetadata!.prompt.content,
-      completion: groupContent,
-      finalCursorPosition: {
-        line: group.endLine,
-        character: group.lines[group.lines.length - 1].line.length,
-      },
-      editableRegionStartLine: group.startLine,
-      editableRegionEndLine: group.endLine,
-      userEdits: this.promptMetadata!.userEdits,
-      userExcerpts: this.promptMetadata!.userExcerpts,
-      originalEditableRange: originalContent,
-      cursorPosition: { line: group.startLine, character: 0 },
-      completionId: uuidv4(), // Generate a new ID for this prefetched item
-      diffLines: group.lines,
-    });
-
-    // Add to prefetch queue
-    prefetchQueue.enqueueProcessed({
-      location: rangeInFile,
-      outcome: groupOutcome,
-    });
-  }
-
-  private async _createOutcomeFromDiffGroup(
-    diffGroup: DiffGroup,
-    helper: HelperVars,
-    startTime: number,
-    llm: ILLM,
-    completionId: string,
-    isCurrentCursorGroup: boolean,
-  ): Promise<NextEditOutcome> {
-    const groupContent = diffGroup.lines
-      .filter((l) => l.type !== "old")
-      .map((line) => line.line)
-      .join("\n");
-
-    const originalContent = diffGroup.lines
-      .filter((l) => l.type !== "new")
-      .map((l) => l.line)
-      .join("\n");
-
-    // Use the actual cursor position if this is the group containing the cursor
-    // Otherwise use the start of the diff group
-    const cursorPos = isCurrentCursorGroup
-      ? helper.pos
-      : { line: diffGroup.startLine, character: 0 };
-
-    const finalCursorPos = calculateFinalCursorPosition(
-      cursorPos,
-      diffGroup.startLine,
-      originalContent,
-      groupContent,
-    );
-
-    const outcomeNext = await this._createNextEditOutcome({
-      helper,
-      startTime,
-      llm,
-      promptContent: this.promptMetadata!.prompt.content,
-      completion: groupContent,
-      finalCursorPosition: finalCursorPos,
-      editableRegionStartLine: diffGroup.startLine,
-      editableRegionEndLine: diffGroup.endLine,
-      userEdits: this.promptMetadata!.userEdits,
-      userExcerpts: this.promptMetadata!.userExcerpts,
-      originalEditableRange: originalContent,
-      cursorPosition: cursorPos,
-      completionId,
-      diffLines: diffGroup.lines,
-    });
-
-    this.previousCompletions.push(outcomeNext);
-
-    // Mark as displayed for JetBrains
-    await this._markDisplayedIfJetBrains(completionId, outcomeNext);
-
-    return outcomeNext;
-  }
-
-  private async _createNextEditOutcome(outcomeCtx: {
-    helper: HelperVars;
-    startTime: number;
-    llm: ILLM;
-    promptContent: string;
-    completion: string;
-    finalCursorPosition: Position;
-    editableRegionStartLine: number;
-    editableRegionEndLine: number;
-    userEdits: string;
-    userExcerpts: string;
-    originalEditableRange: string;
-    cursorPosition?: Position;
-    completionId?: string;
-    diffLines: DiffLine[];
-  }): Promise<NextEditOutcome> {
-    return {
-      elapsed: Date.now() - outcomeCtx.startTime,
-      modelProvider: outcomeCtx.llm.underlyingProviderName,
-      modelName: outcomeCtx.llm.model + ":zetaDataset",
-      completionOptions: null,
-      completionId:
-        outcomeCtx.completionId || outcomeCtx.helper.input.completionId,
-      gitRepo: await this.ide.getRepoName(outcomeCtx.helper.filepath),
-      uniqueId: await this.ide.getUniqueId(),
-      timestamp: Date.now(),
-      fileUri: outcomeCtx.helper.filepath,
-      workspaceDirUri:
-        outcomeCtx.helper.workspaceUris[0] ??
-        path.dirname(outcomeCtx.helper.filepath),
-      prompt: outcomeCtx.promptContent,
-      userEdits: outcomeCtx.userEdits ?? "",
-      userExcerpts: outcomeCtx.userExcerpts ?? "",
-      originalEditableRange: outcomeCtx.originalEditableRange ?? "",
-      completion: outcomeCtx.completion,
-      cursorPosition: outcomeCtx.cursorPosition || outcomeCtx.helper.pos,
-      finalCursorPosition: outcomeCtx.finalCursorPosition,
-      editableRegionStartLine: outcomeCtx.editableRegionStartLine,
-      editableRegionEndLine: outcomeCtx.editableRegionEndLine,
-      diffLines: outcomeCtx.diffLines,
-      ...outcomeCtx.helper.options,
-    };
-  }
-
   private async _markDisplayedIfJetBrains(
     completionId: string,
     outcome: NextEditOutcome,
@@ -985,6 +615,7 @@ export class NextEditProvider {
     try {
       const previousOutcome = this.getPreviousCompletion();
       if (!previousOutcome) {
+        console.log("previousOutcome is undefined");
         return undefined;
       }
 
@@ -995,6 +626,7 @@ export class NextEditProvider {
         ctx,
       );
       if (!input) {
+        console.log("input is undefined");
         return undefined;
       }
 

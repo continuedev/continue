@@ -1,39 +1,33 @@
 ---
-title: "Groq"
+title: "How to Configure Groq with Continue"
+sidebarTitle: "Groq"
 ---
 
 <Info>
-  Check if your chosen model is still supported by referring to the [model
-  documentation](https://console.groq.com/docs/models). If a model has been
-  deprecated, you may encounter a 404 error when attempting to use it.
+  Get your API key from the [Groq Console](https://console.groq.com/docs/models)
 </Info>
 
-Groq provides the fastest available inference for open-source language models, including the entire Llama 3.1 family.
-
-1. Obtain an API key [here](https://console.groq.com/keys)
-2. Update your Continue config file like this:
+## Configuration
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Llama 3.3 70b Versatile
+    - name: <MODEL_NAME>
       provider: groq
-      model: llama-3.3-70b-versatile
-      apiKey: <YOUR_GROQ_API_KEY>
-      roles:
-        - chat
+      model: <MODEL_ID>
+      apiKey: <YOUR_GROQ_API_KEY>"
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
-        "title": "Llama 3.3 70b Versatile",
+        "title": "<MODEL_NAME>",
         "provider": "groq",
-        "model": "llama-3.3-70b-versatile",
-        "apiKey": "<YOUR_GROQ_API_KEY>"
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_GROQ_API_KEY>"",
       }
     ]
   }

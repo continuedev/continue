@@ -1,5 +1,4 @@
 import {
-  BookOpenIcon,
   ChatBubbleLeftIcon,
   ChevronLeftIcon,
   CubeIcon,
@@ -47,7 +46,6 @@ interface Section {
 const sections: Section[] = [
   { id: "models", title: "Models", tooltip: "Models", icon: CubeIcon },
   { id: "rules", title: "Rules", tooltip: "Rules", icon: PencilIcon },
-  { id: "docs", title: "Docs", tooltip: "Docs", icon: BookOpenIcon },
   {
     id: "prompts",
     title: "Prompts",
@@ -241,7 +239,7 @@ export function BlockSettingsTopToolbar() {
             <AssistantAndOrgListbox />
           )}
           <ToolTip id="assistant-select-tooltip" place="top">
-            {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}
+            {isUsingFreeTrial ? "View free trial usage" : "Select Agent"}
           </ToolTip>
         </HoverItem>
       </div>

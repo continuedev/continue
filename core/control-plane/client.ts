@@ -4,6 +4,7 @@ import {
   ConfigResult,
   FQSN,
   FullSlug,
+  Policy,
   SecretResult,
   SecretType,
 } from "@continuedev/config-yaml";
@@ -11,9 +12,15 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
+import { Logger } from "../util/Logger.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
+
+export interface PolicyResponse {
+  orgSlug?: string;
+  policy?: Policy;
+}
 
 export interface ControlPlaneWorkspace {
   id: string;
@@ -140,6 +147,11 @@ export class ControlPlaneClient {
       });
       return (await resp.json()) as any;
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      Logger.error(e, {
+        context: "control_plane_list_assistants",
+        organizationId,
+      });
       return [];
     }
   }
@@ -211,6 +223,26 @@ export class ControlPlaneClient {
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      Logger.error(e, {
+        context: "control_plane_list_assistant_slugs",
+        organizationId,
+      });
+      return null;
+    }
+  }
+
+  public async getPolicy(): Promise<PolicyResponse | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request(`ide/policy`, {
+        method: "GET",
+      });
+      return (await resp.json()) as PolicyResponse;
+    } catch (e) {
       return null;
     }
   }
@@ -226,6 +258,10 @@ export class ControlPlaneClient {
       });
       return (await resp.json()) as FreeTrialStatus;
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      Logger.error(e, {
+        context: "control_plane_free_trial_status",
+      });
       return null;
     }
   }
@@ -260,6 +296,11 @@ export class ControlPlaneClient {
       );
       return (await resp.json()) as { url: string };
     } catch (e) {
+      // Capture control plane API failures to Sentry
+      Logger.error(e, {
+        context: "control_plane_models_checkout_url",
+        vsCodeUriScheme,
+      });
       return null;
     }
   }

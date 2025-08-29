@@ -7,7 +7,7 @@ sidebar_position: 5
 
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, embeddings are generated during indexing and then used by [@Codebase](../context/codebase.mdx) to perform similarity search over your codebase.
+In Continue, embeddings are generated during indexing and then used by [@Codebase](../context/codebase) to perform similarity search over your codebase.
 
 You can add `embed` to a model's `roles` to specify that it can be used to embed.
 
@@ -18,6 +18,10 @@ You can add `embed` to a model's `roles` to specify that it can be used to embed
 </Info>
 
 ## Recommended embedding models
+
+<Info>
+  See our [comprehensive model recommendations](/customization/models#recommended-models) for the best embedding models comparison.
+</Info>
 
 If you have the ability to use any model, we recommend `voyage-code-3`, which is listed below along with the rest of the options for embeddings models.
 
@@ -118,7 +122,7 @@ See [here](../model-providers/top-level/ollama#embeddings-model) for instruction
 
 ### OpenAI
 
-See [here](../model-providers/top-level/openai#embeddings-model) for instructions on how to use OpenAI for embeddings.
+See [here](../model-providers/top-level/openai#how-to-configure-openai-embeddings-models) for instructions on how to use OpenAI for embeddings.
 
 ### Cohere
 
@@ -126,15 +130,15 @@ See [here](../model-providers/more/cohere#embeddings-model) for instructions on 
 
 ### Gemini
 
-See [here](../model-providers/top-level/gemini#embeddings-model) for instructions on how to use Gemini for embeddings.
+See [here](../model-providers/top-level/gemini#how-to-configure-gemini-embeddings-models) for instructions on how to use Gemini for embeddings.
 
 ### Vertex
 
-See [here](../model-providers/top-level/vertexai#embeddings-model) for instructions on how to use Vertex for embeddings.
+See [here](../model-providers/top-level/vertexai#how-to-configure-vertex-ai-embeddings-models) for instructions on how to use Vertex for embeddings.
 
 ### Mistral
 
-See [here](../model-providers/top-level/mistral#embeddings-model) for instructions on how to use Mistral for embeddings.
+See [here](../model-providers/more/mistral#how-to-configure-mistral-embeddings-models) for instructions on how to use Mistral for embeddings.
 
 ### NVIDIA
 
@@ -142,7 +146,7 @@ See [here](../model-providers/more/nvidia#embeddings-model) for instructions on 
 
 ### Bedrock
 
-See [here](../model-providers/top-level/bedrock#embeddings-model) for instructions on how to use Bedrock for embeddings.
+See [here](../model-providers/top-level/bedrock#how-to-configure-amazon-bedrock-embeddings-models) for instructions on how to use Bedrock for embeddings.
 
 ### WatsonX
 
@@ -150,4 +154,4 @@ See [here](../model-providers/more/watsonx#embeddings-model) for instructions on
 
 ### LMStudio
 
-See [here](../model-providers/more/lmstudio#embeddings-model) for instructions on how to use LMStudio for embeddings.
+See [here](../model-providers/top-level/lmstudio#embeddings-model) for instructions on how to use LMStudio for embeddings.

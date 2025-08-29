@@ -1,28 +1,37 @@
 ---
 title: "DeepInfra"
+description: "Configure DeepInfra with Continue to access low-cost inference for open-source models like Mixtral-8x7B-Instruct, including API setup instructions"
 ---
 
-[DeepInfra](https://deepinfra.com) provides inference for open-source models at very low cost. To get started with DeepInfra, obtain your API key [here](https://deepinfra.com/dash). Then, find the model you want to use [here](https://deepinfra.com/models?type=text-generation) and copy the name of the model. Continue can then be configured to use the `DeepInfra` LLM class, like the example here:
+<Tip>
+  **Discover Deep Infra models [here](https://hub.continue.dev/deepinfra)**
+</Tip>
+
+<Info>
+  Get an API key from the [Deep Infra](https://deepinfra.com/)
+</Info>
+
+## Configuration
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: DeepInfra
+    - name: <MODEL_NAME>
       provider: deepinfra
-      model: mistralai/Mixtral-8x7B-Instruct-v0.1
-      apiKey: <YOUR_DEEP_INFRA_API_KEY>
+      model: <MODEL_ID>
+      apiKey: <YOUR_DEEPINFRA_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
+        "title": "<MODEL_NAME>",
         "provider": "deepinfra",
-        "title": "DeepInfra",
-        "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-        "apiKey": "<YOUR_DEEP_INFRA_API_KEY>"
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_DEEPINFRA_API_KEY>"
       }
     ]
   }
@@ -30,4 +39,6 @@ title: "DeepInfra"
   </Tab>
 </Tabs>
 
-[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/DeepInfra.ts)
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/deepinfra/qwen-qwen2.5-coder-32b-instruct?view=config)**
+</Info>

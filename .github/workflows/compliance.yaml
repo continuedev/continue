@@ -36,7 +36,7 @@ jobs:
           else
             echo "❌ PR title does not follow conventional commit format"
             echo "valid=false" >> $GITHUB_OUTPUT
-            exit 1
+            # Don't exit with failure - just mark as invalid for comment
           fi
 
       - name: Add PR title guidance comment
@@ -101,7 +101,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -134,7 +134,7 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check required files
         run: |

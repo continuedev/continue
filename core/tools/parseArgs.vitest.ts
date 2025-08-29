@@ -102,26 +102,26 @@ describe("getStringArg", () => {
   it("should throw error when argument is missing", () => {
     const args = { otherArg: "test" };
     expect(() => getStringArg(args, "name")).toThrowError(
-      "`name` argument is required and must not be empty. (type string)",
+      "`name` argument is required and must not be empty or whitespace-only. (type string)",
     );
   });
 
   it("should throw error when argument is not a string", () => {
     const args = { name: 123 };
     expect(() => getStringArg(args, "name")).toThrowError(
-      "`name` argument is required and must not be empty. (type string)",
+      "`name` argument is required and must not be empty or whitespace-only. (type string)",
     );
   });
 
   it("should throw error when argument is empty and empty not allowed", () => {
     const args = { name: "" };
     expect(() => getStringArg(args, "name")).toThrowError(
-      "Argument name must not be empty",
+      "Argument name must not be empty or whitespace-only",
     );
 
     const argsWithSpace = { name: "   " };
     expect(() => getStringArg(argsWithSpace, "name")).toThrowError(
-      "Argument name must not be empty",
+      "Argument name must not be empty or whitespace-only",
     );
   });
 
@@ -137,10 +137,10 @@ describe("getStringArg", () => {
 
   it("should handle null or undefined args", () => {
     expect(() => getStringArg(null, "name")).toThrowError(
-      "`name` argument is required and must not be empty. (type string)",
+      "`name` argument is required and must not be empty or whitespace-only. (type string)",
     );
     expect(() => getStringArg(undefined, "name")).toThrowError(
-      "`name` argument is required and must not be empty. (type string)",
+      "`name` argument is required and must not be empty or whitespace-only. (type string)",
     );
   });
 });
@@ -161,14 +161,14 @@ describe("getOptionalStringArg", () => {
   it("should throw error when argument is not a string", () => {
     const args = { name: 123 };
     expect(() => getOptionalStringArg(args, "name")).toThrowError(
-      "`name` argument is required and must not be empty. (type string)",
+      "`name` argument is required and must not be empty or whitespace-only. (type string)",
     );
   });
 
   it("should throw error when argument is empty and empty not allowed", () => {
     const args = { name: "" };
     expect(() => getOptionalStringArg(args, "name")).toThrowError(
-      "Argument name must not be empty",
+      "Argument name must not be empty or whitespace-only",
     );
   });
 

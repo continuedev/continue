@@ -37,7 +37,6 @@ import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 
 import type * as LanceType from "vectordb";
 import { LLMError } from "../../llm";
-import { DocsCache, SiteIndexingResults } from "./DocsCache";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -433,60 +432,6 @@ export default class DocsService {
     }
   }
 
-  /**
-   * Attempt to load document embeddings from cache
-   * @returns true if cache was successfully loaded, false otherwise
-   */
-  private async tryLoadFromCache(
-    startUrl: string,
-    embeddingId: string,
-    siteIndexingConfig: SiteIndexingConfig,
-  ): Promise<boolean> {
-    try {
-      // Set a initial status when retrieving cache
-      this.handleStatusUpdate({
-        type: "docs",
-        id: startUrl,
-        embeddingsProviderId: embeddingId,
-        isReindexing: false,
-        title: siteIndexingConfig.title,
-        debugInfo: "Loaded from cache",
-        icon: siteIndexingConfig.faviconUrl,
-        url: startUrl,
-        progress: 0,
-        description: "Try to retrieve cache",
-        status: "indexing",
-      });
-
-      const cacheHit = await this.tryFetchFromCache(startUrl, embeddingId);
-
-      if (cacheHit) {
-        console.log(`Successfully loaded cached embeddings for ${startUrl}`);
-        // Update status to complete
-        this.handleStatusUpdate({
-          type: "docs",
-          id: startUrl,
-          embeddingsProviderId: embeddingId,
-          isReindexing: false,
-          title: siteIndexingConfig.title,
-          debugInfo: "Loaded from cache",
-          icon: siteIndexingConfig.faviconUrl,
-          url: startUrl,
-          progress: 1,
-          description: "Complete",
-          status: "complete",
-        });
-
-        return true;
-      }
-    } catch (e) {
-      console.log(`Error trying to fetch from cache: ${e}`);
-      // Continue with regular indexing
-    }
-
-    return false;
-  }
-
   // eslint-disable-next-line max-statements
   async indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
@@ -506,19 +451,6 @@ export default class DocsService {
     if (!provider) {
       console.warn("@docs indexAndAdd: no embeddings provider found");
       return;
-    }
-
-    // Try to fetch from cache first before crawling
-    if (!forceReindex) {
-      const cacheLoaded = await this.tryLoadFromCache(
-        startUrl,
-        provider.embeddingId,
-        siteIndexingConfig,
-      );
-
-      if (cacheLoaded) {
-        return;
-      }
     }
 
     const startedWithEmbedder = provider.embeddingId;
@@ -811,52 +743,6 @@ export default class DocsService {
     }
   }
 
-  /**
-   * Try to fetch embeddings from the S3 cache for any document URL
-   * @param startUrl The URL of the documentation site
-   * @param embeddingsProviderId The ID of the embeddings provider
-   * @returns True if cache hit and successfully loaded, false otherwise
-   */
-  private async tryFetchFromCache(
-    startUrl: string,
-    embeddingId: string,
-  ): Promise<boolean> {
-    try {
-      const data = await DocsCache.getDocsCacheForUrl(embeddingId, startUrl);
-
-      // Parse the cached data
-      const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
-
-      // Try to get a favicon for the site
-      const favicon =
-        this.statuses.get(startUrl)?.icon ||
-        (await fetchFavicon(new URL(startUrl)));
-
-      // Always try to make the title match what users set in the config
-      const title =
-        this.statuses.get(startUrl)?.title ||
-        siteEmbeddings.title ||
-        new URL(startUrl).hostname;
-
-      // Add the cached embeddings to our database
-      await this.add({
-        favicon,
-        siteIndexingConfig: {
-          startUrl,
-          title,
-        },
-        chunks: siteEmbeddings.chunks,
-        embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
-      });
-
-      return true;
-    } catch (e) {
-      // Cache miss or error - silently fail
-      console.log(`Cache miss for ${startUrl} with provider ${embeddingId}`);
-      return false;
-    }
-  }
-
   // Retrieve docs embeds based on user input
   async retrieveChunksFromQuery(
     query: string,
@@ -940,7 +826,6 @@ export default class DocsService {
     }
   }
   // This function attempts to retrieve chunks by vector similarity
-  // It will also attempt to fetch from cache if no results are found
   async retrieveChunks(
     startUrl: string,
     vector: number[],
@@ -970,29 +855,28 @@ export default class DocsService {
       console.warn("Error retrieving chunks from LanceDB", e);
     }
 
-    // If no docs are found and this isn't a retry, try fetching from cache
-    if (docs.length === 0 && !isRetry) {
-      try {
-        // Try to fetch the document from the S3 cache
-        const cacheHit = await this.tryFetchFromCache(
-          startUrl,
-          provider.embeddingId,
-        );
-
-        if (cacheHit) {
-          // If cache hit, refresh the submenu items for docs
-          this.messenger?.send("refreshSubmenuItems", {
-            providers: ["docs"],
-          });
-          // If cache hit, retry the search once
-          return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
-        }
-      } catch (e) {
-        console.warn("Error trying to fetch from cache:", e);
-      }
-    }
-
     return docs.map(this.lanceDBRowToChunk);
+  }
+
+  async getIndexedPages(startUrl: string): Promise<Set<string>> {
+    try {
+      const table = await this.getOrCreateLanceTable({
+        initializationVector: [],
+        startUrl,
+      });
+
+      const rows = (await table
+        .filter(`starturl = '${startUrl}'`)
+        .select(["path"]) // Only select path to minimize data transfer
+        .limit(99999999) // Default is 10, we want to show all
+        .execute()) as { path: string }[];
+
+      // Get unique paths (pages)
+      return new Set(rows.map((row) => row.path));
+    } catch (e) {
+      console.warn(`Error getting page list for ${startUrl}:`, e);
+      return new Set();
+    }
   }
 
   // SQLITE DB

@@ -8,15 +8,6 @@
 
 <div align="center">
 
-**[Continue](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our
-open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
-and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions
-and [hub of models, rules, and MCP tools](https://hub.continue.dev)**
-
-</div>
-
-<div align="center">
-
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
     <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 22px;" />
 </a>
@@ -32,37 +23,41 @@ and [hub of models, rules, and MCP tools](https://hub.continue.dev)**
 
 <p></p>
 
+<div align="center">
+
+**Ship faster with Continuous AI**
+
+**Build and run custom agents across your IDE, terminal, and CI**
+
+</div>
+
+Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue), [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension), or [CLI](https://docs.continue.dev/guides/cli)
+
 ## Agent
 
-[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
+[Agent](/features/agent/quick-start) to work on development tasks together with AI
 
 ![agent](docs/images/agent.gif)
 
 ## Chat
 
-[Chat](https://continue.dev/docs/chat/how-to-use-it) makes it easy to ask for help from an LLM without needing to leave
-the IDE
+[Chat](/features/chat/quick-start) to ask general questions and clarify code sections
 
 ![chat](docs/images/chat.gif)
 
 ## Edit
 
-[Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current
-file
+[Edit](/features/edit/quick-start) to modify a code section without leaving your current file
 
 ![edit](docs/images/edit.gif)
 
 ## Autocomplete
 
-[Autocomplete](https://continue.dev/docs/autocomplete/how-to-use-it) provides inline code suggestions as you type
+[Autocomplete](/features/autocomplete/quick-start) to receive inline code suggestions as you type
 
 ![autocomplete](docs/images/autocomplete.gif)
 
 </div>
-
-## Getting Started
-
-Learn about how to install and use Continue in the docs [here](https://continue.dev/docs/getting-started/install)
 
 ## Contributing
 

@@ -1,9 +1,9 @@
 ---
-title: "How Agent Works"
+title: "How Agent Mode Works"
 description: "Agent offers the same functionality as Chat, while also including tools in the request to the model and an interface for handling tool calls and responses."
 ---
 
-## The tool handshake
+## How the Tool Handshake Works
 
 Tools provide a flexible, powerful way for models to interface with the external world. They are provided to the model as a JSON object with a name and an arguments schema. For example, a `read_file` tool with a `filepath` argument will give the model the ability to request the contents of a specific file.
 
@@ -17,19 +17,18 @@ The following handshake describes how Agent uses tools:
 6. The model responds, potentially with another tool call and step 2 begins again
 
 <Info>
-  Tool availability varies by mode:
-  - **Chat mode**: No tools included
-  - **Plan mode**: Only read-only tools included
-  - **Agent mode**: All tools included
+  Tool availability varies by mode: - **Chat mode**: No tools included - **Plan
+  mode**: Only read-only tools included - **Agent mode**: All tools included
 </Info>
 
-## Built-in tools
+## What Built-in Tools Are Available
 
 Continue includes several built-in tools which provide the model access to IDE functionality.
 
-### Plan mode tools (read-only)
+### What Tools Are Available in Plan Mode (Read-Only)
 
 In Plan mode, only these read-only tools are available:
+
 - **Read file** (`read_file`)
 - **Read currently open file** (`read_currently_open_file`)
 - **List directory** (`ls`)
@@ -42,7 +41,7 @@ In Plan mode, only these read-only tools are available:
 - **View subdirectory** (`view_subdirectory`)
 - **Codebase tool** (`codebase_tool`)
 
-### Agent mode tools (all tools)
+### What Tools Are Available in Agent Mode (All Tools)
 
 In Agent mode, all tools are available including the read-only tools above plus:
 
