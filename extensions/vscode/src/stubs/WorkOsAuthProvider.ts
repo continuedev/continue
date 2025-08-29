@@ -9,7 +9,7 @@ import {
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
 import { Logger } from "core/util/Logger";
-import fetch from "node-fetch";
+import { fetchwithRequestOptions as fetch } from "@continuedev/fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
   authentication,
@@ -23,6 +23,7 @@ import {
   ProgressLocation,
   Uri,
   window,
+  workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
@@ -328,6 +329,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     refreshToken: string;
     expiresInMs: number;
   }> {
+    const httpConfig = workspace.getConfiguration("http");
+    const proxyUrl = httpConfig.get<string>("proxy") || undefined;
+    const strictSSL = httpConfig.get<boolean>("proxyStrictSSL");
+
     const response = await fetch(
       new URL("/auth/refresh", controlPlaneEnv.CONTROL_PLANE_URL),
       {
@@ -338,6 +343,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         body: JSON.stringify({
           refreshToken,
         }),
+      },
+      {
+        proxy: proxyUrl,
+        verifySsl: strictSSL,
       },
     );
     if (!response.ok) {
@@ -575,6 +584,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     codeVerifier: string,
     hubEnv: HubEnv,
   ) {
+    const httpConfig = workspace.getConfiguration("http");
+    const proxyUrl = httpConfig.get<string>("proxy") || undefined;
+    const strictSSL = httpConfig.get<boolean>("proxyStrictSSL");
+
     const resp = await fetch(
       "https://api.workos.com/user_management/authenticate",
       {
@@ -588,6 +601,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           grant_type: "authorization_code",
           code: token,
         }),
+      },
+      {
+        proxy: proxyUrl,
+        verifySsl: strictSSL,
       },
     );
     const text = await resp.text();

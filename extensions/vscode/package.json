@@ -50,11 +50,12 @@
     "codestral",
     "ai"
   ],
-  "activationEvents": [
-    "onUri",
-    "onStartupFinished",
-    "onView:continueGUIView"
-  ],
+    "activationEvents": [
+      "onUri",
+      "onStartupFinished",
+      "onView:continueGUIView",
+      "onAuthenticationRequest:continue"
+    ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
@@ -650,6 +651,13 @@
       {
         "fileMatch": "**/config.yaml",
         "url": "./config-yaml-schema.json"
+      }
+    ],
+    "authentication": [
+      {
+        "id": "continue",
+        "label": "Continue",
+        "supportsMultipleAccounts": false
       }
     ]
   },

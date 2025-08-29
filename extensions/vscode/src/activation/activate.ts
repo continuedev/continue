@@ -65,17 +65,21 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     "config-yaml-schema.json",
   ).toString();
 
-  try {
-    await yamlConfig.update(
-      "schemas",
-      { [newPath]: [yamlMatcher] },
-      vscode.ConfigurationTarget.Global,
-    );
-  } catch (error) {
-    console.error(
-      "Failed to register Continue config.yaml schema, most likely, YAML extension is not installed",
-      error,
-    );
+  // Only attempt to update YAML schemas if the YAML extension is installed
+  const yamlExtension = vscode.extensions.getExtension("redhat.vscode-yaml");
+  if (yamlExtension) {
+    try {
+      await yamlConfig.update(
+        "schemas",
+        { [newPath]: [yamlMatcher] },
+        vscode.ConfigurationTarget.Global,
+      );
+    } catch (error) {
+      console.error(
+        "Failed to register Continue config.yaml schema, most likely, YAML extension is not installed",
+        error,
+      );
+    }
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);
