@@ -46,16 +46,16 @@ describe("E2E: Resume Flag", () => {
 
     // Verify that a session file was created
     const sessionDir = path.join(context.testDir, ".continue", "sessions");
-    
+
     // Ensure session directory exists
     try {
       await fs.mkdir(sessionDir, { recursive: true });
     } catch (error) {
       // Directory already exists, continue
     }
-    
+
     const sessionFiles = (await fs.readdir(sessionDir)).filter(
-      f => f.endsWith('.json') && f !== 'sessions.json'
+      (f) => f.endsWith(".json") && f !== "sessions.json",
     );
     expect(sessionFiles).toHaveLength(1);
 
@@ -150,16 +150,16 @@ describe("E2E: Resume Flag", () => {
 
     // Verify the first session was saved correctly
     const sessionDir = path.join(context.testDir, ".continue", "sessions");
-    
+
     // Ensure session directory exists
     try {
       await fs.mkdir(sessionDir, { recursive: true });
     } catch (error) {
       // Directory already exists, continue
     }
-    
+
     let sessionFiles = (await fs.readdir(sessionDir)).filter(
-      f => f.endsWith('.json') && f !== 'sessions.json'
+      (f) => f.endsWith(".json") && f !== "sessions.json",
     );
     expect(sessionFiles).toHaveLength(1);
 
@@ -193,7 +193,7 @@ describe("E2E: Resume Flag", () => {
 
     // Check that the session file contains both messages
     sessionFiles = (await fs.readdir(sessionDir)).filter(
-      f => f.endsWith('.json') && f !== 'sessions.json'
+      (f) => f.endsWith(".json") && f !== "sessions.json",
     );
     sessionFile = sessionFiles[0];
     sessionPath = path.join(sessionDir, sessionFile);

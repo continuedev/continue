@@ -30,7 +30,7 @@ describe("E2E: Authentication", () => {
         authPath,
         JSON.stringify({
           userId: "test-user",
-          userEmail: "test@example.com", 
+          userEmail: "test@example.com",
           accessToken: "test-token",
           refreshToken: "test-refresh-token",
           expiresAt: Date.now() + 3600000,
@@ -39,12 +39,12 @@ describe("E2E: Authentication", () => {
       );
 
       // Run logout
-      const result = await runCLI(context, { 
+      const result = await runCLI(context, {
         args: ["logout"],
         env: {
           HOME: context.testDir,
-          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue")
-        }
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
+        },
       });
 
       expect(result.exitCode).toBe(0);
@@ -59,12 +59,12 @@ describe("E2E: Authentication", () => {
     });
 
     it("should handle logout when not logged in", async () => {
-      const result = await runCLI(context, { 
+      const result = await runCLI(context, {
         args: ["logout"],
         env: {
           HOME: context.testDir,
-          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue")
-        }
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
+        },
       });
 
       expect(result.exitCode).toBe(0);
