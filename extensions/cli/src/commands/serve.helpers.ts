@@ -31,28 +31,13 @@ export async function streamChatResponseWithInterruption(
 
   // Create callbacks to capture tool events
   const callbacks: StreamCallbacks = {
-    onContent: (content: string) => {
-      if (!currentStreamingItem) {
-        currentStreamingItem = {
-          message: { role: "assistant", content: "" },
-          contextItems: [],
-        };
-        state.session.history.push(currentStreamingItem);
-      }
-      currentStreamingItem.message.content =
-        (currentStreamingItem.message.content as string) + content;
-    },
+    onContent: (_: string) => {},
     onContentComplete: (content: string) => {
-      if (currentStreamingItem) {
-        currentStreamingItem.message.content = content;
-        currentStreamingItem = null;
-      } else {
-        // Add complete assistant message
-        state.session.history.push({
-          message: { role: "assistant", content: content },
-          contextItems: [],
-        });
-      }
+      currentStreamingItem = {
+        message: { role: "assistant", content },
+        contextItems: [],
+      };
+      state.session.history.push(currentStreamingItem);
     },
     onToolStart: (toolName: string, toolArgs?: any) => {
       // If there was streaming content, finalize it first
