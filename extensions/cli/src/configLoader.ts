@@ -353,7 +353,7 @@ async function loadAssistantSlug(
   }
 
   // Unroll locally if not logged in
-  if (!(apiClient as any).configuration.apiKey) {
+  if (!(apiClient as any).configuration.accessToken) {
     return await unrollAssistantWithConfig(
       {
         uriType: "slug",
