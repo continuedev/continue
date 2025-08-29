@@ -175,23 +175,6 @@ export class ContinueCompletionProvider
 
     const selectedCompletionInfo = context.selectedCompletionInfo;
 
-    // This code checks if there is a selected completion suggestion in the given context and ensures that it is valid
-    // To improve the accuracy of suggestions it checks if the user has typed at least 4 characters
-    // This helps refine and filter out irrelevant autocomplete options
-    if (selectedCompletionInfo) {
-      const { text, range } = selectedCompletionInfo;
-      const typedText = document.getText(range);
-
-      const typedLength = range.end.character - range.start.character;
-
-      if (typedLength < 4) {
-        return null;
-      }
-
-      if (!text.startsWith(typedText)) {
-        return null;
-      }
-    }
     let injectDetails: string | undefined = undefined;
 
     const currCursorPos = editor.selection.active;
@@ -270,116 +253,116 @@ export class ContinueCompletionProvider
 
       let outcome: AutocompleteOutcome | NextEditOutcome | undefined;
 
-      // TODO: We can probably decide here if we want to do the jumping logic.
-      // If we aren't going to jump anyways, then we should be not be using the prefetch queue or the jump manager.
-      // It would simplify the logic quite substantially.
+      if (this.isNextEditActive) {
+        // TODO: We can probably decide here if we want to do the jumping logic.
+        // If we aren't going to jump anyways, then we should be not be using the prefetch queue or the jump manager.
+        // It would simplify the logic quite substantially.
 
-      // Determine why this method was triggered.
-      const isJumping = this.jumpManager.isJumpInProgress();
-      const chainExists = this.nextEditProvider.chainExists();
-      console.log("isJumping:", isJumping, "/ chainExists:", chainExists);
-      this.prefetchQueue.peekThreeProcessed();
+        // Determine why this method was triggered.
+        const isJumping = this.jumpManager.isJumpInProgress();
+        const chainExists = this.nextEditProvider.chainExists();
+        console.log("isJumping:", isJumping, "/ chainExists:", chainExists);
+        this.prefetchQueue.peekThreeProcessed();
 
-      if (isJumping && chainExists) {
-        // Case 2: Jumping (chain exists, jump was taken)
-        console.log("trigger reason: jumping");
+        if (isJumping && chainExists) {
+          // Case 2: Jumping (chain exists, jump was taken)
+          console.log("trigger reason: jumping");
 
-        // Reset jump state.
-        this.jumpManager.setJumpInProgress(false);
+          // Reset jump state.
+          this.jumpManager.setJumpInProgress(false);
 
-        // Use the saved completion from JumpManager instead of dequeuing.
-        const savedCompletion = this.jumpManager.completionAfterJump;
-        if (savedCompletion) {
-          outcome = savedCompletion.outcome;
-          this.jumpManager.clearCompletionAfterJump();
-        } else {
-          // Fall back to prefetch queue. This technically should not happen.
-          console.error(
-            "Fell back to prefetch queue even after jump was taken",
-          );
-          outcome = this.prefetchQueue.dequeueProcessed()?.outcome;
+          // Use the saved completion from JumpManager instead of dequeuing.
+          const savedCompletion = this.jumpManager.completionAfterJump;
+          if (savedCompletion) {
+            outcome = savedCompletion.outcome;
+            this.jumpManager.clearCompletionAfterJump();
+          } else {
+            // Fall back to prefetch queue. This technically should not happen.
+            console.error(
+              "Fell back to prefetch queue even after jump was taken",
+            );
+            outcome = this.prefetchQueue.dequeueProcessed()?.outcome;
 
-          // Fill in the spot after dequeuing.
-          if (!this.usingFullFileDiff) {
-            this.prefetchQueue.process({
-              ...ctx,
-              recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
-              recentlyEditedRanges:
-                await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-            });
+            // Fill in the spot after dequeuing.
+            if (!this.usingFullFileDiff) {
+              this.prefetchQueue.process({
+                ...ctx,
+                recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+                recentlyEditedRanges:
+                  await this.recentlyEditedTracker.getRecentlyEditedRanges(),
+              });
+            }
           }
-        }
-      } else if (chainExists) {
-        // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
-        console.log("trigger reason: accepting");
+        } else if (chainExists) {
+          // Case 3: Accepting next edit outcome (chain exists, jump is not taken).
+          console.log("trigger reason: accepting");
 
-        // Try suggesting jump for each location.
-        let isJumpSuggested = false;
+          // Try suggesting jump for each location.
+          let isJumpSuggested = false;
 
-        while (this.prefetchQueue.processedCount > 0 && !isJumpSuggested) {
-          const nextItemInQueue = this.prefetchQueue.dequeueProcessed();
-          if (!nextItemInQueue) continue;
+          while (this.prefetchQueue.processedCount > 0 && !isJumpSuggested) {
+            const nextItemInQueue = this.prefetchQueue.dequeueProcessed();
+            if (!nextItemInQueue) continue;
 
-          // Fill in the spot after dequeuing.
-          if (!this.usingFullFileDiff) {
-            this.prefetchQueue.process({
-              ...ctx,
-              recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
-              recentlyEditedRanges:
-                await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-            });
+            // Fill in the spot after dequeuing.
+            if (!this.usingFullFileDiff) {
+              this.prefetchQueue.process({
+                ...ctx,
+                recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+                recentlyEditedRanges:
+                  await this.recentlyEditedTracker.getRecentlyEditedRanges(),
+              });
+            }
+
+            const nextLocation = nextItemInQueue.location;
+            outcome = nextItemInQueue.outcome;
+
+            const jumpPosition = new vscode.Position(
+              nextLocation.range.start.line,
+              nextLocation.range.start.character,
+            );
+
+            isJumpSuggested = await this.jumpManager.suggestJump(
+              currCursorPos,
+              jumpPosition,
+              outcome.completion,
+            );
+
+            if (isJumpSuggested) {
+              // Store completion to be rendered after a jump.
+              this.jumpManager.setCompletionAfterJump({
+                completionId: completionId,
+                outcome,
+                currentPosition: jumpPosition,
+              });
+
+              // Don't display anything yet.
+              // This will be handled in Case 2.
+              return undefined;
+            }
           }
 
-          const nextLocation = nextItemInQueue.location;
-          outcome = nextItemInQueue.outcome;
-
-          const jumpPosition = new vscode.Position(
-            nextLocation.range.start.line,
-            nextLocation.range.start.character,
-          );
-
-          isJumpSuggested = await this.jumpManager.suggestJump(
-            currCursorPos,
-            jumpPosition,
-            outcome.completion,
-          );
-
-          if (isJumpSuggested) {
-            // Store completion to be rendered after a jump.
-            this.jumpManager.setCompletionAfterJump({
-              completionId: completionId,
-              outcome,
-              currentPosition: jumpPosition,
-            });
-
-            // Don't display anything yet.
-            // This will be handled in Case 2.
+          if (!isJumpSuggested) {
+            console.log(
+              "No suitable jump location found after trying all positions",
+            );
+            this.nextEditProvider.deleteChain();
             return undefined;
           }
-        }
+        } else {
+          // Case 1: Typing (chain does not exist).
 
-        if (!isJumpSuggested) {
-          console.log(
-            "No suitable jump location found after trying all positions",
-          );
-          this.nextEditProvider.deleteChain();
-          return undefined;
-        }
-      } else {
-        // Case 1: Typing (chain does not exist).
+          this.nextEditProvider.startChain();
 
-        this.nextEditProvider.startChain();
+          const input: AutocompleteInput = {
+            pos,
+            filepath,
+            ...ctx,
+          };
 
-        const input: AutocompleteInput = {
-          pos,
-          filepath,
-          ...ctx,
-        };
+          setupStatusBar(undefined, true);
 
-        setupStatusBar(undefined, true);
-
-        // Get initial completion.
-        if (this.isNextEditActive) {
+          // Get initial completion.
           outcome = await this.nextEditProvider.provideInlineCompletionItems(
             input,
             signal,
@@ -406,232 +389,331 @@ export class ContinueCompletionProvider
               token,
             );
           }
-        } else {
-          // Handle regular autocomplete request.
-          outcome = await this.completionProvider.provideInlineCompletionItems(
-            input,
-            signal,
-            wasManuallyTriggered,
-          );
         }
-      }
 
-      // Return early if no valid outcome was found.
-      if (
-        !outcome ||
-        (!this.isNextEditActive &&
-          !(outcome as AutocompleteOutcome).completion) ||
-        (this.isNextEditActive &&
-          !(outcome as NextEditOutcome).completion &&
-          (outcome as NextEditOutcome).diffLines.length === 0)
-      ) {
-        return null;
-      }
+        // Return early if no valid outcome was found.
+        if (
+          !outcome ||
+          (!(outcome as NextEditOutcome).completion &&
+            (outcome as NextEditOutcome).diffLines.length === 0)
+        ) {
+          return null;
+        }
 
-      // VS Code displays dependent on selectedCompletionInfo (their docstring below)
-      // We should first always make sure we have a valid completion, but if it goes wrong we
-      // want telemetry to be correct
-      /**
-       * Provides information about the currently selected item in the autocomplete widget if it is visible.
-       *
-       * If set, provided inline completions must extend the text of the selected item
-       * and use the same range, otherwise they are not shown as preview.
-       * As an example, if the document text is `console.` and the selected item is `.log` replacing the `.` in the document,
-       * the inline completion must also replace `.` and start with `.log`, for example `.log()`.
-       *
-       * Inline completion providers are requested again whenever the selected item changes.
-       */
-      if (selectedCompletionInfo) {
-        outcome.completion = selectedCompletionInfo.text + outcome.completion;
-      }
-      const willDisplay = this.willDisplay(
-        document,
-        selectedCompletionInfo,
-        signal,
-        outcome,
-      );
-      if (!willDisplay) {
-        return null;
-      }
+        if (selectedCompletionInfo) {
+          outcome.completion = selectedCompletionInfo.text + outcome.completion;
+        }
+        const willDisplay = this.willDisplayForNES(
+          document,
+          selectedCompletionInfo,
+          signal,
+          outcome,
+        );
+        if (!willDisplay) {
+          return null;
+        }
 
-      // Marking the outcome as displayed saves the current outcome
-      // as a value of the key completionId.
-      if (this.isNextEditActive) {
+        // Marking the outcome as displayed saves the current outcome
+        // as a value of the key completionId.
         this.nextEditProvider.markDisplayed(
           completionId,
           outcome as NextEditOutcome,
         );
+
+        this._lastShownCompletion = outcome;
+
+        // Check the diff between old and new editable region.
+        const newEditRangeSlice = outcome.completion;
+
+        // Get the contents of the old (current) editable region.
+        // const editableRegionStartLine = Math.max(
+        //   currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
+        //   0,
+        // );
+        // const editableRegionEndLine = Math.min(
+        //   currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
+        //   editor.document.lineCount - 1,
+        // );
+        const editableRegionStartLine = (outcome as NextEditOutcome)
+          .editableRegionStartLine;
+        const editableRegionEndLine = (outcome as NextEditOutcome)
+          .editableRegionEndLine;
+        const oldEditRangeSlice = editor.document
+          .getText()
+          .split("\n")
+          .slice(editableRegionStartLine, editableRegionEndLine + 1)
+          .join("\n");
+
+        // We don't need to show the next edit window if the predicted edits are identical to the previous version.
+        if (oldEditRangeSlice === newEditRangeSlice) {
+          this.nextEditLoggingService.cancelRejectionTimeout(completionId);
+          return undefined;
+        }
+
+        // Create a cursor position relative to the edit range slice.
+        const relativeCursorPos = {
+          line: currCursorPos.line - editableRegionStartLine,
+          character: currCursorPos.character,
+        };
+
+        // If the diff is a FIM, render a ghost text.
+        const { isFim, fimText } = checkFim(
+          oldEditRangeSlice,
+          newEditRangeSlice,
+          relativeCursorPos,
+        );
+
+        if (isFim) {
+          if (!fimText) {
+            console.log("deleteChain from completionProvider.ts: !fimText");
+            this.nextEditProvider.deleteChain();
+            return undefined;
+          }
+
+          // Track this ghost text for acceptance detection.
+          // Ghost text acceptance can *technically* be acted upon in
+          // the command handler for "continue.logNextEditOutcomeAccept",
+          // but there is a substantial delay between accepting and logging,
+          // which introduces a lot of race conditions with different event handlers.
+          // Plus, separating these concerns seems to make sense logically as well.
+          GhostTextAcceptanceTracker.getInstance().setExpectedGhostTextAcceptance(
+            document,
+            fimText,
+            new vscode.Position(currCursorPos.line, currCursorPos.character),
+          );
+
+          const nextEditCompletionItem = new vscode.InlineCompletionItem(
+            fimText,
+            new vscode.Range(
+              new vscode.Position(currCursorPos.line, currCursorPos.character),
+              new vscode.Position(currCursorPos.line, currCursorPos.character),
+            ),
+            {
+              title: "Log Next Edit Outcome",
+              command: "continue.logNextEditOutcomeAccept",
+              arguments: [completionId, this.nextEditLoggingService],
+            },
+          );
+          return [nextEditCompletionItem];
+        }
+
+        // Handle non-FIM cases with the NextEditWindowManager.
+        const diffLines = (outcome as NextEditOutcome).diffLines;
+        if (diffLines.length === 0) {
+          // At this point, there is no way that diffLines.length === 0.
+          // Only time we ever reach this point would be after the jump was taken, or if its after the very first repsonse.
+          // In case of jump, this is impossible, as the JumpManager wouldn't have suggested a jump here in the first place.
+          // In case of initial response, we suggested a jump.
+          console.log(
+            "deleteChain from completionProvider.ts: diffLines.length === 0",
+          );
+          NextEditProvider.getInstance().deleteChain();
+        }
+
+        if (NextEditWindowManager.isInstantiated()) {
+          NextEditWindowManager.getInstance().updateCurrentCompletionId(
+            completionId,
+          );
+
+          await NextEditWindowManager.getInstance().showNextEditWindow(
+            editor,
+            currCursorPos,
+            editableRegionStartLine,
+            editableRegionEndLine,
+            oldEditRangeSlice,
+            newEditRangeSlice,
+            diffLines,
+          );
+        }
+
+        return undefined;
       } else {
+        // Handle regular autocomplete request.
+        const input: AutocompleteInput = {
+          pos,
+          filepath,
+          ...ctx,
+        };
+
+        outcome = await this.completionProvider.provideInlineCompletionItems(
+          input,
+          signal,
+          wasManuallyTriggered,
+        );
+
+        // Return early if no valid outcome was found.
+        if (!outcome || !(outcome as AutocompleteOutcome).completion) {
+          return null;
+        }
+
+        // VS Code displays dependent on selectedCompletionInfo (their docstring below)
+        // We should first always make sure we have a valid completion, but if it goes wrong we
+        // want telemetry to be correct
+        /**
+         * Provides information about the currently selected item in the autocomplete widget if it is visible.
+         *
+         * If set, provided inline completions must extend the text of the selected item
+         * and use the same range, otherwise they are not shown as preview.
+         * As an example, if the document text is `console.` and the selected item is `.log` replacing the `.` in the document,
+         * the inline completion must also replace `.` and start with `.log`, for example `.log()`.
+         *
+         * Inline completion providers are requested again whenever the selected item changes.
+         */
+        if (
+          selectedCompletionInfo &&
+          selectedCompletionInfo.text.startsWith(".")
+        ) {
+          const trimmedCompletion = outcome.completion.trimStart();
+          if (trimmedCompletion.startsWith(".")) {
+            outcome.completion = trimmedCompletion;
+          }
+        }
+
+        // Marking the outcome as displayed saves the current outcome
+        // as a value of the key completionId.
         this.completionProvider.markDisplayed(
           completionId,
           outcome as AutocompleteOutcome,
         );
-      }
-      this._lastShownCompletion = outcome;
 
-      // Construct the range/text to show
-      const startPos = selectedCompletionInfo?.range.start ?? position;
-      let range = new vscode.Range(startPos, startPos);
-      let completionText = outcome.completion;
+        // Construct the range/text to show
+        let range = new vscode.Range(position, position);
+        let completionText = outcome.completion;
+        // When the completion widget is up, changing the range will
+        // result in our inline completion not being shown.
+        const mayChangeRange = selectedCompletionInfo === undefined;
 
-      const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
+        const isSingleLineCompletion =
+          outcome.completion.split("\n").length <= 1;
 
-      if (isSingleLineCompletion) {
-        const lastLineOfCompletionText = completionText.split("\n").pop() || "";
-        const currentText = document
-          .lineAt(startPos)
-          .text.substring(startPos.character);
+        if (isSingleLineCompletion) {
+          const currentLineRemainder = document
+            .lineAt(position)
+            .text.substring(position.character);
 
-        const result = processSingleLineCompletion(
-          lastLineOfCompletionText,
-          currentText,
-          startPos.character,
-        );
-
-        if (result === undefined) {
-          return undefined;
-        }
-
-        completionText = result.completionText;
-        if (result.range) {
-          range = new vscode.Range(
-            new vscode.Position(startPos.line, result.range.start),
-            new vscode.Position(startPos.line, result.range.end),
+          const result = processSingleLineCompletion(
+            completionText,
+            currentLineRemainder,
+            position.character,
+            mayChangeRange,
           );
-        }
-      } else {
-        // Extend the range to the end of the line for multiline completions
-        range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
-      }
 
-      const autocompleteCompletionItem = new vscode.InlineCompletionItem(
-        completionText,
-        range,
-        {
-          title: "Log Autocomplete Outcome",
-          command: "continue.logAutocompleteOutcome",
-          arguments: [completionId, this.completionProvider],
-        },
-      );
+          if (result === undefined) {
+            return undefined;
+          }
 
-      (autocompleteCompletionItem as any).completeBracketPairs = true;
+          completionText = result.completionText;
+          if (result.range) {
+            range = new vscode.Range(
+              new vscode.Position(position.line, result.range.start),
+              new vscode.Position(position.line, result.range.end),
+            );
+          }
+        } else {
+          if (mayChangeRange) {
+            // Extend the range to the end of the line for multiline completions
+            range = new vscode.Range(
+              position,
+              document.lineAt(position).range.end,
+            );
+          } else {
+            // Since we can't change the range, try to shorten the completion
+            // into a single-line insertion
 
-      // Handle autocomplete request.
-      if (!this.isNextEditActive) {
-        return [autocompleteCompletionItem];
-      }
+            const currentLineRemainder = document
+              .lineAt(position)
+              .text.substring(position.character);
 
-      // Check the diff between old and new editable region.
-      const newEditRangeSlice = completionText;
-
-      // Get the contents of the old (current) editable region.
-      // const editableRegionStartLine = Math.max(
-      //   currCursorPos.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-      //   0,
-      // );
-      // const editableRegionEndLine = Math.min(
-      //   currCursorPos.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-      //   editor.document.lineCount - 1,
-      // );
-      const editableRegionStartLine = (outcome as NextEditOutcome)
-        .editableRegionStartLine;
-      const editableRegionEndLine = (outcome as NextEditOutcome)
-        .editableRegionEndLine;
-      const oldEditRangeSlice = editor.document
-        .getText()
-        .split("\n")
-        .slice(editableRegionStartLine, editableRegionEndLine + 1)
-        .join("\n");
-
-      // We don't need to show the next edit window if the predicted edits are identical to the previous version.
-      if (oldEditRangeSlice === newEditRangeSlice) {
-        this.nextEditLoggingService.cancelRejectionTimeout(completionId);
-        return undefined;
-      }
-
-      // Create a cursor position relative to the edit range slice.
-      const relativeCursorPos = {
-        line: currCursorPos.line - editableRegionStartLine,
-        character: currCursorPos.character,
-      };
-
-      // If the diff is a FIM, render a ghost text.
-      const { isFim, fimText } = checkFim(
-        oldEditRangeSlice,
-        newEditRangeSlice,
-        relativeCursorPos,
-      );
-
-      if (isFim) {
-        if (!fimText) {
-          console.log("deleteChain from completionProvider.ts: !fimText");
-          this.nextEditProvider.deleteChain();
-          return undefined;
+            if (currentLineRemainder !== "") {
+              const firstLineOfCompletion = outcome.completion.split("\n")[0];
+              const remainderLocation =
+                firstLineOfCompletion.lastIndexOf(currentLineRemainder);
+              if (remainderLocation !== -1) {
+                completionText = firstLineOfCompletion.slice(
+                  0,
+                  remainderLocation,
+                );
+              } else {
+                return null;
+              }
+            }
+          }
         }
 
-        // Track this ghost text for acceptance detection.
-        // Ghost text acceptance can *technically* be acted upon in
-        // the command handler for "continue.logNextEditOutcomeAccept",
-        // but there is a substantial delay between accepting and logging,
-        // which introduces a lot of race conditions with different event handlers.
-        // Plus, separating these concerns seems to make sense logically as well.
-        GhostTextAcceptanceTracker.getInstance().setExpectedGhostTextAcceptance(
+        if (selectedCompletionInfo) {
+          // May not change range so range is new vscode.Range(position, position)
+          // Seems to always hold true
+          if (range.start.isEqual(selectedCompletionInfo.range.end)) {
+            range = new vscode.Range(
+              selectedCompletionInfo.range.start,
+              range.end,
+            );
+            const existingText = document.getText(selectedCompletionInfo.range);
+            completionText = existingText + completionText;
+          }
+        }
+
+        outcome.completion = completionText;
+
+        const willDisplay = this.willDisplayForAutocomplete(
           document,
-          fimText,
-          new vscode.Position(currCursorPos.line, currCursorPos.character),
+          selectedCompletionInfo,
+          signal,
+          range,
+          outcome,
         );
 
-        const nextEditCompletionItem = new vscode.InlineCompletionItem(
-          fimText,
-          new vscode.Range(
-            new vscode.Position(currCursorPos.line, currCursorPos.character),
-            new vscode.Position(currCursorPos.line, currCursorPos.character),
-          ),
+        if (!willDisplay) {
+          return null;
+        }
+
+        this._lastShownCompletion = outcome;
+
+        const autocompleteCompletionItem = new vscode.InlineCompletionItem(
+          completionText,
+          range,
           {
-            title: "Log Next Edit Outcome",
-            command: "continue.logNextEditOutcomeAccept",
-            arguments: [completionId, this.nextEditLoggingService],
+            title: "Log Autocomplete Outcome",
+            command: "continue.logAutocompleteOutcome",
+            arguments: [completionId, this.completionProvider],
           },
         );
-        return [nextEditCompletionItem];
+
+        (autocompleteCompletionItem as any).completeBracketPairs = true;
+
+        return [autocompleteCompletionItem];
       }
-
-      // Handle non-FIM cases with the NextEditWindowManager.
-      const diffLines = (outcome as NextEditOutcome).diffLines;
-      if (diffLines.length === 0) {
-        // At this point, there is no way that diffLines.length === 0.
-        // Only time we ever reach this point would be after the jump was taken, or if its after the very first repsonse.
-        // In case of jump, this is impossible, as the JumpManager wouldn't have suggested a jump here in the first place.
-        // In case of initial response, we suggested a jump.
-        console.log(
-          "deleteChain from completionProvider.ts: diffLines.length === 0",
-        );
-        NextEditProvider.getInstance().deleteChain();
-      }
-
-      if (NextEditWindowManager.isInstantiated()) {
-        NextEditWindowManager.getInstance().updateCurrentCompletionId(
-          completionId,
-        );
-
-        await NextEditWindowManager.getInstance().showNextEditWindow(
-          editor,
-          currCursorPos,
-          editableRegionStartLine,
-          editableRegionEndLine,
-          oldEditRangeSlice,
-          newEditRangeSlice,
-          diffLines,
-        );
-      }
-
-      return undefined;
     } finally {
       stopStatusBarLoading();
     }
   }
 
-  willDisplay(
+  willDisplayForAutocomplete(
+    document: vscode.TextDocument,
+    selectedCompletionInfo: vscode.SelectedCompletionInfo | undefined,
+    abortSignal: AbortSignal,
+    range: vscode.Range,
+    outcome: AutocompleteOutcome | NextEditOutcome,
+  ): boolean {
+    if (selectedCompletionInfo) {
+      // If selectedCompletionInfo.range.end always equals to position, them this is always true
+      if (!range.isEqual(selectedCompletionInfo.range)) {
+        return false;
+      }
+
+      if (!outcome.completion.startsWith(selectedCompletionInfo.text)) {
+        return false;
+      }
+    }
+
+    if (abortSignal.aborted) {
+      return false;
+    }
+
+    return true;
+  }
+
+  willDisplayForNES(
     document: vscode.TextDocument,
     selectedCompletionInfo: vscode.SelectedCompletionInfo | undefined,
     abortSignal: AbortSignal,

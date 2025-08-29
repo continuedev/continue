@@ -13,6 +13,7 @@ describe("processSingleLineCompletion", () => {
       testCase.input.lastLineOfCompletionText,
       testCase.input.currentText,
       testCase.input.cursorPosition,
+      true,
     );
 
     expect(result).toEqual(testCase.expectedResult);
@@ -20,14 +21,16 @@ describe("processSingleLineCompletion", () => {
 
   it("should handle midline insert repeating the end of line", () => {
     const testCase = processTestCase({
-      original: "console.log(|cur|);|till|",
+      original: "console.log(|cur|);",
       completion: '"Hello, world!");',
+      appliedCompletion: '"Hello, world!"',
     });
 
     const result = processSingleLineCompletion(
       testCase.input.lastLineOfCompletionText,
       testCase.input.currentText,
       testCase.input.cursorPosition,
+      true,
     );
 
     expect(result).toEqual(testCase.expectedResult);
@@ -43,6 +46,24 @@ describe("processSingleLineCompletion", () => {
       testCase.input.lastLineOfCompletionText,
       testCase.input.currentText,
       testCase.input.cursorPosition,
+      true,
+    );
+
+    expect(result).toEqual(testCase.expectedResult);
+  });
+
+  it("should handle midline insert plus extra when range can't be changed", () => {
+    const testCase = processTestCase({
+      original: "console.log(|cur|)",
+      completion: '"Hello, world!");',
+      appliedCompletion: '"Hello, world!"',
+    });
+
+    const result = processSingleLineCompletion(
+      testCase.input.lastLineOfCompletionText,
+      testCase.input.currentText,
+      testCase.input.cursorPosition,
+      false,
     );
 
     expect(result).toEqual(testCase.expectedResult);
@@ -58,6 +79,7 @@ describe("processSingleLineCompletion", () => {
       testCase.input.lastLineOfCompletionText,
       testCase.input.currentText,
       testCase.input.cursorPosition,
+      true,
     );
 
     expect(result).toEqual(testCase.expectedResult);
@@ -74,6 +96,7 @@ describe("processSingleLineCompletion", () => {
       testCase.input.lastLineOfCompletionText,
       testCase.input.currentText,
       testCase.input.cursorPosition,
+      true,
     );
 
     expect(result).toEqual(testCase.expectedResult);
@@ -89,6 +112,7 @@ describe("processSingleLineCompletion", () => {
       testCase.input.lastLineOfCompletionText,
       testCase.input.currentText,
       testCase.input.cursorPosition,
+      true,
     );
 
     expect(result).toEqual(testCase.expectedResult);
