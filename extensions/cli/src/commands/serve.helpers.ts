@@ -1,9 +1,4 @@
-import type {
-  ChatHistoryItem,
-  Session,
-  ToolCallState,
-  ToolStatus,
-} from "core/index.js";
+import type { Session, ToolCallState, ToolStatus } from "core/index.js";
 
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
@@ -27,42 +22,41 @@ export async function streamChatResponseWithInterruption(
   // Set up periodic interruption checks
   const interruptionChecker = setInterval(checkInterruption, 100);
 
-  let currentStreamingItem: ChatHistoryItem | null = null;
-
   // Create callbacks to capture tool events
   const callbacks: StreamCallbacks = {
-    onContent: (_: string) => {},
-    onContentComplete: (content: string) => {
-      currentStreamingItem = {
-        message: { role: "assistant", content },
-        contextItems: [],
-      };
-      state.session.history.push(currentStreamingItem);
+    onContent: (_: string) => {
+      // onContent is empty - doesn't update history during streaming
+      // This is just for real-time display purposes
+    },
+    onContentComplete: (_: string) => {
+      // Note: streamChatResponse already adds messages to history via handleToolCalls
+      // so we don't need to add them here - this callback is just for notification
+      // that content streaming is complete
     },
     onToolStart: (toolName: string, toolArgs?: any) => {
-      // If there was streaming content, finalize it first
-      if (currentStreamingItem && currentStreamingItem.message.content) {
-        currentStreamingItem = null;
-      }
-
       // Always create a new assistant message for each tool call
       const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      const toolCall = {
+        id: toolCallId,
+        type: "function" as const,
+        function: {
+          name: toolName,
+          arguments: JSON.stringify(toolArgs || {}),
+        },
+      };
       const toolCallState: ToolCallState = {
         toolCallId: toolCallId,
-        toolCall: {
-          id: toolCallId,
-          type: "function",
-          function: {
-            name: toolName,
-            arguments: JSON.stringify(toolArgs || {}),
-          },
-        },
+        toolCall: toolCall,
         status: "calling",
         parsedArgs: toolArgs,
       };
 
       state.session.history.push({
-        message: { role: "assistant", content: "" },
+        message: {
+          role: "assistant",
+          content: "",
+          toolCalls: [toolCall],
+        },
         contextItems: [],
         toolCallStates: [toolCallState],
       });
@@ -85,7 +79,7 @@ export async function streamChatResponseWithInterruption(
                 description: "Tool execution result",
               },
             ];
-            return;
+            break;
           }
         }
       }
@@ -110,7 +104,7 @@ export async function streamChatResponseWithInterruption(
                   description: "Tool execution error",
                 },
               ];
-              return;
+              break;
             }
           }
         }
@@ -125,6 +119,7 @@ export async function streamChatResponseWithInterruption(
       toolName: string,
       toolArgs: any,
       requestId: string,
+      toolCallPreview?: any[],
     ) => {
       // Set pending permission state
       state.pendingPermission = {
@@ -132,6 +127,7 @@ export async function streamChatResponseWithInterruption(
         toolArgs,
         requestId,
         timestamp: Date.now(),
+        toolCallPreview,
       };
 
       // Add a system message indicating permission is needed
@@ -144,6 +140,15 @@ export async function streamChatResponseWithInterruption(
       });
 
       // Don't wait here - the streamChatResponse will handle waiting
+    },
+    onSystemMessage: (message: string) => {
+      state.session.history.push({
+        message: {
+          role: "system",
+          content: message,
+        },
+        contextItems: [],
+      });
     },
   };
 
@@ -158,10 +163,6 @@ export async function streamChatResponseWithInterruption(
     return response || "";
   } finally {
     clearInterval(interruptionChecker);
-    // Ensure any streaming message is finalized
-    if (currentStreamingItem !== null) {
-      currentStreamingItem = null;
-    }
   }
 }
 
@@ -170,6 +171,7 @@ export interface PendingPermission {
   toolArgs: any;
   requestId: string;
   timestamp: number;
+  toolCallPreview?: any[];
 }
 
 export interface ServerState {
