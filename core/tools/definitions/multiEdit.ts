@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { NO_PARALLEL_TOOL_CALLING_INSRUCTION } from "./editFile";
 
 export interface EditOperation {
   old_string: string;
@@ -62,6 +63,7 @@ exactly (including whitespace)
 - The tool will fail if edits.old_string and edits.new_string are the same
 - Since edits are applied in sequence, ensure that earlier edits don't affect
 the text that later edits are trying to find
+- ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}
 
 When making edits:
 

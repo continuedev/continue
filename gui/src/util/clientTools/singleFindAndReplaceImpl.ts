@@ -1,5 +1,6 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 import {
@@ -7,20 +8,11 @@ import {
   validateSingleEdit,
 } from "./findAndReplaceUtils";
 
-export const singleFindAndReplaceImpl: ClientToolImpl = async (
-  args,
-  toolCallId,
-  extras,
-) => {
-  const {
-    filepath,
-    old_string,
-    new_string,
-    replace_all = false,
-    editingFileContents,
-  } = args;
-
-  const streamId = uuid();
+export async function validateAndEnhanceSingleEditArgs(
+  args: Record<string, any>,
+  ideMessenger: IIdeMessenger,
+): Promise<Record<string, any>> {
+  const { filepath, old_string, new_string, replace_all = false } = args;
 
   // Validate arguments
   if (!filepath) {
@@ -29,18 +21,16 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
   validateSingleEdit(old_string, new_string);
 
   // Resolve the file path
-  const resolvedFilepath = await resolveRelativePathInDir(
+  const resolvedFileUri = await resolveRelativePathInDir(
     filepath,
-    extras.ideMessenger.ide,
+    ideMessenger.ide,
   );
-  if (!resolvedFilepath) {
+  if (!resolvedFileUri) {
     throw new Error(`File ${filepath} does not exist`);
   }
 
   // Read the current file content
-  const originalContent =
-    editingFileContents ??
-    (await extras.ideMessenger.ide.readFile(resolvedFilepath));
+  const originalContent = await ideMessenger.ide.readFile(resolvedFileUri);
 
   // Perform the find and replace operation
   const newContent = performFindAndReplace(
@@ -50,13 +40,31 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
     replace_all,
   );
 
+  return {
+    old_string,
+    new_string,
+    replace_all,
+    originalContent,
+    newContent,
+    fileUri: resolvedFileUri,
+  };
+}
+
+export const singleFindAndReplaceImpl: ClientToolImpl = async (
+  args,
+  toolCallId,
+  extras,
+) => {
+  const { newContent, fileUri } = args;
+  const streamId = uuid();
+
   // Apply the changes to the file
   void extras.dispatch(
     applyForEditTool({
       streamId,
       toolCallId,
       text: newContent,
-      filepath: resolvedFilepath,
+      filepath: fileUri,
       isSearchAndReplace: true,
     }),
   );

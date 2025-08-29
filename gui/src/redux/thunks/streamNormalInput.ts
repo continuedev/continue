@@ -14,6 +14,7 @@ import {
   setInactive,
   setInlineErrorMessage,
   setIsPruned,
+  setToolCallArgs,
   setToolGenerated,
   streamUpdate,
   updateToolCallOutput,
@@ -29,7 +30,7 @@ import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { enhanceParsedArgs } from "./enhanceParsedArgs";
+import { validateAndEnhanceToolCallArgs } from "./enhanceParsedArgs";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -258,16 +259,21 @@ export const streamNormalInput = createAsyncThunk<
     await Promise.all(
       allToolCallStates.map(async (tcState) => {
         try {
-          await enhanceParsedArgs(
+          const changedArgs = await validateAndEnhanceToolCallArgs(
             extra.ideMessenger,
-            dispatch,
             tcState?.toolCall.function.name,
-            tcState.toolCallId,
             tcState.parsedArgs,
           );
+          if (changedArgs) {
+            dispatch(
+              setToolCallArgs({
+                toolCallId: tcState.toolCallId,
+                newArgs: changedArgs,
+              }),
+            );
+          }
         } catch (e) {
-          let errorMessage =
-            e instanceof Error ? e.message : `Invalid tool args`;
+          let errorMessage = e instanceof Error ? e.message : `Unknown error`;
           dispatch(
             errorToolCall({
               toolCallId: tcState.toolCallId,
@@ -292,8 +298,8 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     const preprocessedState = getState();
-    const preproccessedCalls = selectCurrentToolCalls(preprocessedState);
-    const generatingToolCalls = preproccessedCalls.filter(
+    const preprocessedCalls = selectCurrentToolCalls(preprocessedState);
+    const generatingToolCalls = preprocessedCalls.filter(
       (toolCallState) => toolCallState.status === "generating",
     );
     const toolSettings = preprocessedState.ui.toolSettings;

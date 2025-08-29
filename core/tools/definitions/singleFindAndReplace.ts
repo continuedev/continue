@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { NO_PARALLEL_TOOL_CALLING_INSRUCTION } from "./editFile";
 
 export interface SingleFindAndReplaceArgs {
   filepath: string;
@@ -37,6 +38,8 @@ unless explicitly required.
 
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to
 files unless asked.
+
+- ${NO_PARALLEL_TOOL_CALLING_INSRUCTION}
 
 - The edit will FAIL if \`old_string\` is not unique in the file. Either provide
 a larger string with more surrounding context to make it unique or use

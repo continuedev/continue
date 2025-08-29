@@ -17,21 +17,22 @@ import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceU
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
-  fileUri?: string;
-  editingFileContents?: string;
-  relativeFilePath?: string;
+  relativeFilePath: string;
   edits: EditOperation[];
   toolCallId: string;
-  historyIndex: number;
+  // These two will be added when args are enhanced
+  fileUri?: string;
+  originalContent?: string;
+  newContent?: string;
 }
 
 export function FindAndReplaceDisplay({
   fileUri,
   relativeFilePath,
-  editingFileContents,
+  originalContent,
+  newContent,
   edits,
   toolCallId,
-  historyIndex,
 }: FindAndReplaceDisplayProps) {
   const [isExpanded, setIsExpanded] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
@@ -57,46 +58,46 @@ export function FindAndReplaceDisplay({
 
   // Get file content from tool call state instead of reading file
   const currentFileContent = useMemo(() => {
-    if (editingFileContents) {
-      return editingFileContents;
+    if (originalContent) {
+      return originalContent;
     }
     return edits?.map((edit) => edit.old_string ?? "").join("\n");
-  }, [editingFileContents, edits]);
+  }, [originalContent, edits]);
 
   const diffResult = useMemo(() => {
+    console.log("DIFF RESULT CALC", currentFileContent, edits, newContent);
     if (!currentFileContent) {
       return null;
     }
 
-    try {
-      // Apply all edits sequentially
-      let newContent = currentFileContent;
-      for (let i = 0; i < edits.length; i++) {
-        const {
-          old_string: oldString,
-          new_string: newString,
-          replace_all: replaceAll,
-        } = edits[i];
-        newContent = performFindAndReplace(
-          newContent,
-          oldString,
-          newString,
-          replaceAll,
-          i,
-        );
+    let liveNewContent = newContent;
+    if (typeof liveNewContent === "undefined") {
+      try {
+        liveNewContent = currentFileContent;
+        for (let i = 0; i < edits.length; i++) {
+          const {
+            old_string: oldString,
+            new_string: newString,
+            replace_all: replaceAll,
+          } = edits[i];
+          liveNewContent = performFindAndReplace(
+            liveNewContent,
+            oldString,
+            newString,
+            replaceAll,
+            i,
+          );
+        }
+      } catch (error) {
+        return {
+          diff: null,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
       }
-
-      // Generate diff between original and final content
-      const diff = diffLines(currentFileContent, newContent);
-      return { diff, newContent, error: null };
-    } catch (error) {
-      return {
-        diff: null,
-        newContent: null,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
     }
-  }, [currentFileContent, edits]);
+    const diff = diffLines(currentFileContent, liveNewContent);
+    return { diff, error: null };
+  }, [newContent, currentFileContent, edits]);
 
   const statusIcon = useMemo(() => {
     const status = toolCallState?.status;
@@ -140,7 +141,7 @@ export function FindAndReplaceDisplay({
             }`}
           />
           <FileInfo
-            filepath={displayName}
+            filepath={displayName ?? "File"}
             onClick={(e) => {
               if (!fileUri) {
                 return;
@@ -176,12 +177,11 @@ export function FindAndReplaceDisplay({
 
   if (diffResult?.error) {
     return renderContainer(
-      <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong> {diffResult.error}
-      </div>,
+      <div className="text-error p-3 text-sm">Error generating diff</div>,
     );
   }
 
+  console.log("DIFF RESULT", diffResult);
   if (
     !diffResult?.diff ||
     (diffResult.diff.length === 1 &&

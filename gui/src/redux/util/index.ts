@@ -43,11 +43,10 @@ export function findAllCurToolCalls(
   // Find the most recent assistant message that has tool call states
   for (let i = chatHistory.length - 1; i >= 0; i--) {
     const item = chatHistory[i];
-    if (
-      item.message.role === "assistant" &&
-      item.toolCallStates &&
-      item.toolCallStates.length > 0
-    ) {
+    if (item.message.role !== "assistant") {
+      break;
+    }
+    if (item.toolCallStates && item.toolCallStates.length > 0) {
       return item.toolCallStates;
     }
   }
