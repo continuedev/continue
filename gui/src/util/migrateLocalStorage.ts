@@ -12,9 +12,6 @@ function migrateToolPolicies(dispatch: AppDispatch) {
   const toFromMap: Record<string, string[]> = {
     [BuiltInToolNames.ReadFile]: ["builtin_read_file"],
     [BuiltInToolNames.EditExistingFile]: ["builtin_edit_existing_file"],
-    [BuiltInToolNames.SearchAndReplaceInFile]: [
-      "builtin_search_and_replace_in_file",
-    ],
     [BuiltInToolNames.ReadCurrentlyOpenFile]: [
       "builtin_read_currently_open_file",
     ],
