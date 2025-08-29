@@ -44,15 +44,14 @@ export const ModelRecommendations = ({ role = "all" }) => {
   const modelRecs = {
     agent_plan: {
       open: [
-        "Qwen3 Coder (480B)",
-        "Qwen3 Coder (30B)",
-        "Devstral (27B)",
-        "Devstral",
+        "[Qwen3 Coder (480B)](https://hub.continue.dev/openrouter/qwen3-coder)",
+        "[Qwen3 Coder (30B)](https://hub.continue.dev/ollama/qwen3-coder-30b)",
+        "[Devstral (27B)](https://hub.continue.dev/ollama/devstral)",
+        "[Kimi K2 (1T)](https://hub.continue.dev/openrouter/kimi-k2)",
+        "[gpt-oss (120B)](https://hub.continue.dev/openrouter/gpt-oss-120b)",
+        "[gpt-oss (20B)](https://hub.continue.dev/ollama/gpt-oss-20b)",
         "GLM 4.5 (355B)",
         "GLM 4.5 Air (106B)",
-        "Kimi K2 (1T)",
-        "gpt-oss (120B)",
-        "gpt-oss (20B)",
       ],
       closed: [
         "[Claude Opus 4.1](https://hub.continue.dev/anthropic/claude-4-1-opus)",
@@ -64,10 +63,10 @@ export const ModelRecommendations = ({ role = "all" }) => {
     },
     chat_edit: {
       open: [
-        "Qwen3 Coder (480B)",
-        "Qwen3 Coder (30B)",
-        "gpt-oss (120B)",
-        "gpt-oss (20B)",
+        "[Qwen3 Coder (480B)](https://hub.continue.dev/openrouter/qwen3-coder)",
+        "[Qwen3 Coder (30B)](https://hub.continue.dev/ollama/qwen3-coder-30b)",
+        "[gpt-oss (120B)](https://hub.continue.dev/openrouter/gpt-oss-120b)",
+        "[gpt-oss (20B)](https://hub.continue.dev/ollama/gpt-oss-20b)",
       ],
       closed: [
         "[Claude Opus 4.1](https://hub.continue.dev/anthropic/claude-4-1-opus)",
@@ -80,7 +79,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
     autocomplete: {
       open: [
         "[QwenCoder2.5 (1.5B)](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)",
-        "QwenCoder2.5 (7B)",
+        "[QwenCoder2.5 (7B)](https://hub.continue.dev/ollama/qwen2.5-coder-7b)",
       ],
       closed: [
         "[Codestral](https://hub.continue.dev/mistral/codestral)",
@@ -94,8 +93,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
         "[Relace Instant Apply](https://hub.continue.dev/relace/instant-apply)",
         "[Morph Fast Apply](https://hub.continue.dev/morphllm/morph-v2)",
       ],
-      notes:
-        "Open models are basically non-existent / not good enough for this model role",
+      notes: "Open models are not good enough for this model role",
     },
     embed: {
       open: [
@@ -119,7 +117,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
       notes: "Open models are beginning to emerge for this model role",
     },
     next_edit: {
-      open: ["Zeta"],
+      open: ["N/A"],
       closed: [
         "[Mercury Coder](https://hub.continue.dev/inceptionlabs/mercury-coder)",
       ],
