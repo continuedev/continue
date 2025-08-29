@@ -68,7 +68,7 @@ runs:
     - name: Install Continue CLI
       if: env.SHOULD_RUN == 'true'
       shell: bash
-      run: npm install -g @continuedev/cli@latest
+      run: npm install -g @continuedev/cli@1.4.30
 
     - name: Build PR Review Prompt
       if: env.SHOULD_RUN == 'true'
@@ -189,7 +189,7 @@ EOF
         # Test Continue CLI availability
         if [ "$SKIP_CLI" != "true" ]; then
           echo "Testing Continue CLI..."
-          if ! timeout 10 cn --version; then
+          if ! cn --version; then
             echo "Warning: Continue CLI not found or not working"
             cat > code_review.md << 'EOF'
 ## Code Review Summary
@@ -201,14 +201,21 @@ EOF
 - Verify @continuedev/cli package is available
 EOF
             echo "SKIP_CLI=true" >> $GITHUB_ENV
+          else
+            echo "Continue CLI version: $(cn --version)"
           fi
         fi
 
         # Run the CLI with validated config and error handling
         if [ "$SKIP_CLI" != "true" ]; then
-          echo "Executing Continue CLI with org: $CONTINUE_ORG, config: $CONTINUE_CONFIG"
-        # Use timeout to prevent hanging (120 seconds max)
-        if ! timeout 120 cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md 2>cli_error.log; then
+          echo "Executing Continue CLI with config: $CONTINUE_ORG/$CONTINUE_CONFIG"
+          
+          # Write prompt to temp file for better handling
+          PROMPT_FILE="/tmp/continue-prompt-$.txt"
+          cp review_prompt.txt "$PROMPT_FILE"
+          
+        # Use timeout to prevent hanging (240 seconds = 4 minutes)
+        if ! timeout 240 cn --config "$CONTINUE_ORG/$CONTINUE_CONFIG" -p "@$PROMPT_FILE" --allow Bash > code_review.md 2>cli_error.log; then
           echo "Error: Continue CLI command failed"
           echo "CLI error log:"
           cat cli_error.log

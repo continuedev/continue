@@ -73,7 +73,7 @@ runs:
     - name: Install Continue CLI
       if: env.SKIP_REVIEW != 'true'
       shell: bash
-      run: npm install -g @continuedev/cli@latest
+      run: npm install -g @continuedev/cli@1.4.30
 
     - name: Build Inline Review Prompt
       if: env.SKIP_REVIEW != 'true'
@@ -219,7 +219,7 @@ runs:
         # Test Continue CLI availability
         if [ "$SKIP_CLI" != "true" ]; then
           echo "Testing Continue CLI..."
-          if ! timeout 10 cn --version; then
+          if ! cn --version; then
             echo "Warning: Continue CLI not found or not working"
             cat > inline_review.json << 'EOF'
         {
@@ -228,14 +228,21 @@ runs:
         }
         EOF
             echo "SKIP_CLI=true" >> $GITHUB_ENV
+          else
+            echo "Continue CLI version: $(cn --version)"
           fi
         fi
 
         # Run the CLI and capture JSON output with error handling
         if [ "$SKIP_CLI" != "true" ]; then
-          echo "Executing Continue CLI with org: ${{ inputs.continue-org }}, config: ${{ inputs.continue-config }}"
-        # Use timeout to prevent hanging (120 seconds max)
-        if ! timeout 120 cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p "$(cat inline_review_prompt.txt)" > inline_review_raw.json 2>cli_error.log; then
+          echo "Executing Continue CLI with config: ${{ inputs.continue-org }}/${{ inputs.continue-config }}"
+          
+          # Write prompt to temp file for better handling
+          PROMPT_FILE="/tmp/continue-prompt-$.txt"
+          cp inline_review_prompt.txt "$PROMPT_FILE"
+          
+        # Use timeout to prevent hanging (240 seconds = 4 minutes)
+        if ! timeout 240 cn --config "${{ inputs.continue-org }}/${{ inputs.continue-config }}" -p "@$PROMPT_FILE" --allow Bash --format json > inline_review_raw.json 2>cli_error.log; then
           echo "Warning: Continue CLI command failed"
           echo "CLI error log:"
           cat cli_error.log
