@@ -84,6 +84,12 @@ export class VsCodeExtension {
 
   private ARBITRARY_TYPING_DELAY = 2000;
 
+  /**
+   * This is how you turn next edit on or off at the extension level.
+   * This is called on config reload and autocomplete menu updates.
+   * This is also the place you want to check to enable/disable next edit during e2e tests,
+   * because it tends to stain other e2e tests and make them fail.
+   */
   private async updateNextEditState(
     context: vscode.ExtensionContext,
   ): Promise<void> {
@@ -608,6 +614,8 @@ export class VsCodeExtension {
       .map((uri) => uri.toString());
     this.core.invoke("files/opened", { uris: initialOpenedFilePaths });
 
+    // This is how you would enable/disable next edit in the autocomplete menu.
+    // See extensions/vscode/src/autocomplete/statusBar.ts.
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
