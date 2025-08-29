@@ -1,4 +1,4 @@
-import type { Session, ToolCallState, ToolStatus } from "core/index.js";
+import type { Session, ToolStatus } from "core/index.js";
 
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
@@ -33,87 +33,25 @@ export async function streamChatResponseWithInterruption(
       // so we don't need to add them here - this callback is just for notification
       // that content streaming is complete
     },
-    onToolStart: (toolName: string, toolArgs?: any) => {
-      // Always create a new assistant message for each tool call
-      const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-      const toolCall = {
-        id: toolCallId,
-        type: "function" as const,
-        function: {
-          name: toolName,
-          arguments: JSON.stringify(toolArgs || {}),
-        },
-      };
-      const toolCallState: ToolCallState = {
-        toolCallId: toolCallId,
-        toolCall: toolCall,
-        status: "calling",
-        parsedArgs: toolArgs,
-      };
-
-      state.session.history.push({
-        message: {
-          role: "assistant",
-          content: "",
-          toolCalls: [toolCall],
-        },
-        contextItems: [],
-        toolCallStates: [toolCallState],
-      });
+    onToolStart: (__: string, _?: any) => {
+      // Note: handleToolCalls already adds the tool call message to history
+      // This callback is just for notification/UI updates
+      // The tool call state is already created and added by handleToolCalls
     },
-    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
-      // Find and update the corresponding tool call state
-      for (let i = state.session.history.length - 1; i >= 0; i--) {
-        const item = state.session.history[i];
-        if (item.toolCallStates) {
-          const toolState = item.toolCallStates.find(
-            (ts: ToolCallState) =>
-              ts.toolCall.function.name === toolName && ts.status === "calling",
-          );
-          if (toolState) {
-            toolState.status = status;
-            toolState.output = [
-              {
-                content: result,
-                name: `Tool Result: ${toolName}`,
-                description: "Tool execution result",
-              },
-            ];
-            break;
-          }
-        }
-      }
+    onToolResult: (_: string, __: string, ___: ToolStatus) => {
+      // Note: handleToolCalls already updates the tool call states in history
+      // This callback is just for notification/UI updates
     },
     onToolError: (error: string, toolName?: string) => {
-      if (toolName) {
-        // Find and update the corresponding tool call state
-        for (let i = state.session.history.length - 1; i >= 0; i--) {
-          const item = state.session.history[i];
-          if (item.toolCallStates) {
-            const toolState = item.toolCallStates.find(
-              (ts: ToolCallState) =>
-                ts.toolCall.function.name === toolName &&
-                ts.status === "calling",
-            );
-            if (toolState) {
-              toolState.status = "errored";
-              toolState.output = [
-                {
-                  content: error,
-                  name: `Tool Error: ${toolName}`,
-                  description: "Tool execution error",
-                },
-              ];
-              break;
-            }
-          }
-        }
+      // Note: handleToolCalls and preprocessStreamedToolCalls already handle errors
+      // This callback is just for notification/UI updates
+      // If we need to display a generic error message (no tool name), add it
+      if (!toolName) {
+        state.session.history.push({
+          message: { role: "system", content: error },
+          contextItems: [],
+        });
       }
-      // Generic error if tool not found
-      state.session.history.push({
-        message: { role: "system", content: error },
-        contextItems: [],
-      });
     },
     onToolPermissionRequest: (
       toolName: string,
