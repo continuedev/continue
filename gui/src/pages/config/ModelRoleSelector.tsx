@@ -8,7 +8,6 @@ import { ModelDescription } from "core";
 import { LLMConfigurationStatuses } from "core/llm/constants";
 import { MouseEvent, useContext, useState } from "react";
 import { defaultBorderRadius } from "../../components";
-import { ToolTip } from "../../components/gui/Tooltip";
 import InfoHover from "../../components/InfoHover";
 import {
   Listbox,
@@ -72,9 +71,6 @@ const ModelRoleSelector = ({
       <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
         <span style={{ fontSize: fontSize(-3) }}>{displayName}</span>
         <InfoHover size="3" id={displayName} msg={description} />
-        <ToolTip id={`${displayName}-description`} place={"bottom"}>
-          {description}
-        </ToolTip>
       </div>
 
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>

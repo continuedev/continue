@@ -81,18 +81,10 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
             }}
           >
             {props.duplicatesDetected ? (
-              <>
-                <InformationCircleIcon
-                  data-tooltip-id={
-                    props.tool.displayTitle + "-duplicate-warning"
-                  }
-                  className="h-3 w-3 flex-shrink-0 cursor-help text-yellow-500"
-                />
-                <ToolTip
-                  id={props.tool.displayTitle + "-duplicate-warning"}
-                  place="bottom"
-                  className="flex flex-wrap items-center"
-                >
+              <ToolTip
+                place="bottom"
+                className="flex flex-wrap items-center"
+                content={
                   <p className="m-0 p-0">
                     <span>Duplicate tool name</span>{" "}
                     <code>{props.tool.function.name}</code>{" "}
@@ -101,8 +93,10 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
                       unpredictable
                     </span>
                   </p>
-                </ToolTip>
-              </>
+                }
+              >
+                <InformationCircleIcon className="h-3 w-3 flex-shrink-0 cursor-help text-yellow-500" />
+              </ToolTip>
             ) : null}
             {props.tool.faviconUrl && (
               <img

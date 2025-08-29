@@ -32,27 +32,25 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
 
   if (completed > total) {
     return (
-      <>
-        <div
-          className="flex flex-1 cursor-default select-none items-center justify-center gap-1"
-          data-tooltip-id="usage_progress_bar"
-        >
+      <ToolTip
+        place="top"
+        content="Configure a model above in order to continue"
+      >
+        <div className="flex flex-1 cursor-default select-none items-center justify-center gap-1">
           <ExclamationCircleIcon width="18px" height="18px" color="red" />
           Trial limit reached
         </div>
-
-        <ToolTip id="usage_progress_bar" place="top">
-          Configure a model above in order to continue
-        </ToolTip>
-      </>
+      </ToolTip>
     );
   }
 
   return (
-    <>
+    <ToolTip
+      place="top"
+      content={`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}
+    >
       <div
         className="flex flex-1 cursor-pointer flex-row items-center gap-2 text-[10px] text-gray-400 sm:gap-3"
-        data-tooltip-id="usage_progress_bar"
         onClick={onClick}
       >
         <span>
@@ -72,10 +70,7 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
           {completed} / {total}
         </span>
       </div>
-      <ToolTip id="usage_progress_bar" place="top">
-        {`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}
-      </ToolTip>
-    </>
+    </ToolTip>
   );
 }
 
