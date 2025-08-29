@@ -418,7 +418,11 @@ export function UnifiedTerminalCommand({
   }, [command, output, hasOutput]);
 
   return (
-    <StyledTerminalContainer fontSize={getFontSize()} className="mb-4">
+    <StyledTerminalContainer
+      fontSize={getFontSize()}
+      className="mb-4"
+      data-testid="terminal-container"
+    >
       <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
         {/* Toolbar */}
         <div
