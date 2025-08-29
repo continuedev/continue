@@ -11,7 +11,7 @@ import {
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
-import { IdeInfo, IdeSettings, ModelDescription } from "../index.js";
+import { IDE, ModelDescription } from "../index.js";
 import { Logger } from "../util/Logger.js";
 
 import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
@@ -44,8 +44,7 @@ export const TRIAL_PROXY_URL =
 export class ControlPlaneClient {
   constructor(
     readonly sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
-    private readonly ideSettingsPromise: Promise<IdeSettings>,
-    private readonly ideInfoPromise: Promise<IdeInfo>,
+    private readonly ide: IDE,
   ) {}
 
   async resolveFQSNs(
@@ -90,9 +89,9 @@ export class ControlPlaneClient {
       throw new Error("No access token");
     }
 
-    const env = await getControlPlaneEnv(this.ideSettingsPromise);
+    const env = await getControlPlaneEnv(this.ide.getIdeSettings());
     const url = new URL(path, env.CONTROL_PLANE_URL).toString();
-    const ideInfo = await this.ideInfoPromise;
+    const ideInfo = await this.ide.getIdeInfo();
 
     const resp = await fetch(url, {
       ...init,
