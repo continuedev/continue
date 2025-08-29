@@ -189,7 +189,7 @@ EOF
         # Test Continue CLI availability
         if [ "$SKIP_CLI" != "true" ]; then
           echo "Testing Continue CLI..."
-          if ! cn --version; then
+          if ! timeout 10 cn --version; then
             echo "Warning: Continue CLI not found or not working"
             cat > code_review.md << 'EOF'
 ## Code Review Summary
@@ -207,7 +207,8 @@ EOF
         # Run the CLI with validated config and error handling
         if [ "$SKIP_CLI" != "true" ]; then
           echo "Executing Continue CLI with org: $CONTINUE_ORG, config: $CONTINUE_CONFIG"
-        if ! cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md 2>cli_error.log; then
+        # Use timeout to prevent hanging (120 seconds max)
+        if ! timeout 120 cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md 2>cli_error.log; then
           echo "Error: Continue CLI command failed"
           echo "CLI error log:"
           cat cli_error.log

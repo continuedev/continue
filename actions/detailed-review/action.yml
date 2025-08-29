@@ -219,7 +219,7 @@ runs:
         # Test Continue CLI availability
         if [ "$SKIP_CLI" != "true" ]; then
           echo "Testing Continue CLI..."
-          if ! cn --version; then
+          if ! timeout 10 cn --version; then
             echo "Warning: Continue CLI not found or not working"
             cat > inline_review.json << 'EOF'
         {
@@ -234,7 +234,8 @@ runs:
         # Run the CLI and capture JSON output with error handling
         if [ "$SKIP_CLI" != "true" ]; then
           echo "Executing Continue CLI with org: ${{ inputs.continue-org }}, config: ${{ inputs.continue-config }}"
-        if ! cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p "$(cat inline_review_prompt.txt)" > inline_review_raw.json 2>cli_error.log; then
+        # Use timeout to prevent hanging (120 seconds max)
+        if ! timeout 120 cn --readonly --format json --org "${{ inputs.continue-org }}" --config "${{ inputs.continue-config }}" -p "$(cat inline_review_prompt.txt)" > inline_review_raw.json 2>cli_error.log; then
           echo "Warning: Continue CLI command failed"
           echo "CLI error log:"
           cat cli_error.log
