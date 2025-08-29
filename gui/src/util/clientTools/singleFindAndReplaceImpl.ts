@@ -55,7 +55,11 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { newContent, fileUri } = args;
+  // This is done AGAIN to avoid issues if user edits file while tool call is pending
+  const { newContent, fileUri } = await validateAndEnhanceSingleEditArgs(
+    args,
+    extras.ideMessenger,
+  );
   const streamId = uuid();
 
   // Apply the changes to the file

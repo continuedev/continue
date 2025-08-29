@@ -3,7 +3,7 @@ import {
   resolveRelativePathInDir,
 } from "core/util/ideUtils";
 import { v4 as uuid } from "uuid";
-import { IIdeMessenger } from "../../context/IdeMessenger";
+import type { IIdeMessenger } from "../../context/IdeMessenger";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
 import {
@@ -93,7 +93,11 @@ export const multiEditImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { fileUri, newContent } = args;
+  // This is done AGAIN to avoid situation where user edits file while tool call is pending
+  const { fileUri, newContent } = await validateAndEnhanceMultiEditArgs(
+    args,
+    extras.ideMessenger,
+  );
 
   const streamId = uuid();
 
