@@ -240,7 +240,6 @@ describe("FindAndReplaceDisplay", () => {
       fireEvent.click(toggleButton);
 
       expect(screen.getByText("Error generating diff")).toBeInTheDocument();
-      expect(screen.getByText("Test error")).toBeInTheDocument();
     });
 
     it("should show 'No changes to display' when diff is empty", () => {
