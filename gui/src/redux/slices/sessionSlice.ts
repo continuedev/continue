@@ -52,6 +52,8 @@ function filterMultipleEditToolCalls(
 ): ToolCallDelta[] {
   const editToolNames = [
     BuiltInToolNames.EditExistingFile,
+    BuiltInToolNames.SingleFindAndReplace,
+    BuiltInToolNames.MultiEdit,
     BuiltInToolNames.SearchAndReplaceInFile,
   ];
   let hasSeenEditTool = false;

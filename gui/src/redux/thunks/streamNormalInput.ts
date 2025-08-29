@@ -7,14 +7,17 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
   setContextPercentage,
   setInactive,
   setInlineErrorMessage,
   setIsPruned,
+  setToolCallArgs,
   setToolGenerated,
   streamUpdate,
+  updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
@@ -27,7 +30,7 @@ import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { enhanceParsedArgs } from "./enhanceParsedArgs";
+import { validateAndEnhanceToolCallArgs } from "./enhanceParsedArgs";
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -250,25 +253,56 @@ export const streamNormalInput = createAsyncThunk<
     }
 
     // Check if we have any tool calls that were just generated
-    const newState = getState();
-    const toolSettings = newState.ui.toolSettings;
-    const allToolCallStates = selectCurrentToolCalls(newState);
+    const allToolCallStates = selectCurrentToolCalls(getState());
 
+    // Tool call pre-processing
     await Promise.all(
-      allToolCallStates.map((tcState) =>
-        enhanceParsedArgs(
-          extra.ideMessenger,
-          dispatch,
-          tcState?.toolCall.function.name,
-          tcState.toolCallId,
-          tcState.parsedArgs,
-        ),
-      ),
+      allToolCallStates.map(async (tcState) => {
+        try {
+          const changedArgs = await validateAndEnhanceToolCallArgs(
+            extra.ideMessenger,
+            tcState?.toolCall.function.name,
+            tcState.parsedArgs,
+          );
+          if (changedArgs) {
+            dispatch(
+              setToolCallArgs({
+                toolCallId: tcState.toolCallId,
+                newArgs: changedArgs,
+              }),
+            );
+          }
+        } catch (e) {
+          let errorMessage = e instanceof Error ? e.message : `Unknown error`;
+          dispatch(
+            errorToolCall({
+              toolCallId: tcState.toolCallId,
+            }),
+          );
+          dispatch(
+            updateToolCallOutput({
+              toolCallId: tcState.toolCallId,
+              contextItems: [
+                {
+                  icon: "problems",
+                  name: "Invalid Tool Call",
+                  description: "",
+                  content: `${tcState.toolCall.function.name} failed because the arguments were invalid, with the following message: ${errorMessage}\n\nPlease try something else or request further instructions.`,
+                  hidden: false,
+                },
+              ],
+            }),
+          );
+        }
+      }),
     );
 
-    const generatingToolCalls = allToolCallStates.filter(
+    const preprocessedState = getState();
+    const preprocessedCalls = selectCurrentToolCalls(preprocessedState);
+    const generatingToolCalls = preprocessedCalls.filter(
       (toolCallState) => toolCallState.status === "generating",
     );
+    const toolSettings = preprocessedState.ui.toolSettings;
 
     // Check if ALL generating tool calls are auto-approved
     const allAutoApproved =
