@@ -30,7 +30,7 @@ function createToolCallState(
 
 // Helper function to create a chat history item
 function createChatHistoryItem(
-  role: "user" | "assistant" | "tool",
+  role: "user" | "assistant" | "tool" | "thinking",
   content: string,
   options?: {
     toolCallStates?: ToolCallState[];
@@ -186,6 +186,82 @@ describe("findCurrentToolCalls", () => {
     ];
     const result = findAllCurToolCalls(chatHistory);
     expect(result).toEqual(toolCallStates);
+  });
+
+  it("should return empty array if user message interrupts assistant sequence", () => {
+    const toolCallStates = [createToolCallState("tool-1", "get_weather")];
+    const chatHistory = [
+      createChatHistoryItem("assistant", "I'll check the weather", {
+        toolCallStates,
+      }),
+      createChatHistoryItem("user", "Actually, nevermind"),
+      createChatHistoryItem("assistant", "Ok, no problem"),
+    ];
+    const result = findAllCurToolCalls(chatHistory);
+    expect(result).toEqual([]);
+  });
+
+  it("should handle thinking messages as part of assistant sequence", () => {
+    const toolCallStates = [createToolCallState("tool-1", "get_weather")];
+    const chatHistory = [
+      createChatHistoryItem("user", "What's the weather?"),
+      createChatHistoryItem("thinking", "I need to get weather data"),
+      createChatHistoryItem("assistant", "I'll check the weather", {
+        toolCallStates,
+      }),
+    ];
+    const result = findAllCurToolCalls(chatHistory);
+    expect(result).toEqual(toolCallStates);
+  });
+
+  it("should find tool calls from last assistant message in sequence", () => {
+    const firstToolCallStates = [createToolCallState("tool-1", "get_weather")];
+    const secondToolCallStates = [createToolCallState("tool-2", "get_time")];
+    const chatHistory = [
+      createChatHistoryItem("user", "What's the weather?"),
+      createChatHistoryItem("assistant", "Let me check", {
+        toolCallStates: firstToolCallStates,
+      }),
+      createChatHistoryItem("thinking", "Now I should also get the time"),
+      createChatHistoryItem("assistant", "And the time too", {
+        toolCallStates: secondToolCallStates,
+      }),
+    ];
+    const result = findAllCurToolCalls(chatHistory);
+    expect(result).toEqual(secondToolCallStates);
+  });
+
+  it("should ignore tool calls from earlier conversation turns", () => {
+    const oldToolCallStates = [createToolCallState("old-tool", "old_function")];
+    const newToolCallStates = [createToolCallState("new-tool", "new_function")];
+    const chatHistory = [
+      createChatHistoryItem("user", "First question"),
+      createChatHistoryItem("assistant", "First response", {
+        toolCallStates: oldToolCallStates,
+      }),
+      createChatHistoryItem("user", "Second question"),
+      createChatHistoryItem("assistant", "Second response", {
+        toolCallStates: newToolCallStates,
+      }),
+    ];
+    const result = findAllCurToolCalls(chatHistory);
+    expect(result).toEqual(newToolCallStates);
+  });
+
+  it("should handle tool message followed by assistant message", () => {
+    const toolCallStates = [createToolCallState("tool-1", "get_weather")];
+    const chatHistory = [
+      createChatHistoryItem("user", "What's the weather?"),
+      createChatHistoryItem("assistant", "I'll check the weather", {
+        toolCallStates,
+      }),
+      createChatHistoryItem("tool", "Weather data: sunny", {
+        toolCallId: "tool-1",
+      }),
+      createChatHistoryItem("assistant", "It's sunny today!"),
+    ];
+    const result = findAllCurToolCalls(chatHistory);
+    expect(result).toEqual([]);
   });
 });
 
