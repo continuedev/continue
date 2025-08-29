@@ -223,7 +223,6 @@ export const streamNormalInput = createAsyncThunk<
       state.ui.ruleSettings,
       systemToolsFramework,
     );
-    console.log(messages);
 
     // TODO parallel tool calls will cause issues with this
     // because there will be multiple tool messages, so which one should have applied rules?
