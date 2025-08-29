@@ -96,8 +96,7 @@ intellijPlatformTesting {
                         "-Dapple.laf.useScreenMenuBar=false",
                         "-Didea.trust.all.projects=true",
                         "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.jsQueryPoolSize=10000",
-                        "-Dide.browser.jcef.contextMenu.devTools.enabled=true"
+                        "-Dide.browser.jcef.sandbox.enable=false"
                     )
                 }
             }
@@ -145,5 +144,6 @@ tasks {
 
     test {
         useJUnitPlatform()
+        jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
     }
 }

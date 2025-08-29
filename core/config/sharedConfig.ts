@@ -32,6 +32,7 @@ export const sharedConfigSchema = z
     displayRawMarkdown: z.boolean(),
     showChatScrollbar: z.boolean(),
     autoAcceptEditToolDiffs: z.boolean(),
+    continueAfterToolRejection: z.boolean(),
 
     // `tabAutocompleteOptions` in `ContinueConfig`
     useAutocompleteCache: z.boolean(),
@@ -156,6 +157,11 @@ export function modifyAnyConfigWithSharedConfig<
 
   if (sharedConfig.showSessionTabs !== undefined) {
     configCopy.ui.showSessionTabs = sharedConfig.showSessionTabs;
+  }
+
+  if (sharedConfig.continueAfterToolRejection !== undefined) {
+    configCopy.ui.continueAfterToolRejection =
+      sharedConfig.continueAfterToolRejection;
   }
 
   configCopy.experimental = {
