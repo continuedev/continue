@@ -1,20 +1,23 @@
 import { DocumentTextIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { RuleWithSource } from "core";
 import { getLastNPathParts } from "core/util/uri";
-import { ComponentType, useMemo, useState } from "react";
+import { ComponentType, useContext, useMemo } from "react";
 import ToggleDiv from "../../ToggleDiv";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { DEFAULT_SYSTEM_MESSAGES_URL } from "core/llm/defaultSystemMessages";
+import { RuleWithSource } from "core";
+import { openRules } from "../Lump/sections/RulesSection";
 
 interface RulesPeekProps {
-  appliedRules?: RuleWithSource[];
+  appliedRules?: Omit<RuleWithSource, "rule">[];
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 interface RulesPeekItemProps {
-  rule: RuleWithSource;
+  rule: Omit<RuleWithSource, "rule">;
 }
 
 // Convert technical source to user-friendly text
-const getSourceLabel = (rule: RuleWithSource): string => {
+const getSourceLabel = (rule: Omit<RuleWithSource, "rule">): string => {
   switch (rule.source) {
     case "default-chat":
       return "Default Chat";
@@ -45,29 +48,11 @@ const getSourceLabel = (rule: RuleWithSource): string => {
 
 export function RulesPeekItem({ rule }: RulesPeekItemProps) {
   const isGlobal = rule.alwaysApply ?? !rule.globs;
-  const [expanded, setExpanded] = useState(false);
-
-  // Define maximum length for rule text display
-  const maxRuleLength = 100;
-  const isRuleLong = rule.rule.length > maxRuleLength;
-
-  // Get the displayed rule text based on expanded state
-  const displayedRule =
-    isRuleLong && !expanded
-      ? `${rule.rule.slice(0, maxRuleLength)}...`
-      : rule.rule;
-
-  const toggleExpand = () => {
-    if (isRuleLong) {
-      setExpanded(!expanded);
-    }
-  };
-
   return (
     <div
-      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10 ${isRuleLong ? "cursor-pointer hover:text-gray-200" : ""}`}
+      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10`}
       data-testid="rules-peek-item"
-      onClick={toggleExpand}
+      onClick={() => openRules(rule)}
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
@@ -87,19 +72,6 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
               : `Pattern: ${typeof rule.globs === "string" ? rule.globs : Array.isArray(rule.globs) ? rule.globs.join(", ") : ""}`}
           </div>
         </div>
-      </div>
-      <div
-        className={`mt-1 whitespace-pre-line pl-6 pr-2 text-xs italic text-gray-300`}
-        title={
-          isRuleLong ? (expanded ? "Click to collapse" : "Click to expand") : ""
-        }
-      >
-        {displayedRule}
-        {isRuleLong && (
-          <span className="text-description-muted ml-1 opacity-0 transition-opacity group-hover:opacity-100">
-            {expanded ? "(collapse)" : "(expand)"}
-          </span>
-        )}
       </div>
       <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
         Source: {getSourceLabel(rule)}

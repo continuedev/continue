@@ -21,7 +21,7 @@ interface ContinueInputBoxProps {
   ) => void;
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
-  appliedRules?: RuleWithSource[];
+  appliedRules?: Omit<RuleWithSource, "rule">[];
   hidden?: boolean;
   inputId: string; // used to keep track of things per input in redux
 }
