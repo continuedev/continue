@@ -962,27 +962,24 @@ export abstract class BaseLLM implements ILLM {
     return completionOptions;
   }
 
-  // Add this private method to the BaseLLM class:
+  // Update the processChatChunk method:
   private processChatChunk(
     chunk: ChatMessage,
     interaction: ILLMInteractionLog | undefined,
-    completion: string,
-    thinking: string,
-    usage: Usage | undefined,
   ): {
-    completion: string;
-    thinking: string;
-    usage: Usage | undefined;
+    completion: string[];
+    thinking: string[];
+    usage: Usage | null;
     chunk: ChatMessage;
   } {
-    let newCompletion = completion;
-    let newThinking = thinking;
-    let newUsage = usage;
+    const completion: string[] = [];
+    const thinking: string[] = [];
+    let usage: Usage | null = null;
 
     if (chunk.role === "assistant") {
-      newCompletion += this._formatChatMessage(chunk);
-    } else if (chunk.role === "thinking") {
-      newThinking += chunk.content;
+      completion.push(this._formatChatMessage(chunk));
+    } else if (chunk.role === "thinking" && typeof chunk.content === "string") {
+      thinking.push(chunk.content);
     }
 
     interaction?.logItem({
@@ -991,18 +988,18 @@ export abstract class BaseLLM implements ILLM {
     });
 
     if (chunk.role === "assistant" && chunk.usage) {
-      newUsage = chunk.usage;
+      usage = chunk.usage;
     }
 
     return {
-      completion: newCompletion,
-      thinking: newThinking,
-      usage: newUsage,
+      completion,
+      thinking,
+      usage,
       chunk,
     };
   }
 
-  // Then update the streamChat method:
+  // Update the streamChat method:
   async *streamChat(
     _messages: ChatMessage[],
     signal: AbortSignal,
@@ -1051,8 +1048,12 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    let thinking = "";
-    let completion = "";
+    // Performance optimization: Use arrays instead of string concatenation.
+    // String concatenation in loops creates new string objects for each operation,
+    // which is O(n²) for n chunks. Arrays with push() are O(1) per operation,
+    // making the total O(n). We join() only once at the end.
+    const thinking: string[] = [];
+    const completion: string[] = [];
     let usage: Usage | undefined = undefined;
 
     try {
@@ -1062,7 +1063,7 @@ export abstract class BaseLLM implements ILLM {
           signal,
           completionOptions,
         )) {
-          completion += chunk;
+          completion.push(chunk);
           interaction?.logItem({
             kind: "chunk",
             chunk: chunk,
@@ -1082,16 +1083,12 @@ export abstract class BaseLLM implements ILLM {
             );
             const messages = fromChatResponse(response);
             for (const msg of messages) {
-              const result = this.processChatChunk(
-                msg,
-                interaction,
-                completion,
-                thinking,
-                usage,
-              );
-              completion = result.completion;
-              thinking = result.thinking;
-              usage = result.usage;
+              const result = this.processChatChunk(msg, interaction);
+              completion.push(...result.completion);
+              thinking.push(...result.thinking);
+              if (result.usage !== null) {
+                usage = result.usage;
+              }
               yield result.chunk;
             }
           } else {
@@ -1106,16 +1103,10 @@ export abstract class BaseLLM implements ILLM {
             for await (const chunk of stream) {
               const chatChunk = fromChatCompletionChunk(chunk);
               if (chatChunk) {
-                const result = this.processChatChunk(
-                  chatChunk,
-                  interaction,
-                  completion,
-                  thinking,
-                  usage,
-                );
-                completion = result.completion;
-                thinking = result.thinking;
-                usage = result.usage;
+                const result = this.processChatChunk(chatChunk, interaction);
+                completion.push(...result.completion);
+                thinking.push(...result.thinking);
+                usage = result.usage || usage;
                 yield result.chunk;
               }
             }
@@ -1126,25 +1117,22 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            const result = this.processChatChunk(
-              chunk,
-              interaction,
-              completion,
-              thinking,
-              usage,
-            );
-            completion = result.completion;
-            thinking = result.thinking;
-            usage = result.usage;
+            const result = this.processChatChunk(chunk, interaction);
+            completion.push(...result.completion);
+            thinking.push(...result.thinking);
+            if (result.usage !== null) {
+              usage = result.usage;
+            }
             yield result.chunk;
           }
         }
       }
+
       status = this._logEnd(
         completionOptions.model,
         prompt,
-        completion,
-        thinking,
+        completion.join(""),
+        thinking.join(""),
         interaction,
         usage,
       );
@@ -1162,8 +1150,8 @@ export abstract class BaseLLM implements ILLM {
       status = this._logEnd(
         completionOptions.model,
         prompt,
-        completion,
-        thinking,
+        completion.join(""),
+        thinking.join(""),
         interaction,
         usage,
         e,
@@ -1174,7 +1162,7 @@ export abstract class BaseLLM implements ILLM {
         this._logEnd(
           completionOptions.model,
           prompt,
-          completion,
+          completion.join(""),
           undefined,
           interaction,
           usage,
@@ -1183,20 +1171,20 @@ export abstract class BaseLLM implements ILLM {
       }
     }
     /*
-    TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
-    During tool use, you must pass thinking and redacted_thinking blocks back to the API,
-    and you must include the complete unmodified block back to the API. This is critical
-    for maintaining the model's reasoning flow and conversation integrity.
+  TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+  During tool use, you must pass thinking and redacted_thinking blocks back to the API,
+  and you must include the complete unmodified block back to the API. This is critical
+  for maintaining the model's reasoning flow and conversation integrity.
 
-    On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
-    requests when not using tools, so it's the simplest option to always add to history.
-    */
+  On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
+  requests when not using tools, so it's the simplest option to always add to history.
+  */
 
     return {
       modelTitle: this.title ?? completionOptions.model,
       modelProvider: this.underlyingProviderName,
       prompt,
-      completion,
+      completion: completion.join(""),
     };
   }
 
