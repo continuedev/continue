@@ -962,6 +962,47 @@ export abstract class BaseLLM implements ILLM {
     return completionOptions;
   }
 
+  // Add this private method to the BaseLLM class:
+  private processChatChunk(
+    chunk: ChatMessage,
+    interaction: ILLMInteractionLog | undefined,
+    completion: string,
+    thinking: string,
+    usage: Usage | undefined,
+  ): {
+    completion: string;
+    thinking: string;
+    usage: Usage | undefined;
+    chunk: ChatMessage;
+  } {
+    let newCompletion = completion;
+    let newThinking = thinking;
+    let newUsage = usage;
+
+    if (chunk.role === "assistant") {
+      newCompletion += this._formatChatMessage(chunk);
+    } else if (chunk.role === "thinking") {
+      newThinking += chunk.content;
+    }
+
+    interaction?.logItem({
+      kind: "message",
+      message: chunk,
+    });
+
+    if (chunk.role === "assistant" && chunk.usage) {
+      newUsage = chunk.usage;
+    }
+
+    return {
+      completion: newCompletion,
+      thinking: newThinking,
+      usage: newUsage,
+      chunk,
+    };
+  }
+
+  // Then update the streamChat method:
   async *streamChat(
     _messages: ChatMessage[],
     signal: AbortSignal,
@@ -1039,9 +1080,20 @@ export abstract class BaseLLM implements ILLM {
               { ...body, stream: false },
               signal,
             );
-            const msg = fromChatResponse(response);
-            yield msg;
-            completion = this._formatChatMessage(msg);
+            const messages = fromChatResponse(response);
+            for (const msg of messages) {
+              const result = this.processChatChunk(
+                msg,
+                interaction,
+                completion,
+                thinking,
+                usage,
+              );
+              completion = result.completion;
+              thinking = result.thinking;
+              usage = result.usage;
+              yield result.chunk;
+            }
           } else {
             // Stream true
             const stream = this.openaiAdapter.chatCompletionStream(
@@ -1052,14 +1104,19 @@ export abstract class BaseLLM implements ILLM {
               signal,
             );
             for await (const chunk of stream) {
-              const result = fromChatCompletionChunk(chunk);
-              if (result) {
-                completion += this._formatChatMessage(result);
-                interaction?.logItem({
-                  kind: "message",
-                  message: result,
-                });
-                yield result;
+              const chatChunk = fromChatCompletionChunk(chunk);
+              if (chatChunk) {
+                const result = this.processChatChunk(
+                  chatChunk,
+                  interaction,
+                  completion,
+                  thinking,
+                  usage,
+                );
+                completion = result.completion;
+                thinking = result.thinking;
+                usage = result.usage;
+                yield result.chunk;
               }
             }
           }
@@ -1069,22 +1126,17 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            if (chunk.role === "assistant") {
-              completion += this._formatChatMessage(chunk);
-            } else if (chunk.role === "thinking") {
-              thinking += chunk.content;
-            }
-
-            interaction?.logItem({
-              kind: "message",
-              message: chunk,
-            });
-
-            if (chunk.role === "assistant" && chunk.usage) {
-              usage = chunk.usage;
-            }
-
-            yield chunk;
+            const result = this.processChatChunk(
+              chunk,
+              interaction,
+              completion,
+              thinking,
+              usage,
+            );
+            completion = result.completion;
+            thinking = result.thinking;
+            usage = result.usage;
+            yield result.chunk;
           }
         }
       }

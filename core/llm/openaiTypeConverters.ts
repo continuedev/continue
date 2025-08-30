@@ -4,6 +4,7 @@ import {
   ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
   ChatCompletionCreateParams,
+  ChatCompletionMessage,
   ChatCompletionMessageParam,
   CompletionCreateParams,
 } from "openai/resources/index";
@@ -158,11 +159,25 @@ export function toFimBody(
   } as any;
 }
 
-export function fromChatResponse(response: ChatCompletion): ChatMessage {
-  const message = response.choices[0].message;
+export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
+  const messages: ChatMessage[] = [];
+  const message = response.choices[0].message as ChatCompletionMessage & {
+    reasoning?: string;
+    reasoning_content?: string;
+  };
+
+  // Check for reasoning content first (similar to fromChatCompletionChunk)
+  if (message.reasoning_content || message.reasoning) {
+    messages.push({
+      role: "thinking",
+      content: (message as any).reasoning_content || (message as any).reasoning,
+    });
+  }
+
+  // Then add the assistant message
   const toolCall = message.tool_calls?.[0];
   if (toolCall) {
-    return {
+    messages.push({
       role: "assistant",
       content: "",
       toolCalls: message.tool_calls
@@ -175,13 +190,15 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage {
             arguments: (tc as any).function?.arguments,
           },
         })),
-    };
+    });
+  } else {
+    messages.push({
+      role: "assistant",
+      content: message.content ?? "",
+    });
   }
 
-  return {
-    role: "assistant",
-    content: message.content ?? "",
-  };
+  return messages;
 }
 
 export function fromChatCompletionChunk(
