@@ -413,12 +413,12 @@ const UserInput: React.FC<UserInputProps> = ({
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
-        
+
         // Only add to history if there's actual text (not when resuming)
         if (submittedText) {
           inputHistory.addEntry(submittedText);
         }
-        
+
         // Send empty string when resuming, actual text otherwise
         onSubmit(submittedText);
         textBuffer.clear();
@@ -654,7 +654,7 @@ const UserInput: React.FC<UserInputProps> = ({
           </Text>
         </Box>
       )}
-      
+
       {/* Input box */}
       <Box
         borderStyle="round"

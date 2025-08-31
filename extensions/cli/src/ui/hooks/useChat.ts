@@ -259,26 +259,29 @@ export function useChat({
       // Find the index of the last user or tool message to resume from
       let lastUserOrToolIndex = -1;
       for (let i = chatHistory.length - 1; i >= 0; i--) {
-        if (chatHistory[i].message.role === "user" || !!chatHistory[i].toolCallStates?.length) {
+        if (
+          chatHistory[i].message.role === "user" ||
+          !!chatHistory[i].toolCallStates?.length
+        ) {
           lastUserOrToolIndex = i;
           break;
         }
       }
-      
+
       if (lastUserOrToolIndex >= 0) {
         // Truncate history to include up to and including the user/tool message
         const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
         setChatHistory(truncatedHistory);
-        
+
         // Clear the interrupted state and resume
         setWasInterrupted(false);
-        
+
         // Re-execute streaming with the truncated history
         await executeStreamingResponse(truncatedHistory, compactionIndex);
         return;
       }
     }
-    
+
     // Clear interrupted state if user types a new message
     if (wasInterrupted && message !== "") {
       setWasInterrupted(false);
@@ -400,16 +403,19 @@ export function useChat({
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
-      
+
       // Remove the last message if it's from assistant (partial response)
       setChatHistory((current) => {
         const lastMessage = current[current.length - 1];
-        if (lastMessage?.message.role === "assistant" && !lastMessage.toolCallStates?.length) {
+        if (
+          lastMessage?.message.role === "assistant" &&
+          !lastMessage.toolCallStates?.length
+        ) {
           return current.slice(0, -1);
         }
         return current;
       });
-      
+
       setWasInterrupted(true);
       setIsWaitingForResponse(false);
       setResponseStartTime(null);

@@ -25,7 +25,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
         inputMode: true,
         onInterrupt: mockOnInterrupt,
         wasInterrupted: false, // Initially false
-      })
+      }),
     );
 
     try {
@@ -43,7 +43,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
           inputMode: true,
           onInterrupt: mockOnInterrupt,
           wasInterrupted: true, // Now true
-        })
+        }),
       );
 
       // Should show interruption message
@@ -51,7 +51,6 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       expect(frame).toBeDefined();
       expect(frame).toContain("⚠ Interrupted by user");
       expect(frame).toContain("Press enter to resume");
-
     } finally {
       unmount();
     }
@@ -68,7 +67,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
         inputMode: true,
         onInterrupt: mockOnInterrupt,
         wasInterrupted: true, // Initially true
-      })
+      }),
     );
 
     try {
@@ -86,7 +85,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
           inputMode: true,
           onInterrupt: mockOnInterrupt,
           wasInterrupted: false, // Now false
-        })
+        }),
       );
 
       // Should not show interruption message
@@ -94,7 +93,6 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       expect(frame).toBeDefined();
       expect(frame).not.toContain("⚠ Interrupted by user");
       expect(frame).not.toContain("Press enter to resume");
-
     } finally {
       unmount();
     }
@@ -111,7 +109,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
         inputMode: true,
         onInterrupt: mockOnInterrupt,
         wasInterrupted: true, // Interrupted state
-      })
+      }),
     );
 
     try {
@@ -120,7 +118,6 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
 
       // Should call onSubmit with empty string (for resume)
       expect(mockOnSubmit).toHaveBeenCalledWith("");
-
     } finally {
       unmount();
     }
@@ -137,7 +134,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
         inputMode: true,
         onInterrupt: mockOnInterrupt,
         wasInterrupted: true, // Interrupted state
-      })
+      }),
     );
 
     try {
@@ -146,8 +143,9 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       stdin.write("\r");
 
       // Should call onSubmit with the typed content
-      expect(mockOnSubmit).toHaveBeenCalledWith("New message after interruption");
-
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        "New message after interruption",
+      );
     } finally {
       unmount();
     }
@@ -164,7 +162,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
         inputMode: true,
         onInterrupt: mockOnInterrupt,
         wasInterrupted: true,
-      })
+      }),
     );
 
     try {
@@ -172,8 +170,8 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       expect(frame).toBeDefined();
 
       // The interruption message should appear before the input box
-      const frameLines = frame?.split('\n') || [];
-      
+      const frameLines = frame?.split("\n") || [];
+
       let foundInterruptionLine = -1;
       let foundInputBoxLine = -1;
 
@@ -190,7 +188,6 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       expect(foundInterruptionLine).toBeGreaterThan(-1);
       expect(foundInputBoxLine).toBeGreaterThan(-1);
       expect(foundInterruptionLine).toBeLessThan(foundInputBoxLine);
-
     } finally {
       unmount();
     }

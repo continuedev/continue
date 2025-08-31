@@ -186,7 +186,7 @@ async function handleInfo() {
     const currentSession = getCurrentSession();
     infoLines.push(`  Title: ${chalk.green(currentSession.title)}`);
     infoLines.push(`  ID: ${chalk.gray(currentSession.sessionId)}`);
-    
+
     const sessionFilePath = getSessionFilePath();
     infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
   } catch {
