@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import React from "react";
+import React, { useMemo } from "react";
 
 // Array of helpful tips for Continue CLI users
 const CONTINUE_CLI_TIPS = [
@@ -20,9 +20,12 @@ interface TipsDisplayProps {
  * Should only be shown 1 in 5 times (20% chance).
  */
 const TipsDisplay: React.FC<TipsDisplayProps> = () => {
-  // Randomly select a tip
-  const randomTip =
-    CONTINUE_CLI_TIPS[Math.floor(Math.random() * CONTINUE_CLI_TIPS.length)];
+  // Randomly select a tip, memoized to prevent changing on re-renders
+  const randomTip = useMemo(
+    () =>
+      CONTINUE_CLI_TIPS[Math.floor(Math.random() * CONTINUE_CLI_TIPS.length)],
+    [],
+  );
 
   return (
     <Box flexDirection="row" paddingX={1} paddingBottom={1}>

@@ -138,7 +138,7 @@ describe("CONTINUE_CLI_TIPS", () => {
       "/resume",
       "headless",
       "flag",
-      "keyboard shortcuts"
+      "keyboard shortcuts",
     ];
 
     const allTipsText = CONTINUE_CLI_TIPS.join(" ").toLowerCase();

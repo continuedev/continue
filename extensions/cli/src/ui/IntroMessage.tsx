@@ -30,8 +30,11 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   // Get MCP prompts directly (not memoized since they can change after first render)
   const mcpPrompts = mcpService?.getState().prompts ?? [];
 
+  // Determine if we should show a tip (1 in 5 chance) - computed once on mount
+  const showTip = useMemo(() => shouldShowTip(), []);
+
   // Memoize expensive operations to avoid running on every resize
-  const { allRules, modelCapable, showTip } = useMemo(() => {
+  const { allRules, modelCapable } = useMemo(() => {
     const allRules = extractRuleNames(config?.rules);
 
     // Check if model is capable - now checking both name and model properties
@@ -39,10 +42,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       ? isModelCapable(model.provider, model.name, model.model)
       : true; // Default to true if model not loaded yet
 
-    // Determine if we should show a tip (1 in 5 chance)
-    const showTip = shouldShowTip();
-
-    return { allRules, modelCapable, showTip };
+    return { allRules, modelCapable };
   }, [config?.rules, model?.provider, model?.name, model?.model]);
 
   // Render helper components
@@ -96,7 +96,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       <Text> </Text>
 
       {/* Tips Display - shown randomly 1 in 5 times */}
-      {showTip ? <TipsDisplay /> : <Text>nah</Text>}
+      {showTip && <TipsDisplay />}
 
       {/* Agent name */}
       {config && (

@@ -1,12 +1,13 @@
 import { render } from "ink-testing-library";
 import React from "react";
+import { Text } from "ink";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { IntroMessage } from "./IntroMessage.js";
 
 // Mock the TipsDisplay module
 vi.mock("./TipsDisplay.js", () => ({
-  TipsDisplay: () => React.createElement("div", null, "Mocked TipsDisplay"),
+  TipsDisplay: () => React.createElement(Text, null, "Mocked TipsDisplay"),
   shouldShowTip: vi.fn(),
 }));
 
