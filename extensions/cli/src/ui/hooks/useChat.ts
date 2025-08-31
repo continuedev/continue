@@ -221,9 +221,6 @@ export function useChat({
       // Save the updated session with the latest chat history that includes the assistant's reply
       // The streamCallbacks update setChatHistory during streaming, so we need to get the current state
       setChatHistory((currentHistory) => {
-        logger.debug("Saving session", {
-          historyLength: currentHistory.length,
-        });
         const updatedSession: Session = {
           ...currentSession,
           history: currentHistory,
@@ -407,7 +404,7 @@ export function useChat({
       // Remove the last message if it's from assistant (partial response)
       setChatHistory((current) => {
         const lastMessage = current[current.length - 1];
-        if (lastMessage?.message.role === "assistant") {
+        if (lastMessage?.message.role === "assistant" && !lastMessage.toolCallStates?.length) {
           return current.slice(0, -1);
         }
         return current;
