@@ -341,6 +341,10 @@ export async function streamChatResponse(
         isHeadless,
         tools,
       });
+      
+    if (abortController?.signal.aborted) {
+      return finalResponse || content || fullResponse;
+    }
 
     fullResponse += content;
 
