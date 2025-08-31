@@ -106,6 +106,12 @@ export function useChat({
     return null;
   });
 
+  // Track interrupted history for resume functionality
+  const [interruptedHistory, setInterruptedHistory] = useState<
+    ChatHistoryItem[] | null
+  >(null);
+  const [wasInterrupted, setWasInterrupted] = useState(false);
+
   // Clean up abort controller on unmount
   useEffect(() => {
     return () => {
@@ -256,6 +262,32 @@ export function useChat({
   };
 
   const handleUserMessage = async (message: string) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (message === "" && wasInterrupted && interruptedHistory) {
+      // Get the last user message to resume
+      const lastUserMessage = interruptedHistory[interruptedHistory.length - 1];
+      if (lastUserMessage && lastUserMessage.message.role === "user") {
+        const originalMessage = lastUserMessage.message.content;
+        const messageString = typeof originalMessage === "string" 
+          ? originalMessage 
+          : originalMessage.map(part => part.type === "text" ? part.text : "").join("");
+        
+        // Clear the interrupted state and resume
+        setWasInterrupted(false);
+        setInterruptedHistory(null);
+        
+        // Re-execute streaming with the clean history
+        await executeStreamingResponse(interruptedHistory, compactionIndex, messageString);
+        return;
+      }
+    }
+    
+    // Clear interrupted state if user types a new message
+    if (wasInterrupted && message !== "") {
+      setWasInterrupted(false);
+      setInterruptedHistory(null);
+    }
+
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -372,16 +404,23 @@ export function useChat({
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: "[Interrupted by user]",
-          },
-          contextItems: [],
-        },
-      ]);
+      
+      // Remove the last message if it's from assistant (partial response)
+      setChatHistory((current) => {
+        const lastMessage = current[current.length - 1];
+        if (lastMessage?.message.role === "assistant") {
+          const historyWithoutLastAssistant = current.slice(0, -1);
+          setInterruptedHistory(historyWithoutLastAssistant);
+          return historyWithoutLastAssistant;
+        }
+        setInterruptedHistory(current);
+        return current;
+      });
+      
+      setWasInterrupted(true);
+      setIsWaitingForResponse(false);
+      setResponseStartTime(null);
+      setInputMode(true);
     }
   };
 
@@ -471,6 +510,7 @@ export function useChat({
     inputMode,
     attachedFiles,
     activePermissionRequest,
+    wasInterrupted,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
