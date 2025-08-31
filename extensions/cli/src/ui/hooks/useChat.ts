@@ -106,10 +106,7 @@ export function useChat({
     return null;
   });
 
-  // Track interrupted history for resume functionality
-  const [interruptedHistory, setInterruptedHistory] = useState<
-    ChatHistoryItem[] | null
-  >(null);
+  // Track interrupted state for resume functionality
   const [wasInterrupted, setWasInterrupted] = useState(false);
 
   // Clean up abort controller on unmount
@@ -187,7 +184,6 @@ export function useChat({
   const executeStreamingResponse = async (
     newHistory: ChatHistoryItem[],
     currentCompactionIndex: number | null,
-    message: string,
   ) => {
     // Clean up previous abort controller if it exists
     if (abortController && !abortController.signal.aborted) {
@@ -201,7 +197,6 @@ export function useChat({
     setResponseStartTime(Date.now());
     setInputMode(false);
     logger.debug("Starting chat response stream", {
-      messageLength: message.length,
       historyLength: newHistory.length,
     });
 
@@ -263,21 +258,26 @@ export function useChat({
 
   const handleUserMessage = async (message: string) => {
     // Check if this is a resume request (empty message after interruption)
-    if (message === "" && wasInterrupted && interruptedHistory) {
-      // Get the last user message to resume
-      const lastUserMessage = interruptedHistory[interruptedHistory.length - 1];
-      if (lastUserMessage && lastUserMessage.message.role === "user") {
-        const originalMessage = lastUserMessage.message.content;
-        const messageString = typeof originalMessage === "string" 
-          ? originalMessage 
-          : originalMessage.map(part => part.type === "text" ? part.text : "").join("");
+    if (message === "" && wasInterrupted) {
+      // Find the index of the last user or tool message to resume from
+      let lastUserOrToolIndex = -1;
+      for (let i = chatHistory.length - 1; i >= 0; i--) {
+        if (chatHistory[i].message.role === "user" || !!chatHistory[i].toolCallStates?.length) {
+          lastUserOrToolIndex = i;
+          break;
+        }
+      }
+      
+      if (lastUserOrToolIndex >= 0) {
+        // Truncate history to include up to and including the user/tool message
+        const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
+        setChatHistory(truncatedHistory);
         
         // Clear the interrupted state and resume
         setWasInterrupted(false);
-        setInterruptedHistory(null);
         
-        // Re-execute streaming with the clean history
-        await executeStreamingResponse(interruptedHistory, compactionIndex, messageString);
+        // Re-execute streaming with the truncated history
+        await executeStreamingResponse(truncatedHistory, compactionIndex);
         return;
       }
     }
@@ -285,7 +285,6 @@ export function useChat({
     // Clear interrupted state if user types a new message
     if (wasInterrupted && message !== "") {
       setWasInterrupted(false);
-      setInterruptedHistory(null);
     }
 
     // Handle special commands
@@ -382,7 +381,7 @@ export function useChat({
     setChatHistory(newHistory);
 
     // Execute the streaming response
-    await executeStreamingResponse(newHistory, currentCompactionIndex, message);
+    await executeStreamingResponse(newHistory, currentCompactionIndex);
   };
 
   const handleInterrupt = () => {
@@ -409,11 +408,8 @@ export function useChat({
       setChatHistory((current) => {
         const lastMessage = current[current.length - 1];
         if (lastMessage?.message.role === "assistant") {
-          const historyWithoutLastAssistant = current.slice(0, -1);
-          setInterruptedHistory(historyWithoutLastAssistant);
-          return historyWithoutLastAssistant;
+          return current.slice(0, -1);
         }
-        setInterruptedHistory(current);
         return current;
       });
       
