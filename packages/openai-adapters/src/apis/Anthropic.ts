@@ -174,11 +174,17 @@ export class AnthropicApi implements BaseLlmApi {
               }
               return part;
             }
+            // Extract media type from data URL (e.g., "data:image/png;base64,..." -> "image/png")
+            // @ts-ignore
+            const dataUrl = part.image_url.url || "";
+            const mediaTypeMatch = dataUrl.match(/^data:([^;]+);base64,/);
+            const mediaType = mediaTypeMatch ? mediaTypeMatch[1] : "image/jpeg";
+            
             return {
               type: "image",
               source: {
                 type: "base64",
-                media_type: "image/jpeg",
+                media_type: mediaType,
                 // @ts-ignore
                 data: part.image_url.url.split(",")[1],
               },
