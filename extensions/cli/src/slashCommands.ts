@@ -8,7 +8,7 @@ import {
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getSessionFilePath } from "./session.js";
+import { getCurrentSession, getSessionFilePath } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 import { getVersion } from "./version.js";
@@ -179,12 +179,19 @@ async function handleInfo() {
     infoLines.push(`  ${chalk.red("Configuration service not available")}`);
   }
 
-  // Session history path
+  // Session info
   infoLines.push("");
-  infoLines.push(chalk.white("Session History:"));
-  const sessionFilePath = getSessionFilePath();
+  infoLines.push(chalk.white("Session:"));
+  try {
+    const currentSession = getCurrentSession();
+    infoLines.push(`  Title: ${chalk.green(currentSession.title)}`);
+    infoLines.push(`  ID: ${chalk.gray(currentSession.sessionId)}`);
 
-  infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
+    const sessionFilePath = getSessionFilePath();
+    infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
+  } catch {
+    infoLines.push(`  ${chalk.red("Session not available")}`);
+  }
 
   return {
     exit: false,
