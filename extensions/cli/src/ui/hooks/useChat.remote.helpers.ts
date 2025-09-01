@@ -149,7 +149,9 @@ export async function handleRemoteExit(
         services.chatHistory.addSystemMessage(
           "Remote environment is shutting down...",
         );
-      } catch (err) { logger.error("Failed to add system message", err); }
+      } catch (err) {
+        logger.error("Failed to add system message", err);
+      }
       setTimeout(() => exit(), 1000);
     } else {
       const text = await response.text();
