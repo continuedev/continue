@@ -16,13 +16,5 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "typescript": "^5.6.3"
-  },
-  "optionalDependencies": {
-    "@img/sharp-darwin-arm64": "^0.33.5",
-    "@img/sharp-darwin-x64": "^0.33.5",
-    "@img/sharp-linux-arm": "^0.33.5",
-    "@img/sharp-linux-arm64": "^0.33.5",
-    "@img/sharp-linux-x64": "^0.33.5",
-    "@img/sharp-win32-x64": "^0.33.5"
   }
 }
