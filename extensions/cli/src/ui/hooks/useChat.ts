@@ -16,9 +16,11 @@ import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
 
 import {
-  formatMessageWithFiles,
   handleAutoCompaction,
   handleCompactCommand,
+} from "./useChat.compaction.js";
+import {
+  formatMessageWithFiles,
   handleSpecialCommands,
   initChatHistory,
   processSlashCommandResult,
