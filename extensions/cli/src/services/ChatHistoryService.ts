@@ -21,6 +21,10 @@ export interface ChatHistoryState {
  * Provides immutable updates and automatic React integration via events
  */
 export class ChatHistoryService extends BaseService<ChatHistoryState> {
+  // Simple undo/redo stacks for history snapshots
+  private past: ChatHistoryItem[][] = [];
+  private future: ChatHistoryItem[][] = [];
+
   constructor() {
     super("ChatHistoryService", {
       history: [],
@@ -29,6 +33,26 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       isRemoteMode: false,
     });
     this.setMaxListeners(50);
+  }
+
+  private setHistoryInternal(
+    history: ChatHistoryItem[],
+    options: { recordUndo?: boolean } = {},
+  ): void {
+    const { recordUndo = true } = options;
+    const prev = this.currentState.history;
+    if (recordUndo) {
+      this.past.push([...prev]);
+      this.future = [];
+    }
+    this.setState({
+      history: [...history],
+      compactionIndex: this.findCompactionIndex(history),
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(history);
+    }
   }
 
   /**
@@ -61,14 +85,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     }, contextItems);
 
     const newHistory = [...this.currentState.history, newMessage];
-    this.setState({
-      history: newHistory,
-    });
-
-    // Auto-save to session if not in remote mode
-    if (!this.currentState.isRemoteMode) {
-      updateSessionHistory(newHistory);
-    }
+    this.setHistoryInternal(newHistory);
 
     logger.debug("Added user message", {
       contentLength: content.length,
@@ -110,14 +127,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 
     const newMessage = createHistoryItem(message, [], toolCallStates);
     const newHistory = [...this.currentState.history, newMessage];
-    
-    this.setState({
-      history: newHistory,
-    });
-
-    if (!this.currentState.isRemoteMode) {
-      updateSessionHistory(newHistory);
-    }
+    this.setHistoryInternal(newHistory);
 
     logger.debug("Added assistant message", {
       contentLength: content.length,
@@ -159,13 +169,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    */
   addHistoryItem(item: ChatHistoryItem): ChatHistoryItem {
     const newHistory = [...this.currentState.history, item];
-    this.setState({
-      history: newHistory,
-    });
-
-    if (!this.currentState.isRemoteMode) {
-      updateSessionHistory(newHistory);
-    }
+    this.setHistoryInternal(newHistory);
 
     logger.debug("Added history item", {
       role: item.message.role,
@@ -220,13 +224,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       ),
     };
 
-    this.setState({
-      history: newHistory,
-    });
-
-    if (!this.currentState.isRemoteMode) {
-      updateSessionHistory(newHistory);
-    }
+    this.setHistoryInternal(newHistory);
 
     logger.debug("Updated tool call state", {
       messageIndex,
@@ -272,11 +270,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Perform compaction on the history
    */
   compact(newHistory: ChatHistoryItem[], compactionIndex: number): void {
-    this.setState({
-      history: newHistory,
-      compactionIndex,
-    });
-
+    this.past.push([...this.currentState.history]);
+    this.future = [];
+    this.setState({ history: newHistory, compactionIndex });
     if (!this.currentState.isRemoteMode) {
       updateSessionHistory(newHistory);
     }
@@ -292,11 +288,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Clear the chat history
    */
   clear(): void {
-    this.setState({
-      history: [],
-      compactionIndex: null,
-    });
-
+    this.past.push([...this.currentState.history]);
+    this.future = [];
+    this.setState({ history: [], compactionIndex: null });
     if (!this.currentState.isRemoteMode) {
       updateSessionHistory([]);
     }
@@ -352,15 +346,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Set the entire history (for remote mode or special cases)
    */
   setHistory(history: ChatHistoryItem[]): void {
-    this.setState({
-      history: [...history],
-      compactionIndex: this.findCompactionIndex(history),
-    });
-
-    if (!this.currentState.isRemoteMode) {
-      updateSessionHistory(history);
-    }
-
+    this.setHistoryInternal(history);
     logger.debug("Set entire history", {
       historyLength: history.length,
     });
@@ -383,6 +369,29 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   private findCompactionIndex(history: ChatHistoryItem[]): number | null {
     const idx = history.findIndex((item) => item.conversationSummary !== undefined);
     return idx === -1 ? null : idx;
+  }
+
+  // Undo/Redo API
+  canUndo(): boolean {
+    return this.past.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.future.length > 0;
+  }
+
+  undo(): void {
+    if (!this.canUndo()) return;
+    const prev = this.past.pop()!;
+    this.future.push([...this.currentState.history]);
+    this.setHistoryInternal(prev, { recordUndo: false });
+  }
+
+  redo(): void {
+    if (!this.canRedo()) return;
+    const next = this.future.pop()!;
+    this.past.push([...this.currentState.history]);
+    this.setHistoryInternal(next, { recordUndo: false });
   }
 
   /**

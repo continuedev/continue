@@ -401,6 +401,51 @@ describe("ChatHistoryService", () => {
     });
   });
 
+  describe("undo/redo", () => {
+    beforeEach(async () => {
+      await service.initialize();
+    });
+
+    it("should undo last change and redo it", () => {
+      service.addUserMessage("A");
+      service.addAssistantMessage("B");
+
+      expect(service.getState().history.map((m) => m.message.content)).toEqual([
+        "A",
+        "B",
+      ]);
+
+      expect(service.canUndo()).toBe(true);
+      service.undo();
+      expect(service.getState().history.map((m) => m.message.content)).toEqual([
+        "A",
+      ]);
+
+      expect(service.canRedo()).toBe(true);
+      service.redo();
+      expect(service.getState().history.map((m) => m.message.content)).toEqual([
+        "A",
+        "B",
+      ]);
+    });
+
+    it("should support undoing tool state updates", () => {
+      service.addAssistantMessage("Using tool", [
+        { id: "t1", name: "Read", arguments: { path: "file" } },
+      ]);
+      const before = service.getHistory();
+      service.addToolResult("t1", "ok", "done");
+      const after = service.getHistory();
+
+      expect(after[0].toolCallStates?.[0].status).toBe("done");
+      service.undo();
+      const undone = service.getHistory();
+      expect(undone[0].toolCallStates?.[0].status).toBe(
+        before[0].toolCallStates?.[0].status,
+      );
+    });
+  });
+
   describe("immutability", () => {
     beforeEach(async () => {
       await service.initialize();

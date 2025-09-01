@@ -8,11 +8,7 @@ import express, { Request, Response } from "express";
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
-import {
-  getService,
-  initializeServices,
-  SERVICE_NAMES,
-} from "../services/index.js";
+import { getService, initializeServices, SERVICE_NAMES, services } from "../services/index.js";
 import {
   AuthServiceState,
   ConfigServiceState,
@@ -122,6 +118,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   const session = createSession(initialHistory);
 
+  // Align ChatHistoryService with server session and enable remote mode
+  try {
+    await services.chatHistory.initialize(session, true);
+  } catch (e) {
+    // Fallback: continue even if service init fails; stream will still work with arrays
+  }
+
   // Initialize server state
   const state: ServerState = {
     session,
@@ -146,6 +149,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // GET /state - Return the current state
   app.get("/state", (_req: Request, res: Response) => {
     state.lastActivity = Date.now();
+    // Ensure session history reflects ChatHistoryService state
+    try {
+      state.session.history = services.chatHistory.getHistory();
+    } catch {}
     res.json({
       session: state.session, // Return session directly instead of converting
       isProcessing: state.isProcessing,
@@ -335,11 +342,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.shouldInterrupt = false;
       state.lastActivity = Date.now();
 
-      // Add user message to history
-      state.session.history.push({
-        message: { role: "user", content: userMessage },
-        contextItems: [],
-      });
+      // Add user message via ChatHistoryService (single source of truth)
+      try {
+        services.chatHistory.addUserMessage(userMessage);
+      } catch {
+        // Fallback to local array if service unavailable
+        state.session.history.push({
+          message: { role: "user", content: userMessage },
+          contextItems: [],
+        });
+      }
 
       try {
         // Create new abort controller for this response
@@ -353,8 +365,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           () => state.shouldInterrupt,
         );
 
-        // Save session after successful response
-        updateSessionHistory(state.session.history);
+        // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
         state.lastActivity = Date.now();
       } catch (e: any) {
@@ -372,12 +383,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
           }
         } else {
           logger.error(`Error: ${formatError(e)}`);
-          // Add error message to chat history and display messages
+          // Add error message via ChatHistoryService
           const errorMessage = `Error: ${formatError(e)}`;
-          state.session.history.push({
-            message: { role: "assistant", content: errorMessage },
-            contextItems: [],
-          });
+          try {
+            services.chatHistory.addAssistantMessage(errorMessage);
+          } catch {
+            state.session.history.push({
+              message: { role: "assistant", content: errorMessage },
+              contextItems: [],
+            });
+          }
         }
       } finally {
         state.currentAbortController = null;
