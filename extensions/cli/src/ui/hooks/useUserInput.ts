@@ -65,7 +65,7 @@ interface TextBufferStateOptions {
 
 export function updateTextBufferState(options: TextBufferStateOptions) {
   const {
-    handled,
+    handled: _handled,
     textBuffer,
     setInputText,
     setCursorPosition,

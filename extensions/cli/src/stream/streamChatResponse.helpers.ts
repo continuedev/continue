@@ -373,80 +373,127 @@ export async function executeStreamedToolCalls(
   hasRejection: boolean;
   chatHistoryEntries: ChatCompletionToolMessageParam[];
 }> {
-  const chatHistoryEntries: ChatCompletionToolMessageParam[] = [];
-  let hasRejection = false;
+  // Strategy: queue permissions (preserve order), then run approved tools in parallel.
+  // If any permission is rejected, cancel the remaining tools in this batch.
 
-  // Execute each preprocessed tool call
-  for (const toolCall of preprocessedCalls) {
+  type IndexedCall = { index: number; call: PreprocessedToolCall };
+  const indexedCalls: IndexedCall[] = preprocessedCalls.map((call, index) => ({
+    index,
+    call,
+  }));
+
+  const entriesByIndex = new Map<number, ChatCompletionToolMessageParam>();
+  const approvedCalls: IndexedCall[] = [];
+
+  let hasRejection = false;
+  let rejectionIndex: number | null = null;
+
+  // Permission phase (sequential)
+  for (const { index, call } of indexedCalls) {
     if (hasRejection) {
+      // Anything after a rejection is cancelled
       const cancelledMessage = `Cancelled due to previous tool rejection`;
-      chatHistoryEntries.push({
+      entriesByIndex.set(index, {
         role: "tool",
-        tool_call_id: toolCall.id,
+        tool_call_id: call.id,
         content: cancelledMessage,
       });
-
-      callbacks?.onToolResult?.(cancelledMessage, toolCall.name, "canceled");
+      callbacks?.onToolResult?.(cancelledMessage, call.name, "canceled");
       continue;
     }
 
-    // Handle remaining tool calls in this batch to maintain chat history consistency
     try {
       logger.debug("Checking tool permissions", {
-        name: toolCall.name,
-        arguments: toolCall.arguments,
+        name: call.name,
+        arguments: call.arguments,
       });
 
-      // Notify tool start - before permission check
-      // This ensures the UI shows the tool call even if it's rejected
-      callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
+      // Notify tool start before permission check to display in UI fallbacks
+      callbacks?.onToolStart?.(call.name, call.arguments);
 
-      // Check tool permissions using helper
       const approved = await checkToolPermissionApproval(
-        toolCall,
+        call,
         callbacks,
         isHeadless,
       );
 
       if (!approved) {
-        handlePermissionDenied(toolCall, chatHistoryEntries, callbacks);
+        // Permission denied: record and mark rejection
+        const deniedEntry: ChatCompletionToolMessageParam = {
+          role: "tool",
+          tool_call_id: call.id,
+          content: `Permission denied by user`,
+        };
+        entriesByIndex.set(index, deniedEntry);
+        callbacks?.onToolResult?.(String(deniedEntry.content), call.name, "canceled");
         hasRejection = true;
+        rejectionIndex = index;
+        // Remaining items will be auto-cancelled in subsequent iterations
         continue;
       }
 
-      logger.debug("Executing tool", {
-        name: toolCall.name,
-        arguments: toolCall.arguments,
-      });
-
-      const toolResult = await executeToolCall(toolCall);
-
-      chatHistoryEntries.push({
-        role: "tool",
-        tool_call_id: toolCall.id,
-        content: toolResult,
-      });
-
-      callbacks?.onToolResult?.(toolResult, toolCall.name, "done");
+      approvedCalls.push({ index, call });
     } catch (error) {
-      const errorMessage = `Error executing tool ${toolCall.name}: ${
+      const errorMessage = `Error checking permissions for ${call.name}: ${
         error instanceof Error ? error.message : String(error)
       }`;
-
-      logger.error("Tool execution failed", {
-        name: toolCall.name,
+      logger.error("Permission check failed", {
+        name: call.name,
         error: errorMessage,
       });
-
-      chatHistoryEntries.push({
+      entriesByIndex.set(index, {
         role: "tool",
-        tool_call_id: toolCall.id,
+        tool_call_id: call.id,
         content: errorMessage,
       });
-
-      callbacks?.onToolError?.(errorMessage, toolCall.name);
+      callbacks?.onToolError?.(errorMessage, call.name);
+      // Treat permission errors like execution errors but do not stop the batch
     }
   }
+
+  // Execution phase (parallel) for approved calls prior to any rejection
+  const toExecute =
+    rejectionIndex === null
+      ? approvedCalls
+      : approvedCalls.filter((c) => c.index < (rejectionIndex as number));
+
+  const execPromises = toExecute.map(async ({ index, call }) => {
+    try {
+      logger.debug("Executing tool", {
+        name: call.name,
+        arguments: call.arguments,
+      });
+      const toolResult = await executeToolCall(call);
+      const entry: ChatCompletionToolMessageParam = {
+        role: "tool",
+        tool_call_id: call.id,
+        content: toolResult,
+      };
+      entriesByIndex.set(index, entry);
+      callbacks?.onToolResult?.(toolResult, call.name, "done");
+    } catch (error) {
+      const errorMessage = `Error executing tool ${call.name}: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+      logger.error("Tool execution failed", {
+        name: call.name,
+        error: errorMessage,
+      });
+      entriesByIndex.set(index, {
+        role: "tool",
+        tool_call_id: call.id,
+        content: errorMessage,
+      });
+      callbacks?.onToolError?.(errorMessage, call.name);
+    }
+  });
+
+  await Promise.all(execPromises);
+
+  // Assemble final entries in original order
+  const chatHistoryEntries: ChatCompletionToolMessageParam[] = preprocessedCalls
+    .map((_, index) => entriesByIndex.get(index))
+    .filter((e): e is ChatCompletionToolMessageParam => !!e);
 
   return {
     hasRejection,

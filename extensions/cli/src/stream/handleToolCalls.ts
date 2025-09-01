@@ -120,16 +120,29 @@ export async function handleToolCalls(
     return true; // Signal early return needed
   }
 
-  // Convert tool results from OpenAI format to ChatHistoryItem format
-  // and add them to the chat history
+  // Convert tool results and add them to the chat history with per-result status
   toolResults.forEach((toolResult) => {
     const resultContent =
       typeof toolResult.content === "string" ? toolResult.content : "";
+
+    // Derive per-result status instead of applying batch-wide hasRejection
+    let status: ToolStatus = "done";
+    const lower = resultContent.toLowerCase();
+    if (
+      lower.includes("permission denied by user") ||
+      lower.includes("cancelled due to previous tool rejection") ||
+      lower.includes("canceled due to previous tool rejection")
+    ) {
+      status = "canceled";
+    } else if (lower.startsWith("error executing tool") || lower.startsWith("error:")) {
+      status = "errored" as ToolStatus;
+    }
+
     if (useService) {
       chatHistorySvc.addToolResult(
         toolResult.tool_call_id,
         resultContent,
-        hasRejection ? ("canceled" as ToolStatus) : ("done" as ToolStatus),
+        status,
       );
     } else {
       // Fallback only when service is unavailable: update local tool state
@@ -144,7 +157,7 @@ export async function handleToolCalls(
           (ts) => ts.toolCallId === toolResult.tool_call_id,
         );
         if (toolState) {
-          toolState.status = hasRejection ? "canceled" : "done";
+          toolState.status = status;
           toolState.output = [
             {
               content: resultContent,
