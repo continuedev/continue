@@ -6,6 +6,14 @@ import { logger } from "../../util/logger.js";
 
 import { RemoteServerState } from "./useChat.types.js";
 
+function historiesEqual(a: ChatHistoryItem[], b: ChatHistoryItem[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+  }
+  return true;
+}
+
 /**
  * Poll remote server for state updates
  */
@@ -103,19 +111,8 @@ function updateStateFromRemote({
     // Avoid redundant updates: only set when history actually changed
     try {
       const current = services.chatHistory.getHistory();
-      let changed = current.length !== newHistory.length;
-      if (!changed) {
-        for (let i = 0; i < current.length; i++) {
-          // Deep compare items; break on first difference
-          if (JSON.stringify(current[i]) !== JSON.stringify(newHistory[i])) {
-            changed = true;
-            break;
-          }
-        }
-      }
-      if (changed) {
-        services.chatHistory.setHistory(newHistory);
-      }
+      const changed = !historiesEqual(current, newHistory);
+      if (changed) services.chatHistory.setHistory(newHistory);
     } catch {
       // As a fallback, attempt to set history (service may handle no-op)
       services.chatHistory.setHistory(newHistory);
