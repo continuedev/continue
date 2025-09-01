@@ -36,7 +36,7 @@ async function loadSharp(): Promise<any> {
 /**
  * Process image buffer to JPEG with resizing using Sharp (if available)
  */
-async function processImageWithSharp(imageBuffer: Buffer, maxWidth = 512, maxHeight = 512): Promise<{ buffer: Buffer; isJpeg: boolean }> {
+async function processImageWithSharp(imageBuffer: Buffer, maxWidth = 1024, maxHeight = 1024): Promise<{ buffer: Buffer; isJpeg: boolean }> {
   try {
     // Try to load Sharp - it's an optional dependency
     const sharp = await loadSharp();
