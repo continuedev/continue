@@ -188,6 +188,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     responseStartTime,
     inputMode,
     activePermissionRequest,
+    wasInterrupted,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -318,6 +319,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
           isInputDisabled={isInputDisabled}
+          wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
         />
 

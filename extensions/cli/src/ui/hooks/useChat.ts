@@ -108,6 +108,9 @@ export function useChat({
     return null;
   });
 
+  // Track interrupted state for resume functionality
+  const [wasInterrupted, setWasInterrupted] = useState(false);
+
   // Clean up abort controller on unmount
   useEffect(() => {
     return () => {
@@ -183,7 +186,6 @@ export function useChat({
   const executeStreamingResponse = async (
     newHistory: ChatHistoryItem[],
     currentCompactionIndex: number | null,
-    message: string,
   ) => {
     // Clean up previous abort controller if it exists
     if (abortController && !abortController.signal.aborted) {
@@ -197,7 +199,6 @@ export function useChat({
     setResponseStartTime(Date.now());
     setInputMode(false);
     logger.debug("Starting chat response stream", {
-      messageLength: message.length,
       historyLength: newHistory.length,
     });
 
@@ -222,9 +223,6 @@ export function useChat({
       // Save the updated session with the latest chat history that includes the assistant's reply
       // The streamCallbacks update setChatHistory during streaming, so we need to get the current state
       setChatHistory((currentHistory) => {
-        logger.debug("Saving session", {
-          historyLength: currentHistory.length,
-        });
         const updatedSession: Session = {
           ...currentSession,
           history: currentHistory,
@@ -261,6 +259,39 @@ export function useChat({
     message: string,
     imageMap?: Map<string, Buffer>,
   ) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (message === "" && wasInterrupted) {
+      // Find the index of the last user or tool message to resume from
+      let lastUserOrToolIndex = -1;
+      for (let i = chatHistory.length - 1; i >= 0; i--) {
+        if (
+          chatHistory[i].message.role === "user" ||
+          !!chatHistory[i].toolCallStates?.length
+        ) {
+          lastUserOrToolIndex = i;
+          break;
+        }
+      }
+
+      if (lastUserOrToolIndex >= 0) {
+        // Truncate history to include up to and including the user/tool message
+        const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
+        setChatHistory(truncatedHistory);
+
+        // Clear the interrupted state and resume
+        setWasInterrupted(false);
+
+        // Re-execute streaming with the truncated history
+        await executeStreamingResponse(truncatedHistory, compactionIndex);
+        return;
+      }
+    }
+
+    // Clear interrupted state if user types a new message
+    if (wasInterrupted && message !== "") {
+      setWasInterrupted(false);
+    }
+
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -373,7 +404,7 @@ export function useChat({
     setChatHistory(newHistory);
 
     // Execute the streaming response
-    await executeStreamingResponse(newHistory, currentCompactionIndex, message);
+    await executeStreamingResponse(newHistory, currentCompactionIndex);
   };
 
   const handleInterrupt = () => {
@@ -395,16 +426,23 @@ export function useChat({
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: "[Interrupted by user]",
-          },
-          contextItems: [],
-        },
-      ]);
+
+      // Remove the last message if it's from assistant (partial response)
+      setChatHistory((current) => {
+        const lastMessage = current[current.length - 1];
+        if (
+          lastMessage?.message.role === "assistant" &&
+          !lastMessage.toolCallStates?.length
+        ) {
+          return current.slice(0, -1);
+        }
+        return current;
+      });
+
+      setWasInterrupted(true);
+      setIsWaitingForResponse(false);
+      setResponseStartTime(null);
+      setInputMode(true);
     }
   };
 
@@ -494,6 +532,7 @@ export function useChat({
     inputMode,
     attachedFiles,
     activePermissionRequest,
+    wasInterrupted,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,

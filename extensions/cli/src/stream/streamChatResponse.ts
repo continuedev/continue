@@ -342,6 +342,10 @@ export async function streamChatResponse(
         tools,
       });
 
+    if (abortController?.signal.aborted) {
+      return finalResponse || content || fullResponse;
+    }
+
     fullResponse += content;
 
     // Update final response based on mode

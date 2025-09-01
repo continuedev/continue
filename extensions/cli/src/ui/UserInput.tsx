@@ -25,6 +25,7 @@ interface UserInputProps {
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
+  wasInterrupted?: boolean;
   onFileAttached?: (filePath: string, content: string) => void;
   disabled?: boolean;
   placeholder?: string;
@@ -38,6 +39,7 @@ const UserInput: React.FC<UserInputProps> = ({
   inputMode,
   onInterrupt,
   assistant,
+  wasInterrupted = false,
   onFileAttached,
   disabled = false,
   placeholder,
@@ -407,14 +409,18 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       // Normal Enter behavior - submit if there's content
-      if (textBuffer.text.trim() && !isWaitingForResponse) {
+      if ((textBuffer.text.trim() || wasInterrupted) && !isWaitingForResponse) {
         // Get images before expanding paste blocks
         const imageMap = textBuffer.getAllImages();
 
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
-        inputHistory.addEntry(submittedText);
+
+        // Only add to history if there's actual text (not when resuming)
+        if (submittedText) {
+          inputHistory.addEntry(submittedText);
+        }
 
         // Submit with images
         onSubmit(submittedText, imageMap);
@@ -657,6 +663,15 @@ const UserInput: React.FC<UserInputProps> = ({
 
   return (
     <Box flexDirection="column">
+      {/* Interruption message - shown just above the input box */}
+      {wasInterrupted && (
+        <Box paddingX={1} marginBottom={0}>
+          <Text color="yellow">
+            ⚠ Interrupted by user - Press enter to resume
+          </Text>
+        </Box>
+      )}
+
       {/* Input box */}
       <Box
         borderStyle="round"

@@ -232,7 +232,6 @@ export async function executeStreaming({
         chatHistory,
         currentCompactionIndex,
       );
-      const _originalLength = historyForLLM.length;
 
       await streamChatResponse(
         historyForLLM,

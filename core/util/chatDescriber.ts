@@ -103,7 +103,6 @@ export class ChatDescriber {
 
       return undefined;
     } catch (error) {
-      console.debug("Error generating chat title:", error);
       return undefined;
     }
   }
