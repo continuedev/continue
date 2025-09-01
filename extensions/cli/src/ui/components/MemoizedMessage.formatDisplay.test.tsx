@@ -126,9 +126,10 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
     );
 
     const output = lastFrame();
-    expect(output).toContain("Start");
-    expect(output).toContain("end");
-    expect(output).toContain('{"type":"unknown","data":{"some":"data"}}');
+    // Verify whitespace preservation - trailing space after "Start" and leading space before "end"
+    expect(output).toContain(
+      'Start {"type":"unknown","data":{"some":"data"}} end',
+    );
   });
 
   it("should handle non-array non-string content by converting to JSON", () => {

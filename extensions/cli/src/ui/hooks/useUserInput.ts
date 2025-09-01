@@ -83,7 +83,7 @@ async function getClipboardImage(): Promise<Buffer | null> {
     } else if (platform === "win32") {
       // Windows: Use PowerShell to save clipboard image
       await execAsync(
-        `powershell -command "Get-Clipboard -Format Image | Set-Content -Path '${tempImagePath}' -Encoding Byte"`,
+        `powershell -command "$image = Get-Clipboard -Format Image; if ($image) { $image.Save('${tempImagePath}') }"`,
       );
     } else if (platform === "linux") {
       // Linux: Use xclip to save clipboard image

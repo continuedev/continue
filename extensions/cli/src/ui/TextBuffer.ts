@@ -2,6 +2,9 @@ import { Key } from "ink";
 
 export const COLLAPSE_SIZE = 800; // Characters threshold for collapsing pasted content
 export const RAPID_INPUT_THRESHOLD = 200; // Minimum characters to trigger rapid input detection
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB per image
+export const MAX_IMAGE_COUNT = 20; // Maximum number of images
+export const MAX_TOTAL_IMAGE_MEMORY = 50 * 1024 * 1024; // 50MB total image memory
 
 export class TextBuffer {
   private _text: string = "";
@@ -195,6 +198,32 @@ export class TextBuffer {
 
   // Add image to buffer and return placeholder
   addImage(imageBuffer: Buffer): string {
+    // Validate image size
+    if (imageBuffer.length > MAX_IMAGE_SIZE) {
+      throw new Error(
+        `Image size ${(imageBuffer.length / 1024 / 1024).toFixed(1)}MB exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+      );
+    }
+
+    // Check image count limit
+    if (this._imageMap.size >= MAX_IMAGE_COUNT) {
+      throw new Error(`Cannot add more than ${MAX_IMAGE_COUNT} images`);
+    }
+
+    // Check total memory usage
+    const currentMemoryUsage = Array.from(this._imageMap.values()).reduce(
+      (total, buffer) => total + buffer.length,
+      0,
+    );
+
+    if (currentMemoryUsage + imageBuffer.length > MAX_TOTAL_IMAGE_MEMORY) {
+      const currentUsageMB = (currentMemoryUsage / 1024 / 1024).toFixed(1);
+      const maxUsageMB = MAX_TOTAL_IMAGE_MEMORY / 1024 / 1024;
+      throw new Error(
+        `Adding image would exceed total memory limit. Current usage: ${currentUsageMB}MB, Maximum: ${maxUsageMB}MB`,
+      );
+    }
+
     this._imageCounter++;
     const placeholder = `[Image #${this._imageCounter}]`;
     this._imageMap.set(placeholder, imageBuffer);
