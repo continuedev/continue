@@ -30,7 +30,7 @@ interface ScreenContentProps {
     createPolicy?: boolean,
     stopStream?: boolean,
   ) => void;
-  handleUserMessage: (message: string) => void;
+  handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
   handleInterrupt: () => void;

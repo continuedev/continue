@@ -255,7 +255,7 @@ export function useChat({
     }
   };
 
-  const handleUserMessage = async (message: string) => {
+  const handleUserMessage = async (message: string, imageMap?: Map<string, Buffer>) => {
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -308,20 +308,45 @@ export function useChat({
     // Track telemetry
     trackUserMessage(message, model);
 
-    // Add user message to history and display
-    const { messageText, contextItems } = formatMessageWithFiles(
+    // Format message with attached files and images
+    logger.debug("Processing message with images", { 
+      hasImages: !!(imageMap && imageMap.size > 0),
+      imageCount: imageMap?.size || 0 
+    });
+    const newUserMessage = await formatMessageWithFiles(
       message,
       attachedFiles,
+      imageMap,
     );
+    logger.debug("Message formatted successfully");
+    
     if (attachedFiles.length > 0) {
       setAttachedFiles([]);
     }
 
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
+      // For remote mode, convert MessageContent to string
+      let messageContentString: string;
+      if (typeof newUserMessage.message.content === "string") {
+        messageContentString = newUserMessage.message.content;
+      } else {
+        // Convert MessagePart[] to string (extracting text, noting images)
+        messageContentString = newUserMessage.message.content
+          .map(part => {
+            if (part.type === "text") {
+              return part.text;
+            } else if (part.type === "imageUrl") {
+              return "[Image]";
+            }
+            return "";
+          })
+          .join("");
+      }
+
       await handleRemoteMessage({
         remoteUrl,
-        messageContent: messageText,
+        messageContent: messageContentString,
         setChatHistory,
       });
       return;
@@ -338,14 +363,7 @@ export function useChat({
         setCompactionIndex,
       });
 
-    // NOW add user message to history with context items
-    const newUserMessage: ChatHistoryItem = {
-      message: {
-        role: "user",
-        content: messageText,
-      },
-      contextItems,
-    };
+    // Add the formatted user message to history
     const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
 
