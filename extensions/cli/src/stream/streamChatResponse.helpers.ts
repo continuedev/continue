@@ -415,10 +415,18 @@ export async function executeStreamedToolCalls(
           content: `Permission denied by user`,
         };
         entriesByIndex.set(index, deniedEntry);
-        callbacks?.onToolResult?.(String(deniedEntry.content), call.name, "canceled");
+        callbacks?.onToolResult?.(
+          String(deniedEntry.content),
+          call.name,
+          "canceled",
+        );
         // Immediate service update for UI feedback
         try {
-          services.chatHistory.addToolResult(call.id, String(deniedEntry.content), "canceled");
+          services.chatHistory.addToolResult(
+            call.id,
+            String(deniedEntry.content),
+            "canceled",
+          );
         } catch {}
         hasRejection = true;
         // Remaining items will be auto-cancelled in subsequent iterations
@@ -448,7 +456,11 @@ export async function executeStreamedToolCalls(
             callbacks?.onToolResult?.(toolResult, call.name, "done");
             // Immediate service update for UI feedback
             try {
-              services.chatHistory.addToolResult(call.id, String(toolResult), "done");
+              services.chatHistory.addToolResult(
+                call.id,
+                String(toolResult),
+                "done",
+              );
             } catch {}
           } catch (error) {
             const errorMessage = `Error executing tool ${call.name}: ${
@@ -466,7 +478,11 @@ export async function executeStreamedToolCalls(
             callbacks?.onToolError?.(errorMessage, call.name);
             // Immediate service update for UI feedback
             try {
-              services.chatHistory.addToolResult(call.id, errorMessage as string, "errored");
+              services.chatHistory.addToolResult(
+                call.id,
+                errorMessage as string,
+                "errored",
+              );
             } catch {}
           }
         })(),
@@ -487,7 +503,11 @@ export async function executeStreamedToolCalls(
       callbacks?.onToolError?.(errorMessage, call.name);
       // Treat permission errors like execution errors but do not stop the batch
       try {
-        services.chatHistory.addToolResult(call.id, errorMessage as string, "errored");
+        services.chatHistory.addToolResult(
+          call.id,
+          errorMessage as string,
+          "errored",
+        );
       } catch {}
     }
   }

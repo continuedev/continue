@@ -134,7 +134,10 @@ export async function handleToolCalls(
       lower.includes("canceled due to previous tool rejection")
     ) {
       status = "canceled";
-    } else if (lower.startsWith("error executing tool") || lower.startsWith("error:")) {
+    } else if (
+      lower.startsWith("error executing tool") ||
+      lower.startsWith("error:")
+    ) {
       status = "errored" as ToolStatus;
     }
 
