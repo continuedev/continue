@@ -273,6 +273,8 @@ describe("slashCommands", () => {
       const result = await handleSlashCommands("/info", mockAssistant);
 
       expect(result?.output).toContain("Session:");
+      expect(result?.output).toContain("Test Session");
+      expect(result?.output).toContain("/test-home/.continue/cli-sessions/");
       expect(result?.output).toContain(".json");
     });
   });
