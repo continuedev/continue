@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
-import { ChatHistoryServiceWrapper } from "../../services/ChatHistoryServiceWrapper.js";
 import { services } from "../../services/index.js";
 import {
   createSession,
@@ -58,8 +57,8 @@ export function useChat({
 }: UseChatProps) {
   const { exit } = useApp();
 
-  // Initialize ChatHistoryServiceWrapper for Phase 2 migration
-  const wrapperRef = useRef<ChatHistoryServiceWrapper | null>(null);
+  // Track service subscription
+  const serviceListenerCleanupRef = useRef<null | (() => void)>(null);
 
   // Store the current session
   const [currentSession, setCurrentSession] = useState<Session>(() => {
@@ -80,47 +79,42 @@ export function useChat({
     return createSession([]);
   });
 
-  const [chatHistory, setChatHistoryOriginal] = useState<ChatHistoryItem[]>(
-    () => currentSession.history,
+  // Local view of history driven solely by ChatHistoryService
+  const [chatHistory, setChatHistoryView] = useState<ChatHistoryItem[]>(() =>
+    services.chatHistory?.isReady() ? services.chatHistory.getHistory() : currentSession.history,
   );
-  // Wrapped setter ref for Phase 2 wrapper
-  const setChatHistoryRef = useRef<typeof setChatHistoryOriginal>(
-    setChatHistoryOriginal,
-  );
-  // Proxy setter that always calls the latest wrapped function
-  const setChatHistory: typeof setChatHistoryOriginal = (value) =>
-    setChatHistoryRef.current(value);
+  // Proxy setter: apply changes to ChatHistoryService (single source of truth)
+  const setChatHistory: React.Dispatch<
+    React.SetStateAction<ChatHistoryItem[]>
+  > = (value) => {
+    const svc = services.chatHistory;
+    const current = svc.getHistory();
+    const next = typeof value === "function" ? (value as any)(current) : value;
+    svc.setHistory(next);
+  };
   
-  // Initialize wrapper on first render
+  // Initialize ChatHistoryService and subscribe to updates
   useEffect(() => {
-    if (!wrapperRef.current) {
-      const chatHistoryService = services.chatHistory;
-      wrapperRef.current = new ChatHistoryServiceWrapper(chatHistoryService);
-      
-      // Initialize service with session data
-      chatHistoryService.initialize(currentSession, isRemoteMode).catch((error) => {
-        logger.error('Failed to initialize ChatHistoryService', { error });
+    const svc = services.chatHistory;
+    svc
+      .initialize(currentSession, isRemoteMode)
+      .then(() => {
+        setChatHistoryView(svc.getHistory());
+        const listener = () => {
+          setChatHistoryView(svc.getHistory());
+        };
+        svc.on("stateChanged", listener);
+        serviceListenerCleanupRef.current = () => svc.off("stateChanged", listener);
+      })
+      .catch((error) => {
+        logger.error("Failed to initialize ChatHistoryService", { error });
       });
-      
-      // Create wrapped setState and setup sync
-      setChatHistoryRef.current =
-        wrapperRef.current.createWrappedSetState(setChatHistoryOriginal);
-      wrapperRef.current.setupSync(setChatHistoryOriginal);
-      
-      // Initialize service with existing state if any
-      if (chatHistory.length > 0) {
-        wrapperRef.current.initializeFromState(chatHistory);
-      }
-    }
 
     return () => {
-      // Cleanup on unmount
-      if (wrapperRef.current) {
-        wrapperRef.current.cleanup();
-        wrapperRef.current = null;
-      }
+      serviceListenerCleanupRef.current?.();
+      serviceListenerCleanupRef.current = null;
     };
-  }, []); // Run only once on mount
+  }, []);
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(

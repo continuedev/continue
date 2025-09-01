@@ -28,6 +28,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       sessionId: "",
       isRemoteMode: false,
     });
+    this.setMaxListeners(50);
   }
 
   /**
@@ -336,13 +337,15 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    */
   getHistoryForLLM(compactionIndex?: number | null): ChatHistoryItem[] {
     const index = compactionIndex ?? this.currentState.compactionIndex;
-    
-    if (index !== null && index !== undefined && index < this.currentState.history.length) {
-      // Return only messages after compaction, plus the compacted summary
-      return this.currentState.history.slice(index);
+    const full = this.currentState.history;
+    if (index === null || index === undefined || index >= full.length) {
+      return this.getHistory();
     }
-    
-    return this.getHistory();
+    const systemMessage = full[0]?.message?.role === "system" ? full[0] : null;
+    const messagesFromCompaction = full.slice(index);
+    return systemMessage && index > 0
+      ? [systemMessage, ...messagesFromCompaction]
+      : messagesFromCompaction;
   }
 
   /**
@@ -378,17 +381,8 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Find compaction index in history
    */
   private findCompactionIndex(history: ChatHistoryItem[]): number | null {
-    for (let i = history.length - 1; i >= 0; i--) {
-      const message = history[i].message;
-      if (message.role === "system") {
-        // Handle both string and MessagePart array content
-        const content = message.content;
-        if (typeof content === "string" && content.includes("[Compacted]")) {
-          return i;
-        }
-      }
-    }
-    return null;
+    const idx = history.findIndex((item) => item.conversationSummary !== undefined);
+    return idx === -1 ? null : idx;
   }
 
   /**
@@ -397,6 +391,8 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   getSessionId(): string {
     return this.currentState.sessionId;
   }
+
+  
 
   /**
    * Check if in remote mode
@@ -424,6 +420,3 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     };
   }
 }
-
-// Export singleton instance for migration compatibility
-export const chatHistoryService = new ChatHistoryService();

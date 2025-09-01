@@ -68,10 +68,7 @@ describe("ChatHistoryService", () => {
           message: { role: "user", content: "First message" },
           contextItems: [],
         },
-        {
-          message: { role: "system", content: "[Compacted] Summary of conversation" },
-          contextItems: [],
-        },
+        { message: { role: "assistant", content: "Summary here" }, contextItems: [], conversationSummary: "Summary here" },
         {
           message: { role: "user", content: "After compaction" },
           contextItems: [],
@@ -390,10 +387,7 @@ describe("ChatHistoryService", () => {
 
     it("should detect compaction index when setting history", () => {
       const historyWithCompaction: ChatHistoryItem[] = [
-        {
-          message: { role: "system", content: "[Compacted] Old stuff" },
-          contextItems: [],
-        },
+        { message: { role: "assistant", content: "old summary" }, contextItems: [], conversationSummary: "old summary" },
         {
           message: { role: "user", content: "Recent message" },
           contextItems: [],
