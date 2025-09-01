@@ -126,7 +126,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   // Align ChatHistoryService with server session and enable remote mode
   try {
-    await services.chatHistory.initialize(session, true);
+    await services.chatHistory.initialize(session, false);
   } catch {
     // Fallback: continue even if service init fails; stream will still work with arrays
   }
