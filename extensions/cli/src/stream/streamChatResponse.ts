@@ -366,7 +366,7 @@ export async function streamChatResponse(
     // Handle content display
     handleContentDisplay(content, callbacks, isHeadless);
 
-    // Handle tool calls and check for early return
+    // Handle tool calls and check for early return. This updates history via ChatHistoryService.
     const shouldReturn = await handleToolCalls(
       toolCalls,
       chatHistory,
@@ -392,7 +392,7 @@ export async function streamChatResponse(
 
       // Only update chat history if compaction actually occurred
       if (wasCompacted) {
-        // If service is available, set history there; otherwise update local copy
+        // Always prefer service; local copy is for temporary reads only
         const chatHistorySvc2 = services.chatHistory;
         if (
           typeof chatHistorySvc2?.isReady === "function" &&
@@ -401,6 +401,7 @@ export async function streamChatResponse(
           chatHistorySvc2.setHistory(updatedChatHistory);
           chatHistory = chatHistorySvc2.getHistory();
         } else {
+          // Fallback only when service is unavailable
           chatHistory = [...updatedChatHistory];
         }
       }

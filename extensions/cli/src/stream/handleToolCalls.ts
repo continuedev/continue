@@ -32,26 +32,8 @@ export async function handleToolCalls(
   const useService = typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
   if (toolCalls.length === 0) {
     if (content) {
-      // De-duplication: if the last message already matches, skip adding
-      const last = chatHistory[chatHistory.length - 1];
-      const isDuplicateLocal =
-        !!last &&
-        last.message.role === "assistant" &&
-        typeof last.message.content === "string" &&
-        last.message.content === content &&
-        !(last as any).toolCallStates?.length;
-
-      if (!isDuplicateLocal) {
-        // Keep the local array updated for compatibility
-        chatHistory.push(
-          createHistoryItem({
-            role: "assistant",
-            content,
-          }),
-        );
-      }
-
       if (useService) {
+        // Service-driven: rely solely on service state (no local mutations)
         try {
           const svcHistory = chatHistorySvc.getHistory();
           const svcLast = svcHistory[svcHistory.length - 1];
@@ -67,6 +49,14 @@ export async function handleToolCalls(
         } catch {
           chatHistorySvc.addAssistantMessage(content);
         }
+      } else {
+        // Fallback only when service is unavailable
+        chatHistory.push(
+          createHistoryItem({
+            role: "assistant",
+            content,
+          }),
+        );
       }
     }
     return false;
@@ -101,14 +91,15 @@ export async function handleToolCalls(
     })),
   };
 
-  // Always keep the local array updated for compatibility
-  chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
   if (useService) {
     // Important: pass ChatCompletion-style toolCalls, not internal ToolCall[]
     chatHistorySvc.addAssistantMessage(
       assistantMessage.content || "",
       assistantMessage.toolCalls,
     );
+  } else {
+    // Fallback only when service is unavailable
+    chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
   }
 
   // First preprocess the tool calls
@@ -123,10 +114,11 @@ export async function handleToolCalls(
       content: stripImages(errorEntry.content) || "",
       toolCallId: errorEntry.tool_call_id,
     });
-    // Keep local array updated
-    chatHistory.push(item);
     if (useService) {
       chatHistorySvc.addHistoryItem(item);
+    } else {
+      // Fallback only when service is unavailable
+      chatHistory.push(item);
     }
   });
 
@@ -146,37 +138,35 @@ export async function handleToolCalls(
   toolResults.forEach((toolResult) => {
     const resultContent =
       typeof toolResult.content === "string" ? toolResult.content : "";
-    // Update local array state
-    const lastAssistantIndex = chatHistory.findLastIndex(
-      (item) => item.message.role === "assistant" && item.toolCallStates,
-    );
-
-    if (
-      lastAssistantIndex >= 0 &&
-      chatHistory[lastAssistantIndex].toolCallStates
-    ) {
-      const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
-        (ts) => ts.toolCallId === toolResult.tool_call_id,
-      );
-
-      if (toolState) {
-        toolState.status = hasRejection ? "canceled" : "done";
-        toolState.output = [
-          {
-            content: resultContent,
-            name: `Tool Result`,
-            description: "Tool execution result",
-          },
-        ];
-      }
-    }
-
     if (useService) {
       chatHistorySvc.addToolResult(
         toolResult.tool_call_id,
         resultContent,
         hasRejection ? ("canceled" as ToolStatus) : ("done" as ToolStatus),
       );
+    } else {
+      // Fallback only when service is unavailable: update local tool state
+      const lastAssistantIndex = chatHistory.findLastIndex(
+        (item) => item.message.role === "assistant" && item.toolCallStates,
+      );
+      if (
+        lastAssistantIndex >= 0 &&
+        chatHistory[lastAssistantIndex].toolCallStates
+      ) {
+        const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
+          (ts) => ts.toolCallId === toolResult.tool_call_id,
+        );
+        if (toolState) {
+          toolState.status = hasRejection ? "canceled" : "done";
+          toolState.output = [
+            {
+              content: resultContent,
+              name: `Tool Result`,
+              description: "Tool execution result",
+            },
+          ];
+        }
+      }
     }
   });
   return false;
