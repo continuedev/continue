@@ -1,9 +1,10 @@
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
+import { ChatHistoryServiceWrapper } from "../../services/ChatHistoryServiceWrapper.js";
 import { services } from "../../services/index.js";
 import {
   createSession,
@@ -57,6 +58,9 @@ export function useChat({
 }: UseChatProps) {
   const { exit } = useApp();
 
+  // Initialize ChatHistoryServiceWrapper for Phase 2 migration
+  const wrapperRef = useRef<ChatHistoryServiceWrapper | null>(null);
+
   // Store the current session
   const [currentSession, setCurrentSession] = useState<Session>(() => {
     // In remote mode, start with empty session (will be populated by polling)
@@ -76,9 +80,43 @@ export function useChat({
     return createSession([]);
   });
 
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
+  const [chatHistory, setChatHistoryOriginal] = useState<ChatHistoryItem[]>(
     () => currentSession.history,
   );
+
+  // Create wrapped setChatHistory that syncs with service
+  // Use a regular variable instead of ref to avoid type issues
+  let setChatHistory = setChatHistoryOriginal;
+  
+  // Initialize wrapper on first render
+  useEffect(() => {
+    if (!wrapperRef.current) {
+      const chatHistoryService = services.chatHistory;
+      wrapperRef.current = new ChatHistoryServiceWrapper(chatHistoryService);
+      
+      // Initialize service with session data
+      chatHistoryService.initialize(currentSession, isRemoteMode).catch((error) => {
+        logger.error('Failed to initialize ChatHistoryService', { error });
+      });
+      
+      // Create wrapped setState and setup sync
+      setChatHistory = wrapperRef.current.createWrappedSetState(setChatHistoryOriginal);
+      wrapperRef.current.setupSync(setChatHistoryOriginal);
+      
+      // Initialize service with existing state if any
+      if (chatHistory.length > 0) {
+        wrapperRef.current.initializeFromState(chatHistory);
+      }
+    }
+
+    return () => {
+      // Cleanup on unmount
+      if (wrapperRef.current) {
+        wrapperRef.current.cleanup();
+        wrapperRef.current = null;
+      }
+    };
+  }, []); // Run only once on mount
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
@@ -124,7 +162,7 @@ export function useChat({
 
     return setupRemotePolling({
       remoteUrl,
-      setChatHistory,
+      setChatHistory: setChatHistory,
       setIsWaitingForResponse,
       responseStartTime,
       setResponseStartTime,
@@ -202,7 +240,7 @@ export function useChat({
 
     try {
       const streamCallbacks = createStreamCallbacks({
-        setChatHistory,
+        setChatHistory: setChatHistory,
         setActivePermissionRequest,
         llmApi,
         model,
@@ -294,7 +332,7 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
-      setChatHistory,
+      setChatHistory: setChatHistory,
     });
 
     if (handled) return;
@@ -308,7 +346,7 @@ export function useChat({
             chatHistory,
             model,
             llmApi,
-            setChatHistory,
+            setChatHistory: setChatHistory,
             setCompactionIndex,
             currentSession,
             setCurrentSession,
@@ -319,7 +357,7 @@ export function useChat({
         const newInput = processSlashCommandResult({
           result: commandResult,
           chatHistory,
-          setChatHistory,
+          setChatHistory: setChatHistory,
           exit,
           onShowConfigSelector,
           onShowModelSelector,
@@ -353,7 +391,7 @@ export function useChat({
       await handleRemoteMessage({
         remoteUrl,
         messageContent: messageText,
-        setChatHistory,
+        setChatHistory: setChatHistory,
       });
       return;
     }
@@ -365,7 +403,7 @@ export function useChat({
         model,
         llmApi,
         compactionIndex,
-        setChatHistory,
+        setChatHistory: setChatHistory,
         setCompactionIndex,
       });
 
@@ -503,7 +541,7 @@ export function useChat({
 
   return {
     chatHistory,
-    setChatHistory,
+    setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,
