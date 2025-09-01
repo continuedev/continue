@@ -20,7 +20,7 @@ import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
@@ -408,8 +408,11 @@ const UserInput: React.FC<UserInputProps> = ({
         return true;
       }
 
-      // Normal Enter behavior - submit if there's content OR if resuming after interruption
+      // Normal Enter behavior - submit if there's content
       if ((textBuffer.text.trim() || wasInterrupted) && !isWaitingForResponse) {
+        // Get images before expanding paste blocks
+        const imageMap = textBuffer.getAllImages();
+
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
@@ -419,8 +422,9 @@ const UserInput: React.FC<UserInputProps> = ({
           inputHistory.addEntry(submittedText);
         }
 
-        // Send empty string when resuming, actual text otherwise
-        onSubmit(submittedText);
+        // Submit with images
+        onSubmit(submittedText, imageMap);
+
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
@@ -481,6 +485,17 @@ const UserInput: React.FC<UserInputProps> = ({
     inputHistory.resetNavigation();
   };
 
+  // Handle text buffer updates for async operations like image pasting
+  const handleTextBufferUpdate = () => {
+    const newText = textBuffer.text;
+    const newCursor = textBuffer.cursor;
+    setInputText(newText);
+    setCursorPosition(newCursor);
+    updateSlashCommandState(newText, newCursor);
+    updateFileSearchState(newText, newCursor);
+    inputHistory.resetNavigation();
+  };
+
   useInput((input, key) => {
     // Don't handle any input when disabled
     if (disabled) {
@@ -497,6 +512,8 @@ const UserInput: React.FC<UserInputProps> = ({
         showFileSearch,
         cycleModes,
         clearInput,
+        textBuffer,
+        onTextBufferUpdate: handleTextBufferUpdate,
       })
     ) {
       return;

@@ -1,6 +1,6 @@
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
@@ -16,9 +16,11 @@ import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
 
 import {
-  formatMessageWithFiles,
   handleAutoCompaction,
   handleCompactCommand,
+} from "./useChat.compaction.js";
+import {
+  formatMessageWithFiles,
   handleSpecialCommands,
   initChatHistory,
   processSlashCommandResult,
@@ -306,33 +308,103 @@ export function useChat({
     }
   };
 
-  const handleUserMessage = async (message: string) => {
-    // Check if this is a resume request (empty message after interruption)
-    if (message === "" && wasInterrupted) {
-      // Find the index of the last user or tool message to resume from
-      let lastUserOrToolIndex = -1;
-      for (let i = chatHistory.length - 1; i >= 0; i--) {
-        if (
-          chatHistory[i].message.role === "user" ||
-          !!chatHistory[i].toolCallStates?.length
-        ) {
-          lastUserOrToolIndex = i;
-          break;
+  const handleResumeRequest = async (message: string) => {
+    if (message !== "" || !wasInterrupted) return false;
+
+    // Find the index of the last user or tool message to resume from
+    let lastUserOrToolIndex = -1;
+    for (let i = chatHistory.length - 1; i >= 0; i--) {
+      if (
+        chatHistory[i].message.role === "user" ||
+        !!chatHistory[i].toolCallStates?.length
+      ) {
+        lastUserOrToolIndex = i;
+        break;
+      }
+    }
+
+    if (lastUserOrToolIndex >= 0) {
+      // Truncate history to include up to and including the user/tool message
+      const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
+      setChatHistory(truncatedHistory);
+
+      // Clear the interrupted state and resume
+      setWasInterrupted(false);
+
+      // Re-execute streaming with the truncated history
+      await executeStreamingResponse(truncatedHistory, compactionIndex);
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleSlashCommandProcessing = async (
+    message: string,
+  ): Promise<string | null> => {
+    // Handle slash commands (skip in remote mode except for /exit which we handled above)
+    if (isRemoteMode || !assistant) {
+      return message;
+    }
+
+    const commandResult = await handleSlashCommands(message, assistant);
+    if (!commandResult) {
+      return message;
+    }
+
+    if (commandResult.compact) {
+      await handleCompactCommand({
+        chatHistory,
+        model,
+        llmApi,
+        setChatHistory,
+        setCompactionIndex,
+        currentSession,
+        setCurrentSession,
+      });
+      return null;
+    }
+
+    const newInput = processSlashCommandResult({
+      result: commandResult,
+      chatHistory,
+      setChatHistory,
+      exit,
+      onShowConfigSelector,
+      onShowModelSelector,
+      onShowMCPSelector,
+      onShowSessionSelector,
+      onClear,
+    });
+
+    return newInput || null;
+  };
+
+  const convertMessageContentToString = (content: any): string => {
+    if (typeof content === "string") {
+      return content;
+    }
+
+    // Convert MessagePart[] to string (extracting text, noting images)
+    return content
+      .map((part: any) => {
+        if (part.type === "text") {
+          return part.text;
+        } else if (part.type === "imageUrl") {
+          return "[Image]";
         }
-      }
+        return "";
+      })
+      .join("");
+  };
 
-      if (lastUserOrToolIndex >= 0) {
-        // Truncate history to include up to and including the user/tool message
-        const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
-        setChatHistory(truncatedHistory);
-
-        // Clear the interrupted state and resume
-        setWasInterrupted(false);
-
-        // Re-execute streaming with the truncated history
-        await executeStreamingResponse(truncatedHistory, compactionIndex);
-        return;
-      }
+  const handleUserMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (await handleResumeRequest(message)) {
+      return;
     }
 
     // Clear interrupted state if user types a new message
@@ -351,60 +423,41 @@ export function useChat({
 
     if (handled) return;
 
-    // Handle slash commands (skip in remote mode except for /exit which we handled above)
-    if (!isRemoteMode && assistant) {
-      const commandResult = await handleSlashCommands(message, assistant);
-      if (commandResult) {
-        if (commandResult.compact) {
-          await handleCompactCommand({
-            chatHistory,
-            model,
-            llmApi,
-            setChatHistory: setChatHistory,
-            setCompactionIndex,
-            currentSession,
-            setCurrentSession,
-          });
-          return;
-        }
-
-        const newInput = processSlashCommandResult({
-          result: commandResult,
-          chatHistory,
-          setChatHistory: setChatHistory,
-          exit,
-          onShowConfigSelector,
-          onShowModelSelector,
-          onShowMCPSelector,
-          onShowSessionSelector,
-          onClear,
-        });
-
-        if (newInput) {
-          message = newInput;
-        } else {
-          return;
-        }
-      }
+    // Handle slash commands
+    const processedMessage = await handleSlashCommandProcessing(message);
+    if (processedMessage === null) {
+      return; // Command was handled and no further processing needed
     }
+    message = processedMessage;
 
     // Track telemetry
     trackUserMessage(message, model);
 
-    // Add user message to history and display
-    const { messageText, contextItems } = formatMessageWithFiles(
+    // Format message with attached files and images
+    logger.debug("Processing message with images", {
+      hasImages: !!(imageMap && imageMap.size > 0),
+      imageCount: imageMap?.size || 0,
+    });
+    const newUserMessage = await formatMessageWithFiles(
       message,
       attachedFiles,
+      imageMap,
     );
+    logger.debug("Message formatted successfully");
+
     if (attachedFiles.length > 0) {
       setAttachedFiles([]);
     }
 
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
+      const messageContentString = convertMessageContentToString(
+        newUserMessage.message.content,
+      );
+
       await handleRemoteMessage({
         remoteUrl,
-        messageContent: messageText,
+        messageContent: messageContentString,
       });
       return;
     }
@@ -420,14 +473,7 @@ export function useChat({
         setCompactionIndex,
       });
 
-    // NOW add user message to history with context items
-    const newUserMessage: ChatHistoryItem = {
-      message: {
-        role: "user",
-        content: messageText,
-      },
-      contextItems,
-    };
+    // Add the formatted user message to history
     const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
 
