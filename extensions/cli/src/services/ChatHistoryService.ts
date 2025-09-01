@@ -109,21 +109,47 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       message.toolCalls = toolCalls;
     }
 
-    const toolCallStates = toolCalls?.map((tc) => ({
-      toolCallId: tc.id,
-      toolCall: {
-        id: tc.id,
-        type: "function" as const,
-        function: {
-          name: tc.name || tc.function?.name,
-          arguments: typeof tc.arguments === "string" 
-            ? tc.arguments 
-            : JSON.stringify(tc.arguments || tc.function?.arguments || {}),
+    const toolCallStates = toolCalls?.map((tc) => {
+      const id = tc.id;
+      const name = tc.function?.name ?? tc.name;
+      // Prefer explicit string arguments; otherwise stringify object arguments
+      const rawArgStr =
+        typeof tc.arguments === "string"
+          ? tc.arguments
+          : typeof tc.function?.arguments === "string"
+            ? tc.function.arguments
+            : tc.arguments !== undefined
+              ? JSON.stringify(tc.arguments)
+              : tc.function?.arguments !== undefined
+                ? String(tc.function.arguments)
+                : "{}";
+
+      // parsedArgs: prefer object, else parse the string if possible
+      let parsedArgs: any = {};
+      if (tc && typeof tc.arguments === "object" && tc.arguments !== null) {
+        parsedArgs = tc.arguments;
+      } else if (typeof rawArgStr === "string") {
+        try {
+          parsedArgs = JSON.parse(rawArgStr);
+        } catch {
+          parsedArgs = {};
+        }
+      }
+
+      return {
+        toolCallId: id,
+        toolCall: {
+          id,
+          type: "function" as const,
+          function: {
+            name,
+            arguments: rawArgStr,
+          },
         },
-      },
-      status: "generated" as ToolStatus,
-      parsedArgs: typeof tc.arguments === "object" ? tc.arguments : {},
-    }));
+        status: "generated" as ToolStatus,
+        parsedArgs,
+      };
+    });
 
     const newMessage = createHistoryItem(message, [], toolCallStates);
     const newHistory = [...this.currentState.history, newMessage];
@@ -165,7 +191,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   }
 
   /**
-   * Add a generic history item (for compatibility during migration)
+   * Add a generic history item
    */
   addHistoryItem(item: ChatHistoryItem): ChatHistoryItem {
     const newHistory = [...this.currentState.history, item];

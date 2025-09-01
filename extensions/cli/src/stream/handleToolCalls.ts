@@ -33,22 +33,8 @@ export async function handleToolCalls(
   if (toolCalls.length === 0) {
     if (content) {
       if (useService) {
-        // Service-driven: rely solely on service state (no local mutations)
-        try {
-          const svcHistory = chatHistorySvc.getHistory();
-          const svcLast = svcHistory[svcHistory.length - 1];
-          const isDuplicateSvc =
-            !!svcLast &&
-            svcLast.message.role === "assistant" &&
-            typeof svcLast.message.content === "string" &&
-            svcLast.message.content === content &&
-            !(svcLast as any).toolCallStates?.length;
-          if (!isDuplicateSvc) {
-            chatHistorySvc.addAssistantMessage(content);
-          }
-        } catch {
-          chatHistorySvc.addAssistantMessage(content);
-        }
+        // Service-driven: write assistant message via service
+        chatHistorySvc.addAssistantMessage(content);
       } else {
         // Fallback only when service is unavailable
         chatHistory.push(

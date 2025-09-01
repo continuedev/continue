@@ -24,27 +24,25 @@ export function createStreamCallbacks(
     onContent: (_: string) => {},
 
     onContentComplete: async (content: string) => {
-      // Update local React state for UI
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          contextItems: [],
-          message: {
-            role: "assistant",
-            content: content,
-            isStreaming: false,
-          },
-        },
-      ]);
-
-      // Also update service; handleToolCalls will de-dup when no tools
+      // Do not add assistant messages via service; handleToolCalls is the single writer
+      // For environments where the service isn't ready (unit tests), update local state only
       try {
         const svc = services.chatHistory;
-        if (typeof svc?.isReady === "function" && svc.isReady()) {
-          svc.addAssistantMessage(content);
+        const useService = typeof svc?.isReady === "function" && svc.isReady();
+        if (!useService && content) {
+          setChatHistory((prev) => [
+            ...prev,
+            {
+              contextItems: [],
+              message: {
+                role: "assistant",
+                content: content,
+                isStreaming: false,
+              },
+            },
+          ]);
         }
       } catch {}
-
       // Generate session title after first assistant response
       if (content && llmApi && model) {
         const currentSession = getCurrentSession();
@@ -273,8 +271,7 @@ export async function executeStreaming({
         streamCallbacks,
       );
 
-      // streamChatResponse modifies the array in place
-      // The new messages are already in historyForLLM
+      // Service-driven streaming; history updates occur via ChatHistoryService
     } else {
       await streamChatResponse(
         chatHistory,

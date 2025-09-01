@@ -160,7 +160,6 @@ export function useChat({
 
     return setupRemotePolling({
       remoteUrl,
-      setChatHistory: setChatHistory,
       setIsWaitingForResponse,
       responseStartTime,
       setResponseStartTime,
@@ -389,7 +388,6 @@ export function useChat({
       await handleRemoteMessage({
         remoteUrl,
         messageContent: messageText,
-        setChatHistory: setChatHistory,
       });
       return;
     }

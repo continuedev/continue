@@ -295,7 +295,7 @@ export async function handleSpecialCommands({
   // Handle /exit command in remote mode
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
-    await handleRemoteExit(remoteUrl, setChatHistory, exit);
+    await handleRemoteExit(remoteUrl, exit);
     return true;
   }
 
