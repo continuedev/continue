@@ -270,7 +270,6 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
 }
 
 /**
@@ -282,7 +281,6 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
-  setChatHistory,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 

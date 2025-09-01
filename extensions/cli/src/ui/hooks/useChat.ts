@@ -342,7 +342,6 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
-      setChatHistory: setChatHistory,
     });
 
     if (handled) return;

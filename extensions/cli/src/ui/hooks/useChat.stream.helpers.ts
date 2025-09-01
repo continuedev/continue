@@ -1,7 +1,7 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
-import { getCurrentSession, updateSessionTitle } from "../../session.js";
 import { services } from "../../services/index.js";
+import { getCurrentSession, updateSessionTitle } from "../../session.js";
 
 import { generateSessionTitle } from "./useChat.helpers.js";
 

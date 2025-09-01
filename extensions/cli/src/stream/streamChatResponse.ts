@@ -298,6 +298,7 @@ export async function processStreamingResponse(
 }
 
 // Main function that handles the conversation loop
+// eslint-disable-next-line complexity
 export async function streamChatResponse(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,

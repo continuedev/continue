@@ -34,6 +34,7 @@ interface ServeOptions extends ExtendedCommandOptions {
   port?: string;
 }
 
+// eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Check if prompt should come from stdin instead of parameter
   let actualPrompt = prompt;
@@ -121,7 +122,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Align ChatHistoryService with server session and enable remote mode
   try {
     await services.chatHistory.initialize(session, true);
-  } catch (e) {
+  } catch {
     // Fallback: continue even if service init fails; stream will still work with arrays
   }
 
@@ -335,6 +336,22 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   });
 
   // Process messages from the queue
+  function removePartialAssistantMessage(state: ServerState) {
+    try {
+      const svcHistory = services.chatHistory.getHistory();
+      const last = svcHistory[svcHistory.length - 1];
+      if (last && last.message.role === "assistant" && !last.message.content) {
+        const trimmed = svcHistory.slice(0, -1);
+        services.chatHistory.setHistory(trimmed);
+      }
+    } catch {
+      const lastMessage = state.session.history[state.session.history.length - 1];
+      if (lastMessage && lastMessage.message.role === "assistant" && !lastMessage.message.content) {
+        state.session.history.pop();
+      }
+    }
+  }
+
   async function processMessages(state: ServerState, llmApi: any) {
     while (state.messageQueue.length > 0 && state.serverRunning) {
       const userMessage = state.messageQueue.shift()!;
@@ -371,29 +388,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       } catch (e: any) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
-          // Remove the partial assistant message if it exists
-          try {
-            const svcHistory = services.chatHistory.getHistory();
-            const last = svcHistory[svcHistory.length - 1];
-            if (
-              last &&
-              last.message.role === "assistant" &&
-              !last.message.content
-            ) {
-              const trimmed = svcHistory.slice(0, -1);
-              services.chatHistory.setHistory(trimmed);
-            }
-          } catch {
-            const lastMessage =
-              state.session.history[state.session.history.length - 1];
-            if (
-              lastMessage &&
-              lastMessage.message.role === "assistant" &&
-              !lastMessage.message.content
-            ) {
-              state.session.history.pop();
-            }
-          }
+          // Remove any partial assistant message
+          removePartialAssistantMessage(state);
         } else {
           logger.error(`Error: ${formatError(e)}`);
           // Add error message via ChatHistoryService

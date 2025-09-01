@@ -50,7 +50,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       compactionIndex: this.findCompactionIndex(history),
     });
 
-    if (!this.currentState.isRemoteMode) {
+    if (this.currentState.isRemoteMode) {
+      // Skip persistence in remote mode
+    } else {
       updateSessionHistory(history);
     }
   }
@@ -113,16 +115,16 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       const id = tc.id;
       const name = tc.function?.name ?? tc.name;
       // Prefer explicit string arguments; otherwise stringify object arguments
-      const rawArgStr =
-        typeof tc.arguments === "string"
-          ? tc.arguments
-          : typeof tc.function?.arguments === "string"
-            ? tc.function.arguments
-            : tc.arguments !== undefined
-              ? JSON.stringify(tc.arguments)
-              : tc.function?.arguments !== undefined
-                ? String(tc.function.arguments)
-                : "{}";
+      let rawArgStr: string;
+      if (typeof tc.arguments === "string") {
+        rawArgStr = tc.arguments;
+      } else if (typeof tc.function?.arguments === "string") {
+        rawArgStr = tc.function.arguments;
+      } else if (tc.arguments === undefined) {
+        rawArgStr = tc.function?.arguments === undefined ? "{}" : String(tc.function.arguments);
+      } else {
+        rawArgStr = JSON.stringify(tc.arguments);
+      }
 
       // parsedArgs: prefer object, else parse the string if possible
       let parsedArgs: any = {};
@@ -178,7 +180,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       history: newHistory,
     });
 
-    if (!this.currentState.isRemoteMode) {
+    if (this.currentState.isRemoteMode) {
+      // Skip persistence in remote mode
+    } else {
       updateSessionHistory(newHistory);
     }
 
@@ -299,7 +303,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     this.past.push([...this.currentState.history]);
     this.future = [];
     this.setState({ history: newHistory, compactionIndex });
-    if (!this.currentState.isRemoteMode) {
+    if (this.currentState.isRemoteMode) {
+      // Skip persistence in remote mode
+    } else {
       updateSessionHistory(newHistory);
     }
 
@@ -317,7 +323,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     this.past.push([...this.currentState.history]);
     this.future = [];
     this.setState({ history: [], compactionIndex: null });
-    if (!this.currentState.isRemoteMode) {
+    if (this.currentState.isRemoteMode) {
+      // Skip persistence in remote mode
+    } else {
       updateSessionHistory([]);
     }
 

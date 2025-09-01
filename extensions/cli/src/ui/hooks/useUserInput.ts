@@ -75,7 +75,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
   } = options;
 
   // Skip state updates during rapid input mode to avoid conflicts with timer-based updates
-  if (handled && !textBuffer.isInRapidInputMode()) {
+  if (!textBuffer.isInRapidInputMode()) {
     const newText = textBuffer.text;
     const newCursor = textBuffer.cursor;
     setInputText(newText);

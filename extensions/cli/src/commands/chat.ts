@@ -4,11 +4,7 @@ import type { ChatHistoryItem, Session } from "core/index.js";
 import { ChatDescriber } from "core/util/chatDescriber.js";
 import * as readlineSync from "readline-sync";
 
-import {
-  compactChatHistory,
-  findCompactionIndex,
-  getHistoryForLLM,
-} from "../compaction.js";
+import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";

@@ -1,7 +1,7 @@
 import type { Session, ToolStatus } from "core/index.js";
 
-import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { services } from "../services/index.js";
+import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
 
 // Modified version of streamChatResponse that supports interruption
