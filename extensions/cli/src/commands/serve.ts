@@ -8,7 +8,12 @@ import express, { Request, Response } from "express";
 import { getAssistantSlug } from "../auth/workos.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
-import { getService, initializeServices, SERVICE_NAMES, services } from "../services/index.js";
+import {
+  getService,
+  initializeServices,
+  SERVICE_NAMES,
+  services,
+} from "../services/index.js";
 import {
   AuthServiceState,
   ConfigServiceState,
@@ -345,8 +350,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         services.chatHistory.setHistory(trimmed);
       }
     } catch {
-      const lastMessage = state.session.history[state.session.history.length - 1];
-      if (lastMessage && lastMessage.message.role === "assistant" && !lastMessage.message.content) {
+      const lastMessage =
+        state.session.history[state.session.history.length - 1];
+      if (
+        lastMessage &&
+        lastMessage.message.role === "assistant" &&
+        !lastMessage.message.content
+      ) {
         state.session.history.pop();
       }
     }

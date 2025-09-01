@@ -31,7 +31,9 @@ describe("TUIChat - Slash Commands Tests", () => {
     stdin.write("/log");
 
     // Wait a bit for the UI to update (remote mode can be slower)
-    await new Promise((resolve) => setTimeout(resolve, mode === "remote" ? 200 : 50));
+    await new Promise((resolve) =>
+      setTimeout(resolve, mode === "remote" ? 200 : 50),
+    );
 
     const frame = lastFrame();
 
@@ -81,7 +83,9 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Type just /
     stdin.write("/");
 
-    await new Promise((resolve) => setTimeout(resolve, mode === "remote" ? 120 : 50));
+    await new Promise((resolve) =>
+      setTimeout(resolve, mode === "remote" ? 120 : 50),
+    );
 
     const frame = lastFrame();
 

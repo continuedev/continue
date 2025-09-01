@@ -1,7 +1,11 @@
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
 
-import { updateSessionHistory, loadSessionById, createSession } from "../session.js";
+import {
+  updateSessionHistory,
+  loadSessionById,
+  createSession,
+} from "../session.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
@@ -60,9 +64,12 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   /**
    * Initialize the service with optional session
    */
-  async doInitialize(session?: any, isRemoteMode = false): Promise<ChatHistoryState> {
+  async doInitialize(
+    session?: any,
+    isRemoteMode = false,
+  ): Promise<ChatHistoryState> {
     const activeSession = session || createSession([]);
-    
+
     logger.debug("Initializing ChatHistoryService", {
       sessionId: activeSession.sessionId,
       historyLength: activeSession.history.length,
@@ -81,10 +88,13 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Add a user message to the history
    */
   addUserMessage(content: string, contextItems: any[] = []): ChatHistoryItem {
-    const newMessage = createHistoryItem({
-      role: "user",
-      content,
-    }, contextItems);
+    const newMessage = createHistoryItem(
+      {
+        role: "user",
+        content,
+      },
+      contextItems,
+    );
 
     const newHistory = [...this.currentState.history, newMessage];
     this.setHistoryInternal(newHistory);
@@ -121,7 +131,10 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
       } else if (typeof tc.function?.arguments === "string") {
         rawArgStr = tc.function.arguments;
       } else if (tc.arguments === undefined) {
-        rawArgStr = tc.function?.arguments === undefined ? "{}" : String(tc.function.arguments);
+        rawArgStr =
+          tc.function?.arguments === undefined
+            ? "{}"
+            : String(tc.function.arguments);
       } else {
         rawArgStr = JSON.stringify(tc.arguments);
       }
@@ -218,7 +231,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     updates: Partial<{
       status: ToolStatus;
       output: any[];
-    }>
+    }>,
   ): void {
     const newHistory = [...this.currentState.history];
     const message = newHistory[messageIndex];
@@ -232,7 +245,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     }
 
     const toolState = message.toolCallStates.find(
-      (ts) => ts.toolCallId === toolCallId
+      (ts) => ts.toolCallId === toolCallId,
     );
 
     if (!toolState) {
@@ -248,9 +261,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     newHistory[messageIndex] = {
       ...message,
       toolCallStates: message.toolCallStates.map((ts) =>
-        ts.toolCallId === toolCallId
-          ? { ...ts, ...updates }
-          : ts
+        ts.toolCallId === toolCallId ? { ...ts, ...updates } : ts,
       ),
     };
 
@@ -266,14 +277,18 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   /**
    * Add a tool result to the history
    */
-  addToolResult(toolCallId: string, result: string, status: ToolStatus = "done"): void {
+  addToolResult(
+    toolCallId: string,
+    result: string,
+    status: ToolStatus = "done",
+  ): void {
     // Find the last assistant message with this tool call
     let targetIndex = -1;
     for (let i = this.currentState.history.length - 1; i >= 0; i--) {
       const item = this.currentState.history[i];
       if (item.message.role === "assistant" && item.toolCallStates) {
         const hasToolCall = item.toolCallStates.some(
-          (ts) => ts.toolCallId === toolCallId
+          (ts) => ts.toolCallId === toolCallId,
         );
         if (hasToolCall) {
           targetIndex = i;
@@ -285,11 +300,13 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     if (targetIndex >= 0) {
       this.updateToolCallState(targetIndex, toolCallId, {
         status,
-        output: [{
-          content: result,
-          name: "Tool Result",
-          description: "Tool execution result",
-        }],
+        output: [
+          {
+            content: result,
+            name: "Tool Result",
+            description: "Tool execution result",
+          },
+        ],
       });
     } else {
       logger.warn("Could not find message for tool result", { toolCallId });
@@ -401,7 +418,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Find compaction index in history
    */
   private findCompactionIndex(history: ChatHistoryItem[]): number | null {
-    const idx = history.findIndex((item) => item.conversationSummary !== undefined);
+    const idx = history.findIndex(
+      (item) => item.conversationSummary !== undefined,
+    );
     return idx === -1 ? null : idx;
   }
 
@@ -434,8 +453,6 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   getSessionId(): string {
     return this.currentState.sessionId;
   }
-
-  
 
   /**
    * Check if in remote mode

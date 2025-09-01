@@ -29,7 +29,8 @@ export async function handleToolCalls(
   isHeadless: boolean,
 ): Promise<boolean> {
   const chatHistorySvc = services.chatHistory;
-  const useService = typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
+  const useService =
+    typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
   if (toolCalls.length === 0) {
     if (content) {
       if (useService) {

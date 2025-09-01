@@ -323,7 +323,10 @@ export async function streamChatResponse(
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view
     const chatHistorySvc = services.chatHistory;
-    if (typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady()) {
+    if (
+      typeof chatHistorySvc?.isReady === "function" &&
+      chatHistorySvc.isReady()
+    ) {
       try {
         chatHistory = chatHistorySvc.getHistory();
       } catch {}

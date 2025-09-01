@@ -93,7 +93,9 @@ export function useChat({
 
   // Local view of history driven solely by ChatHistoryService
   const [chatHistory, setChatHistoryView] = useState<ChatHistoryItem[]>(() =>
-    services.chatHistory?.isReady() ? services.chatHistory.getHistory() : currentSession.history,
+    services.chatHistory?.isReady()
+      ? services.chatHistory.getHistory()
+      : currentSession.history,
   );
   // Proxy setter: apply changes to ChatHistoryService (single source of truth)
   const setChatHistory: React.Dispatch<
@@ -104,7 +106,7 @@ export function useChat({
     const next = typeof value === "function" ? (value as any)(current) : value;
     svc.setHistory(next);
   };
-  
+
   // Initialize ChatHistoryService and subscribe to updates
   useEffect(() => {
     const svc = services.chatHistory;
@@ -116,7 +118,8 @@ export function useChat({
           setChatHistoryView(svc.getHistory());
         };
         svc.on("stateChanged", listener);
-        serviceListenerCleanupRef.current = () => svc.off("stateChanged", listener);
+        serviceListenerCleanupRef.current = () =>
+          svc.off("stateChanged", listener);
       })
       .catch((error) => {
         logger.error("Failed to initialize ChatHistoryService", { error });
@@ -139,7 +142,9 @@ export function useChat({
     // If we're resuming and found a saved session, we're already initialized
     // If we're forking and found a session to fork from, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && currentSession.history.length > 0) || (fork && currentSession.history.length > 0),
+    isRemoteMode ||
+      (resume && currentSession.history.length > 0) ||
+      (fork && currentSession.history.length > 0),
   );
 
   // Capture initial rules to prevent re-initialization when rules change

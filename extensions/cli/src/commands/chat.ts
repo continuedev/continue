@@ -331,9 +331,8 @@ async function processMessage(
     let finalResponse;
     if (compactionIndex !== null && compactionIndex !== undefined) {
       // Use service to compute history for LLM
-      const historyForLLM = services.chatHistory.getHistoryForLLM(
-        compactionIndex,
-      );
+      const historyForLLM =
+        services.chatHistory.getHistoryForLLM(compactionIndex);
 
       finalResponse = await streamChatResponse(
         historyForLLM,

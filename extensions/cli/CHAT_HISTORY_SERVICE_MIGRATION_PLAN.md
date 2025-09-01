@@ -7,6 +7,7 @@ This document outlines a gradual migration plan to move from the current mixed s
 ## Current State Analysis
 
 ### Problems
+
 - **Duplicate state**: Chat history exists in both React state (`useState`) and is directly mutated in arrays
 - **Direct mutations**: `handleToolCalls.ts` uses `chatHistory.push()` bypassing React
 - **Inconsistent updates**: Mix of `setChatHistory` callbacks and direct array modifications
@@ -14,6 +15,7 @@ This document outlines a gradual migration plan to move from the current mixed s
 - **Race conditions**: Potential for state inconsistencies
 
 ### Affected Files
+
 - `src/ui/hooks/useChat.ts` - Main hook with React state
 - `src/stream/handleToolCalls.ts` - Direct array mutations
 - `src/stream/streamChatResponse.ts` - Mixed patterns
@@ -23,9 +25,11 @@ This document outlines a gradual migration plan to move from the current mixed s
 ## Migration Strategy
 
 ### Phase 1: Create ChatHistoryService (Day 1)
+
 **Goal**: Establish the service foundation without breaking existing code
 
 #### 1.1 Create Service Implementation
+
 ```typescript
 // src/services/ChatHistoryService.ts
 export interface ChatHistoryState {
@@ -41,6 +45,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 ```
 
 #### 1.2 Service Methods to Implement
+
 - `addUserMessage(content, contextItems)`
 - `addAssistantMessage(content, toolCalls?)`
 - `addSystemMessage(content)`
@@ -53,11 +58,13 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 - `getHistoryForLLM(compactionIndex?)` - For streaming
 
 #### 1.3 Register Service
+
 - Add to `src/services/index.ts`
 - Add to ServiceContainer initialization
 - Ensure proper initialization order
 
 #### 1.4 Write Unit Tests
+
 - Test all service methods
 - Test event emissions
 - Test immutability guarantees
@@ -66,51 +73,59 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 **Deliverable**: Working service with tests, no integration yet
 
 ### Phase 2: Wrapper Integration (Day 1-2)
+
 **Goal**: Wrap existing code to use service without changing behavior
 
 #### 2.1 Create Compatibility Layer
+
 ```typescript
 // src/services/ChatHistoryCompatibility.ts
 export function createChatHistoryProxy(service: ChatHistoryService) {
   return new Proxy([], {
     get(target, prop) {
-      if (prop === 'push') {
+      if (prop === "push") {
         return (item) => service.addHistoryItem(item);
       }
       // Delegate reads to service.getHistory()
       const history = service.getHistory();
       return history[prop];
-    }
+    },
   });
 }
 ```
 
 #### 2.2 Update useChat Hook
+
 - Initialize ChatHistoryService in useChat
 - Keep existing `setChatHistory` for now
 - Sync service changes to React state:
+
 ```typescript
 // In useChat.ts
-const chatHistoryService = useService<ChatHistoryState>('chatHistory');
+const chatHistoryService = useService<ChatHistoryState>("chatHistory");
 
 useEffect(() => {
-  if (chatHistoryService.state === 'ready') {
+  if (chatHistoryService.state === "ready") {
     setChatHistory(chatHistoryService.value.history);
   }
 }, [chatHistoryService]);
 ```
 
 #### 2.3 Add Service Methods to Mirror State Updates
+
 - Wherever `setChatHistory` is called, also update service
 - This creates temporary duplication but maintains compatibility
 
 **Deliverable**: Service running in parallel with existing state
 
 ### Phase 3: Migrate Stream Processing (Day 2)
+
 **Goal**: Update streaming functions to use service
 
 #### 3.1 Update handleToolCalls.ts
+
 - Replace `chatHistory.push()` with service methods:
+
 ```typescript
 // Before:
 chatHistory.push(createHistoryItem(...));
@@ -120,16 +135,19 @@ await chatHistoryService.addHistoryItem(createHistoryItem(...));
 ```
 
 #### 3.2 Update streamChatResponse.ts
+
 - Pass service instance instead of arrays
 - Use service methods for all updates
 - Remove direct array access
 
 #### 3.3 Update Stream Callbacks
+
 - Modify `createStreamCallbacks` in `useChat.stream.helpers.ts`
 - Use service methods instead of `setChatHistory`
 - Ensure proper event handling
 
 #### 3.4 Test Streaming
+
 - Test tool execution flow
 - Test interruption handling
 - Test auto-compaction
@@ -138,9 +156,11 @@ await chatHistoryService.addHistoryItem(createHistoryItem(...));
 **Deliverable**: All streaming using service, no direct mutations
 
 ### Phase 4: Remove React State Duplication (Day 2-3)
+
 **Goal**: Remove `useState` and rely solely on service
 
 #### 4.1 Update useChat to Use Service Directly
+
 ```typescript
 // Remove:
 const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(...);
@@ -151,11 +171,13 @@ const chatHistory = chatHistoryState?.history || [];
 ```
 
 #### 4.2 Update All Components
+
 - Update components that receive `chatHistory` prop
 - Ensure they handle potential undefined/loading states
 - Update any direct `setChatHistory` calls
 
 #### 4.3 Remove Compatibility Layer
+
 - Remove the proxy wrapper
 - Remove temporary sync code
 - Clean up unused imports
@@ -163,25 +185,30 @@ const chatHistory = chatHistoryState?.history || [];
 **Deliverable**: Single source of truth established
 
 ### Phase 5: Optimize and Enhance (Day 3)
+
 **Goal**: Add optimizations and missing features
 
 #### 5.1 Performance Optimizations
+
 - Implement efficient diffing for large histories
 - Add memoization where needed
 - Optimize re-render triggers
 
 #### 5.2 Add Advanced Features
+
 - Implement undo/redo capability
 - Add history branching for explorations
 - Improve session management integration
 - Add persistence strategies
 
 #### 5.3 Remote Mode Integration
+
 - Update `serve.ts` to use service
 - Ensure remote sync works with service
 - Test remote mode thoroughly
 
 #### 5.4 Update Documentation
+
 - Update code comments
 - Update AGENTS.md with new patterns
 - Create service usage examples
@@ -197,20 +224,24 @@ Status: Completed
 Notes: Further optimizations (batching/memoization) can be added if performance profiling indicates need with very large histories.
 
 ### Phase 6: Validation and Cleanup (Day 3-4)
+
 **Goal**: Ensure migration is complete and stable
 
 #### 6.1 Comprehensive Testing
+
 - Run all existing tests
 - Add integration tests for service
 - Test all user flows (TUI, headless, remote)
 - Performance testing with large histories
 
 #### 6.2 Code Cleanup
+
 - Removed direct history mutations in serve/stream paths where service is present; retained minimal fallbacks.
 - Updated imports/types; removed unused `updateSessionHistory` in serve mode and pruned unused types.
 - Verified service methods own persistence; remote mode disables persistence by design.
 
 #### 6.3 Migration Verification Checklist
+
 - [x] No direct array mutations remain where service is available (fallbacks kept for resilience)
 - [x] All tests passing
 - [x] Service handles all chat operations (user, assistant, tools, system, compaction)
@@ -232,18 +263,21 @@ If issues arise during migration:
 ## Testing Strategy
 
 ### Unit Tests
+
 - Service methods individually
 - Event emissions
 - State immutability
 - Error handling
 
 ### Integration Tests
+
 - Service + React hooks
 - Service + streaming
 - Service + sessions
 - Service + remote mode
 
 ### E2E Tests
+
 - Full chat flows
 - Tool execution
 - Mode switching
@@ -261,16 +295,18 @@ If issues arise during migration:
 ## Risk Mitigation
 
 ### High Risk Areas
+
 1. **Streaming integration**: Most complex change
    - Mitigation: Extensive testing, gradual rollout
-   
 2. **Remote mode**: Different state management
+
    - Mitigation: Test thoroughly, maintain compatibility
 
 3. **Performance**: Large histories might cause issues
    - Mitigation: Profiling, optimization, lazy loading
 
 ### Monitoring
+
 - Add logging for state transitions
 - Monitor performance metrics
 - Track error rates
@@ -288,42 +324,49 @@ Total: 4 days with buffer for issues
 ## Implementation Checklist
 
 ### Pre-Migration
+
 - [ ] Current state documented
 - [ ] All stakeholders informed
 - [ ] Test environment ready
 - [ ] Rollback plan confirmed
 
 ### Phase 1
+
 - [ ] ChatHistoryService created
 - [ ] Unit tests written
 - [ ] Service registered
 - [ ] No breaking changes
 
 ### Phase 2
+
 - [ ] Compatibility layer working
 - [ ] useChat integrated
 - [ ] Parallel operation verified
 - [ ] No regressions
 
 ### Phase 3
+
 - [ ] Stream processing migrated
 - [ ] No direct mutations
 - [ ] Tool handling updated
 - [ ] Tests passing
 
 ### Phase 4
+
 - [ ] React state removed
 - [ ] Service-only operation
 - [ ] Components updated
 - [ ] Performance acceptable
 
 ### Phase 5
+
 - [ ] Optimizations implemented
 - [ ] Features added
 - [ ] Remote mode working
 - [ ] Documentation updated
 
 ### Phase 6
+
 - [ ] All tests passing
 - [ ] Code cleaned up
 - [ ] Migration complete
@@ -340,43 +383,46 @@ Total: 4 days with buffer for issues
 ## Appendix: Code Examples
 
 ### Service Method Example
+
 ```typescript
 class ChatHistoryService extends BaseService<ChatHistoryState> {
   addUserMessage(content: string, contextItems: any[] = []) {
     const newMessage: ChatHistoryItem = {
-      message: { role: 'user', content },
-      contextItems
+      message: { role: "user", content },
+      contextItems,
     };
-    
+
     const newHistory = [...this.currentState.history, newMessage];
-    this.setState({ 
+    this.setState({
       ...this.currentState,
-      history: newHistory 
+      history: newHistory,
     });
-    
+
     // Auto-save to session
     updateSessionHistory(newHistory);
-    
+
     return newMessage;
   }
 }
 ```
 
 ### React Integration Example
+
 ```typescript
 function ChatComponent() {
   const { value: chatState, state } = useService<ChatHistoryState>('chatHistory');
-  
+
   if (state === 'loading') return <LoadingSpinner />;
   if (state === 'error') return <ErrorMessage />;
-  
+
   const history = chatState?.history || [];
-  
+
   return <ChatMessages history={history} />;
 }
 ```
 
 ### Migration Pattern Example
+
 ```typescript
 // Before:
 chatHistory.push(newMessage);
