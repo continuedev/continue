@@ -255,7 +255,10 @@ export function useChat({
     }
   };
 
-  const handleUserMessage = async (message: string, imageMap?: Map<string, Buffer>) => {
+  const handleUserMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -309,9 +312,9 @@ export function useChat({
     trackUserMessage(message, model);
 
     // Format message with attached files and images
-    logger.debug("Processing message with images", { 
+    logger.debug("Processing message with images", {
       hasImages: !!(imageMap && imageMap.size > 0),
-      imageCount: imageMap?.size || 0 
+      imageCount: imageMap?.size || 0,
     });
     const newUserMessage = await formatMessageWithFiles(
       message,
@@ -319,7 +322,7 @@ export function useChat({
       imageMap,
     );
     logger.debug("Message formatted successfully");
-    
+
     if (attachedFiles.length > 0) {
       setAttachedFiles([]);
     }
@@ -333,7 +336,7 @@ export function useChat({
       } else {
         // Convert MessagePart[] to string (extracting text, noting images)
         messageContentString = newUserMessage.message.content
-          .map(part => {
+          .map((part) => {
             if (part.type === "text") {
               return part.text;
             } else if (part.type === "imageUrl") {

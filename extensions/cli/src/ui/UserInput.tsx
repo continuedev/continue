@@ -410,15 +410,15 @@ const UserInput: React.FC<UserInputProps> = ({
       if (textBuffer.text.trim() && !isWaitingForResponse) {
         // Get images before expanding paste blocks
         const imageMap = textBuffer.getAllImages();
-        
+
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
         inputHistory.addEntry(submittedText);
-        
+
         // Submit with images
         onSubmit(submittedText, imageMap);
-        
+
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);

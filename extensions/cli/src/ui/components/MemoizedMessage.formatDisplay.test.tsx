@@ -1,8 +1,13 @@
 import { render } from "ink-testing-library";
 import React from "react";
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import type { ChatHistoryItem, MessageContent, MessagePart } from "../../../../../core/index.js";
+import type {
+  ChatHistoryItem,
+  MessageContent,
+  MessagePart,
+} from "../../../../../core/index.js";
+
 import { MemoizedMessage } from "./MemoizedMessage.js";
 
 describe("MemoizedMessage formatMessageContentForDisplay", () => {
@@ -17,9 +22,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
   it("should display string content as-is", () => {
     const content = "Just a simple text message";
     const historyItem = createTestHistoryItem(content);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     expect(lastFrame()).toContain("Just a simple text message");
@@ -32,9 +37,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
       { type: "text", text: " and some more text" },
     ];
     const historyItem = createTestHistoryItem(messageParts);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     const output = lastFrame();
@@ -52,9 +57,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
       { type: "text", text: " end" },
     ];
     const historyItem = createTestHistoryItem(messageParts);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     const output = lastFrame();
@@ -69,9 +74,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
       { type: "imageUrl", imageUrl: { url: "data:image/png;base64,def456" } },
     ];
     const historyItem = createTestHistoryItem(messageParts);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     const output = lastFrame();
@@ -85,9 +90,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
       { type: "text", text: "" },
     ];
     const historyItem = createTestHistoryItem(messageParts);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     const output = lastFrame();
@@ -100,9 +105,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
       { type: "text", text: "Just text, no images here" },
     ];
     const historyItem = createTestHistoryItem(messageParts);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     expect(lastFrame()).toContain("Just text, no images here");
@@ -115,9 +120,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
       { type: "text", text: " end" },
     ] as MessagePart[];
     const historyItem = createTestHistoryItem(messageParts);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     const output = lastFrame();
@@ -129,9 +134,9 @@ describe("MemoizedMessage formatMessageContentForDisplay", () => {
   it("should handle non-array non-string content by converting to JSON", () => {
     const content = { someObject: "data" } as any;
     const historyItem = createTestHistoryItem(content);
-    
+
     const { lastFrame } = render(
-      <MemoizedMessage item={historyItem} index={1} />
+      <MemoizedMessage item={historyItem} index={1} />,
     );
 
     expect(lastFrame()).toContain('{"someObject":"data"}');

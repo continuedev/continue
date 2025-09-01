@@ -8,11 +8,11 @@ import { MarkdownRenderer } from "../MarkdownRenderer.js";
 import { ToolResultSummary } from "../ToolResultSummary.js";
 
 /**
- * Formats message content for display, converting message parts array back to 
+ * Formats message content for display, converting message parts array back to
  * user-friendly format with placeholders like [Image #1], [Pasted Text #1], etc.
  */
 function formatMessageContentForDisplay(
-  content: import("../../../../../core/index.js").MessageContent
+  content: import("../../../../../core/index.js").MessageContent,
 ): string {
   if (typeof content === "string") {
     return content;
