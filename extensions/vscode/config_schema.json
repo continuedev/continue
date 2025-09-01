@@ -78,7 +78,7 @@
         },
         "reasoning": {
           "title": "Reasoning",
-          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
+          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models",
           "type": "boolean"
         },
         "reasoningBudgetTokens": {

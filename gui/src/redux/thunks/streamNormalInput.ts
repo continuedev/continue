@@ -121,12 +121,17 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
-    if (state.session.hasReasoningEnabled) {
+    if (state.session.hasReasoningEnabled !== undefined) {
       completionOptions = {
         ...completionOptions,
-        reasoning: true,
-        reasoningBudgetTokens:
-          selectedChatModel.completionOptions?.reasoningBudgetTokens ?? 2048,
+        reasoning: !!state.session.hasReasoningEnabled,
+        ...(state.session.hasReasoningEnabled &&
+          selectedChatModel.underlyingProviderName !== "ollama" && {
+            // Ollama doesn't support limiting reasoning tokens at this point
+            reasoningBudgetTokens:
+              selectedChatModel.completionOptions?.reasoningBudgetTokens ??
+              2048,
+          }),
       };
     }
 

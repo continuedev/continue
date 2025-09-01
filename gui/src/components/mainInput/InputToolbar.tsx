@@ -5,7 +5,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { LightBulbIcon as LightBulbIconSolid } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
-import { modelSupportsImages } from "core/llm/autodetect";
+import {
+  modelSupportsImages,
+  modelSupportsThinking,
+} from "core/llm/autodetect";
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -65,6 +68,8 @@ function InputToolbar(props: InputToolbarProps) {
       defaultModel.title,
       defaultModel.capabilities,
     );
+
+  const supportsThinking = modelSupportsThinking(defaultModel);
 
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
@@ -139,7 +144,7 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
-            {defaultModel?.underlyingProviderName === "anthropic" && (
+            {supportsThinking && (
               <HoverItem
                 onClick={() =>
                   dispatch(setHasReasoningEnabled(!hasReasoningEnabled))
