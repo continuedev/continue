@@ -62,7 +62,12 @@ export function createStreamCallbacks(
     },
 
     onToolStart: (toolName: string, toolArgs?: any) => {
-      // Preserve local UI behavior: create a new assistant message representing the tool call
+      // When ChatHistoryService is ready, let handleToolCalls add entries
+      const svc = services.chatHistory;
+      const useService = typeof svc?.isReady === "function" && svc.isReady();
+      if (useService) return;
+
+      // Fallback (service not ready): create a local assistant message representing the tool call
       setChatHistory((prev) => {
         const newHistory = [...prev];
 
@@ -102,11 +107,15 @@ export function createStreamCallbacks(
 
         return newHistory;
       });
-      // Do not update service here; handleToolCalls will add tool call message
     },
 
     onToolResult: (result: string, toolName: string, status: ToolStatus) => {
-      // Update local UI-only state; service is updated through handleToolCalls
+      // When service is ready, it updates tool results; avoid duplicate local updates
+      const svc = services.chatHistory;
+      const useService = typeof svc?.isReady === "function" && svc.isReady();
+      if (useService) return;
+
+      // Fallback (service not ready): update local UI-only state
       setChatHistory((prev) => {
         const newHistory = [...prev];
 
@@ -138,6 +147,11 @@ export function createStreamCallbacks(
     },
 
     onToolError: (error: string, toolName?: string) => {
+      // When service is ready, handleToolCalls adds error entries; avoid duplicate local updates
+      const svc = services.chatHistory;
+      const useService = typeof svc?.isReady === "function" && svc.isReady();
+      if (useService) return;
+
       setChatHistory((prev) => {
         const newHistory = [...prev];
 

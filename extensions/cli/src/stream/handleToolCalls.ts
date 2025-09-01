@@ -104,7 +104,11 @@ export async function handleToolCalls(
   // Always keep the local array updated for compatibility
   chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
   if (useService) {
-    chatHistorySvc.addAssistantMessage(assistantMessage.content || "", toolCalls);
+    // Important: pass ChatCompletion-style toolCalls, not internal ToolCall[]
+    chatHistorySvc.addAssistantMessage(
+      assistantMessage.content || "",
+      assistantMessage.toolCalls,
+    );
   }
 
   // First preprocess the tool calls
