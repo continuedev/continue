@@ -51,7 +51,7 @@ export class OpenAIApi implements BaseLlmApi {
           return message;
         });
       }
-      if (body.tools?.length && !body.model.startsWith("o3")) {
+      if (body.tools?.length && !(body.model.startsWith("o3") || body.model.startsWith("gpt-5"))) {
         body.parallel_tool_calls = false;
       }
     }
