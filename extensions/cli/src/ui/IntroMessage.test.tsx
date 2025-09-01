@@ -1,7 +1,7 @@
+import { Text } from "ink";
 import { render } from "ink-testing-library";
 import React from "react";
-import { Text } from "ink";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IntroMessage } from "./IntroMessage.js";
 
