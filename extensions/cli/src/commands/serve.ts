@@ -14,7 +14,7 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import { createSession, updateSessionHistory } from "../session.js";
+import { createSession } from "../session.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { formatError } from "../util/formatError.js";
@@ -372,14 +372,27 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         if (e.name === "AbortError") {
           logger.debug("Response interrupted");
           // Remove the partial assistant message if it exists
-          const lastMessage =
-            state.session.history[state.session.history.length - 1];
-          if (
-            lastMessage &&
-            lastMessage.message.role === "assistant" &&
-            !lastMessage.message.content
-          ) {
-            state.session.history.pop();
+          try {
+            const svcHistory = services.chatHistory.getHistory();
+            const last = svcHistory[svcHistory.length - 1];
+            if (
+              last &&
+              last.message.role === "assistant" &&
+              !last.message.content
+            ) {
+              const trimmed = svcHistory.slice(0, -1);
+              services.chatHistory.setHistory(trimmed);
+            }
+          } catch {
+            const lastMessage =
+              state.session.history[state.session.history.length - 1];
+            if (
+              lastMessage &&
+              lastMessage.message.role === "assistant" &&
+              !lastMessage.message.content
+            ) {
+              state.session.history.pop();
+            }
           }
         } else {
           logger.error(`Error: ${formatError(e)}`);
