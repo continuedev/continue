@@ -28,6 +28,12 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   // Simple undo/redo stacks for history snapshots
   private past: ChatHistoryItem[][] = [];
   private future: ChatHistoryItem[][] = [];
+  // Memoized snapshot for referential stability in getState()
+  private _memoSnapshot: {
+    stateRef: ChatHistoryState | null;
+    historyRef: ChatHistoryItem[] | null;
+    snapshot: ChatHistoryState | null;
+  } = { stateRef: null, historyRef: null, snapshot: null };
 
   constructor() {
     super("ChatHistoryService", {
@@ -41,9 +47,13 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 
   private setHistoryInternal(
     history: ChatHistoryItem[],
-    options: { recordUndo?: boolean } = {},
+    options: {
+      recordUndo?: boolean;
+      compactionIndex?: number | null;
+      persist?: boolean; // set to false to skip persistence (rare)
+    } = {},
   ): void {
-    const { recordUndo = true } = options;
+    const { recordUndo = true, compactionIndex, persist } = options;
     const prev = this.currentState.history;
     if (recordUndo) {
       this.past.push([...prev]);
@@ -51,12 +61,15 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     }
     this.setState({
       history: [...history],
-      compactionIndex: this.findCompactionIndex(history),
+      compactionIndex:
+        compactionIndex === undefined
+          ? this.findCompactionIndex(history)
+          : compactionIndex,
     });
 
     if (this.currentState.isRemoteMode) {
       // Skip persistence in remote mode
-    } else {
+    } else if (persist !== false) {
       updateSessionHistory(history);
     }
   }
@@ -189,15 +202,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
     });
 
     const newHistory = [...this.currentState.history, newMessage];
-    this.setState({
-      history: newHistory,
-    });
-
-    if (this.currentState.isRemoteMode) {
-      // Skip persistence in remote mode
-    } else {
-      updateSessionHistory(newHistory);
-    }
+    this.setHistoryInternal(newHistory);
 
     logger.debug("Added system message", {
       contentLength: content.length,
@@ -346,14 +351,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Perform compaction on the history
    */
   compact(newHistory: ChatHistoryItem[], compactionIndex: number): void {
-    this.past.push([...this.currentState.history]);
-    this.future = [];
-    this.setState({ history: newHistory, compactionIndex });
-    if (this.currentState.isRemoteMode) {
-      // Skip persistence in remote mode
-    } else {
-      updateSessionHistory(newHistory);
-    }
+    this.setHistoryInternal(newHistory, { compactionIndex });
 
     logger.debug("Compacted history", {
       oldLength: this.currentState.history.length,
@@ -366,14 +364,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Clear the chat history
    */
   clear(): void {
-    this.past.push([...this.currentState.history]);
-    this.future = [];
-    this.setState({ history: [], compactionIndex: null });
-    if (this.currentState.isRemoteMode) {
-      // Skip persistence in remote mode
-    } else {
-      updateSessionHistory([]);
-    }
+    this.setHistoryInternal([], { compactionIndex: null });
 
     logger.debug("Cleared chat history");
   }
@@ -384,11 +375,9 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   async loadSession(sessionId: string): Promise<void> {
     const session = loadSessionById(sessionId);
     if (session) {
-      this.setState({
-        history: session.history,
-        sessionId: session.sessionId,
-        compactionIndex: this.findCompactionIndex(session.history),
-      });
+      // Load new history without recording undo; set sessionId separately
+      this.setHistoryInternal(session.history, { recordUndo: false });
+      this.setState({ sessionId: session.sessionId });
 
       logger.debug("Loaded session", {
         sessionId,
@@ -503,9 +492,43 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
    * Override getState to ensure deep immutability for history array
    */
   getState(): ChatHistoryState {
-    return {
-      ...this.currentState,
-      history: [...this.currentState.history],
-    };
+    const stateRef = this.currentState;
+    const historyRef = stateRef.history;
+
+    // If neither the state object nor the history reference changed,
+    // return the same memoized snapshot to preserve referential stability
+    if (
+      this._memoSnapshot.snapshot &&
+      this._memoSnapshot.stateRef === stateRef &&
+      this._memoSnapshot.historyRef === historyRef
+    ) {
+      return this._memoSnapshot.snapshot;
+    }
+
+    // Build a memoized snapshot object with getters to:
+    // - keep the outer object reference stable when unchanged
+    // - return a fresh copy of history on each access to prevent external mutation
+    const snapshot = {} as ChatHistoryState;
+    Object.defineProperties(snapshot, {
+      history: {
+        enumerable: true,
+        get: () => [...stateRef.history],
+      },
+      compactionIndex: {
+        enumerable: true,
+        get: () => stateRef.compactionIndex,
+      },
+      sessionId: {
+        enumerable: true,
+        get: () => stateRef.sessionId,
+      },
+      isRemoteMode: {
+        enumerable: true,
+        get: () => stateRef.isRemoteMode,
+      },
+    });
+
+    this._memoSnapshot = { stateRef, historyRef, snapshot };
+    return snapshot;
   }
 }

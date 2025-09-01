@@ -97,8 +97,29 @@ function updateStateFromRemote({
   if (state.session && state.session.history) {
     const newHistory = state.session.history as ChatHistoryItem[];
     // Let ChatHistoryService own the history and emit updates to UI
-    services.chatHistory.setRemoteMode(true);
-    services.chatHistory.setHistory(newHistory);
+    if (!services.chatHistory.isRemoteMode()) {
+      services.chatHistory.setRemoteMode(true);
+    }
+    // Avoid redundant updates: only set when history actually changed
+    try {
+      const current = services.chatHistory.getHistory();
+      let changed = current.length !== newHistory.length;
+      if (!changed) {
+        for (let i = 0; i < current.length; i++) {
+          // Deep compare items; break on first difference
+          if (JSON.stringify(current[i]) !== JSON.stringify(newHistory[i])) {
+            changed = true;
+            break;
+          }
+        }
+      }
+      if (changed) {
+        services.chatHistory.setHistory(newHistory);
+      }
+    } catch {
+      // As a fallback, attempt to set history (service may handle no-op)
+      services.chatHistory.setHistory(newHistory);
+    }
   }
 
   // Update processing state

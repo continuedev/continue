@@ -1,5 +1,7 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
+import { logger } from "src/util/logger.js";
+
 import { services } from "../../services/index.js";
 import { getCurrentSession, updateSessionTitle } from "../../session.js";
 
@@ -42,7 +44,9 @@ export function createStreamCallbacks(
             },
           ]);
         }
-      } catch {}
+      } catch (error) {
+        logger.error("Failed to update chat history", { error });
+      }
       // Generate session title after first assistant response
       if (content && llmApi && model) {
         const currentSession = getCurrentSession();

@@ -3,6 +3,7 @@ import type { Session, ToolStatus } from "core/index.js";
 import { services } from "../services/index.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
+import { logger } from "../util/logger.js";
 
 // Modified version of streamChatResponse that supports interruption
 export async function streamChatResponseWithInterruption(
@@ -65,14 +66,13 @@ export async function streamChatResponseWithInterruption(
         services.chatHistory.addSystemMessage(
           `WARNING: Tool ${toolName} requires permission`,
         );
-      } catch {
-        state.session.history.push({
-          message: {
-            role: "system",
-            content: `WARNING: Tool ${toolName} requires permission`,
-          },
-          contextItems: [],
-        });
+      } catch (err) {
+        // Do not mutate session history; ChatHistoryService is the source of truth
+        logger.error(
+          "Failed to add system message via ChatHistoryService",
+          err,
+          { context: "onToolPermissionRequest", toolName, requestId },
+        );
       }
 
       // Don't wait here - the streamChatResponse will handle waiting
@@ -80,14 +80,13 @@ export async function streamChatResponseWithInterruption(
     onSystemMessage: (message: string) => {
       try {
         services.chatHistory.addSystemMessage(message);
-      } catch {
-        state.session.history.push({
-          message: {
-            role: "system",
-            content: message,
-          },
-          contextItems: [],
-        });
+      } catch (err) {
+        // Do not mutate session history; ChatHistoryService is the source of truth
+        logger.error(
+          "Failed to add system message via ChatHistoryService",
+          err,
+          { context: "onSystemMessage" },
+        );
       }
     },
   };

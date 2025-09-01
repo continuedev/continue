@@ -129,19 +129,18 @@ async function handleManualCompaction(
     const current = services.chatHistory.getHistory();
     const result = await compactChatHistory(current, model, llmApi);
 
-    // Update service-driven history and persist session
+    // Update service-driven history (persistence handled by service)
     services.chatHistory.compact(
       result.compactedHistory,
       result.compactionIndex,
     );
-    updateSessionHistory(result.compactedHistory);
 
     if (isHeadless) {
       safeStdout(
         JSON.stringify({
           status: "success",
           message: "Chat history compacted",
-          historyLength: chatHistory.length,
+          historyLength: services.chatHistory.getHistory().length,
         }) + "\n",
       );
     } else {
@@ -188,7 +187,7 @@ async function handleAutoCompaction(
               message: "Auto-compacting triggered",
               contextUsage:
                 calculateContextUsagePercentage(
-                  countChatHistoryTokens(chatHistory),
+                  countChatHistoryTokens(services.chatHistory.getHistory()),
                   model,
                 ) + "%",
             }) + "\n",
@@ -198,11 +197,11 @@ async function handleAutoCompaction(
         if (!isHeadless) {
           console.info(chalk.green(message));
         } else if (format === "json") {
+          // Omit history length here; service updates occur after compaction completes
           safeStdout(
             JSON.stringify({
               status: "success",
               message: "Auto-compacted successfully",
-              historyLength: chatHistory.length,
             }) + "\n",
           );
         }

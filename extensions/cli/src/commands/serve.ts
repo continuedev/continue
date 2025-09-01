@@ -158,7 +158,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     // Ensure session history reflects ChatHistoryService state
     try {
       state.session.history = services.chatHistory.getHistory();
-    } catch {}
+    } catch (e) {
+      logger.debug(
+        `Failed to sync session history from ChatHistoryService: ${formatError(e)}`,
+      );
+    }
     res.json({
       session: state.session, // Return session directly instead of converting
       isProcessing: state.isProcessing,
