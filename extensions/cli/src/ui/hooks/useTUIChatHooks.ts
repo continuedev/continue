@@ -99,6 +99,7 @@ export function useSelectors(
   configPath: string | undefined,
   setChatHistory: React.Dispatch<React.SetStateAction<any[]>>,
   handleClear: () => void,
+  onModelSwitch?: () => void,
 ): {
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
@@ -129,6 +130,7 @@ export function useSelectors(
         },
       ]);
     },
+    onModelSwitch,
   });
 
   return {

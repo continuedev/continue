@@ -236,6 +236,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
     configPath,
     setChatHistory,
     handleClear,
+    () => {
+      // When model changes, force StaticChatContent to remount so IntroMessage updates Model header
+      setStaticRefreshTrigger((prev) => prev + 1);
+    },
   );
 
   // Session selection handler
