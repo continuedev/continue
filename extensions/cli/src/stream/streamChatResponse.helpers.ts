@@ -5,6 +5,7 @@ import { ChatCompletionToolMessageParam } from "openai/resources/chat/completion
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCallRequest } from "../permissions/types.js";
+import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { calculateTokenCost } from "../telemetry/utils.js";
 import {
@@ -383,24 +384,13 @@ export async function executeStreamedToolCalls(
   }));
 
   const entriesByIndex = new Map<number, ChatCompletionToolMessageParam>();
-  const approvedCalls: IndexedCall[] = [];
+  const execPromises: Promise<void>[] = [];
 
   let hasRejection = false;
-  let rejectionIndex: number | null = null;
 
   // Permission phase (sequential)
   for (const { index, call } of indexedCalls) {
-    if (hasRejection) {
-      // Anything after a rejection is cancelled
-      const cancelledMessage = `Cancelled due to previous tool rejection`;
-      entriesByIndex.set(index, {
-        role: "tool",
-        tool_call_id: call.id,
-        content: cancelledMessage,
-      });
-      callbacks?.onToolResult?.(cancelledMessage, call.name, "canceled");
-      continue;
-    }
+    // Do not cancel subsequent tools after a rejection; handle each independently
 
     try {
       logger.debug("Checking tool permissions", {
@@ -426,13 +416,61 @@ export async function executeStreamedToolCalls(
         };
         entriesByIndex.set(index, deniedEntry);
         callbacks?.onToolResult?.(String(deniedEntry.content), call.name, "canceled");
+        // Immediate service update for UI feedback
+        try {
+          services.chatHistory.addToolResult(call.id, String(deniedEntry.content), "canceled");
+        } catch {}
         hasRejection = true;
-        rejectionIndex = index;
         // Remaining items will be auto-cancelled in subsequent iterations
         continue;
       }
 
-      approvedCalls.push({ index, call });
+      // Immediately mark as calling for instant UI feedback
+      try {
+        services.chatHistory.updateToolStatus(call.id, "calling");
+      } catch {}
+
+      // Start execution immediately for approved calls
+      execPromises.push(
+        (async () => {
+          try {
+            logger.debug("Executing tool", {
+              name: call.name,
+              arguments: call.arguments,
+            });
+            const toolResult = await executeToolCall(call);
+            const entry: ChatCompletionToolMessageParam = {
+              role: "tool",
+              tool_call_id: call.id,
+              content: toolResult,
+            };
+            entriesByIndex.set(index, entry);
+            callbacks?.onToolResult?.(toolResult, call.name, "done");
+            // Immediate service update for UI feedback
+            try {
+              services.chatHistory.addToolResult(call.id, String(toolResult), "done");
+            } catch {}
+          } catch (error) {
+            const errorMessage = `Error executing tool ${call.name}: ${
+              error instanceof Error ? error.message : String(error)
+            }`;
+            logger.error("Tool execution failed", {
+              name: call.name,
+              error: errorMessage,
+            });
+            entriesByIndex.set(index, {
+              role: "tool",
+              tool_call_id: call.id,
+              content: errorMessage,
+            });
+            callbacks?.onToolError?.(errorMessage, call.name);
+            // Immediate service update for UI feedback
+            try {
+              services.chatHistory.addToolResult(call.id, errorMessage as string, "errored");
+            } catch {}
+          }
+        })(),
+      );
     } catch (error) {
       const errorMessage = `Error checking permissions for ${call.name}: ${
         error instanceof Error ? error.message : String(error)
@@ -448,45 +486,11 @@ export async function executeStreamedToolCalls(
       });
       callbacks?.onToolError?.(errorMessage, call.name);
       // Treat permission errors like execution errors but do not stop the batch
+      try {
+        services.chatHistory.addToolResult(call.id, errorMessage as string, "errored");
+      } catch {}
     }
   }
-
-  // Execution phase (parallel) for approved calls prior to any rejection
-  const toExecute =
-    rejectionIndex === null
-      ? approvedCalls
-      : approvedCalls.filter((c) => c.index < (rejectionIndex as number));
-
-  const execPromises = toExecute.map(async ({ index, call }) => {
-    try {
-      logger.debug("Executing tool", {
-        name: call.name,
-        arguments: call.arguments,
-      });
-      const toolResult = await executeToolCall(call);
-      const entry: ChatCompletionToolMessageParam = {
-        role: "tool",
-        tool_call_id: call.id,
-        content: toolResult,
-      };
-      entriesByIndex.set(index, entry);
-      callbacks?.onToolResult?.(toolResult, call.name, "done");
-    } catch (error) {
-      const errorMessage = `Error executing tool ${call.name}: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      logger.error("Tool execution failed", {
-        name: call.name,
-        error: errorMessage,
-      });
-      entriesByIndex.set(index, {
-        role: "tool",
-        tool_call_id: call.id,
-        content: errorMessage,
-      });
-      callbacks?.onToolError?.(errorMessage, call.name);
-    }
-  });
 
   await Promise.all(execPromises);
 

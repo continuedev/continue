@@ -314,6 +314,35 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   }
 
   /**
+   * Update a tool's status (e.g., set to "calling" immediately on approval)
+   */
+  updateToolStatus(toolCallId: string, status: ToolStatus): void {
+    // Find the last assistant message with this tool call
+    let targetIndex = -1;
+    for (let i = this.currentState.history.length - 1; i >= 0; i--) {
+      const item = this.currentState.history[i];
+      if (item.message.role === "assistant" && item.toolCallStates) {
+        const hasToolCall = item.toolCallStates.some(
+          (ts) => ts.toolCallId === toolCallId,
+        );
+        if (hasToolCall) {
+          targetIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (targetIndex >= 0) {
+      this.updateToolCallState(targetIndex, toolCallId, { status });
+    } else {
+      logger.warn("Could not find message for tool status update", {
+        toolCallId,
+        status,
+      });
+    }
+  }
+
+  /**
    * Perform compaction on the history
    */
   compact(newHistory: ChatHistoryItem[], compactionIndex: number): void {
