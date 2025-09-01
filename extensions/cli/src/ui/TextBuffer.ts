@@ -2,6 +2,9 @@ import { Key } from "ink";
 
 export const COLLAPSE_SIZE = 800; // Characters threshold for collapsing pasted content
 export const RAPID_INPUT_THRESHOLD = 200; // Minimum characters to trigger rapid input detection
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB per image
+export const MAX_IMAGE_COUNT = 20; // Maximum number of images
+export const MAX_TOTAL_IMAGE_MEMORY = 50 * 1024 * 1024; // 50MB total image memory
 
 export class TextBuffer {
   private _text: string = "";
@@ -15,6 +18,8 @@ export class TextBuffer {
   private _onStateChange?: () => void;
   private _pasteMap = new Map<string, string>(); // placeholder -> original content
   private _pasteCounter: number = 0;
+  private _imageMap = new Map<string, Buffer>(); // placeholder -> image buffer
+  private _imageCounter: number = 0;
 
   constructor(initialText: string = "") {
     this._text = initialText;
@@ -153,6 +158,8 @@ export class TextBuffer {
     this._cursor = 0;
     this._pasteMap.clear();
     this._pasteCounter = 0;
+    this._imageMap.clear();
+    this._imageCounter = 0;
     this._pasteBuffer = "";
     this._inPasteMode = false;
     this._rapidInputBuffer = "";
@@ -187,6 +194,52 @@ export class TextBuffer {
       this._text = this._text.replace(regex, normalizedContent);
     }
     this._pasteMap.clear();
+  }
+
+  // Add image to buffer and return placeholder
+  addImage(imageBuffer: Buffer): string {
+    // Validate image size
+    if (imageBuffer.length > MAX_IMAGE_SIZE) {
+      throw new Error(
+        `Image size ${(imageBuffer.length / 1024 / 1024).toFixed(1)}MB exceeds maximum allowed size of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+      );
+    }
+
+    // Check image count limit
+    if (this._imageMap.size >= MAX_IMAGE_COUNT) {
+      throw new Error(`Cannot add more than ${MAX_IMAGE_COUNT} images`);
+    }
+
+    // Check total memory usage
+    const currentMemoryUsage = Array.from(this._imageMap.values()).reduce(
+      (total, buffer) => total + buffer.length,
+      0,
+    );
+
+    if (currentMemoryUsage + imageBuffer.length > MAX_TOTAL_IMAGE_MEMORY) {
+      const currentUsageMB = (currentMemoryUsage / 1024 / 1024).toFixed(1);
+      const maxUsageMB = MAX_TOTAL_IMAGE_MEMORY / 1024 / 1024;
+      throw new Error(
+        `Adding image would exceed total memory limit. Current usage: ${currentUsageMB}MB, Maximum: ${maxUsageMB}MB`,
+      );
+    }
+
+    this._imageCounter++;
+    const placeholder = `[Image #${this._imageCounter}]`;
+    this._imageMap.set(placeholder, imageBuffer);
+    this.insertText(placeholder);
+    return placeholder;
+  }
+
+  // Get all images for message formatting
+  getAllImages(): Map<string, Buffer> {
+    return new Map(this._imageMap);
+  }
+
+  // Clear images after message submission
+  clearImages(): void {
+    this._imageMap.clear();
+    this._imageCounter = 0;
   }
 
   // Test helper: forces immediate finalization without waiting for timers
