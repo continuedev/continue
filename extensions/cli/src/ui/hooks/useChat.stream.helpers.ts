@@ -1,6 +1,7 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
 import { getCurrentSession, updateSessionTitle } from "../../session.js";
+import { services } from "../../services/index.js";
 
 import { generateSessionTitle } from "./useChat.helpers.js";
 
@@ -23,6 +24,7 @@ export function createStreamCallbacks(
     onContent: (_: string) => {},
 
     onContentComplete: async (content: string) => {
+      // Update local React state for UI
       setChatHistory((prev) => [
         ...prev,
         {
@@ -34,6 +36,14 @@ export function createStreamCallbacks(
           },
         },
       ]);
+
+      // Also update service; handleToolCalls will de-dup when no tools
+      try {
+        const svc = services.chatHistory;
+        if (typeof svc?.isReady === "function" && svc.isReady()) {
+          svc.addAssistantMessage(content);
+        }
+      } catch {}
 
       // Generate session title after first assistant response
       if (content && llmApi && model) {
@@ -52,10 +62,10 @@ export function createStreamCallbacks(
     },
 
     onToolStart: (toolName: string, toolArgs?: any) => {
+      // Preserve local UI behavior: create a new assistant message representing the tool call
       setChatHistory((prev) => {
         const newHistory = [...prev];
 
-        // Always create a new assistant message for each tool call
         const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
         const toolCallState: ToolCallState = {
           toolCallId: toolCallId,
@@ -92,20 +102,21 @@ export function createStreamCallbacks(
 
         return newHistory;
       });
+      // Do not update service here; handleToolCalls will add tool call message
     },
 
     onToolResult: (result: string, toolName: string, status: ToolStatus) => {
+      // Update local UI-only state; service is updated through handleToolCalls
       setChatHistory((prev) => {
         const newHistory = [...prev];
 
-        // Find the tool call state and update it
         for (let i = newHistory.length - 1; i >= 0; i--) {
           const item = newHistory[i];
           if (item.toolCallStates) {
             const toolState = item.toolCallStates.find(
               (ts) =>
                 ts.toolCall.function.name === toolName &&
-                ts.status === "calling",
+                (ts.status === "calling" || ts.status === "generated"),
             );
 
             if (toolState) {
@@ -130,7 +141,6 @@ export function createStreamCallbacks(
       setChatHistory((prev) => {
         const newHistory = [...prev];
 
-        // Find the tool call state and mark it as errored
         if (toolName) {
           for (let i = newHistory.length - 1; i >= 0; i--) {
             const item = newHistory[i];
@@ -138,7 +148,7 @@ export function createStreamCallbacks(
               const toolState = item.toolCallStates.find(
                 (ts) =>
                   ts.toolCall.function.name === toolName &&
-                  ts.status === "calling",
+                  (ts.status === "calling" || ts.status === "generated"),
               );
 
               if (toolState) {
@@ -184,6 +194,14 @@ export function createStreamCallbacks(
     },
 
     onSystemMessage: (message: string) => {
+      try {
+        const svc = services.chatHistory;
+        if (typeof svc?.isReady === "function" && svc.isReady()) {
+          svc.addSystemMessage(message);
+          return;
+        }
+      } catch {}
+      // Fallback to local state if service unavailable
       setChatHistory((prev) => [
         ...prev,
         {

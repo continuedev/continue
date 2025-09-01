@@ -83,10 +83,13 @@ export function useChat({
   const [chatHistory, setChatHistoryOriginal] = useState<ChatHistoryItem[]>(
     () => currentSession.history,
   );
-
-  // Create wrapped setChatHistory that syncs with service
-  // Use a regular variable instead of ref to avoid type issues
-  let setChatHistory = setChatHistoryOriginal;
+  // Wrapped setter ref for Phase 2 wrapper
+  const setChatHistoryRef = useRef<typeof setChatHistoryOriginal>(
+    setChatHistoryOriginal,
+  );
+  // Proxy setter that always calls the latest wrapped function
+  const setChatHistory: typeof setChatHistoryOriginal = (value) =>
+    setChatHistoryRef.current(value);
   
   // Initialize wrapper on first render
   useEffect(() => {
@@ -100,7 +103,8 @@ export function useChat({
       });
       
       // Create wrapped setState and setup sync
-      setChatHistory = wrapperRef.current.createWrappedSetState(setChatHistoryOriginal);
+      setChatHistoryRef.current =
+        wrapperRef.current.createWrappedSetState(setChatHistoryOriginal);
       wrapperRef.current.setupSync(setChatHistoryOriginal);
       
       // Initialize service with existing state if any

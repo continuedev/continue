@@ -8,7 +8,7 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
 import { systemMessageService } from "../services/SystemMessageService.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -320,6 +320,13 @@ export async function streamChatResponse(
   let finalResponse = "";
 
   while (true) {
+    // If ChatHistoryService is available, refresh local chatHistory view
+    const chatHistorySvc = services.chatHistory;
+    if (typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady()) {
+      try {
+        chatHistory = chatHistorySvc.getHistory();
+      } catch {}
+    }
     logger.debug("Starting conversation iteration");
 
     // Recompute tools on each iteration to handle mode changes during streaming
@@ -385,7 +392,17 @@ export async function streamChatResponse(
 
       // Only update chat history if compaction actually occurred
       if (wasCompacted) {
-        chatHistory = [...updatedChatHistory];
+        // If service is available, set history there; otherwise update local copy
+        const chatHistorySvc2 = services.chatHistory;
+        if (
+          typeof chatHistorySvc2?.isReady === "function" &&
+          chatHistorySvc2.isReady()
+        ) {
+          chatHistorySvc2.setHistory(updatedChatHistory);
+          chatHistory = chatHistorySvc2.getHistory();
+        } else {
+          chatHistory = [...updatedChatHistory];
+        }
       }
     }
 

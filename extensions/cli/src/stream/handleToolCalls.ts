@@ -9,6 +9,7 @@ import {
   MCPServiceState,
   MCPTool,
   SERVICE_NAMES,
+  services,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { getAllBuiltinTools, ToolCall } from "../tools/index.js";
@@ -27,14 +28,46 @@ export async function handleToolCalls(
   callbacks: StreamCallbacks | undefined,
   isHeadless: boolean,
 ): Promise<boolean> {
+  const chatHistorySvc = services.chatHistory;
+  const useService = typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
   if (toolCalls.length === 0) {
     if (content) {
-      chatHistory.push(
-        createHistoryItem({
-          role: "assistant",
-          content,
-        }),
-      );
+      // De-duplication: if the last message already matches, skip adding
+      const last = chatHistory[chatHistory.length - 1];
+      const isDuplicateLocal =
+        !!last &&
+        last.message.role === "assistant" &&
+        typeof last.message.content === "string" &&
+        last.message.content === content &&
+        !(last as any).toolCallStates?.length;
+
+      if (!isDuplicateLocal) {
+        // Keep the local array updated for compatibility
+        chatHistory.push(
+          createHistoryItem({
+            role: "assistant",
+            content,
+          }),
+        );
+      }
+
+      if (useService) {
+        try {
+          const svcHistory = chatHistorySvc.getHistory();
+          const svcLast = svcHistory[svcHistory.length - 1];
+          const isDuplicateSvc =
+            !!svcLast &&
+            svcLast.message.role === "assistant" &&
+            typeof svcLast.message.content === "string" &&
+            svcLast.message.content === content &&
+            !(svcLast as any).toolCallStates?.length;
+          if (!isDuplicateSvc) {
+            chatHistorySvc.addAssistantMessage(content);
+          }
+        } catch {
+          chatHistorySvc.addAssistantMessage(content);
+        }
+      }
     }
     return false;
   }
@@ -68,7 +101,11 @@ export async function handleToolCalls(
     })),
   };
 
+  // Always keep the local array updated for compatibility
   chatHistory.push(createHistoryItem(assistantMessage, [], toolCallStates));
+  if (useService) {
+    chatHistorySvc.addAssistantMessage(assistantMessage.content || "", toolCalls);
+  }
 
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
@@ -77,13 +114,16 @@ export async function handleToolCalls(
   // Add any preprocessing errors to chat history
   // Convert error entries from OpenAI format to ChatHistoryItem format
   errorChatEntries.forEach((errorEntry) => {
-    chatHistory.push(
-      createHistoryItem({
-        role: "tool",
-        content: stripImages(errorEntry.content) || "",
-        toolCallId: errorEntry.tool_call_id,
-      }),
-    );
+    const item = createHistoryItem({
+      role: "tool",
+      content: stripImages(errorEntry.content) || "",
+      toolCallId: errorEntry.tool_call_id,
+    });
+    // Keep local array updated
+    chatHistory.push(item);
+    if (useService) {
+      chatHistorySvc.addHistoryItem(item);
+    }
   });
 
   // Execute the valid preprocessed tool calls
@@ -100,7 +140,9 @@ export async function handleToolCalls(
   // Convert tool results from OpenAI format to ChatHistoryItem format
   // and add them to the chat history
   toolResults.forEach((toolResult) => {
-    // Find the corresponding tool call state to update
+    const resultContent =
+      typeof toolResult.content === "string" ? toolResult.content : "";
+    // Update local array state
     const lastAssistantIndex = chatHistory.findLastIndex(
       (item) => item.message.role === "assistant" && item.toolCallStates,
     );
@@ -117,13 +159,20 @@ export async function handleToolCalls(
         toolState.status = hasRejection ? "canceled" : "done";
         toolState.output = [
           {
-            content:
-              typeof toolResult.content === "string" ? toolResult.content : "",
+            content: resultContent,
             name: `Tool Result`,
             description: "Tool execution result",
           },
         ];
       }
+    }
+
+    if (useService) {
+      chatHistorySvc.addToolResult(
+        toolResult.tool_call_id,
+        resultContent,
+        hasRejection ? ("canceled" as ToolStatus) : ("done" as ToolStatus),
+      );
     }
   });
   return false;
