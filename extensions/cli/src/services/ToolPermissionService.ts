@@ -9,6 +9,14 @@ import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
 
+// Shared constant: tools that must be excluded in plan mode (write-like operations)
+export const PLAN_MODE_WRITE_EXCLUDED_TOOLS = [
+  "Write",
+  "Edit",
+  "MultiEdit",
+  "NotebookEdit",
+] as const;
+
 export interface ToolPermissionServiceState {
   permissions: ToolPermissions;
   currentMode: PermissionMode;
@@ -39,10 +47,10 @@ export class ToolPermissionService extends BaseService<ToolPermissionServiceStat
         // Plan mode: Complete override - exclude all write operations, allow only reads and bash
         return [
           // Exclude all write tools with absolute priority
-          { tool: "Write", permission: "exclude" },
-          { tool: "Edit", permission: "exclude" },
-          { tool: "MultiEdit", permission: "exclude" },
-          { tool: "NotebookEdit", permission: "exclude" },
+          ...PLAN_MODE_WRITE_EXCLUDED_TOOLS.map<ToolPermissionPolicy>((tool) => ({
+            tool,
+            permission: "exclude",
+          })),
           // Allow all read tools and bash
           { tool: "Bash", permission: "allow" },
           { tool: "Read", permission: "allow" },

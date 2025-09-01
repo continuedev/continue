@@ -208,6 +208,16 @@ export async function getAllTools() {
       allToolNames,
       permissionsServiceResult.value.permissions,
     );
+
+    // Extra safety: in plan mode, ensure write/edit tools are never sent
+    if (permissionsServiceResult.value.currentMode === "plan") {
+      // Import shared constant to avoid duplication with ToolPermissionService
+      const { PLAN_MODE_WRITE_EXCLUDED_TOOLS } = await import(
+        "../services/ToolPermissionService.js"
+      );
+      const denyInPlan = new Set<string>(PLAN_MODE_WRITE_EXCLUDED_TOOLS as readonly string[]);
+      allowedToolNames = allowedToolNames.filter((name) => !denyInPlan.has(name));
+    }
   } else {
     // Service not ready - this is a critical error since tools should only be
     // requested after services are properly initialized
