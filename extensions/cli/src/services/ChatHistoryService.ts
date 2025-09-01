@@ -1,0 +1,429 @@
+import type { ChatHistoryItem, ToolStatus } from "core/index.js";
+import { createHistoryItem } from "core/util/messageConversion.js";
+
+import { updateSessionHistory, loadSessionById, createSession } from "../session.js";
+import { logger } from "../util/logger.js";
+
+import { BaseService } from "./BaseService.js";
+
+/**
+ * State managed by the ChatHistoryService
+ */
+export interface ChatHistoryState {
+  history: ChatHistoryItem[];
+  compactionIndex: number | null;
+  sessionId: string;
+  isRemoteMode: boolean;
+}
+
+/**
+ * Service for managing chat history as the single source of truth
+ * Provides immutable updates and automatic React integration via events
+ */
+export class ChatHistoryService extends BaseService<ChatHistoryState> {
+  constructor() {
+    super("ChatHistoryService", {
+      history: [],
+      compactionIndex: null,
+      sessionId: "",
+      isRemoteMode: false,
+    });
+  }
+
+  /**
+   * Initialize the service with optional session
+   */
+  async doInitialize(session?: any, isRemoteMode = false): Promise<ChatHistoryState> {
+    const activeSession = session || createSession([]);
+    
+    logger.debug("Initializing ChatHistoryService", {
+      sessionId: activeSession.sessionId,
+      historyLength: activeSession.history.length,
+      isRemoteMode,
+    });
+
+    return {
+      history: activeSession.history || [],
+      compactionIndex: this.findCompactionIndex(activeSession.history || []),
+      sessionId: activeSession.sessionId,
+      isRemoteMode,
+    };
+  }
+
+  /**
+   * Add a user message to the history
+   */
+  addUserMessage(content: string, contextItems: any[] = []): ChatHistoryItem {
+    const newMessage = createHistoryItem({
+      role: "user",
+      content,
+    }, contextItems);
+
+    const newHistory = [...this.currentState.history, newMessage];
+    this.setState({
+      history: newHistory,
+    });
+
+    // Auto-save to session if not in remote mode
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(newHistory);
+    }
+
+    logger.debug("Added user message", {
+      contentLength: content.length,
+      contextItemCount: contextItems.length,
+      newHistoryLength: newHistory.length,
+    });
+
+    return newMessage;
+  }
+
+  /**
+   * Add an assistant message to the history
+   */
+  addAssistantMessage(content: string, toolCalls?: any[]): ChatHistoryItem {
+    const message: any = {
+      role: "assistant",
+      content,
+    };
+
+    if (toolCalls && toolCalls.length > 0) {
+      message.toolCalls = toolCalls;
+    }
+
+    const toolCallStates = toolCalls?.map((tc) => ({
+      toolCallId: tc.id,
+      toolCall: {
+        id: tc.id,
+        type: "function" as const,
+        function: {
+          name: tc.name || tc.function?.name,
+          arguments: typeof tc.arguments === "string" 
+            ? tc.arguments 
+            : JSON.stringify(tc.arguments || tc.function?.arguments || {}),
+        },
+      },
+      status: "generated" as ToolStatus,
+      parsedArgs: typeof tc.arguments === "object" ? tc.arguments : {},
+    }));
+
+    const newMessage = createHistoryItem(message, [], toolCallStates);
+    const newHistory = [...this.currentState.history, newMessage];
+    
+    this.setState({
+      history: newHistory,
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(newHistory);
+    }
+
+    logger.debug("Added assistant message", {
+      contentLength: content.length,
+      toolCallCount: toolCalls?.length || 0,
+      newHistoryLength: newHistory.length,
+    });
+
+    return newMessage;
+  }
+
+  /**
+   * Add a system message to the history
+   */
+  addSystemMessage(content: string): ChatHistoryItem {
+    const newMessage = createHistoryItem({
+      role: "system",
+      content,
+    });
+
+    const newHistory = [...this.currentState.history, newMessage];
+    this.setState({
+      history: newHistory,
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(newHistory);
+    }
+
+    logger.debug("Added system message", {
+      contentLength: content.length,
+      newHistoryLength: newHistory.length,
+    });
+
+    return newMessage;
+  }
+
+  /**
+   * Add a generic history item (for compatibility during migration)
+   */
+  addHistoryItem(item: ChatHistoryItem): ChatHistoryItem {
+    const newHistory = [...this.currentState.history, item];
+    this.setState({
+      history: newHistory,
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(newHistory);
+    }
+
+    logger.debug("Added history item", {
+      role: item.message.role,
+      newHistoryLength: newHistory.length,
+    });
+
+    return item;
+  }
+
+  /**
+   * Update a tool call state within a message
+   */
+  updateToolCallState(
+    messageIndex: number,
+    toolCallId: string,
+    updates: Partial<{
+      status: ToolStatus;
+      output: any[];
+    }>
+  ): void {
+    const newHistory = [...this.currentState.history];
+    const message = newHistory[messageIndex];
+
+    if (!message?.toolCallStates) {
+      logger.warn("No tool call states found at message index", {
+        messageIndex,
+        toolCallId,
+      });
+      return;
+    }
+
+    const toolState = message.toolCallStates.find(
+      (ts) => ts.toolCallId === toolCallId
+    );
+
+    if (!toolState) {
+      logger.warn("Tool call state not found", {
+        messageIndex,
+        toolCallId,
+        availableIds: message.toolCallStates.map((ts) => ts.toolCallId),
+      });
+      return;
+    }
+
+    // Create a new message with updated tool state (immutable)
+    newHistory[messageIndex] = {
+      ...message,
+      toolCallStates: message.toolCallStates.map((ts) =>
+        ts.toolCallId === toolCallId
+          ? { ...ts, ...updates }
+          : ts
+      ),
+    };
+
+    this.setState({
+      history: newHistory,
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(newHistory);
+    }
+
+    logger.debug("Updated tool call state", {
+      messageIndex,
+      toolCallId,
+      updates,
+    });
+  }
+
+  /**
+   * Add a tool result to the history
+   */
+  addToolResult(toolCallId: string, result: string, status: ToolStatus = "done"): void {
+    // Find the last assistant message with this tool call
+    let targetIndex = -1;
+    for (let i = this.currentState.history.length - 1; i >= 0; i--) {
+      const item = this.currentState.history[i];
+      if (item.message.role === "assistant" && item.toolCallStates) {
+        const hasToolCall = item.toolCallStates.some(
+          (ts) => ts.toolCallId === toolCallId
+        );
+        if (hasToolCall) {
+          targetIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (targetIndex >= 0) {
+      this.updateToolCallState(targetIndex, toolCallId, {
+        status,
+        output: [{
+          content: result,
+          name: "Tool Result",
+          description: "Tool execution result",
+        }],
+      });
+    } else {
+      logger.warn("Could not find message for tool result", { toolCallId });
+    }
+  }
+
+  /**
+   * Perform compaction on the history
+   */
+  compact(newHistory: ChatHistoryItem[], compactionIndex: number): void {
+    this.setState({
+      history: newHistory,
+      compactionIndex,
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(newHistory);
+    }
+
+    logger.debug("Compacted history", {
+      oldLength: this.currentState.history.length,
+      newLength: newHistory.length,
+      compactionIndex,
+    });
+  }
+
+  /**
+   * Clear the chat history
+   */
+  clear(): void {
+    this.setState({
+      history: [],
+      compactionIndex: null,
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory([]);
+    }
+
+    logger.debug("Cleared chat history");
+  }
+
+  /**
+   * Load a session into the service
+   */
+  async loadSession(sessionId: string): Promise<void> {
+    const session = loadSessionById(sessionId);
+    if (session) {
+      this.setState({
+        history: session.history,
+        sessionId: session.sessionId,
+        compactionIndex: this.findCompactionIndex(session.history),
+      });
+
+      logger.debug("Loaded session", {
+        sessionId,
+        historyLength: session.history.length,
+      });
+    } else {
+      logger.warn("Session not found", { sessionId });
+    }
+  }
+
+  /**
+   * Get an immutable copy of the current history
+   */
+  getHistory(): ChatHistoryItem[] {
+    return [...this.currentState.history];
+  }
+
+  /**
+   * Get history for LLM (considering compaction)
+   */
+  getHistoryForLLM(compactionIndex?: number | null): ChatHistoryItem[] {
+    const index = compactionIndex ?? this.currentState.compactionIndex;
+    
+    if (index !== null && index !== undefined && index < this.currentState.history.length) {
+      // Return only messages after compaction, plus the compacted summary
+      return this.currentState.history.slice(index);
+    }
+    
+    return this.getHistory();
+  }
+
+  /**
+   * Set the entire history (for remote mode or special cases)
+   */
+  setHistory(history: ChatHistoryItem[]): void {
+    this.setState({
+      history: [...history],
+      compactionIndex: this.findCompactionIndex(history),
+    });
+
+    if (!this.currentState.isRemoteMode) {
+      updateSessionHistory(history);
+    }
+
+    logger.debug("Set entire history", {
+      historyLength: history.length,
+    });
+  }
+
+  /**
+   * Update compaction index
+   */
+  setCompactionIndex(index: number | null): void {
+    this.setState({
+      compactionIndex: index,
+    });
+
+    logger.debug("Updated compaction index", { index });
+  }
+
+  /**
+   * Find compaction index in history
+   */
+  private findCompactionIndex(history: ChatHistoryItem[]): number | null {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const message = history[i].message;
+      if (message.role === "system") {
+        // Handle both string and MessagePart array content
+        const content = message.content;
+        if (typeof content === "string" && content.includes("[Compacted]")) {
+          return i;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get current session ID
+   */
+  getSessionId(): string {
+    return this.currentState.sessionId;
+  }
+
+  /**
+   * Check if in remote mode
+   */
+  isRemoteMode(): boolean {
+    return this.currentState.isRemoteMode;
+  }
+
+  /**
+   * Set remote mode
+   */
+  setRemoteMode(isRemote: boolean): void {
+    this.setState({
+      isRemoteMode: isRemote,
+    });
+  }
+
+  /**
+   * Override getState to ensure deep immutability for history array
+   */
+  getState(): ChatHistoryState {
+    return {
+      ...this.currentState,
+      history: [...this.currentState.history],
+    };
+  }
+}
+
+// Export singleton instance for migration compatibility
+export const chatHistoryService = new ChatHistoryService();
