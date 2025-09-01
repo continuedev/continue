@@ -80,6 +80,7 @@ function stripThinkTags(response: string): string {
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
+  fork?: string; // Fork from an existing session ID
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
 }
@@ -88,6 +89,20 @@ export async function initializeChatHistory(
   options: ChatOptions,
 ): Promise<ChatHistoryItem[]> {
   let session: Session | null = null;
+
+  // Fork from an existing session if --fork flag is used
+  if (options.fork) {
+    const { loadSessionById, startNewSession } = await import("../session.js");
+    const sessionToFork = loadSessionById(options.fork);
+    if (sessionToFork) {
+      logger.info(chalk.yellow("Forking from existing session..."));
+      const newSession = startNewSession(sessionToFork.history);
+      return newSession.history;
+    } else {
+      logger.error(chalk.red(`Session with ID "${options.fork}" not found.`));
+      process.exit(1);
+    }
+  }
 
   // Load previous session if --resume flag is used
   if (options.resume) {
@@ -419,7 +434,7 @@ async function runHeadlessMode(
   // Initialize service-driven history (resume if requested)
   const chatHistory = await initializeChatHistory(options);
   let compactionIndex: number | null = null;
-  if (options.resume) {
+  if (options.resume || options.fork) {
     services.chatHistory.setHistory(chatHistory);
     compactionIndex = findCompactionIndex(chatHistory);
   }
@@ -503,6 +518,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       const tuiOptions: any = {
         initialPrompt: prompt,
         resume: options.resume,
+        fork: options.fork,
         config: options.config,
         org: options.org,
         rule: options.rule,

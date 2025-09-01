@@ -44,6 +44,7 @@ export function useChat({
   llmApi,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
   onShowConfigSelector,
@@ -64,6 +65,17 @@ export function useChat({
   const [currentSession, setCurrentSession] = useState<Session>(() => {
     // In remote mode, start with empty session (will be populated by polling)
     if (isRemoteMode) {
+      return createSession([]);
+    }
+
+    // Fork from an existing session if fork flag is used
+    if (fork) {
+      const { loadSessionById, startNewSession } = require("../../session.js");
+      const sessionToFork = loadSessionById(fork);
+      if (sessionToFork) {
+        return startNewSession(sessionToFork.history);
+      }
+      // If session not found, create a new empty session
       return createSession([]);
     }
 
@@ -125,8 +137,9 @@ export function useChat({
     useState<AbortController | null>(null);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
+    // If we're forking and found a session to fork from, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && currentSession.history.length > 0),
+    isRemoteMode || (resume && currentSession.history.length > 0) || (fork && currentSession.history.length > 0),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
@@ -135,8 +148,8 @@ export function useChat({
   const [activePermissionRequest, setActivePermissionRequest] =
     useState<ActivePermissionRequest | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
-    // When resuming, check for compaction markers in the loaded history
-    if (resume && currentSession.history.length > 0) {
+    // When resuming or forking, check for compaction markers in the loaded history
+    if ((resume || fork) && currentSession.history.length > 0) {
       return findCompactionIndex(currentSession.history);
     }
     return null;

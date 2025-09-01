@@ -120,6 +120,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "execa": "^9.6.0",
+    "clipboardy": "^4.0.0",
     "happy-dom": "^18.0.1",
     "ink-testing-library": "^4.0.0",
     "jsdom": "^26.1.0",

@@ -43,6 +43,7 @@ interface TUIChatProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
 }
@@ -138,6 +139,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   configPath,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
 }) => {
@@ -200,6 +202,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     llmApi: services.model?.llmApi || undefined,
     initialPrompt,
     resume,
+    fork,
     additionalRules,
     additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
