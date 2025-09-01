@@ -221,7 +221,6 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
 }
 
 /**
@@ -233,7 +232,6 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
-  setChatHistory,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -246,7 +244,7 @@ export async function handleSpecialCommands({
   // Handle /exit command in remote mode
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
-    await handleRemoteExit(remoteUrl, setChatHistory, exit);
+    await handleRemoteExit(remoteUrl, exit);
     return true;
   }
 

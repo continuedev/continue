@@ -199,6 +199,34 @@ async function handleInfo() {
   };
 }
 
+async function handleFork() {
+  posthogService.capture("useSlashCommand", { name: "fork" });
+
+  try {
+    const currentSession = getCurrentSession();
+    const forkCommand = `cn --fork ${currentSession.sessionId}`;
+    // Try to copy to clipboard dynamically to avoid hard dependency in tests
+    try {
+      const clipboardy = await import("clipboardy");
+      await clipboardy.default.write(forkCommand);
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand} (copied to clipboard)`),
+      };
+    } catch {
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand}`),
+      };
+    }
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to create fork command: ${error.message}`),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -230,6 +258,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     posthogService.capture("useSlashCommand", { name: "resume" });
     return { openSessionSelector: true };
   },
+  fork: handleFork,
 };
 
 export async function handleSlashCommands(

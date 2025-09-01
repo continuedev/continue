@@ -1,7 +1,9 @@
-import type { Session, ToolCallState, ToolStatus } from "core/index.js";
+import type { Session, ToolStatus } from "core/index.js";
 
+import { services } from "../services/index.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
+import { logger } from "../util/logger.js";
 
 // Modified version of streamChatResponse that supports interruption
 export async function streamChatResponseWithInterruption(
@@ -38,47 +40,11 @@ export async function streamChatResponseWithInterruption(
       // This callback is just for notification/UI updates
       // The tool call state is already created and added by handleToolCalls
     },
-    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
-      // Update only the tool call state status
-      // The actual result is already added as a separate message by handleToolCalls
-      for (let i = state.session.history.length - 1; i >= 0; i--) {
-        const item = state.session.history[i];
-        if (item.toolCallStates) {
-          const toolState = item.toolCallStates.find(
-            (ts: ToolCallState) =>
-              ts.toolCall.function.name === toolName &&
-              (ts.status === "calling" || ts.status === "generated"),
-          );
-          if (toolState) {
-            // Only update the status, not the output
-            toolState.status = status;
-            break;
-          }
-        }
-      }
+    onToolResult: (_result: string, _toolName: string, _status: ToolStatus) => {
+      // No-op when using ChatHistoryService; it updates tool states/results
     },
-    onToolError: (error: string, toolName?: string) => {
-      // Only update the tool call state to errored status when tool name is provided
-      // The error message is already added as a separate tool result message
-      // by handleToolCalls/preprocessStreamedToolCalls/executeStreamedToolCalls
-      if (toolName) {
-        // Find and update the corresponding tool call state
-        for (let i = state.session.history.length - 1; i >= 0; i--) {
-          const item = state.session.history[i];
-          if (item.toolCallStates) {
-            const toolState = item.toolCallStates.find(
-              (ts: ToolCallState) =>
-                ts.toolCall.function.name === toolName &&
-                (ts.status === "calling" || ts.status === "generated"),
-            );
-            if (toolState) {
-              // Only update the status, not the output
-              toolState.status = "errored";
-              break;
-            }
-          }
-        }
-      }
+    onToolError: (_error: string, _toolName?: string) => {
+      // No-op; errors are added to history via handleToolCalls flow
     },
     onToolPermissionRequest: (
       toolName: string,
@@ -95,25 +61,33 @@ export async function streamChatResponseWithInterruption(
         toolCallPreview,
       };
 
-      // Add a system message indicating permission is needed
-      state.session.history.push({
-        message: {
-          role: "system",
-          content: `WARNING: Tool ${toolName} requires permission`,
-        },
-        contextItems: [],
-      });
+      // Add a system message indicating permission is needed via service
+      try {
+        services.chatHistory.addSystemMessage(
+          `WARNING: Tool ${toolName} requires permission`,
+        );
+      } catch (err) {
+        // Do not mutate session history; ChatHistoryService is the source of truth
+        logger.error(
+          "Failed to add system message via ChatHistoryService",
+          err,
+          { context: "onToolPermissionRequest", toolName, requestId },
+        );
+      }
 
       // Don't wait here - the streamChatResponse will handle waiting
     },
     onSystemMessage: (message: string) => {
-      state.session.history.push({
-        message: {
-          role: "system",
-          content: message,
-        },
-        contextItems: [],
-      });
+      try {
+        services.chatHistory.addSystemMessage(message);
+      } catch (err) {
+        // Do not mutate session history; ChatHistoryService is the source of truth
+        logger.error(
+          "Failed to add system message via ChatHistoryService",
+          err,
+          { context: "onSystemMessage" },
+        );
+      }
     },
   };
 

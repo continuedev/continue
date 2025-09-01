@@ -117,7 +117,15 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               >
                 <Box>
                   <Text
-                    color={isErrored ? "red" : isCompleted ? "green" : "white"}
+                    color={
+                      isErrored
+                        ? "red"
+                        : isCompleted
+                          ? "green"
+                          : toolState.status === "generated"
+                            ? "yellow"
+                            : "white"
+                    }
                   >
                     {isCompleted || isErrored ? "●" : "○"}
                   </Text>

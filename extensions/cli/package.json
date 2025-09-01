@@ -97,6 +97,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "execa": "^9.6.0",
+    "clipboardy": "^4.0.0",
     "express": "^5.1.0",
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",

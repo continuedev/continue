@@ -1,6 +1,6 @@
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
@@ -46,6 +46,7 @@ export function useChat({
   llmApi,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
   onShowConfigSelector,
@@ -59,10 +60,24 @@ export function useChat({
 }: UseChatProps) {
   const { exit } = useApp();
 
+  // Track service subscription
+  const serviceListenerCleanupRef = useRef<null | (() => void)>(null);
+
   // Store the current session
   const [currentSession, setCurrentSession] = useState<Session>(() => {
     // In remote mode, start with empty session (will be populated by polling)
     if (isRemoteMode) {
+      return createSession([]);
+    }
+
+    // Fork from an existing session if fork flag is used
+    if (fork) {
+      const { loadSessionById, startNewSession } = require("../../session.js");
+      const sessionToFork = loadSessionById(fork);
+      if (sessionToFork) {
+        return startNewSession(sessionToFork.history);
+      }
+      // If session not found, create a new empty session
       return createSession([]);
     }
 
@@ -78,9 +93,45 @@ export function useChat({
     return createSession([]);
   });
 
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
-    () => currentSession.history,
+  // Local view of history driven solely by ChatHistoryService
+  const [chatHistory, setChatHistoryView] = useState<ChatHistoryItem[]>(() =>
+    services.chatHistory?.isReady()
+      ? services.chatHistory.getHistory()
+      : currentSession.history,
   );
+  // Proxy setter: apply changes to ChatHistoryService (single source of truth)
+  const setChatHistory: React.Dispatch<
+    React.SetStateAction<ChatHistoryItem[]>
+  > = (value) => {
+    const svc = services.chatHistory;
+    const current = svc.getHistory();
+    const next = typeof value === "function" ? (value as any)(current) : value;
+    svc.setHistory(next);
+  };
+
+  // Initialize ChatHistoryService and subscribe to updates
+  useEffect(() => {
+    const svc = services.chatHistory;
+    svc
+      .initialize(currentSession, isRemoteMode)
+      .then(() => {
+        setChatHistoryView(svc.getHistory());
+        const listener = () => {
+          setChatHistoryView(svc.getHistory());
+        };
+        svc.on("stateChanged", listener);
+        serviceListenerCleanupRef.current = () =>
+          svc.off("stateChanged", listener);
+      })
+      .catch((error) => {
+        logger.error("Failed to initialize ChatHistoryService", { error });
+      });
+
+    return () => {
+      serviceListenerCleanupRef.current?.();
+      serviceListenerCleanupRef.current = null;
+    };
+  }, []);
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
@@ -91,8 +142,11 @@ export function useChat({
     useState<AbortController | null>(null);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
+    // If we're forking and found a session to fork from, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && currentSession.history.length > 0),
+    isRemoteMode ||
+      (resume && currentSession.history.length > 0) ||
+      (fork && currentSession.history.length > 0),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
@@ -101,8 +155,8 @@ export function useChat({
   const [activePermissionRequest, setActivePermissionRequest] =
     useState<ActivePermissionRequest | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
-    // When resuming, check for compaction markers in the loaded history
-    if (resume && currentSession.history.length > 0) {
+    // When resuming or forking, check for compaction markers in the loaded history
+    if ((resume || fork) && currentSession.history.length > 0) {
       return findCompactionIndex(currentSession.history);
     }
     return null;
@@ -126,7 +180,6 @@ export function useChat({
 
     return setupRemotePolling({
       remoteUrl,
-      setChatHistory,
       setIsWaitingForResponse,
       responseStartTime,
       setResponseStartTime,
@@ -204,7 +257,7 @@ export function useChat({
 
     try {
       const streamCallbacks = createStreamCallbacks({
-        setChatHistory,
+        setChatHistory: setChatHistory,
         setActivePermissionRequest,
         llmApi,
         model,
@@ -366,7 +419,6 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
-      setChatHistory,
     });
 
     if (handled) return;
@@ -406,7 +458,6 @@ export function useChat({
       await handleRemoteMessage({
         remoteUrl,
         messageContent: messageContentString,
-        setChatHistory,
       });
       return;
     }
@@ -418,7 +469,7 @@ export function useChat({
         model,
         llmApi,
         compactionIndex,
-        setChatHistory,
+        setChatHistory: setChatHistory,
         setCompactionIndex,
       });
 
@@ -549,7 +600,7 @@ export function useChat({
 
   return {
     chatHistory,
-    setChatHistory,
+    setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,

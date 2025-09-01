@@ -8,6 +8,21 @@ export interface UITestContext {
   cleanup: () => void;
 }
 
+// Export a mock LLM API for testing
+export const mockLlmApi = {
+  chatCompletionNonStream: vi.fn(),
+  chatCompletionStream: vi.fn(),
+  completionNonStream: vi.fn(),
+  completionStream: vi.fn(),
+  embed: vi.fn(),
+  rerank: vi.fn(),
+  fimStream: vi.fn(),
+  listModels: vi.fn(),
+  completions: vi.fn(),
+  stream: vi.fn(),
+  abort: vi.fn(),
+} as any;
+
 /**
  * Creates a test context with common UI mocks for TUI components
  */
