@@ -117,7 +117,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       stdin.write("\r");
 
       // Should call onSubmit with empty string (for resume)
-      expect(mockOnSubmit).toHaveBeenCalledWith("");
+      expect(mockOnSubmit).toHaveBeenCalledWith("", expect.any(Map));
     } finally {
       unmount();
     }
@@ -145,6 +145,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       // Should call onSubmit with the typed content
       expect(mockOnSubmit).toHaveBeenCalledWith(
         "New message after interruption",
+        expect.any(Map),
       );
     } finally {
       unmount();
