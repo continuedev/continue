@@ -1,1 +1,0 @@
-export { registerAllCodeLensProviders } from "./registerAllCodeLensProviders";
