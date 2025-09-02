@@ -232,10 +232,13 @@ async function loadUserAssistantWithFallback(
     if (!result.config) {
       throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
     }
-    
+
     const errors = result.errors;
     if (errors?.some((e: any) => e.fatal)) {
-      throw new Error(errors.map((e: any) => e.message).join("\n") ?? "Failed to load assistant.");
+      throw new Error(
+        errors.map((e: any) => e.message).join("\n") ??
+          "Failed to load assistant.",
+      );
     }
 
     return result.config as AssistantUnrolled;
@@ -381,7 +384,10 @@ async function loadAssistantSlug(
   const result = resp.configResult;
   const errors = result.errors;
   if (errors?.some((e: any) => e.fatal)) {
-    throw new Error(errors.map((e: any) => e.message).join("\n") ?? "Failed to load assistant.");
+    throw new Error(
+      errors.map((e: any) => e.message).join("\n") ??
+        "Failed to load assistant.",
+    );
   }
 
   return result.config as AssistantUnrolled;
