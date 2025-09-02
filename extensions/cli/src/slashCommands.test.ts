@@ -83,6 +83,9 @@ vi.mock("./session.js", () => ({
     () => "/home/test/.continue/cli-sessions/continue-cli-pid-12345.json",
   ),
   hasSession: vi.fn(() => false),
+  getCurrentSession: vi.fn(() => {
+    throw new Error("Session not available");
+  }),
 }));
 
 describe("slashCommands", () => {
@@ -141,8 +144,8 @@ describe("slashCommands", () => {
       expect(result?.output).toContain("Not logged in");
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("/test/config.yaml");
-      expect(result?.output).toContain("Session History:");
-      expect(result?.output).toContain(".json");
+      expect(result?.output).toContain("Session:");
+      expect(result?.output).toContain("Session not available");
       expect(result?.exit).toBe(false);
     });
 
@@ -244,12 +247,18 @@ describe("slashCommands", () => {
     it("should use test session directory when in test mode", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      const { getSessionFilePath } = await import("./session.js");
+      const { getSessionFilePath, getCurrentSession } = await import(
+        "./session.js"
+      );
 
-      // Mock the session path for this specific test
+      // Mock the session functions for this specific test
       (getSessionFilePath as any).mockReturnValue(
         "/test-home/.continue/cli-sessions/continue-cli-test-123.json",
       );
+      (getCurrentSession as any).mockReturnValue({
+        sessionId: "test-123",
+        title: "Test Session",
+      });
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
@@ -265,6 +274,8 @@ describe("slashCommands", () => {
 
       const result = await handleSlashCommands("/info", mockAssistant);
 
+      expect(result?.output).toContain("Session:");
+      expect(result?.output).toContain("Test Session");
       expect(result?.output).toContain("/test-home/.continue/cli-sessions/");
       expect(result?.output).toContain(".json");
     });

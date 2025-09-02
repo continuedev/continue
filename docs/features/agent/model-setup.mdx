@@ -3,12 +3,9 @@ title: "Model Setup for Agent Mode"
 description: "Learn how to set up models for Agent Mode in Continue, including recommended models and configuration options for optimal performance"
 sidebarTitle: "Model Setup"
 ---
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
 
 The models you set up for Chat mode will be used with Agent mode if the model supports tool calling. The recommended models and how to set them up can be found [here](/features/chat/model-setup).
-
-<Info>
-  For the latest recommendations on the best models for Agent/Plan mode, see our [comprehensive model recommendations](/customization/models#recommended-models).
-</Info>
 
 ## How System Message Tools Work
 
@@ -23,7 +20,9 @@ Instead of relying solely on native tool calling APIs (which vary between provid
 - **Better reliability** - Models that struggle with native tools often perform better with system message tools
 - **Seamless switching** - Change between providers without modifying your workflow
 
-For recommended Agent models, please refer to our [Model Recommendations page](/customization/models).
+## Recommended Agent Models
+
+<ModelRecommendations role="all" />
 
 ### How to Configure Agent Mode
 

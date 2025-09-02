@@ -43,6 +43,7 @@ interface TUIChatProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
 }
@@ -138,6 +139,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   configPath,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
 }) => {
@@ -188,6 +190,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     responseStartTime,
     inputMode,
     activePermissionRequest,
+    wasInterrupted,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -199,6 +202,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     llmApi: services.model?.llmApi || undefined,
     initialPrompt,
     resume,
+    fork,
     additionalRules,
     additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
@@ -318,6 +322,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
           isInputDisabled={isInputDisabled}
+          wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
         />
 

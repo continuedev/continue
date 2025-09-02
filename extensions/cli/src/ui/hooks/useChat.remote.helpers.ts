@@ -1,9 +1,18 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+import { services } from "../../services/index.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { logger } from "../../util/logger.js";
 
 import { RemoteServerState } from "./useChat.types.js";
+
+function historiesEqual(a: ChatHistoryItem[], b: ChatHistoryItem[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+  }
+  return true;
+}
 
 /**
  * Poll remote server for state updates
@@ -25,7 +34,6 @@ async function pollRemoteServerState(
 
 interface SetupRemotePollingOptions {
   remoteUrl: string;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
   responseStartTime: number | null;
   setResponseStartTime: React.Dispatch<React.SetStateAction<number | null>>;
@@ -36,7 +44,6 @@ interface SetupRemotePollingOptions {
  */
 export function setupRemotePolling({
   remoteUrl,
-  setChatHistory,
   setIsWaitingForResponse,
   responseStartTime,
   setResponseStartTime,
@@ -54,7 +61,6 @@ export function setupRemotePolling({
       if (state && isMounted) {
         updateStateFromRemote({
           state,
-          setChatHistory,
           setIsWaitingForResponse,
           responseStartTime,
           setResponseStartTime,
@@ -81,7 +87,6 @@ export function setupRemotePolling({
 
 interface UpdateStateFromRemoteOptions {
   state: RemoteServerState;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
   responseStartTime: number | null;
   setResponseStartTime: React.Dispatch<React.SetStateAction<number | null>>;
@@ -92,37 +97,26 @@ interface UpdateStateFromRemoteOptions {
  */
 function updateStateFromRemote({
   state,
-  setChatHistory,
   setIsWaitingForResponse,
   responseStartTime,
   setResponseStartTime,
 }: UpdateStateFromRemoteOptions): void {
   // Update chat history from server - now using session.history directly
   if (state.session && state.session.history) {
-    setChatHistory((prevHistory) => {
-      // Use session history directly - it already has the correct type
-      const newHistory = state.session.history;
-
-      // Quick length check first
-      if (prevHistory.length !== newHistory.length) {
-        return newHistory;
-      }
-
-      // Deep comparison - check if content actually changed
-      const hasChanged = newHistory.some((item, index) => {
-        const prevItem = prevHistory[index];
-        return (
-          !prevItem ||
-          prevItem.message.role !== item.message.role ||
-          prevItem.message.content !== item.message.content ||
-          JSON.stringify(prevItem.toolCallStates) !==
-            JSON.stringify(item.toolCallStates)
-        );
-      });
-
-      // Only update if there are actual changes
-      return hasChanged ? newHistory : prevHistory;
-    });
+    const newHistory = state.session.history as ChatHistoryItem[];
+    // Let ChatHistoryService own the history and emit updates to UI
+    if (!services.chatHistory.isRemoteMode()) {
+      services.chatHistory.setRemoteMode(true);
+    }
+    // Avoid redundant updates: only set when history actually changed
+    try {
+      const current = services.chatHistory.getHistory();
+      const changed = !historiesEqual(current, newHistory);
+      if (changed) services.chatHistory.setHistory(newHistory);
+    } catch {
+      // As a fallback, attempt to set history (service may handle no-op)
+      services.chatHistory.setHistory(newHistory);
+    }
   }
 
   // Update processing state
@@ -139,7 +133,6 @@ function updateStateFromRemote({
  */
 export async function handleRemoteExit(
   remoteUrl: string,
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>,
   exit: () => void,
 ): Promise<void> {
   posthogService.capture("useSlashCommand", {
@@ -152,50 +145,36 @@ export async function handleRemoteExit(
     });
 
     if (response.ok) {
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: "Remote environment is shutting down...",
-          },
-          contextItems: [],
-        },
-      ]);
+      try {
+        services.chatHistory.addSystemMessage(
+          "Remote environment is shutting down...",
+        );
+      } catch (err) {
+        logger.error("Failed to add system message", err);
+      }
       setTimeout(() => exit(), 1000);
     } else {
       const text = await response.text();
       logger.error("Remote shutdown failed:", text);
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: "Failed to shutdown remote environment",
-          },
-          contextItems: [],
-        },
-      ]);
+      try {
+        services.chatHistory.addSystemMessage(
+          "Failed to shutdown remote environment",
+        );
+      } catch {}
     }
   } catch (error) {
     logger.error("Failed to send exit request to remote server:", error);
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "Error: Failed to connect to remote server for shutdown",
-        },
-        contextItems: [],
-      },
-    ]);
+    try {
+      services.chatHistory.addSystemMessage(
+        "Error: Failed to connect to remote server for shutdown",
+      );
+    } catch {}
   }
 }
 
 interface HandleRemoteMessageOptions {
   remoteUrl: string;
   messageContent: string;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
 }
 
 /**
@@ -204,7 +183,6 @@ interface HandleRemoteMessageOptions {
 export async function handleRemoteMessage({
   remoteUrl,
   messageContent,
-  setChatHistory,
 }: HandleRemoteMessageOptions): Promise<void> {
   try {
     const response = await fetch(`${remoteUrl}/message`, {
@@ -217,29 +195,19 @@ export async function handleRemoteMessage({
 
     if (!response.ok) {
       const error = await response.json();
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: `Error: ${error.error || "Failed to send message"}`,
-          },
-          contextItems: [],
-        },
-      ]);
+      try {
+        services.chatHistory.addSystemMessage(
+          `Error: ${error.error || "Failed to send message"}`,
+        );
+      } catch {}
     }
     // State will be updated by polling
   } catch (error) {
     logger.error("Failed to send message to remote server:", error);
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: `Error: Failed to connect to remote server`,
-        },
-        contextItems: [],
-      },
-    ]);
+    try {
+      services.chatHistory.addSystemMessage(
+        "Error: Failed to connect to remote server",
+      );
+    } catch {}
   }
 }

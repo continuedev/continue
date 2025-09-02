@@ -93,6 +93,7 @@ export interface ToolPermissionServiceState {
 }
 
 export type { FileIndexServiceState } from "./FileIndexService.js";
+export type { ChatHistoryState } from "./ChatHistoryService.js";
 
 /**
  * Service names as constants to prevent typos
@@ -107,6 +108,7 @@ export const SERVICE_NAMES = {
   FILE_INDEX: "fileIndex",
   RESOURCE_MONITORING: "resourceMonitoring",
   SYSTEM_MESSAGE: "systemMessage",
+  CHAT_HISTORY: "chatHistory",
 } as const;
 
 /**

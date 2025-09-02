@@ -30,12 +30,13 @@ interface ScreenContentProps {
     createPolicy?: boolean,
     stopStream?: boolean,
   ) => void;
-  handleUserMessage: (message: string) => void;
+  handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
   handleInterrupt: () => void;
   handleFileAttached: (filePath: string, content: string) => void;
   isInputDisabled: boolean;
+  wasInterrupted?: boolean;
   isRemoteMode: boolean;
 }
 
@@ -57,6 +58,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleInterrupt,
   handleFileAttached,
   isInputDisabled,
+  wasInterrupted = false,
   isRemoteMode,
 }) => {
   // Login prompt
@@ -147,6 +149,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         inputMode={inputMode}
         onInterrupt={handleInterrupt}
         assistant={services.config?.config || undefined}
+        wasInterrupted={wasInterrupted}
         onFileAttached={handleFileAttached}
         disabled={isInputDisabled}
         isRemoteMode={isRemoteMode}

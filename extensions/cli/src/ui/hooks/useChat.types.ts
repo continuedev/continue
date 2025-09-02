@@ -10,6 +10,7 @@ export interface UseChatProps {
   llmApi?: BaseLlmApi;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
   onShowConfigSelector: () => void;

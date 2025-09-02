@@ -12,6 +12,7 @@ export { MarkdownRenderer } from "./MarkdownRenderer.js";
 interface StartTUIChatOptions {
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   config?: string;
   org?: string;
   rule?: string[];
@@ -31,6 +32,7 @@ export async function startTUIChat(
   const {
     initialPrompt,
     resume,
+    fork,
     config,
     org,
     rule,
@@ -63,6 +65,7 @@ export async function startTUIChat(
         configPath: config,
         initialPrompt,
         resume,
+        fork,
         additionalRules: rule,
         additionalPrompts: prompt,
       }),
