@@ -148,13 +148,13 @@ export class GUIActions {
     // Map old number format to state names for backward compatibility
     // 0 = Automatic/Auto, 1 = Excluded/Off, 2 = Ask First/Ask
     let targetStates: string[];
-    if (typeof desiredState === 'number') {
+    if (typeof desiredState === "number") {
       const stateMap = [
-        ['Automatic', 'Auto'],  // 0
-        ['Excluded', 'Off'],    // 1
-        ['Ask First', 'Ask']    // 2
+        ["Automatic", "Auto"], // 0
+        ["Excluded", "Off"], // 1
+        ["Ask First", "Ask"], // 2
       ];
-      targetStates = stateMap[desiredState] || ['Ask First', 'Ask'];
+      targetStates = stateMap[desiredState] || ["Ask First", "Ask"];
     } else {
       targetStates = [desiredState];
     }
@@ -163,21 +163,23 @@ export class GUIActions {
     let maxAttempts = 5; // Safety limit to prevent infinite loops
     while (maxAttempts > 0) {
       const currentText = await toolPolicyButton.getText();
-      
+
       // Check if we've reached any of the target states
-      if (targetStates.some(state => currentText.includes(state))) {
+      if (targetStates.some((state) => currentText.includes(state))) {
         break;
       }
-      
+
       // Click to move to next state
       await toolPolicyButton.click();
       await TestUtils.waitForTimeout(200); // Small delay for UI update
-      
+
       maxAttempts--;
     }
-    
+
     if (maxAttempts === 0) {
-      throw new Error(`Failed to set tool policy to ${targetStates.join(' or ')} after 5 attempts`);
+      throw new Error(
+        `Failed to set tool policy to ${targetStates.join(" or ")} after 5 attempts`,
+      );
     }
   }
 }
