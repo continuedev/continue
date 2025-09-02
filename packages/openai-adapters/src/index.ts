@@ -125,6 +125,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
 export {
   type ChatCompletion,
   type ChatCompletionChunk,
+  type ChatCompletionContentPart,
   type ChatCompletionCreateParams,
   type ChatCompletionCreateParamsNonStreaming,
   type ChatCompletionCreateParamsStreaming,
@@ -133,6 +134,15 @@ export {
   type CompletionCreateParamsNonStreaming,
   type CompletionCreateParamsStreaming,
 } from "openai/resources/index";
+
+import { OpenAI } from "openai";
+
+export type ResponseCreateParamsStreaming =
+  OpenAI.Responses.ResponseCreateParamsStreaming;
+export type ResponseStreamEvent = OpenAI.Responses.ResponseStreamEvent;
+export type Response = OpenAI.Responses.Response;
+export type ResponseOutputText = OpenAI.Responses.ResponseOutputText;
+export type ResponseOutputRefusal = OpenAI.Responses.ResponseOutputRefusal;
 
 // export
 export type { BaseLlmApi } from "./apis/base.js";

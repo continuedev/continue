@@ -193,4 +193,14 @@ export class OpenAIApi implements BaseLlmApi {
   async list(): Promise<Model[]> {
     return (await this.openai.models.list()).data;
   }
+
+  async *responsesStream(
+    body: OpenAI.Responses.ResponseCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<OpenAI.Responses.ResponseStreamEvent, any, unknown> {
+    const stream: any = await this.openai.responses.create(body, { signal });
+    for await (const event of stream) {
+      yield event;
+    }
+  }
 }

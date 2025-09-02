@@ -1,3 +1,4 @@
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -76,4 +77,10 @@ export interface BaseLlmApi {
 
   // List Models
   list(): Promise<Model[]>;
+
+  // Optional: Responses API streaming accessor (single entry point)
+  responsesStream?: (
+    body: OpenAI.Responses.ResponseCreateParamsStreaming,
+    signal: AbortSignal,
+  ) => AsyncGenerator<OpenAI.Responses.ResponseStreamEvent>;
 }
