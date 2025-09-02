@@ -20,6 +20,7 @@ export default class CheerioCrawler {
 
   constructor(
     private readonly startUrl: URL,
+    private readonly rootUrl: URL,
     private readonly maxRequestsPerCrawl: number,
     private readonly maxDepth: number,
   ) {}
@@ -113,6 +114,9 @@ export default class CheerioCrawler {
     const html = await response.text();
     let links: string[] = [];
 
+    // FIXME: Why do we have this special case?
+    // This method will also catch subdomains such as `docs.github.com`,
+    // so we should clarify the intent and make the `includes` more specific if needed.
     if (url.includes("github.com")) {
       return { html, links };
     }
@@ -126,7 +130,10 @@ export default class CheerioCrawler {
       }
 
       const parsedUrl = new URL(href, location);
-      if (parsedUrl.hostname === baseUrl.hostname) {
+      if (
+        parsedUrl.hostname === this.rootUrl.hostname &&
+        parsedUrl.pathname.startsWith(this.rootUrl.pathname)
+      ) {
         links.push(parsedUrl.pathname);
       }
     });

@@ -2,6 +2,7 @@ import { URL } from "node:url";
 
 import { ContinueConfig, IDE } from "../../..";
 
+import { getRootFromStartUrl } from "../DocsService";
 import CheerioCrawler from "./CheerioCrawler";
 import { ChromiumCrawler, ChromiumInstaller } from "./ChromiumCrawler";
 import { DefaultCrawler } from "./DefaultCrawler";
@@ -42,16 +43,22 @@ class DocsCrawler {
   */
   async *crawl(
     startUrl: URL,
+    rootUrl?: URL,
   ): AsyncGenerator<PageData, DocsCrawlerType, undefined> {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl, this.githubToken).crawl();
       return "github";
     }
 
+    if (!rootUrl) {
+      rootUrl = getRootFromStartUrl(startUrl);
+    }
+
     if (!this.useLocalCrawling) {
       try {
         const pageData = await new DefaultCrawler(
           startUrl,
+          rootUrl,
           this.maxRequestsPerCrawl,
           this.maxDepth,
         ).crawl();
@@ -67,6 +74,7 @@ class DocsCrawler {
     if (this.shouldUseChromium()) {
       yield* new ChromiumCrawler(
         startUrl,
+        rootUrl,
         this.maxRequestsPerCrawl,
         this.maxDepth,
       ).crawl();
@@ -76,6 +84,7 @@ class DocsCrawler {
 
       for await (const pageData of new CheerioCrawler(
         startUrl,
+        rootUrl,
         this.maxRequestsPerCrawl,
         this.maxDepth,
       ).crawl()) {
@@ -103,6 +112,7 @@ class DocsCrawler {
 
           yield* new ChromiumCrawler(
             startUrl,
+            rootUrl,
             this.maxRequestsPerCrawl,
             this.maxDepth,
           ).crawl();
