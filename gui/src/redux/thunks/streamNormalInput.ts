@@ -64,8 +64,7 @@ async function evaluateToolPolicy(
       args: parsedArgs,
     });
   } catch (error) {
-    console.log("ERROR ZZZ", error);
-    // If request fails, return disabled
+      // If request fails, return disabled
     return "disabled";
   }
 
@@ -89,7 +88,6 @@ async function handleToolCallExecution(
   activeTools: Tool[],
   ideMessenger: any,
 ): Promise<void> {
-  console.log("HANDLE TOOL CALL EXECUTION");
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
@@ -145,7 +143,6 @@ export const streamNormalInput = createAsyncThunk<
 >(
   "chat/streamNormalInput",
   async ({ legacySlashCommandData }, { dispatch, extra, getState }) => {
-    console.log("STREAMING ZZZZZZ ZZ");
     const state = getState();
     const selectedChatModel = selectSelectedChatModel(state);
 
