@@ -1028,15 +1028,29 @@ describe("streamResponseThunk - tool calls", () => {
         ],
       },
       {
-        type: "session/setInactive",
-        payload: undefined,
-      },
-      {
-        type: "session/setToolGenerated",
+        type: "session/errorToolCall",
         payload: {
           toolCallId: "tool-reject-1",
-          tools: [],
         },
+      },
+      {
+        type: "session/updateToolCallOutput",
+        payload: {
+          toolCallId: "tool-reject-1",
+          contextItems: [
+            {
+              icon: "problems",
+              name: "Security Policy Violation",
+              description: "Command Disabled",
+              content: `This command has been disabled by security policy:\n\nedit_existing_file\n\nThis command cannot be executed as it may pose a security risk.`,
+              hidden: false,
+            },
+          ],
+        },
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
       },
       {
         type: "chat/streamNormalInput/fulfilled",
@@ -1304,7 +1318,16 @@ describe("streamResponseThunk - tool calls", () => {
                   filepath: "test.js",
                   changes: "const x = 1;",
                 },
-                status: "generated", // Tool call exists but isn't executed due to settings
+                status: "errored", // Tool call is marked as errored due to being disabled
+                output: [
+                  {
+                    icon: "problems",
+                    name: "Security Policy Violation",
+                    description: "Command Disabled",
+                    content: `This command has been disabled by security policy:\n\nedit_existing_file\n\nThis command cannot be executed as it may pose a security risk.`,
+                    hidden: false,
+                  },
+                ],
               },
             ],
           },

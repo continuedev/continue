@@ -105,7 +105,7 @@ async function handleToolCallExecution(
 
   // If no generating tool calls, nothing to process
   if (toolCallStates.length === 0) {
-    return true;  // No tools to process, consider as "auto-approved"
+    return false;  // No tools to process, need to set inactive
   }
 
   // Check if ALL tool calls are auto-approved using dynamic evaluation
@@ -372,12 +372,7 @@ export const streamNormalInput = createAsyncThunk<
     
     // Only set inactive if not all tools were auto-approved
     // This prevents UI flashing for auto-approved tools
-    const finalState = getState();
-    const generatingToolCalls = selectCurrentToolCalls(finalState).filter(
-      (toolCallState) => toolCallState.status === "generating",
-    );
-    
-    if (generatingToolCalls.length === 0 || !allAutoApproved) {
+    if (!allAutoApproved) {
       dispatch(setInactive());
     }
   },
