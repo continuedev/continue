@@ -677,7 +677,9 @@ describe("streamResponseThunk", () => {
           ],
         },
       ],
-      options: {},
+      options: {
+        reasoning: false,
+      },
     });
     expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
 
@@ -1027,7 +1029,9 @@ describe("streamResponseThunk", () => {
           ],
         },
       ],
-      options: {},
+      options: {
+        reasoning: false,
+      },
     });
     expect(mockIdeMessenger.llmStreamChat).not.toHaveBeenCalled();
 
