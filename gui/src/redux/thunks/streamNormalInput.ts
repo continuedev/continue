@@ -1,5 +1,11 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ContextItem, LLMFullCompletionOptions, Tool, ToolCallState, ToolPolicy } from "core";
+import {
+  ContextItem,
+  LLMFullCompletionOptions,
+  Tool,
+  ToolCallState,
+  ToolPolicy,
+} from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -60,7 +66,7 @@ async function evaluateToolPolicy(
       args: parsedArgs,
     });
   } catch (error) {
-      // If request fails, return disabled
+    // If request fails, return disabled
     return "disabled";
   }
 
@@ -77,7 +83,10 @@ async function evaluateToolPolicy(
   if (basePolicy === "disabled") {
     return "disabled"; // Cannot override disabled
   }
-  if (basePolicy === "allowedWithPermission" && dynamicPolicy === "allowedWithoutPermission") {
+  if (
+    basePolicy === "allowedWithPermission" &&
+    dynamicPolicy === "allowedWithoutPermission"
+  ) {
     return "allowedWithPermission"; // Cannot make more lenient
   }
 
@@ -93,7 +102,8 @@ async function handleToolCallExecution(
   getState: () => RootState,
   activeTools: Tool[],
   ideMessenger: IIdeMessenger,
-): Promise<boolean> {  // Return whether all tools were auto-approved
+): Promise<boolean> {
+  // Return whether all tools were auto-approved
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
@@ -105,7 +115,7 @@ async function handleToolCallExecution(
 
   // If no generating tool calls, nothing to process
   if (toolCallStates.length === 0) {
-    return false;  // No tools to process, need to set inactive
+    return false; // No tools to process, need to set inactive
   }
 
   // Check if ALL tool calls are auto-approved using dynamic evaluation
@@ -113,16 +123,16 @@ async function handleToolCallExecution(
     evaluateToolPolicy(toolCallState, toolSettings, activeTools, ideMessenger),
   );
   const policies = await Promise.all(policyPromises);
-  
+
   // Handle disabled tool calls and set others as generated
   const allAutoApproved = await Promise.all(
     toolCallStates.map(async (toolCallState, index) => {
       const policy = policies[index];
-      
+
       if (policy === "disabled") {
         // Mark as errored instead of generated
         dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
-        
+
         // Get the actual command from parsed arguments if it's runTerminalCommand
         const parsedArgs = toolCallState.parsedArgs || {};
         let command = toolCallState.toolCall.function.name;
@@ -132,7 +142,7 @@ async function handleToolCallExecution(
         ) {
           command = parsedArgs.command;
         }
-        
+
         // Add error message explaining why it's disabled
         dispatch(
           updateToolCallOutput({
@@ -167,7 +177,7 @@ async function handleToolCallExecution(
     const nonDisabledToolCalls = toolCallStates.filter(
       (_, index) => policies[index] !== "disabled",
     );
-    
+
     const toolCallPromises = nonDisabledToolCalls.map(async (toolCallState) => {
       const response = await dispatch(
         callToolById({ toolCallId: toolCallState.toolCallId }),
@@ -177,7 +187,7 @@ async function handleToolCallExecution(
 
     await Promise.all(toolCallPromises);
   }
-  
+
   return allAutoApproved;
 }
 
@@ -369,7 +379,7 @@ export const streamNormalInput = createAsyncThunk<
       activeTools,
       extra.ideMessenger,
     );
-    
+
     // Only set inactive if not all tools were auto-approved
     // This prevents UI flashing for auto-approved tools
     if (!allAutoApproved) {

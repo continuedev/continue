@@ -1,5 +1,12 @@
 import { Tool, ToolCallState } from "core";
-import { ComponentType, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ComponentType,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ContextItemsPeekItem,
   openContextItem,
@@ -42,7 +49,7 @@ export function SimpleToolCallUI({
       !hasAutoOpenedError.current
     ) {
       hasAutoOpenedError.current = true;
-      
+
       // For single error items, open directly
       if (shownContextItems.length === 1) {
         openContextItem(shownContextItems[0], ideMessenger);
