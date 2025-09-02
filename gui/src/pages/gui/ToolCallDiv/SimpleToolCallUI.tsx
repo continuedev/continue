@@ -1,5 +1,5 @@
 import { Tool, ToolCallState } from "core";
-import { ComponentType, useContext, useMemo, useState } from "react";
+import { ComponentType, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ContextItemsPeekItem,
   openContextItem,
@@ -32,6 +32,26 @@ export function SimpleToolCallUI({
 
   const [open, setOpen] = useState(false);
   const [showingArgs, setShowingArgs] = useState(false);
+  const hasAutoOpenedError = useRef(false);
+
+  // Auto-open error details when tool call fails
+  useEffect(() => {
+    if (
+      toolCallState.status === "errored" &&
+      shownContextItems.length > 0 &&
+      !hasAutoOpenedError.current
+    ) {
+      hasAutoOpenedError.current = true;
+      
+      // For single error items, open directly
+      if (shownContextItems.length === 1) {
+        openContextItem(shownContextItems[0], ideMessenger);
+      } else {
+        // For multiple items, expand the view
+        setOpen(true);
+      }
+    }
+  }, [toolCallState.status, shownContextItems, ideMessenger]);
 
   const args: [string, any][] = useMemo(() => {
     return Object.entries(toolCallState.parsedArgs);

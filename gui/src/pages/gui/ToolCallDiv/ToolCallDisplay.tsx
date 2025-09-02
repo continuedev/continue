@@ -1,5 +1,7 @@
 import { Tool, ToolCallState } from "core";
-import { useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { renderContextItems } from "core/util/messageContent";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ArgsItems, ArgsToggleIcon } from "./ToolCallArgs";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
@@ -19,11 +21,29 @@ export function ToolCallDisplay({
   icon,
   historyIndex,
 }: ToolCallDisplayProps) {
+  const ideMessenger = useContext(IdeMessengerContext);
   const [argsExpanded, setArgsExpanded] = useState(false);
+  const hasAutoOpenedError = useRef(false);
 
   const args: [string, any][] = useMemo(() => {
     return Object.entries(toolCallState.parsedArgs);
   }, [toolCallState.parsedArgs]);
+
+  // Auto-open error details when tool call fails
+  useEffect(() => {
+    if (
+      toolCallState.status === "errored" &&
+      toolCallState.output &&
+      toolCallState.output.length > 0 &&
+      !hasAutoOpenedError.current
+    ) {
+      hasAutoOpenedError.current = true;
+      ideMessenger.post("showVirtualFile", {
+        name: "Tool Call Error",
+        content: renderContextItems(toolCallState.output),
+      });
+    }
+  }, [toolCallState.status, toolCallState.output, ideMessenger]);
 
   return (
     <div className="flex flex-col justify-center px-4">
