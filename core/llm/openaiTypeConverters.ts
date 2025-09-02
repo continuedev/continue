@@ -13,6 +13,7 @@ import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
 
 export function toChatMessage(
   message: ChatMessage,
+  options: CompletionOptions,
 ): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
     return {
@@ -28,7 +29,27 @@ export function toChatMessage(
     };
   }
   if (message.role === "thinking") {
-    return null;
+    if (message.signature && options.model.includes("claude")) {
+      return {
+        role: "assistant",
+        reasoning: message.content,
+        reasoning_details: {
+          signature: message.signature,
+        },
+      } as ChatCompletionMessageParam;
+    } else {
+      return null;
+      /*
+      Possible improvement: option to preserve reasoning for other models
+      see https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
+      For example:
+      if (options.preserveReasoning) {
+        return {
+          role: "assistant",
+          reasoning: message.content
+        } as ChatCompletionMessageParam;
+      }*/
+    }
   }
 
   if (message.role === "assistant") {
@@ -92,7 +113,7 @@ export function toChatBody(
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
     messages: messages
-      .map(toChatMessage)
+      .map((m) => toChatMessage(m, options))
       .filter((m) => m !== null) as ChatCompletionMessageParam[],
     model: options.model,
     max_tokens: options.maxTokens,
@@ -208,6 +229,9 @@ export function fromChatCompletionChunk(
     | (ChatCompletionChunk.Choice.Delta & {
         reasoning?: string;
         reasoning_content?: string;
+        reasoning_details?: {
+          signature?: string;
+        }[];
       })
     | undefined;
 
@@ -235,10 +259,15 @@ export function fromChatCompletionChunk(
         toolCalls,
       };
     }
-  } else if (delta?.reasoning_content || delta?.reasoning) {
+  } else if (
+    delta?.reasoning_content ||
+    delta?.reasoning ||
+    delta?.reasoning_details?.[0]?.signature
+  ) {
     return {
       role: "thinking",
-      content: (delta as any)?.reasoning_content || (delta as any)?.reasoning,
+      content: delta.reasoning_content || delta.reasoning || "",
+      signature: delta?.reasoning_details?.[0]?.signature,
     };
   }
 
