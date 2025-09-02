@@ -52,6 +52,18 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
     const isAssistant = message.role === "assistant";
+    const isThinking = message.role === "thinking";
+
+    // Handle thinking messages
+    if (isThinking) {
+      return (
+        <Box key={index} marginBottom={1}>
+          <Text color="gray" italic>
+            {formatMessageContentForDisplay(message.content)}
+          </Text>
+        </Box>
+      );
+    }
 
     // Handle system messages
     if (isSystem) {
