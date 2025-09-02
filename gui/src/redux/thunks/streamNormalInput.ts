@@ -1,5 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ContextItem, LLMFullCompletionOptions, Tool, ToolPolicy } from "core";
+import { ContextItem, LLMFullCompletionOptions, Tool, ToolCallState, ToolPolicy } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -20,6 +20,7 @@ import {
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
@@ -36,10 +37,10 @@ import { enhanceParsedArgs } from "./enhanceParsedArgs";
  * Evaluates the tool policy for a tool call, including dynamic policy evaluation
  */
 async function evaluateToolPolicy(
-  toolCallState: any,
-  toolSettings: any,
+  toolCallState: ToolCallState,
+  toolSettings: Record<string, ToolPolicy>,
   activeTools: Tool[],
-  ideMessenger: any,
+  ideMessenger: IIdeMessenger,
 ): Promise<ToolPolicy> {
   const basePolicy =
     toolSettings[toolCallState.toolCall.function.name] ??
@@ -48,13 +49,8 @@ async function evaluateToolPolicy(
     )?.defaultToolPolicy ??
     DEFAULT_TOOL_SETTING;
 
-  // Parse arguments for dynamic policy evaluation
-  let parsedArgs: Record<string, unknown> = {};
-  try {
-    parsedArgs = JSON.parse(toolCallState.toolCall.function.arguments);
-  } catch {
-    // If parsing fails, use empty object
-  }
+  // Use already parsed arguments
+  const parsedArgs = toolCallState.parsedArgs || {};
 
   let result;
   try {
@@ -69,13 +65,23 @@ async function evaluateToolPolicy(
   }
 
   // Evaluate the policy dynamically
-
   if (!result || result.status === "error") {
     // If evaluation fails, treat as disabled
     return "disabled";
   }
 
-  return result.content.policy;
+  const dynamicPolicy = result.content.policy;
+
+  // Ensure dynamic policy cannot be more lenient than base policy
+  // Policy hierarchy (most restrictive to least): disabled > allowedWithPermission > allowedWithoutPermission
+  if (basePolicy === "disabled") {
+    return "disabled"; // Cannot override disabled
+  }
+  if (basePolicy === "allowedWithPermission" && dynamicPolicy === "allowedWithoutPermission") {
+    return "allowedWithPermission"; // Cannot make more lenient
+  }
+
+  return dynamicPolicy;
 }
 
 /**
@@ -86,8 +92,8 @@ async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
   activeTools: Tool[],
-  ideMessenger: any,
-): Promise<void> {
+  ideMessenger: IIdeMessenger,
+): Promise<boolean> {  // Return whether all tools were auto-approved
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
@@ -99,7 +105,7 @@ async function handleToolCallExecution(
 
   // If no generating tool calls, nothing to process
   if (toolCallStates.length === 0) {
-    return;
+    return true;  // No tools to process, consider as "auto-approved"
   }
 
   // Check if ALL tool calls are auto-approved using dynamic evaluation
@@ -107,23 +113,62 @@ async function handleToolCallExecution(
     evaluateToolPolicy(toolCallState, toolSettings, activeTools, ideMessenger),
   );
   const policies = await Promise.all(policyPromises);
-  const allAutoApproved = policies.every(
-    (policy) => policy === "allowedWithoutPermission",
-  );
+  
+  // Handle disabled tool calls and set others as generated
+  const allAutoApproved = await Promise.all(
+    toolCallStates.map(async (toolCallState, index) => {
+      const policy = policies[index];
+      
+      if (policy === "disabled") {
+        // Mark as errored instead of generated
+        dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
+        
+        // Get the actual command from parsed arguments if it's runTerminalCommand
+        const parsedArgs = toolCallState.parsedArgs || {};
+        let command = toolCallState.toolCall.function.name;
+        if (
+          toolCallState.toolCall.function.name === "runTerminalCommand" &&
+          parsedArgs.command
+        ) {
+          command = parsedArgs.command;
+        }
+        
+        // Add error message explaining why it's disabled
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: toolCallState.toolCallId,
+            contextItems: [
+              {
+                icon: "problems",
+                name: "Security Policy Violation",
+                description: "Command Disabled",
+                content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
+                hidden: false,
+              },
+            ],
+          }),
+        );
+        return false;
+      } else {
+        // Set as generated for non-disabled tools
+        dispatch(
+          setToolGenerated({
+            toolCallId: toolCallState.toolCallId,
+            tools: newState.config.config.tools,
+          }),
+        );
+        return policy === "allowedWithoutPermission";
+      }
+    }),
+  ).then((results) => results.every(Boolean));
 
-  // Set all tools as generated first
-  toolCallStates.forEach((toolCallState) => {
-    dispatch(
-      setToolGenerated({
-        toolCallId: toolCallState.toolCallId,
-        tools: newState.config.config.tools,
-      }),
-    );
-  });
-
-  // Only run if we have auto-approve for all
+  // Only run if we have auto-approve for all non-disabled tools
   if (allAutoApproved && toolCallStates.length > 0) {
-    const toolCallPromises = toolCallStates.map(async (toolCallState) => {
+    const nonDisabledToolCalls = toolCallStates.filter(
+      (_, index) => policies[index] !== "disabled",
+    );
+    
+    const toolCallPromises = nonDisabledToolCalls.map(async (toolCallState) => {
       const response = await dispatch(
         callToolById({ toolCallId: toolCallState.toolCallId }),
       );
@@ -132,6 +177,8 @@ async function handleToolCallExecution(
 
     await Promise.all(toolCallPromises);
   }
+  
+  return allAutoApproved;
 }
 
 export const streamNormalInput = createAsyncThunk<
@@ -315,83 +362,23 @@ export const streamNormalInput = createAsyncThunk<
       ),
     );
 
-    const generatingToolCalls = allToolCallStates.filter(
-      (toolCallState) => toolCallState.status === "generating",
-    );
-
-    // Check if ALL generating tool calls are auto-approved using dynamic evaluation
-    let allAutoApproved = false;
-    if (generatingToolCalls.length > 0) {
-      const policyPromises = generatingToolCalls.map((toolCallState) =>
-        evaluateToolPolicy(
-          toolCallState,
-          toolSettings,
-          activeTools,
-          extra.ideMessenger,
-        ),
-      );
-      const policies = await Promise.all(policyPromises);
-
-      // Handle disabled tool calls
-      policies.forEach((policy, index) => {
-        if (policy === "disabled") {
-          const toolCallId = generatingToolCalls[index].toolCallId;
-          const toolCall = generatingToolCalls[index].toolCall;
-
-          // Get the actual command from parsed arguments if it's runTerminalCommand
-          let command = toolCall.function.name;
-          try {
-            const args = JSON.parse(toolCall.function.arguments);
-            if (
-              toolCall.function.name === "runTerminalCommand" &&
-              args.command
-            ) {
-              command = args.command;
-            }
-          } catch {
-            // Use function name if parsing fails
-          }
-
-          // Mark as errored instead of generated
-          dispatch(errorToolCall({ toolCallId }));
-
-          // Add error message explaining why it's disabled
-          dispatch(
-            updateToolCallOutput({
-              toolCallId,
-              contextItems: [
-                {
-                  icon: "problems",
-                  name: "Security Policy Violation",
-                  description: "Command Disabled",
-                  content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
-                  hidden: false,
-                },
-              ],
-            }),
-          );
-        }
-        // Non-disabled tools will be set to "generated" by handleToolCallExecution
-      });
-
-      allAutoApproved = policies.every(
-        (policy) => policy === "allowedWithoutPermission",
-      );
-    }
-
-    // Only set inactive if:
-    // 1. There are no tool calls, OR
-    // 2. There are tool calls but they require manual approval
-    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
-    if (generatingToolCalls.length === 0 || !allAutoApproved) {
-      dispatch(setInactive());
-    }
-
-    await handleToolCallExecution(
+    // Handle tool call execution if there are any generating tool calls
+    const allAutoApproved = await handleToolCallExecution(
       dispatch,
       getState,
       activeTools,
       extra.ideMessenger,
     );
+    
+    // Only set inactive if not all tools were auto-approved
+    // This prevents UI flashing for auto-approved tools
+    const finalState = getState();
+    const generatingToolCalls = selectCurrentToolCalls(finalState).filter(
+      (toolCallState) => toolCallState.status === "generating",
+    );
+    
+    if (generatingToolCalls.length === 0 || !allAutoApproved) {
+      dispatch(setInactive());
+    }
   },
 );

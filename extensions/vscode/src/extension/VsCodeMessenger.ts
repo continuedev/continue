@@ -254,14 +254,6 @@ export class VsCodeMessenger {
       editDecorationManager.clear();
     });
 
-    this.onWebview("tools/evaluatePolicy", async (msg) => {
-      return this.inProcessMessenger.externalRequest(
-        "tools/evaluatePolicy",
-        msg.data,
-        msg.messageId,
-      );
-    });
-
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
