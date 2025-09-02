@@ -229,9 +229,15 @@ async function loadUserAssistantWithFallback(
 
   if (assistants.length > 0) {
     const result = assistants[0].configResult;
-    if (result.errors?.length || !result.config) {
+    if (!result.config) {
       throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
     }
+    
+    const errors = result.errors;
+    if (errors?.some((e: any) => e.fatal)) {
+      throw new Error(errors.map((e: any) => e.message).join("\n") ?? "Failed to load assistant.");
+    }
+
     return result.config as AssistantUnrolled;
   }
 
