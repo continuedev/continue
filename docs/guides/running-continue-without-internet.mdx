@@ -3,7 +3,283 @@ title: "How to Run Continue Without Internet"
 description: "Learn how to set up Continue for air-gapped or offline environments using local models, including steps to disable telemetry and configure local model providers"
 ---
 
-1. Download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix).
-2. Turn off "Allow Anonymous Telemetry" in the user settings. This will stop Continue from attempting requests to PostHog for [anonymous telemetry](/customize/telemetry).
-3. Also in `config.json`, set the default model to a local model. You can available options [here](/customization/models#openai).
-4. Restart VS Code to ensure that the changes to `config.json` or `config.yaml` take effect.
+## Overview
+
+Continue can run entirely offline using local language models through providers like Ollama, LM Studio, or llama.cpp. This guide covers everything you need to set up a fully functional offline development environment.
+
+## Installation for offline environments
+
+### Step 1: Install Continue
+
+For air-gapped environments, download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix).
+
+### Step 2: Install a local model provider
+
+Choose one of these local model providers:
+
+- **[Ollama](https://ollama.com/)** - Recommended for ease of use (see our [complete Ollama guide](/guides/ollama-guide))
+- **[LM Studio](https://lmstudio.ai/)** - GUI-based model management
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** - Direct model serving
+
+### Step 3: Download models
+
+Before going offline, pull the models you'll need. For Ollama:
+
+```bash
+# For general coding tasks (see recommended models below)
+ollama pull llama3.1:8b
+
+# For resource-constrained environments
+ollama pull gemma2:2b
+
+# For code completion
+ollama pull qwen2.5-coder:1.5b
+```
+
+## Configuration
+
+### Basic config.yaml setup
+
+Create or update your `config.yaml` file with local models:
+
+```yaml
+name: offline-config
+version: 0.0.1
+schema: v1
+
+models:
+  # Main chat model
+  - name: Llama 3.1 8B
+    provider: ollama
+    model: llama3.1:8b
+    roles:
+      - chat
+      - edit
+      - apply
+    defaultCompletionOptions:
+      temperature: 0.7
+
+  # Lightweight autocomplete model
+  - name: Qwen2.5 Coder
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    roles:
+      - autocomplete
+    defaultCompletionOptions:
+      temperature: 0.3
+
+# Disable telemetry for offline use
+allowAnonymousTelemetry: false
+```
+
+### Resource-constrained setup
+
+For limited RAM or CPU environments:
+
+```yaml
+name: lightweight-offline-config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Gemma 2B
+    provider: ollama
+    model: gemma2:2b
+    roles:
+      - chat
+      - edit
+      - apply
+    defaultCompletionOptions:
+      temperature: 0.5
+      maxTokens: 2048
+
+# Disable features that require internet
+allowAnonymousTelemetry: false
+```
+
+## Recommended models for offline use
+
+Based on our [model recommendations](/customization/models#recommended-models), here are the best local models for offline development:
+
+### High-Performance (16GB+ VRAM)
+
+- **[Qwen3 Coder 30B](https://hub.continue.dev/ollama/qwen3-coder-30b)** - Best overall coding capability
+- **[gpt-oss-20b](https://hub.continue.dev/ollama/gpt-oss-20b)** - Strong reasoning and code generation
+- **[Devstral Small 27B](https://hub.continue.dev/ollama/devstral)** - Excellent for complex tasks
+
+### Balanced Performance (8GB+ VRAM)
+
+- **[Qwen2.5-Coder 7B](https://hub.continue.dev/ollama/qwen2.5-coder-7b)** - Best for code generation
+- **[Llama 3.1 8B](https://ollama.com/library/llama3.1:8b)** - Good general-purpose with tool support
+- **[Mistral 7B](https://ollama.com/library/mistral)** - Fast and versatile
+
+### Lightweight (4GB+ VRAM)
+
+- **[Gemma 3 4B](https://hub.continue.dev/ollama/gemma3-4b)** - Efficient for basic tasks
+- **[Qwen2.5-Coder 1.5B](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)** - Excellent for autocomplete
+- **[Gemma 2B](https://ollama.com/library/gemma2:2b)** - Minimal resource usage
+
+See our complete [local models guide](/customization/models#local-models) for more options.
+
+## Preparing for offline work
+
+### Pre-flight checklist
+
+Before disconnecting from the internet:
+
+1. **Index your codebase** - Open Continue and let it fully analyze your project
+2. **Cache documentation** - Use the [@docs](https://docs.continue.dev/customize/deep-dives/docs) provider to download relevant documentation
+3. **Pull all required models** - Ensure all models in your config are downloaded locally
+4. **Test your setup** - Verify everything works by running a few prompts offline
+5. **Download dependencies** - Run your package manager to ensure all dependencies are cached
+
+### Setting up context providers
+
+Configure local context providers that don't require internet:
+
+```yaml
+contextProviders:
+  - name: codebase
+    params:
+      useLocalEmbeddings: true
+
+  - name: file
+
+  - name: folder
+
+  - name: gitDiff
+```
+
+## Optimizing for offline performance
+
+### Model selection guidelines
+
+| Use Case        | Recommended Model                                                        | RAM Required | See Guide                                          |
+| --------------- | ------------------------------------------------------------------------ | ------------ | -------------------------------------------------- |
+| General coding  | [llama3.1:8b](https://ollama.com/library/llama3.1:8b)                    | 8GB+         | [Ollama Guide](/guides/ollama-guide)               |
+| Light editing   | [gemma2:2b](https://ollama.com/library/gemma2:2b)                        | 4GB+         | [Ollama Guide](/guides/ollama-guide)               |
+| Code completion | [qwen2.5-coder:1.5b](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b) | 2GB+         | [Model Roles](/customize/model-roles/autocomplete) |
+| Complex tasks   | [gpt-oss-20b](https://hub.continue.dev/ollama/gpt-oss-20b)               | 20GB+        | [Models Guide](/customization/models)              |
+
+### Performance tips
+
+1. **Use smaller models for autocomplete** - They're faster and less resource-intensive
+2. **Adjust context length** - Reduce `maxTokens` for faster responses
+3. **Disable unnecessary features** - Turn off features that might attempt network requests
+4. **Pre-warm models** - Run a test prompt to load models into memory before starting work
+
+For detailed performance optimization, see our [Ollama performance guide](/guides/ollama-guide#how-to-optimize-performance).
+
+## Working with agent mode offline
+
+Agent mode works excellently offline for multi-file operations:
+
+```yaml
+models:
+  - name: Local Agent
+    provider: ollama
+    model: llama3.1:8b
+    roles:
+      - chat
+      - edit
+      - apply
+    defaultCompletionOptions:
+      temperature: 0.7
+      maxTokens: 4096
+```
+
+Note: Some local models have limited tool calling capabilities. Check our [model capabilities guide](/customize/deep-dives/model-capabilities) for details.
+
+### Best practices for offline agent mode
+
+1. **Write clear task descriptions** - Be specific about what you want to accomplish
+2. **Break down complex tasks** - Smaller, focused requests work better with local models
+3. **Use project rules** - Define coding standards in [rules](/customize/rules) to guide the agent
+4. **Leverage context providers** - Use @file and @folder to provide relevant context
+
+## Troubleshooting
+
+### Common issues and solutions
+
+**Model won't load:**
+
+- Check available RAM
+- Try a smaller model
+- Ensure the model is fully downloaded (see [Ollama troubleshooting](/guides/ollama-guide#how-to-troubleshoot-ollama-issues))
+
+**Slow responses:**
+
+- Reduce `maxTokens` in config
+- Use a smaller model
+- Close other applications to free resources
+
+**Continue attempts network requests:**
+
+- Set `allowAnonymousTelemetry: false`
+- Check for context providers that require internet
+- Restart VS Code after config changes
+
+### Verifying offline status
+
+Test your setup by:
+
+1. Disconnecting from the internet
+2. Restarting VS Code
+3. Opening Continue and sending a test prompt
+4. Checking that no network errors appear
+
+## Advanced configuration
+
+### Multiple model profiles
+
+Create different configurations for various scenarios:
+
+```yaml
+models:
+  # Fast, lightweight model for quick edits
+  - name: Quick Edit
+    provider: ollama
+    model: gemma2:2b
+    roles:
+      - edit
+
+  # More capable model for complex tasks
+  - name: Deep Think
+    provider: ollama
+    model: llama3.1:8b
+    roles:
+      - chat
+      - apply
+
+  # Specialized model for code completion
+  - name: Autocomplete
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    roles:
+      - autocomplete
+```
+
+### Custom embeddings for codebase search
+
+For better codebase search without internet:
+
+```yaml
+embeddingsProvider:
+  provider: ollama
+  model: nomic-embed-text
+```
+
+Remember to pull the embeddings model:
+
+```bash
+ollama pull nomic-embed-text
+```
+
+## Next steps
+
+- Follow our complete [Ollama setup guide](/guides/ollama-guide) for detailed instructions
+- Explore all [local model options](/customization/models#local-models)
+- Set up [project-specific rules](/customize/rules) for better offline assistance
+- Configure [context providers](/customize/context-providers) for your workflow
+- Learn about [agent mode](/agent-mode) for complex offline tasks
+- Understand [model capabilities](/customize/deep-dives/model-capabilities) and limitations
