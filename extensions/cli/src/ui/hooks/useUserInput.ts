@@ -129,12 +129,15 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
   }
 
   // Handle Ctrl+V for clipboard paste (including images)
+  // Note: Cmd+V often doesn't work for image pasting as terminals don't send the key event
   if (key.ctrl && input === "v" && textBuffer) {
-    logger.debug("Handling clipboard paste");
-    // Check for images asynchronously
+    logger.debug("Handling Ctrl+V clipboard paste");
+
+    // Check clipboard for images immediately on paste event
     checkClipboardForImage()
       .then(async (hasImage) => {
         if (hasImage) {
+          logger.debug("Image found in clipboard during paste event");
           const imageBuffer = await getClipboardImage();
           if (imageBuffer) {
             textBuffer.addImage(imageBuffer);
@@ -145,16 +148,13 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
             return;
           }
         }
-        // If no image or image reading failed, let normal text paste handling continue
-        // We return false here to allow the normal paste processing to happen
+        // If no image, let normal text paste handling continue
       })
       .catch((error) => {
         logger.debug("Error checking clipboard for image:", error);
-        // Continue with normal text paste handling
       });
 
-    // Don't consume the event - let normal paste handling continue
-    // This allows text pastes to work normally when no image is present
+    // Don't consume the event - let normal text paste handling continue
     return false;
   }
 
