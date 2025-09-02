@@ -8,10 +8,11 @@ import { UpdateNotification } from "../UpdateNotification.js";
 
 import { ContextPercentageDisplay } from "./ContextPercentageDisplay.js";
 import { ModeIndicator } from "./ModeIndicator.js";
+import { ResponsiveRepoDisplay } from "./ResponsiveRepoDisplay.js";
 
 interface BottomStatusBarProps {
   currentMode: PermissionMode;
-  repoURLText: string;
+  remoteUrl?: string;
   isRemoteMode: boolean;
   services: any;
   navState: any;
@@ -22,7 +23,7 @@ interface BottomStatusBarProps {
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   currentMode,
-  repoURLText,
+  remoteUrl,
   isRemoteMode,
   services,
   navState,
@@ -34,9 +35,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
     <Box marginLeft={2} flexDirection="row" alignItems="center">
       {currentMode === "normal" && (
         <React.Fragment>
-          <Text key="repo-url" color="dim" wrap="truncate-start">
-            {repoURLText}
-          </Text>
+          <ResponsiveRepoDisplay remoteUrl={remoteUrl} />
           <Text key="repo-separator"> </Text>
         </React.Fragment>
       )}
