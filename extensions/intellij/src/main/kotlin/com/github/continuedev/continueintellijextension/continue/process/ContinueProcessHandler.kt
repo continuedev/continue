@@ -50,8 +50,8 @@ class ContinueProcessHandler(
 
         processScope!!.launch(Dispatchers.IO) {
             while (isActive) {
-                val line = reader.readLine()
-                if (line != null && line.isNotEmpty())
+                val line = reader.readLine() ?: break
+                if (line.isNotEmpty())
                     readMessage(line)
             }
         }
