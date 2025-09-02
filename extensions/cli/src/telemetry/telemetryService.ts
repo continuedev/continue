@@ -37,6 +37,7 @@ class TelemetryService {
   private startTime = Date.now();
   private activeStartTime: number | null = null;
   private totalActiveTime = 0;
+  private shutdownHandlersRegistered = false;
 
   // Metrics
   private sessionCounter: any = null;
@@ -114,7 +115,7 @@ class TelemetryService {
                   ),
                 }),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "20000",
                 ),
               }),
             );
@@ -124,7 +125,7 @@ class TelemetryService {
               new PeriodicExportingMetricReader({
                 exporter: new ConsoleMetricExporter(),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "20000",
                 ),
               }),
             );
@@ -143,13 +144,36 @@ class TelemetryService {
 
       this.initializeMetrics();
 
-      logger.debug("Telemetry service initialized", {
+      // Set up graceful shutdown handlers
+      this.setupShutdownHandlers();
+
+      logger.info("Telemetry service initialized", {
         sessionId: this.config.sessionId,
         exporters: metricsExporters,
+        exportInterval: process.env.OTEL_METRIC_EXPORT_INTERVAL || "20000",
       });
     } catch (error) {
       logger.error("Failed to initialize telemetry", error);
     }
+  }
+
+  /**
+   * Set up process handlers to ensure metrics are flushed on shutdown
+   */
+  private setupShutdownHandlers() {
+    if (this.shutdownHandlersRegistered) return;
+
+    const shutdownHandler = async () => {
+      logger.debug("Process shutdown detected, flushing telemetry...");
+      await this.shutdown();
+    };
+
+    // Handle graceful shutdown - use once() to avoid duplicate handlers
+    process.once("beforeExit", shutdownHandler);
+    process.once("SIGINT", shutdownHandler);
+    process.once("SIGTERM", shutdownHandler);
+
+    this.shutdownHandlersRegistered = true;
   }
 
   private parseHeaders(headersStr: string): Record<string, string> {
@@ -312,6 +336,7 @@ class TelemetryService {
   public recordSessionStart() {
     if (!this.isEnabled()) return;
 
+    logger.debug("Recording session start with telemetry");
     this.sessionCounter.add(1, this.getStandardAttributes());
     this.recordStartupTime(Date.now() - this.startTime);
   }
@@ -542,9 +567,26 @@ class TelemetryService {
     return this.config.sessionId;
   }
 
-  public shutdown() {
+  /**
+   * Shutdown telemetry service and ensure all metrics are flushed
+   */
+  public async shutdown(): Promise<void> {
     this.stopActiveTime();
-    return this.meterProvider?.shutdown();
+
+    if (this.meterProvider) {
+      try {
+        logger.debug("Flushing telemetry metrics before shutdown...");
+        // Force flush any pending metrics before shutdown
+        await this.meterProvider.forceFlush();
+        logger.debug("Telemetry metrics flushed successfully");
+
+        // Now shutdown the provider
+        await this.meterProvider.shutdown();
+        logger.debug("Telemetry service shut down successfully");
+      } catch (error) {
+        logger.error("Failed to shutdown telemetry service", error);
+      }
+    }
   }
 }
 
