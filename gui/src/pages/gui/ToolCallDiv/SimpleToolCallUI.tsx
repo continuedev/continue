@@ -64,9 +64,6 @@ export function SimpleToolCallUI({
 
   return (
     <div className="mt-1 flex flex-col px-4">
-      <div>ERROR</div>
-      <div>{JSON.stringify(toolCallState.output)}</div>
-      <div>END ERROR</div>
       <div className="flex min-w-0 flex-row items-center justify-between gap-2">
         <div
           className={`text-description flex min-w-0 flex-row items-center justify-between gap-1.5 text-xs transition-colors duration-200 ease-in-out ${
