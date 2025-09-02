@@ -99,7 +99,7 @@ allowAnonymousTelemetry: false
 
 ## Recommended models for offline use
 
-Based on our [model recommendations](/customization/models#recommended-models), here are the best local models for offline development:
+Based on our [model recommendations](/customization/models), here are the best local models for offline development:
 
 ### High-Performance (16GB+ VRAM)
 
@@ -119,7 +119,7 @@ Based on our [model recommendations](/customization/models#recommended-models), 
 - **[Qwen2.5-Coder 1.5B](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)** - Excellent for autocomplete
 - **[Gemma 2B](https://ollama.com/library/gemma2:2b)** - Minimal resource usage
 
-See our complete [local models guide](/customization/models#local-models) for more options.
+See our complete [local models guide](/customization/models) for more options.
 
 ## Preparing for offline work
 
@@ -128,7 +128,7 @@ See our complete [local models guide](/customization/models#local-models) for mo
 Before disconnecting from the internet:
 
 1. **Index your codebase** - Open Continue and let it fully analyze your project
-2. **Cache documentation** - Use the [@docs](https://docs.continue.dev/customize/deep-dives/docs) provider to download relevant documentation
+2. **Cache documentation** - Use the @docs context provider to download relevant documentation
 3. **Pull all required models** - Ensure all models in your config are downloaded locally
 4. **Test your setup** - Verify everything works by running a few prompts offline
 5. **Download dependencies** - Run your package manager to ensure all dependencies are cached
@@ -194,7 +194,7 @@ Note: Some local models have limited tool calling capabilities. Check our [model
 
 1. **Write clear task descriptions** - Be specific about what you want to accomplish
 2. **Break down complex tasks** - Smaller, focused requests work better with local models
-3. **Use project rules** - Define coding standards in [rules](/customize/rules) to guide the agent
+3. **Use project rules** - Define coding standards in [rules](/customize/deep-dives/rules) to guide the agent
 4. **Leverage context providers** - Use @file and @folder to provide relevant context
 
 ## Troubleshooting
@@ -278,8 +278,8 @@ ollama pull nomic-embed-text
 ## Next steps
 
 - Follow our complete [Ollama setup guide](/guides/ollama-guide) for detailed instructions
-- Explore all [local model options](/customization/models#local-models)
-- Set up [project-specific rules](/customize/rules) for better offline assistance
-- Configure [context providers](/customize/context-providers) for your workflow
-- Learn about [agent mode](/agent-mode) for complex offline tasks
+- Explore all [local model options](/customization/models)
+- Set up [project-specific rules](/customize/deep-dives/rules) for better offline assistance
+- Configure context providers for your workflow
+- Learn about [agent mode](/features/agent/quick-start) for complex offline tasks
 - Understand [model capabilities](/customize/deep-dives/model-capabilities) and limitations
