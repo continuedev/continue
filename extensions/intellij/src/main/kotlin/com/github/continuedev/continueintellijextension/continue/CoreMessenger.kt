@@ -5,9 +5,11 @@ import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.github.continuedev.continueintellijextension.`continue`.process.ContinueBinaryProcess
 import com.github.continuedev.continueintellijextension.`continue`.process.ContinueProcessHandler
 import com.github.continuedev.continueintellijextension.`continue`.process.ContinueSocketProcess
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
@@ -15,14 +17,13 @@ import kotlinx.coroutines.CoroutineScope
 class CoreMessenger(
     private val project: Project,
     private val ideProtocolClient: IdeProtocolClient,
-
-    // todo: this scope is public only to cancel the coroutines on dispose in ContinuePluginService
-    // todo: scope is created in ContinuePluginStartupActivity; refactor this/clean this up/encapsulate
-    val coroutineScope: CoroutineScope
+    val coroutineScope: CoroutineScope,
+    private val onUnexpectedExit: () -> Unit
 ) {
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
-    private val process = startContinueProcess()
+    private var process = startContinueProcess()
+    private val log = Logger.getInstance(CoreMessenger::class.java.simpleName)
 
     fun request(messageType: String, data: Any?, messageId: String?, onResponse: (Any?) -> Unit) {
         val id = messageId ?: uuid()
@@ -33,15 +34,14 @@ class CoreMessenger(
 
     private fun startContinueProcess(): ContinueProcessHandler {
         val isTcp = System.getenv("USE_TCP")?.toBoolean() ?: false
-        return ContinueProcessHandler(coroutineScope, ::readProcessMessage) {
-            if (isTcp)
-                ContinueSocketProcess()
-            else
-                ContinueBinaryProcess()
-        }
+        val process = if (isTcp)
+            ContinueSocketProcess()
+        else
+            ContinueBinaryProcess(onUnexpectedExit)
+        return ContinueProcessHandler(coroutineScope, process, ::handleMessage)
     }
 
-    private fun readProcessMessage(json: String) {
+    private fun handleMessage(json: String) {
         val responseMap = tryToParse(json) ?: return
         val messageId = responseMap["messageId"].toString()
         val messageType = responseMap["messageType"].toString()
@@ -76,16 +76,19 @@ class CoreMessenger(
         try {
             gson.fromJson(json, Map::class.java)
         } catch (_: JsonSyntaxException) {
-            LOG.warn("Invalid message JSON: $json") // example: NODE_ENV undefined
+            log.warn("Invalid message JSON: $json") // example: NODE_ENV undefined
             null
         }
 
     fun restart() {
+        log.warn("Restarting Continue process")
         responseListeners.clear()
-        process.restart()
+        process.close()
+        process = startContinueProcess()
     }
 
-    private companion object {
-        private val LOG = Logger.getInstance(CoreMessenger::class.java.simpleName)
+    fun close() {
+        log.warn("Closing Continue process")
+        process.close()
     }
 }
