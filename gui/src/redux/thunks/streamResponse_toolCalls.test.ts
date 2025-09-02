@@ -1702,15 +1702,15 @@ describe("streamResponseThunk - tool calls", () => {
         ],
       },
       {
-        type: "session/setInactive",
-        payload: undefined,
-      },
-      {
         type: "session/setToolGenerated",
         payload: {
           toolCallId: "tool-approval-1",
           tools: [],
         },
+      },
+      {
+        type: "session/setInactive",
+        payload: undefined,
       },
       {
         type: "chat/streamNormalInput/fulfilled",
