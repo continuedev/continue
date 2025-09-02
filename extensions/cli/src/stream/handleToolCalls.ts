@@ -1,7 +1,7 @@
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { stripImages } from "core/util/messageContent.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
-import type { ChatCompletionTool } from "openai/resources.mjs";
+import type { ChatCompletionFunctionTool } from "openai/resources.mjs";
 
 import { filterExcludedTools } from "../permissions/index.js";
 import {
@@ -175,7 +175,7 @@ export async function handleToolCalls(
   return false;
 }
 
-export async function getAllTools() {
+export async function getAllTools(): Promise<ChatCompletionFunctionTool[]> {
   // Get all available tool names
   const allBuiltinTools = getAllBuiltinTools();
   const builtinToolNames = allBuiltinTools.map((tool) => tool.name);
@@ -215,8 +215,12 @@ export async function getAllTools() {
       const { PLAN_MODE_WRITE_EXCLUDED_TOOLS } = await import(
         "../services/ToolPermissionService.js"
       );
-      const denyInPlan = new Set<string>(PLAN_MODE_WRITE_EXCLUDED_TOOLS as readonly string[]);
-      allowedToolNames = allowedToolNames.filter((name) => !denyInPlan.has(name));
+      const denyInPlan = new Set<string>(
+        PLAN_MODE_WRITE_EXCLUDED_TOOLS as readonly string[],
+      );
+      allowedToolNames = allowedToolNames.filter(
+        (name) => !denyInPlan.has(name),
+      );
     }
   } else {
     // Service not ready - this is a critical error since tools should only be
@@ -236,29 +240,31 @@ export async function getAllTools() {
     allowedToolNamesSet.has(tool.name),
   );
 
-  const allTools: ChatCompletionTool[] = allowedBuiltinTools.map((tool) => ({
-    type: "function" as const,
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: {
-        type: "object",
-        properties: Object.fromEntries(
-          Object.entries(tool.parameters).map(([key, param]) => [
-            key,
-            {
-              type: param.type,
-              description: param.description,
-              items: param.items,
-            },
-          ]),
-        ),
-        required: Object.entries(tool.parameters)
-          .filter(([_, param]) => param.required)
-          .map(([key, _]) => key),
+  const allTools: ChatCompletionFunctionTool[] = allowedBuiltinTools.map(
+    (tool) => ({
+      type: "function" as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: {
+          type: "object",
+          properties: Object.fromEntries(
+            Object.entries(tool.parameters).map(([key, param]) => [
+              key,
+              {
+                type: param.type,
+                description: param.description,
+                items: param.items,
+              },
+            ]),
+          ),
+          required: Object.entries(tool.parameters)
+            .filter(([_, param]) => param.required)
+            .map(([key, _]) => key),
+        },
       },
-    },
-  }));
+    }),
+  );
 
   // Add filtered MCP tools
   const allowedMcpTools = mcpTools.filter((tool) =>
