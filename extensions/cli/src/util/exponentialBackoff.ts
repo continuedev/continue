@@ -5,6 +5,7 @@ import { error, warn } from "../logging.js";
 
 import { formatError } from "./formatError.js";
 import { logger } from "./logger.js";
+import { responsesToChatCompletion } from "./responsesToChatCompletion.js";
 
 export interface ExponentialBackoffOptions {
   /** Maximum number of retry attempts */
@@ -124,6 +125,10 @@ function calculateDelay(
   return cappedDelay;
 }
 
+function shouldUseResponsesApi(llmApi: BaseLlmApi, model: string): boolean {
+  return !!llmApi.responsesStream && model.startsWith("gpt-5");
+}
+
 /**
  * Wrapper around llmApi.chatCompletionStream with exponential backoff retry logic
  */
@@ -143,7 +148,7 @@ export async function chatCompletionStreamWithBackoff(
         throw new Error("Request aborted");
       }
 
-      return llmApi.chatCompletionStream(params, abortSignal);
+      return shouldUseResponsesApi(llmApi, params.model) ? responsesToChatCompletion(params, abortSignal, llmApi) : llmApi.chatCompletionStream(params, abortSignal);
     } catch (err: any) {
       lastError = err;
 

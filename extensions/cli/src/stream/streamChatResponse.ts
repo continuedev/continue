@@ -336,11 +336,6 @@ export async function streamChatResponse(
     // Recompute tools on each iteration to handle mode changes during streaming
     const tools = await getAllTools();
 
-    logger.debug("Tools prepared", {
-      toolCount: tools.length,
-      toolNames: tools.map((t) => t.function.name),
-    });
-
     // Get response from LLM
     const { content, toolCalls, shouldContinue } =
       await processStreamingResponse({
