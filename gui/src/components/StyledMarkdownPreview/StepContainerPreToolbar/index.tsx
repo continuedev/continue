@@ -1,4 +1,7 @@
-import { ChevronDownIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { renderContextItems } from "core/util/messageContent";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -137,23 +140,32 @@ export function StepContainerPreToolbar({
     // Check if it's a terminal code block (includes bash, sh, or looks like terminal commands)
     if (isTerminalCodeBlock(language, codeBlockContent)) {
       // First try evaluating the entire block
-      const wholeBlockEval = evaluateTerminalCommandSecurity('allowedWithoutPermission', codeBlockContent);
-      if (wholeBlockEval === 'disabled' || wholeBlockEval === 'allowedWithPermission') {
+      const wholeBlockEval = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        codeBlockContent,
+      );
+      if (
+        wholeBlockEval === "disabled" ||
+        wholeBlockEval === "allowedWithPermission"
+      ) {
         return true;
       }
-      
+
       // If the whole block seems safe, check individual lines
       // This catches cases where dangerous commands are mixed with comments
-      const lines = codeBlockContent.split('\n');
+      const lines = codeBlockContent.split("\n");
       for (const line of lines) {
         const trimmedLine = line.trim();
         // Skip empty lines and comments
-        if (!trimmedLine || trimmedLine.startsWith('#')) {
+        if (!trimmedLine || trimmedLine.startsWith("#")) {
           continue;
         }
-        
-        const lineEval = evaluateTerminalCommandSecurity('allowedWithoutPermission', trimmedLine);
-        if (lineEval === 'disabled' || lineEval === 'allowedWithPermission') {
+
+        const lineEval = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          trimmedLine,
+        );
+        if (lineEval === "disabled" || lineEval === "allowedWithPermission") {
           return true;
         }
       }
@@ -326,7 +338,10 @@ export function StepContainerPreToolbar({
       {securityWarning && (
         <div className="bg-warning/10 border-warning/30 text-warning flex items-center gap-2 border-b px-2 py-1.5 text-sm">
           <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
-          <span>This code contains potentially dangerous commands. Please review and understand the code before running.</span>
+          <span>
+            This code contains potentially dangerous commands. Please review and
+            understand the code before running.
+          </span>
         </div>
       )}
       <div
