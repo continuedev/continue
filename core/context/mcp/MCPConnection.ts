@@ -9,6 +9,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 
+import { fileURLToPath } from "node:url";
 import {
   IDE,
   MCPConnectionStatus,
@@ -343,6 +344,26 @@ class MCPConnection {
     };
   }
 
+  /**
+   * Resolves the current working directory of the current workspace.
+   * @param cwd The cwd parameter provided by user.
+   * @returns Current working directory (user-provided cwd or workspace root).
+   */
+  private async resolveCwd(cwd?: string) {
+    // Return cwd if it has been explicitly set.
+    if (cwd) {
+      return cwd;
+    }
+    // Otherwise use workspace folder.
+    const workspaceDirs = await this.extras?.ide.getWorkspaceDirs();
+    if (workspaceDirs) {
+      if (workspaceDirs.length > 0) {
+        cwd = fileURLToPath(workspaceDirs[0]);
+      }
+    }
+    return cwd;
+  }
+
   private async constructTransportAsync(
     options: MCPOptions,
   ): Promise<Transport> {
@@ -379,7 +400,7 @@ class MCPConnection {
           command,
           args,
           env,
-          cwd: options.transport.cwd,
+          cwd: await this.resolveCwd(options.transport.cwd),
           stderr: "pipe",
         });
 
