@@ -641,9 +641,14 @@ export const sessionSlice = createSlice({
                 lastMessage.content += messageContent;
               }
             }
-          } else if (message.role === "thinking" && message.signature) {
+          } else if (
+            message.role === "thinking" &&
+            (message.signature || message.reasoning_details)
+          ) {
             if (lastMessage.role === "thinking") {
-              lastMessage.signature = message.signature;
+              if (message.signature) lastMessage.signature = message.signature;
+              if (message.reasoning_details)
+                lastMessage.reasoning_details = message.reasoning_details;
             }
           } else if (
             message.role === "assistant" &&

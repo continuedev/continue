@@ -30,25 +30,32 @@ export function toChatMessage(
   }
   if (message.role === "thinking") {
     if (message.signature && options.model.includes("claude")) {
+      const reasoningDetails =
+        message.reasoning_details ||
+        (message.signature
+          ? {
+              signature: message.signature,
+            }
+          : undefined);
+
       return {
         role: "assistant",
         reasoning: message.content,
-        reasoning_details: {
-          signature: message.signature,
-        },
+        reasoning_details: reasoningDetails,
       } as ChatCompletionMessageParam;
     } else {
       return null;
       /*
-      Possible improvement: option to preserve reasoning for other models
-      see https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
-      For example:
-      if (options.preserveReasoning) {
-        return {
-          role: "assistant",
-          reasoning: message.content
-        } as ChatCompletionMessageParam;
-      }*/
+    Possible improvement: option to preserve reasoning for other models
+    see https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
+    For example:
+    if (options.preserveReasoning) {
+      return {
+        role: "assistant",
+        reasoning: message.content,
+        reasoning_details: message.reasoning_details
+      } as ChatCompletionMessageParam;
+    }*/
     }
   }
 
@@ -185,14 +192,29 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
   const message = response.choices[0].message as ChatCompletionMessage & {
     reasoning?: string;
     reasoning_content?: string;
+    reasoning_details?: {
+      signature?: string;
+      [key: string]: any;
+    }[];
   };
 
   // Check for reasoning content first (similar to fromChatCompletionChunk)
   if (message.reasoning_content || message.reasoning) {
-    messages.push({
+    const thinkingMessage: ChatMessage = {
       role: "thinking",
       content: (message as any).reasoning_content || (message as any).reasoning,
-    });
+    };
+
+    // Preserve reasoning_details if present
+    if (message.reasoning_details) {
+      thinkingMessage.reasoning_details = message.reasoning_details;
+      // Extract signature from reasoning_details if available
+      if (message.reasoning_details[0]?.signature) {
+        thinkingMessage.signature = message.reasoning_details[0].signature;
+      }
+    }
+
+    messages.push(thinkingMessage);
   }
 
   // Then add the assistant message
@@ -268,6 +290,9 @@ export function fromChatCompletionChunk(
       role: "thinking",
       content: delta.reasoning_content || delta.reasoning || "",
       signature: delta?.reasoning_details?.[0]?.signature,
+      reasoning_details: delta?.reasoning_details?.[0]?.signature
+        ? delta.reasoning_details
+        : undefined,
     };
   }
 
