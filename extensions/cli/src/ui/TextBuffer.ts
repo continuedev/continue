@@ -323,10 +323,8 @@ export class TextBuffer {
 
     // Fallback paste detection: some terminals send large pastes as rapid chunks
     // instead of using bracketed paste mode. We detect this by timing between inputs.
-    if (
-      input.length > RAPID_INPUT_THRESHOLD ||
-      (input.length >= 50 && this._rapidInputBuffer.length === 0)
-    ) {
+    // Only trigger for actually large chunks to avoid interfering with normal typing
+    if (input.length > RAPID_INPUT_THRESHOLD) {
       this._rapidInputStartPos = this._cursor;
 
       // Accumulate chunks without inserting to avoid visual flicker
@@ -524,7 +522,8 @@ export class TextBuffer {
       }
 
       // Fallback: detect chunked paste operations
-      if (this.handleRapidInput(input)) {
+      // Don't trigger rapid input detection for small inputs (e.g. single characters like "/" or "@")
+      if (input.length > 50 && this.handleRapidInput(input)) {
         return true;
       }
 

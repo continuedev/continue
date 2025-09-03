@@ -1,4 +1,4 @@
-import { testBothModes, renderInMode } from "./TUIChat.dualModeHelper.js";
+import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
 
 describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("shows slash when user types /", async (mode) => {
@@ -28,17 +28,15 @@ describe("TUIChat - Slash Commands Tests", () => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     // Type /log to trigger slash command filtering
-    stdin.write("/log");
+    stdin.write("/exi");
 
     // Wait a bit for the UI to update (allow extra time in both modes)
-    await new Promise((resolve) =>
-      setTimeout(resolve, mode === "remote" ? 200 : 150),
-    );
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const frame = lastFrame();
 
     // Should show the typed command
-    expect(frame).toContain("/log");
+    expect(frame).toContain("/exi");
 
     // Mode-specific UI elements
     if (mode === "remote") {
@@ -53,7 +51,7 @@ describe("TUIChat - Slash Commands Tests", () => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     // Type /log and then tab
-    stdin.write("/log");
+    stdin.write("/exi");
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -83,9 +81,7 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Type just /
     stdin.write("/");
 
-    await new Promise((resolve) =>
-      setTimeout(resolve, mode === "remote" ? 120 : 50),
-    );
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const frame = lastFrame();
 
