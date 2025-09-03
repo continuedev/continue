@@ -1277,6 +1277,7 @@ export interface MCPOptions {
   transport: TransportOptions;
   faviconUrl?: string;
   timeout?: number;
+  requestOptions?: RequestOptions;
 }
 
 export type MCPConnectionStatus =

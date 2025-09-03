@@ -4,6 +4,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   isAssistantUnrolledNonNullable,
+  mergeConfigYamlRequestOptions,
   mergeUnrolledAssistants,
   ModelRole,
   PackageIdentifier,
@@ -32,10 +33,7 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-import {
-  convertYamlMcpToContinueMcp,
-  convertYamlRuleToContinueRule,
-} from "./yamlToContinueConfig";
+import { convertYamlRuleToContinueRule } from "./yamlToContinueConfig";
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
@@ -153,7 +151,7 @@ async function loadConfigYaml(options: {
   };
 }
 
-async function configYamlToContinueConfig(options: {
+export async function configYamlToContinueConfig(options: {
   config: AssistantUnrolled;
   ide: IDE;
   ideSettings: IdeSettings;
@@ -190,6 +188,7 @@ async function configYamlToContinueConfig(options: {
       summarize: null,
     },
     rules: [],
+    requestOptions: { ...config.requestOptions },
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
@@ -210,7 +209,13 @@ async function configYamlToContinueConfig(options: {
     continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
   }
 
-  continueConfig.data = config.data;
+  continueConfig.data = config.data?.map((d) => ({
+    ...d,
+    requestOptions: mergeConfigYamlRequestOptions(
+      d.requestOptions,
+      continueConfig.requestOptions,
+    ),
+  }));
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -233,12 +238,6 @@ async function configYamlToContinueConfig(options: {
       message: `MCP server "${mcpServer.name}" has unsubstituted variables in args: ${mcpArgVariables.join(", ")}. Please refer to https://docs.continue.dev/hub/secrets/secret-types for managing hub secrets.`,
     });
   });
-
-  continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map(
-      convertYamlMcpToContinueMcp,
-    ),
-  };
 
   // Prompt files -
   try {
@@ -386,6 +385,10 @@ async function configYamlToContinueConfig(options: {
       transport: {
         type: "stdio",
         args: [],
+        requestOptions: mergeConfigYamlRequestOptions(
+          server.requestOptions,
+          config.requestOptions,
+        ),
         ...(server as any), // TODO: fix the types on mcpServers in config-yaml
       },
       timeout: server.connectionTimeout,

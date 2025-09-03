@@ -193,6 +193,7 @@ export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
     prompts,
     mcpServers,
     docs,
+    requestOptions: configJson.requestOptions,
   };
 
   return configYaml;
