@@ -7,7 +7,6 @@ import { diffLines } from "diff";
 import { useContext, useMemo, useState } from "react";
 import { ApplyActions } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ApplyActions";
 import { FileInfo } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/FileInfo";
-import { useFontSize } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import {
@@ -34,15 +33,16 @@ export function FindAndReplaceDisplay({
   toolCallId,
   historyIndex,
 }: FindAndReplaceDisplayProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
   const applyState: ApplyState | undefined = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, toolCallId),
   );
-  const fontSize = useFontSize();
+
   const toolCallState = useAppSelector((state) =>
     selectToolCallById(state, toolCallId),
   );
+  const showContent = isExpanded ?? toolCallState?.status === "generated";
   const config = useAppSelector((state) => state.config.config);
 
   const displayName = useMemo(() => {
@@ -126,21 +126,21 @@ export function FindAndReplaceDisplay({
   const renderContainer = (content: React.ReactNode) => (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mx-2 my-1 flex min-w-0 flex-col outline outline-1">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
+        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 px-1.5 py-1 ${showContent ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
         onClick={() => {
-          setIsExpanded((prev) => !prev);
+          setIsExpanded(!showContent);
         }}
       >
         <div className="flex max-w-[50%] flex-row items-center text-xs">
           {statusIcon}
           <ChevronDownIcon
             data-testid="toggle-find-and-replace-diff"
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer transition-all hover:brightness-125 ${
-              isExpanded ? "rotate-0" : "-rotate-90"
+            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
+              showContent ? "rotate-0" : "-rotate-90"
             }`}
           />
           <FileInfo
-            filepath={displayName}
+            filepath={displayName || "..."}
             onClick={(e) => {
               if (!fileUri) {
                 return;
@@ -170,14 +170,14 @@ export function FindAndReplaceDisplay({
           />
         )}
       </div>
-      {toolCallState?.status === "generated" || isExpanded ? content : null}
+      {showContent ? content : null}
     </div>
   );
 
   if (diffResult?.error) {
     return renderContainer(
       <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong> {diffResult.error}
+        <strong>Error generating diff</strong>
       </div>,
     );
   }
@@ -198,7 +198,7 @@ export function FindAndReplaceDisplay({
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
     >
       <pre
-        className={`m-0 text-xs leading-tight ${config?.ui?.codeWrap ? "w-full whitespace-pre-wrap" : "w-min whitespace-pre"}`}
+        className={`bg-editor m-0 w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
         {diffResult.diff.map((part, index) => {
           if (part.removed) {
@@ -245,7 +245,7 @@ export function FindAndReplaceDisplay({
             );
           } else {
             return (
-              <div key={index} className="bg-background">
+              <div key={index}>
                 {part.value.split("\n").map((line, lineIndex) => {
                   if (
                     line === "" &&

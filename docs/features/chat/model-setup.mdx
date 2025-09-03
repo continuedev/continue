@@ -1,99 +1,21 @@
-The model you use for for Chat mode will be
+---
+title: "Recommended Models for Chat in Continue"
+description: "Choose the best chat model for Continue, including hosted high-performance options, fast speed/quality tradeoffs, and local privacy-first models."
+sidebarTitle: "Recommended Chat Models"
+---
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx';
+
+The model you use for for Chat mode will be:
 
 - used with Edit mode by default but can be switched
 - always used with Agent mode if the model supports tool calling
+
+## Model Recommendations
+
+<ModelRecommendations role="chat_edit" />
 
 <Info>
   For a comprehensive comparison of all available models by role, see our [model recommendations table](/customization/models#recommended-models).
 </Info>
 
 For model recommendations, please refer to our [Model Recommendations page](/customization/models).
-
-### What Other Hosted Models Are Available?
-
-These models have varying tool calling and reasoning capabilities.
-
-[Kimi K2](https://hub.continue.dev/openrouter/kimi-k2) from Moonshot AI
-
-1. Get your API key from [OpenRouter](https://openrouter.ai/settings/keys)
-2. Add [Kimi K2](https://hub.continue.dev/openrouter/kimi-k2) to your assistant on Continue Hub
-3. Add `OPENROUTER_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Qwen Coder 3 480B](https://hub.continue.dev/openrouter/qwen3-coder) from Qwen
-
-1. Get your API key from [OpenRouter](https://openrouter.ai/settings/keys)
-2. Add [Qwen Coder 3 480B](https://hub.continue.dev/openrouter/qwen3-coder) to your assistant on Continue Hub
-3. Add `OPENROUTER_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Gemini 2.5 Pro](https://hub.continue.dev/google/gemini-2.5-pro) from Google
-
-1. Get your API key from [Google AI Studio](https://aistudio.google.com)
-2. Add [Gemini 2.5 Pro](https://hub.continue.dev/google/gemini-2.5-pro) to your assistant on Continue Hub
-3. Add `GEMINI_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[o3](https://hub.continue.dev/openai/o3) from OpenAI
-
-1. Get your API key from [OpenAI](https://platform.openai.com)
-2. Add [o3](https://hub.continue.dev/openai/o3) to your assistant on Continue Hub
-3. Add `OPENAI_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Grok 4](https://hub.continue.dev/xai/grok-4) from xAI
-
-1. Get your API key from [xAI](https://console.x.ai/)
-2. Add [Grok 4](https://hub.continue.dev/xai/grok-4) to your assistant on Continue Hub
-3. Add `XAI_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Devstral Medium](https://hub.continue.dev/mistral/devstral-medium) from Mistral AI
-
-1. Get your API key from [Mistral AI](https://console.mistral.ai/)
-2. Add [Devstral Medium](https://hub.continue.dev/mistral/devstral-medium) to your assistant on Continue Hub
-3. Add `MISTRAL_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[DeepSeek-V3](https://hub.continue.dev/togetherai/deepseek-v3) from DeepSeek
-
-1. Get your API key from [Together AI](https://api.together.ai)
-2. Add [DeepSeek-V3](https://hub.continue.dev/togetherai/deepseek-v3) to your assistant on Continue Hub
-3. Add `TOGETHER_API_KEY` as a [User Secret](https://docs.continue.dev/hub/secrets/secret-types#user-secrets) on Continue Hub [here](https://hub.continue.dev/settings/secrets)
-4. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-### What Local Models Are Available?
-
-These models can be run on your computer if you have enough VRAM.
-
-Their limited tool calling and reasoning capabilities will make it challenging to use Agent mode.
-
-[Qwen2.5-Coder 32B](https://hub.continue.dev/ollama/qwen2.5-coder-32b)
-
-1. Add [Qwen2.5-Coder 32B](https://hub.continue.dev/ollama/qwen2.5-coder-32b) to your assistant on Continue Hub
-2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
-3. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Devstral Small 27B](https://hub.continue.dev/ollama/devstral)
-
-1. Add [Devstral Small](https://hub.continue.dev/ollama/devstral) to your assistant on Continue Hub
-2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
-3. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Qwen2.5-Coder 7B](https://hub.continue.dev/ollama/qwen2.5-coder-7b) from Qwen
-
-1. Add [Qwen2.5-Coder 7B](https://hub.continue.dev/ollama/qwen2.5-coder-7b) to your assistant on Continue Hub
-2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
-3. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-[Gemma 3 4B](https://hub.continue.dev/ollama/gemma3-4b) from Google
-
-1. Add [Gemma 3 4B](https://hub.continue.dev/ollama/gemma3-4b) to your assistant on Continue Hub
-2. Run the model with [Ollama](https://docs.continue.dev/guides/ollama-guide#using-ollama-with-continue-a-developers-guide)
-3. Click `Reload config` in the assistant selector in the Continue IDE extension
-
-For more detailed setup instructions, see [here](/getting-started/install#setup-your-first-model).
-
-## How to Check Model Compatibility
-
-To see which models support specific features like tool use (for Agent mode) and image input, check out our [Model Capabilities guide](/customize/deep-dives/model-capabilities).

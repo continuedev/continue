@@ -1,23 +1,26 @@
 ---
 title: "How to Configure Amazon Bedrock with Continue"
 slug: ../bedrock
-description: "Configure Amazon Bedrock with Continue to access foundation models like Claude 3.7 Sonnet for chat, Titan for embeddings, and Cohere for reranking, with AWS credential authentication"
 sidebarTitle: "Amazon Bedrock"
 ---
 
-Amazon Bedrock is a fully managed service on AWS that provides access to foundation models from various AI companies through a single API.
+<Tip>
+  **Discover Amazon Bedrock models [here](https://hub.continue.dev/amazon)**
+</Tip>
 
-## How to Set Up Amazon Bedrock Chat Models
+<Info>
+  Get started with [Amazon Bedrock](https://aws.amazon.com/bedrock/)
+</Info>
 
-We recommend configuring **Claude 3.7 Sonnet** as your chat model.
+## Configuration
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.7 Sonnet
+    - name: <MODEL_NAME>
       provider: bedrock
-      model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      model: <MODEL_ID>
       env:
         region: us-east-1
         profile: bedrock
@@ -25,14 +28,14 @@ We recommend configuring **Claude 3.7 Sonnet** as your chat model.
         - chat
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
-        "title": "Claude 3.7 Sonnet",
+        "title": "<MODEL_NAME>",
         "provider": "bedrock",
-        "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        "model": "<MODEL_ID>",
         "region": "us-east-1",
         "profile": "bedrock"
       }
@@ -42,109 +45,9 @@ We recommend configuring **Claude 3.7 Sonnet** as your chat model.
   </Tab>
 </Tabs>
 
-> If you run into the following error when connecting to the new Claude 3.5 Sonnet 2 models from AWS - `400 Invocation of model ID anthropic.claude-3-5-sonnet-20241022-v2:0 with on-demand throughput isn't supported. Retry your request with the ID or ARN of an inference profile that contains this model.`
-
-> You can fix this using the following config:
-
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  models:
-    - name: Claude 3.5 Sonnet
-      provider: bedrock
-      model: us.anthropic.claude-3-5-sonnet-20241022-v2:0
-      env:
-        region: us-east-1
-        profile: bedrock
-      roles:
-        - chat
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "Claude 3.5 Sonnet",
-        "provider": "bedrock",
-        "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-        "region": "us-east-1",
-        "profile": "bedrock"
-      }
-    ]
-  }
-  ```
-  </Tab>
-</Tabs>
-
-## How to Set Up Amazon Bedrock Autocomplete Models
-
-Bedrock currently does not offer any autocomplete models. However, [Codestral from Mistral](https://mistral.ai/news/codestral-2501/) and [Point from Poolside](https://aws.amazon.com/bedrock/poolside/) will be supported in the near future.
-
-In the meantime, you can view a list of autocomplete model providers [here](../../model-roles/autocomplete).
-
-## How to Configure Amazon Bedrock Embeddings Models
-
-We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazon.com/bedrock/latest/devguide/models.html#amazon.titan-embed-text-v2-0) as your embeddings model.
-
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  models:
-    - name: Embeddings Model
-      provider: bedrock
-      model: amazon.titan-embed-text-v2:0
-      env:
-        region: us-west-2
-      roles:
-        - embed
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "embeddingsProvider": {
-      "title": "Embeddings Model",
-      "provider": "bedrock",
-      "model": "amazon.titan-embed-text-v2:0",
-      "region": "us-west-2"
-    }
-  }
-  ```
-  </Tab>
-</Tabs>
-
-## How to Configure Amazon Bedrock Reranking Models
-
-We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may also use `amazon.rerank-v1:0`.
-
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  models:
-    - name: Bedrock Reranker
-      provider: bedrock
-      model: cohere.rerank-v3-5:0
-      env:
-        region: us-west-2
-      roles:
-        - rerank
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "reranker": {
-      "name": "bedrock",
-      "params": {
-        "model": "cohere.rerank-v3-5:0",
-        "region": "us-west-2"
-      }
-    }
-  }
-  ```
-  </Tab>
-</Tabs>
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/amazon/us-anthropic-claude-sonnet-4-20250514-v1?view=config)**
+</Info>
 
 ## How to Enable Prompt Caching with Amazon Bedrock
 
@@ -153,23 +56,11 @@ messages between requests. Enable this behavior by adding
 `promptCaching: true` under `defaultCompletionOptions` in your model
 configuration.
 
-Prompt caching is generally available for:
-
-- Claude 3.7 Sonnet
-- Claude 3.5 Haiku
-- Amazon Nova Micro
-- Amazon Nova Lite
-- Amazon Nova Pro
-
-Customers who were granted access to Claude 3.5 Sonnet v2 during the prompt
-caching preview will retain that access, but it cannot be enabled for new users
-on that model.
-
 ```yaml title="config.yaml"
 models:
-  - name: Claude 3.7 Sonnet
+  - name: <MODEL_NAME>
     provider: bedrock
-    model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+    model: <MODEL_ID>
     defaultCompletionOptions:
       promptCaching: true
 ```
@@ -194,9 +85,9 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.7 Sonnet
+    - name: <MODEL_NAME>
       provider: bedrock
-      model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      model: <MODEL_ID>
       env:
         region: us-east-1
         accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }} # can also enter key inline here for local assistants
@@ -205,17 +96,17 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
         - chat
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
-        "title": "Claude 3.7 Sonnet",
+        "title": "<MODEL_NAME>",
         "provider": "bedrock",
-        "model": "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        "model": "<MODEL_ID>",
         "region": "us-east-1",
-        "accessKeyId": "[YOUR_ACCESS_KEY_ID]",
-        "secretAccessKey": "[YOUR_SECRET_ACCESS_KEY]" 
+        "accessKeyId": "<YOUR_ACCESS_KEY_ID>",
+        "secretAccessKey": "<YOUR_SECRET_ACCESS_KEY>" 
       }
     ]
   }
@@ -231,23 +122,23 @@ To setup Bedrock using custom imported models, add the following to your config 
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: AWS Bedrock deepseek-coder-6.7b-instruct
+    - name: <MODEL_NAME>
       provider: bedrockimport
-      model: deepseek-coder-6.7b-instruct
+      model: <MODEL_ID>
       env:
         region: us-west-2
         profile: bedrock
         modelArn: arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
-        "title": "AWS Bedrock deepseek-coder-6.7b-instruct",
+        "title": "<MODEL_NAME>",
         "provider": "bedrockimport",
-        "model": "deepseek-coder-6.7b-instruct",
+        "model": "<MODEL_ID>",
         "modelArn": "arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX", 
         "region": "us-west-2",
         "profile": "bedrock"

@@ -1,13 +1,19 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions, Tool } from "core";
+import {
+  ContextItem,
+  LLMFullCompletionOptions,
+  Tool,
+  ToolCallState,
+  ToolPolicy,
+} from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
-import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
+  errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
   setContextPercentage,
@@ -16,8 +22,10 @@ import {
   setIsPruned,
   setToolGenerated,
   streamUpdate,
+  updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
@@ -29,6 +37,62 @@ import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 import { enhanceParsedArgs } from "./enhanceParsedArgs";
+
+/**
+ * Evaluates the tool policy for a tool call, including dynamic policy evaluation
+ */
+async function evaluateToolPolicy(
+  toolCallState: ToolCallState,
+  toolSettings: Record<string, ToolPolicy>,
+  activeTools: Tool[],
+  ideMessenger: IIdeMessenger,
+): Promise<{ policy: ToolPolicy; displayValue?: string }> {
+  const basePolicy =
+    toolSettings[toolCallState.toolCall.function.name] ??
+    activeTools.find(
+      (tool) => tool.function.name === toolCallState.toolCall.function.name,
+    )?.defaultToolPolicy ??
+    DEFAULT_TOOL_SETTING;
+
+  // Use already parsed arguments
+  const parsedArgs = toolCallState.parsedArgs || {};
+
+  let result;
+  try {
+    result = await ideMessenger.request("tools/evaluatePolicy", {
+      toolName: toolCallState.toolCall.function.name,
+      basePolicy,
+      args: parsedArgs,
+    });
+  } catch (error) {
+    // If request fails, return disabled
+    return { policy: "disabled" };
+  }
+
+  // Evaluate the policy dynamically
+  if (!result || result.status === "error") {
+    // If evaluation fails, treat as disabled
+    return { policy: "disabled" };
+  }
+
+  const dynamicPolicy = result.content.policy;
+  const displayValue = result.content.displayValue;
+
+  // Ensure dynamic policy cannot be more lenient than base policy
+  // Policy hierarchy (most restrictive to least): disabled > allowedWithPermission > allowedWithoutPermission
+  if (basePolicy === "disabled") {
+    return { policy: "disabled", displayValue }; // Cannot override disabled
+  }
+  if (
+    basePolicy === "allowedWithPermission" &&
+    dynamicPolicy === "allowedWithoutPermission"
+  ) {
+    return { policy: "allowedWithPermission", displayValue }; // Cannot make more lenient
+  }
+
+  return { policy: dynamicPolicy, displayValue };
+}
+
 /**
  * Handles the execution of tool calls that may be automatically accepted.
  * Sets all tools as generated first, then executes auto-approved tool calls.
@@ -37,7 +101,9 @@ async function handleToolCallExecution(
   dispatch: AppThunkDispatch,
   getState: () => RootState,
   activeTools: Tool[],
-): Promise<void> {
+  ideMessenger: IIdeMessenger,
+): Promise<boolean> {
+  // Return whether all tools were auto-approved
   const newState = getState();
   const toolSettings = newState.ui.toolSettings;
   const allToolCallStates = selectCurrentToolCalls(newState);
@@ -49,33 +115,71 @@ async function handleToolCallExecution(
 
   // If no generating tool calls, nothing to process
   if (toolCallStates.length === 0) {
-    return;
+    return false; // No tools to process, need to set inactive
   }
 
-  // Check if ALL tool calls are auto-approved - if not, wait for user approval
-  const allAutoApproved = toolCallStates.every((toolCallState) => {
-    const toolPolicy =
-      toolSettings[toolCallState.toolCall.function.name] ??
-      activeTools.find(
-        (tool) => tool.function.name === toolCallState.toolCall.function.name,
-      )?.defaultToolPolicy ??
-      DEFAULT_TOOL_SETTING;
-    return toolPolicy == "allowedWithoutPermission";
-  });
+  // Check if ALL tool calls are auto-approved using dynamic evaluation
+  const policyResults = await Promise.all(
+    toolCallStates.map((toolCallState) =>
+      evaluateToolPolicy(
+        toolCallState,
+        toolSettings,
+        activeTools,
+        ideMessenger,
+      ),
+    ),
+  );
 
-  // Set all tools as generated first
-  toolCallStates.forEach((toolCallState) => {
-    dispatch(
-      setToolGenerated({
-        toolCallId: toolCallState.toolCallId,
-        tools: newState.config.config.tools,
-      }),
-    );
-  });
+  // Handle disabled tool calls and set others as generated
+  const autoApprovedResults = await Promise.all(
+    toolCallStates.map(async (toolCallState, index) => {
+      const { policy, displayValue } = policyResults[index];
 
-  // Only run if we have auto-approve for all
+      if (policy === "disabled") {
+        // Mark as errored instead of generated
+        dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
+
+        // Use the displayValue from the policy evaluation, or fallback to function name
+        const command = displayValue || toolCallState.toolCall.function.name;
+
+        // Add error message explaining why it's disabled
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: toolCallState.toolCallId,
+            contextItems: [
+              {
+                icon: "problems",
+                name: "Security Policy Violation",
+                description: "Command Disabled",
+                content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
+                hidden: false,
+              },
+            ],
+          }),
+        );
+        return false;
+      } else {
+        // Set as generated for non-disabled tools
+        dispatch(
+          setToolGenerated({
+            toolCallId: toolCallState.toolCallId,
+            tools: newState.config.config.tools,
+          }),
+        );
+        return policy === "allowedWithoutPermission";
+      }
+    }),
+  );
+
+  const allAutoApproved = autoApprovedResults.every(Boolean);
+
+  // Only run if we have auto-approve for all non-disabled tools
   if (allAutoApproved && toolCallStates.length > 0) {
-    const toolCallPromises = toolCallStates.map(async (toolCallState) => {
+    const nonDisabledToolCalls = toolCallStates.filter(
+      (_, index) => policyResults[index].policy !== "disabled",
+    );
+
+    const toolCallPromises = nonDisabledToolCalls.map(async (toolCallState) => {
       const response = await dispatch(
         callToolById({ toolCallId: toolCallState.toolCallId }),
       );
@@ -84,6 +188,8 @@ async function handleToolCallExecution(
 
     await Promise.all(toolCallPromises);
   }
+
+  return allAutoApproved;
 }
 
 export const streamNormalInput = createAsyncThunk<
@@ -105,12 +211,12 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const activeTools = selectActiveTools(state);
 
-    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
-
     // Use the centralized selector to determine if system message tools should be used
-    const useSystemTools = selectUseSystemMessageTools(state);
-    const useNativeTools = !useSystemTools && supportsNativeTools;
-    const systemToolsFramework = useSystemTools
+    const useNativeTools = state.config.config.experimental
+      ?.onlyUseSystemMessageTools
+      ? false
+      : modelSupportsNativeTools(selectedChatModel);
+    const systemToolsFramework = !useNativeTools
       ? new SystemMessageToolCodeblocksFramework()
       : undefined;
 
@@ -267,32 +373,18 @@ export const streamNormalInput = createAsyncThunk<
       ),
     );
 
-    const generatingToolCalls = allToolCallStates.filter(
-      (toolCallState) => toolCallState.status === "generating",
+    // Handle tool call execution if there are any generating tool calls
+    const allAutoApproved = await handleToolCallExecution(
+      dispatch,
+      getState,
+      activeTools,
+      extra.ideMessenger,
     );
 
-    // Check if ALL generating tool calls are auto-approved
-    const allAutoApproved =
-      generatingToolCalls.length > 0 &&
-      generatingToolCalls.every((toolCallState) => {
-        const toolPolicy =
-          toolSettings[toolCallState.toolCall.function.name] ??
-          activeTools.find(
-            (tool) =>
-              tool.function.name === toolCallState.toolCall.function.name,
-          )?.defaultToolPolicy ??
-          DEFAULT_TOOL_SETTING;
-        return toolPolicy == "allowedWithoutPermission";
-      });
-
-    // Only set inactive if:
-    // 1. There are no tool calls, OR
-    // 2. There are tool calls but they require manual approval
-    // This prevents UI flashing for auto-approved tools while still showing approval UI for others
-    if (generatingToolCalls.length === 0 || !allAutoApproved) {
+    // Only set inactive if not all tools were auto-approved
+    // This prevents UI flashing for auto-approved tools
+    if (!allAutoApproved) {
       dispatch(setInactive());
     }
-
-    await handleToolCallExecution(dispatch, getState, activeTools);
   },
 );

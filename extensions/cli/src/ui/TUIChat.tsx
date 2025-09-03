@@ -43,6 +43,7 @@ interface TUIChatProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
 }
@@ -52,7 +53,6 @@ async function loadAndSetSession(
   sessionId: string,
   closeCurrentScreen: () => void,
   setChatHistory: (history: any) => void,
-  setMessages: (messages: any) => void,
   setShowIntroMessage: (show: boolean) => void,
 ) {
   try {
@@ -62,9 +62,9 @@ async function loadAndSetSession(
     // Import session functions
     const { loadSessionById } = await import("../session.js");
 
-    // Load the session history
-    const sessionHistory = loadSessionById(sessionId);
-    if (!sessionHistory) {
+    // Load the session
+    const session = loadSessionById(sessionId);
+    if (!session) {
       logger.error(`Session ${sessionId} could not be loaded.`);
       return;
     }
@@ -75,18 +75,8 @@ async function loadAndSetSession(
       "",
     );
 
-    // Directly set the chat history and messages to the loaded session
-    setChatHistory(sessionHistory);
-
-    // Convert chat history to display messages (exclude system messages)
-    const displayMessages = sessionHistory
-      .filter((msg: any) => msg.role !== "system")
-      .map((msg: any) => ({
-        role: msg.role,
-        content: msg.content as string,
-      }));
-
-    setMessages(displayMessages);
+    // Set the chat history from the session
+    setChatHistory(session.history);
 
     // Clear the intro message since we're now showing a resumed session
     setShowIntroMessage(false);
@@ -149,6 +139,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
   configPath,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
 }) => {
@@ -193,14 +184,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
   );
 
   const {
-    messages,
-    setMessages,
     chatHistory,
     setChatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,
     activePermissionRequest,
+    wasInterrupted,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -212,6 +202,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     llmApi: services.model?.llmApi || undefined,
     initialPrompt,
     resume,
+    fork,
     additionalRules,
     additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
@@ -231,6 +222,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resetChatHistoryRef.current = resetChatHistory;
   }, [resetChatHistory]);
 
+  // Memoize the chat history conversion to avoid expensive recalculation on every render
+
   // Calculate context percentage
   const contextData = useContextPercentage({
     chatHistory,
@@ -241,8 +234,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   const { handleConfigSelect, handleModelSelect } = useSelectors(
     configPath,
-    setMessages,
-    resetChatHistory,
+    setChatHistory,
+    handleClear,
   );
 
   // Session selection handler
@@ -252,11 +245,10 @@ const TUIChat: React.FC<TUIChatProps> = ({
         sessionId,
         closeCurrentScreen,
         setChatHistory,
-        setMessages,
         setShowIntroMessage,
       );
     },
-    [closeCurrentScreen, setChatHistory, setMessages, setShowIntroMessage],
+    [closeCurrentScreen, setChatHistory, setShowIntroMessage],
   );
 
   // Determine if input should be disabled
@@ -267,10 +259,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Check if verbose mode is enabled for resource debugging
   const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
 
+  // State for image in clipboard status
+  const [hasImageInClipboard, setHasImageInClipboard] = useState(false);
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
-      <Box flexDirection="column" flexGrow={1} paddingX={1} overflow="hidden">
+      <Box flexDirection="column" flexGrow={1} overflow="hidden">
         {/* Debug component - comment out when not needed */}
         {/* {!isRemoteMode && (
           <ServiceDebugger
@@ -289,7 +284,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           config={services.config?.config || undefined}
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
-          messages={messages}
+          chatHistory={chatHistory}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
@@ -330,7 +325,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
           isInputDisabled={isInputDisabled}
+          wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
+          onImageInClipboardChange={setHasImageInClipboard}
         />
 
         {/* Resource debug bar - only in verbose mode */}
@@ -348,6 +345,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           navigateTo={navigateTo}
           closeCurrentScreen={closeCurrentScreen}
           contextPercentage={contextData?.percentage}
+          hasImageInClipboard={hasImageInClipboard}
         />
       </Box>
     </Box>

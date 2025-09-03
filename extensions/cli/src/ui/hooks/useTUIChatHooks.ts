@@ -32,27 +32,16 @@ export function getRepoUrlText(remoteUrl?: string): string {
 // Custom hook for intro message
 export function useIntroMessage(
   isRemoteMode: boolean,
-  services: any,
-  allServicesReady: boolean,
+  _services: any,
+  _allServicesReady: boolean,
 ) {
   const [showIntroMessage, setShowIntroMessage] = useState(false);
 
   useEffect(() => {
-    const shouldShow =
-      !isRemoteMode &&
-      allServicesReady &&
-      !!services.config?.config &&
-      !!services.model?.model &&
-      !!services.mcp?.mcpService;
+    const shouldShow = !isRemoteMode;
 
     setShowIntroMessage(shouldShow);
-  }, [
-    isRemoteMode,
-    allServicesReady,
-    services.config?.config,
-    services.model?.model,
-    services.mcp?.mcpService,
-  ]);
+  }, [isRemoteMode]);
 
   return [showIntroMessage, setShowIntroMessage] as const;
 }
@@ -108,8 +97,8 @@ export function useCurrentMode() {
 // Custom hook to combine all selector logic
 export function useSelectors(
   configPath: string | undefined,
-  setMessages: React.Dispatch<React.SetStateAction<any[]>>,
-  resetChatHistory: () => void,
+  setChatHistory: React.Dispatch<React.SetStateAction<any[]>>,
+  handleClear: () => void,
 ): {
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
@@ -117,14 +106,28 @@ export function useSelectors(
   const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
+      // Convert message to ChatHistoryItem format
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          message: { role: message.role, content: message.content },
+          contextItems: [],
+        },
+      ]);
     },
-    onChatReset: resetChatHistory,
+    handleClear,
   });
 
   const { handleModelSelect } = useModelSelector({
     onMessage: (message) => {
-      setMessages((prev) => [...prev, message]);
+      // Convert message to ChatHistoryItem format
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          message: { role: "system", content: message.content },
+          contextItems: [],
+        },
+      ]);
     },
   });
 

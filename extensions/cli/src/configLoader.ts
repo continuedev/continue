@@ -18,6 +18,7 @@ import {
   getConfigUri,
   getOrganizationId,
   isEnvironmentAuthConfig,
+  loadAuthConfig,
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
@@ -228,9 +229,18 @@ async function loadUserAssistantWithFallback(
 
   if (assistants.length > 0) {
     const result = assistants[0].configResult;
-    if (result.errors?.length || !result.config) {
+    if (!result.config) {
       throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
     }
+
+    const errors = result.errors;
+    if (errors?.some((e: any) => e.fatal)) {
+      throw new Error(
+        errors.map((e: any) => e.message).join("\n") ??
+          "Failed to load assistant.",
+      );
+    }
+
     return result.config as AssistantUnrolled;
   }
 
@@ -301,16 +311,7 @@ async function unrollAssistantWithConfig(
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       onPremProxyUrl: null,
-      injectBlocks: [
-        {
-          uriType: "slug",
-          fullSlug: {
-            ownerSlug: "openai",
-            packageSlug: "gpt-5",
-            versionSlug: "latest",
-          },
-        },
-      ],
+      injectBlocks: [],
     },
   );
 
@@ -361,13 +362,13 @@ async function loadAssistantSlug(
   }
 
   // Unroll locally if not logged in
-  if (!(apiClient as any).configuration.apiKey) {
+  if (!(apiClient as any).configuration.accessToken) {
     return await unrollAssistantWithConfig(
       {
         uriType: "slug",
         fullSlug: { ownerSlug, packageSlug, versionSlug: "latest" },
       },
-      null,
+      getAccessToken(loadAuthConfig()),
       organizationId,
       apiClient,
     );
@@ -381,8 +382,12 @@ async function loadAssistantSlug(
   });
 
   const result = resp.configResult;
-  if (result.errors?.length || !result.config) {
-    throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
+  const errors = result.errors;
+  if (errors?.some((e: any) => e.fatal)) {
+    throw new Error(
+      errors.map((e: any) => e.message).join("\n") ??
+        "Failed to load assistant.",
+    );
   }
 
   return result.config as AssistantUnrolled;

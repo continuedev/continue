@@ -64,6 +64,7 @@ addCommonOptions(program)
     "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag.",
   )
   .option("--resume", "Resume from last session")
+  .option("--fork <sessionId>", "Fork from an existing session ID")
   .action(async (prompt, options) => {
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
@@ -100,6 +101,8 @@ addCommonOptions(program)
       readonly: options.readonly,
       auto: options.auto,
       config: options.config,
+      resume: options.resume,
+      fork: options.fork,
       allow: options.allow,
       ask: options.ask,
       exclude: options.exclude,
@@ -187,7 +190,7 @@ program
 
 // Remote subcommand
 program
-  .command("remote [prompt]")
+  .command("remote [prompt]", { hidden: true })
   .description("Launch a remote instance of the cn agent")
   .option(
     "--url <url>",
@@ -215,7 +218,7 @@ program
 
 // Serve subcommand
 program
-  .command("serve [prompt]")
+  .command("serve [prompt]", { hidden: true })
   .description("Start an HTTP server with /state and /message endpoints")
   .option(
     "--timeout <seconds>",

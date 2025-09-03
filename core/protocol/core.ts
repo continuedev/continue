@@ -39,6 +39,7 @@ import {
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
   ToolCall,
+  ToolPolicy,
 } from "../";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../autocomplete/types";
@@ -285,12 +286,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
+  "docs/getIndexedPages": [{ startUrl: string }, string[]];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
     { contextItems: ContextItem[]; errorMessage?: string },
+  ];
+  "tools/evaluatePolicy": [
+    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    { policy: ToolPolicy; displayValue?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];

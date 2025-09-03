@@ -1,0 +1,40 @@
+---
+title: DeepSeek
+slug: ../deepseek
+---
+
+<Tip>
+  **Discover DeepSeek models [here](https://hub.continue.dev/?q=DeepSeek)**
+</Tip>
+
+<Info>
+  You can get an API key from the [DeepSeek Console](https://www.deepseek.com/).
+</Info>
+
+## Confiugration
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: <MODEL_NAME>
+       provider: deepseek
+       model: <MODEL_ID>
+       apiKey: <YOUR_DEEPSEEK_API_KEY>
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "<MODEL_NAME>",
+         "provider": "deepseek",
+         "model": "<MODEL_ID>",
+         "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
