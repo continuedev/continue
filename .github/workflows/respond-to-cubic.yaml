@@ -27,6 +27,18 @@ jobs:
             echo "contains_mention=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Add eyes reaction to comment
+        if: steps.check-mention.outputs.contains_mention == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: ${{ github.event.comment.id }},
+              content: 'eyes'
+            });
+
       - name: Checkout PR branch
         if: steps.check-mention.outputs.contains_mention == 'true'
         uses: actions/checkout@v5
@@ -129,6 +141,18 @@ jobs:
           else
             echo "contains_mention=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Add eyes reaction to comment
+        if: steps.check-mention.outputs.contains_mention == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForPullRequestReviewComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: ${{ github.event.comment.id }},
+              content: 'eyes'
+            });
 
       - name: Checkout PR branch
         if: steps.check-mention.outputs.contains_mention == 'true'
