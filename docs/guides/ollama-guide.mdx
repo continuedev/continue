@@ -34,15 +34,15 @@ curl -fsSL https://ollama.ai/install.sh | sh
 After installation, start the Ollama service:
 
 ```bash
+# Check Ollama version - verify it's installed
+ollama --version
+
 # Start Ollama (runs in background)
 ollama serve
 
 # Verify it's running
 curl http://localhost:11434
 # Should return "Ollama is running"
-
-# Check Ollama version
-ollama --version
 ```
 
 ### Step 3: Download Models

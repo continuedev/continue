@@ -259,6 +259,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Check if verbose mode is enabled for resource debugging
   const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
 
+  // State for image in clipboard status
+  const [hasImageInClipboard, setHasImageInClipboard] = useState(false);
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -324,6 +327,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isInputDisabled={isInputDisabled}
           wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
+          onImageInClipboardChange={setHasImageInClipboard}
         />
 
         {/* Resource debug bar - only in verbose mode */}
@@ -341,6 +345,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           navigateTo={navigateTo}
           closeCurrentScreen={closeCurrentScreen}
           contextPercentage={contextData?.percentage}
+          hasImageInClipboard={hasImageInClipboard}
         />
       </Box>
     </Box>
