@@ -1,9 +1,11 @@
+import { runTerminalCommandTool } from "src/tools/runTerminalCommand.js";
+import { getErrorString } from "src/util/error.js";
 import { services } from "../../services/index.js";
 
 export const handleBashModeProcessing = async (
   message: string,
 ): Promise<string | null> => {
-  // Handle bash mode commands (starting with !)
+  // Handle shell mode commands (starting with !)
   if (!message.trimStart().startsWith("!")) {
     return message;
   }
@@ -16,7 +18,7 @@ export const handleBashModeProcessing = async (
   }
 
   // Show tool call immediately, then run asynchronously and populate result
-  const toolCallId = `bash-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const toolCallId = `shell-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const toolCall = {
     id: toolCallId,
     type: "function" as const,
@@ -27,25 +29,22 @@ export const handleBashModeProcessing = async (
   };
 
   // Add assistant message with tool call immediately
-  services.chatHistory.addAssistantMessage("", [toolCall as any]);
+  services.chatHistory.addAssistantMessage("", [toolCall]);
   // Mark as calling for immediate UI feedback
   services.chatHistory.updateToolStatus(toolCallId, "calling");
 
   // Execute the bash command asynchronously - don't block UI
-  (async () => {
-    try {
-      const { runTerminalCommandTool } = await import(
-        "../../tools/runTerminalCommand.js"
-      );
-      const result = await runTerminalCommandTool.run({
-        command: bashCommand,
-      });
+  void runTerminalCommandTool
+    .run({
+      command: bashCommand,
+    })
+    .then((result) => {
       services.chatHistory.addToolResult(toolCallId, result, "done");
-    } catch (error: any) {
-      const errorMessage = `Bash command failed: ${error?.message || String(error)}`;
+    })
+    .catch((error) => {
+      const errorMessage = `Bash command failed: ${getErrorString(error)}`;
       services.chatHistory.addToolResult(toolCallId, errorMessage, "errored");
-    }
-  })();
+    });
 
   return null; // Processed, no further message handling needed
 };

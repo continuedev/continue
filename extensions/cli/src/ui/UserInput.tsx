@@ -190,13 +190,13 @@ const UserInput: React.FC<UserInputProps> = ({
     return nextMode;
   };
 
-  // Update bash mode state based on input
+  // Update shell mode state based on input
   const updateBashModeState = (text: string) => {
     const trimmed = text.trimStart();
     const isBash = trimmed.startsWith("!");
     setShowBashMode(isBash);
     if (isBash) {
-      // Disable other helpers while in bash mode
+      // Disable other helpers while in shell mode
       setShowSlashCommands(false);
       setShowFileSearch(false);
     }
@@ -275,7 +275,7 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    // Disable file search if we're in bash mode or slash command mode
+    // Disable file search if we're in shell mode or slash command mode
     const trimmed = text.trimStart();
     if (trimmed.startsWith("!") || trimmed.startsWith("/")) {
       setShowFileSearch(false);
@@ -551,7 +551,7 @@ const UserInput: React.FC<UserInputProps> = ({
   const handleEscapeKey = (key: any): boolean => {
     if (!key.escape) return false;
 
-    // If only "!" is present, clear bash mode
+    // If only "!" is present, clear shell mode
     if (inputMode && showBashMode && inputText.trim() === "!") {
       textBuffer.clear();
       setInputText("");
@@ -688,9 +688,9 @@ const UserInput: React.FC<UserInputProps> = ({
 
   const renderInputText = () => {
     const placeholderText = isRemoteMode
-      ? "Ask anything, / for slash commands, ! for bash mode"
+      ? "Ask anything, / for slash commands, ! for shell mode"
       : placeholder ||
-        "Ask anything, @ for context, / for slash commands, ! for bash mode";
+        "Ask anything, @ for context, / for slash commands, ! for shell mode";
     if (inputText.length === 0) {
       return (
         <>

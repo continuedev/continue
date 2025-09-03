@@ -28,7 +28,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  ${chalk.cyan("Enter")}      Submit message`,
     `  ${chalk.cyan("Shift+Enter")} New line`,
     `  ${chalk.cyan("\\")}          Line continuation (at end of line)`,
-    `  ${chalk.cyan("!")}          Bash mode - run shell commands`,
+    `  ${chalk.cyan("!")}          Shell mode - run shell commands`,
     "",
     chalk.white("Controls:"),
     `  ${chalk.cyan("Ctrl+C")}     Clear input`,

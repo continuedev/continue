@@ -17,7 +17,7 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   } else {
-    // Unix/macOS: Just run the user's shell as a login shell
+    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
     const userShell = process.env.SHELL || "/bin/bash";
     return { shell: userShell, args: ["-l", "-c", command] };
   }
@@ -60,12 +60,7 @@ The command will be executed from the current working directory: ${process.cwd()
     return new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
-      const child = spawn(shell, args, {
-        cwd: process.cwd(),
-        env: process.env,
-        stdio: ["ignore", "pipe", "pipe"], // prevent child from reading TTY input
-        detached: false,
-      });
+      const child = spawn(shell, args);
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;

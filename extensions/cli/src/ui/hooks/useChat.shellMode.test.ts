@@ -1,5 +1,5 @@
 import { act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMinimalTestContext } from "../../test-helpers/ui-test-context.js";
 import { runTerminalCommandTool } from "../../tools/runTerminalCommand.js";

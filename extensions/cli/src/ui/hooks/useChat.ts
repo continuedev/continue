@@ -15,7 +15,6 @@ import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
 
-import { handleBashModeProcessing } from "./useChat.bashMode.js";
 import {
   handleAutoCompaction,
   handleCompactCommand,
@@ -31,6 +30,7 @@ import {
   handleRemoteMessage,
   setupRemotePolling,
 } from "./useChat.remote.helpers.js";
+import { handleBashModeProcessing } from "./useChat.shellMode.js";
 import {
   createStreamCallbacks,
   executeStreaming,
@@ -424,7 +424,7 @@ export function useChat({
 
     if (handled) return;
 
-    // Handle bash mode commands (before slash commands)
+    // Handle shell mode commands (before slash commands)
     const bashProcessedMessage = await handleBashModeProcessing(message);
     if (bashProcessedMessage === null) {
       return; // Bash command was handled and no further processing needed
