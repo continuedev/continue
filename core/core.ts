@@ -668,6 +668,8 @@ export class Core {
       return queue.dequeueProcessed() || null;
     });
 
+    // NOTE: This is not used unless prefetch is used.
+    // At this point this is not used because I opted to rely on the model to return multiple diffs than to use prefetching.
     on("nextEdit/queue/processOne", async (msg) => {
       console.log("nextEdit/queue/processOne");
       const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;

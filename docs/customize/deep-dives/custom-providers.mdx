@@ -335,6 +335,8 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
       - provider: http
         params:
           url: "https://api.example.com/v1/users"
+          headers:
+            - Authorization: "Bearer <token>"
     ```
   </Tab>
   <Tab title="JSON (Deprecated)">
@@ -409,7 +411,8 @@ You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 ## Deprecated Context Providers
 
 <Note>
-  To provide conext beyond the built-in context providers, we now recommend using [MCP Servers](/customization/mcp-tools)
+  To provide conext beyond the built-in context providers, we now recommend
+  using [MCP Servers](/customization/mcp-tools)
 </Note>
 
 View the [deprecated context providers](/reference/deprecated-context-providers) for documentation on:
