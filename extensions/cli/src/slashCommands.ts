@@ -259,22 +259,16 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openSessionSelector: true };
   },
   fork: handleFork,
+  update: () => {
+    posthogService.capture("useSlashCommand", { name: "update" });
+    return { openUpdateSelector: true };
+  },
 };
 
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-): Promise<{
-  output?: string;
-  exit?: boolean;
-  newInput?: string;
-  clear?: boolean;
-  openConfigSelector?: boolean;
-  openModelSelector?: boolean;
-  openMCPSelector?: boolean;
-  openSessionSelector?: boolean;
-  compact?: boolean;
-} | null> {
+): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
     return null;

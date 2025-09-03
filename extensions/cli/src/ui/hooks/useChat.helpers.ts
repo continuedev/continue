@@ -49,6 +49,7 @@ interface ProcessSlashCommandResultOptions {
   exit: () => void;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
+  onShowUpdateSelector?: () => void;
   onShowMCPSelector?: () => void;
   onShowSessionSelector?: () => void;
   onClear?: () => void;
@@ -63,6 +64,7 @@ export function processSlashCommandResult({
   setChatHistory,
   exit,
   onShowConfigSelector,
+  onShowUpdateSelector,
   onShowModelSelector,
   onShowMCPSelector,
   onShowSessionSelector,
@@ -75,6 +77,11 @@ export function processSlashCommandResult({
 
   if (result.openMcpSelector) {
     onShowMCPSelector?.();
+    return null;
+  }
+
+  if (result.openUpdateSelector) {
+    onShowUpdateSelector?.();
     return null;
   }
 
