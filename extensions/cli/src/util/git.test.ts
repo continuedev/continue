@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { getGitBranch, getGitHubActionsRepoUrl, isGitHubActions } from "./git.js";
+import {
+  getGitBranch,
+  getGitHubActionsRepoUrl,
+  isGitHubActions,
+} from "./git.js";
 
 describe("git utilities - GitHub Actions detection", () => {
   beforeEach(() => {

@@ -146,7 +146,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const { services, allServicesReady, isRemoteMode } =
     useTUIChatServices(remoteUrl);
 
-
   // Use navigation context
   const {
     state: navState,

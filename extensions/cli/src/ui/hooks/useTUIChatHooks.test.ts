@@ -14,13 +14,15 @@ describe("Responsive repo text functionality", () => {
     // Reset mocks before each test
     const gitModule = await import("../../util/git.js");
     vi.mocked(gitModule.isGitRepo).mockReturnValue(true);
-    vi.mocked(gitModule.getGitRemoteUrl).mockReturnValue("https://github.com/testuser/testrepo.git");
+    vi.mocked(gitModule.getGitRemoteUrl).mockReturnValue(
+      "https://github.com/testuser/testrepo.git",
+    );
     vi.mocked(gitModule.getGitBranch).mockReturnValue("feature/test-branch");
   });
   describe("getRepoInfo", () => {
     it("should extract repo info correctly", () => {
       const info = getRepoInfo();
-      
+
       expect(info.repoName).toBe("testuser/testrepo");
       expect(info.branchName).toBe("feature/test-branch");
       expect(info.isGitRepo).toBe(true);
@@ -28,7 +30,7 @@ describe("Responsive repo text functionality", () => {
 
     it("should handle remote URL override", () => {
       const info = getRepoInfo("https://github.com/override/repo.git");
-      
+
       expect(info.repoName).toBe("override/repo");
       expect(info.branchName).toBe("feature/test-branch");
       expect(info.isGitRepo).toBe(true);
@@ -48,7 +50,7 @@ describe("Responsive repo text functionality", () => {
 
     it("should prefer branch when both fit individually", () => {
       // Full text: "testuser/testrepo ⊦ feature/test-branch" (38 chars)
-      // Repo only: "testuser/testrepo" (17 chars)  
+      // Repo only: "testuser/testrepo" (17 chars)
       // Branch only: "feature/test-branch" (18 chars)
       // With width 20, both repo and branch fit, but we prefer branch
       const result = getResponsiveRepoText(undefined, 20);
@@ -58,8 +60,10 @@ describe("Responsive repo text functionality", () => {
     it("should fallback to repo when branch doesn't fit but repo does", async () => {
       // Use a long branch name
       const gitModule = await import("../../util/git.js");
-      vi.mocked(gitModule.getGitBranch).mockReturnValue("very-long-feature-branch-name-that-wont-fit");
-      
+      vi.mocked(gitModule.getGitBranch).mockReturnValue(
+        "very-long-feature-branch-name-that-wont-fit",
+      );
+
       const result = getResponsiveRepoText(undefined, 20);
       // Branch is too long, repo should fit
       expect(result).toBe("testuser/testrepo");
@@ -68,9 +72,11 @@ describe("Responsive repo text functionality", () => {
     it("should return branch only when repo doesn't fit but branch does", async () => {
       // When space is very limited, prefer shorter option
       const gitModule = await import("../../util/git.js");
-      vi.mocked(gitModule.getGitRemoteUrl).mockReturnValue("https://github.com/very-long-repo-name/testrepo.git");
+      vi.mocked(gitModule.getGitRemoteUrl).mockReturnValue(
+        "https://github.com/very-long-repo-name/testrepo.git",
+      );
       vi.mocked(gitModule.getGitBranch).mockReturnValue("main");
-      
+
       const result = getResponsiveRepoText(undefined, 10);
       // "main" (4 chars) should fit, "very-long-repo-name/testrepo" won't
       expect(result).toBe("main");
@@ -90,16 +96,22 @@ describe("Responsive repo text functionality", () => {
       const gitModule = await import("../../util/git.js");
       vi.mocked(gitModule.isGitRepo).mockReturnValue(false);
       vi.mocked(gitModule.getGitBranch).mockReturnValue(null);
-      
-      const result = getResponsiveRepoText("https://github.com/user/repo.git", 50);
+
+      const result = getResponsiveRepoText(
+        "https://github.com/user/repo.git",
+        50,
+      );
       expect(result).toBe("user/repo");
     });
 
     it("should return empty string when repo name is too long in non-git scenario", async () => {
       const gitModule = await import("../../util/git.js");
       vi.mocked(gitModule.isGitRepo).mockReturnValue(false);
-      
-      const result = getResponsiveRepoText("https://github.com/very-long-user/repo.git", 8);
+
+      const result = getResponsiveRepoText(
+        "https://github.com/very-long-user/repo.git",
+        8,
+      );
       expect(result).toBe("");
     });
   });
