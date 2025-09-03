@@ -424,7 +424,7 @@ export async function executeStreamedToolCalls(
           denialReason === "policy"
             ? `Command blocked by security policy`
             : `Permission denied by user`;
-        
+
         const deniedEntry: ChatCompletionToolMessageParam = {
           role: "tool",
           tool_call_id: call.id,
