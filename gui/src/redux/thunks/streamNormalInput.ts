@@ -122,7 +122,12 @@ async function handleToolCallExecution(
   // Check if ALL tool calls are auto-approved using dynamic evaluation
   const policyResults = await Promise.all(
     toolCallStates.map((toolCallState) =>
-      evaluateToolPolicy(toolCallState, toolSettings, activeTools, ideMessenger),
+      evaluateToolPolicy(
+        toolCallState,
+        toolSettings,
+        activeTools,
+        ideMessenger,
+      ),
     ),
   );
 
@@ -166,7 +171,7 @@ async function handleToolCallExecution(
       }
     }),
   );
-  
+
   const allAutoApproved = autoApprovedResults.every(Boolean);
 
   // Only run if we have auto-approve for all non-disabled tools
