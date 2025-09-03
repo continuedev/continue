@@ -30,8 +30,8 @@ export default function StepContainer(props: StepContainerProps) {
   // Calculate dimming and indicator state based on latest summary index
   const latestSummaryIndex = props.latestSummaryIndex ?? -1;
   const isBeforeLatestSummary =
-    latestSummaryIndex !== -1 && 
-    props.index <= latestSummaryIndex && 
+    latestSummaryIndex !== -1 &&
+    props.index <= latestSummaryIndex &&
     !props.isConversationSummary; // Only the latest conversation summary should not be dimmed
   const isLatestSummary =
     latestSummaryIndex !== -1 && props.index === latestSummaryIndex;

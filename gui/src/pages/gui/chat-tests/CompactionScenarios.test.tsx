@@ -42,7 +42,7 @@ describe("Compaction UI Scenarios", () => {
 
     // Find and click the compact conversation button
     const compactButton = await getElementByTestId("compact-button-1");
-    
+
     // Mock the compaction loading state
     await act(async () => {
       store.dispatch({
@@ -58,12 +58,14 @@ describe("Compaction UI Scenarios", () => {
     // During compaction, verify we're in compacting state
     // (The submit button might still exist but should be disabled/replaced by compacting UI)
     // Let's just verify the compacting state is active instead
-    expect(await getElementByTestId("notch-compacting-text")).toBeInTheDocument();
+    expect(
+      await getElementByTestId("notch-compacting-text"),
+    ).toBeInTheDocument();
 
     // Simulate compaction completion
     await act(async () => {
       store.dispatch({
-        type: "session/setCompactionLoading", 
+        type: "session/setCompactionLoading",
         payload: { index: 1, loading: false },
       });
     });
@@ -74,9 +76,11 @@ describe("Compaction UI Scenarios", () => {
     // After compaction completes, verify we can find at least one enabled submit button
     const submitButtons = screen.getAllByTestId("submit-input-button");
     expect(submitButtons.length).toBeGreaterThan(0);
-    
+
     // At least one submit button should not be disabled
-    const enabledButtons = submitButtons.filter(btn => !(btn as HTMLButtonElement).disabled);
+    const enabledButtons = submitButtons.filter(
+      (btn) => !(btn as HTMLButtonElement).disabled,
+    );
     expect(enabledButtons.length).toBeGreaterThan(0);
   });
 
@@ -103,7 +107,7 @@ describe("Compaction UI Scenarios", () => {
 
     // Verify the loading indicator shows in the notch
     await getElementByTestId("notch-compacting-text");
-    
+
     // Verify loading text appears in the notch
     await getElementByText("Generating Summary");
   });
@@ -157,14 +161,14 @@ describe("Compaction UI Scenarios", () => {
 
     // Find the compact button
     const compactButton = await getElementByTestId("compact-button-1");
-    
+
     // Mock the IDE messenger to capture and delay compaction requests
     let compactionRequested = false;
     let compactionResolve: () => void;
     const compactionPromise = new Promise<void>((resolve) => {
       compactionResolve = resolve;
     });
-    
+
     const originalRequest = ideMessenger.request;
     ideMessenger.request = async (messageType, data) => {
       if (messageType === "conversation/compact") {
@@ -187,16 +191,16 @@ describe("Compaction UI Scenarios", () => {
 
     // Verify that compaction was requested
     expect(compactionRequested).toBe(true);
-    
+
     // Verify loading state appears and persists
     await getElementByTestId("notch-compacting-text");
     await getElementByText("Generating Summary");
-    
+
     // Complete the compaction
     await act(async () => {
       compactionResolve!();
     });
-    
+
     // Restore original request method
     ideMessenger.request = originalRequest;
   });
@@ -217,7 +221,7 @@ describe("Compaction UI Scenarios", () => {
     // Simulate high context usage that would trigger compaction suggestions
     await act(async () => {
       store.dispatch({
-        type: "session/setContextPercentage", 
+        type: "session/setContextPercentage",
         payload: 0.8, // 80% context usage
       });
     });
@@ -243,13 +247,13 @@ describe("Compaction UI Scenarios", () => {
     // Simulate high context usage that triggers context gauge display
     await act(async () => {
       store.dispatch({
-        type: "session/setContextPercentage", 
+        type: "session/setContextPercentage",
         payload: 0.65, // 65% context usage - should show gauge
       });
     });
 
     // Should show context gauge and compact option is available in DOM
-    // The context gauge should be visible now (appears at 60%+)  
+    // The context gauge should be visible now (appears at 60%+)
     // Even if tooltip isn't visible, the "Compact conversation" text should be in DOM
     await getElementByText("Compact conversation");
   });
@@ -270,11 +274,11 @@ describe("Compaction UI Scenarios", () => {
     // Simulate pruned state (oldest messages being removed)
     await act(async () => {
       store.dispatch({
-        type: "session/setIsPruned", 
+        type: "session/setIsPruned",
         payload: true,
       });
       store.dispatch({
-        type: "session/setContextPercentage", 
+        type: "session/setContextPercentage",
         payload: 0.45, // Even at lower percentage, should show when pruned
       });
     });

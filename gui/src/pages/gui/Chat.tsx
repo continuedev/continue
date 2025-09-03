@@ -277,14 +277,14 @@ export function Chat() {
 
   const renderConversationSummaryMessage = useCallback(
     (
-      originalItem: ChatHistoryItemWithMessageId, 
-      index: number, 
-      isLoading: boolean, 
-      latestSummaryIndex: number
+      originalItem: ChatHistoryItemWithMessageId,
+      index: number,
+      isLoading: boolean,
+      latestSummaryIndex: number,
     ) => {
       // Only the conversation summary at the latest summary index should not be dimmed
       const isLatestConversationSummary = index === latestSummaryIndex;
-      
+
       return (
         <>
           {/* Show compaction indicator before the latest conversation summary */}
@@ -299,20 +299,24 @@ export function Chat() {
               </div>
             </div>
           )}
-          
+
           <div className="thread-message">
             <TimelineItem
               item={{
-                message: { 
-                  role: "assistant", 
-                  content: isLoading 
-                    ? "Generating conversation summary..." 
-                    : `## Conversation Summary\n\n${originalItem.conversationSummary}`
+                message: {
+                  role: "assistant",
+                  content: isLoading
+                    ? "Generating conversation summary..."
+                    : `## Conversation Summary\n\n${originalItem.conversationSummary}`,
                 },
                 contextItems: [],
               }}
               iconElement={
-                <DocumentTextIcon width="16px" height="16px" className="text-blue-400" />
+                <DocumentTextIcon
+                  width="16px"
+                  height="16px"
+                  className="text-blue-400"
+                />
               }
               open={true}
               onToggle={() => {}}
@@ -321,11 +325,11 @@ export function Chat() {
                 index={index}
                 isLast={false}
                 item={{
-                  message: { 
-                    role: "assistant", 
-                    content: isLoading 
-                      ? "Generating conversation summary..." 
-                      : `## Conversation Summary\n\n${originalItem.conversationSummary}`
+                  message: {
+                    role: "assistant",
+                    content: isLoading
+                      ? "Generating conversation summary..."
+                      : `## Conversation Summary\n\n${originalItem.conversationSummary}`,
                   },
                   contextItems: [],
                 }}
@@ -336,11 +340,9 @@ export function Chat() {
           </div>
         </>
       );
-    }, 
-    []
+    },
+    [],
   );
-
-
 
   const renderChatHistoryItem = useCallback(
     (item: ChatHistoryItemWithMessageId, index: number) => {
@@ -357,7 +359,7 @@ export function Chat() {
       const latestSummaryIndex = findLatestSummaryIndex(history);
       const isBeforeLatestSummary =
         latestSummaryIndex !== -1 && index < latestSummaryIndex;
-      
+
       // Check if this item has a conversation summary and render it instead of regular content
       if (conversationSummary) {
         const isCurrentlyCompacting = compactionLoading[index];
@@ -365,7 +367,7 @@ export function Chat() {
           item,
           index,
           isCurrentlyCompacting || false,
-          latestSummaryIndex
+          latestSummaryIndex,
         );
       }
 
@@ -423,8 +425,6 @@ export function Chat() {
                 historyIndex={index}
               />
             )}
-
-
           </>
         );
       }
@@ -465,7 +465,14 @@ export function Chat() {
         </div>
       );
     },
-    [sendInput, isLastUserInput, history, stepsOpen, compactionLoading, renderConversationSummaryMessage],
+    [
+      sendInput,
+      isLastUserInput,
+      history,
+      stepsOpen,
+      compactionLoading,
+      renderConversationSummaryMessage,
+    ],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;

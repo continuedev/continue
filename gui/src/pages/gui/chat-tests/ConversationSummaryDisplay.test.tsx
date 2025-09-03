@@ -3,7 +3,7 @@ import { addAndSelectMockLlm } from "../../../util/test/config";
 import { renderWithProviders } from "../../../util/test/render";
 import {
   getElementByText,
-  sendInputWithMockedResponse
+  sendInputWithMockedResponse,
 } from "../../../util/test/utils";
 import { Chat } from "../Chat";
 
@@ -34,11 +34,15 @@ describe("Conversation Summary Display", () => {
 
     // Verify that the conversation summary is displayed
     await getElementByText("Conversation Summary");
-    await getElementByText("This is a test conversation summary about greetings.");
-    
+    await getElementByText(
+      "This is a test conversation summary about greetings.",
+    );
+
     // Verify that the conversation summary is displayed
     await getElementByText("Conversation Summary");
-    await getElementByText("This is a test conversation summary about greetings.");
+    await getElementByText(
+      "This is a test conversation summary about greetings.",
+    );
 
     // Verify the "Previous Conversation Compacted" indicator is shown
     await getElementByText("Previous Conversation Compacted");
@@ -95,7 +99,7 @@ describe("Conversation Summary Display", () => {
 
     // Wait for UI to stabilize before sending second message
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
     // Send second message using direct state manipulation instead of sendInputWithMockedResponse
@@ -105,10 +109,18 @@ describe("Conversation Summary Display", () => {
         type: "session/submitEditorAndInitAtIndex",
         payload: {
           index: 2, // Next index after first conversation
-          editorState: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Second' }] }] },
+          editorState: {
+            type: "doc",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Second" }],
+              },
+            ],
+          },
         },
       });
-      
+
       // Add the assistant response
       store.dispatch({
         type: "session/streamUpdate",
@@ -142,7 +154,9 @@ describe("Conversation Summary Display", () => {
     await getElementByText("Second conversation summary");
 
     // Only the latest summary should show the compaction indicator
-    const compactionIndicators = screen.getAllByText("Previous Conversation Compacted");
+    const compactionIndicators = screen.getAllByText(
+      "Previous Conversation Compacted",
+    );
     expect(compactionIndicators).toHaveLength(1);
   });
 });

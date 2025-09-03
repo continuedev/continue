@@ -61,8 +61,8 @@ function InputToolbar(props: InputToolbarProps) {
   const isAnyCompactionLoading = Object.keys(compactionLoading).length > 0;
 
   const isEnterDisabled =
-    props.disabled || 
-    (isInEdit && codeToEdit.length === 0) || 
+    props.disabled ||
+    (isInEdit && codeToEdit.length === 0) ||
     isAnyCompactionLoading;
 
   const supportsImages =
