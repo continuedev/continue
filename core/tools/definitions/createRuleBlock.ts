@@ -84,4 +84,6 @@ For example:`,
       ["alwaysApply", "false"],
     ],
   },
+  isExecutionResultSearchable: true,
+  toolCallIcon: "PencilIcon",
 };
