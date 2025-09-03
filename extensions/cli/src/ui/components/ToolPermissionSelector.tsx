@@ -1,7 +1,8 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
 
-import { formatToolCall } from "../../tools/index.js";
+import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
+
 import { ToolCallPreview } from "../../tools/types.js";
 import { defaultBoxStyles } from "../styles.js";
 
@@ -102,16 +103,14 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
     }
   });
 
-  const toolCallDisplay = formatToolCall(toolName, toolArgs);
-
   return (
     <Box {...defaultBoxStyles("magenta")}>
       <Text color="magenta" bold>
-        {toolCallDisplay}
+        <ToolCallTitle toolName={toolName} args={toolArgs} />
       </Text>
 
       {/* Show preview of what the tool will do */}
-      <Box marginTop={1}>
+      <Box>
         <ToolPreview
           toolName={toolName}
           toolArgs={toolArgs}

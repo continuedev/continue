@@ -97,6 +97,11 @@ export const HIDE_NEXT_EDIT_SUGGESTION_COMMAND =
 export const ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND =
   "continue.nextEditWindow.acceptNextEditSuggestion";
 
+/**
+ * This is where we create SVG windows and deletion decorations for non-FIM next edit suggestions.
+ * This class controls the decoration object lifetime.
+ * The syntax highlighting and the actual building of SVG happens inside core/codeRenderer/CodeRenderer.ts.
+ */
 export class NextEditWindowManager {
   private static instance: NextEditWindowManager | undefined;
 
@@ -495,9 +500,6 @@ export class NextEditWindowManager {
   /**
    * Accept the current next edit suggestion by inserting it at cursor position.
    */
-  /**
-   * Accept the current next edit suggestion by inserting it at cursor position.
-   */
   private async acceptNextEdit() {
     if (this.activeEditor === null || this.currentTooltipText === null) {
       return;
@@ -840,15 +842,6 @@ export class NextEditWindowManager {
     editor: vscode.TextEditor,
     position: vscode.Position,
   ): vscode.Position {
-    // Create a position that's offset spaces to the right of the cursor.
-
-    // const line = editor.document.lineAt(position.line);
-    // const offsetChar = Math.min(
-    //   position.character + SVG_CONFIG.cursorOffset,
-    //   line.text.length,
-    // );
-    // return new vscode.Position(position.line, offsetChar);
-
     // Place decoration at the end of the current line
     const line = editor.document.lineAt(position.line);
     return new vscode.Position(position.line, line.text.length);

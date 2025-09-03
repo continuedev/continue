@@ -1,0 +1,55 @@
+name: "Check LLM Changes"
+description: "Check if LLM-related files have changed and set environment variable to control API tests"
+outputs:
+  llm_changed:
+    description: "Whether LLM-related files have changed"
+    value: ${{ steps.check-changes.outputs.llm_changed }}
+  ignore_api_tests:
+    description: "Whether to ignore API tests based on file changes and other conditions"
+    value: ${{ steps.check-changes.outputs.ignore_api_tests }}
+inputs:
+  is_fork:
+    description: "Whether this is a fork PR"
+    required: false
+    default: "false"
+  is_dependabot:
+    description: "Whether this is a dependabot PR"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check if LLM-related files changed
+      id: check-changes
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "push" ]; then
+          # For push events, compare against the previous commit
+          CHANGED_FILES=$(git diff --name-only HEAD~1...HEAD)
+        else
+          # For PR events, compare against the base branch
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+        fi
+
+        echo "Changed files:"
+        echo "$CHANGED_FILES"
+
+        # Check if any LLM-related files were changed
+        LLM_CHANGED=false
+        if echo "$CHANGED_FILES" | grep -E "(^core/llm/|^core/index\.ts|^core/package\.json|^core/jest\.config\.js|^packages/.*/(.*llm.*|.*openai.*|.*anthropic.*)|\.github/workflows/pr-checks\.yaml|\.github/actions/check-llm-changes/)" > /dev/null; then
+          LLM_CHANGED=true
+        fi
+
+        echo "LLM files changed: $LLM_CHANGED"
+        echo "llm_changed=$LLM_CHANGED" >> $GITHUB_OUTPUT
+
+        # Determine whether to ignore API tests
+        IGNORE_API_TESTS=false
+        if [ "${{ inputs.is_fork }}" = "true" ] || [ "${{ inputs.is_dependabot }}" = "true" ] || [ "$LLM_CHANGED" = "false" ]; then
+          IGNORE_API_TESTS=true
+        fi
+
+        echo "Ignore API tests: $IGNORE_API_TESTS"
+        echo "ignore_api_tests=$IGNORE_API_TESTS" >> $GITHUB_OUTPUT

@@ -1,14 +1,18 @@
+/* eslint-disable max-lines */
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useCallback, useState } from "react";
 
 import { getAllSlashCommands } from "../commands/commands.js";
+import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
+import type { FileIndexServiceState } from "../services/FileIndexService.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
+import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
   handleControlKeys,
   updateTextBufferState,
@@ -17,16 +21,18 @@ import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
+  wasInterrupted?: boolean;
   onFileAttached?: (filePath: string, content: string) => void;
   disabled?: boolean;
   placeholder?: string;
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
+  onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -35,11 +41,13 @@ const UserInput: React.FC<UserInputProps> = ({
   inputMode,
   onInterrupt,
   assistant,
+  wasInterrupted = false,
   onFileAttached,
   disabled = false,
   placeholder,
   hideNormalUI = false,
   isRemoteMode = false,
+  onImageInClipboardChange,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -68,6 +76,9 @@ const UserInput: React.FC<UserInputProps> = ({
     textBuffer.clear();
     setInputText("");
     setCursorPosition(0);
+    setShowSlashCommands(false);
+    setShowFileSearch(false);
+    inputHistory.resetNavigation();
   }, [textBuffer]);
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -78,6 +89,11 @@ const UserInput: React.FC<UserInputProps> = ({
     Array<{ path: string; displayName: string }>
   >([]);
   const { exit } = useApp();
+
+  // Get file index service
+  const { services } = useServices<{
+    fileIndex: FileIndexServiceState;
+  }>(["fileIndex"]);
 
   const getSlashCommands = () => {
     if (assistant || isRemoteMode) {
@@ -193,7 +209,27 @@ const UserInput: React.FC<UserInputProps> = ({
       if (afterAt.includes(" ") || afterAt.includes("\n")) {
         setShowFileSearch(false);
       } else {
-        // We're in a file search context
+        // We're in a file search context - check if there are matching files
+        const fileIndexService = services.fileIndex;
+        if (fileIndexService) {
+          const filteredFiles = fileIndexService.files.filter((file) => {
+            if (afterAt.length === 0) {
+              return true;
+            }
+            const lowerFilter = afterAt.toLowerCase();
+            return (
+              file.displayName.toLowerCase().includes(lowerFilter) ||
+              file.path.toLowerCase().includes(lowerFilter)
+            );
+          });
+
+          // If no files match, hide the dropdown to allow normal Enter behavior
+          if (filteredFiles.length === 0 && afterAt.length > 0) {
+            setShowFileSearch(false);
+            return;
+          }
+        }
+
         setShowFileSearch(true);
         setFileSearchFilter(afterAt);
         setSelectedFileIndex(0);
@@ -268,8 +304,10 @@ const UserInput: React.FC<UserInputProps> = ({
       if (onFileAttached) {
         try {
           const fs = await import("fs/promises");
-          const content = await fs.readFile(filePath, "utf-8");
-          onFileAttached(filePath, content);
+          const path = await import("path");
+          const absolutePath = path.resolve(filePath);
+          const content = await fs.readFile(absolutePath, "utf-8");
+          onFileAttached(absolutePath, content);
         } catch (error) {
           console.error(`Error reading file ${filePath}:`, error);
         }
@@ -358,12 +396,43 @@ const UserInput: React.FC<UserInputProps> = ({
 
   const handleEnterKey = (key: any): boolean => {
     if (key.return && !key.shift) {
-      if (textBuffer.text.trim() && !isWaitingForResponse) {
+      // Check for backslash continuation
+      const beforeCursor = textBuffer.text.slice(0, cursorPosition);
+      const trimmedBeforeCursor = beforeCursor.trimEnd();
+
+      if (trimmedBeforeCursor.endsWith("\\")) {
+        // Handle backslash continuation: remove the trailing "\" and add newline
+        const beforeBackslash = trimmedBeforeCursor.slice(0, -1);
+        const afterCursor = textBuffer.text.slice(cursorPosition);
+        const newText = beforeBackslash + "\n" + afterCursor;
+        const newCursorPos = beforeBackslash.length + 1;
+
+        textBuffer.setText(newText);
+        textBuffer.setCursor(newCursorPos);
+        setInputText(newText);
+        setCursorPosition(newCursorPos);
+        updateSlashCommandState(newText, newCursorPos);
+        updateFileSearchState(newText, newCursorPos);
+        return true;
+      }
+
+      // Normal Enter behavior - submit if there's content
+      if ((textBuffer.text.trim() || wasInterrupted) && !isWaitingForResponse) {
+        // Get images before expanding paste blocks
+        const imageMap = textBuffer.getAllImages();
+
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
-        inputHistory.addEntry(submittedText);
-        onSubmit(submittedText);
+
+        // Only add to history if there's actual text (not when resuming)
+        if (submittedText) {
+          inputHistory.addEntry(submittedText);
+        }
+
+        // Submit with images
+        onSubmit(submittedText, imageMap);
+
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
@@ -414,6 +483,33 @@ const UserInput: React.FC<UserInputProps> = ({
     return false;
   };
 
+  // Handle text buffer updates for async operations like image pasting
+  const handleTextBufferUpdate = () => {
+    const newText = textBuffer.text;
+    const newCursor = textBuffer.cursor;
+    setInputText(newText);
+    setCursorPosition(newCursor);
+    updateSlashCommandState(newText, newCursor);
+    updateFileSearchState(newText, newCursor);
+    inputHistory.resetNavigation();
+  };
+
+  // State for showing image paste hint
+  const [_hasImageInClipboard, _setHasImageInClipboard] = useState(false);
+
+  // Monitor clipboard for images and show helpful hints
+  const { checkNow: _checkClipboardNow } = useClipboardMonitor({
+    onImageStatusChange: (hasImage) => {
+      _setHasImageInClipboard(hasImage);
+      // Also notify parent component
+      if (onImageInClipboardChange) {
+        onImageInClipboardChange(hasImage);
+      }
+    },
+    enabled: !disabled && inputMode,
+    pollInterval: 2000,
+  });
+
   useInput((input, key) => {
     // Don't handle any input when disabled
     if (disabled) {
@@ -430,6 +526,8 @@ const UserInput: React.FC<UserInputProps> = ({
         showFileSearch,
         cycleModes,
         clearInput,
+        textBuffer,
+        onTextBufferUpdate: handleTextBufferUpdate,
       })
     ) {
       return;
@@ -579,6 +677,15 @@ const UserInput: React.FC<UserInputProps> = ({
 
   return (
     <Box flexDirection="column">
+      {/* Interruption message - shown just above the input box */}
+      {wasInterrupted && (
+        <Box paddingX={1} marginBottom={0}>
+          <Text color="yellow">
+            ⚠ Interrupted by user - Press enter to resume
+          </Text>
+        </Box>
+      )}
+
       {/* Input box */}
       <Box
         borderStyle="round"
@@ -586,7 +693,7 @@ const UserInput: React.FC<UserInputProps> = ({
         paddingX={1}
         borderColor={isRemoteMode ? "cyan" : "gray"}
       >
-        <Text color={isRemoteMode ? "cyan" : "green"} bold>
+        <Text color={isRemoteMode ? "cyan" : "blue"} bold>
           {isRemoteMode ? "◉" : "●"}{" "}
         </Text>
         {renderInputText()}

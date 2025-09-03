@@ -6,22 +6,20 @@ import { UserInput } from "../UserInput.js";
 
 describe("Ctrl+C input clearing", () => {
   let mockOnSubmit: ReturnType<typeof vi.fn>;
-  let mockProcess: any;
+  let mockProcessKill: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     mockOnSubmit = vi.fn();
 
-    // Mock process.kill for SIGINT simulation
-    mockProcess = {
-      kill: vi.fn(),
-      pid: 12345,
-    };
-    vi.stubGlobal("process", mockProcess);
+    // Mock process.kill using vi.spyOn
+    mockProcessKill = vi.spyOn(process, 'kill').mockImplementation(() => {
+      return true;
+    });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("sends SIGINT when Ctrl+C is pressed (input clearing tested implicitly)", () => {
@@ -37,11 +35,11 @@ describe("Ctrl+C input clearing", () => {
     // Type some text first
     stdin.write("hello world");
 
-    // Simulate Ctrl+C
+    // Simulate Ctrl+C using raw character code (like other tests in codebase)
     stdin.write("\u0003");
 
     // Should send SIGINT to process (which handles the two-stage exit)
-    expect(mockProcess.kill).toHaveBeenCalledWith(12345, "SIGINT");
+    expect(mockProcessKill).toHaveBeenCalledWith(process.pid, "SIGINT");
   });
 
   it("sends SIGINT to main process for two-stage exit handling", () => {
@@ -54,10 +52,10 @@ describe("Ctrl+C input clearing", () => {
       />,
     );
 
-    // Simulate Ctrl+C
+    // Simulate Ctrl+C using raw character code (like other tests in codebase)
     stdin.write("\u0003");
 
     // Should delegate to main process SIGINT handler
-    expect(mockProcess.kill).toHaveBeenCalledWith(12345, "SIGINT");
+    expect(mockProcessKill).toHaveBeenCalledWith(process.pid, "SIGINT");
   });
 });

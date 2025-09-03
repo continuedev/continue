@@ -1,5 +1,6 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
+import { NO_PARALLEL_TOOL_CALLING_INTSRUCTION } from "./editFile";
 
 export interface EditOperation {
   old_string: string;
@@ -54,6 +55,7 @@ CRITICAL REQUIREMENTS:
 1. All edits follow the same requirements as the single find and replace tool
 2. The edits are atomic - either all succeed or none are applied
 3. Plan your edits carefully to avoid conflicts between sequential operations
+4. ${NO_PARALLEL_TOOL_CALLING_INTSRUCTION}
 
 WARNING:
 

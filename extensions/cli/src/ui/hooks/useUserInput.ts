@@ -1,5 +1,10 @@
 import type { PermissionMode } from "../../permissions/types.js";
+import {
+  checkClipboardForImage,
+  getClipboardImage,
+} from "../../util/clipboard.js";
 import { logger } from "../../util/logger.js";
+import type { TextBuffer } from "../TextBuffer.js";
 
 // Helper function to handle control keys
 interface ControlKeysOptions {
@@ -10,6 +15,8 @@ interface ControlKeysOptions {
   showFileSearch: boolean;
   cycleModes: () => Promise<PermissionMode>;
   clearInput?: () => void;
+  textBuffer?: TextBuffer;
+  onTextBufferUpdate?: () => void;
 }
 
 export function handleControlKeys(options: ControlKeysOptions): boolean {
@@ -21,6 +28,8 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
     showFileSearch,
     cycleModes,
     clearInput,
+    textBuffer,
+    onTextBufferUpdate,
   } = options;
 
   // Handle Ctrl+C with two-stage exit, Ctrl+D immediately exits
@@ -34,6 +43,37 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
     return true;
   }
 
+  // Handle Ctrl+V for clipboard paste (including images)
+  // Note: Cmd+V often doesn't work for image pasting as terminals don't send the key event
+  if (key.ctrl && input === "v" && textBuffer) {
+    logger.debug("Handling Ctrl+V clipboard paste");
+
+    // Check clipboard for images immediately on paste event
+    checkClipboardForImage()
+      .then(async (hasImage) => {
+        if (hasImage) {
+          logger.debug("Image found in clipboard during paste event");
+          const imageBuffer = await getClipboardImage();
+          if (imageBuffer) {
+            textBuffer.addImage(imageBuffer);
+            // Trigger UI update
+            if (onTextBufferUpdate) {
+              onTextBufferUpdate();
+            }
+            return;
+          }
+        }
+        // If no image, let normal text paste handling continue
+      })
+      .catch((error) => {
+        logger.debug("Error checking clipboard for image:", error);
+      });
+
+    // Don't consume the event - let normal text paste handling continue
+    return false;
+  }
+
+  // Handle Ctrl+D to exit
   if (key.ctrl && input === "d") {
     exit();
     return true;
@@ -69,7 +109,7 @@ interface TextBufferStateOptions {
 
 export function updateTextBufferState(options: TextBufferStateOptions) {
   const {
-    handled,
+    handled: _handled,
     textBuffer,
     setInputText,
     setCursorPosition,
@@ -79,7 +119,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
   } = options;
 
   // Skip state updates during rapid input mode to avoid conflicts with timer-based updates
-  if (handled && !textBuffer.isInRapidInputMode()) {
+  if (!textBuffer.isInRapidInputMode()) {
     const newText = textBuffer.text;
     const newCursor = textBuffer.cursor;
     setInputText(newText);

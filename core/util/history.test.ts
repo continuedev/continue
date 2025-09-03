@@ -93,8 +93,9 @@ describe("Many sessions created", () => {
     const offset = 10;
 
     const sessions = historyManager.list({ offset: offset, limit: limit });
+    // Sessions are now reversed, so newest (99) comes first
     const sessionIds = Array.from({ length: limit }, (_, i) =>
-      (i + offset).toString(),
+      (99 - offset - i).toString(),
     );
     const isSessionIdInList = (sessionId: string) =>
       sessions.some((session) => session.sessionId === sessionId);
@@ -105,7 +106,10 @@ describe("Many sessions created", () => {
     const limit = 25;
 
     const sessions = historyManager.list({ limit: limit });
-    const sessionIds = Array.from({ length: limit }, (_, i) => i.toString());
+    // Sessions are now reversed, so newest (99) comes first
+    const sessionIds = Array.from({ length: limit }, (_, i) =>
+      (99 - i).toString(),
+    );
 
     const isSessionIdInList = (sessionId: string) =>
       sessions.some((session) => session.sessionId === sessionId);

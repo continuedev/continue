@@ -5,10 +5,10 @@ import React, { useEffect, useState } from "react";
 
 import {
   getAccessToken,
-  getOrganizationId,
-  loadAuthConfig,
   getAssistantSlug,
+  getOrganizationId,
   listUserOrganizations,
+  loadAuthConfig,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
 import { env } from "../env.js";
@@ -80,7 +80,10 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
                 });
 
                 return assistants.map((assistant) => {
-                  const displayName = `[${org.name}] ${assistant.ownerSlug}/${assistant.packageSlug}`;
+                  const name =
+                    (assistant.configResult.config as any)?.name ??
+                    `${assistant.ownerSlug}/${assistant.packageSlug}`;
+                  const displayName = `[${org.name}] ${name}`;
                   // Create unique ID that includes org info to avoid conflicts
                   const uniqueId = `${org.id || "personal"}-${assistant.packageSlug}`;
                   return {

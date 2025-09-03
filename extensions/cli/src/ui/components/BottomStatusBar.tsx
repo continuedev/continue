@@ -19,6 +19,7 @@ interface BottomStatusBarProps {
   navigateTo: (screen: NavigationScreen, data?: any) => void;
   closeCurrentScreen: () => void;
   contextPercentage?: number;
+  hasImageInClipboard?: boolean;
 }
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
@@ -30,6 +31,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   navigateTo,
   closeCurrentScreen,
   contextPercentage,
+  hasImageInClipboard,
 }) => {
   const [_refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -46,16 +48,25 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
       <Box marginLeft={2} flexDirection="row" alignItems="center">
         {currentMode === "normal" && (
           <React.Fragment>
-            <Text key="repo-url" color="dim" wrap="truncate-start">
-              {showingExitMessage ? "ctrl+c to exit" : repoURLText}
-            </Text>
+            {hasImageInClipboard ? (
+              <Text key="image-paste-hint" color="cyan" wrap="truncate-start">
+                Press Ctrl+V to paste image
+              </Text>
+            ) : (
+              <Text key="repo-url" color="dim" wrap="truncate-start">
+                {showingExitMessage ? "ctrl+c to exit" : repoURLText}
+              </Text>
+            )}
             <Text key="repo-separator"> </Text>
           </React.Fragment>
         )}
         <ModeIndicator />
         {contextPercentage !== undefined && contextPercentage > 75 && (
           <React.Fragment>
-            <Text key="context-separator"> • </Text>
+            <Text key="context-separator" color="dim">
+              {" "}
+              •{" "}
+            </Text>
             <ContextPercentageDisplay percentage={contextPercentage} />
           </React.Fragment>
         )}

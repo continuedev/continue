@@ -28,7 +28,7 @@ describe("E2E: Headless Mode with JSON Format", () => {
     const validJsonResponse = {
       response: "This is a JSON response",
       status: "success",
-      files: ["test.ts"]
+      files: ["test.ts"],
     };
 
     mockServer = await setupMockLLMTest(context, {
@@ -37,7 +37,14 @@ describe("E2E: Headless Mode with JSON Format", () => {
     });
 
     const result = await runCLI(context, {
-      args: ["-p", "--format", "json", "--config", context.configPath, "Test prompt"],
+      args: [
+        "-p",
+        "--format",
+        "json",
+        "--config",
+        context.configPath,
+        "Test prompt",
+      ],
       timeout: 15000,
     });
 
@@ -56,7 +63,14 @@ describe("E2E: Headless Mode with JSON Format", () => {
     });
 
     const result = await runCLI(context, {
-      args: ["-p", "--format", "json", "--config", context.configPath, "Test prompt"],
+      args: [
+        "-p",
+        "--format",
+        "json",
+        "--config",
+        context.configPath,
+        "Test prompt",
+      ],
       timeout: 15000,
     });
 
@@ -65,7 +79,9 @@ describe("E2E: Headless Mode with JSON Format", () => {
     const parsedOutput = JSON.parse(result.stdout.trim());
     expect(parsedOutput.response).toBe(nonJsonResponse);
     expect(parsedOutput.status).toBe("success");
-    expect(parsedOutput.note).toBe("Response was not valid JSON, so it was wrapped in a JSON object");
+    expect(parsedOutput.note).toBe(
+      "Response was not valid JSON, so it was wrapped in a JSON object",
+    );
     expect(result.exitCode).toBe(0);
   }, 20000);
 
@@ -81,11 +97,15 @@ describe("E2E: Headless Mode with JSON Format", () => {
 
     expect(result.exitCode).toBe(0);
     expect(mockServer.requests).toHaveLength(1);
-    
+
     // Find the system message
-    const systemMessage = mockServer.requests[0].body.messages.find((m: any) => m.role === "system");
+    const systemMessage = mockServer.requests[0].body.messages.find(
+      (m: any) => m.role === "system",
+    );
     expect(systemMessage.content).toContain("JSON output mode");
-    expect(systemMessage.content).toContain("valid JSON that can be parsed by JSON.parse()");
+    expect(systemMessage.content).toContain(
+      "valid JSON that can be parsed by JSON.parse()",
+    );
   }, 20000);
 
   it("should fail validation when --format is used without -p flag", async () => {
@@ -95,7 +115,9 @@ describe("E2E: Headless Mode with JSON Format", () => {
       expectError: true,
     });
 
-    expect(result.stderr).toContain("--format flag can only be used with -p/--print flag");
+    expect(result.stderr).toContain(
+      "--format flag can only be used with -p/--print flag",
+    );
     expect(result.exitCode).toBe(1);
   }, 10000);
 
