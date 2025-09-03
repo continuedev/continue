@@ -202,6 +202,8 @@ export class ConfigHandler {
           message: `Error loading Continue Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
         });
       }
+    } else {
+      PolicySingleton.getInstance().policy = null;
     }
     // Load local org if not signed in or hub orgs fail
     try {
