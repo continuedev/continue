@@ -730,6 +730,14 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
+    it("should allow simple echo with quoted string without permission", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        'echo "hello"',
+      );
+      expect(result).toBe("allowedWithoutPermission");
+    });
+
     it("should allow echo with dangerous-looking but quoted strings", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithPermission",
