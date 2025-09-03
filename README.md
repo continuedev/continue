@@ -35,25 +35,25 @@ Get started in [VS Code](https://marketplace.visualstudio.com/items?itemName=Con
 
 ## Agent
 
-[Agent](/features/agent/quick-start) to work on development tasks together with AI
+[Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
 
 ![agent](docs/images/agent.gif)
 
 ## Chat
 
-[Chat](/features/chat/quick-start) to ask general questions and clarify code sections
+[Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
 
 ![chat](docs/images/chat.gif)
 
 ## Edit
 
-[Edit](/features/edit/quick-start) to modify a code section without leaving your current file
+[Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
 
 ![edit](docs/images/edit.gif)
 
 ## Autocomplete
 
-[Autocomplete](/features/autocomplete/quick-start) to receive inline code suggestions as you type
+[Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
 
 ![autocomplete](docs/images/autocomplete.gif)
 

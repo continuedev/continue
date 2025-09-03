@@ -19,6 +19,7 @@ interface BottomStatusBarProps {
   navigateTo: (screen: NavigationScreen, data?: any) => void;
   closeCurrentScreen: () => void;
   contextPercentage?: number;
+  hasImageInClipboard?: boolean;
 }
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
@@ -30,12 +31,19 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   navigateTo,
   closeCurrentScreen,
   contextPercentage,
+  hasImageInClipboard,
 }) => (
   <Box flexDirection="row" justifyContent="space-between" alignItems="center">
     <Box marginLeft={2} flexDirection="row" alignItems="center">
       {currentMode === "normal" && (
         <React.Fragment>
-          <ResponsiveRepoDisplay remoteUrl={remoteUrl} />
+          {hasImageInClipboard ? (
+            <Text key="image-paste-hint" color="cyan" wrap="truncate-start">
+              Press Ctrl+V to paste image
+            </Text>
+          ) : (
+            <ResponsiveRepoDisplay remoteUrl={remoteUrl} />
+          )}
           <Text key="repo-separator"> </Text>
         </React.Fragment>
       )}
