@@ -315,14 +315,11 @@ export function mergeReasoningDetails(
   if (!delta) return existing;
   if (!existing) return delta;
 
-  console.log("merging reasoning details", existing, delta);
-
   const result = [...existing];
 
   for (const deltaItem of delta) {
     // Skip items without a type
     if (!deltaItem.type) {
-      console.warn("Delta item missing type field, skipping:", deltaItem);
       continue;
     }
 
