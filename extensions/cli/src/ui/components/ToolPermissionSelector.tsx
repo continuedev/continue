@@ -132,7 +132,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
         <Text color="dim">Would you like to continue?</Text>
         {hasDynamicEvaluation && (
           <Box marginTop={1}>
-            <Text color="yellow" dim>
+            <Text color="yellow" dimColor>
               Note: Dangerous commands will be blocked regardless of your
               preference.
             </Text>
