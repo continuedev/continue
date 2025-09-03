@@ -37,7 +37,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
       {currentMode === "normal" && (
         <React.Fragment>
           {hasImageInClipboard ? (
-            <Text key="image-paste-hint" color="cyan">
+            <Text key="image-paste-hint" color="cyan" wrap="truncate-start">
               Press Ctrl+V to paste image
             </Text>
           ) : (
