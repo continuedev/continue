@@ -196,13 +196,17 @@ export function checkToolPermission(
       toolCall.arguments,
     );
 
-    // Convert back to CLI permission
-    const finalPermission = toolPolicyToPermissionPolicy(evaluatedPolicy);
+    // If dynamic evaluation says disabled, that ALWAYS takes precedence
+    if (evaluatedPolicy === "disabled") {
+      return {
+        permission: "exclude",
+        matchedPolicy,
+      };
+    }
 
-    console.error("FINAL PERMISSION", finalPermission);
-
+    // Otherwise, user preference wins - return the original base permission
     return {
-      permission: finalPermission,
+      permission: basePermission,
       matchedPolicy,
     };
   }
