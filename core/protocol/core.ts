@@ -296,7 +296,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "tools/evaluatePolicy": [
     { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
-    { policy: ToolPolicy },
+    { policy: ToolPolicy; displayValue?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];

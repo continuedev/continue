@@ -1021,14 +1021,20 @@ export class Core {
           return { policy: basePolicy };
         }
 
+        // Extract display value for specific tools
+        let displayValue: string | undefined;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
+        }
+
         // If tool has evaluateToolCallPolicy function, use it
         if (tool.evaluateToolCallPolicy) {
           const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
-          return { policy: evaluatedPolicy };
+          return { policy: evaluatedPolicy, displayValue };
         }
 
         // Otherwise return base policy unchanged
-        return { policy: basePolicy };
+        return { policy: basePolicy, displayValue };
       },
     );
 
