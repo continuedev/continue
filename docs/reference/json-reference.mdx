@@ -191,7 +191,7 @@ Parameters that control the behavior of text generation and completion settings.
 - `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
 - `numGpu`: For Ollama, this parameter overrides the number of gpu layers that will be used to load the model into VRAM.
 - `useMmap`: For Ollama, this parameter allows the model to be mapped into memory. If disabled can enhance response time on low end devices but will slow down the stream.
-- `reasoning`: Enables thinking/reasoning for Anthropic Claude 3.7+ models.
+- `reasoning`: Enables thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models.
 - `reasoningBudgetTokens`: Sets budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 
 Example
@@ -485,8 +485,6 @@ Several experimental config parameters are available, as described below:
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
 
-
-
 - `modelContextProtocolServers`: See [Model Context Protocol](/customize/deep-dives/mcp)
 
 Example
@@ -540,5 +538,3 @@ Some deprecated `config.json` settings are no longer stored in config and have b
   - `codeWrap`
   - `displayRawMarkdown`
   - `showChatScrollbar`
-
-
