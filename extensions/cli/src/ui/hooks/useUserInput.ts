@@ -189,6 +189,7 @@ interface TextBufferStateOptions {
   setCursorPosition: (pos: number) => void;
   updateSlashCommandState: (text: string, cursor: number) => void;
   updateFileSearchState: (text: string, cursor: number) => void;
+  updateBashModeState: (text: string) => void;
   inputHistory: any;
 }
 
@@ -200,6 +201,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     setCursorPosition,
     updateSlashCommandState,
     updateFileSearchState,
+    updateBashModeState,
     inputHistory,
   } = options;
 
@@ -211,6 +213,7 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     setCursorPosition(newCursor);
     updateSlashCommandState(newText, newCursor);
     updateFileSearchState(newText, newCursor);
+    updateBashModeState(newText);
     inputHistory.resetNavigation();
   }
 }

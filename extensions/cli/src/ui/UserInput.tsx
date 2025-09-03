@@ -69,6 +69,7 @@ const UserInput: React.FC<UserInputProps> = ({
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+  const [showBashMode, setShowBashMode] = useState(false);
   const [showFileSearch, setShowFileSearch] = useState(false);
   const [fileSearchFilter, setFileSearchFilter] = useState("");
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
@@ -118,6 +119,18 @@ const UserInput: React.FC<UserInputProps> = ({
     return nextMode;
   };
 
+  // Update bash mode state based on input
+  const updateBashModeState = (text: string) => {
+    const trimmed = text.trimStart();
+    const isBash = trimmed.startsWith("!");
+    setShowBashMode(isBash);
+    if (isBash) {
+      // Disable other helpers while in bash mode
+      setShowSlashCommands(false);
+      setShowFileSearch(false);
+    }
+  };
+
   // Update slash command UI state based on input
   const updateSlashCommandState = (text: string, cursor: number) => {
     // Only show slash commands if slash is the very first character
@@ -125,6 +138,9 @@ const UserInput: React.FC<UserInputProps> = ({
       setShowSlashCommands(false);
       return;
     }
+
+    // When using slash commands, disable file search
+    setShowFileSearch(false);
 
     const trimmedText = text.trimStart();
     const beforeCursor = trimmedText.slice(
@@ -188,6 +204,13 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
+    // Disable file search if we're in bash mode or slash command mode
+    const trimmed = text.trimStart();
+    if (trimmed.startsWith("!") || trimmed.startsWith("/")) {
+      setShowFileSearch(false);
+      return;
+    }
+
     // Check if we're in a file search context
     const beforeCursor = text.slice(0, cursor);
     const lastAtIndex = beforeCursor.lastIndexOf("@");
@@ -226,6 +249,7 @@ const UserInput: React.FC<UserInputProps> = ({
         setFileSearchFilter(afterAt);
         setSelectedFileIndex(0);
         setShowSlashCommands(false);
+        setShowBashMode(false);
       }
     }
   };
@@ -270,6 +294,7 @@ const UserInput: React.FC<UserInputProps> = ({
       setInputText(newText);
       setCursorPosition(newCursorPos);
       setShowSlashCommands(false);
+      setShowBashMode(false);
     }
   };
 
@@ -429,6 +454,7 @@ const UserInput: React.FC<UserInputProps> = ({
         setInputText("");
         setCursorPosition(0);
         setShowSlashCommands(false);
+        setShowBashMode(false);
       }
       return true;
     }
@@ -453,6 +479,15 @@ const UserInput: React.FC<UserInputProps> = ({
 
   const handleEscapeKey = (key: any): boolean => {
     if (!key.escape) return false;
+
+    // If only "!" is present, clear bash mode
+    if (inputMode && showBashMode && inputText.trim() === "!") {
+      textBuffer.clear();
+      setInputText("");
+      setCursorPosition(0);
+      setShowBashMode(false);
+      return true;
+    }
 
     // Handle escape key to interrupt streaming
     if (isWaitingForResponse && onInterrupt) {
@@ -482,6 +517,7 @@ const UserInput: React.FC<UserInputProps> = ({
     setCursorPosition(0);
     setShowSlashCommands(false);
     setShowFileSearch(false);
+    setShowBashMode(false);
     inputHistory.resetNavigation();
   };
 
@@ -493,6 +529,7 @@ const UserInput: React.FC<UserInputProps> = ({
     setCursorPosition(newCursor);
     updateSlashCommandState(newText, newCursor);
     updateFileSearchState(newText, newCursor);
+    updateBashModeState(newText);
     inputHistory.resetNavigation();
   };
 
@@ -573,14 +610,15 @@ const UserInput: React.FC<UserInputProps> = ({
       setCursorPosition,
       updateSlashCommandState,
       updateFileSearchState,
+      updateBashModeState,
       inputHistory,
     });
   });
 
   const renderInputText = () => {
     const placeholderText = isRemoteMode
-      ? "Ask anything, / for slash commands"
-      : placeholder || "Ask anything, @ for context, / for slash commands";
+      ? "Ask anything, / for slash commands, ! for bash mode"
+      : placeholder || "Ask anything, @ for context, / for slash commands, ! for bash mode";
     if (inputText.length === 0) {
       return (
         <>
@@ -677,10 +715,10 @@ const UserInput: React.FC<UserInputProps> = ({
         borderStyle="round"
         borderTop={true}
         paddingX={1}
-        borderColor={isRemoteMode ? "cyan" : "gray"}
+        borderColor={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "gray"}
       >
-        <Text color={isRemoteMode ? "cyan" : "blue"} bold>
-          {isRemoteMode ? "◉" : "●"}{" "}
+        <Text color={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "blue"} bold>
+          {showBashMode ? "$" : isRemoteMode ? "◉" : "●"} 
         </Text>
         {renderInputText()}
       </Box>
