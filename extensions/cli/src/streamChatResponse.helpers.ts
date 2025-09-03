@@ -23,12 +23,13 @@ export function handlePermissionDenied(
   toolCall: PreprocessedToolCall,
   chatHistoryEntries: ChatCompletionToolMessageParam[],
   callbacks?: StreamCallbacks,
-  reason: 'user' | 'policy' = 'user',
+  reason: "user" | "policy" = "user",
 ): void {
-  const deniedMessage = reason === 'policy' 
-    ? `Command blocked by security policy`
-    : `Permission denied by user`;
-    
+  const deniedMessage =
+    reason === "policy"
+      ? `Command blocked by security policy`
+      : `Permission denied by user`;
+
   logger.info("Tool call denied", {
     name: toolCall.name,
     arguments: toolCall.arguments,
@@ -117,7 +118,7 @@ export async function checkToolPermissionApproval(
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
-): Promise<{ approved: boolean; denialReason?: 'user' | 'policy' }> {
+): Promise<{ approved: boolean; denialReason?: "user" | "policy" }> {
   const permissionCheck = checkToolPermission(toolCall);
 
   if (permissionCheck.permission === "allow") {
@@ -127,15 +128,15 @@ export async function checkToolPermissionApproval(
       handleHeadlessPermission(toolCall);
     }
     const userApproved = await requestUserPermission(toolCall, callbacks);
-    return userApproved 
+    return userApproved
       ? { approved: true }
-      : { approved: false, denialReason: 'user' };
+      : { approved: false, denialReason: "user" };
   } else if (permissionCheck.permission === "exclude") {
     // Tool blocked by security policy
-    return { approved: false, denialReason: 'policy' };
+    return { approved: false, denialReason: "policy" };
   }
 
-  return { approved: false, denialReason: 'policy' };
+  return { approved: false, denialReason: "policy" };
 }
 
 // Helper function to track first token time
@@ -417,10 +418,10 @@ export async function executeStreamedToolCalls(
 
       if (!permissionResult.approved) {
         handlePermissionDenied(
-          toolCall, 
-          chatHistoryEntries, 
+          toolCall,
+          chatHistoryEntries,
           callbacks,
-          permissionResult.denialReason || 'user',
+          permissionResult.denialReason || "user",
         );
         hasRejection = true;
         continue;
