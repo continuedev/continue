@@ -1,5 +1,5 @@
-import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, LLMFullCompletionOptions, Tool } from "core";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { LLMFullCompletionOptions } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -7,149 +7,27 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
-  errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
   setContextPercentage,
   setInactive,
   setInlineErrorMessage,
   setIsPruned,
-  setToolCallArgs,
   setToolGenerated,
   streamUpdate,
-  updateToolCallOutput,
 } from "../slices/sessionSlice";
-import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
+import { ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
 
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
-import { renderContextItems } from "core/util/messageContent";
-import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
-import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
-import { callToolById } from "./callToolById";
-import { validateAndEnhanceToolCallArgs } from "./enhanceParsedArgs";
-
-async function preprocessToolCalls(
-  dispatch: AppThunkDispatch,
-  getState: () => RootState,
-  ideMessenger: IIdeMessenger,
-): Promise<void> {
-  const state = getState();
-  const toolCalls = selectCurrentToolCalls(state);
-  const generatingCalls = toolCalls.filter((tc) => tc.status === "generating");
-
-  // Tool call pre-processing
-  await Promise.all(
-    generatingCalls.map(async (tcState) => {
-      try {
-        const changedArgs = await validateAndEnhanceToolCallArgs(
-          ideMessenger,
-          tcState?.toolCall.function.name,
-          tcState.parsedArgs,
-        );
-        if (changedArgs) {
-          dispatch(
-            setToolCallArgs({
-              toolCallId: tcState.toolCallId,
-              newArgs: changedArgs,
-            }),
-          );
-        }
-      } catch (e) {
-        let errorMessage = e instanceof Error ? e.message : `Unknown error`;
-        dispatch(
-          errorToolCall({
-            toolCallId: tcState.toolCallId,
-          }),
-        );
-        dispatch(
-          updateToolCallOutput({
-            toolCallId: tcState.toolCallId,
-            contextItems: [
-              {
-                icon: "problems",
-                name: "Invalid Tool Call",
-                description: "",
-                content: `${tcState.toolCall.function.name} failed because the arguments were invalid, with the following message: ${errorMessage}\n\nPlease try something else or request further instructions.`,
-                hidden: false,
-              },
-            ],
-          }),
-        );
-      }
-    }),
-  );
-}
-
-/**
- * Handles the execution of tool calls that may be automatically accepted.
- * Sets all tools as generated first, then executes auto-approved tool calls.
- */
-async function executeToolCalls(
-  dispatch: AppThunkDispatch,
-  getState: () => RootState,
-  activeTools: Tool[],
-): Promise<void> {
-  const state = getState();
-  const toolSettings = state.ui.toolSettings;
-  const toolCalls = selectCurrentToolCalls(state);
-
-  const generatingToolCalls = toolCalls.filter(
-    (toolCallState) => toolCallState.status === "generating",
-  );
-
-  // We will stop streaming only if any need approval
-  const anyNeedApproval = generatingToolCalls.find((toolCallState) => {
-    const toolPolicy =
-      toolSettings[toolCallState.toolCall.function.name] ??
-      activeTools.find(
-        (tool) => tool.function.name === toolCallState.toolCall.function.name,
-      )?.defaultToolPolicy ??
-      DEFAULT_TOOL_SETTING;
-    return toolPolicy !== "allowedWithoutPermission";
-  });
-
-  // Set all tools as generated first
-  generatingToolCalls.forEach((toolCallState) => {
-    dispatch(
-      setToolGenerated({
-        toolCallId: toolCallState.toolCallId,
-        tools: state.config.config.tools,
-      }),
-    );
-  });
-
-  // Case 1: No tool calls OR tool calls require approval -> stop streaming
-  // This prevents UI flashing for auto-approved tools while still showing approval UI for others
-  if (toolCalls.length === 0 || anyNeedApproval) {
-    dispatch(setInactive());
-  } else if (generatingToolCalls.length > 0) {
-    // Case 2: All auto approved -> call them!
-    const toolCallPromises = generatingToolCalls.map(async ({ toolCallId }) => {
-      const response = await dispatch(
-        callToolById({ toolCallId, autoApproved: true }),
-      );
-      unwrapResult(response);
-    });
-    await Promise.all(toolCallPromises);
-  } else {
-    // Case 3: All errored -> stream on!
-    for (const { output, toolCallId } of toolCalls) {
-      const newMessage: ChatMessage = {
-        role: "tool",
-        content: output ? renderContextItems(output) : "",
-        toolCallId,
-      };
-      dispatch(streamUpdate([newMessage]));
-    }
-    unwrapResult(await dispatch(streamNormalInput({})));
-  }
-}
+import { preprocessToolCalls } from "./enhanceParsedArgs";
+import { evaluateToolPolicies } from "./evaluateToolPolicies";
+import { executeToolCalls } from "./executeToolCalls";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -315,7 +193,53 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
+
+    // Tool call sequence:
+    // 1. Mark generating tool calls as generated
+    const state1 = getState()
+    const currentToolCalls = selectCurrentToolCalls(state1)
+    const generatingCalls = currentToolCalls.filter(tc => tc.status === "generating")
+    for (const { toolCallId} of generatingCalls) {
+         dispatch(
+        setToolGenerated({
+          toolCallId,
+          tools: state1.config.config.tools,
+        }),
+      );
+    }
+
+
+    // 2. Pre-process args to catch invalid args before checking policies
+    const state2 = getState()
+    const generatedCalls = selectCurrentGeneratedToolCalls(state2)
+    
     await preprocessToolCalls(dispatch, getState, extra.ideMessenger);
-    await executeToolCalls(dispatch, getState, activeTools);
+
+    // 2. Security check: evaluate updated policies based on args
+    const policies = await evaluateToolPolicies(
+      dispatch,
+      getState,
+      extra.ideMessenger,
+      activeTools,
+    );
+
+    // 3. Execute remaining tool calls
+    const newState = getState();
+    const toolCalls = selectCurrentToolCalls(newState);
+    const generatingToolCalls = toolCalls.filter(
+      (toolCallState) => toolCallState.status === "generating",
+    );
+    const continueStreaming = await executeToolCalls(
+      dispatch,
+      generatingToolCalls,
+      policies,
+    );
+
+    // Only set inactive if not all tools were auto-approved
+    // This prevents UI flashing for auto-approved tools
+    const anyRequireApproval = policies.
+    if (!) {
+      dispatch(setInactive());
+    }
   },
 );

@@ -1009,6 +1009,37 @@ export class Core {
       this.handleToolCall(toolCall),
     );
 
+    on(
+      "tools/evaluatePolicy",
+      async ({ data: { toolName, basePolicy, args } }) => {
+        const { config } = await this.configHandler.loadConfig();
+        if (!config) {
+          throw new Error("Config not loaded");
+        }
+
+        const tool = config.tools.find((t) => t.function.name === toolName);
+        if (!tool) {
+          // Tool not found, return base policy
+          return { policy: basePolicy };
+        }
+
+        // Extract display value for specific tools
+        let displayValue: string | undefined;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
+        }
+
+        // If tool has evaluateToolCallPolicy function, use it
+        if (tool.evaluateToolCallPolicy) {
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          return { policy: evaluatedPolicy, displayValue };
+        }
+
+        // Otherwise return base policy unchanged
+        return { policy: basePolicy, displayValue };
+      },
+    );
+
     on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
     });

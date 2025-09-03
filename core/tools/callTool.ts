@@ -12,6 +12,8 @@ import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
+
+import { readFileRangeImpl } from "./implementations/readFileRange";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
@@ -145,6 +147,8 @@ export async function callBuiltInTool(
   switch (functionName) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
+    case BuiltInToolNames.ReadFileRange:
+      return await readFileRangeImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.GrepSearch:

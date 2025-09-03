@@ -1,4 +1,12 @@
-import { jest } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll,
+  vi,
+} from "vitest";
 import * as childProcess from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -6,17 +14,18 @@ import * as path from "node:path";
 import { IDE, ToolExtras } from "../..";
 import * as processBackgroundStates from "../../util/processTerminalBackgroundStates";
 import { runTerminalCommandImpl } from "./runTerminalCommand";
+import { runTerminalCommandTool } from "../definitions/runTerminalCommand";
 
 // We're using real child processes, so ensure these aren't mocked
-jest.unmock("node:child_process");
-jest.unmock("node:util");
+vi.unmock("node:child_process");
+vi.unmock("node:util");
 
 describe("runTerminalCommandImpl", () => {
   // Setup mocks and spies
-  const mockGetIdeInfo = jest.fn();
-  const mockGetWorkspaceDirs = jest.fn();
-  const mockOnPartialOutput = jest.fn();
-  const mockRunCommand = jest.fn();
+  const mockGetIdeInfo = vi.fn();
+  const mockGetWorkspaceDirs = vi.fn();
+  const mockOnPartialOutput = vi.fn();
+  const mockRunCommand = vi.fn();
 
   // Use a simple approach to ensure background processes are terminated
   let testPid: number | null = null;
@@ -27,7 +36,7 @@ describe("runTerminalCommandImpl", () => {
   );
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 
     // Setup backgrounded processes handling - don't mock, just make sure it's empty
     // Get any processes that might be already tracked and clear them
@@ -73,7 +82,7 @@ describe("runTerminalCommandImpl", () => {
   // Helper function to create a ToolExtras object
   const createMockExtras = (
     overrides: Partial<{
-      onPartialOutput?: jest.Mock;
+      onPartialOutput?: any;
       remoteName?: string;
     }> = {},
   ): ToolExtras => {
@@ -90,16 +99,16 @@ describe("runTerminalCommandImpl", () => {
       getWorkspaceDirs: mockGetWorkspaceDirs,
       runCommand: mockRunCommand,
       // Add stubs for other required IDE methods
-      getIdeSettings: jest.fn(),
-      getDiff: jest.fn(),
-      getClipboardContent: jest.fn(),
-      isTelemetryEnabled: jest.fn(),
-      readFile: jest.fn(),
-      writeFile: jest.fn(),
-      renameFile: jest.fn(),
-      deleteFile: jest.fn(),
-      globFiles: jest.fn(),
-      ls: jest.fn(),
+      getIdeSettings: vi.fn(),
+      getDiff: vi.fn(),
+      getClipboardContent: vi.fn(),
+      isTelemetryEnabled: vi.fn(),
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+      renameFile: vi.fn(),
+      deleteFile: vi.fn(),
+      globFiles: vi.fn(),
+      ls: vi.fn(),
     };
 
     // Create a base ToolExtras object with required properties
@@ -147,7 +156,7 @@ describe("runTerminalCommandImpl", () => {
     "`;
 
     const args = { command, waitForCompletion: true };
-    const mockOutputFn = jest.fn();
+    const mockOutputFn = vi.fn();
     const extras = createMockExtras({ onPartialOutput: mockOutputFn });
 
     // Execute the command with streaming
@@ -191,7 +200,7 @@ describe("runTerminalCommandImpl", () => {
     "`;
 
     const args = { command, waitForCompletion: false };
-    const mockOutputFn = jest.fn();
+    const mockOutputFn = vi.fn();
     const extras = createMockExtras({ onPartialOutput: mockOutputFn });
 
     const result = await runTerminalCommandImpl(args, extras);
@@ -355,25 +364,25 @@ describe("runTerminalCommandImpl", () => {
 
   it("should handle missing workspace directory gracefully", async () => {
     // Mock IDE to return empty workspace directories
-    const mockEmptyWorkspace = jest.fn().mockReturnValue(Promise.resolve([]));
+    const mockEmptyWorkspace = vi.fn().mockReturnValue(Promise.resolve([]));
 
     // Create IDE mock with empty workspace
     const mockIde = {
-      getIdeInfo: jest
+      getIdeInfo: vi
         .fn()
         .mockReturnValue(Promise.resolve({ remoteName: "local" })),
       getWorkspaceDirs: mockEmptyWorkspace,
-      runCommand: jest.fn(),
-      getIdeSettings: jest.fn(),
-      getDiff: jest.fn(),
-      getClipboardContent: jest.fn(),
-      isTelemetryEnabled: jest.fn(),
-      readFile: jest.fn(),
-      writeFile: jest.fn(),
-      renameFile: jest.fn(),
-      deleteFile: jest.fn(),
-      globFiles: jest.fn(),
-      ls: jest.fn(),
+      runCommand: vi.fn(),
+      getIdeSettings: vi.fn(),
+      getDiff: vi.fn(),
+      getClipboardContent: vi.fn(),
+      isTelemetryEnabled: vi.fn(),
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+      renameFile: vi.fn(),
+      deleteFile: vi.fn(),
+      globFiles: vi.fn(),
+      ls: vi.fn(),
     };
 
     const extras = {
@@ -402,7 +411,7 @@ describe("runTerminalCommandImpl", () => {
 
   it("should handle case where cwd fallbacks all fail", async () => {
     // Mock IDE to return empty workspace directories
-    const mockEmptyWorkspace = jest.fn().mockReturnValue(Promise.resolve([]));
+    const mockEmptyWorkspace = vi.fn().mockReturnValue(Promise.resolve([]));
 
     // Save original environment variables and process.cwd
     const originalHome = process.env.HOME;
@@ -413,27 +422,27 @@ describe("runTerminalCommandImpl", () => {
       // Mock all fallbacks to fail
       delete process.env.HOME;
       delete process.env.USERPROFILE;
-      process.cwd = jest.fn().mockImplementation(() => {
+      process.cwd = vi.fn().mockImplementation(() => {
         throw new Error("Current directory unavailable");
-      }) as jest.MockedFunction<() => string>;
+      }) as any;
 
       // Create IDE mock with empty workspace
       const mockIde = {
-        getIdeInfo: jest
+        getIdeInfo: vi
           .fn()
           .mockReturnValue(Promise.resolve({ remoteName: "local" })),
         getWorkspaceDirs: mockEmptyWorkspace,
-        runCommand: jest.fn(),
-        getIdeSettings: jest.fn(),
-        getDiff: jest.fn(),
-        getClipboardContent: jest.fn(),
-        isTelemetryEnabled: jest.fn(),
-        readFile: jest.fn(),
-        writeFile: jest.fn(),
-        renameFile: jest.fn(),
-        deleteFile: jest.fn(),
-        globFiles: jest.fn(),
-        ls: jest.fn(),
+        runCommand: vi.fn(),
+        getIdeSettings: vi.fn(),
+        getDiff: vi.fn(),
+        getClipboardContent: vi.fn(),
+        isTelemetryEnabled: vi.fn(),
+        readFile: vi.fn(),
+        writeFile: vi.fn(),
+        renameFile: vi.fn(),
+        deleteFile: vi.fn(),
+        globFiles: vi.fn(),
+        ls: vi.fn(),
       };
 
       const extras = {
@@ -470,5 +479,127 @@ describe("runTerminalCommandImpl", () => {
       }
       process.cwd = originalCwd;
     }
+  });
+});
+
+describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
+  it("should return base policy for safe commands like echo", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: "echo hello world" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithoutPermission");
+  });
+
+  it("should respect disabled policy even for non-echo commands", () => {
+    const basePolicy = "disabled";
+    const args = { command: "ls -la" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("disabled");
+  });
+
+  it("should respect disabled policy even for safe commands", () => {
+    const basePolicy = "disabled";
+    const args = { command: "echo test" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("disabled");
+  });
+
+  it("should return base policy for non-echo commands", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: "ls -la" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithoutPermission");
+  });
+
+  it("should return base policy for git commands", () => {
+    const basePolicy = "allowedWithPermission";
+    const args = { command: "git status" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithPermission");
+  });
+
+  it("should handle undefined command gracefully", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: undefined };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithoutPermission");
+  });
+
+  it("should handle null command gracefully", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: null };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithoutPermission");
+  });
+
+  it("should handle empty command string", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: "" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithoutPermission");
+  });
+
+  it("should disable dangerous commands like rm -rf /", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: "rm -rf /" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("disabled");
+  });
+
+  it("should require permission for high-risk network commands", () => {
+    const basePolicy = "allowedWithoutPermission";
+    const args = { command: "curl http://example.com" };
+
+    const result = runTerminalCommandTool.evaluateToolCallPolicy!(
+      basePolicy,
+      args,
+    );
+
+    expect(result).toBe("allowedWithPermission");
   });
 });
