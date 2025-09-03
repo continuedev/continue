@@ -1,5 +1,6 @@
 import * as os from "node:os";
 import * as path from "node:path";
+import * as fs from "node:fs";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -37,19 +38,17 @@ models:
     it("should NOT show warning in headless mode even when running from home directory", async () => {
       await createTestConfig(context, testConfig);
 
-      // Create a context that simulates running from home directory
-      const homeContext = {
-        ...context,
-        testDir: os.homedir(), // Set test directory to actual home directory
-      };
-
-      const result = await runCLI(homeContext, {
+      // Simulate running from home directory using the isolated test dir
+      const result = await runCLI(context, {
         args: ["-p", "--config", context.configPath!, "test prompt"],
         env: {
           OPENAI_API_KEY: "test-key",
-          // Override HOME to match the test directory (which is now home)
-          HOME: os.homedir(),
-          USERPROFILE: os.homedir(),
+          // Ensure home vars point to the isolated test dir
+          HOME: context.testDir,
+          USERPROFILE: context.testDir,
+          HOMEDRIVE: path.parse(context.testDir).root,
+          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 5000,
         expectError: true,
@@ -63,20 +62,16 @@ models:
     it("should show warning when running from home directory in TUI mode", async () => {
       await createTestConfig(context, testConfig);
 
-      // Create a context that simulates running from home directory
-      const homeContext = {
-        ...context,
-        testDir: os.homedir(), // Set test directory to actual home directory
-      };
-
-      // Test TUI mode (without -p flag) - this will likely fail in test environment
-      // but we can check if the warning would be shown if TUI could start
-      const result = await runCLI(homeContext, {
+      // Test TUI mode (without -p flag) from an isolated "home" directory
+      const result = await runCLI(context, {
         args: ["--config", context.configPath!],
         env: {
           OPENAI_API_KEY: "test-key",
-          HOME: os.homedir(),
-          USERPROFILE: os.homedir(),
+          HOME: context.testDir,
+          USERPROFILE: context.testDir,
+          HOMEDRIVE: path.parse(context.testDir).root,
+          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 3000,
         expectError: true,
@@ -104,29 +99,25 @@ models:
       const platformEnvs: Record<string, string>[] = [
         // Unix-style
         {
-          HOME: "/home/testuser",
+          HOME: context.testDir,
           OPENAI_API_KEY: "test-key",
         },
         // Windows-style
         {
-          USERPROFILE: "C:\\Users\\testuser",
-          HOMEDRIVE: "C:",
-          HOMEPATH: "\\Users\\testuser",
+          USERPROFILE: context.testDir,
+          HOMEDRIVE: path.parse(context.testDir).root,
+          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
           OPENAI_API_KEY: "test-key",
         },
       ];
 
       for (const env of platformEnvs) {
-        // Create a context where the test directory matches the home directory
-        const homeDir = env.HOME || env.USERPROFILE || os.homedir();
-        const platformContext = {
-          ...context,
-          testDir: homeDir,
-        };
-
-        const result = await runCLI(platformContext, {
+        const result = await runCLI(context, {
           args: ["-p", "--config", context.configPath!, "test prompt"],
-          env,
+          env: {
+            CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
+            ...env,
+          },
           timeout: 5000,
           expectError: true,
         });
@@ -140,19 +131,27 @@ models:
     it("should NOT show warning in headless mode with symlinked home directories", async () => {
       await createTestConfig(context, testConfig);
 
-      // Use resolved paths to test symlink handling
-      const resolvedHome = path.resolve(os.homedir());
-      const homeContext = {
-        ...context,
-        testDir: resolvedHome,
-      };
+      // Create a symlink to the isolated home directory to simulate symlinked home paths
+      const realHome = fs.realpathSync(context.testDir);
+      const linkPath = path.join(path.dirname(realHome), `${path.basename(realHome)}-link`);
+      try {
+        if (!fs.existsSync(linkPath)) {
+          fs.symlinkSync(realHome, linkPath, "dir");
+        }
+      } catch {
+        // If symlink creation fails (e.g., on Windows without privileges), skip this specific scenario
+      }
 
-      const result = await runCLI(homeContext, {
+      const result = await runCLI(context, {
         args: ["-p", "--config", context.configPath!, "test prompt"],
         env: {
           OPENAI_API_KEY: "test-key",
-          HOME: resolvedHome,
-          USERPROFILE: resolvedHome,
+          // Point HOME to the symlink while cwd remains the real path
+          HOME: fs.existsSync(linkPath) ? linkPath : realHome,
+          USERPROFILE: fs.existsSync(linkPath) ? linkPath : realHome,
+          HOMEDRIVE: path.parse(realHome).root,
+          HOMEPATH: path.relative(path.parse(realHome).root, realHome),
+          CONTINUE_GLOBAL_DIR: path.join(realHome, ".continue-global"),
         },
         timeout: 5000,
         expectError: true,
@@ -167,17 +166,15 @@ models:
       await createTestConfig(context, testConfig);
 
       // Test TUI mode behavior (though it may fail in test environment)
-      const homeContext = {
-        ...context,
-        testDir: os.homedir(),
-      };
-
-      const result = await runCLI(homeContext, {
+      const result = await runCLI(context, {
         args: ["--config", context.configPath!],
         env: {
           OPENAI_API_KEY: "test-key",
-          HOME: os.homedir(),
-          USERPROFILE: os.homedir(),
+          HOME: context.testDir,
+          USERPROFILE: context.testDir,
+          HOMEDRIVE: path.parse(context.testDir).root,
+          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 3000,
         expectError: true,
@@ -201,11 +198,12 @@ models:
         args: ["-p", "--config", context.configPath!, "test prompt"],
         env: {
           OPENAI_API_KEY: "test-key",
-          // Remove home directory environment variables
-          // HOME: undefined,
-          // USERPROFILE: undefined,
-          // HOMEDRIVE: undefined,
-          // HOMEPATH: undefined,
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
+          // Mask home directory environment variables so os.homedir() cannot derive a value
+          HOME: "",
+          USERPROFILE: "",
+          HOMEDRIVE: "",
+          HOMEPATH: "",
         },
         timeout: 5000,
         expectError: true,
@@ -221,19 +219,23 @@ models:
     it("should handle relative vs absolute path comparisons", async () => {
       await createTestConfig(context, testConfig);
 
-      // Test with relative path representation of home
+      // Use a HOME that is equivalent but not identical (e.g., with './')
+      const altHome = path.join(context.testDir, ".");
       const result = await runCLI(context, {
         args: ["-p", "--config", context.configPath!, "test prompt"],
         env: {
           OPENAI_API_KEY: "test-key",
-          // Use a relative path that resolves to home
-          HOME: "~",
+          HOME: altHome,
+          USERPROFILE: altHome,
+          HOMEDRIVE: path.parse(altHome).root,
+          HOMEPATH: path.relative(path.parse(altHome).root, altHome),
+          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 5000,
         expectError: true,
       });
 
-      // Should handle path resolution correctly
+      // Should handle path resolution correctly (no crash)
       expect(result.exitCode).toBeDefined();
     });
   });

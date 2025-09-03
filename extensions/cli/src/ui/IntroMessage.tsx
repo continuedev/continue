@@ -44,7 +44,12 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
   const isInHomeDirectory = useMemo(() => {
     const cwd = process.cwd();
     const homedir = os.homedir();
-    return path.resolve(cwd) === path.resolve(homedir);
+    const resolvedCwd = path.resolve(cwd);
+    const resolvedHome = path.resolve(homedir);
+    if (process.platform === "win32") {
+      return resolvedCwd.toLowerCase() === resolvedHome.toLowerCase();
+    }
+    return resolvedCwd === resolvedHome;
   }, []);
 
   // Memoize expensive operations to avoid running on every resize
