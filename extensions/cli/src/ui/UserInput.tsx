@@ -12,6 +12,7 @@ import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
+import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
   handleControlKeys,
   updateTextBufferState,
@@ -31,6 +32,7 @@ interface UserInputProps {
   placeholder?: string;
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
+  onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -45,6 +47,7 @@ const UserInput: React.FC<UserInputProps> = ({
   placeholder,
   hideNormalUI = false,
   isRemoteMode = false,
+  onImageInClipboardChange,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -495,6 +498,22 @@ const UserInput: React.FC<UserInputProps> = ({
     updateFileSearchState(newText, newCursor);
     inputHistory.resetNavigation();
   };
+
+  // State for showing image paste hint
+  const [_hasImageInClipboard, _setHasImageInClipboard] = useState(false);
+
+  // Monitor clipboard for images and show helpful hints
+  const { checkNow: _checkClipboardNow } = useClipboardMonitor({
+    onImageStatusChange: (hasImage) => {
+      _setHasImageInClipboard(hasImage);
+      // Also notify parent component
+      if (onImageInClipboardChange) {
+        onImageInClipboardChange(hasImage);
+      }
+    },
+    enabled: !disabled && inputMode,
+    pollInterval: 2000,
+  });
 
   useInput((input, key) => {
     // Don't handle any input when disabled
