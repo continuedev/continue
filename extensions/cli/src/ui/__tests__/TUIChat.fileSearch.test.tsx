@@ -34,7 +34,7 @@ describe("TUIChat - @ File Search Tests", () => {
       stdin.write("@READ");
 
       // Wait for file search to filter and display results
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const frame = lastFrame()!;
 
@@ -58,7 +58,7 @@ describe("TUIChat - @ File Search Tests", () => {
     stdin.write("@@test");
 
     // Wait for UI update
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const frame = lastFrame();
 
