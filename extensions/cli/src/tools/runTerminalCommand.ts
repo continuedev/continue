@@ -1,4 +1,6 @@
 import { spawn } from "child_process";
+import type { ToolPolicy } from "../../../../core/index.js";
+import { evaluateTerminalCommandSecurity } from "../../../../core/tools/security/terminalCommandSecurity.js";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
@@ -24,6 +26,15 @@ The command will be executed from the current working directory: ${process.cwd()
   },
   readonly: false,
   isBuiltIn: true,
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    return evaluateTerminalCommandSecurity(
+      basePolicy,
+      parsedArgs.command as string,
+    );
+  },
   preprocess: async (args) => {
     const command = args.command;
     if (!command || typeof command !== "string") {
