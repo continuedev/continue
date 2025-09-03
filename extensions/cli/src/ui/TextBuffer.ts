@@ -458,6 +458,68 @@ export class TextBuffer {
     return false;
   }
 
+  private handleSpecialKeys(input: string, key: Key): boolean {
+    // Detect option key combinations through escape sequences
+    const isOptionKey = input.startsWith("\u001b") && input.length > 1;
+
+    // Handle option key combinations (detected through escape sequences)
+    if (isOptionKey) {
+      return this.handleOptionKey(input.slice(1));
+    }
+
+    // Handle special key combinations based on input character
+    if (key.ctrl && this.handleCtrlKey(input)) {
+      return true;
+    }
+
+    // Handle meta key combinations (cmd on Mac)
+    if (key.meta && this.handleMetaKey(input, key)) {
+      return true;
+    }
+
+    // Handle arrow keys
+    if (this.handleArrowKeys(key)) {
+      return true;
+    }
+
+    // Handle backspace/delete
+    if (this.handleDeleteKeys(key)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private handleTextInput(input: string): boolean {
+    // Direct paste detection: single large input - but delay insertion to catch split pastes
+    if (input.length > COLLAPSE_SIZE && this._rapidInputBuffer.length === 0) {
+      // Start rapid input mode immediately to delay placeholder creation
+      this._rapidInputStartPos = this._cursor;
+      this._rapidInputBuffer = input;
+      this._lastInputTime = Date.now();
+
+      if (this._rapidInputTimer) {
+        clearTimeout(this._rapidInputTimer);
+      }
+
+      // Wait 250ms to see if more content comes (split paste)
+      this._rapidInputTimer = setTimeout(() => {
+        this.finalizeRapidInput();
+      }, 250);
+
+      return true;
+    }
+
+    // Fallback: detect chunked paste operations
+    // Don't trigger rapid input detection for small inputs (e.g. single characters like "/" or "@")
+    if (input.length > 50 && this.handleRapidInput(input)) {
+      return true;
+    }
+
+    this.insertText(input);
+    return true;
+  }
+
   handleInput(input: string, key: Key): boolean {
     // Handle bracketed paste sequences first
     if (this.handleBracketedPaste(input)) {
@@ -471,64 +533,15 @@ export class TextBuffer {
       return true;
     }
 
-    // Detect option key combinations through escape sequences
+    // Handle special keys (option, ctrl, meta, arrows, delete)
+    if (this.handleSpecialKeys(input, key)) {
+      return true;
+    }
+
+    // Handle regular text input
     const isOptionKey = input.startsWith("\u001b") && input.length > 1;
-
-    // Handle option key combinations (detected through escape sequences)
-    if (isOptionKey) {
-      return this.handleOptionKey(input.slice(1));
-    }
-
-    // Handle special key combinations based on input character
-    if (key.ctrl) {
-      const handled = this.handleCtrlKey(input);
-      if (handled) return true;
-    }
-
-    // Handle meta key combinations (cmd on Mac)
-    if (key.meta) {
-      const handled = this.handleMetaKey(input, key);
-      if (handled) return true;
-    }
-
-    // Handle arrow keys
-    if (this.handleArrowKeys(key)) {
-      return true;
-    }
-
-    // Handle backspace/delete
-    if (this.handleDeleteKeys(key)) {
-      return true;
-    }
-
     if (input && input.length >= 1 && !key.ctrl && !key.meta && !isOptionKey) {
-      // Direct paste detection: single large input - but delay insertion to catch split pastes
-      if (input.length > COLLAPSE_SIZE && this._rapidInputBuffer.length === 0) {
-        // Start rapid input mode immediately to delay placeholder creation
-        this._rapidInputStartPos = this._cursor;
-        this._rapidInputBuffer = input;
-        this._lastInputTime = Date.now();
-
-        if (this._rapidInputTimer) {
-          clearTimeout(this._rapidInputTimer);
-        }
-
-        // Wait 250ms to see if more content comes (split paste)
-        this._rapidInputTimer = setTimeout(() => {
-          this.finalizeRapidInput();
-        }, 250);
-
-        return true;
-      }
-
-      // Fallback: detect chunked paste operations
-      // Don't trigger rapid input detection for small inputs (e.g. single characters like "/" or "@")
-      if (input.length > 50 && this.handleRapidInput(input)) {
-        return true;
-      }
-
-      this.insertText(input);
-      return true;
+      return this.handleTextInput(input);
     }
 
     return false;
