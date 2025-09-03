@@ -1,8 +1,8 @@
 import { Text } from "ink";
 import React, { useMemo } from "react";
 
-import { getResponsiveRepoText } from "../hooks/useTUIChatHooks.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
+import { getResponsiveRepoText } from "../hooks/useTUIChatHooks.js";
 
 interface ResponsiveRepoDisplayProps {
   remoteUrl?: string;

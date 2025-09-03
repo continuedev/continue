@@ -55,7 +55,7 @@ export function getResponsiveRepoText(
 ): string {
   const repoInfo = getRepoInfo(remoteUrl);
 
-  // If no available width provided, return full format
+  // If no available width provided, show nothing
   if (availableWidth <= 0) {
     return "";
   }
