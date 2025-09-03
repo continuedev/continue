@@ -47,7 +47,10 @@ models:
           HOME: context.testDir,
           USERPROFILE: context.testDir,
           HOMEDRIVE: path.parse(context.testDir).root,
-          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          HOMEPATH: path.relative(
+            path.parse(context.testDir).root,
+            context.testDir,
+          ),
           CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 5000,
@@ -70,7 +73,10 @@ models:
           HOME: context.testDir,
           USERPROFILE: context.testDir,
           HOMEDRIVE: path.parse(context.testDir).root,
-          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          HOMEPATH: path.relative(
+            path.parse(context.testDir).root,
+            context.testDir,
+          ),
           CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 3000,
@@ -106,7 +112,10 @@ models:
         {
           USERPROFILE: context.testDir,
           HOMEDRIVE: path.parse(context.testDir).root,
-          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          HOMEPATH: path.relative(
+            path.parse(context.testDir).root,
+            context.testDir,
+          ),
           OPENAI_API_KEY: "test-key",
         },
       ];
@@ -133,7 +142,10 @@ models:
 
       // Create a symlink to the isolated home directory to simulate symlinked home paths
       const realHome = fs.realpathSync(context.testDir);
-      const linkPath = path.join(path.dirname(realHome), `${path.basename(realHome)}-link`);
+      const linkPath = path.join(
+        path.dirname(realHome),
+        `${path.basename(realHome)}-link`,
+      );
       try {
         if (!fs.existsSync(linkPath)) {
           fs.symlinkSync(realHome, linkPath, "dir");
@@ -173,7 +185,10 @@ models:
           HOME: context.testDir,
           USERPROFILE: context.testDir,
           HOMEDRIVE: path.parse(context.testDir).root,
-          HOMEPATH: path.relative(path.parse(context.testDir).root, context.testDir),
+          HOMEPATH: path.relative(
+            path.parse(context.testDir).root,
+            context.testDir,
+          ),
           CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue-global"),
         },
         timeout: 3000,
