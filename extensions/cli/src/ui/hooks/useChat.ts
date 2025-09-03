@@ -349,7 +349,7 @@ export function useChat({
 
     // Extract the command after the !
     const bashCommand = message.trimStart().slice(1).trim();
-    
+
     if (!bashCommand) {
       return message; // No command provided, treat as regular message
     }
@@ -373,8 +373,12 @@ export function useChat({
     // Execute the bash command asynchronously - don't block UI
     (async () => {
       try {
-        const { runTerminalCommandTool } = await import("../../tools/runTerminalCommand.js");
-        const result = await runTerminalCommandTool.run({ command: bashCommand });
+        const { runTerminalCommandTool } = await import(
+          "../../tools/runTerminalCommand.js"
+        );
+        const result = await runTerminalCommandTool.run({
+          command: bashCommand,
+        });
         services.chatHistory.addToolResult(toolCallId, result, "done");
       } catch (error: any) {
         const errorMessage = `Bash command failed: ${error?.message || String(error)}`;

@@ -20,7 +20,9 @@ describe("useChat - Bash Mode", () => {
 
   it("should detect bash mode when message starts with !", async () => {
     const mockRun = vi.mocked(runTerminalCommandTool.run);
-    mockRun.mockResolvedValue("total 5\ndrwxr-xr-x 2 user user 4096 Jan 1 12:00 .\ndrwxr-xr-x 3 user user 4096 Jan 1 12:00 ..");
+    mockRun.mockResolvedValue(
+      "total 5\ndrwxr-xr-x 2 user user 4096 Jan 1 12:00 .\ndrwxr-xr-x 3 user user 4096 Jan 1 12:00 ..",
+    );
 
     const ctx = createMinimalTestContext();
     const chat = useChat({

@@ -618,7 +618,8 @@ const UserInput: React.FC<UserInputProps> = ({
   const renderInputText = () => {
     const placeholderText = isRemoteMode
       ? "Ask anything, / for slash commands, ! for bash mode"
-      : placeholder || "Ask anything, @ for context, / for slash commands, ! for bash mode";
+      : placeholder ||
+        "Ask anything, @ for context, / for slash commands, ! for bash mode";
     if (inputText.length === 0) {
       return (
         <>
@@ -717,8 +718,11 @@ const UserInput: React.FC<UserInputProps> = ({
         paddingX={1}
         borderColor={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "gray"}
       >
-        <Text color={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "blue"} bold>
-          {showBashMode ? "$" : isRemoteMode ? "◉" : "●"} 
+        <Text
+          color={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "blue"}
+          bold
+        >
+          {showBashMode ? "$" : isRemoteMode ? "◉" : "●"}
         </Text>
         {renderInputText()}
       </Box>

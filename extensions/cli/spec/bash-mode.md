@@ -1,23 +1,27 @@
 Bash Mode (CLI TUI)
 
 Overview
+
 - Bash mode lets users run shell commands directly from the chat input by starting their input with an exclamation mark (!).
 - It is intended for quick terminal command execution without leaving the TUI.
 
 Activation
+
 - Bash mode is activated when the current input (trimmed) starts with !
-  - Example: "!git status" or "   !ls -la" both activate Bash mode.
+  - Example: "!git status" or " !ls -la" both activate Bash mode.
 - Visual indicator:
   - Input border color changes to yellow.
   - The input prompt indicator changes to a yellow "$".
   - The input placeholder includes "! for bash mode".
 
 Deactivation / Exiting Bash Mode
+
 - Pressing Enter to submit the input exits bash mode immediately after submission, regardless of the command result.
 - Pressing Esc when the input (trimmed) is exactly ! clears the input and exits bash mode.
 - Editing the input so it no longer starts with ! also exits bash mode and restores normal input behavior.
 
 Interaction with other input helpers
+
 - When in bash mode (input starts with !):
   - "@" file search suggestions are disabled.
   - "/" slash command UI is disabled.
@@ -25,12 +29,14 @@ Interaction with other input helpers
   - "@" file search suggestions are disabled.
 
 Submission behavior
+
 - On submit (Enter) with a bash-mode input:
   - The leading ! is removed and the remainder is treated as the shell command to run.
   - The TUI immediately appends an assistant message representing a Bash tool call, with status set to calling, so users can see that the command is in progress.
   - The bash command is executed asynchronously; when it completes, the tool call status is updated to done (or error) and the output is populated.
 
 Execution semantics
+
 - The command is executed from the current working directory of the CLI process.
 - The command runs in the user’s shell as a login shell:
   - Unix/macOS: SHELL (or /bin/bash) invoked with -l -c "<command>".
@@ -40,6 +46,7 @@ Execution semantics
 - Environment variables are inherited from the parent process. Aliases/functions availability depends on the user’s shell configuration and is not guaranteed.
 
 Output handling
+
 - Stdout is streamed into memory; Stderr is captured and appended as a trailing "Stderr: ..." section on success.
 - If the process exits non-zero and Stderr contains content, the tool call is marked as error and the error text is shown.
 - Output is truncated to the first 5000 lines if exceeded.
@@ -47,18 +54,22 @@ Output handling
   "[Command timed out after 30 seconds of no output]".
 
 Keyboard behaviors (summary)
+
 - Enter: submit input. If in bash mode, exits bash mode after submission and shows the pending Bash tool call immediately.
 - Shift+Enter: new line.
 - Backslash (\) at end-of-line: inserts a new line (line continuation) as usual.
 - Esc: if only ! (trimmed) is present, clears input and exits bash mode; otherwise cancels streaming or closes suggestions depending on context.
 
 Scope / Modes
+
 - Bash mode applies to interactive (TUI/standard) CLI usage. It is not part of headless (-p/--print) processing.
 
 Error handling
+
 - Command execution errors are captured and surfaced in the tool call as status error with human-readable error text (including Stderr when available).
 
 Examples
+
 - "!git status" → shows a Bash tool call immediately, then populates with the git status output.
 - "!echo hello" → shows a Bash tool call immediately, then output "hello".
 - "!some-unknown-cmd" → shows a Bash tool call immediately, then sets status to error with an error message.
