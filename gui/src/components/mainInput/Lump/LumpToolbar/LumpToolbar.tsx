@@ -1,5 +1,4 @@
 import { useContext, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
@@ -14,6 +13,7 @@ import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
 import { IsApplyingToolbar } from "./IsApplyingToolbar";
+import { IsCompactingToolbar } from "./IsCompactingToolbar";
 import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
@@ -54,6 +54,10 @@ export function LumpToolbar() {
     (state) => state.status === "done",
   );
   const isApplying = applyStates.some((state) => state.status === "streaming");
+  const compactionLoading = useAppSelector(
+    (state) => state.session.compactionLoading,
+  );
+  const isCompacting = Object.keys(compactionLoading).length > 0;
 
   useEffect(() => {
     if (!firstPendingToolCall) {
@@ -89,6 +93,10 @@ export function LumpToolbar() {
 
   if (isApplying) {
     return <IsApplyingToolbar />;
+  }
+
+  if (isCompacting) {
+    return <IsCompactingToolbar />;
   }
 
   if (isInEdit) {

@@ -53,9 +53,17 @@ function InputToolbar(props: InputToolbarProps) {
   const hasReasoningEnabled = useAppSelector(
     (store) => store.session.hasReasoningEnabled,
   );
+  const compactionLoading = useAppSelector(
+    (store) => store.session.compactionLoading,
+  );
+
+  // Check if any compaction is currently loading
+  const isAnyCompactionLoading = Object.keys(compactionLoading).length > 0;
 
   const isEnterDisabled =
-    props.disabled || (isInEdit && codeToEdit.length === 0);
+    props.disabled || 
+    (isInEdit && codeToEdit.length === 0) || 
+    isAnyCompactionLoading;
 
   const supportsImages =
     defaultModel &&

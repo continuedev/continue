@@ -6,7 +6,6 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
-import ConversationSummary from "./ConversationSummary";
 import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
@@ -16,6 +15,7 @@ interface StepContainerProps {
   index: number;
   isLast: boolean;
   latestSummaryIndex?: number;
+  isConversationSummary?: boolean; // Special flag for conversation summary messages
 }
 
 export default function StepContainer(props: StepContainerProps) {
@@ -30,7 +30,9 @@ export default function StepContainer(props: StepContainerProps) {
   // Calculate dimming and indicator state based on latest summary index
   const latestSummaryIndex = props.latestSummaryIndex ?? -1;
   const isBeforeLatestSummary =
-    latestSummaryIndex !== -1 && props.index <= latestSummaryIndex;
+    latestSummaryIndex !== -1 && 
+    props.index <= latestSummaryIndex && 
+    !props.isConversationSummary; // Only the latest conversation summary should not be dimmed
   const isLatestSummary =
     latestSummaryIndex !== -1 && props.index === latestSummaryIndex;
 
@@ -125,21 +127,9 @@ export default function StepContainer(props: StepContainerProps) {
         </div>
       )}
 
-      {/* Show compaction indicator for the latest summary */}
-      {isLatestSummary && (
-        <div className="mx-1.5 my-5">
-          <div className="flex items-center">
-            <div className="border-border flex-1 border-t border-solid"></div>
-            <span className="text-description mx-3 text-xs">
-              Previous Conversation Compacted
-            </span>
-            <div className="border-border flex-1 border-t border-solid"></div>
-          </div>
-        </div>
-      )}
+      {/* Compaction indicator now handled in Chat.tsx */}
 
-      {/* ConversationSummary is outside the dimmed container so it's always at full opacity */}
-      <ConversationSummary item={props.item} index={props.index} />
+      {/* ConversationSummary is now rendered separately in Chat.tsx */}
     </div>
   );
 }
