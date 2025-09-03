@@ -970,6 +970,13 @@ export class Core {
       const pages = await this.docsService.getIndexedPages(msg.data.startUrl);
       return Array.from(pages);
     });
+    on("docs/getMaxNumberOfConcurrentIndexing", async (msg) => {
+      return this.docsService.getMaxNumberOfConcurrentIndexing();
+    });
+    on("docs/updateMaxNumberOfConcurrentIndexing", async (msg) => {
+      this.docsService.updateMaxNumberOfConcurrentIndexing(msg.data);
+      this.docsService.pokeEmbeddingManager();
+    });
 
     on("didChangeSelectedProfile", async (msg) => {
       if (msg.data.id) {

@@ -286,6 +286,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/initStatuses": [undefined, void];
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   "docs/getIndexedPages": [{ startUrl: string }, string[]];
+  "docs/getMaxNumberOfConcurrentIndexing": [undefined, number];
+  "docs/updateMaxNumberOfConcurrentIndexing": [number, void];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
