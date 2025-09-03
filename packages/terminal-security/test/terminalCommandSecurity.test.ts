@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateTerminalCommandSecurity } from "../security/terminalCommandSecurity";
-import { ToolPolicy } from "../..";
+import { evaluateTerminalCommandSecurity, ToolPolicy } from "../src/index.js";
 
 describe("evaluateTerminalCommandSecurity", () => {
   describe("Critical Risk - Always Disabled", () => {

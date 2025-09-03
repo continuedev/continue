@@ -1,5 +1,5 @@
 import { parse } from "shell-quote";
-import { ToolPolicy } from "../..";
+import { ToolPolicy } from "./types.js";
 
 /**
  * Token types from shell-quote

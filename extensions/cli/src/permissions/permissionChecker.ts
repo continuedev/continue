@@ -1,5 +1,4 @@
 import type { ToolPolicy } from "../../../../core/index.js";
-
 import { getServiceSync } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/types.js";
 import { SERVICE_NAMES } from "../services/types.js";
@@ -122,22 +121,6 @@ function permissionPolicyToToolPolicy(
       return "disabled";
     default:
       return "allowedWithPermission";
-  }
-}
-
-/**
- * Converts core's ToolPolicy to CLI's PermissionPolicy
- */
-function toolPolicyToPermissionPolicy(policy: ToolPolicy): PermissionPolicy {
-  switch (policy) {
-    case "allowedWithoutPermission":
-      return "allow";
-    case "allowedWithPermission":
-      return "ask";
-    case "disabled":
-      return "exclude";
-    default:
-      return "ask";
   }
 }
 

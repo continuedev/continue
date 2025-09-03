@@ -1,4 +1,7 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+
+import * as toolsModule from "../tools/index.js";
+
 import {
   checkToolPermission,
   filterExcludedTools,
@@ -6,7 +9,6 @@ import {
   matchesToolPattern,
 } from "./permissionChecker.js";
 import { ToolPermissions } from "./types.js";
-import * as toolsModule from "../tools/index.js";
 
 describe("Permission Checker", () => {
   describe("matchesToolPattern", () => {
