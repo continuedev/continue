@@ -24,6 +24,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -641,14 +642,9 @@ export const sessionSlice = createSlice({
                 lastMessage.content += messageContent;
               }
             }
-          } else if (
-            message.role === "thinking" &&
-            (message.signature || message.reasoning_details)
-          ) {
+          } else if (message.role === "thinking" && message.signature) {
             if (lastMessage.role === "thinking") {
-              if (message.signature) lastMessage.signature = message.signature;
-              if (message.reasoning_details)
-                lastMessage.reasoning_details = message.reasoning_details;
+              lastMessage.signature = message.signature;
             }
           } else if (
             message.role === "assistant" &&
@@ -656,6 +652,16 @@ export const sessionSlice = createSlice({
             lastMessage.role === "assistant"
           ) {
             handleStreamingToolCallUpdates(message, lastItem);
+          }
+          if (
+            message.role === "thinking" &&
+            message.reasoning_details &&
+            lastMessage.role === "thinking"
+          ) {
+            lastMessage.reasoning_details = mergeReasoningDetails(
+              lastMessage.reasoning_details,
+              message.reasoning_details,
+            );
           }
         }
       }

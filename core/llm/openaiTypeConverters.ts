@@ -9,11 +9,17 @@ import {
   CompletionCreateParams,
 } from "openai/resources/index";
 
-import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  TextMessagePart,
+  ThinkingChatMessage,
+} from "..";
 
 export function toChatMessage(
   message: ChatMessage,
   options: CompletionOptions,
+  prevMessage?: ChatMessage,
 ): ChatCompletionMessageParam | null {
   if (message.role === "tool") {
     return {
@@ -29,47 +35,29 @@ export function toChatMessage(
     };
   }
   if (message.role === "thinking") {
-    if (message.signature && options.model.includes("claude")) {
-      const reasoningDetails =
-        message.reasoning_details ||
-        (message.signature
-          ? {
-              signature: message.signature,
-            }
-          : undefined);
-
-      return {
-        role: "assistant",
-        reasoning: message.content,
-        reasoning_details: reasoningDetails,
-      } as ChatCompletionMessageParam;
-    } else {
-      return null;
-      /*
-    Possible improvement: option to preserve reasoning for other models
-    see https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
-    For example:
-    if (options.preserveReasoning) {
-      return {
-        role: "assistant",
-        reasoning: message.content,
-        reasoning_details: message.reasoning_details
-      } as ChatCompletionMessageParam;
-    }*/
-    }
+    // Return null - thinking messages are merged into following assistant messages
+    return null;
   }
 
   if (message.role === "assistant") {
-    const msg: ChatCompletionAssistantMessageParam = {
+    // Base assistant message
+    const msg: ChatCompletionAssistantMessageParam & {
+      reasoning?: string;
+      reasoning_details?: {
+        [key: string]: any;
+        signature?: string | undefined;
+      }[];
+    } = {
       role: "assistant",
       content:
         typeof message.content === "string"
           ? message.content || " " // LM Studio (and other providers) don't accept empty content
           : message.content
               .filter((part) => part.type === "text")
-              .map((part) => part as TextMessagePart), // can remove with newer typescript version
+              .map((part) => part as TextMessagePart),
     };
 
+    // Add tool calls if present
     if (message.toolCalls) {
       msg.tool_calls = message.toolCalls.map((toolCall) => ({
         id: toolCall.id!,
@@ -80,7 +68,29 @@ export function toChatMessage(
         },
       }));
     }
-    return msg;
+
+    // Preserving reasoning blocks
+    // see: https://openrouter.ai/docs/use-cases/reasoning-tokens#preserving-reasoning-blocks
+    if (
+      prevMessage?.role === "thinking" &&
+      (prevMessage.signature || options.preserveReasoning)
+    ) {
+      msg.reasoning = prevMessage.content as string;
+
+      const reasoningDetails =
+        prevMessage.reasoning_details ||
+        (prevMessage.signature
+          ? [
+              {
+                signature: prevMessage.signature,
+              },
+            ]
+          : undefined);
+
+      msg.reasoning_details = reasoningDetails || [];
+    }
+
+    return msg as ChatCompletionMessageParam;
   } else {
     if (typeof message.content === "string") {
       return {
@@ -120,7 +130,7 @@ export function toChatBody(
 ): ChatCompletionCreateParams {
   const params: ChatCompletionCreateParams = {
     messages: messages
-      .map((m) => toChatMessage(m, options))
+      .map((m, index) => toChatMessage(m, options, messages[index - 1]))
       .filter((m) => m !== null) as ChatCompletionMessageParam[],
     model: options.model,
     max_tokens: options.maxTokens,
@@ -284,19 +294,66 @@ export function fromChatCompletionChunk(
   } else if (
     delta?.reasoning_content ||
     delta?.reasoning ||
-    delta?.reasoning_details?.[0]?.signature
+    delta?.reasoning_details?.length
   ) {
-    return {
+    const message: ThinkingChatMessage = {
       role: "thinking",
       content: delta.reasoning_content || delta.reasoning || "",
       signature: delta?.reasoning_details?.[0]?.signature,
-      reasoning_details: delta?.reasoning_details?.[0]?.signature
-        ? delta.reasoning_details
-        : undefined,
+      reasoning_details: delta?.reasoning_details as any[],
     };
+    return message;
   }
 
   return undefined;
+}
+
+export function mergeReasoningDetails(
+  existing: any[] | undefined,
+  delta: any[] | undefined,
+): any[] | undefined {
+  if (!delta) return existing;
+  if (!existing) return delta;
+
+  console.log("merging reasoning details", existing, delta);
+
+  const result = [...existing];
+
+  for (const deltaItem of delta) {
+    // Skip items without a type
+    if (!deltaItem.type) {
+      console.warn("Delta item missing type field, skipping:", deltaItem);
+      continue;
+    }
+
+    // Find existing item with the same type
+    const existingIndex = result.findIndex(
+      (item) => item.type === deltaItem.type,
+    );
+
+    if (existingIndex === -1) {
+      // No existing item with this type, add new item
+      result.push({ ...deltaItem });
+    } else {
+      // Merge with existing item of the same type
+      const existingItem = result[existingIndex];
+
+      for (const [key, value] of Object.entries(deltaItem)) {
+        if (value === null || value === undefined) continue;
+
+        if (key === "text" || key === "signature" || key === "summary") {
+          // Concatenate text and signature fields
+          existingItem[key] = (existingItem[key] || "") + value;
+        } else if (key !== "type") {
+          // Don't overwrite type
+          // Overwrite other fields
+          existingItem[key] = value;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 export type LlmApiRequestType =
