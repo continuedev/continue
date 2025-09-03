@@ -6,13 +6,13 @@ import { UserInput } from "../UserInput.js";
 
 describe("Ctrl+C input clearing", () => {
   let mockOnSubmit: ReturnType<typeof vi.fn>;
-  let mockProcessKill: ReturnType<typeof vi.fn>;
+  let mockProcessKill: any;
 
   beforeEach(() => {
     mockOnSubmit = vi.fn();
 
     // Mock process.kill using vi.spyOn
-    mockProcessKill = vi.spyOn(process, 'kill').mockImplementation(() => {
+    mockProcessKill = vi.spyOn(process, "kill").mockImplementation(() => {
       return true;
     });
   });
