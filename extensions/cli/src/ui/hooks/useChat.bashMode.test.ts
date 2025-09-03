@@ -1,7 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { createMinimalTestContext } from "../../test-helpers/ui-test-context.js";
+import { runTerminalCommandTool } from "../../tools/runTerminalCommand.js";
+
+import { useChat } from "./useChat.js";
 
 // Mock the runTerminalCommandTool
 vi.mock("../../tools/runTerminalCommand.js", () => ({
@@ -9,9 +12,6 @@ vi.mock("../../tools/runTerminalCommand.js", () => ({
     run: vi.fn(),
   },
 }));
-
-import { useChat } from "./useChat.js";
-import { runTerminalCommandTool } from "../../tools/runTerminalCommand.js";
 
 describe("useChat - Bash Mode", () => {
   beforeEach(() => {

@@ -19,6 +19,77 @@ import {
 import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
+// Small presentational helpers to reduce cyclomatic complexity in UserInput
+const InterruptedBanner: React.FC<{ wasInterrupted: boolean }> = ({
+  wasInterrupted,
+}) => {
+  if (!wasInterrupted) return null;
+  return (
+    <Box paddingX={1} marginBottom={0}>
+      <Text color="yellow">⚠ Interrupted by user - Press enter to resume</Text>
+    </Box>
+  );
+};
+
+const SlashCommandsMaybe: React.FC<{
+  show: boolean;
+  inputMode: boolean;
+  hideNormalUI: boolean;
+  isRemoteMode: boolean;
+  assistant?: AssistantConfig;
+  filter: string;
+  selectedIndex: number;
+}> = ({
+  show,
+  inputMode,
+  hideNormalUI,
+  isRemoteMode,
+  assistant,
+  filter,
+  selectedIndex,
+}) => {
+  if (!show || !inputMode || hideNormalUI || !(isRemoteMode || assistant))
+    return null;
+  return (
+    <SlashCommandUI
+      assistant={assistant}
+      filter={filter}
+      selectedIndex={selectedIndex}
+      isRemoteMode={isRemoteMode}
+    />
+  );
+};
+
+const FileSearchMaybe: React.FC<{
+  show: boolean;
+  inputMode: boolean;
+  hideNormalUI: boolean;
+  isRemoteMode: boolean;
+  filter: string;
+  selectedIndex: number;
+  onSelect: (path: string) => void | Promise<void>;
+  onFilesUpdated: (files: Array<{ path: string; displayName: string }>) => void;
+}> = ({
+  show,
+  inputMode,
+  hideNormalUI,
+  isRemoteMode,
+  filter,
+  selectedIndex,
+  onSelect,
+  onFilesUpdated,
+}) => {
+  if (!show || !inputMode || hideNormalUI || isRemoteMode) return null;
+  return (
+    <FileSearchUI
+      filter={filter}
+      selectedIndex={selectedIndex}
+      onSelect={onSelect}
+      onFilesUpdated={onFilesUpdated}
+    />
+  );
+};
+
 interface UserInputProps {
   onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
@@ -702,14 +773,7 @@ const UserInput: React.FC<UserInputProps> = ({
 
   return (
     <Box flexDirection="column">
-      {/* Interruption message - shown just above the input box */}
-      {wasInterrupted && (
-        <Box paddingX={1} marginBottom={0}>
-          <Text color="yellow">
-            ⚠ Interrupted by user - Press enter to resume
-          </Text>
-        </Box>
-      )}
+      <InterruptedBanner wasInterrupted={!!wasInterrupted} />
 
       {/* Input box */}
       <Box
@@ -727,28 +791,26 @@ const UserInput: React.FC<UserInputProps> = ({
         {renderInputText()}
       </Box>
 
-      {/* Slash command UI - show in remote mode OR when assistant is available */}
-      {showSlashCommands &&
-        inputMode &&
-        !hideNormalUI &&
-        (isRemoteMode || assistant) && (
-          <SlashCommandUI
-            assistant={assistant}
-            filter={slashCommandFilter}
-            selectedIndex={selectedCommandIndex}
-            isRemoteMode={isRemoteMode}
-          />
-        )}
+      <SlashCommandsMaybe
+        show={showSlashCommands}
+        inputMode={inputMode}
+        hideNormalUI={!!hideNormalUI}
+        isRemoteMode={!!isRemoteMode}
+        assistant={assistant}
+        filter={slashCommandFilter}
+        selectedIndex={selectedCommandIndex}
+      />
 
-      {/* File search UI - only show in local mode */}
-      {showFileSearch && inputMode && !hideNormalUI && !isRemoteMode && (
-        <FileSearchUI
-          filter={fileSearchFilter}
-          selectedIndex={selectedFileIndex}
-          onSelect={selectFile}
-          onFilesUpdated={setCurrentFiles}
-        />
-      )}
+      <FileSearchMaybe
+        show={showFileSearch}
+        inputMode={inputMode}
+        hideNormalUI={!!hideNormalUI}
+        isRemoteMode={!!isRemoteMode}
+        filter={fileSearchFilter}
+        selectedIndex={selectedFileIndex}
+        onSelect={selectFile}
+        onFilesUpdated={setCurrentFiles}
+      />
     </Box>
   );
 };

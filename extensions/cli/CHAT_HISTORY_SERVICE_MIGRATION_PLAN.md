@@ -299,7 +299,6 @@ If issues arise during migration:
 1. **Streaming integration**: Most complex change
    - Mitigation: Extensive testing, gradual rollout
 2. **Remote mode**: Different state management
-
    - Mitigation: Test thoroughly, maintain compatibility
 
 3. **Performance**: Large histories might cause issues
