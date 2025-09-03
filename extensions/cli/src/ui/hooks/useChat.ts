@@ -1,21 +1,26 @@
+import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
-import { loadSession, saveSession } from "../../session.js";
+import {
+  createSession,
+  loadSession,
+  updateSessionHistory,
+} from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
-import { DisplayMessage } from "../types.js";
 
 import {
-  formatMessageWithFiles,
   handleAutoCompaction,
   handleCompactCommand,
+} from "./useChat.compaction.js";
+import {
+  formatMessageWithFiles,
   handleSpecialCommands,
   initChatHistory,
   processSlashCommandResult,
@@ -41,46 +46,92 @@ export function useChat({
   llmApi,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
+  additionalPrompts,
   onShowConfigSelector,
   onShowModelSelector,
   onShowMCPSelector,
   onShowSessionSelector,
   onLoginPrompt: _onLoginPrompt,
+  onClear,
   isRemoteMode = false,
   remoteUrl,
 }: UseChatProps) {
   const { exit } = useApp();
 
-  const [chatHistory, setChatHistory] = useState<ChatCompletionMessageParam[]>(
-    () => {
-      // In remote mode, start with empty history (will be populated by polling)
-      if (isRemoteMode) {
-        return [];
+  // Track service subscription
+  const serviceListenerCleanupRef = useRef<null | (() => void)>(null);
+
+  // Store the current session
+  const [currentSession, setCurrentSession] = useState<Session>(() => {
+    // In remote mode, start with empty session (will be populated by polling)
+    if (isRemoteMode) {
+      return createSession([]);
+    }
+
+    // Fork from an existing session if fork flag is used
+    if (fork) {
+      const { loadSessionById, startNewSession } = require("../../session.js");
+      const sessionToFork = loadSessionById(fork);
+      if (sessionToFork) {
+        return startNewSession(sessionToFork.history);
       }
+      // If session not found, create a new empty session
+      return createSession([]);
+    }
 
-      // Synchronously initialize chat history to prevent race conditions
-      // Load previous session if resume flag is used
-      // If no session loaded or not resuming, we'll need to add system message
-      // We can't make this async, so we'll handle it in the useEffect
-      return resume ? (loadSession() ?? []) : [];
-    },
-  );
-
-  const [messages, setMessages] = useState<DisplayMessage[]>(() => {
+    // Load previous session if resume flag is used
     if (resume) {
-      const savedHistory = loadSession();
-      if (savedHistory) {
-        return savedHistory
-          .filter((msg) => msg.role !== "system")
-          .map((msg) => ({
-            role: msg.role,
-            content: msg.content as string,
-          }));
+      const savedSession = loadSession();
+      if (savedSession) {
+        return savedSession;
       }
     }
-    return [];
+
+    // Create new session
+    return createSession([]);
   });
+
+  // Local view of history driven solely by ChatHistoryService
+  const [chatHistory, setChatHistoryView] = useState<ChatHistoryItem[]>(() =>
+    services.chatHistory?.isReady()
+      ? services.chatHistory.getHistory()
+      : currentSession.history,
+  );
+  // Proxy setter: apply changes to ChatHistoryService (single source of truth)
+  const setChatHistory: React.Dispatch<
+    React.SetStateAction<ChatHistoryItem[]>
+  > = (value) => {
+    const svc = services.chatHistory;
+    const current = svc.getHistory();
+    const next = typeof value === "function" ? (value as any)(current) : value;
+    svc.setHistory(next);
+  };
+
+  // Initialize ChatHistoryService and subscribe to updates
+  useEffect(() => {
+    const svc = services.chatHistory;
+    svc
+      .initialize(currentSession, isRemoteMode)
+      .then(() => {
+        setChatHistoryView(svc.getHistory());
+        const listener = () => {
+          setChatHistoryView(svc.getHistory());
+        };
+        svc.on("stateChanged", listener);
+        serviceListenerCleanupRef.current = () =>
+          svc.off("stateChanged", listener);
+      })
+      .catch((error) => {
+        logger.error("Failed to initialize ChatHistoryService", { error });
+      });
+
+    return () => {
+      serviceListenerCleanupRef.current?.();
+      serviceListenerCleanupRef.current = null;
+    };
+  }, []);
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
@@ -91,8 +142,11 @@ export function useChat({
     useState<AbortController | null>(null);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
+    // If we're forking and found a session to fork from, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && loadSession() !== null),
+    isRemoteMode ||
+      (resume && currentSession.history.length > 0) ||
+      (fork && currentSession.history.length > 0),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
@@ -101,15 +155,15 @@ export function useChat({
   const [activePermissionRequest, setActivePermissionRequest] =
     useState<ActivePermissionRequest | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
-    // When resuming, check for compaction markers in the loaded history
-    if (resume) {
-      const savedHistory = loadSession();
-      if (savedHistory) {
-        return findCompactionIndex(savedHistory);
-      }
+    // When resuming or forking, check for compaction markers in the loaded history
+    if ((resume || fork) && currentSession.history.length > 0) {
+      return findCompactionIndex(currentSession.history);
     }
     return null;
   });
+
+  // Track interrupted state for resume functionality
+  const [wasInterrupted, setWasInterrupted] = useState(false);
 
   // Clean up abort controller on unmount
   useEffect(() => {
@@ -126,8 +180,6 @@ export function useChat({
 
     return setupRemotePolling({
       remoteUrl,
-      setMessages,
-      setChatHistory,
       setIsWaitingForResponse,
       responseStartTime,
       setResponseStartTime,
@@ -162,15 +214,31 @@ export function useChat({
   useEffect(() => {
     // Only handle initial prompt after chat history is initialized
     // This prevents race conditions where the prompt runs before system message is loaded
-    if (initialPrompt && isChatHistoryInitialized) {
-      handleUserMessage(initialPrompt);
+    if (
+      (initialPrompt || (additionalPrompts && additionalPrompts.length > 0)) &&
+      isChatHistoryInitialized
+    ) {
+      const processPrompts = async () => {
+        const { processAndCombinePrompts } = await import(
+          "../../util/promptProcessor.js"
+        );
+        const finalMessage = await processAndCombinePrompts(
+          additionalPrompts,
+          initialPrompt,
+        );
+
+        if (finalMessage) {
+          await handleUserMessage(finalMessage);
+        }
+      };
+
+      processPrompts().catch(console.error);
     }
-  }, [initialPrompt, isChatHistoryInitialized]);
+  }, [initialPrompt, additionalPrompts, isChatHistoryInitialized]);
 
   const executeStreamingResponse = async (
-    newHistory: ChatCompletionMessageParam[],
+    newHistory: ChatHistoryItem[],
     currentCompactionIndex: number | null,
-    message: string,
   ) => {
     // Clean up previous abort controller if it exists
     if (abortController && !abortController.signal.aborted) {
@@ -184,22 +252,20 @@ export function useChat({
     setResponseStartTime(Date.now());
     setInputMode(false);
     logger.debug("Starting chat response stream", {
-      messageLength: message.length,
       historyLength: newHistory.length,
     });
 
     try {
-      const currentStreamingMessageRef = {
-        current: null as DisplayMessage | null,
-      };
-      const streamCallbacks = createStreamCallbacks(
-        { setMessages, setActivePermissionRequest },
-        currentStreamingMessageRef,
-      );
+      const streamCallbacks = createStreamCallbacks({
+        setChatHistory: setChatHistory,
+        setActivePermissionRequest,
+        llmApi,
+        model,
+      });
 
       // Execute streaming chat response
       await executeStreaming({
-        newHistory,
+        chatHistory: newHistory,
         model,
         llmApi,
         controller,
@@ -207,39 +273,28 @@ export function useChat({
         currentCompactionIndex,
       });
 
-      if (
-        currentStreamingMessageRef.current &&
-        currentStreamingMessageRef.current.content
-      ) {
-        const messageContent = currentStreamingMessageRef.current.content;
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: messageContent,
-            isStreaming: false,
-          },
-        ]);
-      }
-
-      // Update the chat history with the complete conversation after streaming
-      setChatHistory(newHistory);
-      logger.debug("Chat history updated", {
-        finalHistoryLength: newHistory.length,
+      // Save the updated session with the latest chat history that includes the assistant's reply
+      // The streamCallbacks update setChatHistory during streaming, so we need to get the current state
+      setChatHistory((currentHistory) => {
+        const updatedSession: Session = {
+          ...currentSession,
+          history: currentHistory,
+        };
+        updateSessionHistory(currentHistory);
+        setCurrentSession(updatedSession);
+        logger.debug("Session saved");
+        return currentHistory;
       });
-
-      // Save the updated history to session
-      logger.debug("Saving session", { historyLength: newHistory.length });
-      saveSession(newHistory);
-      logger.debug("Session saved");
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
-      setMessages((prev) => [
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: errorMessage,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: errorMessage,
+          },
+          contextItems: [],
         },
       ]);
     } finally {
@@ -253,7 +308,110 @@ export function useChat({
     }
   };
 
-  const handleUserMessage = async (message: string) => {
+  const handleResumeRequest = async (message: string) => {
+    if (message !== "" || !wasInterrupted) return false;
+
+    // Find the index of the last user or tool message to resume from
+    let lastUserOrToolIndex = -1;
+    for (let i = chatHistory.length - 1; i >= 0; i--) {
+      if (
+        chatHistory[i].message.role === "user" ||
+        !!chatHistory[i].toolCallStates?.length
+      ) {
+        lastUserOrToolIndex = i;
+        break;
+      }
+    }
+
+    if (lastUserOrToolIndex >= 0) {
+      // Truncate history to include up to and including the user/tool message
+      const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
+      setChatHistory(truncatedHistory);
+
+      // Clear the interrupted state and resume
+      setWasInterrupted(false);
+
+      // Re-execute streaming with the truncated history
+      await executeStreamingResponse(truncatedHistory, compactionIndex);
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleSlashCommandProcessing = async (
+    message: string,
+  ): Promise<string | null> => {
+    // Handle slash commands (skip in remote mode except for /exit which we handled above)
+    if (isRemoteMode || !assistant) {
+      return message;
+    }
+
+    const commandResult = await handleSlashCommands(message, assistant);
+    if (!commandResult) {
+      return message;
+    }
+
+    if (commandResult.compact) {
+      await handleCompactCommand({
+        chatHistory,
+        model,
+        llmApi,
+        setChatHistory,
+        setCompactionIndex,
+        currentSession,
+        setCurrentSession,
+      });
+      return null;
+    }
+
+    const newInput = processSlashCommandResult({
+      result: commandResult,
+      chatHistory,
+      setChatHistory,
+      exit,
+      onShowConfigSelector,
+      onShowModelSelector,
+      onShowMCPSelector,
+      onShowSessionSelector,
+      onClear,
+    });
+
+    return newInput || null;
+  };
+
+  const convertMessageContentToString = (content: any): string => {
+    if (typeof content === "string") {
+      return content;
+    }
+
+    // Convert MessagePart[] to string (extracting text, noting images)
+    return content
+      .map((part: any) => {
+        if (part.type === "text") {
+          return part.text;
+        } else if (part.type === "imageUrl") {
+          return "[Image]";
+        }
+        return "";
+      })
+      .join("");
+  };
+
+  const handleUserMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (await handleResumeRequest(message)) {
+      return;
+    }
+
+    // Clear interrupted state if user types a new message
+    if (wasInterrupted && message !== "") {
+      setWasInterrupted(false);
+    }
+
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -261,62 +419,45 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
-      setMessages,
     });
 
     if (handled) return;
 
-    // Handle slash commands (skip in remote mode except for /exit which we handled above)
-    if (!isRemoteMode && assistant) {
-      const commandResult = await handleSlashCommands(message, assistant);
-      if (commandResult) {
-        if (commandResult.compact) {
-          await handleCompactCommand({
-            chatHistory,
-            model,
-            llmApi,
-            setChatHistory,
-            setMessages,
-            setCompactionIndex,
-          });
-          return;
-        }
-
-        const newInput = processSlashCommandResult({
-          result: commandResult,
-          chatHistory,
-          setChatHistory,
-          setMessages,
-          exit,
-          onShowConfigSelector,
-          onShowModelSelector,
-          onShowMCPSelector,
-          onShowSessionSelector,
-        });
-
-        if (newInput) {
-          message = newInput;
-        } else {
-          return;
-        }
-      }
+    // Handle slash commands
+    const processedMessage = await handleSlashCommandProcessing(message);
+    if (processedMessage === null) {
+      return; // Command was handled and no further processing needed
     }
+    message = processedMessage;
 
     // Track telemetry
     trackUserMessage(message, model);
 
-    // Add user message to history and display
-    const messageContent = formatMessageWithFiles(message, attachedFiles);
+    // Format message with attached files and images
+    logger.debug("Processing message with images", {
+      hasImages: !!(imageMap && imageMap.size > 0),
+      imageCount: imageMap?.size || 0,
+    });
+    const newUserMessage = await formatMessageWithFiles(
+      message,
+      attachedFiles,
+      imageMap,
+    );
+    logger.debug("Message formatted successfully");
+
     if (attachedFiles.length > 0) {
       setAttachedFiles([]);
     }
 
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
+      const messageContentString = convertMessageContentToString(
+        newUserMessage.message.content,
+      );
+
       await handleRemoteMessage({
         remoteUrl,
-        messageContent,
-        setMessages,
+        messageContent: messageContentString,
       });
       return;
     }
@@ -328,22 +469,16 @@ export function useChat({
         model,
         llmApi,
         compactionIndex,
-        setMessages,
-        setChatHistory,
+        setChatHistory: setChatHistory,
         setCompactionIndex,
       });
 
-    // NOW add user message to history and UI
-    const newUserMessage: ChatCompletionMessageParam = {
-      role: "user",
-      content: messageContent,
-    };
+    // Add the formatted user message to history
     const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
 
     // Execute the streaming response
-    await executeStreamingResponse(newHistory, currentCompactionIndex, message);
+    await executeStreamingResponse(newHistory, currentCompactionIndex);
   };
 
   const handleInterrupt = () => {
@@ -365,14 +500,23 @@ export function useChat({
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: "[Interrupted by user]",
-          messageType: "system" as const,
-        },
-      ]);
+
+      // Remove the last message if it's from assistant (partial response)
+      setChatHistory((current) => {
+        const lastMessage = current[current.length - 1];
+        if (
+          lastMessage?.message.role === "assistant" &&
+          !lastMessage.toolCallStates?.length
+        ) {
+          return current.slice(0, -1);
+        }
+        return current;
+      });
+
+      setWasInterrupted(true);
+      setIsWaitingForResponse(false);
+      setResponseStartTime(null);
+      setInputMode(true);
     }
   };
 
@@ -386,7 +530,6 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
-    setMessages([]);
   };
 
   const handleToolPermissionResponse = async (
@@ -437,13 +580,15 @@ export function useChat({
       // If this is a "stop stream" rejection, abort the current request
       if (stopStream && abortController && isWaitingForResponse) {
         abortController.abort();
-        setMessages((prev) => [
+        setChatHistory((prev) => [
           ...prev,
           {
-            role: "system",
-            content:
-              "[Tool canceled - please tell Continue what to do differently]",
-            messageType: "system" as const,
+            message: {
+              role: "system",
+              content:
+                "[Tool canceled - please tell Continue what to do differently]",
+            },
+            contextItems: [],
           },
         ]);
         setIsWaitingForResponse(false);
@@ -454,15 +599,14 @@ export function useChat({
   };
 
   return {
-    messages,
-    setMessages,
     chatHistory,
-    setChatHistory,
+    setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,
     attachedFiles,
     activePermissionRequest,
+    wasInterrupted,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,

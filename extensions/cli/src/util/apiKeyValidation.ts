@@ -10,8 +10,8 @@ export function isValidAnthropicApiKey(
     return false;
   }
 
-  // Anthropic API keys must start with "TEST-ant-" and have additional characters
-  return apiKey.startsWith("TEST-ant-") && apiKey.length > "TEST-ant-".length;
+  // Anthropic API keys must start with "sk-ant-" and have additional characters
+  return apiKey.startsWith("sk-ant-") && apiKey.length > "sk-ant-".length;
 }
 
 /**
@@ -26,11 +26,11 @@ export function getApiKeyValidationError(
     return "API key is required";
   }
 
-  if (!apiKey.startsWith("TEST-ant-")) {
-    return 'API key must start with "TEST-ant-"';
+  if (!apiKey.startsWith("sk-ant-")) {
+    return 'API key must start with "sk-ant-"';
   }
 
-  if (apiKey.length <= "TEST-ant-".length) {
+  if (apiKey.length <= "sk-ant-".length) {
     return "API key is too short";
   }
 

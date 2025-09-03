@@ -3,8 +3,6 @@ name: CLI PR Checks
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "extensions/cli/**"
 
 permissions:
   contents: read
@@ -12,11 +10,19 @@ permissions:
   issues: write
 
 jobs:
+  track-rerun:
+    runs-on: ubuntu-latest
+    if: github.run_attempt > 1
+    steps:
+      - uses: actions/checkout@v5
+      - name: Track workflow rerun
+        uses: ./.github/actions/track-rerun
+
   lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,10 +31,23 @@ jobs:
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
 
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
+        with:
+          component: core
+          include-root: true
+
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Install dependencies
         run: |
           cd extensions/cli
-          npm ci
+          npm ci --include=optional
 
       - name: Run linting
         run: |
@@ -44,38 +63,60 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: extensions/cli/package-lock.json
+
+      - name: Cache CLI node_modules
+        uses: actions/cache@v4
+        with:
+          path: extensions/cli/node_modules
+          key: ${{ runner.os }}-node${{ matrix.node-version }}-cli-modules-${{ hashFiles('extensions/cli/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node${{ matrix.node-version }}-cli-modules-
+
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
+        with:
+          component: core
+          include-root: true
+
+      - name: Build core
+        run: |
+          cd core
+          npm run build
 
       - name: Install dependencies
         run: |
           cd extensions/cli
-          npm ci
+          npm ci --include=optional
 
       - name: Build
         run: |
           cd extensions/cli
           npm run build
 
-      # e2e tests are failing on Windows specifically - likely due to stdout flush issues
+      - name: Run smoke tests
+        run: |
+          cd extensions/cli
+          npm run test:smoke
+
       - name: Run tests
-        if: matrix.os != 'windows-latest'
         run: |
           cd extensions/cli
           npm test
 
-      - name: Run tests (excluding e2e on Windows)
-        if: matrix.os == 'windows-latest'
-        shell: bash
+      # e2e tests are failing on Windows specifically - likely due to stdout flush issues
+      - name: Run e2e tests
+        if: matrix.os != 'windows-latest'
         run: |
           cd extensions/cli
-          npm test -- --exclude='**/*.e2e.*' --exclude='**/e2e/**'
+          npm run test:e2e
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control

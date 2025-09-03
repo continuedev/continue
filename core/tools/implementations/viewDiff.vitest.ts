@@ -58,7 +58,7 @@ test("viewDiff should truncate diffs exceeding line limit", async () => {
   expect(resultLines.length).toBe(DEFAULT_GIT_DIFF_LINE_LIMIT);
 
   // Check the warning
-  expect(result[1].name).toBe("Diff truncation warning");
+  expect(result[1].name).toBe("Truncation warning");
   expect(result[1].content).toContain("truncated");
   expect(result[1].content).toContain(`${DEFAULT_GIT_DIFF_LINE_LIMIT} lines`);
 });
@@ -83,5 +83,5 @@ test("viewDiff should handle multiple diffs correctly", async () => {
   expect(resultLines.length).toBe(DEFAULT_GIT_DIFF_LINE_LIMIT);
 
   // Check the warning
-  expect(result[1].name).toBe("Diff truncation warning");
+  expect(result[1].name).toBe("Truncation warning");
 });

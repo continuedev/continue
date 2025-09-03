@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// MUST be the first import - intercepts console/stdout/stderr before any dependencies load
+import "./init.js";
+
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
@@ -10,12 +13,12 @@ import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
 import {
-  validateFlags,
   handleValidationErrors,
+  validateFlags,
 } from "./flags/flagValidator.js";
+import { configureConsoleForHeadless, safeStderr } from "./init.js";
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
-import { configureConsoleForHeadless } from "./util/consoleOverride.js";
 import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
@@ -61,6 +64,7 @@ addCommonOptions(program)
     "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag.",
   )
   .option("--resume", "Resume from last session")
+  .option("--fork <sessionId>", "Fork from an existing session ID")
   .action(async (prompt, options) => {
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
@@ -97,6 +101,8 @@ addCommonOptions(program)
       readonly: options.readonly,
       auto: options.auto,
       config: options.config,
+      resume: options.resume,
+      fork: options.fork,
       allow: options.allow,
       ask: options.ask,
       exclude: options.exclude,
@@ -139,13 +145,13 @@ addCommonOptions(program)
 
     // In headless mode, ensure we have a prompt
     if (options.print && !prompt) {
-      console.error(
-        "Error: A prompt is required when using the -p/--print flag.\n",
+      safeStderr(
+        "Error: A prompt is required when using the -p/--print flag.\n\n",
       );
-      console.error("Usage examples:");
-      console.error('  cn -p "please review my current git diff"');
-      console.error('  echo "hello" | cn -p');
-      console.error('  cn -p "analyze the code in src/"');
+      safeStderr("Usage examples:\n");
+      safeStderr('  cn -p "please review my current git diff"\n');
+      safeStderr('  echo "hello" | cn -p\n');
+      safeStderr('  cn -p "analyze the code in src/"\n');
       process.exit(1);
     }
 
@@ -184,7 +190,7 @@ program
 
 // Remote subcommand
 program
-  .command("remote [prompt]")
+  .command("remote [prompt]", { hidden: true })
   .description("Launch a remote instance of the cn agent")
   .option(
     "--url <url>",
@@ -202,13 +208,17 @@ program
     "--branch <branch>",
     "Specify the git branch name to use in the remote environment",
   )
+  .option(
+    "--repo <url>",
+    "Specify the repository URL to use in the remote environment",
+  )
   .action(async (prompt: string | undefined, options) => {
     await remote(prompt, options);
   });
 
 // Serve subcommand
 program
-  .command("serve [prompt]")
+  .command("serve [prompt]", { hidden: true })
   .description("Start an HTTP server with /state and /message endpoints")
   .option(
     "--timeout <seconds>",

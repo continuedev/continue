@@ -40,6 +40,7 @@ describe("E2E: Basic Commands", () => {
       expect(result.stdout).toContain("--readonly");
       expect(result.stdout).toContain("--auto");
       expect(result.stdout).toContain("--rule <rule>");
+      expect(result.stdout).toContain("--prompt <prompt>");
     });
 
     it("should show available commands", async () => {

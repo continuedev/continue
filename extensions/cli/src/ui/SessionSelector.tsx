@@ -61,9 +61,9 @@ export function SessionSelector({
       );
     } else if (key.return) {
       if (displaySessions[selectedIndex]) {
-        onSelect(displaySessions[selectedIndex].id);
+        onSelect(displaySessions[selectedIndex].sessionId);
       }
-    } else if (key.escape || (key.ctrl && input === "c")) {
+    } else if (key.escape || (key.ctrl && input === "d")) {
       onExit();
     }
   });
@@ -73,7 +73,7 @@ export function SessionSelector({
       <Box flexDirection="column" padding={1}>
         <Text color="yellow">No previous sessions found.</Text>
         <Text color="gray">Start a new conversation with: cn</Text>
-        <Text color="gray">Press ESC to exit</Text>
+        <Text color="gray">Press ESC or Ctrl+D to exit</Text>
       </Box>
     );
   }
@@ -84,7 +84,7 @@ export function SessionSelector({
         Recent Sessions
       </Text>
       <Text color="gray">
-        Use ↑↓ arrows to navigate, Enter to select, ESC to exit
+        Use ↑↓ arrows to navigate, Enter to select, ESC or Ctrl+D to exit
       </Text>
       <Text> </Text>
 
@@ -94,21 +94,20 @@ export function SessionSelector({
         const color = isSelected ? "cyan" : "white";
 
         return (
-          <Box key={session.id} flexDirection="column">
+          <Box key={session.sessionId} flexDirection="column">
             <Box paddingRight={3}>
               <Text color={color} wrap="truncate-end">
                 {indicator}
-                {formatMessage(session.firstUserMessage)}
+                {formatMessage(session.title)}
               </Text>
             </Box>
             <Box marginLeft={2}>
               <Text color="gray">
-                {formatTimestamp(session.timestamp)} - {session.messageCount}{" "}
-                {session.messageCount === 1 ? "message" : "messages"}
+                {formatTimestamp(new Date(session.dateCreated))}
               </Text>
             </Box>
             {index < displaySessions.length - 1 && (
-              <Text key={`spacer-${session.id}`}> </Text>
+              <Text key={`spacer-${session.sessionId}`}> </Text>
             )}
           </Box>
         );
