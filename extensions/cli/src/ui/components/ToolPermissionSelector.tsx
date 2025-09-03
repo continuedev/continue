@@ -29,31 +29,24 @@ interface ToolPermissionSelectorProps {
   ) => void;
 }
 
-const getPermissionOptions = (hasDynamicEvaluation: boolean): PermissionOption[] => {
-  const baseOptions: PermissionOption[] = [
+const getPermissionOptions = (): PermissionOption[] => {
+  return [
     { id: "approve", name: "Continue", color: "green", approved: true },
-  ];
-  
-  // Only show "don't ask again" option for tools without dynamic evaluation
-  if (!hasDynamicEvaluation) {
-    baseOptions.push({
+    {
       id: "approve_policy",
       name: "Continue + don't ask again",
       color: "cyan",
       approved: true,
       createPolicy: true,
-    });
-  }
-  
-  baseOptions.push({
-    id: "deny_stop",
-    name: "No, and tell Continue what to do differently",
-    color: "yellow",
-    approved: false,
-    stopStream: true,
-  });
-  
-  return baseOptions;
+    },
+    {
+      id: "deny_stop",
+      name: "No, and tell Continue what to do differently",
+      color: "yellow",
+      approved: false,
+      stopStream: true,
+    },
+  ];
 };
 
 export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
@@ -64,7 +57,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   hasDynamicEvaluation = false,
   onResponse,
 }) => {
-  const permissionOptions = getPermissionOptions(hasDynamicEvaluation);
+  const permissionOptions = getPermissionOptions();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   useInput((input, key) => {
@@ -85,8 +78,8 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       return;
     }
 
-    // Shift+Tab to continue with policy creation (only if not dynamic)
-    if (key.tab && key.shift && !hasDynamicEvaluation) {
+    // Shift+Tab to continue with policy creation
+    if (key.tab && key.shift) {
       onResponse(requestId, true, true, false);
       return;
     }
@@ -140,10 +133,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
         {hasDynamicEvaluation && (
           <Box marginTop={1}>
             <Text color="yellow" dim>
-              Note: This tool evaluates permissions based on the specific command.
-            </Text>
-            <Text color="yellow" dim>
-              Some commands will always require permission.
+              Note: Dangerous commands will be blocked regardless of your preference.
             </Text>
           </Box>
         )}
@@ -151,7 +141,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
           const isSelected = index === selectedIndex;
           let shortcut = "";
           if (option.id === "approve") shortcut = "(tab)";
-          else if (option.id === "approve_policy" && !hasDynamicEvaluation) shortcut = "(shift+tab)";
+          else if (option.id === "approve_policy") shortcut = "(shift+tab)";
           else if (option.id === "deny_stop") shortcut = "(esc)";
 
           return (
