@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Interface for services that need to handle cursor movement events.
@@ -56,7 +57,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var activeHandler: CursorMovementHandler? = null
-    private var isHandlingEvent = false
+    private var isHandlingEvent = AtomicBoolean(false)
 
     // Track last known cursor position to detect movements
     private var lastKnownPosition: LogicalPosition? = null
@@ -100,7 +101,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
 
     // SelectionListener implementation
     override fun selectionChanged(event: SelectionEvent) {
-        if (isHandlingEvent || event.editor.isDisposed) return
+        if (isHandlingEvent.get() || event.editor.isDisposed) return
 
         coroutineScope.launch {
             handleCursorMovement(event.editor, event.newRange.startOffset)
@@ -109,17 +110,20 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
 
     // CaretListener implementation
     override fun caretPositionChanged(event: CaretEvent) {
-        if (isHandlingEvent || event.editor.isDisposed) return
+        if (isHandlingEvent.get() || event.editor.isDisposed) return
 
-        coroutineScope.launch {
-            handleCursorMovement(event.editor, event.caret?.offset ?: return@launch)
+        val offset = event.caret?.offset
+        if (offset != null) {
+            coroutineScope.launch {
+                handleCursorMovement(event.editor, offset)
+            }
         }
     }
 
     private suspend fun handleCursorMovement(editor: Editor, offset: Int) {
-        if (isHandlingEvent) return
+        if (isHandlingEvent.get()) return
 
-        isHandlingEvent = true
+        isHandlingEvent.set(true)
         try {
             val currentPosition = editor.offsetToLogicalPosition(offset)
             val oldPosition = if (editor == lastKnownEditor) lastKnownPosition else null
@@ -151,7 +155,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
                 handleDeliberateCursorMovement()
             }
         } finally {
-            isHandlingEvent = false
+            isHandlingEvent.set(false)
         }
     }
 
