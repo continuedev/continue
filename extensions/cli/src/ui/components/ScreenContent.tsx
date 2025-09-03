@@ -136,6 +136,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
           toolArgs={activePermissionRequest.toolArgs}
           requestId={activePermissionRequest.requestId}
           toolCallPreview={activePermissionRequest.toolCallPreview}
+          hasDynamicEvaluation={activePermissionRequest.hasDynamicEvaluation}
           onResponse={handleToolPermissionResponse}
         />
       );

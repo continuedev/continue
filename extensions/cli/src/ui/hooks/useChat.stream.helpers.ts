@@ -1,4 +1,5 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
+import { getAllBuiltinTools } from "src/tools/index.js";
 
 interface CreateStreamCallbacksOptions {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
@@ -154,11 +155,16 @@ export function createStreamCallbacks(
       requestId: string,
       toolCallPreview?: any[],
     ) => {
+      // Check if this tool has dynamic evaluation
+      const tool = getAllBuiltinTools().find((t: any) => t.name === toolName);
+      const hasDynamicEvaluation = !!tool?.evaluateToolCallPolicy;
+
       setActivePermissionRequest({
         toolName,
         toolArgs,
         requestId,
         toolCallPreview,
+        hasDynamicEvaluation,
       });
     },
 

@@ -110,7 +110,9 @@ export function matchesArguments(
 /**
  * Converts CLI's PermissionPolicy to core's ToolPolicy
  */
-function permissionPolicyToToolPolicy(permission: PermissionPolicy): ToolPolicy {
+function permissionPolicyToToolPolicy(
+  permission: PermissionPolicy,
+): ToolPolicy {
   switch (permission) {
     case "allow":
       return "allowedWithoutPermission";
@@ -168,7 +170,7 @@ export function checkToolPermission(
   // First, get the base permission from static policies
   let basePermission: PermissionPolicy = "ask";
   let matchedPolicy = undefined;
-  
+
   for (const policy of policies) {
     if (
       matchesToolPattern(toolCall.name, policy.tool, toolCall.arguments) &&
@@ -183,20 +185,22 @@ export function checkToolPermission(
   // Check if tool has dynamic policy evaluation
   const builtinTools = getAllBuiltinTools();
   const tool = builtinTools.find((t) => t.name === toolCall.name);
-  
+
   if (tool?.evaluateToolCallPolicy) {
     // Convert CLI permission to core policy
     const basePolicy = permissionPolicyToToolPolicy(basePermission);
-    
+
     // Evaluate the dynamic policy
     const evaluatedPolicy = tool.evaluateToolCallPolicy(
       basePolicy,
       toolCall.arguments,
     );
-    
+
     // Convert back to CLI permission
     const finalPermission = toolPolicyToPermissionPolicy(evaluatedPolicy);
-    
+
+    console.error("FINAL PERMISSION", finalPermission);
+
     return {
       permission: finalPermission,
       matchedPolicy,
