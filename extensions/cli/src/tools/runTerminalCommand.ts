@@ -1,6 +1,9 @@
 import { spawn } from "child_process";
 
-import { evaluateTerminalCommandSecurity, type ToolPolicy } from "@continuedev/terminal-security";
+import {
+  evaluateTerminalCommandSecurity,
+  type ToolPolicy,
+} from "@continuedev/terminal-security";
 
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
