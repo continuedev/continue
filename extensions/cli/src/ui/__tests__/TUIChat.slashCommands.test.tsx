@@ -8,7 +8,7 @@ describe("TUIChat - Slash Commands Tests", () => {
     stdin.write("/");
 
     // Wait a bit for the UI to update
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const frame = lastFrame();
 
@@ -27,11 +27,11 @@ describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("filters slash commands when typing /log", async (mode) => {
     const { lastFrame, stdin } = renderInMode(mode);
 
-    // Type /log to trigger slash command filtering
+    // Type /exi to trigger slash command filtering
     stdin.write("/exi");
 
     // Wait a bit for the UI to update (allow extra time in both modes)
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     const frame = lastFrame();
 
@@ -50,14 +50,14 @@ describe("TUIChat - Slash Commands Tests", () => {
   testBothModes("handles tab key after slash command", async (mode) => {
     const { lastFrame, stdin } = renderInMode(mode);
 
-    // Type /log and then tab
+    // Type /exi and then tab
     stdin.write("/exi");
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     stdin.write("\t");
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const frameAfterTab = lastFrame();
 
@@ -81,7 +81,7 @@ describe("TUIChat - Slash Commands Tests", () => {
     // Type just /
     stdin.write("/");
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     const frame = lastFrame();
 
