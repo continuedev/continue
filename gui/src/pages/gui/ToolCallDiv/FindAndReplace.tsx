@@ -177,7 +177,7 @@ export function FindAndReplaceDisplay({
   if (diffResult?.error) {
     return renderContainer(
       <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong> {diffResult.error}
+        <strong>Error generating diff</strong>
       </div>,
     );
   }
