@@ -132,7 +132,7 @@ function modelSupportsImages(
   return false;
 }
 
-function modelSupportsThinking(
+function modelSupportsReasoning(
   model: ModelDescription | null | undefined,
 ): boolean {
   if (!model) {
@@ -446,5 +446,5 @@ export {
   llmCanGenerateInParallel,
   modelSupportsImages,
   modelSupportsNextEdit,
-  modelSupportsThinking,
+  modelSupportsReasoning,
 };

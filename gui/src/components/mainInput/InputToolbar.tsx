@@ -7,7 +7,7 @@ import { LightBulbIcon as LightBulbIconSolid } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import {
   modelSupportsImages,
-  modelSupportsThinking,
+  modelSupportsReasoning,
 } from "core/llm/autodetect";
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -69,7 +69,7 @@ function InputToolbar(props: InputToolbarProps) {
       defaultModel.capabilities,
     );
 
-  const supportsThinking = modelSupportsThinking(defaultModel);
+  const supportsReasoning = modelSupportsReasoning(defaultModel);
 
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
@@ -144,7 +144,7 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
-            {supportsThinking && (
+            {supportsReasoning && (
               <HoverItem
                 onClick={() =>
                   dispatch(setHasReasoningEnabled(!hasReasoningEnabled))

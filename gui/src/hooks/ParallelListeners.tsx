@@ -19,7 +19,7 @@ import {
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 
-import { modelSupportsThinking } from "core/llm/autodetect";
+import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { handleApplyStateUpdate } from "../redux/thunks/handleApplyStateUpdate";
 import { refreshSessionMetadata } from "../redux/thunks/session";
@@ -81,7 +81,7 @@ function ParallelListeners() {
       }
 
       const chatModel = configResult.config?.selectedModelByRole.chat;
-      const supportsReasoning = modelSupportsThinking(chatModel);
+      const supportsReasoning = modelSupportsReasoning(chatModel);
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
       dispatch(
