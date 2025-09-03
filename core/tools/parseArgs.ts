@@ -20,11 +20,11 @@ export function getStringArg(
 ): string {
   if (!args || !(argName in args) || typeof args[argName] !== "string") {
     throw new Error(
-      `\`${argName}\` argument is required${allowEmpty ? "" : " and must not be empty"}. (type string)`,
+      `\`${argName}\` argument is required${allowEmpty ? "" : " and must not be empty or whitespace-only"}. (type string)`,
     );
   }
   if (!allowEmpty && !args[argName].trim()) {
-    throw new Error(`Argument ${argName} must not be empty`);
+    throw new Error(`Argument ${argName} must not be empty or whitespace-only`);
   }
   return args[argName];
 }

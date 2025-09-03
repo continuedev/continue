@@ -37,6 +37,7 @@ interface Option {
   title: string;
   apiKey?: string;
   sourceFile?: string;
+  isAutoDetected?: boolean;
 }
 
 function modelSelectTitle(model: any): string {
@@ -75,8 +76,15 @@ function ModelOption({
           <CubeIcon className="h-3 w-3 flex-shrink-0" />
           <span className="line-clamp-1">
             {option.title}
+            {option.isAutoDetected && (
+              <span className="text-description-muted ml-1.5 text-[10px] italic">
+                (autodetected)
+              </span>
+            )}
             {showMissingApiKeyMsg && (
-              <span className="ml-2 text-[10px] italic">(Missing API key)</span>
+              <span className="ml-1.5 text-[10px] italic">
+                (Missing API key)
+              </span>
             )}
           </span>
         </div>
@@ -132,6 +140,7 @@ function ModelSelect() {
           title: modelSelectTitle(model),
           apiKey: model.apiKey,
           sourceFile: model.sourceFile,
+          isAutoDetected: model.isFromAutoDetect,
         };
       }),
     );

@@ -124,6 +124,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "nova-pro",
           "nova-micro",
           "nova-premier",
+          "gpt-oss",
         ].some((part) => model.toLowerCase().includes(part))
       ) {
         return true;
@@ -302,6 +303,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "meta-llama/llama-3-70b-instruct",
         "arcee-ai/caller-large",
         "nousresearch/hermes-3-llama-3.1-70b",
+        "moonshotai/kimi-k2",
       ];
       for (const model of specificModels) {
         if (model.toLowerCase() === model) {
@@ -334,6 +336,36 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    novita: (model) => {
+      const lower = model.toLowerCase();
+
+      // Exact match models
+      const exactMatches = [
+        "deepseek/deepseek-r1-0528",
+        "deepseek/deepseek-r1-turbo",
+        "deepseek/deepseek-v3-0324",
+        "deepseek/deepseek-v3-turbo",
+        "meta-llama/llama-3.3-70b-instruct",
+        "qwen/qwen-2.5-72b-instruct",
+        "zai-org/glm-4.5",
+        "moonshotai/kimi-k2-instruct",
+      ];
+
+      if (exactMatches.includes(lower)) {
+        return true;
+      }
+
+      // Prefix match models
+      const prefixMatches = ["qwen/qwen3", "openai/gpt-oss"];
+
+      for (const prefix of prefixMatches) {
+        if (lower.startsWith(prefix)) {
+          return true;
+        }
+      }
+
+      return false;
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {
@@ -343,6 +375,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
     [/gpt/, /4/],
+    [/gpt-5/],
     [/claude/, /sonnet/, /3\.5|3\.7|3-5|3-7|-4/],
     [/claude/, /opus/, /-4/],
   ];

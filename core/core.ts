@@ -10,7 +10,6 @@ import {
 import { ConfigHandler } from "./config/ConfigHandler";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getWorkspaceContinueRuleDotFiles";
 import { addModel, deleteModel } from "./config/util";
-import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
@@ -669,6 +668,8 @@ export class Core {
       return queue.dequeueProcessed() || null;
     });
 
+    // NOTE: This is not used unless prefetch is used.
+    // At this point this is not used because I opted to rely on the model to return multiple diffs than to use prefetching.
     on("nextEdit/queue/processOne", async (msg) => {
       console.log("nextEdit/queue/processOne");
       const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;
@@ -966,6 +967,10 @@ export class Core {
     });
     on("docs/getDetails", async (msg) => {
       return await this.docsService.getDetails(msg.data.startUrl);
+    });
+    on("docs/getIndexedPages", async (msg) => {
+      const pages = await this.docsService.getIndexedPages(msg.data.startUrl);
+      return Array.from(pages);
     });
 
     on("didChangeSelectedProfile", async (msg) => {
@@ -1281,15 +1286,9 @@ export class Core {
       throw new Error("No chat model selected");
     }
 
-    const provider =
-      config.contextProviders?.find(
-        (provider) => provider.description.title === name,
-      ) ??
-      [
-        // user doesn't need these in their config.json for the shortcuts to work
-        // option+enter
-        new CurrentFileContextProvider({}),
-      ].find((provider) => provider.description.title === name);
+    const provider = config.contextProviders?.find(
+      (provider) => provider.description.title === name,
+    );
     if (!provider) {
       return [];
     }

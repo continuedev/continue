@@ -15,7 +15,6 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.7.2"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("org.jetbrains.kotlinx.kover") version "0.7.3"
     id("io.sentry.jvm.gradle") version "5.8.0"
 }
 
@@ -60,13 +59,24 @@ intellijPlatform {
             sinceBuild = "241"
         }
     }
+    publishing {
+        token = environment("PUBLISH_TOKEN")
+        hidden = true
+        val channel = if (isEap) "eap" else "default"
+        channels = listOf(channel)
+    }
+    signing {
+        certificateChain = environment("CERTIFICATE_CHAIN")
+        privateKey = environment("PRIVATE_KEY")
+        password = environment("PRIVATE_KEY_PASSWORD")
+    }
     pluginVerification {
         ides {
-            ide("IC", "2025.2")
-            ide("IC", "2025.1")
-            ide("IC", "2024.3")
-            ide("IC", "2024.2")
-            ide("IC", "2024.1")
+            create("IC", "2025.2")
+            create("IC", "2025.1")
+            create("IC", "2024.3")
+            create("IC", "2024.2")
+            create("IC", "2024.1")
         }
     }
 }
@@ -76,12 +86,6 @@ qodana {
     reportPath = provider { file("build/reports/inspections").canonicalPath }
     saveReport = true
     showReport = environment("QODANA_SHOW_REPORT").map { it.toBoolean() }.getOrElse(false)
-}
-
-koverReport {
-    defaults {
-        xml { onCheck = true }
-    }
 }
 
 intellijPlatformTesting {
@@ -103,8 +107,7 @@ intellijPlatformTesting {
                         "-Dapple.laf.useScreenMenuBar=false",
                         "-Didea.trust.all.projects=true",
                         "-Dide.show.tips.on.startup.default.value=false",
-                        "-Dide.browser.jcef.jsQueryPoolSize=10000",
-                        "-Dide.browser.jcef.contextMenu.devTools.enabled=true"
+                        "-Dide.browser.jcef.sandbox.enable=false"
                     )
                 }
             }
@@ -130,19 +133,6 @@ tasks {
         check(pluginDescription.get().isNotEmpty()) { "Plugin description section not found in README.md" }
     }
 
-    signPlugin {
-        certificateChain = environment("CERTIFICATE_CHAIN")
-        privateKey = environment("PRIVATE_KEY")
-        password = environment("PRIVATE_KEY_PASSWORD")
-    }
-
-    publishPlugin {
-        token = environment("PUBLISH_TOKEN")
-
-        val channel = if (isEap) "eap" else "default"
-        channels = listOf(channel)
-    }
-
     runIde {
         val openProject = "$projectDir/../../manual-testing-sandbox"
         argumentProviders += CommandLineArgumentProvider {
@@ -152,5 +142,6 @@ tasks {
 
     test {
         useJUnitPlatform()
+        jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
     }
 }
