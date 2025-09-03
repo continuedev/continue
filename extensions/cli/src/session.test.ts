@@ -2,6 +2,7 @@ import fs from "fs";
 import os from "os";
 
 import type { ChatHistoryItem, Session } from "core/index.js";
+import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -11,6 +12,7 @@ import {
   hasSession,
   loadSession,
   saveSession,
+  startNewSession,
   updateSessionHistory,
   updateSessionTitle,
 } from "./session.js";
@@ -350,6 +352,53 @@ describe("SessionManager", () => {
       expect(session.title).toBe("Test Title");
       expect(session.history).toHaveLength(1);
       expect(session.history[0].message.content).toBe("Test message");
+    });
+  });
+
+  describe("startNewSession", () => {
+    it("should clear the current session and create a new one", () => {
+      const firstSession = createSession();
+      const firstSessionId = firstSession.sessionId;
+
+      vi.mocked(uuidv4).mockReturnValue("new-uuid-456" as any);
+
+      const secondSession = startNewSession();
+
+      expect(secondSession.sessionId).toBe("new-uuid-456");
+      expect(secondSession.sessionId).not.toBe(firstSessionId);
+      expect(secondSession.title).toBe("Untitled Session");
+      expect(secondSession.history).toEqual([]);
+    });
+
+    it("should create a new session with provided history", () => {
+      const history: ChatHistoryItem[] = [
+        {
+          message: {
+            role: "system",
+            content: "You are a helpful assistant",
+          },
+          contextItems: [],
+        },
+      ];
+
+      vi.mocked(uuidv4).mockReturnValue("new-uuid-789" as any);
+
+      const session = startNewSession(history);
+
+      expect(session.sessionId).toBe("new-uuid-789");
+      expect(session.history).toBe(history);
+    });
+
+    it("should set the new session as current", () => {
+      const originalSession = createSession();
+
+      vi.mocked(uuidv4).mockReturnValue("new-session-id" as any);
+
+      const newSession = startNewSession();
+      const currentSession = getCurrentSession();
+
+      expect(currentSession).toBe(newSession);
+      expect(currentSession).not.toBe(originalSession);
     });
   });
 });

@@ -19,7 +19,12 @@ import {
 } from "../types.js";
 import { isWhitespaceOnlyDeletion } from "../utils.js";
 
-export abstract class BaseNextEditProvider {
+/**
+ * This class is used as an abstract base class for model-specific providers.
+ * This and its children are responsible for pre/post processing of prompts and outcomes.
+ * Different next edit models have very different requirements.
+ */
+export abstract class BaseNextEditModelProvider {
   protected readonly modelName: string;
 
   constructor(modelName: string) {

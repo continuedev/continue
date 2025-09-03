@@ -1,10 +1,45 @@
 import { Box, Text } from "ink";
 import React, { memo } from "react";
 
+import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
+
 import type { ChatHistoryItem } from "../../../../../core/index.js";
-import { formatToolCall } from "../../tools/index.js";
 import { MarkdownRenderer } from "../MarkdownRenderer.js";
 import { ToolResultSummary } from "../ToolResultSummary.js";
+
+/**
+ * Formats message content for display, converting message parts array back to
+ * user-friendly format with placeholders like [Image #1], [Pasted Text #1], etc.
+ */
+function formatMessageContentForDisplay(
+  content: import("../../../../../core/index.js").MessageContent,
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (!Array.isArray(content)) {
+    return JSON.stringify(content);
+  }
+
+  // Convert message parts array back to display format with placeholders
+  let displayText = "";
+  let imageCounter = 0;
+
+  for (const part of content) {
+    if (part.type === "text") {
+      displayText += part.text;
+    } else if (part.type === "imageUrl") {
+      imageCounter++;
+      displayText += `[Image #${imageCounter}]`;
+    } else {
+      // Handle any other part types by converting to JSON
+      displayText += JSON.stringify(part);
+    }
+  }
+
+  return displayText;
+}
 
 interface MemoizedMessageProps {
   item: ChatHistoryItem;
@@ -61,11 +96,7 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               <Text color="white">●</Text>
               <Text> </Text>
               <MarkdownRenderer
-                content={
-                  typeof message.content === "string"
-                    ? message.content
-                    : JSON.stringify(message.content)
-                }
+                content={formatMessageContentForDisplay(message.content)}
               />
             </Box>
           )}
@@ -86,13 +117,21 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               >
                 <Box>
                   <Text
-                    color={isErrored ? "red" : isCompleted ? "green" : "white"}
+                    color={
+                      isErrored
+                        ? "red"
+                        : isCompleted
+                          ? "green"
+                          : toolState.status === "generated"
+                            ? "yellow"
+                            : "white"
+                    }
                   >
                     {isCompleted || isErrored ? "●" : "○"}
                   </Text>
                   <Text color="white">
                     {" "}
-                    {formatToolCall(toolName, toolArgs)}
+                    <ToolCallTitle toolName={toolName} args={toolArgs} />
                   </Text>
                 </Box>
 
@@ -131,17 +170,11 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         <Text> </Text>
         {isUser ? (
           <Text color="gray">
-            {typeof message.content === "string"
-              ? message.content
-              : JSON.stringify(message.content)}
+            {formatMessageContentForDisplay(message.content)}
           </Text>
         ) : (
           <MarkdownRenderer
-            content={
-              typeof message.content === "string"
-                ? message.content
-                : JSON.stringify(message.content)
-            }
+            content={formatMessageContentForDisplay(message.content)}
           />
         )}
         {isStreaming && <Text color="gray">▋</Text>}

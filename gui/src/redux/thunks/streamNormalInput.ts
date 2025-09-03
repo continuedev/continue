@@ -9,7 +9,6 @@ import {
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
-import { selectUseSystemMessageTools } from "../selectors/selectUseSystemMessageTools";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -47,7 +46,7 @@ async function evaluateToolPolicy(
   toolSettings: Record<string, ToolPolicy>,
   activeTools: Tool[],
   ideMessenger: IIdeMessenger,
-): Promise<ToolPolicy> {
+): Promise<{ policy: ToolPolicy; displayValue?: string }> {
   const basePolicy =
     toolSettings[toolCallState.toolCall.function.name] ??
     activeTools.find(
@@ -67,30 +66,31 @@ async function evaluateToolPolicy(
     });
   } catch (error) {
     // If request fails, return disabled
-    return "disabled";
+    return { policy: "disabled" };
   }
 
   // Evaluate the policy dynamically
   if (!result || result.status === "error") {
     // If evaluation fails, treat as disabled
-    return "disabled";
+    return { policy: "disabled" };
   }
 
   const dynamicPolicy = result.content.policy;
+  const displayValue = result.content.displayValue;
 
   // Ensure dynamic policy cannot be more lenient than base policy
   // Policy hierarchy (most restrictive to least): disabled > allowedWithPermission > allowedWithoutPermission
   if (basePolicy === "disabled") {
-    return "disabled"; // Cannot override disabled
+    return { policy: "disabled", displayValue }; // Cannot override disabled
   }
   if (
     basePolicy === "allowedWithPermission" &&
     dynamicPolicy === "allowedWithoutPermission"
   ) {
-    return "allowedWithPermission"; // Cannot make more lenient
+    return { policy: "allowedWithPermission", displayValue }; // Cannot make more lenient
   }
 
-  return dynamicPolicy;
+  return { policy: dynamicPolicy, displayValue };
 }
 
 /**
@@ -119,29 +119,28 @@ async function handleToolCallExecution(
   }
 
   // Check if ALL tool calls are auto-approved using dynamic evaluation
-  const policyPromises = toolCallStates.map((toolCallState) =>
-    evaluateToolPolicy(toolCallState, toolSettings, activeTools, ideMessenger),
+  const policyResults = await Promise.all(
+    toolCallStates.map((toolCallState) =>
+      evaluateToolPolicy(
+        toolCallState,
+        toolSettings,
+        activeTools,
+        ideMessenger,
+      ),
+    ),
   );
-  const policies = await Promise.all(policyPromises);
 
   // Handle disabled tool calls and set others as generated
-  const allAutoApproved = await Promise.all(
+  const autoApprovedResults = await Promise.all(
     toolCallStates.map(async (toolCallState, index) => {
-      const policy = policies[index];
+      const { policy, displayValue } = policyResults[index];
 
       if (policy === "disabled") {
         // Mark as errored instead of generated
         dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
 
-        // Get the actual command from parsed arguments if it's runTerminalCommand
-        const parsedArgs = toolCallState.parsedArgs || {};
-        let command = toolCallState.toolCall.function.name;
-        if (
-          toolCallState.toolCall.function.name === "runTerminalCommand" &&
-          parsedArgs.command
-        ) {
-          command = parsedArgs.command;
-        }
+        // Use the displayValue from the policy evaluation, or fallback to function name
+        const command = displayValue || toolCallState.toolCall.function.name;
 
         // Add error message explaining why it's disabled
         dispatch(
@@ -170,12 +169,14 @@ async function handleToolCallExecution(
         return policy === "allowedWithoutPermission";
       }
     }),
-  ).then((results) => results.every(Boolean));
+  );
+
+  const allAutoApproved = autoApprovedResults.every(Boolean);
 
   // Only run if we have auto-approve for all non-disabled tools
   if (allAutoApproved && toolCallStates.length > 0) {
     const nonDisabledToolCalls = toolCallStates.filter(
-      (_, index) => policies[index] !== "disabled",
+      (_, index) => policyResults[index].policy !== "disabled",
     );
 
     const toolCallPromises = nonDisabledToolCalls.map(async (toolCallState) => {
@@ -210,12 +211,12 @@ export const streamNormalInput = createAsyncThunk<
     // Get tools and filter them based on the selected model
     const activeTools = selectActiveTools(state);
 
-    const supportsNativeTools = modelSupportsNativeTools(selectedChatModel);
-
     // Use the centralized selector to determine if system message tools should be used
-    const useSystemTools = selectUseSystemMessageTools(state);
-    const useNativeTools = !useSystemTools && supportsNativeTools;
-    const systemToolsFramework = useSystemTools
+    const useNativeTools = state.config.config.experimental
+      ?.onlyUseSystemMessageTools
+      ? false
+      : modelSupportsNativeTools(selectedChatModel);
+    const systemToolsFramework = !useNativeTools
       ? new SystemMessageToolCodeblocksFramework()
       : undefined;
 

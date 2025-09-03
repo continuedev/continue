@@ -2,8 +2,8 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 
-import { streamChatResponse } from "./streamChatResponse.js";
-import { StreamCallbacks } from "./streamChatResponse.types.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
+import { StreamCallbacks } from "./stream/streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 import {
   countChatHistoryTokens,
@@ -80,7 +80,7 @@ export async function compactChatHistory(
     historyForCompaction = [...historyToUse, compactionPrompt];
   }
 
-  // Stream the compaction response
+  // Stream the compaction response (service drives updates; this collects content locally)
   const controller = new AbortController();
 
   let compactionContent = "";

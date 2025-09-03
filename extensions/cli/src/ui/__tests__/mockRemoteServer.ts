@@ -29,9 +29,17 @@ export class MockRemoteServer {
     // GET /state - Return the current state
     this.app.get("/state", (req, res) => {
       res.json({
-        chatHistory: this.messages,
+        session: {
+          history: this.messages.map((msg) => ({
+            message: msg,
+            contextItems: [],
+          })),
+          id: "mock-session",
+          workspaceDirectory: "/mock/workspace",
+        },
         isProcessing: this.isProcessing,
         messageQueueLength: 0,
+        pendingPermission: null,
       });
     });
 

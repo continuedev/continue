@@ -11,9 +11,9 @@ import {
   PromptTemplateRenderer,
 } from "../templating/NextEditPromptEngine.js";
 import { ModelSpecificContext, Prompt, PromptMetadata } from "../types.js";
-import { BaseNextEditProvider } from "./BaseNextEditProvider.js";
+import { BaseNextEditModelProvider } from "./BaseNextEditProvider.js";
 
-export class InstinctProvider extends BaseNextEditProvider {
+export class InstinctProvider extends BaseNextEditModelProvider {
   private templateRenderer: PromptTemplateRenderer;
 
   constructor() {

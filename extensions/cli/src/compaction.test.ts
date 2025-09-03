@@ -1,6 +1,7 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
+import { convertToUnifiedHistory } from "core/util/messageConversion.js";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -8,11 +9,10 @@ import {
   findCompactionIndex,
   getHistoryForLLM,
 } from "./compaction.js";
-import { convertToUnifiedHistory } from "./messageConversion.js";
-import { streamChatResponse } from "./streamChatResponse.js";
+import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the streamChatResponse function
-vi.mock("./streamChatResponse.js", () => ({
+vi.mock("./stream/streamChatResponse.js", () => ({
   streamChatResponse: vi.fn(),
 }));
 

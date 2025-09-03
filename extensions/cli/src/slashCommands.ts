@@ -8,25 +8,40 @@ import {
 } from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getSessionFilePath } from "./session.js";
+import { getCurrentSession, getSessionFilePath } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
+import { getVersion } from "./version.js";
 
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
-async function handleHelp(args: string[], assistant: AssistantConfig) {
-  const allCommands = getAllSlashCommands(assistant);
+async function handleHelp(_args: string[], _assistant: AssistantConfig) {
   const helpMessage = [
-    "Slash commands:",
-    ...allCommands
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map(
-        (cmd) =>
-          `- ${chalk.white(`/${cmd.name}:`)} ${chalk.gray(cmd.description)}`,
-      ),
+    chalk.bold("Keyboard Shortcuts:"),
+    "",
+    chalk.white("Navigation:"),
+    `  ${chalk.cyan("↑/↓")}        Navigate command/file suggestions or history`,
+    `  ${chalk.cyan("Tab")}        Complete command or file selection`,
+    `  ${chalk.cyan("Enter")}      Submit message`,
+    `  ${chalk.cyan("Shift+Enter")} New line`,
+    `  ${chalk.cyan("\\")}          Line continuation (at end of line)`,
+    "",
+    chalk.white("Controls:"),
+    `  ${chalk.cyan("Ctrl+C")}     Clear input`,
+    `  ${chalk.cyan("Ctrl+D")}     Exit application`,
+    `  ${chalk.cyan("Ctrl+L")}     Clear screen`,
+    `  ${chalk.cyan("Shift+Tab")}  Cycle permission modes (normal/plan/auto)`,
+    `  ${chalk.cyan("Esc")}        Cancel streaming or close suggestions`,
+    "",
+    chalk.white("Special Characters:"),
+    `  ${chalk.cyan("@")}          Search and attach files for context`,
+    `  ${chalk.cyan("/")}          Access slash commands`,
+    "",
+    chalk.white("Available Commands:"),
+    `  Type ${chalk.cyan("/")} to see available slash commands`,
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
@@ -102,22 +117,33 @@ async function handleInfo() {
 
   const infoLines = [];
 
+  // Version and working directory info
+  const version = getVersion();
+  const cwd = process.cwd();
+
+  infoLines.push(chalk.white("CLI Information:"));
+  infoLines.push(`  Version: ${chalk.green(version)}`);
+  infoLines.push(`  Working Directory: ${chalk.blue(cwd)}`);
+
   // Auth info
   if (isAuthenticated()) {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
       const email = config.userEmail || config.userId;
       const org = "(no org)"; // Organization info not available in AuthenticatedConfig
+      infoLines.push("");
       infoLines.push(chalk.white("Authentication:"));
       infoLines.push(`  Email: ${chalk.green(email)}`);
       infoLines.push(`  Organization: ${chalk.cyan(org)}`);
     } else {
+      infoLines.push("");
       infoLines.push(chalk.white("Authentication:"));
       infoLines.push(
         `  ${chalk.yellow("Authenticated via environment variable")}`,
       );
     }
   } else {
+    infoLines.push("");
     infoLines.push(chalk.white("Authentication:"));
     infoLines.push(`  ${chalk.red("Not logged in")}`);
   }
@@ -135,23 +161,70 @@ async function handleInfo() {
     if (configState.configPath) {
       infoLines.push(`  Path: ${chalk.blue(configState.configPath)}`);
     }
+
+    // Add current model info
+    try {
+      const modelInfo = services.model?.getModelInfo();
+      if (modelInfo) {
+        infoLines.push(`  Model: ${chalk.cyan(modelInfo.name)}`);
+      } else {
+        infoLines.push(`  Model: ${chalk.red("Not available")}`);
+      }
+    } catch {
+      infoLines.push(`  Model: ${chalk.red("Error retrieving model info")}`);
+    }
   } catch {
     infoLines.push("");
     infoLines.push(chalk.white("Configuration:"));
     infoLines.push(`  ${chalk.red("Configuration service not available")}`);
   }
 
-  // Session history path
+  // Session info
   infoLines.push("");
-  infoLines.push(chalk.white("Session History:"));
-  const sessionFilePath = getSessionFilePath();
+  infoLines.push(chalk.white("Session:"));
+  try {
+    const currentSession = getCurrentSession();
+    infoLines.push(`  Title: ${chalk.green(currentSession.title)}`);
+    infoLines.push(`  ID: ${chalk.gray(currentSession.sessionId)}`);
 
-  infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
+    const sessionFilePath = getSessionFilePath();
+    infoLines.push(`  File: ${chalk.blue(sessionFilePath)}`);
+  } catch {
+    infoLines.push(`  ${chalk.red("Session not available")}`);
+  }
 
   return {
     exit: false,
     output: infoLines.join("\n"),
   };
+}
+
+async function handleFork() {
+  posthogService.capture("useSlashCommand", { name: "fork" });
+
+  try {
+    const currentSession = getCurrentSession();
+    const forkCommand = `cn --fork ${currentSession.sessionId}`;
+    // Try to copy to clipboard dynamically to avoid hard dependency in tests
+    try {
+      const clipboardy = await import("clipboardy");
+      await clipboardy.default.write(forkCommand);
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand} (copied to clipboard)`),
+      };
+    } catch {
+      return {
+        exit: false,
+        output: chalk.gray(`${forkCommand}`),
+      };
+    }
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to create fork command: ${error.message}`),
+    };
+  }
 }
 
 const commandHandlers: Record<string, CommandHandler> = {
@@ -185,6 +258,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     posthogService.capture("useSlashCommand", { name: "resume" });
     return { openSessionSelector: true };
   },
+  fork: handleFork,
 };
 
 export async function handleSlashCommands(

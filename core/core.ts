@@ -668,6 +668,8 @@ export class Core {
       return queue.dequeueProcessed() || null;
     });
 
+    // NOTE: This is not used unless prefetch is used.
+    // At this point this is not used because I opted to rely on the model to return multiple diffs than to use prefetching.
     on("nextEdit/queue/processOne", async (msg) => {
       console.log("nextEdit/queue/processOne");
       const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;
@@ -1021,14 +1023,20 @@ export class Core {
           return { policy: basePolicy };
         }
 
+        // Extract display value for specific tools
+        let displayValue: string | undefined;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
+        }
+
         // If tool has evaluateToolCallPolicy function, use it
         if (tool.evaluateToolCallPolicy) {
           const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
-          return { policy: evaluatedPolicy };
+          return { policy: evaluatedPolicy, displayValue };
         }
 
         // Otherwise return base policy unchanged
-        return { policy: basePolicy };
+        return { policy: basePolicy, displayValue };
       },
     );
 

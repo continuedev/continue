@@ -13,7 +13,7 @@ sealed class NextEditModelMatcher {
     data object MercuryCoder : NextEditModelMatcher() {
         override fun matches(modelName: String?, title: String?): Boolean =
             modelName?.lowercase()?.contains("mercury-coder") == true ||
-                    title?.lowercase()?.contains("mercury-coder") == true
+                    title?.lowercase()?.contains("mercury coder") == true
     }
 
     data object Instinct : NextEditModelMatcher() {
@@ -25,8 +25,9 @@ sealed class NextEditModelMatcher {
     companion object {
         private val allMatchers = listOf(MercuryCoder, Instinct)
 
-        fun isSupported(modelName: String?, title: String?): Boolean =
-            allMatchers.any { it.matches(modelName, title) }
+        fun isSupported(modelName: String?, title: String?): Boolean {
+            return allMatchers.any { it.matches(modelName, title) }
+        }
     }
 }
 
