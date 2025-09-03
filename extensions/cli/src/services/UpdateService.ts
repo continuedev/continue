@@ -1,10 +1,13 @@
 import { exec, spawn } from "child_process";
-import { logger } from "src/util/logger.js";
 import { promisify } from "util";
+
+import { logger } from "src/util/logger.js";
+
 import { compareVersions, getLatestVersion, getVersion } from "../version.js";
+
+import { GlobalContext } from "core/util/GlobalContext.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { UpdateServiceState, UpdateStatus } from "./types.js";
-
 const execAsync = promisify(exec);
 
 /**
@@ -16,7 +19,7 @@ export class UpdateService {
 
   constructor() {
     this.state = {
-      autoUpdate: true, // TODO make configurable
+      autoUpdate: false,
       status: UpdateStatus.IDLE,
       message: "",
       error: null,
@@ -43,24 +46,31 @@ export class UpdateService {
   }
 
   private async checkAndAutoUpdate() {
+    const globalContext = new GlobalContext();
+    const autoUpdate = globalContext.get("autoUpdateCli");
+    if (autoUpdate === false) {
+      return;
+    }
+
     await this.checkForUpdates();
 
     if (this.state.currentVersion === "0.0.0-dev") {
-      return; // Uncomment to test update behavior
+      return; // Uncomment to test auto-update behavior in dev
     }
 
     // If update is available, automatically update
-    if (
-      this.state.isUpdateAvailable &&
-      this.state.autoUpdate &&
-      this.state.status !== "updating"
-    ) {
+    if (this.state.isUpdateAvailable && this.state.status !== "updating") {
       if (process.env.CONTINUE_CLI_AUTO_UPDATED) {
         logger.debug("Already auto updated, preventing sequential auto-update");
-      } else {
-        await this.performUpdate(true);
+        return;
       }
+      await this.performUpdate(true);
     }
+  }
+
+  public async setAutoUpdate(value: boolean) {
+    const globalContext = new GlobalContext();
+    globalContext.update("autoUpdateCli", value);
   }
 
   private async checkForUpdates() {

@@ -3,10 +3,10 @@ import React, { useMemo, useState } from "react";
 import { useService } from "../hooks/useService.js";
 import { services } from "../services/index.js";
 import { SERVICE_NAMES } from "../services/types.js";
+import type { UpdateServiceState } from "../services/types.js";
 
 import { Selector, SelectorOption } from "./Selector.js";
 
-import type { UpdateServiceState } from "../services/types.js";
 
 interface UpdateSelectorProps {
   onCancel: () => void;

@@ -8,8 +8,8 @@ import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import { SessionSelector } from "../SessionSelector.js";
-import { UpdateSelector } from "../UpdateSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
+import { UpdateSelector } from "../UpdateSelector.js";
 import { UserInput } from "../UserInput.js";
 
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
