@@ -1,19 +1,29 @@
-import { act } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMinimalTestContext } from "../../test-helpers/ui-test-context.js";
-import { runTerminalCommandTool } from "../../tools/runTerminalCommand.js";
+import { runTerminalCommandTool } from "src/tools/runTerminalCommand.js";
+import { services } from "../../services/index.js";
 
-import { useChat } from "./useChat.js";
+import { handleBashModeProcessing } from "./useChat.shellMode.js";
 
-// Mock the runTerminalCommandTool
-vi.mock("../../tools/runTerminalCommand.js", () => ({
+// Mock the runTerminalCommandTool with the correct path for the import in shellMode.ts
+vi.mock("src/tools/runTerminalCommand.js", () => ({
   runTerminalCommandTool: {
     run: vi.fn(),
   },
 }));
 
-describe("useChat - Bash Mode", () => {
+// Mock the services
+vi.mock("../../services/index.js", () => ({
+  services: {
+    chatHistory: {
+      addAssistantMessage: vi.fn(),
+      updateToolStatus: vi.fn(),
+      addToolResult: vi.fn(),
+    },
+  },
+}));
+
+describe("handleBashModeProcessing", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -24,87 +34,114 @@ describe("useChat - Bash Mode", () => {
       "total 5\ndrwxr-xr-x 2 user user 4096 Jan 1 12:00 .\ndrwxr-xr-x 3 user user 4096 Jan 1 12:00 ..",
     );
 
-    const ctx = createMinimalTestContext();
-    const chat = useChat({
-      assistant: { name: "test" } as any,
-      model: { name: "test-model" } as any,
-      llmApi: {} as any,
-    } as any);
+    const result = await handleBashModeProcessing("!ls -la");
 
-    await act(async () => {
-      await chat.handleUserMessage("!ls -la");
-    });
+    expect(result).toBe(null); // Processed, no further handling needed
+    expect(services.chatHistory.addAssistantMessage).toHaveBeenCalled();
+    expect(services.chatHistory.updateToolStatus).toHaveBeenCalledWith(
+      expect.any(String),
+      "calling",
+    );
 
-    expect(mockRun).toHaveBeenCalledWith({ command: "ls -la" });
+    // Use vi.waitFor to wait for async operations in the void expression
+    await vi.waitFor(
+      () => {
+        expect(mockRun).toHaveBeenCalledWith({ command: "ls -la" });
+      },
+      { timeout: 1000 },
+    );
 
-    // Since history is managed by service, we just verify no exception and tool called
-    ctx.cleanup();
+    await vi.waitFor(
+      () => {
+        expect(services.chatHistory.addToolResult).toHaveBeenCalledWith(
+          expect.any(String),
+          "total 5\ndrwxr-xr-x 2 user user 4096 Jan 1 12:00 .\ndrwxr-xr-x 3 user user 4096 Jan 1 12:00 ..",
+          "done",
+        );
+      },
+      { timeout: 1000 },
+    );
   });
 
   it("should handle bash command errors", async () => {
     const mockRun = vi.mocked(runTerminalCommandTool.run);
     mockRun.mockRejectedValue(new Error("Command not found"));
 
-    const chat = useChat({
-      assistant: { name: "test" } as any,
-      model: { name: "test-model" } as any,
-      llmApi: {} as any,
-    } as any);
+    const result = await handleBashModeProcessing("!invalidcommand");
 
-    await act(async () => {
-      await chat.handleUserMessage("!invalidcommand");
-    });
+    expect(result).toBe(null); // Processed, no further handling needed
+    expect(services.chatHistory.addAssistantMessage).toHaveBeenCalled();
+    expect(services.chatHistory.updateToolStatus).toHaveBeenCalledWith(
+      expect.any(String),
+      "calling",
+    );
 
-    expect(mockRun).toHaveBeenCalledWith({ command: "invalidcommand" });
+    // Use vi.waitFor to wait for async operations in the void expression
+    await vi.waitFor(
+      () => {
+        expect(mockRun).toHaveBeenCalledWith({ command: "invalidcommand" });
+      },
+      { timeout: 1000 },
+    );
+
+    await vi.waitFor(
+      () => {
+        expect(services.chatHistory.addToolResult).toHaveBeenCalledWith(
+          expect.any(String),
+          "Bash command failed: Command not found",
+          "errored",
+        );
+      },
+      { timeout: 1000 },
+    );
   });
 
   it("should not trigger bash mode for regular messages", async () => {
     const mockRun = vi.mocked(runTerminalCommandTool.run);
 
-    const chat = useChat({
-      assistant: { name: "test" } as any,
-      model: { name: "test-model" } as any,
-      llmApi: {} as any,
-    } as any);
+    const result = await handleBashModeProcessing("Hello! How are you?");
 
-    await act(async () => {
-      await chat.handleUserMessage("Hello! How are you?");
-    });
-
+    expect(result).toBe("Hello! How are you?"); // Pass through unchanged
     expect(mockRun).not.toHaveBeenCalled();
+    expect(services.chatHistory.addAssistantMessage).not.toHaveBeenCalled();
   });
 
   it("should handle empty bash command", async () => {
     const mockRun = vi.mocked(runTerminalCommandTool.run);
 
-    const chat = useChat({
-      assistant: { name: "test" } as any,
-      model: { name: "test-model" } as any,
-      llmApi: {} as any,
-    } as any);
+    const result = await handleBashModeProcessing("!");
 
-    await act(async () => {
-      await chat.handleUserMessage("!");
-    });
-
-    // Should not call the tool for empty command
+    expect(result).toBe("!"); // Pass through unchanged for empty command
     expect(mockRun).not.toHaveBeenCalled();
+    expect(services.chatHistory.addAssistantMessage).not.toHaveBeenCalled();
   });
 
   it("should handle bash command with leading whitespace", async () => {
     const mockRun = vi.mocked(runTerminalCommandTool.run);
     mockRun.mockResolvedValue("echo test output");
 
-    const chat = useChat({
-      assistant: { name: "test" } as any,
-      model: { name: "test-model" } as any,
-      llmApi: {} as any,
-    } as any);
+    const result = await handleBashModeProcessing("   !echo hello");
 
-    await act(async () => {
-      await chat.handleUserMessage("   !echo hello");
-    });
+    expect(result).toBe(null); // Processed, no further handling needed
+    expect(services.chatHistory.addAssistantMessage).toHaveBeenCalled();
 
-    expect(mockRun).toHaveBeenCalledWith({ command: "echo hello" });
+    // Use vi.waitFor to wait for async operations in the void expression
+    await vi.waitFor(
+      () => {
+        expect(mockRun).toHaveBeenCalledWith({ command: "echo hello" });
+      },
+      { timeout: 1000 },
+    );
+
+    await vi.waitFor(
+      () => {
+        expect(services.chatHistory.addToolResult).toHaveBeenCalledWith(
+          expect.any(String),
+          "echo test output",
+          "done",
+        );
+      },
+      { timeout: 1000 },
+    );
   });
 });
