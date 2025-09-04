@@ -1,10 +1,9 @@
 ---
-title: How to make your agent aware of codebases and documentation
+title: How to Make Your Agent Aware of Codebases and Documentation
 description: Learn how to give your AI agent access to codebases and documentation for more context-aware assistance
 keywords: [agent, codebase, documentation, MCP, context, RAG, tools]
+sidebarTitle: Codebase and Documentation Awareness
 ---
-
-# How to make your agent aware of codebases and documentation
 
 AI coding agents work best when they understand the context of your project. This guide shows you how to give your agent access to codebases and documentation, making it more helpful and accurate.
 
@@ -28,18 +27,21 @@ Rules guide your agent's behavior and understanding. Place markdown files in `.c
 # Project Architecture
 
 This is a React application with:
+
 - Components in `/src/components`
 - API routes in `/src/api`
 - State management using Redux in `/src/store`
 
 ## Coding Standards
+
 - Use TypeScript for all new files
 - Follow the existing naming conventions
 - Write tests for all new features
 ```
 
 <Tip>
-    Place rules files at different levels of your project hierarchy to scope when they trigger
+  Place rules files at different levels of your project hierarchy to scope when
+  they trigger
 </Tip>
 
 Learn more about [rules configuration](/customize/deep-dives/rules).
@@ -60,6 +62,7 @@ Create rules that point to external codebases:
 # External Dependencies
 
 Our authentication system is based on:
+
 - [Auth.js documentation](https://authjs.dev/)
 - [Example implementation](https://github.com/nextauthjs/next-auth-example)
 
@@ -76,6 +79,7 @@ Add rules to guide CLI usage:
 # Repository Access
 
 You can use the `gh` CLI to:
+
 - Search for issues: `gh issue list --repo owner/repo`
 - View pull requests: `gh pr list --repo owner/repo`
 - Clone repositories: `gh repo clone owner/repo`
@@ -86,6 +90,7 @@ You can use the `gh` CLI to:
 [DeepWiki MCP](https://hub.continue.dev/deepwiki/deepwiki-mcp) lets your agent explore any public GitHub repository.
 
 Once configured, your agent can explore repositories like:
+
 - "Explore the React repository structure"
 - "Find how authentication is implemented in NextAuth.js"
 
@@ -115,6 +120,7 @@ Guide your agent to relevant documentation:
 # Documentation Resources
 
 For framework-specific questions, refer to:
+
 - React: https://react.dev/reference/react
 - Next.js: https://nextjs.org/docs
 - Tailwind CSS: https://tailwindcss.com/docs
@@ -127,6 +133,7 @@ Always cite documentation when explaining concepts.
 [Context7 MCP](https://hub.continue.dev/upstash/context7-mcp) enables your agent to search and retrieve information from public documentation:
 
 Your agent can then answer questions like:
+
 - "How do I use React hooks?"
 - "What's the syntax for Tailwind CSS animations?"
 
@@ -142,6 +149,7 @@ Create rules that reference internal resources:
 # Internal Documentation
 
 Our team documentation is available at:
+
 - API Documentation: https://internal.docs/api
 - Architecture Guide: https://internal.docs/architecture
 - Deployment Process: https://internal.docs/deployment
