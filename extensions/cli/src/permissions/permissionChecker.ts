@@ -1,4 +1,5 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
+
 import { getServiceSync } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/types.js";
 import { SERVICE_NAMES } from "../services/types.js";
