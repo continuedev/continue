@@ -150,7 +150,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
   constructor(options: LLMOptions) {
     super(options);
 
-    if (options.isFromAutoDetect) {
+    if (options.model === "AUTODETECT") {
       return;
     }
     const headers: Record<string, string> = {
