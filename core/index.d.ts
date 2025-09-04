@@ -496,7 +496,7 @@ export interface ChatHistoryItem {
   toolCallStates?: ToolCallState[];
   isGatheringContext?: boolean;
   reasoning?: Reasoning;
-  appliedRules?: RuleWithSource[];
+  appliedRules?: Omit<RuleWithSource, "rule">[];
   conversationSummary?: string;
 }
 
