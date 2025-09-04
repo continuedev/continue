@@ -1,4 +1,4 @@
-import type { ToolPolicy } from "../../../../core/index.js";
+import type { ToolPolicy } from "@continuedev/terminal-security";
 
 export type ToolParameters = Record<
   string,
