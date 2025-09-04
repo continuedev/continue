@@ -17,6 +17,10 @@ class JiraIssuesContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  get deprecationMessage() {
+    return "The Jira issues context provider is now deprecated and will be removed in a later version. Please consider using the official Atlassian MCP server atlassian.com/platform/remote-mcp-server.";
+  }
+
   private getApi() {
     return new JiraClient({
       domain: this.options.domain,
