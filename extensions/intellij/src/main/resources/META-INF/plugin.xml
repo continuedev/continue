@@ -30,9 +30,11 @@
                 serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.ContinueNextEditService"/>
 
         <projectService
+                serviceInterface="com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManagerService"
                 serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManager"/>
 
         <projectService
+                serviceInterface="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManagerService"
                 serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager"/>
 
         <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>

@@ -92,7 +92,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
     }
 
     private fun getPlatformSpecificKeyStroke(key: String): String {
-        val osName = System.getProperty("os.name").toLowerCase()
+        val osName = System.getProperty("os.name").lowercase()
         val modifier = if (osName.contains("mac")) "meta" else "control"
         return "$modifier $key"
     }
@@ -112,9 +112,9 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 continue
             }
             val shortcuts = keymap.getShortcuts(actionId)
-            for (shortcut in shortcuts) {
-                if (shortcut is KeyboardShortcut && shortcut.firstKeyStroke == keyStroke) {
-                    keymap.removeShortcut(actionId, shortcut)
+            for (shortcut_item in shortcuts) {
+                if (shortcut_item is KeyboardShortcut && shortcut_item.firstKeyStroke == keyStroke) {
+                    keymap.removeShortcut(actionId, shortcut_item)
                 }
             }
         }
@@ -251,7 +251,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 )
 
             // Reload the WebView
-            continuePluginService?.let { pluginService ->
+            continuePluginService.let { pluginService ->
                 val allModulePaths = ModuleManager.getInstance(project).modules
                     .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.mapNotNull { it.toUriOrNull() } }
 

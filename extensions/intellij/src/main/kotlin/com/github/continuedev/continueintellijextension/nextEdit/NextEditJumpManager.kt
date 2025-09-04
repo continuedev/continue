@@ -12,6 +12,7 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -41,8 +42,20 @@ data class CompletionDataForAfterJump(
     val position: LogicalPosition
 )
 
+interface NextEditJumpManagerService {
+    fun isJumpInProgress(): Boolean
+    fun setJumpInProgress(jumpInProgress: Boolean)
+    fun wasJumpJustAccepted(): Boolean
+    fun setCompletionAfterJump(completionData: CompletionDataForAfterJump)
+    fun clearSavedCompletionAfterJump()
+    fun getSavedCompletionAfterJump(): CompletionDataForAfterJump?
+    fun getJumpPosition(): LogicalPosition?
+    fun getOriginalPosition(): LogicalPosition?
+    fun abortJump()
+}
+
 @Service(Service.Level.PROJECT)
-class NextEditJumpManager(private val project: Project) {
+class NextEditJumpManager(private val project: Project) : NextEditJumpManagerService{
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
@@ -67,29 +80,29 @@ class NextEditJumpManager(private val project: Project) {
     )
 
     // Public API
-    fun isJumpInProgress(): Boolean = jumpState.inProgress
+    override fun isJumpInProgress(): Boolean = jumpState.inProgress
 
-    fun setJumpInProgress(jumpInProgress: Boolean) {
+    override fun setJumpInProgress(jumpInProgress: Boolean) {
         jumpState = jumpState.copy(inProgress = jumpInProgress)
     }
 
-    fun wasJumpJustAccepted(): Boolean = jumpState.justAccepted
+    override fun wasJumpJustAccepted(): Boolean = jumpState.justAccepted
 
-    fun setCompletionAfterJump(completionData: CompletionDataForAfterJump) {
+    override fun setCompletionAfterJump(completionData: CompletionDataForAfterJump) {
         jumpState = jumpState.copy(completionAfterJump = completionData)
     }
 
-    fun clearSavedCompletionAfterJump() {
+    override fun clearSavedCompletionAfterJump() {
         jumpState = jumpState.copy(completionAfterJump = null)
     }
 
-    fun getSavedCompletionAfterJump(): CompletionDataForAfterJump? = jumpState.completionAfterJump
+    override fun getSavedCompletionAfterJump(): CompletionDataForAfterJump? = jumpState.completionAfterJump
 
-    fun getJumpPosition(): LogicalPosition? = jumpState.jumpPosition
+    override fun getJumpPosition(): LogicalPosition? = jumpState.jumpPosition
 
-    fun getOriginalPosition(): LogicalPosition? = jumpState.oldCursorPosition
+    override fun getOriginalPosition(): LogicalPosition? = jumpState.oldCursorPosition
 
-    fun abortJump() {
+    override fun abortJump() {
         // Public method that delegates to the existing private rejectJump logic
         rejectJump()
     }
@@ -136,7 +149,13 @@ class NextEditJumpManager(private val project: Project) {
                 }
             }
             result
-        } catch (e: Exception) {
+        }
+        catch (e: ProcessCanceledException) {
+            println("DEBUG: Error in suggestJump invokeAndWait: $e")
+            jumpState = jumpState.copy(inProgress = false)
+            throw e
+        }
+        catch (e: Exception) {
             println("DEBUG: Error in suggestJump invokeAndWait: $e")
             // Reset state on error
             jumpState = jumpState.copy(inProgress = false)
