@@ -223,7 +223,7 @@ describe("singleFindAndReplaceImpl", () => {
     });
   });
 
-  describe("singleFindAndReplaceImpl", () => {
+  describe("singleFindAndReplaceImpl function", () => {
     it("should apply changes using enhanced args", async () => {
       const args = {
         filepath: "test/file.txt",

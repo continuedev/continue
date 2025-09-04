@@ -310,9 +310,6 @@ describe("multiEditImpl", () => {
         });
       });
     });
-  });
-
-  describe("multiEditImpl", () => {
     it("should apply changes using enhanced args", async () => {
       mockResolveRelativePathInDir.mockResolvedValue("file:///test/file.txt");
       mockPerformFindAndReplace.mockReturnValue("new content");
