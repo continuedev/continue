@@ -48,6 +48,21 @@ export class MCPManagerSingleton {
     this.connections.delete(id);
   }
 
+  async shutdown() {
+    if (this.connections.size > 0) {
+      await Promise.allSettled(
+        Array.from(this.connections.entries()).map(([id, connection]) => {
+          try {
+            connection.abortController.abort();
+            void connection.client.close();
+          } finally {
+            this.connections.delete(id);
+          }
+        }),
+      );
+    }
+  }
+
   setConnections(
     servers: MCPOptions[],
     forceRefresh: boolean,

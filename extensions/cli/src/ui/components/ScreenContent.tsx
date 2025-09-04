@@ -38,6 +38,7 @@ interface ScreenContentProps {
   isInputDisabled: boolean;
   wasInterrupted?: boolean;
   isRemoteMode: boolean;
+  onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
 export const ScreenContent: React.FC<ScreenContentProps> = ({
@@ -60,6 +61,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   isInputDisabled,
   wasInterrupted = false,
   isRemoteMode,
+  onImageInClipboardChange,
 }) => {
   // Login prompt
   if (isScreenActive("login") && navState.screenData) {
@@ -138,6 +140,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
           toolArgs={activePermissionRequest.toolArgs}
           requestId={activePermissionRequest.requestId}
           toolCallPreview={activePermissionRequest.toolCallPreview}
+          hasDynamicEvaluation={activePermissionRequest.hasDynamicEvaluation}
           onResponse={handleToolPermissionResponse}
         />
       );
@@ -153,6 +156,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         onFileAttached={handleFileAttached}
         disabled={isInputDisabled}
         isRemoteMode={isRemoteMode}
+        onImageInClipboardChange={onImageInClipboardChange}
       />
     );
   }

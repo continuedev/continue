@@ -12,6 +12,7 @@ import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
+import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
   handleControlKeys,
   updateTextBufferState,
@@ -102,6 +103,7 @@ interface UserInputProps {
   placeholder?: string;
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
+  onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -116,6 +118,7 @@ const UserInput: React.FC<UserInputProps> = ({
   placeholder,
   hideNormalUI = false,
   isRemoteMode = false,
+  onImageInClipboardChange,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -138,6 +141,18 @@ const UserInput: React.FC<UserInputProps> = ({
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+
+  // Clear input function for Ctrl+C
+  const clearInput = useCallback(() => {
+    textBuffer.clear();
+    setInputText("");
+    setCursorPosition(0);
+    setShowSlashCommands(false);
+    setShowFileSearch(false);
+    setShowBashMode(false);
+    inputHistory.resetNavigation();
+  }, [textBuffer]);
+
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const [showBashMode, setShowBashMode] = useState(false);
@@ -225,13 +240,8 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    const afterSlash = beforeCursor.slice(1);
-
-    // Check if we have whitespace in the command
-    if (afterSlash.includes(" ") || afterSlash.includes("\n")) {
-      setShowSlashCommands(false);
-      return;
-    }
+    // Get the complete slash command, not just the part before cursor
+    const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
@@ -581,17 +591,6 @@ const UserInput: React.FC<UserInputProps> = ({
     return false;
   };
 
-  // Clear input function
-  const clearInput = () => {
-    textBuffer.clear();
-    setInputText("");
-    setCursorPosition(0);
-    setShowSlashCommands(false);
-    setShowFileSearch(false);
-    setShowBashMode(false);
-    inputHistory.resetNavigation();
-  };
-
   // Handle text buffer updates for async operations like image pasting
   const handleTextBufferUpdate = () => {
     const newText = textBuffer.text;
@@ -603,6 +602,22 @@ const UserInput: React.FC<UserInputProps> = ({
     updateBashModeState(newText);
     inputHistory.resetNavigation();
   };
+
+  // State for showing image paste hint
+  const [_hasImageInClipboard, _setHasImageInClipboard] = useState(false);
+
+  // Monitor clipboard for images and show helpful hints
+  const { checkNow: _checkClipboardNow } = useClipboardMonitor({
+    onImageStatusChange: (hasImage) => {
+      _setHasImageInClipboard(hasImage);
+      // Also notify parent component
+      if (onImageInClipboardChange) {
+        onImageInClipboardChange(hasImage);
+      }
+    },
+    enabled: !disabled && inputMode,
+    pollInterval: 2000,
+  });
 
   useInput((input, key) => {
     // Don't handle any input when disabled

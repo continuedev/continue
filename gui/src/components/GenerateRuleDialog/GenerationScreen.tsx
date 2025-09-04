@@ -139,7 +139,6 @@ export function GenerationScreen({
   };
 
   const showNameSpinner = isGenerating && !formData.name && !isManualMode;
-  const tooltipId = "rule-type-tooltip";
 
   return (
     <div className="px-2 pb-2 pt-4 sm:px-4">
@@ -181,14 +180,12 @@ export function GenerationScreen({
                   <label className="text-foreground text-sm font-medium">
                     Rule Type
                   </label>
-                  <InformationCircleIcon
-                    data-tooltip-id={tooltipId}
-                    data-tooltip-content={
-                      RuleTypeDescriptions[selectedRuleType]
-                    }
-                    className="h-4 w-4 text-gray-500"
-                  />
-                  <ToolTip id={tooltipId} style={{ zIndex: 100001 }} />
+                  <ToolTip
+                    style={{ zIndex: 100001 }}
+                    content={RuleTypeDescriptions[selectedRuleType]}
+                  >
+                    <InformationCircleIcon className="h-4 w-4 text-gray-500" />
+                  </ToolTip>
                 </div>
                 <div className="relative">
                   <select

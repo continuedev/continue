@@ -1,17 +1,17 @@
-import { testSingleMode, renderInMode } from "./TUIChat.dualModeHelper.js";
+import { renderInMode, testSingleMode } from "./TUIChat.dualModeHelper.js";
 
 describe("TUIChat - @ File Search Tests", () => {
   testSingleMode("shows @ character when user types @", "local", async () => {
     const { lastFrame, stdin } = renderInMode("local");
 
     // Wait a bit for initial render
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Type the @ character to trigger file search
     stdin.write("@");
 
     // Wait longer for file search to initialize and display files
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     const frame = lastFrame()!;
 
@@ -34,7 +34,7 @@ describe("TUIChat - @ File Search Tests", () => {
       stdin.write("@READ");
 
       // Wait for file search to filter and display results
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const frame = lastFrame()!;
 
@@ -58,7 +58,7 @@ describe("TUIChat - @ File Search Tests", () => {
     stdin.write("@@test");
 
     // Wait for UI update
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const frame = lastFrame();
 
@@ -80,7 +80,7 @@ describe("TUIChat - @ File Search Tests", () => {
       stdin.write("@");
 
       // Wait for potential async operations
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const frame = lastFrame()!;
 

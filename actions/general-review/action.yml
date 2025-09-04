@@ -68,7 +68,7 @@ runs:
     - name: Install Continue CLI
       if: env.SHOULD_RUN == 'true'
       shell: bash
-      run: npm install -g @continuedev/cli@1.4.25
+      run: npm install -g @continuedev/cli@1.4.30
 
     - name: Build PR Review Prompt
       if: env.SHOULD_RUN == 'true'
@@ -157,6 +157,24 @@ runs:
         echo "=================================="
         echo ""
 
+        # Validate API key
+        if [ -z "$CONTINUE_API_KEY" ]; then
+          echo "Warning: CONTINUE_API_KEY environment variable is not set"
+          # Create fallback review and continue
+          cat > code_review.md << 'EOF'
+## Code Review Summary
+
+⚠️ AI review skipped: CONTINUE_API_KEY not configured.
+
+### Configuration Required
+- Please set the CONTINUE_API_KEY secret in repository settings
+- Verify that the organization and config path are valid
+EOF
+          echo "SKIP_CLI=true" >> $GITHUB_ENV
+        else
+          echo "SKIP_CLI=false" >> $GITHUB_ENV
+        fi
+
         # Validate inputs to prevent command injection
         if [[ ! "$CONTINUE_ORG" =~ ^[a-zA-Z0-9_-]+$ ]]; then
           echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
@@ -168,8 +186,55 @@ runs:
           exit 1
         fi
 
-        # Run the CLI with validated config
-        cn --readonly --org "$CONTINUE_ORG" --config "$CONTINUE_CONFIG" -p "$(cat review_prompt.txt)" > code_review.md
+        # Test Continue CLI availability
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Testing Continue CLI..."
+          if ! cn --version; then
+            echo "Warning: Continue CLI not found or not working"
+            cat > code_review.md << 'EOF'
+## Code Review Summary
+
+⚠️ AI review skipped: Continue CLI installation failed.
+
+### Troubleshooting
+- Check that npm installation succeeded
+- Verify @continuedev/cli package is available
+EOF
+            echo "SKIP_CLI=true" >> $GITHUB_ENV
+          else
+            echo "Continue CLI version: $(cn --version)"
+          fi
+        fi
+
+        # Run the CLI with validated config and error handling
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Executing Continue CLI with config: $CONTINUE_ORG/$CONTINUE_CONFIG"
+          
+          # Write prompt to temp file for better handling
+          PROMPT_FILE="/tmp/continue-prompt-$.txt"
+          cp review_prompt.txt "$PROMPT_FILE"
+          
+        # Use timeout to prevent hanging (240 seconds = 4 minutes)
+        if ! timeout 240 cn --config "$CONTINUE_ORG/$CONTINUE_CONFIG" -p "@$PROMPT_FILE" --allow Bash > code_review.md 2>cli_error.log; then
+          echo "Error: Continue CLI command failed"
+          echo "CLI error log:"
+          cat cli_error.log
+          
+          # Create fallback review
+          cat > code_review.md << 'EOF'
+## Code Review Summary
+
+⚠️ AI review failed due to service initialization issues. Please check the Continue API key and configuration.
+
+### Troubleshooting
+- Verify the CONTINUE_API_KEY secret is set correctly
+- Check that the organization and config path are valid
+- Ensure the Continue service is accessible
+EOF
+        else
+          echo "Review generated successfully"
+        fi
+        fi
 
     - name: Upload Review Results
       if: env.SHOULD_RUN == 'true' && always()
