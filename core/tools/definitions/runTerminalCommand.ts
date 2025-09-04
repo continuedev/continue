@@ -1,7 +1,10 @@
 import os from "os";
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { evaluateTerminalCommandSecurity, ToolPolicy } from "@continuedev/terminal-security";
+import {
+  evaluateTerminalCommandSecurity,
+  ToolPolicy,
+} from "@continuedev/terminal-security";
 
 /**
  * Get the preferred shell for the current platform
