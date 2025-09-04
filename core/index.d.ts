@@ -1070,11 +1070,6 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
-export type ToolPolicy =
-  | "allowedWithPermission"
-  | "allowedWithoutPermission"
-  | "disabled";
-
 export interface Tool {
   type: "function";
   function: {
