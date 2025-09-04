@@ -36,6 +36,14 @@ ollama pull gemma2:2b
 ollama pull qwen2.5-coder:1.5b
 ```
 
+<Note>
+  If your machine is truly offline and cannot connect to download models, you
+  can download them on a different computer and copy the `~/.ollama` directory
+  to your offline machine. See [this Ollama issue
+  comment](https://github.com/ollama/ollama/issues/696#issuecomment-1711230525)
+  for detailed instructions.
+</Note>
+
 ## Configuration
 
 ### Basic config.yaml setup
@@ -123,27 +131,24 @@ See our complete [local models guide](/customization/models) for more options.
 
 Before disconnecting from the internet:
 
-1. **Index your codebase** - Open Continue and let it fully analyze your project
-2. **Cache documentation** - Use the @docs context provider to download relevant documentation
-3. **Pull all required models** - Ensure all models in your config are downloaded locally
-4. **Test your setup** - Verify everything works by running a few prompts offline
-5. **Download dependencies** - Run your package manager to ensure all dependencies are cached
+1. **Pull all required models** - Ensure all models in your config are downloaded locally
+2. **Test your setup** - Verify everything works by running a few prompts offline
+3. **Download dependencies** - Run your package manager to ensure all dependencies are cached
 
 ### Setting up context providers
 
 Configure local context providers that don't require internet:
 
 ```yaml
-contextProviders:
-  - name: codebase
-    params:
-      useLocalEmbeddings: true
-
-  - name: file
-
-  - name: folder
-
-  - name: gitDiff
+context:
+  - provider: diff
+  - provider: currentFile
+  - provider: codebase
+  - provider: folder
+  - provider: docs
+  - provider: tree
+  - provider: terminal
+  - provider: url
 ```
 
 ## Optimizing for offline performance
@@ -237,6 +242,8 @@ models:
     model: gemma2:2b
     roles:
       - edit
+   defaultCompletionOptions:
+      contextLength: 8192
 
   # More capable model for complex tasks
   - name: Deep Think
