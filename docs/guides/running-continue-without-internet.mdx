@@ -67,9 +67,7 @@ models:
       - autocomplete
     defaultCompletionOptions:
       temperature: 0.3
-
 # Disable telemetry for offline use
-allowAnonymousTelemetry: false
 ```
 
 ### Resource-constrained setup
@@ -92,9 +90,7 @@ models:
     defaultCompletionOptions:
       temperature: 0.5
       maxTokens: 2048
-
 # Disable features that require internet
-allowAnonymousTelemetry: false
 ```
 
 ## Recommended models for offline use
@@ -215,7 +211,6 @@ Note: Some local models have limited tool calling capabilities. Check our [model
 
 **Continue attempts network requests:**
 
-- Set `allowAnonymousTelemetry: false`
 - Check for context providers that require internet
 - Restart VS Code after config changes
 
@@ -264,9 +259,8 @@ models:
 For better codebase search without internet:
 
 ```yaml
-embeddingsProvider:
-  provider: ollama
-  model: nomic-embed-text
+provider: ollama
+model: nomic-embed-text
 ```
 
 Remember to pull the embeddings model:
