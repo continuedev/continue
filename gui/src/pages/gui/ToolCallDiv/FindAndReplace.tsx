@@ -3,7 +3,7 @@ import { ApplyState } from "core";
 import { EditOperation } from "core/tools/definitions/multiEdit";
 import { renderContextItems } from "core/util/messageContent";
 import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
-import { diffLines } from "diff";
+import { ChangeObject, diffLines } from "diff";
 import { useContext, useMemo, useState } from "react";
 import { ApplyActions } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ApplyActions";
 import { FileInfo } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/FileInfo";
@@ -122,6 +122,107 @@ export function FindAndReplaceDisplay({
     }
   }, [toolCallState?.status, toolCallState?.output]);
 
+  const processedDiff: (ChangeObject<string> | { ellipsis: true })[] =
+    useMemo(() => {
+      if (!diffResult?.diff) return [];
+
+      const MAX_CONTEXT_LINES = 2;
+      const processed: (ChangeObject<string> | { ellipsis: true })[] = [];
+
+      for (let i = 0; i < diffResult.diff.length; i++) {
+        const part = diffResult.diff[i];
+
+        if (part.added || part.removed) {
+          processed.push(part);
+        } else {
+          // This is an unchanged part
+          const lines = part.value.split("\n");
+          // Remove empty line at the end if it exists
+          if (lines[lines.length - 1] === "") {
+            lines.pop();
+          }
+
+          const isFirstPart = i === 0;
+          const isLastPart = i === diffResult.diff.length - 1;
+          const hasChangesAfter =
+            i < diffResult.diff.length - 1 &&
+            diffResult.diff.slice(i + 1).some((p) => p.added || p.removed);
+          const hasChangesBefore =
+            i > 0 &&
+            diffResult.diff.slice(0, i).some((p) => p.added || p.removed);
+
+          let startIndex = 0;
+          let endIndex = lines.length;
+          let addEllipsisAtStart = false;
+          let addEllipsisAtEnd = false;
+
+          if (isFirstPart && hasChangesAfter) {
+            // Show only last MAX_CONTEXT_LINES lines
+            const newStartIndex = Math.max(0, lines.length - MAX_CONTEXT_LINES);
+            if (newStartIndex > 0) {
+              addEllipsisAtStart = true;
+            }
+            startIndex = newStartIndex;
+          } else if (isLastPart && hasChangesBefore) {
+            // Show only first MAX_CONTEXT_LINES lines
+            const newEndIndex = Math.min(lines.length, MAX_CONTEXT_LINES);
+            if (newEndIndex < lines.length) {
+              addEllipsisAtEnd = true;
+            }
+            endIndex = newEndIndex;
+          } else if (
+            !isFirstPart &&
+            !isLastPart &&
+            (hasChangesBefore || hasChangesAfter)
+          ) {
+            // Show MAX_CONTEXT_LINES at start and end
+            if (lines.length > MAX_CONTEXT_LINES * 2) {
+              const contextLines = [
+                ...lines.slice(0, MAX_CONTEXT_LINES),
+                ...lines.slice(-MAX_CONTEXT_LINES),
+              ];
+              processed.push({
+                ...part,
+                value:
+                  contextLines.slice(0, MAX_CONTEXT_LINES).join("\n") + "\n",
+              });
+
+              // Add ellipsis indicator
+              processed.push({
+                ellipsis: true,
+              });
+
+              processed.push({
+                ...part,
+                value: contextLines.slice(MAX_CONTEXT_LINES).join("\n") + "\n",
+              });
+              continue;
+            }
+          }
+
+          if (startIndex < endIndex) {
+            const visibleLines = lines.slice(startIndex, endIndex);
+            if (visibleLines.length > 0) {
+              if (addEllipsisAtStart) {
+                processed.unshift({ ellipsis: true });
+              }
+
+              processed.push({
+                ...part,
+                value: visibleLines.join("\n") + "\n",
+              });
+
+              if (addEllipsisAtEnd) {
+                processed.push({ ellipsis: true });
+              }
+            }
+          }
+        }
+      }
+
+      return processed;
+    }, [diffResult?.diff]);
+
   // Unified container component that always renders the same structure
   const renderContainer = (content: React.ReactNode) => (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mx-2 my-1 flex min-w-0 flex-col outline outline-1">
@@ -200,7 +301,18 @@ export function FindAndReplaceDisplay({
       <pre
         className={`bg-editor m-0 w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
-        {diffResult.diff.map((part, index) => {
+        {processedDiff.map((part, index) => {
+          if ("ellipsis" in part) {
+            return (
+              <div
+                key={index}
+                className="text-description-muted px-3 py-1 text-center font-mono"
+              >
+                ⋯
+              </div>
+            );
+          }
+
           if (part.removed) {
             return (
               <div
