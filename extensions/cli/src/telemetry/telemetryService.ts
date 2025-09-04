@@ -37,6 +37,7 @@ class TelemetryService {
   private startTime = Date.now();
   private activeStartTime: number | null = null;
   private totalActiveTime = 0;
+  private shutdownHandlersRegistered = false;
 
   // Metrics
   private sessionCounter: any = null;
@@ -114,7 +115,7 @@ class TelemetryService {
                   ),
                 }),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "20000",
                 ),
               }),
             );
@@ -124,7 +125,7 @@ class TelemetryService {
               new PeriodicExportingMetricReader({
                 exporter: new ConsoleMetricExporter(),
                 exportIntervalMillis: parseInt(
-                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "60000",
+                  process.env.OTEL_METRIC_EXPORT_INTERVAL || "20000",
                 ),
               }),
             );
@@ -143,13 +144,36 @@ class TelemetryService {
 
       this.initializeMetrics();
 
-      logger.debug("Telemetry service initialized", {
+      // Set up graceful shutdown handlers
+      this.setupShutdownHandlers();
+
+      logger.info("Telemetry service initialized", {
         sessionId: this.config.sessionId,
         exporters: metricsExporters,
+        exportInterval: process.env.OTEL_METRIC_EXPORT_INTERVAL || "20000",
       });
     } catch (error) {
       logger.error("Failed to initialize telemetry", error);
     }
+  }
+
+  /**
+   * Set up process handlers to ensure metrics are flushed on shutdown
+   */
+  private setupShutdownHandlers() {
+    if (this.shutdownHandlersRegistered) return;
+
+    const shutdownHandler = async () => {
+      logger.debug("Process shutdown detected, flushing telemetry...");
+      await this.shutdown();
+    };
+
+    // Handle graceful shutdown - use once() to avoid duplicate handlers
+    process.once("beforeExit", shutdownHandler);
+    process.once("SIGINT", shutdownHandler);
+    process.once("SIGTERM", shutdownHandler);
+
+    this.shutdownHandlersRegistered = true;
   }
 
   private parseHeaders(headersStr: string): Record<string, string> {
@@ -171,7 +195,7 @@ class TelemetryService {
 
     // Core metrics (Claude Code compatible)
     this.sessionCounter = this.meter.createCounter(
-      "continue.cli.session.count",
+      "continue_cli_session_count",
       {
         description: "Count of CLI sessions started",
         unit: "count",
@@ -179,7 +203,7 @@ class TelemetryService {
     );
 
     this.linesOfCodeCounter = this.meter.createCounter(
-      "continue.cli.lines_of_code.count",
+      "continue_cli_lines_of_code_count",
       {
         description: "Count of lines of code modified",
         unit: "count",
@@ -187,30 +211,30 @@ class TelemetryService {
     );
 
     this.pullRequestCounter = this.meter.createCounter(
-      "continue.cli.pull_request.count",
+      "continue_cli_pull_request_count",
       {
         description: "Number of pull requests created",
         unit: "count",
       },
     );
 
-    this.commitCounter = this.meter.createCounter("continue.cli.commit.count", {
+    this.commitCounter = this.meter.createCounter("continue_cli_commit_count", {
       description: "Number of git commits created",
       unit: "count",
     });
 
-    this.costCounter = this.meter.createCounter("continue.cli.cost.usage", {
+    this.costCounter = this.meter.createCounter("continue_cli_cost_usage", {
       description: "Cost of the Continue CLI session",
       unit: "USD",
     });
 
-    this.tokenCounter = this.meter.createCounter("continue.cli.token.usage", {
+    this.tokenCounter = this.meter.createCounter("continue_cli_token_usage", {
       description: "Number of tokens used",
       unit: "tokens",
     });
 
     this.codeEditDecisionCounter = this.meter.createCounter(
-      "continue.cli.code_edit_tool.decision",
+      "continue_cli_code_edit_tool_decision",
       {
         description: "Count of code editing tool permission decisions",
         unit: "count",
@@ -218,7 +242,7 @@ class TelemetryService {
     );
 
     this.activeTimeCounter = this.meter.createCounter(
-      "continue.cli.active_time.total",
+      "continue_cli_active_time_total",
       {
         description: "Total active time in seconds",
         unit: "s",
@@ -227,7 +251,7 @@ class TelemetryService {
 
     // Additional Continue CLI specific metrics
     this.authAttemptsCounter = this.meter.createCounter(
-      "continue.cli.auth.attempts",
+      "continue_cli_auth_attempts",
       {
         description: "Authentication attempts",
         unit: "{attempt}",
@@ -235,7 +259,7 @@ class TelemetryService {
     );
 
     this.mcpConnectionsGauge = this.meter.createObservableGauge(
-      "continue.cli.mcp.connections",
+      "continue_cli_mcp_connections",
       {
         description: "Active MCP connections",
         unit: "{connection}",
@@ -243,7 +267,7 @@ class TelemetryService {
     );
 
     this.startupTimeHistogram = this.meter.createHistogram(
-      "continue.cli.startup.time",
+      "continue_cli_startup_time",
       {
         description: "Time from CLI start to ready state",
         unit: "ms",
@@ -251,7 +275,7 @@ class TelemetryService {
     );
 
     this.responseTimeHistogram = this.meter.createHistogram(
-      "continue.cli.response_time",
+      "continue_cli_response_time",
       {
         description: "LLM response time metrics",
         unit: "ms",
@@ -312,6 +336,7 @@ class TelemetryService {
   public recordSessionStart() {
     if (!this.isEnabled()) return;
 
+    logger.debug("Recording session start with telemetry");
     this.sessionCounter.add(1, this.getStandardAttributes());
     this.recordStartupTime(Date.now() - this.startTime);
   }
@@ -542,9 +567,26 @@ class TelemetryService {
     return this.config.sessionId;
   }
 
-  public shutdown() {
+  /**
+   * Shutdown telemetry service and ensure all metrics are flushed
+   */
+  public async shutdown(): Promise<void> {
     this.stopActiveTime();
-    return this.meterProvider?.shutdown();
+
+    if (this.meterProvider) {
+      try {
+        logger.debug("Flushing telemetry metrics before shutdown...");
+        // Force flush any pending metrics before shutdown
+        await this.meterProvider.forceFlush();
+        logger.debug("Telemetry metrics flushed successfully");
+
+        // Now shutdown the provider
+        await this.meterProvider.shutdown();
+        logger.debug("Telemetry service shut down successfully");
+      } catch (error) {
+        logger.error("Failed to shutdown telemetry service", error);
+      }
+    }
   }
 }
 
