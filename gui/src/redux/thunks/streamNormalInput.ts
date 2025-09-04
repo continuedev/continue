@@ -1,5 +1,5 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { LLMFullCompletionOptions } from "core";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
+import { ChatMessage, LLMFullCompletionOptions } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -23,11 +23,15 @@ import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
-import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
+import { renderContextItems } from "core/util/messageContent";
+import {
+  selectCurrentGeneratedToolCalls,
+  selectCurrentToolCalls,
+} from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
+import { callToolById } from "./callToolById";
 import { preprocessToolCalls } from "./enhanceParsedArgs";
 import { evaluateToolPolicies } from "./evaluateToolPolicies";
-import { executeToolCalls } from "./executeToolCalls";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -193,14 +197,15 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-
     // Tool call sequence:
     // 1. Mark generating tool calls as generated
-    const state1 = getState()
-    const currentToolCalls = selectCurrentToolCalls(state1)
-    const generatingCalls = currentToolCalls.filter(tc => tc.status === "generating")
-    for (const { toolCallId} of generatingCalls) {
-         dispatch(
+    const state1 = getState();
+    const originalToolCalls = selectCurrentToolCalls(state1);
+    const generatingCalls = originalToolCalls.filter(
+      (tc) => tc.status === "generating",
+    );
+    for (const { toolCallId } of generatingCalls) {
+      dispatch(
         setToolGenerated({
           toolCallId,
           tools: state1.config.config.tools,
@@ -208,38 +213,55 @@ export const streamNormalInput = createAsyncThunk<
       );
     }
 
-
     // 2. Pre-process args to catch invalid args before checking policies
-    const state2 = getState()
-    const generatedCalls = selectCurrentGeneratedToolCalls(state2)
-    
-    await preprocessToolCalls(dispatch, getState, extra.ideMessenger);
+    const state2 = getState();
+    const generatedCalls2 = selectCurrentGeneratedToolCalls(state2);
+    await preprocessToolCalls(dispatch, extra.ideMessenger, generatedCalls2);
 
-    // 2. Security check: evaluate updated policies based on args
+    // 3. Security check: evaluate updated policies based on args
+    const state3 = getState();
+    const generatedCalls3 = selectCurrentGeneratedToolCalls(state3);
+    const toolPolicies = state3.ui.toolSettings;
     const policies = await evaluateToolPolicies(
       dispatch,
-      getState,
       extra.ideMessenger,
       activeTools,
+      generatedCalls3,
+      toolPolicies,
+    );
+    const anyRequireApproval = policies.find(
+      ({ policy }) => policy === "allowedWithPermission",
     );
 
-    // 3. Execute remaining tool calls
-    const newState = getState();
-    const toolCalls = selectCurrentToolCalls(newState);
-    const generatingToolCalls = toolCalls.filter(
-      (toolCallState) => toolCallState.status === "generating",
-    );
-    const continueStreaming = await executeToolCalls(
-      dispatch,
-      generatingToolCalls,
-      policies,
-    );
-
+    // 4. Execute remaining tool calls
     // Only set inactive if not all tools were auto-approved
     // This prevents UI flashing for auto-approved tools
-    const anyRequireApproval = policies.
-    if (!) {
+    if (originalToolCalls.length === 0 || anyRequireApproval) {
       dispatch(setInactive());
+    } else {
+      const state4 = getState();
+      const generatedCalls4 = selectCurrentGeneratedToolCalls(state4);
+      if (generatedCalls4.length > 0) {
+        // All that didn't fail are auto approved - call them
+        await Promise.all(
+          generatedCalls4.map(async ({ toolCallId }) => {
+            unwrapResult(
+              await dispatch(callToolById({ toolCallId, autoApproved: true })),
+            );
+          }),
+        );
+      } else {
+        // All failed - stream on
+        for (const { output, toolCallId } of originalToolCalls) {
+          const newMessage: ChatMessage = {
+            role: "tool",
+            content: output ? renderContextItems(output) : "",
+            toolCallId,
+          };
+          dispatch(streamUpdate([newMessage]));
+        }
+        unwrapResult(await dispatch(streamNormalInput({})));
+      }
     }
   },
 );

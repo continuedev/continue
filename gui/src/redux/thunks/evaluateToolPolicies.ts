@@ -1,13 +1,8 @@
 import { Tool, ToolCallState, ToolPolicy } from "core";
 import { IIdeMessenger } from "../../context/IdeMessenger";
-import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
-import {
-  errorToolCall,
-  setToolGenerated,
-  updateToolCallOutput,
-} from "../slices/sessionSlice";
+import { errorToolCall, updateToolCallOutput } from "../slices/sessionSlice";
 import { DEFAULT_TOOL_SETTING, ToolPolicies } from "../slices/uiSlice";
-import { AppThunkDispatch, RootState } from "../store";
+import { AppThunkDispatch } from "../store";
 
 interface EvaluatedPolicy {
   policy: ToolPolicy;
@@ -17,15 +12,16 @@ interface EvaluatedPolicy {
 
 /**
  * Evaluates the tool policy for a tool call, including dynamic policy evaluation
+ * Note that tool group policies are not considered here because activeTools already excludes disabled groups
  */
 async function evaluateToolPolicy(
-  toolCallState: ToolCallState,
-  toolSettings: Record<string, ToolPolicy>,
-  activeTools: Tool[],
   ideMessenger: IIdeMessenger,
+  activeTools: Tool[],
+  toolCallState: ToolCallState,
+  toolPolicies: ToolPolicies,
 ): Promise<EvaluatedPolicy> {
   const basePolicy =
-    toolSettings[toolCallState.toolCall.function.name] ??
+    toolPolicies[toolCallState.toolCall.function.name] ??
     activeTools.find(
       (tool) => tool.function.name === toolCallState.toolCall.function.name,
     )?.defaultToolPolicy ??
@@ -77,54 +73,48 @@ async function evaluateToolPolicy(
 */
 export async function evaluateToolPolicies(
   dispatch: AppThunkDispatch,
-  generatingToolCalls: 
   ideMessenger: IIdeMessenger,
   activeTools: Tool[],
-  toolPolicies: ToolPolicies
+  generatedToolCalls: ToolCallState[],
+  toolPolicies: ToolPolicies,
 ): Promise<EvaluatedPolicy[]> {
-  const toolSettings = state.ui.toolSettings;
-  const toolCallStates = selectCurrentToolCalls(state);
-  const generatingCalls = toolCallStates.filter(
-    ({ status }) => status === "generating",
-  );
-
   // Check if ALL tool calls are auto-approved using dynamic evaluation
   const policyResults = await Promise.all(
-    generatingCalls.map((toolCallState) =>
+    generatedToolCalls.map((toolCallState) =>
       evaluateToolPolicy(
-        toolCallState,
-        toolSettings,
-        activeTools,
         ideMessenger,
+        activeTools,
+        toolCallState,
+        toolPolicies,
       ),
     ),
   );
 
-  for (const { displayValue, toolCallState, policy } of policyResults) {
-    if (policy === "disabled") {
-      dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
+  const disabledResults = policyResults.filter(
+    ({ policy }) => policy === "disabled",
+  );
 
-      // Use the displayValue from the policy evaluation, or fallback to function name
-      const command = displayValue || toolCallState.toolCall.function.name;
+  for (const { displayValue, toolCallState } of disabledResults) {
+    dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
 
-      // Add error message explaining why it's disabled
-      dispatch(
-        updateToolCallOutput({
-          toolCallId: toolCallState.toolCallId,
-          contextItems: [
-            {
-              icon: "problems",
-              name: "Security Policy Violation",
-              description: "Command Disabled",
-              content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
-              hidden: false,
-            },
-          ],
-        }),
-      );
-    } else {
-    
-    }
+    // Use the displayValue from the policy evaluation, or fallback to function name
+    const command = displayValue || toolCallState.toolCall.function.name;
+
+    // Add error message explaining why it's disabled
+    dispatch(
+      updateToolCallOutput({
+        toolCallId: toolCallState.toolCallId,
+        contextItems: [
+          {
+            icon: "problems",
+            name: "Security Policy Violation",
+            description: "Command Disabled",
+            content: `This command has been disabled by security policy:\n\n${command}\n\nThis command cannot be executed as it may pose a security risk.`,
+            hidden: false,
+          },
+        ],
+      }),
+    );
   }
 
   return policyResults;

@@ -1,8 +1,8 @@
+import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { validateAndEnhanceMultiEditArgs } from "../../util/clientTools/multiEditImpl";
 import { validateAndEnhanceSingleEditArgs } from "../../util/clientTools/singleFindAndReplaceImpl";
-import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import {
   errorToolCall,
   setToolCallArgs,
@@ -31,13 +31,11 @@ export async function validateAndEnhanceToolCallArgs(
 export async function preprocessToolCalls(
   dispatch: AppThunkDispatch,
   ideMessenger: IIdeMessenger,
+  generatedToolCalls: ToolCallState[],
 ): Promise<void> {
-  const toolCalls = selectCurrentToolCalls(state);
-  const generatingCalls = toolCalls.filter((tc) => tc.status === "generating");
-
   // Tool call pre-processing
   await Promise.all(
-    generatingCalls.map(async (tcState) => {
+    generatedToolCalls.map(async (tcState) => {
       try {
         const changedArgs = await validateAndEnhanceToolCallArgs(
           ideMessenger,
