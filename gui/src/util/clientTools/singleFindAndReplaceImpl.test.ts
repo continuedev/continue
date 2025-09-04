@@ -116,7 +116,7 @@ describe("singleFindAndReplaceImpl", () => {
 
       it("should resolve relative file paths and read file content", async () => {
         mockResolveRelativePathInDir.mockResolvedValue(
-          "/absolute/path/test.txt",
+          "file:///absolute/path/test.txt",
         );
         mockExtras.ideMessenger.ide.readFile = vi
           .fn()
@@ -139,16 +139,16 @@ describe("singleFindAndReplaceImpl", () => {
           mockExtras.ideMessenger.ide,
         );
         expect(mockExtras.ideMessenger.ide.readFile).toHaveBeenCalledWith(
-          "/absolute/path/test.txt",
+          "file:///absolute/path/test.txt",
         );
         expect(result.editingFileContents).toBe("test content");
-        expect(result.fileUri).toBe("/absolute/path/test.txt");
+        expect(result.fileUri).toBe("file:///absolute/path/test.txt");
       });
     });
 
     describe("find and replace operation", () => {
       beforeEach(() => {
-        mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+        mockResolveRelativePathInDir.mockResolvedValue("file:///test/file.txt");
         mockExtras.ideMessenger.ide.readFile = vi
           .fn()
           .mockResolvedValue("test content");
@@ -176,12 +176,13 @@ describe("singleFindAndReplaceImpl", () => {
           true,
         );
         expect(result).toEqual({
+          filepath: "file.txt",
           old_string: "test",
           new_string: "replacement",
           replace_all: true,
           editingFileContents: "test content",
           newContent: "replacement content",
-          fileUri: "/test/file.txt",
+          fileUri: "file:///test/file.txt",
         });
       });
 
@@ -225,12 +226,13 @@ describe("singleFindAndReplaceImpl", () => {
   describe("singleFindAndReplaceImpl", () => {
     it("should apply changes using enhanced args", async () => {
       const args = {
+        filepath: "test/file.txt",
         old_string: "test",
         new_string: "replacement",
         replace_all: false,
         editingFileContents: "test content",
         newContent: "replacement content",
-        fileUri: "/test/file.txt",
+        fileUri: "file:///test/file.txt",
       };
 
       await singleFindAndReplaceImpl(args, "tool-call-id", mockExtras);
@@ -238,20 +240,21 @@ describe("singleFindAndReplaceImpl", () => {
       expect(mockApplyForEditTool).toHaveBeenCalledWith({
         streamId: "test-uuid",
         toolCallId: "tool-call-id",
-        text: "replacement content",
-        filepath: "/test/file.txt",
+        text: "mocked content",
+        filepath: "file:///test/file.txt",
         isSearchAndReplace: true,
       });
     });
 
     it("should return correct response structure", async () => {
       const args = {
+        filepath: "test/file.txt",
         old_string: "test",
         new_string: "replacement",
         replace_all: false,
         editingFileContents: "test content",
         newContent: "replacement content",
-        fileUri: "/test/file.txt",
+        fileUri: "file:///test/file.txt",
       };
 
       const result = await singleFindAndReplaceImpl(
@@ -269,7 +272,7 @@ describe("singleFindAndReplaceImpl", () => {
 
   describe("error handling", () => {
     it("should wrap and rethrow errors from readFile in validateAndEnhanceSingleEditArgs", async () => {
-      mockResolveRelativePathInDir.mockResolvedValue("/test/file.txt");
+      mockResolveRelativePathInDir.mockResolvedValue("file:///test/file.txt");
       mockExtras.ideMessenger.ide.readFile = vi
         .fn()
         .mockRejectedValue(new Error("Permission denied"));
