@@ -66,6 +66,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   ).toString();
 
   // Only attempt to update YAML schemas if the YAML extension is installed
+  // This checks for the standard Red Hat YAML extension (extension id: "redhat.vscode-yaml").
   const yamlExtension = vscode.extensions.getExtension("redhat.vscode-yaml");
   if (yamlExtension) {
     try {

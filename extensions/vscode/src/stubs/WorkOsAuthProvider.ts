@@ -26,7 +26,9 @@ import {
 } from "vscode";
 import * as vscode from "vscode";
 
-function getHttpConfigurationSafe(): { get<T>(key: string): T | undefined } | undefined {
+function getHttpConfigurationSafe():
+  | { get<T>(key: string): T | undefined }
+  | undefined {
   try {
     // Some test environments mock 'vscode' without exporting 'workspace'
     // Accessing it may throw from the mock proxy; guard with try/catch

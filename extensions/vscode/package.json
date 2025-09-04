@@ -50,12 +50,12 @@
     "codestral",
     "ai"
   ],
-    "activationEvents": [
-      "onUri",
-      "onStartupFinished",
-      "onView:continueGUIView",
-      "onAuthenticationRequest:continue"
-    ],
+  "activationEvents": [
+    "onUri",
+    "onStartupFinished",
+    "onView:continueGUIView",
+    "onAuthenticationRequest:continue"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [

@@ -167,12 +167,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div className="flex flex-col gap-2">
         <span>Likely causes:</span>
         <ul className="m-0">
-          <li>Temporary network error or model provider outage</li>
           <li>
-            Proxy configured in your IDE could block connections.
-            <span className="ml-1">
-              Check Settings → Proxy (http.proxy, http.proxyStrictSSL) or NO_PROXY.
-            </span>
+            Temporary internet connectivity issue or model provider outage
           </li>
           <li>
             Invalid <code>apiBase</code>
@@ -182,6 +178,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
                 <code>{selectedModel.apiBase}</code>
               </>
             )}
+          </li>
+          <li>
+            <span>
+              If you're behind a corporate proxy, verify proxy settings in your
+              IDE (http.proxy, http.proxyStrictSSL) or your NO_PROXY
+              configuration.
+            </span>
           </li>
         </ul>
         <div className="flex flex-row flex-wrap gap-2">
