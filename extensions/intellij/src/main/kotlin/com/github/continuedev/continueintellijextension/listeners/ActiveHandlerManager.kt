@@ -1,8 +1,10 @@
 package com.github.continuedev.continueintellijextension.listeners
 
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditService
+import com.github.continuedev.continueintellijextension.nextEdit.NextEditStatusService
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.event.CaretEvent
@@ -102,7 +104,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
 
     // SelectionListener implementation
     override fun selectionChanged(event: SelectionEvent) {
-        if (isHandlingEvent.get() || event.editor.isDisposed) return
+        if (isHandlingEvent.get() || event.editor.isDisposed || !isNextEditEnabled()) return
 
         coroutineScope.launch {
             handleCursorMovement(event.editor, event.newRange.startOffset)
@@ -111,7 +113,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
 
     // CaretListener implementation
     override fun caretPositionChanged(event: CaretEvent) {
-        if (isHandlingEvent.get() || event.editor.isDisposed) return
+        if (isHandlingEvent.get() || event.editor.isDisposed || !isNextEditEnabled()) return
         coroutineScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.EDT) {
                 handleCursorMovement(event.editor, event.caret?.offset ?: return@withContext)
@@ -170,6 +172,9 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
             println("ActiveHandlerManager: Error handling deliberate cursor movement: ${e.message}")
         }
     }
+
+    private fun isNextEditEnabled() =
+        project.service<NextEditStatusService>().isNextEditEnabled()
 
     fun dispose() {
         clearActiveHandler()

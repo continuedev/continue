@@ -32,9 +32,14 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
     onTextBufferUpdate,
   } = options;
 
-  // Handle Ctrl+C to clear input
-  if (key.ctrl && input === "c" && clearInput) {
-    clearInput();
+  // Handle Ctrl+C with two-stage exit, Ctrl+D immediately exits
+  if (key.ctrl && input === "c") {
+    // Clear input box if clearInput function is provided
+    if (clearInput) {
+      clearInput();
+    }
+    // Let the main process SIGINT handler handle Ctrl+C logic
+    process.kill(process.pid, "SIGINT");
     return true;
   }
 
