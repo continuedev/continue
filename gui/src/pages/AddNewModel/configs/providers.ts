@@ -998,6 +998,34 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://venice.ai/chat",
   },
+  openrouter: {
+    title: "OpenRouter",
+    provider: "openrouter",
+    description: "Access 200+ AI models through a unified API with competitive pricing",
+    longDescription:
+      "OpenRouter provides access to a wide variety of AI models from different providers through a single API. Get started by obtaining an API key from [OpenRouter](https://openrouter.ai/settings/keys).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your OpenRouter API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "OpenRouter",
+        },
+      },
+    ],
+    apiKeyUrl: "https://openrouter.ai/settings/keys",
+  },
   tars: {
     title: "Tetrate Agent Router Service",
     provider: "tars",
