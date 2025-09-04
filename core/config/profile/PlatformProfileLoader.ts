@@ -2,7 +2,7 @@ import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
-import { ContinueConfig, IDE, IdeSettings, ILLMLogger } from "../../index.js";
+import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
 import doLoadConfig from "./doLoadConfig.js";
@@ -28,7 +28,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
   private readonly versionSlug: string;
   private readonly controlPlaneClient: ControlPlaneClient;
   private readonly ide: IDE;
-  private ideSettingsPromise: Promise<IdeSettings>;
   private llmLogger: ILLMLogger;
   readonly description: ProfileDescription;
   private readonly orgScopeId: string | null;
@@ -41,7 +40,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
     versionSlug,
     controlPlaneClient,
     ide,
-    ideSettingsPromise,
     llmLogger,
     description,
     orgScopeId,
@@ -53,7 +51,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
     versionSlug: string;
     controlPlaneClient: ControlPlaneClient;
     ide: IDE;
-    ideSettingsPromise: Promise<IdeSettings>;
     llmLogger: ILLMLogger;
     description: ProfileDescription;
     orgScopeId: string | null;
@@ -65,7 +62,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
     this.versionSlug = versionSlug;
     this.controlPlaneClient = controlPlaneClient;
     this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
     this.llmLogger = llmLogger;
     this.description = description;
     this.orgScopeId = orgScopeId;
@@ -79,7 +75,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
     versionSlug,
     controlPlaneClient,
     ide,
-    ideSettingsPromise,
     llmLogger,
     rawYaml,
     orgScopeId,
@@ -91,12 +86,11 @@ export default class PlatformProfileLoader implements IProfileLoader {
     versionSlug: string;
     controlPlaneClient: ControlPlaneClient;
     ide: IDE;
-    ideSettingsPromise: Promise<IdeSettings>;
     llmLogger: ILLMLogger;
     rawYaml: string;
     orgScopeId: string | null;
   }): Promise<PlatformProfileLoader> {
-    const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
+    const controlPlaneEnv = await getControlPlaneEnv(ide.getIdeSettings());
 
     const description: ProfileDescription = {
       id: `${ownerSlug}/${packageSlug}`,
@@ -121,7 +115,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
       versionSlug,
       controlPlaneClient,
       ide,
-      ideSettingsPromise,
       llmLogger,
       description,
       orgScopeId,
@@ -139,7 +132,6 @@ export default class PlatformProfileLoader implements IProfileLoader {
 
     const results = await doLoadConfig({
       ide: this.ide,
-      ideSettingsPromise: this.ideSettingsPromise,
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
       overrideConfigYaml: this.configResult.config,

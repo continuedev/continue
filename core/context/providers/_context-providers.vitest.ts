@@ -28,11 +28,9 @@ async function getContextProviderExtras(
 ): Promise<ContextProviderExtras> {
   setUpTestDir();
   const ide = new FileSystemIde(TEST_DIR);
-  const ideSettingsPromise = ide.getIdeSettings();
   const llmLogger = new LLMLogger();
   const configHandler = new ConfigHandler(
     ide,
-    ideSettingsPromise,
     llmLogger,
     Promise.resolve(undefined),
   );
