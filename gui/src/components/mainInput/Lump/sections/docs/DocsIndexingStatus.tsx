@@ -38,6 +38,14 @@ function DocsIndexingStatus({
 
   const isComplete = status?.status === "complete";
 
+  const renderIndexedSummary = () => {
+    if (!status) return "";
+    if (!isComplete) return status.description;
+    if (!Array.isArray(indexedPages)) return "Loading site info...";
+    const count = indexedPages.length;
+    return `${count} page${count === 1 ? "" : "s"} indexed`;
+  };
+
   const reIndex = () =>
     ideMessenger.post("indexing/reindex", {
       type: "docs",
@@ -192,52 +200,52 @@ function DocsIndexingStatus({
         <div
           className={`flex flex-row items-center justify-between gap-2 text-sm`}
         >
-          <p
-            style={{
-              fontSize: fontSize(-4),
-            }}
-            className={`m-0 line-clamp-1 p-0 text-left text-gray-400 ${isComplete ? "cursor-pointer hover:underline" : ""}`}
-            onClick={() => {
-              if (isComplete) {
-                showPagesList();
+          {indexedPages ? (
+            <ToolTip
+              content={
+                <IndexedPagesTooltip
+                  pages={indexedPages}
+                  siteTitle={docConfig.title ?? docConfig.startUrl}
+                  baseUrl={docConfig.startUrl}
+                />
               }
-            }}
-            data-tooltip-id={`docs-tooltip-${startUrlSlug}`}
-          >
-            {isComplete
-              ? indexedPages
-                ? `${indexedPages.length} page${indexedPages.length === 1 ? "" : "s"} indexed`
-                : "Loading site info..."
-              : status.description}
-          </p>
+              isOpen={showTooltip}
+              setIsOpen={setShowTooltip}
+              clickable
+              delayShow={0}
+              openEvents={{ mouseenter: false, click: true }}
+              closeEvents={{ blur: true, mouseleave: false, click: true }}
+            >
+              <p
+                style={{ fontSize: fontSize(-4) }}
+                className={`m-0 line-clamp-1 p-0 text-left text-gray-400 ${
+                  isComplete ? "cursor-pointer hover:underline" : ""
+                }`}
+                onClick={() => {
+                  if (isComplete) {
+                    showPagesList();
+                  }
+                }}
+              >
+                {renderIndexedSummary()}
+              </p>
+            </ToolTip>
+          ) : (
+            <p
+              style={{ fontSize: fontSize(-4) }}
+              className={`m-0 line-clamp-1 p-0 text-left text-gray-400 ${
+                isComplete ? "cursor-pointer hover:underline" : ""
+              }`}
+              onClick={() => {
+                if (isComplete) {
+                  showPagesList();
+                }
+              }}
+            >
+              {renderIndexedSummary()}
+            </p>
+          )}
         </div>
-      )}
-
-      {indexedPages && (
-        <ToolTip
-          isOpen={showTooltip}
-          setIsOpen={setShowTooltip}
-          clickable
-          delayShow={0}
-          openEvents={{
-            mouseenter: false,
-            click: true,
-          }}
-          closeEvents={{
-            blur: true,
-            mouseleave: false,
-            click: true,
-          }}
-          content={
-            <IndexedPagesTooltip
-              pages={indexedPages}
-              siteTitle={docConfig.title ?? docConfig.startUrl}
-              baseUrl={docConfig.startUrl}
-            />
-          }
-        >
-          <div data-tooltip-id={`docs-tooltip-${startUrlSlug}`} />
-        </ToolTip>
       )}
     </div>
   );
