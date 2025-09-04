@@ -314,10 +314,12 @@ describe("multiEditImpl", () => {
 
   describe("multiEditImpl", () => {
     it("should apply changes using enhanced args", async () => {
+      mockResolveRelativePathInDir.mockResolvedValue("file:///test/file.txt");
+      mockPerformFindAndReplace.mockReturnValue("new content");
       const args = {
         filepath: "file.txt",
         edits: [{ old_string: "test", new_string: "replacement" }],
-        fileUri: "file:///test/file.txt",
+        fileUri: "file:///not-this-one/file.txt",
         editingFileContents: "test content",
         newContent: "replacement content",
       };
@@ -327,7 +329,7 @@ describe("multiEditImpl", () => {
       expect(mockApplyForEditTool).toHaveBeenCalledWith({
         streamId: "test-uuid",
         toolCallId: "tool-call-id",
-        text: "replacement content",
+        text: "new content",
         filepath: "file:///test/file.txt",
         isSearchAndReplace: true,
       });
