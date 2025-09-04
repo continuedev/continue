@@ -29,11 +29,42 @@ class OpenRouter extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
+  constructor(options: LLMOptions) {
+    super(options);
+
+    // Set context length based on the model
+    if (!options.contextLength) {
+      this._contextLength = this.getContextLengthForModel(options.model);
+    }
+  }
+
+  private getContextLengthForModel(model: string): number {
+    const modelContextLengths: Record<string, number> = {
+      "openai/gpt-4o": 128000,
+      "openai/gpt-4o-mini": 128000,
+      "anthropic/claude-3.5-sonnet": 200000,
+      "anthropic/claude-3-haiku": 200000,
+      "meta-llama/llama-3.1-405b-instruct": 131072,
+      "meta-llama/llama-3.1-70b-instruct": 131072,
+      "meta-llama/llama-3.1-8b-instruct": 131072,
+      "google/gemini-pro-1.5": 2097152,
+      "mistralai/mistral-large": 128000,
+      "cohere/command-r-plus": 128000,
+      "deepseek/deepseek-chat": 128000,
+      "qwen/qwen-2.5-72b-instruct": 131072,
+      "nvidia/llama-3.1-nemotron-70b-instruct": 131072,
+      "x-ai/grok-beta": 131072,
+      "perplexity/llama-3.1-sonar-large-128k-online": 131072,
+    };
+
+    return modelContextLengths[model] || 32768; // fallback to default
+  }
+
   async listModels(): Promise<string[]> {
     try {
       const response = await fetch("https://openrouter.ai/api/v1/models", {
         headers: {
-          "Authorization": this.apiKey ? `Bearer ${this.apiKey}` : "",
+          Authorization: this.apiKey ? `Bearer ${this.apiKey}` : "",
           "Content-Type": "application/json",
         },
       });
@@ -69,7 +100,7 @@ class OpenRouter extends OpenAI {
   static async exchangeCodeForApiKey(
     code: string,
     codeVerifier?: string,
-    codeChallengeMethod?: string
+    codeChallengeMethod?: string,
   ): Promise<{ key: string; userId?: string }> {
     const response = await fetch("https://openrouter.ai/api/v1/auth/keys", {
       method: "POST",
@@ -84,7 +115,9 @@ class OpenRouter extends OpenAI {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to exchange code for API key: ${response.statusText}`);
+      throw new Error(
+        `Failed to exchange code for API key: ${response.statusText}`,
+      );
     }
 
     return await response.json();
@@ -97,7 +130,7 @@ class OpenRouter extends OpenAI {
     clientId: string,
     redirectUri: string,
     codeChallenge?: string,
-    codeChallengeMethod: string = "S256"
+    codeChallengeMethod: string = "S256",
   ): string {
     const params = new URLSearchParams({
       response_type: "code",

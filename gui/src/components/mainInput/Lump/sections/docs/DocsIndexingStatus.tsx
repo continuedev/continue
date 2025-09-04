@@ -215,7 +215,6 @@ function DocsIndexingStatus({
 
       {indexedPages && (
         <ToolTip
-          id={`docs-tooltip-${startUrlSlug}`}
           isOpen={showTooltip}
           setIsOpen={setShowTooltip}
           clickable
