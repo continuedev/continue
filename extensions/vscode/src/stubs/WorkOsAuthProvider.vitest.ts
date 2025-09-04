@@ -1,5 +1,4 @@
 // @ts-nocheck
-import fetch from "node-fetch";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { EventEmitter } from "vscode";
 
@@ -25,11 +24,11 @@ vi.mock("vscode", () => ({
   },
 }));
 
-// Properly mock node-fetch
-vi.mock("node-fetch", () => {
+// Mock @continuedev/fetch used by WorkOsAuthProvider
+vi.mock("@continuedev/fetch", () => {
   return {
     __esModule: true,
-    default: vi.fn(),
+    fetchwithRequestOptions: vi.fn(),
   };
 });
 
@@ -114,7 +113,9 @@ it("should refresh tokens on initialization when sessions exist", async () => {
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Setup successful token refresh
@@ -161,6 +162,7 @@ it("should refresh tokens on initialization when sessions exist", async () => {
       method: "POST",
       body: expect.stringContaining("refresh-token"),
     }),
+    expect.anything(),
   );
 
   // Restore setInterval
@@ -187,7 +189,9 @@ it("should not remove sessions during transient network errors", async () => {
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // First refresh attempt fails with network error
@@ -259,6 +263,7 @@ it("should not remove sessions during transient network errors", async () => {
       }),
       body: expect.stringContaining("refresh-token"),
     }),
+    expect.anything(),
   );
 
   // Clean up
@@ -282,7 +287,9 @@ it("should refresh tokens at regular intervals rather than based on expiration",
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Setup successful token refresh responses for multiple calls
@@ -364,6 +371,7 @@ it("should refresh tokens at regular intervals rather than based on expiration",
       }),
       body: expect.stringContaining("refresh-token"),
     }),
+    expect.anything(),
   );
 
   // Clear mock calls for the second interval test
@@ -388,6 +396,7 @@ it("should refresh tokens at regular intervals rather than based on expiration",
       }),
       body: expect.stringContaining("refresh-token"),
     }),
+    expect.anything(),
   );
 
   // Restore the original setInterval
@@ -414,7 +423,9 @@ it("should remove session if token refresh fails with authentication error", asy
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Setup refresh to fail with 401 unauthorized
@@ -463,6 +474,7 @@ it("should remove session if token refresh fails with authentication error", asy
       method: "POST",
       body: expect.stringContaining("invalid-refresh-token"),
     }),
+    expect.anything(),
   );
 
   // Verify sessions were removed due to auth error
@@ -495,7 +507,9 @@ it("should remove session if token refresh returns Unauthorized error message", 
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Setup refresh to return an error containing "Unauthorized" in the message
@@ -545,6 +559,7 @@ it("should remove session if token refresh returns Unauthorized error message", 
       method: "POST",
       body: expect.stringContaining("invalid-refresh-token"),
     }),
+    expect.anything(),
   );
 
   // Verify sessions were removed due to Unauthorized error message
@@ -582,7 +597,9 @@ it("should preserve valid tokens during network errors by retrying", async () =>
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Create mock objects
@@ -660,7 +677,9 @@ it("should remove expired tokens when refresh fails with a 401 error", async () 
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Create mock objects
@@ -718,7 +737,9 @@ it("should implement exponential backoff for failed refresh attempts", async () 
   };
 
   // Setup fetch mock
-  const fetchMock = fetch as any;
+  const { fetchwithRequestOptions: fetchMock } = (await import(
+    "@continuedev/fetch"
+  )) as any;
   fetchMock.mockClear();
 
   // Setup repeated network errors followed by success
