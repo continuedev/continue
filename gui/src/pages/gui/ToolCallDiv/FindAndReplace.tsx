@@ -251,6 +251,7 @@ export function FindAndReplaceDisplay({
                 lines={part.value.split("\n")}
                 className="border-l-4 border-red-900 bg-red-900/30"
                 diffCharClass="text-red-600"
+                diffChar="-"
               />
             );
           } else if (part.added) {
@@ -260,6 +261,7 @@ export function FindAndReplaceDisplay({
                 lines={part.value.split("\n")}
                 diffCharClass="text-green-600"
                 className="border-l-4 border-green-600 bg-green-600/20"
+                diffChar="+"
               />
             );
           } else {
