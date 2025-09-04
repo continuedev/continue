@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.listeners
 
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditService
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditStatusService
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
@@ -113,17 +114,15 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
     // CaretListener implementation
     override fun caretPositionChanged(event: CaretEvent) {
         if (isHandlingEvent.get() || event.editor.isDisposed || !isNextEditEnabled()) return
-
-        val offset = event.caret?.offset
-        if (offset != null) {
-            coroutineScope.launch {
-                handleCursorMovement(event.editor, offset)
+        coroutineScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.EDT) {
+                handleCursorMovement(event.editor, event.caret?.offset ?: return@withContext)
             }
         }
     }
 
     private suspend fun handleCursorMovement(editor: Editor, offset: Int) {
-        if (isHandlingEvent.get()) return
+        if (isHandlingEvent.get() || editor.isDisposed) return
 
         isHandlingEvent.set(true)
         try {
@@ -161,7 +160,7 @@ class ActiveHandlerManager(private val project: Project) : SelectionListener, Ca
         }
     }
 
-    private suspend fun handleDeliberateCursorMovement() {
+    private fun handleDeliberateCursorMovement() {
         try {
             // Clear any active handler since the user moved the cursor deliberately
             clearActiveHandler()

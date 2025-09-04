@@ -34,17 +34,7 @@ import java.awt.geom.RoundRectangle2D
 import javax.swing.*
 import javax.swing.border.AbstractBorder
 
-@Service(Service.Level.PROJECT)
-class NextEditWindowManager(private val project: Project) {
-    private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-    private var currentPopup: JBPopup? = null
-    private var deletionHighlighters: List<RangeHighlighter> = emptyList()
-    private var isAccepted = false
-    private var currentCompletionId: String? = null
-
-    // Handler management
-    private var windowHandler: NextEditWindowHandler? = null
+interface NextEditWindowManagerService {
 
     fun showNextEditWindow(
         editor: Editor,
@@ -55,6 +45,32 @@ class NextEditWindowManager(private val project: Project) {
         newCode: String,
         diffLines: List<DiffLine>,
         completionId: String? = null
+    )
+    fun hideAllNextEditWindows()
+    fun hasAccepted(): Boolean
+}
+
+@Service(Service.Level.PROJECT)
+class NextEditWindowManager(private val project: Project) : NextEditWindowManagerService {
+    private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    private var currentPopup: JBPopup? = null
+    private var deletionHighlighters: List<RangeHighlighter> = emptyList()
+    private var isAccepted = false
+    private var currentCompletionId: String? = null
+
+    // Handler management
+    private var windowHandler: NextEditWindowHandler? = null
+
+    override fun showNextEditWindow(
+        editor: Editor,
+        currCursorPos: Position,
+        editableRegionStartLine: Int,
+        editableRegionEndLine: Int,
+        oldCode: String,
+        newCode: String,
+        diffLines: List<DiffLine>,
+        completionId: String?
     ) {
         // Clear existing decorations first
         hideAllNextEditWindows()
@@ -817,7 +833,7 @@ class NextEditWindowManager(private val project: Project) {
         }
     }
 
-    fun hideAllNextEditWindows() {
+    override fun hideAllNextEditWindows() {
         currentPopup?.let { popup ->
             // Clear keyboard shortcuts before closing popup
             val content = popup.content
@@ -855,7 +871,7 @@ class NextEditWindowManager(private val project: Project) {
         windowHandler = null
     }
 
-    fun hasAccepted(): Boolean = isAccepted
+    override fun hasAccepted(): Boolean = isAccepted
 }
 
 enum class PopupAction {

@@ -31,6 +31,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
+import com.intellij.util.io.awaitExit
 import kotlinx.coroutines.*
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalView
@@ -89,10 +90,6 @@ class IntelliJIDE(
             extensionVersion = extensionVersion,
             isPrerelease = false // TODO: Implement prerelease detection for JetBrains
         )
-    }
-
-    suspend fun enableHubContinueDev(): Boolean {
-        return true
     }
 
     override suspend fun getIdeSettings(): IdeSettings {
@@ -199,7 +196,9 @@ class IntelliJIDE(
     }
 
     override suspend fun openFile(path: String) =
-        fileUtils.openFile(path)
+        withContext(Dispatchers.EDT) {
+            fileUtils.openFile(path)
+        }
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
@@ -423,7 +422,7 @@ class IntelliJIDE(
         val stderr = process.errorStream.bufferedReader().readText()
 
         withContext(Dispatchers.IO) {
-            process.waitFor()
+            process.awaitExit()
         }
 
         return listOf(stdout, stderr)
@@ -484,7 +483,7 @@ class IntelliJIDE(
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 val output = reader.readLine()
-                process.waitFor()
+                process.awaitExit()
                 output ?: "NONE"
             } catch (e: Exception) {
                 "NONE"
@@ -520,7 +519,7 @@ class IntelliJIDE(
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 output = reader.readLine()
-                process.waitFor()
+                process.awaitExit()
             } catch (e: Exception) {
                 output = null
             }
@@ -578,7 +577,7 @@ class IntelliJIDE(
 
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val output = reader.readLine()
-            process.waitFor()
+            process.awaitExit()
             output
         }
     }
