@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
 
 import { ToolCallPreview } from "../../tools/types.js";
+import { defaultBoxStyles } from "../styles.js";
 
 import { ToolPreview } from "./ToolPreview.js";
 
@@ -80,8 +81,8 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       return;
     }
 
-    // Escape to reject with stop stream
-    if (key.escape) {
+    // Escape or Ctrl+C to reject with stop stream
+    if (key.escape || (key.ctrl && input === "c")) {
       onResponse(requestId, false, false, true);
       return;
     }
@@ -103,12 +104,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   });
 
   return (
-    <Box
-      flexDirection="column"
-      padding={1}
-      borderStyle="round"
-      borderColor="magenta"
-    >
+    <Box {...defaultBoxStyles("magenta")}>
       <Text color="magenta" bold>
         <ToolCallTitle toolName={toolName} args={toolArgs} />
       </Text>
