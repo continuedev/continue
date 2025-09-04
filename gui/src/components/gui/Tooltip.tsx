@@ -1,6 +1,6 @@
-import { cloneElement, CSSProperties, ReactElement, useId } from "react";
+import { CSSProperties, ReactElement, cloneElement, useId, isValidElement } from "react";
 import ReactDOM from "react-dom";
-import { ITooltip, Tooltip } from "react-tooltip";
+import { Tooltip } from "react-tooltip";
 import { vscBackground, vscForeground } from "..";
 import { varWithFallback } from "../../styles/theme";
 import { fontSize } from "../../util";
@@ -17,44 +17,58 @@ const TooltipStyles: CSSProperties = {
   textAlign: "center",
 };
 
-export function ToolTip({
-  children,
-  content,
-  ...props
-}: Omit<ITooltip, "id" | "children" | "content"> & {
-  content: ITooltip["children"];
-  children: ReactElement;
-}) {
-  const tooltipId = useId();
+// Backward-compatible ToolTip wrapper that supports both legacy (id + content children)
+// and new API (content prop + child trigger element)
+export function ToolTip(props: any) {
+  const { children, content, id, ...rest } = props ?? {};
 
   const combinedStyles = {
     ...TooltipStyles,
-    ...props.style,
+    ...rest.style,
   };
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
-  const childrenWithTooltipId = cloneElement(children, {
-    "data-tooltip-id": tooltipId,
-  });
+  // New API: content + trigger element passed as children
+  if (content && isValidElement(children)) {
+    const tooltipId = useId();
+    const childrenWithTooltipId = cloneElement(children as ReactElement, {
+      "data-tooltip-id": tooltipId,
+    });
 
+    return (
+      <>
+        {childrenWithTooltipId}
+        {tooltipPortalDiv &&
+          ReactDOM.createPortal(
+            <Tooltip
+              {...rest}
+              id={tooltipId}
+              noArrow
+              style={combinedStyles}
+              opacity={1}
+              delayShow={200}
+            >
+              {content}
+            </Tooltip>,
+            tooltipPortalDiv,
+          )}
+      </>
+    );
+  }
+
+  // Legacy API: render tooltip with provided id and children as content
   return (
-    <>
-      {childrenWithTooltipId}
-      {tooltipPortalDiv &&
-        ReactDOM.createPortal(
-          <Tooltip
-            {...props}
-            id={tooltipId}
-            noArrow
-            style={combinedStyles}
-            opacity={1}
-            delayShow={200}
-          >
-            {content}
-          </Tooltip>,
-          tooltipPortalDiv,
-        )}
-    </>
+    tooltipPortalDiv &&
+    ReactDOM.createPortal(
+      <Tooltip
+        {...props}
+        noArrow
+        style={combinedStyles}
+        opacity={1}
+        delayShow={200}
+      />,
+      tooltipPortalDiv,
+    )
   );
 }
