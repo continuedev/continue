@@ -39,7 +39,10 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
-type UsageInfo = Pick<CompletionUsage, 'total_tokens' | 'completion_tokens' | 'prompt_tokens'>;
+type UsageInfo = Pick<
+  CompletionUsage,
+  "total_tokens" | "completion_tokens" | "prompt_tokens"
+>;
 
 export class GeminiApi implements BaseLlmApi {
   apiBase: string = "https://generativelanguage.googleapis.com/v1beta/";

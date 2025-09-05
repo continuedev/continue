@@ -30,7 +30,10 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
-type UsageInfo = Pick<CompletionUsage, 'total_tokens' | 'completion_tokens' | 'prompt_tokens'>;
+type UsageInfo = Pick<
+  CompletionUsage,
+  "total_tokens" | "completion_tokens" | "prompt_tokens"
+>;
 
 // Relace only supports apply through a /v1/apply endpoint
 export class RelaceApi implements BaseLlmApi {

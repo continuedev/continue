@@ -39,7 +39,7 @@ export class OpenAIApi implements BaseLlmApi {
     if (body.stream) {
       (body as any).stream_options = { include_usage: true };
     }
-    
+
     // o-series models - only apply for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     if (isOfficialOpenAIAPI) {
