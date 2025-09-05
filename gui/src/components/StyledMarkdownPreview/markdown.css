@@ -1038,3 +1038,6 @@ body[data-color-mode*="light"] {
 .token.entity {
   cursor: help;
 }
+.mermaid foreignObject {
+  width: 100%
+}
