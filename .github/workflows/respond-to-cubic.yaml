@@ -212,6 +212,9 @@ jobs:
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
+          # Debug: Echo the branch we're starting the session on
+          echo "Starting remote session on branch: ${{ github.event.pull_request.head.ref }}"
+
           # Create a temporary file for the prompt to handle special characters and newlines properly
           cat > /tmp/prompt.txt << 'PROMPT_EOF'
           Please help with the following code review discussion from PR #${{ github.event.pull_request.number }}:
