@@ -4,7 +4,9 @@ import node_machine_id from "node-machine-id";
 import type { PostHog as PostHogType } from "posthog-node";
 
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
+import { isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
+import { getVersion } from "../version.js";
 
 export class PosthogService {
   private os: string | undefined;
@@ -13,6 +15,14 @@ export class PosthogService {
   constructor() {
     this.os = os.platform();
     this.uniqueId = this.getEventUserId();
+  }
+
+  /**
+   * Check if running in headless mode (-p flag)
+   */
+  private isHeadlessMode(): boolean {
+    const args = process.argv.slice(2);
+    return args.includes("-p") || args.includes("--print");
   }
 
   get isEnabled() {
@@ -62,9 +72,11 @@ export class PosthogService {
       const augmentedProperties = {
         ...properties,
         os: this.os,
-        extensionVersion: "", // TODO cn version
+        extensionVersion: getVersion(),
         ideName: "cn",
         ideType: "cli",
+        isHeadless: this.isHeadlessMode(),
+        isGitHubCI: isGitHubActions(),
       };
       const payload = {
         distinctId: this.uniqueId,
