@@ -7,7 +7,7 @@ import {
   WebDriver,
   WebElement,
   WebView,
-  until
+  until,
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";

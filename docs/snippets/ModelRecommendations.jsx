@@ -117,11 +117,11 @@ export const ModelRecommendations = ({ role = "all" }) => {
       notes: "Open models are beginning to emerge for this model role",
     },
     next_edit: {
-      open: ["N/A"],
+      open: ["[Instinct](https://hub.continue.dev/continuedev/instinct)"],
       closed: [
         "[Mercury Coder](https://hub.continue.dev/inceptionlabs/mercury-coder)",
       ],
-      notes: "Closed models are significantly better than open models",
+      notes: "Closed models are better than open models",
     },
   };
 

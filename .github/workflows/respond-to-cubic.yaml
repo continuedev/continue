@@ -27,6 +27,18 @@ jobs:
             echo "contains_mention=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Add eyes reaction to comment
+        if: steps.check-mention.outputs.contains_mention == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: ${{ github.event.comment.id }},
+              content: 'eyes'
+            });
+
       - name: Checkout PR branch
         if: steps.check-mention.outputs.contains_mention == 'true'
         uses: actions/checkout@v5
@@ -37,7 +49,7 @@ jobs:
       - name: Get PR information
         if: steps.check-mention.outputs.contains_mention == 'true'
         id: pr-info
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -95,7 +107,7 @@ jobs:
 
       - name: Comment with session URL
         if: steps.check-mention.outputs.contains_mention == 'true' && steps.remote-session.outputs.session_url
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
@@ -129,6 +141,18 @@ jobs:
           else
             echo "contains_mention=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Add eyes reaction to comment
+        if: steps.check-mention.outputs.contains_mention == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.reactions.createForPullRequestReviewComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: ${{ github.event.comment.id }},
+              content: 'eyes'
+            });
 
       - name: Checkout PR branch
         if: steps.check-mention.outputs.contains_mention == 'true'
@@ -187,7 +211,7 @@ jobs:
 
       - name: Comment with session URL
         if: steps.check-mention.outputs.contains_mention == 'true' && steps.remote-session.outputs.session_url
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const commentBody = `I've started [a remote session](${{ steps.remote-session.outputs.session_url }}) to help with your request:
