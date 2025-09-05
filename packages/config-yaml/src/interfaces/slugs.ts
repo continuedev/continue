@@ -20,7 +20,7 @@ interface FullSlugIdentifier extends BasePackageIdentifier {
 
 interface FileIdentifier extends BasePackageIdentifier {
   uriType: "file";
-  filePath: string;
+  fileUri: string;
 }
 
 export type PackageIdentifier = FullSlugIdentifier | FileIdentifier;
@@ -28,7 +28,7 @@ export type PackageIdentifier = FullSlugIdentifier | FileIdentifier;
 export function packageIdentifierToDisplayName(id: PackageIdentifier): string {
   switch (id.uriType) {
     case "file":
-      return id.filePath;
+      return id.fileUri;
     case "slug":
       return id.fullSlug.packageSlug;
   }
@@ -40,7 +40,7 @@ export function encodePackageIdentifier(identifier: PackageIdentifier): string {
       return encodeFullSlug(identifier.fullSlug);
     case "file":
       // For file paths, just return the path directly without a prefix
-      return identifier.filePath;
+      return identifier.fileUri;
     default:
       throw new Error(`Unknown URI type: ${(identifier as any).uriType}`);
   }
@@ -51,14 +51,14 @@ export function decodePackageIdentifier(identifier: string): PackageIdentifier {
   if (identifier.startsWith(".") || identifier.startsWith("/")) {
     return {
       uriType: "file",
-      filePath: identifier,
+      fileUri: identifier,
     };
   }
   // Keep support for explicit file:// protocol
   else if (identifier.startsWith("file://")) {
     return {
       uriType: "file",
-      filePath: identifier.substring(7),
+      fileUri: identifier.substring(7),
     };
   }
   // Otherwise, it's a slug

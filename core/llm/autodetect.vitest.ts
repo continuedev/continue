@@ -220,7 +220,7 @@ describe("modelSupportsNextEdit", () => {
       expect(
         modelSupportsNextEdit(
           { nextEdit: false },
-          "mercury-coder-nextedit",
+          "mercury-coder",
           "Mercury Coder",
         ),
       ).toBe(false);
@@ -231,7 +231,7 @@ describe("modelSupportsNextEdit", () => {
       expect(
         modelSupportsNextEdit(
           { nextEdit: false },
-          "mercury-coder-nextedit",
+          "mercury-coder",
           "Mercury Coder",
         ),
       ).toBe(false);
@@ -239,10 +239,10 @@ describe("modelSupportsNextEdit", () => {
   });
 
   describe("when capabilities.nextEdit is undefined", () => {
-    it("should return true for mercury-coder-nextedit model (case insensitive)", () => {
-      expect(
-        modelSupportsNextEdit(undefined, "Mercury-Coder-Nextedit", undefined),
-      ).toBe(true);
+    it("should return true for mercury-coder model (case insensitive)", () => {
+      expect(modelSupportsNextEdit(undefined, "Mercury-Coder", undefined)).toBe(
+        true,
+      );
     });
 
     it("should return true for instinct", () => {
@@ -255,7 +255,7 @@ describe("modelSupportsNextEdit", () => {
       expect(
         modelSupportsNextEdit(
           undefined,
-          "provider/mercury-coder-nextedit-v2",
+          "provider/mercury-coder-v2",
           undefined,
         ),
       ).toBe(true);
@@ -266,7 +266,7 @@ describe("modelSupportsNextEdit", () => {
         modelSupportsNextEdit(
           undefined,
           "some-model",
-          "This is mercury-coder-nextedit model",
+          "This is mercury-coder model",
         ),
       ).toBe(true);
     });
@@ -312,14 +312,14 @@ describe("modelSupportsNextEdit", () => {
     });
 
     it("should handle undefined title gracefully", () => {
-      expect(
-        modelSupportsNextEdit(undefined, "mercury-coder-nextedit", undefined),
-      ).toBe(true);
+      expect(modelSupportsNextEdit(undefined, "mercury-coder", undefined)).toBe(
+        true,
+      );
     });
 
     it("should handle case sensitivity correctly", () => {
       expect(
-        modelSupportsNextEdit(undefined, "MERCURY-CODER-NEXTEDIT", "instinct"),
+        modelSupportsNextEdit(undefined, "MERCURY-CODER", "instinct"),
       ).toBe(true);
     });
 

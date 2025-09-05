@@ -1,0 +1,50 @@
+---
+title: Mistral
+slug: ../mistral
+---
+
+<Tip>
+  **Discover Mistral models [here](https://hub.continue.dev/mistral)**
+</Tip>
+
+<Info>
+  Get an API key from the [Mistral Dashboard](https://console.mistral.ai)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: <MODEL_NAME>
+      provider: mistral
+      model: <MODEL_ID>
+      apiKey: <YOUR_MISTRAL_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "mistral",
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_MISTRAL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/mistral/codestral?view=config)**
+</Info>
+
+<Note>
+  The API key for `codestral.mistral.ai` is different from `api.mistral.ai`. 
+  If you are using a Codestral API key, you should set the `apiBase` to `https://codestral.mistral.ai/v1`.
+  Otherwise, we will default to using `https://api.mistral.ai/v1`.
+</Note>

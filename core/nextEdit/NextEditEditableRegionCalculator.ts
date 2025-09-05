@@ -13,6 +13,10 @@ export enum EditableRegionStrategy {
   Static = "static",
 }
 
+/**
+ * This was an attempt to find next edit locations deterministically.
+ * I was intending to use this in tandem with the prefetching logic, but we are not using it anymore.
+ */
 export async function getNextEditableRegion(
   strategy: EditableRegionStrategy,
   ctx: any,

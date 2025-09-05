@@ -461,6 +461,7 @@ describe("streamResponseThunk", () => {
         prompt: "Hello",
         completion: "Hi there!",
         modelProvider: "anthropic",
+        modelName: "Claude 3.5 Sonnet",
         modelTitle: "Claude 3.5 Sonnet",
         sessionId: "session-123",
       },
@@ -566,13 +567,21 @@ describe("streamResponseThunk", () => {
         returnToMode: "chat",
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
       },
       tabs: {
         tabsItems: [],
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
       },
     });
   });
@@ -662,6 +671,12 @@ describe("streamResponseThunk", () => {
               contextPercentage: 0.9,
             },
           });
+        } else if (endpoint === "tools/evaluatePolicy") {
+          // Mock dynamic policy evaluation - return auto-approve for this test
+          return Promise.resolve({
+            status: "success",
+            content: { policy: "allowedWithoutPermission" },
+          });
         } else if (endpoint === "tools/call") {
           // Mock server-side tool call response
           return Promise.resolve({
@@ -750,7 +765,7 @@ describe("streamResponseThunk", () => {
     // Verify key actions are dispatched (tool calls trigger a complex cascade, so we verify key actions exist)
     const dispatchedActions = (mockStoreWithToolSettings as any).getActions();
 
-    // Verify exact action sequence by comparing action types
+    // Verify exact action sequence
     const actionTypes = dispatchedActions.map((action: any) => action.type);
     expect(actionTypes).toEqual([
       "chat/streamResponse/pending",
@@ -1086,13 +1101,21 @@ describe("streamResponseThunk", () => {
         returnToMode: "chat",
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
       },
       tabs: {
         tabsItems: [],
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
       },
     });
   });
@@ -1631,13 +1654,21 @@ describe("streamResponseThunk", () => {
         returnToMode: "chat",
       },
       indexing: {
-        indexingState: "disabled",
+        indexing: {
+          statuses: {},
+          hiddenChatPeekTypes: {
+            docs: false,
+          },
+        },
       },
       tabs: {
         tabsItems: [],
       },
       profiles: {
-        profiles: [],
+        organizations: [],
+        selectedProfileId: null,
+        selectedOrganizationId: null,
+        preferencesByProfileId: {},
       },
     });
   });

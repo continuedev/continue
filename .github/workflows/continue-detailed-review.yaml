@@ -1,0 +1,25 @@
+name: Continue Detailed Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  detailed-code-review:
+    name: Continue Detailed Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run Detailed PR Review
+        uses: continuedev/continue/actions/detailed-review@80c679747b7c7b2624d15db31ff5bdadc9681c65
+        with:
+          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
+          continue-org: continuedev
+          continue-config: continuedev/review-bot

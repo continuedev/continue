@@ -1,0 +1,385 @@
+---
+title: "FAQs"
+description: "Frequently asked questions about Continue"
+---
+
+## Networking Issues
+
+### Configure Certificates
+
+If you're seeing a `fetch failed` error and your network requires custom certificates, you will need to configure them in your config file. In each of the objects in the `"models"` array, add `requestOptions.caBundlePath` like this:
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml
+    models:
+      - name: My Model
+        ...
+        requestOptions:
+          caBundlePath: /path/to/cert.pem
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json
+    {
+      "models": [
+        {
+          "name": "My Model",
+          "...": "...",
+          "requestOptions": {
+            "caBundlePath": "/path/to/cert.pem"
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
+
+**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
+
+### VS Code Proxy Settings
+
+If you are using VS Code and require requests to be made through a proxy, you are likely already set up through VS Code's [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support). To double-check that this is enabled, use `cmd/ctrl` + `,` to open settings and search for "Proxy Support". Unless it is set to "off", then VS Code is responsible for making the request to the proxy.
+
+### code-server
+
+Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
+
+## Changes to assistants not showing in VS Code
+
+If you've made changes to assistants (adding, modifying, or removing them) but the changes aren't appearing in the Continue extension in VS Code, try reloading the VS Code window:
+
+1. Open the command palette (`cmd/ctrl` + `shift` + `P`)
+2. Type "Reload Window"
+3. Select the reload option
+
+This will restart VS Code and reload all extensions, which should make your assistant changes visible.
+
+## I installed Continue, but don't see the sidebar window
+
+By default the Continue window is on the left side of VS Code, but it can be dragged to right side as well, which we recommend in our tutorial. In the situation where you have previously installed Continue and moved it to the right side, it may still be there. You can reveal Continue either by using cmd/ctrl+L or by clicking the button in the top right of VS Code to open the right sidebar.
+
+## I'm getting a 404 error from OpenAI
+
+If you have entered a valid API key and model, but are still getting a 404 error from OpenAI, this may be because you need to add credits to your billing account. You can do so from the [billing console](https://platform.openai.com/settings/organization/billing/overview). If you just want to check that this is in fact the cause of the error, you can try adding $1 to your account and checking whether the error persists.
+
+## I'm getting a 404 error from OpenRouter
+
+If you have entered a valid API key and model, but are still getting a 404 error from OpenRouter, this may be because models that do not support function calling will return an error to Continue when a request is sent. Example error: `HTTP 404 Not Found from https://openrouter.ai/api/v1/chat/completions`
+
+## Indexing issues
+
+If you are having persistent errors with indexing, our recommendation is to rebuild your index from scratch. Note that for large codebases this may take some time.
+
+This can be accomplished using the following command: `Continue: Rebuild codebase index`.
+
+## Agent mode is unavailable or tools aren't working
+
+If Agent mode is grayed out or tools aren't functioning properly, this is likely due to model capability configuration issues.
+
+<Info>
+  Continue uses system message tools as a fallback for models without native tool support, so most models should work with Agent mode automatically.
+</Info>
+
+### Check if your model has tool support
+
+1. Not all models support native tool/function calling, but Continue will automatically use system message tools as a fallback
+2. Try adding `capabilities: ["tool_use"]` to your model config to force tool support
+3. Verify your provider supports function calling or that system message tools are working correctly
+
+### Tools Not Working
+
+If tools aren't being called:
+
+1. Ensure `tool_use` is in your capabilities
+2. Check that your API endpoint actually supports function calling
+3. Some providers may use different function calling formats
+
+### Images Not Uploading
+
+If you can't upload images:
+
+1. Add `image_input` to capabilities
+2. Ensure your model actually supports vision (e.g., gpt-4-vision, claude-3)
+3. Check that your provider passes through image data
+
+### Add capabilities
+
+If Continue's autodetection isn't working correctly, you can manually add capabilities in your `config.yaml`:
+
+```yaml
+models:
+  - name: my-model
+    provider: openai
+    model: gpt-4
+    capabilities:
+      - tool_use
+      - image_input
+```
+
+### Verify with provider
+
+Some proxy services (like OpenRouter) or custom deployments may not preserve tool calling capabilities. Check your provider's documentation.
+
+### Verifying Current Capabilities
+
+To see what capabilities Continue detected for your model:
+
+1. Check the mode selector tooltips - they indicate if tools are available
+2. Try uploading an image - if disabled, the model lacks `image_input`
+3. Check if Agent mode is available - requires `tool_use`
+
+See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for complete configuration details.
+
+## Android Studio - "Nothing to show" in Chat
+
+This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178) for details.
+
+## I received a "Codebase indexing disabled - Your Linux system lacks required CPU features (AVX2, FMA)" notification
+
+We use LanceDB as our vector database for codebase search features. On x64 Linux systems, LanceDB requires specific CPU features (FMA and AVX2) which may not be available on older processors.
+
+Most Continue features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
+
+For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
+
+## Ollama Issues
+
+For a comprehensive guide on setting up and troubleshooting Ollama, see the [Ollama Guide](/guides/ollama-guide).
+
+### Unable to connect to local Ollama instance
+
+If you're getting "Unable to connect to local Ollama instance" errors:
+
+1. **Verify Ollama is running**: Check http://localhost:11434 in your browser - you should see "Ollama is running"
+2. **Start Ollama properly**: Use `ollama serve` (not just `ollama run model-name`)
+3. **Check your config**: Ensure your `config.yaml` has the correct setup:
+
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    model: llama3:latest
+```
+
+### Connection failed to remote Ollama (EHOSTUNREACH/ECONNREFUSED)
+
+When connecting to Ollama on another machine:
+
+1. **Configure Ollama to listen on all interfaces**:
+   - Set environment variable: `OLLAMA_HOST=0.0.0.0:11434`
+   - For systemd: Edit `/etc/systemd/system/ollama.service` and add under `[Service]`:
+     ```
+     Environment="OLLAMA_HOST=0.0.0.0:11434"
+     Environment="OLLAMA_ORIGINS=*"
+     ```
+   - Restart Ollama: `sudo systemctl restart ollama`
+
+2. **Update your Continue config**:
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://192.168.1.136:11434  # Use your server's IP
+    model: llama3:latest
+```
+
+3. **Check firewall settings**: Ensure port 11434 is open on the server
+
+### Ollama not working in WSL
+
+For WSL users having connection issues:
+
+#### Windows 11 22H2+ (Recommended)
+Create or edit `%UserProfile%\.wslconfig`:
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+Then restart WSL: `wsl --shutdown`
+
+#### Older Windows/WSL versions
+In PowerShell (as Administrator):
+```powershell
+# Add firewall rules
+New-NetFireWallRule -DisplayName 'WSL Ollama' -Direction Inbound -LocalPort 11434 -Action Allow -Protocol TCP
+New-NetFireWallRule -DisplayName 'WSL Ollama' -Direction Outbound -LocalPort 11434 -Action Allow -Protocol TCP
+
+# Get WSL IP (run 'ip addr' in WSL to find eth0 IP)
+# Then add port proxy (replace <WSL_IP> with your actual IP)
+netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 connectport=11434 connectaddress=<WSL_IP>
+```
+
+### Docker container can't connect to host Ollama
+
+When running Continue or other tools in Docker that need to connect to Ollama on the host:
+
+**Windows/Mac**: Use `host.docker.internal`:
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://host.docker.internal:11434
+    model: llama3:latest
+```
+
+**Linux**: Use the Docker bridge IP (usually `172.17.0.1`):
+```yaml
+models:
+  - name: llama3
+    provider: ollama
+    apiBase: http://172.17.0.1:11434
+    model: llama3:latest
+```
+
+**Docker run command**: Add host mapping:
+```bash
+docker run -d --add-host=host.docker.internal:host-gateway ...
+```
+
+### Parse errors with remote Ollama
+
+If you're getting parse errors with remote Ollama:
+
+1. **Verify the model is installed on the remote**:
+   ```bash
+   OLLAMA_HOST=192.168.1.136:11434 ollama list
+   ```
+   
+2. **Install missing models**:
+   ```bash
+   OLLAMA_HOST=192.168.1.136:11434 ollama pull llama3
+   ```
+
+3. **Check URL format**: Ensure you're using `http://` not `https://` for local network addresses
+
+## Local Assistant
+
+### Managing Local Secrets and Environment Variables
+
+For running Continue completely offline without internet access, see the [Running Continue Without Internet guide](/guides/running-continue-without-internet).
+
+Continue supports multiple methods for managing secrets locally, searched in this order:
+
+1. **Workspace `.env` files**: Place a `.env` file in your workspace root directory
+2. **Workspace Continue folder**: Place a `.env` file in `<workspace-root>/.continue/.env`  
+3. **Global `.env` file**: Place a `.env` file in `~/.continue/.env` for user-wide secrets
+4. **Process environment variables**: Use standard system environment variables
+
+#### Creating `.env` files
+
+Create a `.env` file in one of these locations:
+- **Per-workspace**: `<workspace-root>/.env` or `<workspace-root>/.continue/.env`
+- **Global**: `~/.continue/.env`
+
+Example `.env` file:
+```
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+CUSTOM_API_URL=https://api.example.com
+```
+
+#### Using secrets in config.yaml
+
+Reference your local secrets using the `secrets` namespace:
+```yaml
+models:
+  - provider: openai
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+```
+
+#### Hub-managed secrets
+
+For centralized team secret management, use `${{ inputs.SECRET_NAME }}` syntax in your config.yaml and manage them at [https://hub.continue.dev/settings/secrets](https://hub.continue.dev/settings/secrets):
+```yaml
+models:
+  - provider: openai
+    apiKey: ${{ inputs.OPENAI_API_KEY }}
+```
+
+#### Important notes
+
+- **Never commit `.env` files** to version control - add them to `.gitignore`
+- The `.env` file uses standard dotenv format (KEY=value, no quotes needed)
+- Secrets are loaded when Continue starts, so restart your IDE after changes
+- Local `.env` files take precedence over Hub secrets when both exist
+
+#### Troubleshooting secrets
+
+If your API keys aren't being recognized:
+1. Check the `.env` file is in the correct location
+2. Ensure there are no quotes around values in the `.env` file
+3. Restart your IDE after adding/changing secrets
+4. Verify the variable name matches exactly (case-sensitive)
+5. Check that your `.env` file has proper line endings (LF, not CRLF on Windows)
+
+### Using Model Addons Locally
+
+You can leverage model addons from the Continue Hub in your local assistant configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
+
+#### Requirements
+
+- You must be logged in to Continue
+- Internet connection is required (model addons are fetched from the hub)
+
+#### Usage
+
+In your local `config.yaml`, reference model addons using the format `provider/model-name`:
+
+```yaml
+name: My Local Assistant
+version: 0.0.1
+schema: v1
+models:
+  - uses: ollama/llama3.1-8b
+  - uses: anthropic/claude-3.5-sonnet
+  - uses: openai/gpt-4
+```
+
+#### With local configuration
+
+You can combine hub model addons with local models:
+
+```yaml
+name: My Local Assistant
+version: 0.0.1
+schema: v1
+models:
+  # Hub model addon
+  - uses: anthropic/claude-3.5-sonnet
+  
+  # Local model configuration
+  - name: Local Ollama
+    provider: ollama
+    model: codellama:latest
+    apiBase: http://localhost:11434
+```
+
+#### Override addon settings
+
+You can override specific settings from the model addon:
+
+```yaml
+models:
+  - uses: ollama/llama3.1-8b
+    override:
+      apiBase: http://192.168.1.100:11434  # Use remote Ollama server
+      roles:
+        - chat
+        - autocomplete
+```
+
+This feature allows you to maintain consistent model configurations across teams while still allowing local customization when needed.
+
+## How do I reset the state of the extension?
+
+Continue stores its data in the `~/.continue` directory (`%USERPROFILE%\.continue` on Windows).
+
+If you'd like to perform a clean reset of the extension, including removing all configuration files, indices, etc, you can remove this directory, uninstall, and then reinstall.
+
+## Still having trouble?
+
+You can also join our Discord community [here](https://discord.gg/vapESyrFmJ) for additional support and GitHub Discussions. Alternatively, you can create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), providing details of your problem, and we'll be able to help you out more quickly.

@@ -23,6 +23,7 @@ import "./katex.css";
 import "./markdown.css";
 import MermaidBlock from "./MermaidBlock";
 import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
+import { SecureImageComponent } from "./SecureImageComponent";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -123,6 +124,7 @@ const StyledMarkdown = styled.div<{
 `;
 
 interface StyledMarkdownPreviewProps {
+  showToolCallStatusIcon?: boolean;
   source?: string;
   className?: string;
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
@@ -259,22 +261,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypeReactOptions: {
       components: {
         a: ({ ...aProps }) => {
-          const tooltipId = uuidv4();
-
           return (
-            <>
-              <a
-                href={aProps.href}
-                target="_blank"
-                className="hover:underline"
-                data-tooltip-id={tooltipId}
-              >
+            <ToolTip place="top" className="m-0 p-0" content={aProps.href}>
+              <a href={aProps.href} target="_blank" className="hover:underline">
                 {aProps.children}
               </a>
-              <ToolTip id={tooltipId} place="top" className="m-0 p-0">
-                {aProps.href}
-              </ToolTip>
-            </>
+            </ToolTip>
           );
         },
         pre: ({ ...preProps }) => {
@@ -300,6 +292,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           return (
             <StepContainerPreToolbar
+              showToolCallStatusIcon={props.showToolCallStatusIcon}
               codeBlockContent={codeBlockContent}
               itemIndex={itemIndexRef.current}
               codeBlockIndex={codeBlockIndex}
@@ -344,6 +337,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           }
           return <code {...codeProps}>{codeProps.children}</code>;
         },
+        img: ({ ...imgProps }) => {
+          return (
+            <SecureImageComponent
+              src={imgProps.src}
+              alt={imgProps.alt}
+              title={imgProps.title}
+              className={imgProps.className}
+            />
+          );
+        },
       },
     },
   });
@@ -357,6 +360,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
+
   return (
     <StyledMarkdown
       fontSize={getFontSize()}

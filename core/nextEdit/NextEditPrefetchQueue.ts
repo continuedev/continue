@@ -2,11 +2,19 @@ import { RangeInFile } from "..";
 import { NextEditProvider } from "./NextEditProvider";
 import { NextEditOutcome } from "./types";
 
-interface ProcessedItem {
+export interface ProcessedItem {
   location: RangeInFile;
   outcome: NextEditOutcome; // Result from the model
 }
 
+/**
+ * Keeps a queue of the broken down diffs from a changed editable range, as determined in core/nextEdit/diff.ts
+ */
+/**
+ * This is where the chain is stored. Think of it as a regular queue, but being a singleton because we need one source of truth for the chain.
+ * I originally intended this to be a separate data structure to handle prefetching next edit outcomes from the model in the background.
+ * Due to subpar results, lack of satisfactory next edit location suggestion algorithms and token cost/latency issues, I scratched the idea.
+ */
 export class PrefetchQueue {
   private static instance: PrefetchQueue | null = null;
 

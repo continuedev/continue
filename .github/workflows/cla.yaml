@@ -27,5 +27,5 @@ jobs:
           path-to-document: "https://github.com/continuedev/continue/blob/main/CLA.md"
           branch: cla-signatures
           # Bots and CLAs signed outside of GitHub
-          allowlist: dependabot[bot],fbricon,panyamkeerthana,Jazzcort,owtaylor,halfline
+          allowlist: dependabot[bot],fbricon,panyamkeerthana,Jazzcort,owtaylor,halfline,agent@continue.dev
           signed-commit-message: "CLA signed in $pullRequestNo"

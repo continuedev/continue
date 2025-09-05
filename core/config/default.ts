@@ -15,17 +15,8 @@ export const defaultContextProvidersJetBrains: NonNullable<
 >[number][] = [{ provider: "diff" }];
 
 export const defaultConfig: ConfigYaml = {
-  name: "Local Assistant",
+  name: "Local Agent",
   version: "1.0.0",
   schema: "v1",
   models: [],
-  context: defaultContextProvidersVsCode,
-};
-
-export const defaultConfigJetBrains: ConfigYaml = {
-  name: "Local Assistant",
-  version: "1.0.0",
-  schema: "v1",
-  models: [],
-  context: defaultContextProvidersJetBrains,
 };

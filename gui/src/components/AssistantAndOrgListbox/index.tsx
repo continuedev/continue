@@ -1,4 +1,9 @@
-import { ArrowPathIcon, PlusIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowPathIcon,
+  ArrowRightEndOnRectangleIcon,
+  ArrowRightStartOnRectangleIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 import { AuthType, isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../context/Auth";
@@ -10,6 +15,7 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
+import { ToolTip } from "../gui/Tooltip";
 import {
   Listbox,
   ListboxOption,
@@ -47,10 +53,14 @@ export function AssistantAndOrgListbox() {
   }
 
   function onNewAssistant() {
-    void ideMessenger.request("controlPlane/openUrl", {
-      path: "/new",
-      orgSlug: currentOrg?.slug,
-    });
+    if (session) {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "/new",
+        orgSlug: currentOrg?.slug,
+      });
+    } else {
+      void ideMessenger.request("config/newAssistantFile", undefined);
+    }
     close();
   }
 
@@ -105,12 +115,29 @@ export function AssistantAndOrgListbox() {
       <div className="relative" ref={listboxRef}>
         <SelectedAssistantButton selectedProfile={selectedProfile} />
         <Transition>
-          <ListboxOptions className="-translate-x-1.5 pb-0">
-            <div className="border-border border-x-0 border-t-0 border-solid px-2 py-3">
-              <div className="flex flex-col gap-2 pb-1 pl-1">
-                {session && session?.AUTH_TYPE !== AuthType.OnPrem && (
-                  <span className="text-description-muted flex items-center pb-1">
-                    {session?.account.id}
+          <ListboxOptions
+            className="-translate-x-1.5 pb-0"
+            style={{ zIndex: 200 }}
+          >
+            <div className="border-border border-x-0 border-t-0 border-solid px-2 py-2">
+              <div className="flex flex-col gap-2 pl-1">
+                {session ? (
+                  <span className="text-description-muted flex items-center justify-between gap-x-1">
+                    {session?.AUTH_TYPE !== AuthType.OnPrem &&
+                      session?.account.id}
+                    <ToolTip content="Logout">
+                      <ArrowRightStartOnRectangleIcon
+                        className="h-3 w-3 cursor-pointer hover:brightness-125"
+                        onClick={onLogout}
+                      />
+                    </ToolTip>
+                  </span>
+                ) : (
+                  <span
+                    className="text-description-muted flex cursor-pointer items-center justify-end gap-x-1 hover:brightness-125"
+                    onClick={() => login(false)}
+                  >
+                    Log In <ArrowRightEndOnRectangleIcon className="h-3 w-3" />
                   </span>
                 )}
                 {shouldRenderOrgInfo && (
@@ -135,13 +162,13 @@ export function AssistantAndOrgListbox() {
                 value="new-assistant"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={session ? onNewAssistant : () => login(false)}
+                onClick={onNewAssistant}
               >
                 <span
                   className="text-description flex flex-row items-center"
                   style={{ fontSize: tinyFont }}
                 >
-                  <PlusIcon className="mr-1 h-3 w-3" /> New Assistant
+                  <PlusIcon className="mr-1 h-3 w-3" /> New Agent
                 </span>
               </ListboxOption>
 
@@ -149,9 +176,10 @@ export function AssistantAndOrgListbox() {
                 value="reload-assistant"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={() =>
-                  refreshProfiles("Manual refresh from assistant list")
-                }
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  refreshProfiles("Manual refresh from assistant list");
+                }}
               >
                 <span
                   className="text-description flex flex-row items-center"
@@ -163,32 +191,16 @@ export function AssistantAndOrgListbox() {
                       configLoading && "animate-spin-slow",
                     )}
                   />
-                  Reload assistants
+                  Reload agents
                 </span>
               </ListboxOption>
-
-              {session && (
-                <ListboxOption
-                  value="log-out"
-                  fontSizeModifier={-2}
-                  className="border-border border-b px-3 py-1.5"
-                  onClick={onLogout}
-                >
-                  <div
-                    className="text-description flex flex-row items-center"
-                    style={{ fontSize: tinyFont }}
-                  >
-                    Log out
-                  </div>
-                </ListboxOption>
-              )}
 
               <div
                 className="text-description border-border flex items-center justify-between gap-1.5 border-x-0 border-b-0 border-t border-solid px-2 py-2"
                 style={{ fontSize: tinyFont }}
               >
                 <span className="block" style={{ fontSize: tinyFont - 1 }}>
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle assistant
+                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle agent
                 </span>
               </div>
             </div>

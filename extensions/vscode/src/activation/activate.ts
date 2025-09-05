@@ -3,18 +3,23 @@ import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
-import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion, isUnsupportedPlatform } from "../util/util";
 
+import { GlobalContext } from "core/util/GlobalContext";
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   const platformCheck = isUnsupportedPlatform();
-  if (platformCheck.isUnsupported) {
-    // const platformTarget = `${getPlatform()}-${getArchitecture()}`;
+  const globalContext = new GlobalContext();
+  const hasShownUnsupportedPlatformWarning = globalContext.get(
+    "hasShownUnsupportedPlatformWarning",
+  );
+
+  if (platformCheck.isUnsupported && !hasShownUnsupportedPlatformWarning) {
     const platformTarget = "windows-arm64";
 
+    globalContext.update("hasShownUnsupportedPlatformWarning", true);
     void vscode.window.showInformationMessage(
       `Continue detected that you are using ${platformTarget}. Due to native dependencies, Continue may not be able to start`,
     );
@@ -35,7 +40,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   getContinueRcPath();
 
   // Register commands and providers
-  registerQuickFixProvider();
   setupInlineTips(context);
 
   const vscodeExtension = new VsCodeExtension(context);

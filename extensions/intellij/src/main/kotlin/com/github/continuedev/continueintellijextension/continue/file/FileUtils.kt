@@ -1,69 +1,110 @@
 package com.github.continuedev.continueintellijextension.`continue`.file
 
+import com.github.continuedev.continueintellijextension.FileStats
 import com.github.continuedev.continueintellijextension.FileType
-import com.github.continuedev.continueintellijextension.`continue`.UriUtils
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.vfs.LocalFileSystem
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.FileInputStream
-import java.nio.charset.Charset
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import kotlin.math.min
 
-class FileUtils {
-    // todo: use VFS (it's moved from IntellijIde)
 
-    fun fileExists(uri: String): Boolean {
-        val file = UriUtils.uriToFile(uri)
-        return file.exists()
-    }
+class FileUtils(
+    private val project: Project,
+) {
+    fun fileExists(fileUri: String): Boolean =
+        findFile(fileUri) != null
 
-    fun writeFile(uri: String, contents: String) {
-        val file = UriUtils.uriToFile(uri)
-        file.parentFile?.mkdirs()
-        file.writeText(contents)
-    }
-
-    fun listDir(dir: String): List<List<Any>> {
-        val files = UriUtils.uriToFile(dir).listFiles()?.map {
-            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
-        } ?: emptyList()
-
-        return files
-    }
-
-    fun readFile(uri: String): String {
-        return try {
-            val content = ApplicationManager.getApplication().runReadAction<String?> {
-                val virtualFile = LocalFileSystem.getInstance().findFileByPath(UriUtils.parseUri(uri).path)
-                if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
-                    return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
-                }
-                return@runReadAction null
-            }
-
-            if (content != null) {
-                content
-            } else {
-                val file = UriUtils.uriToFile(uri)
-                if (!file.exists() || file.isDirectory) return ""
-                FileInputStream(file).use { fis ->
-                    val sizeToRead = minOf(100000, file.length()).toInt()
-                    val buffer = ByteArray(sizeToRead)
-                    val bytesRead = fis.read(buffer, 0, sizeToRead)
-                    if (bytesRead <= 0) return@use ""
-                    val content = String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
-                    // Remove `\r` characters but preserve trailing newlines to prevent line count discrepancies
-                    val contentWithoutCR = content.replace("\r\n", "\n").replace("\r", "\n")
-                    contentWithoutCR
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ""
+    fun writeFile(fileUri: String, content: String) {
+        val path = VfsUtilCore.urlToPath(fileUri)
+        val pathDirectory = VfsUtil.getParentDir(path)
+            ?: return
+        val vfsDirectory = VfsUtil.createDirectories(pathDirectory)
+        val pathFilename = VfsUtil.extractFileName(path)
+            ?: return
+        runWriteAction {
+            val newFile = vfsDirectory.createChildData(this, pathFilename)
+            VfsUtil.saveText(newFile, content)
         }
-
     }
 
+    fun listDir(fileUri: String): List<List<Any>> {
+        val found = findFile(fileUri)
+            ?: return emptyList()
+        if (!found.isDirectory)
+            return emptyList()
+        return found.children.map { file ->
+            val fileType = if (file.isDirectory)
+                FileType.DIRECTORY.value
+            else
+                FileType.FILE.value
+            listOf(file.name, fileType)
+        }
+    }
 
+    fun readFile(fileUri: String, maxLength: Int = 100_000): String {
+        val found = findFile(fileUri)
+            ?: return ""
+        val text = runReadAction {
+            // note: document (if exists) is more up-to-date than VFS
+            readDocument(found, maxLength) ?: VfsUtil.loadText(found, maxLength)
+        }
+        return normalizeLineEndings(text)
+    }
+
+    fun openFile(fileUri: String) {
+        val found = findFile(fileUri)
+            ?: return
+        FileEditorManager.getInstance(project).openFile(found, true)
+    }
+
+    fun saveFile(fileUri: String) {
+        val found = findFile(fileUri)
+            ?: return
+        val manager = FileDocumentManager.getInstance()
+        val document = manager.getDocument(found)
+            ?: return
+        manager.saveDocument(document)
+    }
+
+    fun getFileStats(fileUris: List<String>): Map<String, FileStats> =
+        fileUris.mapNotNull { fileUri ->
+            val file = findFile(fileUri)
+                ?: return@mapNotNull null
+            fileUri to FileStats(file.timeStamp, file.length)
+        }.toMap()
+
+    private fun findFile(fileUri: String): VirtualFile? {
+        val noParams = fileUri.substringBefore("?")
+        val normalizedAuthority = normalizeWindowsAuthority(noParams)
+        return VirtualFileManager.getInstance()
+            .refreshAndFindFileByUrl(normalizedAuthority)
+    }
+
+    private fun readDocument(file: VirtualFile, maxLength: Int): String? {
+        val document = FileDocumentManager.getInstance().getDocument(file)
+            ?: return ""
+        val length = min(document.textLength, maxLength)
+        return document.getText(TextRange(0, length))
+    }
+
+    private fun normalizeLineEndings(text: String) =
+        text.replace("\r\n", "\n")
+            .replace("\r", "\n")
+
+    private fun normalizeWindowsAuthority(fileUri: String): String {
+        val authorityPrefix = "file://"
+        val noAuthorityPrefix = "file:///"
+        if (fileUri.startsWith(authorityPrefix) && !fileUri.startsWith(noAuthorityPrefix)) {
+            val path = fileUri.substringAfter(authorityPrefix)
+            return "$noAuthorityPrefix$path"
+        }
+        return fileUri
+    }
 }

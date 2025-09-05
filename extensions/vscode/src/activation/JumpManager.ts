@@ -1,10 +1,64 @@
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditOutcome } from "core/nextEdit/types";
+// @ts-ignore
+import svgBuilder from "svg-builder";
 import * as vscode from "vscode";
+import { getTheme } from "../util/getTheme";
 import {
   HandlerPriority,
   SelectionChangeManager,
 } from "./SelectionChangeManager";
+
+// Instead of getters that execute immediately, use methods or lazy properties
+const SVG_CONFIG = {
+  stroke: "#999998",
+  strokeWidth: 1,
+  shortcutColor: "#999998",
+  filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
+  radius: 3,
+  leftMargin: 40,
+  debounceDelay: 500,
+  label: "📍 Press Tab to jump, Esc to cancel",
+
+  // Convert getters to methods that are called when needed
+  getFontSize(): number {
+    return Math.ceil(
+      (vscode.workspace.getConfiguration("editor").get<number>("fontSize") ??
+        14) * 0.8,
+    );
+  },
+
+  getFontFamily(): string {
+    return (
+      vscode.workspace.getConfiguration("editor").get<string>("fontFamily") ||
+      "helvetica"
+    );
+  },
+
+  getPaddingX(): number {
+    return Math.ceil(this.getEstimatedTextWidth(" "));
+  },
+
+  getGap(): number {
+    return this.getFontSize() * 0.5;
+  },
+
+  getTipWidth(): number {
+    return this.getEstimatedTextWidth(this.label) + this.getPaddingX();
+  },
+
+  getTipHeight(): number {
+    return this.getFontSize();
+  },
+
+  getTextY(): number {
+    return (this.getTipHeight() + this.getFontSize()) / 2;
+  },
+
+  getEstimatedTextWidth(text: string): number {
+    return text.length * this.getFontSize() * 0.6;
+  },
+} as const;
 
 export interface CompletionDataForAfterJump {
   completionId: string;
@@ -12,20 +66,39 @@ export interface CompletionDataForAfterJump {
   currentPosition: vscode.Position;
 }
 
+/**
+ * This is how we handle jumps and manage decoration object lifetime.
+ * There are mainly three states the user can be in: not jumping, jumping in progress, and just jumped.
+ * This can potentially be an enum for better readability, but there is logic here that relies on
+ * the _jumpAccepted flag to determine whether we should delete chains.
+ */
 export class JumpManager {
   private static _instance: JumpManager | undefined;
 
   // Decoration state.
+  private _jumpIcon: vscode.Uri | undefined;
   private _jumpDecoration: vscode.TextEditorDecorationType | undefined;
   private _jumpDecorationVisible = false;
   private _disposables: vscode.Disposable[] = [];
+  private _theme = getTheme();
 
   private _jumpInProgress: boolean = false;
   private _jumpAccepted: boolean = false;
   private _completionAfterJump: CompletionDataForAfterJump | null = null;
   private _oldCursorPosition: vscode.Position | undefined;
 
-  private constructor() {}
+  private constructor() {
+    // Build the first SVG icon
+    this._createSvgJumpIcon();
+
+    // Re‑build when the colour theme changes
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("workbench.colorTheme")) {
+        this._theme = getTheme();
+        this._createSvgJumpIcon();
+      }
+    });
+  }
 
   initialize() {}
 
@@ -49,6 +122,64 @@ export class JumpManager {
       if (d) d.dispose();
     });
     this._disposables = [];
+  }
+
+  private _createSvgJumpIcon() {
+    const baseTextConfig = {
+      y: SVG_CONFIG.getTextY(),
+      "font-family": SVG_CONFIG.getFontFamily(),
+      "font-size": SVG_CONFIG.getFontSize(),
+    };
+
+    try {
+      // NOTE: it's critical to use svgBuilder.newInstance.
+      // svgBuilder holds state of previously created SVGs,
+      // so you end up with SVGs stacking on top of each other and being interleaved.
+      const builder = svgBuilder.newInstance
+        ? svgBuilder.newInstance()
+        : svgBuilder;
+      const svgContent = builder
+        .width(SVG_CONFIG.getTipWidth())
+        .height(SVG_CONFIG.getTipHeight())
+        .text(
+          {
+            ...baseTextConfig,
+            x: 4,
+            fill: this._theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
+          },
+          SVG_CONFIG.label,
+        )
+        .render();
+
+      const dataUri = `data:image/svg+xml;base64,${Buffer.from(
+        svgContent,
+      ).toString("base64")}`;
+      this._jumpIcon = vscode.Uri.parse(dataUri);
+
+      // Dispose the old decoration (if any) and create a fresh one.
+      if (this._jumpDecoration) {
+        this._jumpDecoration.dispose();
+      }
+      this._jumpDecoration = this._createSvgJumpDecoration();
+    } catch (err) {
+      console.error("Error creating SVG jump tooltip:", err);
+    }
+  }
+
+  private _createSvgJumpDecoration(): vscode.TextEditorDecorationType {
+    const backgroundColour =
+      this._theme?.colors["editor.background"] ?? "#333333";
+
+    return vscode.window.createTextEditorDecorationType({
+      after: {
+        contentIconPath: this._jumpIcon,
+        border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${SVG_CONFIG.getTipHeight()}px ${backgroundColour};
+                  border-radius: ${SVG_CONFIG.radius}px;
+                  filter: ${SVG_CONFIG.filter}`,
+        margin: `0 0 0 ${SVG_CONFIG.leftMargin}px`,
+        width: `${SVG_CONFIG.getTipWidth()}px`,
+      },
+    });
   }
 
   public async suggestJump(
@@ -157,17 +288,6 @@ export class JumpManager {
       );
     }
 
-    // Scroll to show the jump location.
-    editor.revealRange(
-      new vscode.Range(decorationLine, 0, decorationLine, 0),
-      vscode.TextEditorRevealType.InCenter,
-    );
-
-    // Clean up after timeout if no jump has been made.
-    // setTimeout(() => {
-    //   this._jumpInProgress = false;
-    // }, 10000);
-
     return true;
   }
 
@@ -180,18 +300,13 @@ export class JumpManager {
     await this.clearJumpDecoration();
 
     // Create a decoration for jump.
-    this._jumpDecoration = vscode.window.createTextEditorDecorationType({
-      before: {
-        contentText: "📍 Press Tab to jump, Esc to cancel",
-        color: new vscode.ThemeColor("editor.foreground"),
-        backgroundColor: new vscode.ThemeColor("editorInfo.background"),
-        margin: `0 0 0 4px`,
-      },
-    });
+    if (!this._jumpDecoration) {
+      this._createSvgJumpIcon(); // makes both the icon & decoration
+    }
 
     // Apply the decoration.
     const lastIndexOfLine = editor.document.lineAt(lineToRenderOn).text.length;
-    editor.setDecorations(this._jumpDecoration, [
+    editor.setDecorations(this._jumpDecoration!, [
       new vscode.Range(
         lineToRenderOn,
         lastIndexOfLine,
@@ -239,6 +354,12 @@ export class JumpManager {
       async () => {
         if (this._jumpDecorationVisible) {
           this._jumpAccepted = true;
+
+          // Scroll to show the jump location.
+          editor.revealRange(
+            new vscode.Range(jumpPosition.line, 0, jumpPosition.line, 0),
+            vscode.TextEditorRevealType.InCenter,
+          );
 
           // Move cursor to the jump position.
           editor.selection = new vscode.Selection(jumpPosition, jumpPosition);
