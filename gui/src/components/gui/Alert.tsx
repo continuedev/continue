@@ -27,9 +27,9 @@ type AlertConfig = {
 const ALERT_CONFIGS: AlertConfig = {
   info: {
     Icon: InformationCircleIcon,
-    background: "bg-background",
-    border: "border-foreground",
-    iconColor: "text-foreground",
+    background: "bg-blue-600/20",
+    border: "border-blue-500",
+    iconColor: "text-blue-500",
     text: "text-foreground",
   },
   success: {
@@ -56,18 +56,18 @@ const ALERT_CONFIGS: AlertConfig = {
 };
 
 const alertSizes = {
-  sm: "px-3 py-1.5 rounded-md border",
-  lg: "px-4 py-3 rounded-md border",
+  sm: "px-3 py-2 rounded-md",
+  lg: "px-3 py-2.5 rounded-md",
 };
 
 const iconSizes = {
-  sm: "h-4 w-4 mt-1",
-  lg: "h-5 w-5 mt-0.5",
+  sm: "h-4 w-4",
+  lg: "h-4 w-4",
 };
 
 const spacingSizes = {
   sm: "ml-2",
-  lg: "ml-3",
+  lg: "ml-2",
 };
 
 function Alert({ type = "info", size = "lg", ...props }: AlertProps) {
@@ -76,7 +76,7 @@ function Alert({ type = "info", size = "lg", ...props }: AlertProps) {
   return (
     <div
       className={cn(
-        `flex flex-row items-start ${background} border-[0.5px] border-solid ${border} shadow-sm ${alertSizes[size]}`,
+        `flex flex-row items-center ${background} border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
         props.className,
       )}
     >

@@ -31,7 +31,7 @@ function getOrgIcon(org: { name: string; iconUrl?: string | null }) {
 
   const IconComponent =
     org.name === "Personal" ? UserCircleIcon : BuildingOfficeIcon;
-  return <IconComponent className="h-3.5 w-3.5" />;
+  return <IconComponent className="h-3.5 w-3.5 shrink-0" />;
 }
 
 export function ScopeSelect({ onSelect }: ScopeSelectProps) {
@@ -52,35 +52,67 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
     onSelect?.();
   };
 
+  const handleConfigClick = () => {
+    ideMessenger.post("config/openProfile", {
+      profileId: undefined,
+    });
+  };
+
   const selectedDisplay = currentOrg ?? {
     name: "Personal",
     iconUrl: null,
   };
 
-  return (
-    <Listbox value={selectedOrgId} onChange={handleChange}>
-      <div className="relative">
-        <ListboxButton className="hover:bg-list-active hover:text-list-active-foreground w-full min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
-          <div className="flex items-center gap-2">
-            {getOrgIcon(selectedDisplay)}
-            <span className="truncate">
-              {selectedDisplay?.name || "Select Organization"}
-            </span>
-          </div>
-          <ChevronUpDownIcon className="h-3.5 w-3.5" aria-hidden="true" />
-        </ListboxButton>
+  const isPersonalSelected =
+    !selectedOrgId || selectedDisplay?.name === "Personal";
 
-        <ListboxOptions className="z-[1000] min-w-[140px] pt-0.5 sm:min-w-[200px]">
-          {organizations.map((org) => (
-            <ListboxOption key={org.id} value={org.id} className="py-2">
-              <div className="flex items-center gap-2">
-                {getOrgIcon(org)}
-                <span>{org.name}</span>
-              </div>
-            </ListboxOption>
-          ))}
-        </ListboxOptions>
-      </div>
-    </Listbox>
+  return (
+    <div>
+      <Listbox value={selectedOrgId} onChange={handleChange}>
+        <div className="relative">
+          <ListboxButton className="hover:bg-list-active hover:text-list-active-foreground w-full min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
+            <div className="flex items-center gap-2">
+              {getOrgIcon(selectedDisplay)}
+              <span className="truncate">
+                {selectedDisplay?.name || "Select Organization"}
+              </span>
+            </div>
+            <ChevronUpDownIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          </ListboxButton>
+
+          <ListboxOptions
+            className="z-[1000] !w-[--button-width] pt-0.5"
+            anchor="bottom start"
+          >
+            {organizations.map((org) => (
+              <ListboxOption key={org.id} value={org.id} className="py-2">
+                <div className="flex items-center gap-2">
+                  {getOrgIcon(org)}
+                  <div className="flex flex-col">
+                    <span>{org.name}</span>
+                    {org.name === "Personal" && (
+                      <span className="text-2xs text-description">
+                        Includes your local config.yaml
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </ListboxOption>
+            ))}
+          </ListboxOptions>
+        </div>
+      </Listbox>
+      {isPersonalSelected && (
+        <p className="text-description !mt-1 ml-1 text-xs">
+          Includes your local{" "}
+          <span
+            className="cursor-pointer underline hover:brightness-125"
+            onClick={handleConfigClick}
+          >
+            config.yaml
+          </span>
+        </p>
+      )}
+    </div>
   );
 }

@@ -10,7 +10,6 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
-import { useLump } from "../mainInput/Lump/LumpContext";
 import {
   Listbox,
   ListboxOption,
@@ -27,7 +26,6 @@ export function AssistantAndOrgListbox() {
   const listboxRef = useRef<HTMLDivElement>(null);
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
-  const { isToolbarExpanded } = useLump();
   const {
     profiles,
     selectedProfile,
@@ -38,7 +36,6 @@ export function AssistantAndOrgListbox() {
     refreshProfiles,
   } = useAuth();
   const configLoading = useAppSelector((store) => store.config.loading);
-  const smallFont = useFontSize(-3);
   const tinyFont = useFontSize(-4);
   const shouldRenderOrgInfo =
     session && organizations.length > 1 && !isOnPremSession(session);
