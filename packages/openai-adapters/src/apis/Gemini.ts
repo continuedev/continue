@@ -10,6 +10,7 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
+  CompletionUsage,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
   Model,
@@ -38,11 +39,7 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
-type UsageInfo = {
-  total_tokens: number;
-  completion_tokens: number;
-  prompt_tokens: number;
-};
+type UsageInfo = Pick<CompletionUsage, 'total_tokens' | 'completion_tokens' | 'prompt_tokens'>;
 
 export class GeminiApi implements BaseLlmApi {
   apiBase: string = "https://generativelanguage.googleapis.com/v1beta/";

@@ -2,6 +2,7 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
+  CompletionUsage,
 } from "openai/resources/completions.mjs";
 import {
   CreateEmbeddingResponse,
@@ -29,11 +30,7 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
-type UsageInfo = {
-  total_tokens: number;
-  completion_tokens: number;
-  prompt_tokens: number;
-};
+type UsageInfo = Pick<CompletionUsage, 'total_tokens' | 'completion_tokens' | 'prompt_tokens'>;
 
 // Relace only supports apply through a /v1/apply endpoint
 export class RelaceApi implements BaseLlmApi {
