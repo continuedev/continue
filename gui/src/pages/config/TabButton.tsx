@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { ToolTip } from "../../components/gui/Tooltip";
 import { fontSize } from "../../util";
 
@@ -11,10 +10,13 @@ interface TabButtonProps {
 }
 
 export function TabButton({ id, label, icon, isActive, onClick }: TabButtonProps) {
-  const tooltipId = `tab-tooltip-${uuidv4()}`;
-
   return (
-    <div>
+    <ToolTip
+      content={label}
+      place="right"
+      className="md:!hidden"
+      style={{ fontSize: fontSize(-2) }}
+    >
       <div
         style={{
           fontSize: fontSize(-2),
@@ -25,20 +27,10 @@ export function TabButton({ id, label, icon, isActive, onClick }: TabButtonProps
             : "text-description px-2 py-2"
         }`}
         onClick={onClick}
-        data-tooltip-id={tooltipId}
       >
         {icon}
         <span className="hidden md:inline">{label}</span>
       </div>
-
-      <ToolTip
-        id={tooltipId}
-        place="right"
-        className="md:!hidden"
-        style={{ fontSize: fontSize(-2) }}
-      >
-        {label}
-      </ToolTip>
-    </div>
+    </ToolTip>
   );
 }
