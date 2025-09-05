@@ -1,0 +1,66 @@
+Script started on Thu Aug 28 15:37:02 2025
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hsscrio   s  ccd scripts[1m/[0m[0m/inst            c  ccd scripts[?2004l
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac scripts % [K[?2004hlls[?2004l
+build-packages.js		oneper
+create-docker-ssh-container.sh	uninstall.js
+install-dependencies.ps1	util
+install-dependencies.sh
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac scripts % [K[?2004hccd c            [8Diins i  iinse tall-dep         i  [7minstall-dependencies.sh[27m[23D[27mi[27mn[27ms[27mt[27ma[27ml[27ml[27m-[27md[27me[27mp[27me[27mn[27md[27me[27mn[27mc[27mi[27me[27ms[27m.[27ms[27mh[?2004l
+zsh: command not found: install-dependencies.sh
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac scripts % [K[?2004hccde ..[?2004l
+zsh: command not found: cde
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac scripts % [K[?2004hccd ..[?2004l
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggot  g git status[?2004l
+On branch workspace_global_rules
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	[31mmodified:   binary/package-lock.json[m
+	[31mmodified:   core/package-lock.json[m
+	[31mmodified:   extensions/vscode/package-lock.json[m
+	[31mmodified:   gui/src/components/mainInput/Lump/sections/RulesSection.tsx[m
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	[31mtypescript[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggit restore [7mbinary/package-lock.json[27m[24D[27mb[27mi[27mn[27ma[27mr[27my[27m/[27mp[27ma[27mc[27mk[27ma[27mg[27me[27m-[27ml[27mo[27mc[27mk[27m.[27mj[27ms[27mo[27mn , [7m  core/package-lock.jso[7mn[27m[K[A[68C[27m [27m [27mc[27mo[27mr[27me[27m/[27mp[27ma[27mc[27mk[27ma[27mg[27me[27m-[27ml[27mo[27mc[27mk[27m.[27mj[27ms[27mon, [7mextensions/vscode/package-lock.json[27m[35D[27me[27mx[27mt[27me[27mn[27ms[27mi[27mo[27mn[27ms[27m/[27mv[27ms[27mc[27mo[27md[27me[27m/[27mp[27ma[27mc[27mk[27ma[27mg[27me[27m-[27ml[27mo[27mc[27mk[27m.[27mj[27ms[27mo[27mn[?2004l
+error: pathspec 'binary/package-lock.json,' did not match any file(s) known to git
+error: pathspec 'core/package-lock.json,' did not match any file(s) known to git
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggit status[?2004l
+On branch workspace_global_rules
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	[31mmodified:   binary/package-lock.json[m
+	[31mmodified:   core/package-lock.json[m
+	[31mmodified:   extensions/vscode/package-lock.json[m
+	[31mmodified:   gui/src/components/mainInput/Lump/sections/RulesSection.tsx[m
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	[31mtypescript[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggit status      restore [7mbinary/package-lock.json[27m[24D[27mb[27mi[27mn[27ma[27mr[27my[27m/[27mp[27ma[27mc[27mk[27ma[27mg[27me[27m-[27ml[27mo[27mc[27mk[27m.[27mj[27ms[27mo[27mn, [7m core/package-lock.json[27m [K[A[69C[27m [27mc[27mo[27mr[27me[27m/[27mp[27ma[27mc[27mk[27ma[27mg[27me[27m-[27ml[27mo[27mc[27mk[27m.[27mj[27ms[27mo[27mn,, [7mextensions/vscode/package-lock.json[27m[35D[27me[27mx[27mt[27me[27mn[27ms[27mi[27mo[27mn[27ms[27m/[27mv[27ms[27mc[27mo[27md[27me[27m/[27mp[27ma[27mc[27mk[27ma[27mg[27me[27m-[27ml[27mo[27mc[27mk[27m.[27mj[27ms[27mo[27mn[?2004l
+error: pathspec 'binary/package-lock.json,' did not match any file(s) known to git
+error: pathspec 'core/package-lock.json,' did not match any file(s) known to git
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggit  g  ggit status[?2004l
+On branch workspace_global_rules
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	[31mmodified:   binary/package-lock.json[m
+	[31mmodified:   core/package-lock.json[m
+	[31mmodified:   extensions/vscode/package-lock.json[m
+	[31mmodified:   gui/src/components/mainInput/Lump/sections/RulesSection.tsx[m
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	[31mtypescript[m
+
+no changes added to commit (use "git add" and/or "git commit -a")
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggit add [7mgui/src/components/mainInput/Lump/sections/RulesSecti[7mo[7mn.tsx[27m[K[A[33C[27mg[27mu[27mi[27m/[27ms[27mr[27mc[27m/[27mc[27mo[27mm[27mp[27mo[27mn[27me[27mn[27mt[27ms[27m/[27mm[27ma[27mi[27mn[27mI[27mn[27mp[27mu[27mt[27m/[27mL[27mu[27mm[27mp[27m/[27ms[27me[27mc[27mt[27mi[27mo[27mn[27ms[27m/[27mR[27mu[27ml[27me[27ms[27mS[27me[27mc[27mt[27mio[27mn[27m.[27mt[27ms[27mx[?2004l
+[1m[7m%[27m[1m[0m                                                                                            [0m[27m[24m[Jkpanyam@kpanyam-mac continue % [K[?2004hggit commit --amend[?2004l
+hint: Waiting for your editor to close the file... 

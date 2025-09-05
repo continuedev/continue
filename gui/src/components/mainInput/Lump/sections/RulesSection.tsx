@@ -1,6 +1,8 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
+  CheckIcon,
+  ChevronUpDownIcon,
   EyeIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
@@ -10,7 +12,8 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
+import { defaultBorderRadius } from "../../../../components";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
@@ -21,7 +24,15 @@ import {
   toggleRuleSetting,
 } from "../../../../redux/slices/uiSlice";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
-import Switch from "../../../gui/Switch";
+import ToggleSwitch from "../../../gui/Switch";
+import InfoHover from "../../../InfoHover";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../../ui";
 import { useFontSize } from "../../../ui/font";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
@@ -126,7 +137,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
           <div className="flex flex-row items-center gap-2">
             {rule.name && policy && (
               <div className="flex cursor-pointer flex-row items-center justify-end gap-1 px-2 py-0.5">
-                <Switch
+                <ToggleSwitch
                   isToggled={policy === "on"}
                   onToggle={() => handleTogglePolicy()}
                   size={10}
@@ -180,10 +191,21 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   );
 };
 
+// Define dropdown options for global rules
+const globalRulesOptions = [
+  { value: "workspace", label: "Current workspace" },
+  { value: "global", label: "Global" },
+];
+
 export function RulesSection() {
   const { selectedProfile } = useAuth();
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
+  const [globalRulesMode, setGlobalRulesMode] = useState<
+    "workspace" | "global"
+  >("workspace");
+  const tinyFont = useFontSize(-3);
+
   const sortedRules: RuleWithSource[] = useMemo(() => {
     const rules = [...config.rules.map((rule) => ({ ...rule }))];
 
@@ -262,12 +284,68 @@ export function RulesSection() {
     return rules;
   }, [config, selectedProfile, mode]);
 
+  const handleGlobalRulesModeChange = (value: string | null) => {
+    setGlobalRulesMode((value as "workspace" | "global") || "workspace");
+  };
+
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex flex-row items-center gap-1">
+          <span className="text-foreground" style={{ fontSize: tinyFont }}>
+            Rules scope
+          </span>
+          <InfoHover
+            size="3"
+            id="rules-scope"
+            msg="Choose to add rules to the current workspace or globally"
+          />
+        </div>
+        <Listbox value={globalRulesMode} onChange={handleGlobalRulesModeChange}>
+          <div className="relative">
+            <ListboxButton className="bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-48 justify-between px-2 py-1 text-xs">
+              <span className="line-clamp-1">
+                {globalRulesOptions.find(
+                  (option) => option.value === globalRulesMode,
+                )?.label || "Current Workspace"}
+              </span>
+              <div className="pointer-events-none flex items-center">
+                <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
+              </div>
+            </ListboxButton>
+            <Transition>
+              <ListboxOptions
+                style={{ borderRadius: defaultBorderRadius }}
+                className="min-w-48"
+              >
+                {globalRulesOptions.map((option) => (
+                  <ListboxOption
+                    key={option.value}
+                    value={option.value}
+                    className=""
+                  >
+                    <div className="flex flex-row items-center justify-between gap-2">
+                      <span className="line-clamp-1 text-xs">
+                        {option.label}
+                      </span>
+                      {option.value === globalRulesMode && (
+                        <CheckIcon className="h-3 w-3 flex-shrink-0" />
+                      )}
+                    </div>
+                  </ListboxOption>
+                ))}
+              </ListboxOptions>
+            </Transition>
+          </div>
+        </Listbox>
+      </div>
       {sortedRules.map((rule, index) => (
         <RuleCard key={index} rule={rule} />
       ))}
-      <ExploreBlocksButton blockType="rules" />
+      <ExploreBlocksButton
+        blockType="rules"
+        isGlobalMode={globalRulesMode === "global"}
+      />
     </div>
   );
 }
