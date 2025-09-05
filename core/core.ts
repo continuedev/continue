@@ -175,6 +175,13 @@ export class Core {
         }
       };
 
+      this.codeBaseIndexer = new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        this.messenger,
+        this.globalContext.get("indexingPaused"),
+      );
+
       this.configHandler.onConfigUpdate((result) => {
         void (async () => {
           const serializedResult =
@@ -187,6 +194,12 @@ export class Core {
             selectedOrgId: this.configHandler.currentOrg?.id ?? null,
           });
 
+          if (await this.codeBaseIndexer.wasIndexesChanged()) {
+            await this.codeBaseIndexer.refreshCodebaseIndex(
+              await this.ide.getWorkspaceDirs(),
+            );
+          }
+
           // update additional submenu context providers registered via VSCode API
           const additionalProviders =
             this.configHandler.getAdditionalSubmenuContextProviders();
@@ -197,13 +210,6 @@ export class Core {
           }
         })();
       });
-
-      this.codeBaseIndexer = new CodebaseIndexer(
-        this.configHandler,
-        this.ide,
-        this.messenger,
-        this.globalContext.get("indexingPaused"),
-      );
 
       // Dev Data Logger
       const dataLogger = DataLogger.getInstance();
