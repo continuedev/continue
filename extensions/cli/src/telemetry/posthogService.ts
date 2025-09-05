@@ -18,7 +18,7 @@ export class PosthogService {
   }
 
   /**
-   * Check if running in headless mode (-p flag)
+   * Check if running in headless mode (-p/--print flags)
    */
   private isHeadlessMode(): boolean {
     const args = process.argv.slice(2);
