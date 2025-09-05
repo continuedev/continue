@@ -9,6 +9,17 @@ export const viewDiffImpl: ToolImpl = async (args, extras) => {
   // TODO includeUnstaged should be an option
 
   const combinedDiff = diffs.join("\n");
+
+  if (!combinedDiff.trim()) {
+    return [
+      {
+        name: "Diff",
+        description: "current Git diff",
+        content: "The current diff is empty",
+      },
+    ];
+  }
+
   const diffLines = combinedDiff.split("\n");
 
   let truncated = false;

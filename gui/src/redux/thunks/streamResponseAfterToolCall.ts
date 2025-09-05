@@ -1,13 +1,13 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage } from "core";
 import { renderContextItems } from "core/util/messageContent";
+import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import {
   ChatHistoryItemWithMessageId,
   resetNextCodeBlockToApplyIndex,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { findToolCallById } from "../util";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
 
@@ -44,10 +44,9 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-
-        const toolCallState = findToolCallById(
-          state.session.history,
-          toolCallId,
+        const currentToolCalls = selectCurrentToolCalls(state);
+        const toolCallState = currentToolCalls.find(
+          (tc) => tc.toolCallId === toolCallId,
         );
 
         if (!toolCallState) {
@@ -57,7 +56,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const toolOutput = toolCallState.output ?? [];
 
         dispatch(resetNextCodeBlockToApplyIndex());
-        // await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Create and dispatch the tool message
         const newMessage: ChatMessage = {

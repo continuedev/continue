@@ -14,6 +14,12 @@ export const selectCurrentToolCalls = createSelector(
   (history) => findAllCurToolCalls(history),
 );
 
+export const selectCurrentGeneratedToolCalls = createSelector(
+  (store: RootState) => store.session.history,
+  (history) =>
+    findAllCurToolCalls(history).filter((tc) => tc.status === "generated"),
+);
+
 export const selectHasCurrentToolCalls = createSelector(
   (store: RootState) => store.session.history,
   (history) => hasCurrentToolCalls(history),
