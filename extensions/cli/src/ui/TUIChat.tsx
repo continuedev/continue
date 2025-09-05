@@ -24,7 +24,6 @@ import { StaticChatContent } from "./components/StaticChatContent.js";
 import { useNavigation } from "./context/NavigationContext.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
-import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import {
   getRepoUrlText,
   useCurrentMode,
@@ -230,8 +229,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     model: services.model?.model || undefined,
   });
 
-  const { renderMessage } = useMessageRenderer();
-
   const { handleConfigSelect, handleModelSelect } = useSelectors(
     configPath,
     setChatHistory,
@@ -285,7 +282,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
           chatHistory={chatHistory}
-          renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
       </Box>
