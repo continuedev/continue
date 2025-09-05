@@ -2,6 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, Session, SessionMetadata } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
+import { v4 as uuidv4 } from "uuid";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -66,6 +67,87 @@ export const deleteSession = createAsyncThunk<void, string, ThunkApiType>(
       throw new Error(result.error);
     }
     void dispatch(refreshSessionMetadata({}));
+  },
+);
+
+export const copySession = createAsyncThunk<
+  void,
+  {
+    sessionId: string;
+    upToMessageIndex?: number;
+    titlePrefix?: string;
+  },
+  ThunkApiType
+>(
+  "session/copy",
+  async (
+    { sessionId, upToMessageIndex, titlePrefix = "Copy of" },
+    { dispatch, extra },
+  ) => {
+    try {
+      // Load the source session
+      const sourceSession = await getSession(extra.ideMessenger, sessionId);
+
+      // Validate session has history to copy
+      if (!sourceSession.history || sourceSession.history.length === 0) {
+        throw new Error("Cannot copy session with no history");
+      }
+
+      // Create a deep copy of the session history
+      let copiedHistory = sourceSession.history.map((item) => ({
+        ...item,
+        message: {
+          ...item.message,
+          id: uuidv4(), // Generate new message IDs
+        },
+        // Deep copy context items if they exist
+        contextItems: item.contextItems ? [...item.contextItems] : [],
+        // Deep copy other properties that might contain references
+        ...(item.toolCallStates && {
+          toolCallStates: item.toolCallStates.map((state) => ({
+            ...state,
+            toolCallId: uuidv4(), // Generate new tool call IDs
+          })),
+        }),
+      }));
+
+      // If upToMessageIndex is specified, slice the history (for future feature)
+      if (upToMessageIndex !== undefined) {
+        if (upToMessageIndex < 0 || upToMessageIndex >= copiedHistory.length) {
+          throw new Error("Invalid message index for copying");
+        }
+        copiedHistory = copiedHistory.slice(0, upToMessageIndex + 1);
+      }
+
+      // Generate new title with prefix
+      let newTitle = `${titlePrefix} ${sourceSession.title}`;
+
+      // Ensure title doesn't exceed MAX_TITLE_LENGTH
+      if (newTitle.length > MAX_TITLE_LENGTH) {
+        const availableLength = MAX_TITLE_LENGTH - titlePrefix.length - 1; // -1 for space
+        const truncatedOriginal =
+          sourceSession.title.slice(0, availableLength - 3) + "...";
+        newTitle = `${titlePrefix} ${truncatedOriginal}`;
+      }
+
+      // Create new session with copied data
+      const newSession: Session = {
+        sessionId: uuidv4(),
+        title: newTitle,
+        workspaceDirectory: sourceSession.workspaceDirectory,
+        history: copiedHistory,
+      };
+
+      // Save the new session
+      const result = await dispatch(updateSession(newSession));
+      unwrapResult(result);
+
+      // Refresh session metadata to show the new session in the list
+      void dispatch(refreshSessionMetadata({}));
+    } catch (error) {
+      console.error("Failed to copy session:", error);
+      throw error; // Re-throw to let the UI handle the error
+    }
   },
 );
 

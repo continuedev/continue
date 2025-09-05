@@ -1,4 +1,8 @@
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  DocumentDuplicateIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
 import { getUriPathBasename } from "core/util/uri";
 import React, { useContext, useEffect, useState } from "react";
@@ -8,6 +12,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { exitEdit } from "../../redux/thunks/edit";
 import {
+  copySession,
   deleteSession,
   getSession,
   loadSession,
@@ -126,6 +131,17 @@ export function HistoryTableRow({
             }}
           >
             <PencilSquareIcon width="1em" height="1em" />
+          </HeaderButtonWithToolTip>
+          <HeaderButtonWithToolTip
+            text="Copy"
+            onClick={async (e) => {
+              e.stopPropagation();
+              await dispatch(
+                copySession({ sessionId: sessionMetadata.sessionId }),
+              );
+            }}
+          >
+            <DocumentDuplicateIcon width="1em" height="1em" />
           </HeaderButtonWithToolTip>
           <HeaderButtonWithToolTip
             text="Delete"
