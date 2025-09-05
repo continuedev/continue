@@ -8,7 +8,7 @@ export interface PageHeaderProps {
 
 export function PageHeader({ onTitleClick, title }: PageHeaderProps) {
   return (
-    <div className="sticky top-0 z-20 m-0 flex items-center justify-between bg-inherit py-1">
+    <div className="border-border sticky top-0 z-20 m-0 flex items-center justify-between border border-x-0 border-b-2 border-t-0 border-solid bg-inherit py-3.5">
       <div
         className="flex cursor-pointer items-center transition-colors duration-200 hover:brightness-125"
         onClick={onTitleClick}

@@ -19,7 +19,7 @@ export function AccountSection() {
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <div className="text-center">
           <p className="mb-2 text-lg font-medium">Not signed in</p>
-          <p className="mb-4 text-gray-400">
+          <p className="text-description-muted mb-4">
             Sign in to access your account settings
           </p>
           <Button variant="outline" onClick={() => login(false)}>
@@ -36,12 +36,12 @@ export function AccountSection() {
       <div className="space-y-6">
         <div>
           <h2 className="text-xl font-medium">Account</h2>
-          <p className="text-gray-400">On-premise deployment</p>
+          <p className="text-description-muted">On-premise deployment</p>
         </div>
 
         <div className="bg-vsc-input-background rounded-md p-4">
           <h3 className="mb-2 font-medium">Account Information</h3>
-          <p className="text-gray-400">
+          <p className="text-description-muted">
             Account details not available for on-premise deployments
           </p>
         </div>
@@ -54,18 +54,13 @@ export function AccountSection() {
       <div className="my-3 flex items-center justify-between">
         <div>
           <h2 className="my-0 text-xl font-medium">{session.account.label}</h2>
-          <p className="my-0 text-gray-400">{session.account.id}</p>
+          <p className="text-description-muted my-0">{session.account.id}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={logout}
-          className="p-1"
-          data-tooltip-id="logout-tooltip"
-        >
-          <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
-        </Button>
-        <ToolTip id="logout-tooltip">Sign out</ToolTip>
+        <ToolTip content="Sign out">
+          <Button variant="outline" size="sm" onClick={logout} className="p-1">
+            <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+          </Button>
+        </ToolTip>
       </div>
 
       {organizations.length > 0 && (
@@ -73,7 +68,7 @@ export function AccountSection() {
           <label className="text-vsc-foreground text-sm font-medium">
             Current organization
           </label>
-          <p className="!mt-1 text-xs text-gray-400">
+          <p className="text-description-muted !mt-1 text-xs">
             Determines what{" "}
             <span
               className="cursor-pointer underline hover:brightness-125"

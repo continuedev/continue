@@ -91,7 +91,7 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
                   <div className="flex flex-col">
                     <span>{org.name}</span>
                     {org.name === "Personal" && (
-                      <span className="text-2xs text-description">
+                      <span className="text-2xs text-description-muted">
                         Includes your local config.yaml
                       </span>
                     )}
@@ -103,7 +103,7 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
         </div>
       </Listbox>
       {isPersonalSelected && (
-        <p className="text-description !mt-1 ml-1 text-xs">
+        <p className="text-description-muted !mt-1 ml-1 text-xs">
           Includes your local{" "}
           <span
             className="cursor-pointer underline hover:brightness-125"

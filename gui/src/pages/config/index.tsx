@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "../../components/PageHeader";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { topTabSections, bottomTabSections, getAllTabs } from "./configTabs";
+import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
 import { TabGroup } from "./TabGroup";
 
 function ConfigPage() {
@@ -11,6 +10,14 @@ function ConfigPage() {
   const [activeTab, setActiveTab] = useState("settings");
 
   const allTabs = getAllTabs();
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "back") {
+      navigate("/");
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
   return (
     <div className="flex h-full flex-row overflow-hidden">
@@ -22,23 +29,23 @@ function ConfigPage() {
               key={section.id}
               tabs={section.tabs}
               activeTab={activeTab}
-              onTabClick={setActiveTab}
+              onTabClick={handleTabClick}
               label={section.label}
               showTopDivider={section.showTopDivider}
               showBottomDivider={section.showBottomDivider}
               className={section.className}
             />
           ))}
-          
+
           <div className="flex-1" />
-          
+
           <div className="md:border-description-muted hidden md:block md:border-t md:pt-2" />
           {bottomTabSections.map((section) => (
             <TabGroup
               key={section.id}
               tabs={section.tabs}
               activeTab={activeTab}
-              onTabClick={setActiveTab}
+              onTabClick={handleTabClick}
               label={section.label}
               showTopDivider={section.showTopDivider}
               showBottomDivider={section.showBottomDivider}
@@ -50,7 +57,6 @@ function ConfigPage() {
 
       {/* Main content area */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <PageHeader onTitleClick={() => navigate("/")} title="Back" />
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto px-4">
           {allTabs.find((tab) => tab.id === activeTab)?.component}

@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
@@ -38,10 +39,18 @@ export const topTabSections: TabSection[] = [
     id: "top",
     tabs: [
       {
+        id: "back",
+        label: "Back",
+        component: <div />,
+        icon: <ArrowLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+      },
+      {
         id: "account",
         label: "Account",
         component: <AccountSection />,
-        icon: <UserCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+        icon: (
+          <UserCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+        ),
       },
     ],
   },
@@ -76,7 +85,9 @@ export const topTabSections: TabSection[] = [
         id: "mcp",
         label: "MCP",
         component: <MCPSection />,
-        icon: <Squares2X2Icon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+        icon: (
+          <Squares2X2Icon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+        ),
       },
       {
         id: "tools",
@@ -101,7 +112,9 @@ export const topTabSections: TabSection[] = [
         id: "indexing",
         label: "Indexing",
         component: <IndexingSettingsSection />,
-        icon: <CircleStackIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+        icon: (
+          <CircleStackIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+        ),
       },
     ],
   },
@@ -130,5 +143,7 @@ export const bottomTabSections: TabSection[] = [
 ];
 
 export const getAllTabs = (): TabOption[] => {
-  return [...topTabSections, ...bottomTabSections].flatMap((section) => section.tabs);
+  return [...topTabSections, ...bottomTabSections].flatMap(
+    (section) => section.tabs,
+  );
 };
