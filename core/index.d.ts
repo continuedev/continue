@@ -370,6 +370,10 @@ export interface ThinkingChatMessage {
   signature?: string;
   redactedThinking?: string;
   toolCalls?: ToolCallDelta[];
+  reasoning_details?: {
+    signature?: string;
+    [key: string]: any;
+  }[];
 }
 
 /**
@@ -1139,6 +1143,7 @@ export interface BaseCompletionOptions {
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
   promptCaching?: boolean;
+  preserveReasoning?: boolean;
 }
 
 export interface ModelCapability {
