@@ -172,6 +172,40 @@ jobs:
         if: steps.check-mention.outputs.contains_mention == 'true'
         run: npm i -g @continuedev/cli
 
+      - name: Get review context
+        if: steps.check-mention.outputs.contains_mention == 'true'
+        id: review-context
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let reviewContext = '';
+
+            // Check if this comment is a reply to another review comment
+            if (context.payload.comment.in_reply_to_id) {
+              try {
+                const { data: originalComment } = await github.rest.pulls.getReviewComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: context.payload.comment.in_reply_to_id
+                });
+                
+                reviewContext = `**Original review comment by @${originalComment.user.login}:**
+            ${originalComment.body}
+
+            **Reply by @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}`;
+              } catch (error) {
+                console.log('Could not fetch original comment, using current comment only');
+                reviewContext = `**Review comment by @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}`;
+              }
+            } else {
+              reviewContext = `**Review comment by @${{ github.event.comment.user.login }}:**
+            ${{ github.event.comment.body }}`;
+            }
+
+            core.setOutput('context', reviewContext);
+
       - name: Start remote session
         if: steps.check-mention.outputs.contains_mention == 'true'
         id: remote-session
@@ -180,13 +214,14 @@ jobs:
         run: |
           # Create a temporary file for the prompt to handle special characters and newlines properly
           cat > /tmp/prompt.txt << 'PROMPT_EOF'
-          Please help with the following code review comment from @${{ github.event.comment.user.login }} on PR #${{ github.event.pull_request.number }}:
+          Please help with the following code review discussion from PR #${{ github.event.pull_request.number }}:
 
           **File:** ${{ github.event.comment.path }}
           **Line:** ${{ github.event.comment.line || github.event.comment.original_line || 'N/A' }}
-          **Comment:** ${{ github.event.comment.body }}
 
-          Please analyze the specific file and line mentioned, understand the review feedback, implement the necessary changes, and commit them to this branch.
+          ${{ steps.review-context.outputs.context }}
+
+          Please analyze the specific file and line mentioned, understand the review feedback and any discussion context, implement the necessary changes, and commit them to this branch.
           PROMPT_EOF
 
           # Debug output
