@@ -72,6 +72,8 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "docs/initStatuses",
     "docs/getDetails",
     "docs/getIndexedPages",
+    "docs/getMaxNumberOfConcurrentIndexing",
+    "docs/updateMaxNumberOfConcurrentIndexing",
     //
     "onboarding/complete",
     "addAutocompleteModel",
