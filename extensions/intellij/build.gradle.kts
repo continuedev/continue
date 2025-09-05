@@ -90,6 +90,10 @@ qodana {
 
 intellijPlatformTesting {
     runIde {
+        // This task might not work locally because the binary tends to ignore CONTINUE_GLOBAL_DIR when a
+        // local Continue config is present. If you want to run the e2e tests locally, the most effective
+        // way is to temporarily disconnect from the network and run the tests again.
+        // todo: fix it properly
         register("runIdeForUiTests") {
             task {
                 environment(
