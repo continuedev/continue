@@ -16,6 +16,7 @@ export async function remote(
     start?: boolean;
     branch?: string;
     repo?: string;
+    config?: string;
   } = {},
 ) {
   // Check if prompt should come from stdin instead of parameter
@@ -84,6 +85,8 @@ export async function remote(
       name: `devbox-${Date.now()}`,
       prompt: actualPrompt,
       idempotencyKey: options.idempotencyKey,
+      agent: options.config,
+      config: options.config,
     };
 
     // Add branchName to request body if branch option is provided

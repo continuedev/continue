@@ -218,9 +218,11 @@ program
   });
 
 // Remote subcommand
-program
-  .command("remote [prompt]", { hidden: true })
-  .description("Launch a remote instance of the cn agent")
+addCommonOptions(
+  program
+    .command("remote [prompt]", { hidden: true })
+    .description("Launch a remote instance of the cn agent"),
+)
   .option(
     "--url <url>",
     "Connect directly to the specified URL instead of creating a new remote environment",
