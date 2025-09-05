@@ -12,6 +12,7 @@ import { modeService } from "../services/ModeService.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
+import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
   handleControlKeys,
   updateTextBufferState,
@@ -20,16 +21,18 @@ import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
 interface UserInputProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
+  wasInterrupted?: boolean;
   onFileAttached?: (filePath: string, content: string) => void;
   disabled?: boolean;
   placeholder?: string;
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
+  onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -38,11 +41,13 @@ const UserInput: React.FC<UserInputProps> = ({
   inputMode,
   onInterrupt,
   assistant,
+  wasInterrupted = false,
   onFileAttached,
   disabled = false,
   placeholder,
   hideNormalUI = false,
   isRemoteMode = false,
+  onImageInClipboardChange,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -65,6 +70,16 @@ const UserInput: React.FC<UserInputProps> = ({
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+
+  // Clear input function for Ctrl+C
+  const clearInput = useCallback(() => {
+    textBuffer.clear();
+    setInputText("");
+    setCursorPosition(0);
+    setShowSlashCommands(false);
+    setShowFileSearch(false);
+    inputHistory.resetNavigation();
+  }, [textBuffer]);
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const [showFileSearch, setShowFileSearch] = useState(false);
@@ -136,13 +151,8 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    const afterSlash = beforeCursor.slice(1);
-
-    // Check if we have whitespace in the command
-    if (afterSlash.includes(" ") || afterSlash.includes("\n")) {
-      setShowSlashCommands(false);
-      return;
-    }
+    // Get the complete slash command, not just the part before cursor
+    const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
@@ -407,12 +417,22 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       // Normal Enter behavior - submit if there's content
-      if (textBuffer.text.trim() && !isWaitingForResponse) {
+      if ((textBuffer.text.trim() || wasInterrupted) && !isWaitingForResponse) {
+        // Get images before expanding paste blocks
+        const imageMap = textBuffer.getAllImages();
+
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
-        inputHistory.addEntry(submittedText);
-        onSubmit(submittedText);
+
+        // Only add to history if there's actual text (not when resuming)
+        if (submittedText) {
+          inputHistory.addEntry(submittedText);
+        }
+
+        // Submit with images
+        onSubmit(submittedText, imageMap);
+
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
@@ -463,15 +483,32 @@ const UserInput: React.FC<UserInputProps> = ({
     return false;
   };
 
-  // Clear input function
-  const clearInput = () => {
-    textBuffer.clear();
-    setInputText("");
-    setCursorPosition(0);
-    setShowSlashCommands(false);
-    setShowFileSearch(false);
+  // Handle text buffer updates for async operations like image pasting
+  const handleTextBufferUpdate = () => {
+    const newText = textBuffer.text;
+    const newCursor = textBuffer.cursor;
+    setInputText(newText);
+    setCursorPosition(newCursor);
+    updateSlashCommandState(newText, newCursor);
+    updateFileSearchState(newText, newCursor);
     inputHistory.resetNavigation();
   };
+
+  // State for showing image paste hint
+  const [_hasImageInClipboard, _setHasImageInClipboard] = useState(false);
+
+  // Monitor clipboard for images and show helpful hints
+  const { checkNow: _checkClipboardNow } = useClipboardMonitor({
+    onImageStatusChange: (hasImage) => {
+      _setHasImageInClipboard(hasImage);
+      // Also notify parent component
+      if (onImageInClipboardChange) {
+        onImageInClipboardChange(hasImage);
+      }
+    },
+    enabled: !disabled && inputMode,
+    pollInterval: 2000,
+  });
 
   useInput((input, key) => {
     // Don't handle any input when disabled
@@ -489,6 +526,8 @@ const UserInput: React.FC<UserInputProps> = ({
         showFileSearch,
         cycleModes,
         clearInput,
+        textBuffer,
+        onTextBufferUpdate: handleTextBufferUpdate,
       })
     ) {
       return;
@@ -638,6 +677,15 @@ const UserInput: React.FC<UserInputProps> = ({
 
   return (
     <Box flexDirection="column">
+      {/* Interruption message - shown just above the input box */}
+      {wasInterrupted && (
+        <Box paddingX={1} marginBottom={0}>
+          <Text color="yellow">
+            ⚠ Interrupted by user - Press enter to resume
+          </Text>
+        </Box>
+      )}
+
       {/* Input box */}
       <Box
         borderStyle="round"

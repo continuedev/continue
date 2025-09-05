@@ -1,6 +1,6 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { Session } from "core/index.js";
 
 import { ToolCallPreview } from "../../tools/types.js";
 
@@ -10,6 +10,7 @@ export interface UseChatProps {
   llmApi?: BaseLlmApi;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
   onShowConfigSelector: () => void;
@@ -37,14 +38,10 @@ export interface ActivePermissionRequest {
 }
 
 export interface RemoteServerState {
-  messages: Array<{
-    role: string;
-    content?: string;
-    tool_calls?: any[];
-  }>;
-  chatHistory: ChatCompletionMessageParam[];
+  session: Session;
   isProcessing: boolean;
-  activePermissionRequest?: {
+  messageQueueLength: number;
+  pendingPermission?: {
     toolName: string;
     toolArgs: any;
     requestId: string;

@@ -8,7 +8,7 @@ import type {
   ChatCompletionTool,
 } from "openai/resources.mjs";
 
-import { getServiceSync, SERVICE_NAMES } from "../services/index.js";
+import { getServiceSync, SERVICE_NAMES, services } from "../services/index.js";
 import { systemMessageService } from "../services/SystemMessageService.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -298,6 +298,7 @@ export async function processStreamingResponse(
 }
 
 // Main function that handles the conversation loop
+// eslint-disable-next-line complexity
 export async function streamChatResponse(
   chatHistory: ChatHistoryItem[],
   model: ModelConfig,
@@ -320,6 +321,16 @@ export async function streamChatResponse(
   let finalResponse = "";
 
   while (true) {
+    // If ChatHistoryService is available, refresh local chatHistory view
+    const chatHistorySvc = services.chatHistory;
+    if (
+      typeof chatHistorySvc?.isReady === "function" &&
+      chatHistorySvc.isReady()
+    ) {
+      try {
+        chatHistory = chatHistorySvc.getHistory();
+      } catch {}
+    }
     logger.debug("Starting conversation iteration");
 
     // Recompute tools on each iteration to handle mode changes during streaming
@@ -342,6 +353,10 @@ export async function streamChatResponse(
         tools,
       });
 
+    if (abortController?.signal.aborted) {
+      return finalResponse || content || fullResponse;
+    }
+
     fullResponse += content;
 
     // Update final response based on mode
@@ -355,7 +370,7 @@ export async function streamChatResponse(
     // Handle content display
     handleContentDisplay(content, callbacks, isHeadless);
 
-    // Handle tool calls and check for early return
+    // Handle tool calls and check for early return. This updates history via ChatHistoryService.
     const shouldReturn = await handleToolCalls(
       toolCalls,
       chatHistory,
@@ -381,7 +396,18 @@ export async function streamChatResponse(
 
       // Only update chat history if compaction actually occurred
       if (wasCompacted) {
-        chatHistory = [...updatedChatHistory];
+        // Always prefer service; local copy is for temporary reads only
+        const chatHistorySvc2 = services.chatHistory;
+        if (
+          typeof chatHistorySvc2?.isReady === "function" &&
+          chatHistorySvc2.isReady()
+        ) {
+          chatHistorySvc2.setHistory(updatedChatHistory);
+          chatHistory = chatHistorySvc2.getHistory();
+        } else {
+          // Fallback only when service is unavailable
+          chatHistory = [...updatedChatHistory];
+        }
       }
     }
 

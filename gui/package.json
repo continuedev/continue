@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@continuedev/config-yaml": "file:../packages/config-yaml",
+    "@continuedev/terminal-security": "file:../packages/terminal-security",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
     "@panzoom/panzoom": "^4.6.0",
