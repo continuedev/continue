@@ -137,7 +137,10 @@ export function HistoryTableRow({
             onClick={async (e) => {
               e.stopPropagation();
               await dispatch(
-                copySession({ sessionId: sessionMetadata.sessionId }),
+                copySession({
+                  sessionId: sessionMetadata.sessionId,
+                  titlePrefix: "Copy",
+                }),
               );
             }}
           >

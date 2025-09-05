@@ -1,5 +1,6 @@
 import {
   ArrowsPointingInIcon,
+  ArrowTurnRightDownIcon,
   BarsArrowDownIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -40,6 +41,7 @@ export default function ResponseActions({
     (state) => state.session.contextPercentage,
   );
   const isPruned = useAppSelector((state) => state.session.isPruned);
+  const sessionId = useAppSelector((state) => state.session.id);
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
@@ -57,6 +59,16 @@ export default function ResponseActions({
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
     dispatch(setDialogMessage(<GenerateRuleDialog />));
+  };
+
+  const onFork = async () => {
+    const { forkSession } = await import("../../redux/thunks/session");
+    void dispatch(
+      forkSession({
+        sessionId,
+        upToMessageIndex: index,
+      }),
+    );
   };
 
   return (
@@ -104,6 +116,15 @@ export default function ResponseActions({
           <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
+
+      <HeaderButtonWithToolTip
+        testId={`fork-button-${index}`}
+        text="Copy and fork from here"
+        tabIndex={-1}
+        onClick={onFork}
+      >
+        <ArrowTurnRightDownIcon className="text-description-muted h-3.5 w-3.5" />
+      </HeaderButtonWithToolTip>
 
       <HeaderButtonWithToolTip
         testId={`delete-button-${index}`}

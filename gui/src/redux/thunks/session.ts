@@ -71,7 +71,7 @@ export const deleteSession = createAsyncThunk<void, string, ThunkApiType>(
 );
 
 export const copySession = createAsyncThunk<
-  void,
+  string, // Return the new session ID
   {
     sessionId: string;
     upToMessageIndex?: number;
@@ -81,8 +81,8 @@ export const copySession = createAsyncThunk<
 >(
   "session/copy",
   async (
-    { sessionId, upToMessageIndex, titlePrefix = "Copy of" },
-    { dispatch, extra },
+    { sessionId, upToMessageIndex, titlePrefix = "Copy" },
+    { dispatch, extra, getState },
   ) => {
     try {
       // Load the source session
@@ -119,20 +119,40 @@ export const copySession = createAsyncThunk<
         copiedHistory = copiedHistory.slice(0, upToMessageIndex + 1);
       }
 
-      // Generate new title with prefix
-      let newTitle = `${titlePrefix} ${sourceSession.title}`;
+      // Generate numbered title with prefix
+      const state = getState();
+      const existingSessions = state.session.allSessionMetadata;
+
+      // Find the next available number for this prefix
+      const prefixPattern = new RegExp(`^${titlePrefix}(\\d+) of `);
+      let maxNumber = 0;
+
+      existingSessions.forEach((session) => {
+        const match = session.title.match(prefixPattern);
+        if (match) {
+          const number = parseInt(match[1], 10);
+          if (number > maxNumber) {
+            maxNumber = number;
+          }
+        }
+      });
+
+      const nextNumber = maxNumber + 1;
+      let newTitle = `${titlePrefix}${nextNumber} of ${sourceSession.title}`;
 
       // Ensure title doesn't exceed MAX_TITLE_LENGTH
       if (newTitle.length > MAX_TITLE_LENGTH) {
-        const availableLength = MAX_TITLE_LENGTH - titlePrefix.length - 1; // -1 for space
+        const prefixWithNumber = `${titlePrefix}${nextNumber} of `;
+        const availableLength = MAX_TITLE_LENGTH - prefixWithNumber.length;
         const truncatedOriginal =
           sourceSession.title.slice(0, availableLength - 3) + "...";
-        newTitle = `${titlePrefix} ${truncatedOriginal}`;
+        newTitle = `${prefixWithNumber}${truncatedOriginal}`;
       }
 
       // Create new session with copied data
+      const newSessionId = uuidv4();
       const newSession: Session = {
-        sessionId: uuidv4(),
+        sessionId: newSessionId,
         title: newTitle,
         workspaceDirectory: sourceSession.workspaceDirectory,
         history: copiedHistory,
@@ -144,9 +164,69 @@ export const copySession = createAsyncThunk<
 
       // Refresh session metadata to show the new session in the list
       void dispatch(refreshSessionMetadata({}));
+
+      return newSessionId;
     } catch (error) {
       console.error("Failed to copy session:", error);
       throw error; // Re-throw to let the UI handle the error
+    }
+  },
+);
+
+export const forkSession = createAsyncThunk<
+  void,
+  {
+    sessionId: string;
+    upToMessageIndex: number;
+  },
+  ThunkApiType
+>(
+  "session/fork",
+  async ({ sessionId, upToMessageIndex }, { dispatch, getState, extra }) => {
+    try {
+      // Import tab actions here to avoid auto-formatting issues
+      const { addTab, setActiveTab } = await import("../slices/tabsSlice");
+
+      // Save current session if it has history
+      const state = getState();
+      if (state.session.history.length > 0) {
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: false,
+            generateTitle: true,
+          }),
+        );
+      }
+
+      // Create the forked session using copySession with "Fork" prefix
+      const result = await dispatch(
+        copySession({
+          sessionId,
+          upToMessageIndex,
+          titlePrefix: "Fork",
+        }),
+      );
+      const newSessionId = unwrapResult(result);
+
+      // Load the new session
+      const session = await getSession(extra.ideMessenger, newSessionId);
+      dispatch(newSession(session));
+
+      // Create a new tab for the forked session
+      const newTabId =
+        Date.now().toString(36) + Math.random().toString(36).substring(2);
+      dispatch(
+        addTab({
+          id: newTabId,
+          title: session.title,
+          isActive: true,
+          sessionId: newSessionId,
+        }),
+      );
+      dispatch(setActiveTab(newTabId));
+    } catch (error) {
+      console.error("Failed to fork session:", error);
+      throw error;
     }
   },
 );
