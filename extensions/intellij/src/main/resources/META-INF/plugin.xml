@@ -181,5 +181,17 @@
             <add-to-group group-id="EditorPopupMenu"/>
             <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
         </action>
+        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue" icon="/icons/continue.svg">
+            <action id="com.github.continuedev.continueintellijextension.actions.menu.file.AddFilesOrFoldersToChatAction"
+                    class="com.github.continuedev.continueintellijextension.actions.menu.file.AddFilesOrFoldersToChatAction"
+                    text="Add to the Chat">
+            </action>
+            <action id="com.github.continuedev.continueintellijextension.actions.menu.file.AddRepoMapToChatAction"
+                    class="com.github.continuedev.continueintellijextension.actions.menu.file.AddRepoMapToChatAction"
+                    text="Add to the Chat as a Repository Map">
+            </action>
+
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
     </actions>
 </idea-plugin>

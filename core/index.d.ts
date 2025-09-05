@@ -1815,6 +1815,16 @@ export interface CompiledMessagesResult {
   contextPercentage: number;
 }
 
+export interface AddChatMentionsPayload {
+  data: AddChatMentionPayload[];
+}
+
+interface AddChatMentionPayload {
+  type: "file" | "folder" | "repo-map";
+  fullPath: string;
+  name: string;
+}
+
 export interface MessageOption {
   precompiled: boolean;
 }
