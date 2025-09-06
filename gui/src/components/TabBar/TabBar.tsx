@@ -1,6 +1,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
 import styled from "styled-components";
 import { defaultBorderRadius } from "..";
 import { newSession } from "../../redux/slices/sessionSlice";
@@ -10,10 +11,14 @@ import {
   removeTab,
   setActiveTab,
   setTabs,
+  setTabModel,
 } from "../../redux/slices/tabsSlice";
 import { AppDispatch, RootState } from "../../redux/store";
 import { loadSession, saveCurrentSession } from "../../redux/thunks/session";
 import { varWithFallback } from "../../styles/theme";
+import { useAuth } from "../../context/Auth";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
+import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 
 // Haven't set up theme colors for tabs yet
 // Will keep it simple and choose from existing ones. Comments show vars we could use
@@ -137,6 +142,11 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
     (state: RootState) => state.session.history.length > 0,
   );
   const tabs = useSelector((state: RootState) => state.tabs.tabs);
+  const selectedModel = useAppSelector(selectSelectedChatModel);
+  const { selectedProfile } = useAuth();
+  const activeTab = tabs.find((tab) => tab.isActive);
+  const activeTabId = activeTab?.id;
+  const activeTabModel = activeTab?.modelTitle;
 
   // Simple UUID generator for our needs
   const generateId = useCallback(() => {
@@ -155,6 +165,15 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
     );
   }, [currentSessionId, currentSessionTitle]);
 
+  // Persist selected model into the active tab in Redux
+  useEffect(() => {
+    if (activeTabId && selectedModel?.title) {
+      dispatch(
+        setTabModel({ id: activeTabId, modelTitle: selectedModel.title }),
+      );
+    }
+  }, [activeTabId, selectedModel?.title, dispatch]);
+
   const handleNewTab = async () => {
     // Save current session before creating new one
     if (hasHistory) {
@@ -171,6 +190,7 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
         title: `Chat ${tabs.length + 1}`,
         isActive: true,
         sessionId: undefined,
+        modelTitle: selectedModel?.title,
       }),
     );
   };
@@ -196,6 +216,16 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
     }
 
     dispatch(setActiveTab(id));
+    // restore model for this tab
+    if (targetTab.modelTitle && selectedProfile) {
+      void dispatch(
+        updateSelectedModelByRole({
+          selectedProfile,
+          role: "chat",
+          modelTitle: targetTab.modelTitle,
+        }),
+      );
+    }
   };
 
   const handleTabClose = async (id: string) => {

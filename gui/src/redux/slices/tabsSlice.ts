@@ -5,6 +5,7 @@ export interface Tab {
   title: string;
   isActive: boolean;
   sessionId?: string;
+  modelTitle?: string; // store per-tab model
 }
 
 interface TabsState {
@@ -17,6 +18,7 @@ const initialState: TabsState = {
       id: Date.now().toString(36) + Math.random().toString(36).substring(2),
       title: "Chat 1",
       isActive: true,
+      modelTitle: undefined,
     },
   ],
 };
@@ -35,6 +37,16 @@ export const tabsSlice = createSlice({
       const { id, updates } = action.payload;
       state.tabs = state.tabs.map((tab) =>
         tab.id === id ? { ...tab, ...updates } : tab,
+      );
+    },
+    // Set the model title for a specific tab
+    setTabModel: (
+      state,
+      action: PayloadAction<{ id: string; modelTitle: string }>,
+    ) => {
+      const { id, modelTitle } = action.payload;
+      state.tabs = state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, modelTitle } : tab,
       );
     },
     addTab: (state, action: PayloadAction<Tab>) => {
@@ -122,6 +134,7 @@ export const tabsSlice = createSlice({
             title: currentSessionTitle,
             isActive: true,
             sessionId: currentSessionId,
+            modelTitle: undefined,
           });
       }
     },
@@ -131,6 +144,7 @@ export const tabsSlice = createSlice({
 export const {
   setTabs,
   updateTab,
+  setTabModel,
   addTab,
   removeTab,
   setActiveTab,
