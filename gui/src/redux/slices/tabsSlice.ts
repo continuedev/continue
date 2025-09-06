@@ -1,10 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { MessageModes } from "core";
 
 export interface Tab {
   id: string;
   title: string;
   isActive: boolean;
   sessionId?: string;
+  modelTitle?: string; // store per-tab model
+  mode?: MessageModes; // store per-tab mode ('chat' | 'plan' | 'agent')
 }
 
 interface TabsState {
@@ -17,6 +20,8 @@ const initialState: TabsState = {
       id: Date.now().toString(36) + Math.random().toString(36).substring(2),
       title: "Chat 1",
       isActive: true,
+      modelTitle: undefined,
+      mode: "chat",
     },
   ],
 };
@@ -35,6 +40,26 @@ export const tabsSlice = createSlice({
       const { id, updates } = action.payload;
       state.tabs = state.tabs.map((tab) =>
         tab.id === id ? { ...tab, ...updates } : tab,
+      );
+    },
+    // Set the model title for a specific tab
+    setTabModel: (
+      state,
+      action: PayloadAction<{ id: string; modelTitle: string }>,
+    ) => {
+      const { id, modelTitle } = action.payload;
+      state.tabs = state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, modelTitle } : tab,
+      );
+    },
+    // Set the mode for a specific tab
+    setTabMode: (
+      state,
+      action: PayloadAction<{ id: string; mode: MessageModes }>,
+    ) => {
+      const { id, mode } = action.payload;
+      state.tabs = state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, mode } : tab,
       );
     },
     addTab: (state, action: PayloadAction<Tab>) => {
@@ -122,6 +147,7 @@ export const tabsSlice = createSlice({
             title: currentSessionTitle,
             isActive: true,
             sessionId: currentSessionId,
+            modelTitle: undefined,
           });
       }
     },
@@ -131,6 +157,8 @@ export const tabsSlice = createSlice({
 export const {
   setTabs,
   updateTab,
+  setTabModel,
+  setTabMode,
   addTab,
   removeTab,
   setActiveTab,
