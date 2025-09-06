@@ -2,18 +2,17 @@ import { ConfigYaml } from "@continuedev/config-yaml";
 import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
-import { updateIndexingStatus } from "../../../../../redux/slices/indexingSlice";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { updateIndexingStatus } from "../../../../redux/slices/indexingSlice";
 import {
   setDialogMessage,
   setShowDialog,
-} from "../../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../../util";
-import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
-import { ToolTip } from "../../../../gui/Tooltip";
-import EditBlockButton from "../../EditBlockButton";
-import { useLump } from "../../LumpContext";
+} from "../../../../redux/slices/uiSlice";
+import { fontSize } from "../../../../util";
+import ConfirmationDialog from "../../../../components/dialogs/ConfirmationDialog";
+import { ToolTip } from "../../../../components/gui/Tooltip";
+import EditBlockButton from "../../../../components/mainInput/Lump/EditBlockButton";
 import { IndexedPagesTooltip } from "./IndexedPagesTooltip";
 import { StatusIndicator } from "./StatusIndicator";
 
@@ -28,7 +27,6 @@ function DocsIndexingStatus({
 }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
-  const { hideLump } = useLump();
   const [indexedPages, setIndexedPages] = useState<null | string[]>(null);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -127,7 +125,6 @@ function DocsIndexingStatus({
           onClick={() => {
             if (status?.url) {
               ideMessenger.post("openUrl", status.url);
-              hideLump();
             }
           }}
         >

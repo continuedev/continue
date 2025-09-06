@@ -172,9 +172,8 @@ export function HelpSection() {
   };
 
   return (
-    <div className="flex flex-col py-4">
+    <div className="flex flex-col">
       <ConfigHeader title="Help Center" />
-
       <div className="space-y-6">
         {/* Resources */}
         <div>

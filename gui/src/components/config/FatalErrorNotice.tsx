@@ -5,7 +5,6 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { ROUTES } from "../../util/navigation";
 import Alert from "../gui/Alert";
-import { useLump } from "../mainInput/Lump/LumpContext";
 
 export const FatalErrorIndicator = () => {
   const { refreshProfiles } = useAuth();
@@ -18,12 +17,10 @@ export const FatalErrorIndicator = () => {
     return configError?.some((error) => error.fatal);
   }, [configError]);
 
-  const { setSelectedSection, selectedSection } = useLump();
   const configLoading = useAppSelector((state) => state.config.loading);
 
-  const showLumpErrorSection = () => {
-    navigate(ROUTES.HOME);
-    setSelectedSection("error");
+  const showConfigPage = () => {
+    navigate("/config?tab=agents");
   };
 
   const { selectedProfile } = useAuth();
@@ -68,8 +65,8 @@ export const FatalErrorIndicator = () => {
           </div>
         )}
         <div
-          onClick={showLumpErrorSection}
-          className={`cursor-pointer underline transition-all ${selectedSection === "error" ? "opacity-0" : ""}`}
+          onClick={showConfigPage}
+          className="cursor-pointer underline"
         >
           View
         </div>

@@ -70,19 +70,20 @@ const spacingSizes = {
   lg: "ml-2",
 };
 
-function Alert({ type = "info", size = "lg", ...props }: AlertProps) {
+function Alert({ type = "info", size = "lg", className, children, ...props }: AlertProps) {
   const { Icon, background, border, text, iconColor } = ALERT_CONFIGS[type];
 
   return (
     <div
       className={cn(
         `flex flex-row items-center ${background} border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
-        props.className,
+        className,
       )}
+      {...props}
     >
       <Icon className={`flex-shrink-0 ${iconColor} ${iconSizes[size]}`} />
       <div className="flex flex-1 flex-col">
-        <div className={`${spacingSizes[size]} ${text}`}>{props.children}</div>
+        <div className={`${spacingSizes[size]} ${text}`}>{children}</div>
       </div>
     </div>
   );

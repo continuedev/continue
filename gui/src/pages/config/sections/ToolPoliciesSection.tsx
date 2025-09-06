@@ -1,4 +1,5 @@
 import {
+  ChevronDownIcon,
   ChevronRightIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -10,7 +11,7 @@ import { Tooltip } from "react-tooltip";
 import Alert from "../../../components/gui/Alert";
 import ToggleSwitch from "../../../components/gui/Switch";
 import { ToolTip } from "../../../components/gui/Tooltip";
-import { Card } from "../../../components/ui";
+import { Card, Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../../../components/ui";
 import { useFontSize } from "../../../components/ui/font";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -117,43 +118,46 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
           </div>
         </div>
 
-        <div
-          className={`flex w-8 select-none flex-row items-center justify-end gap-2 px-2 py-0.5 sm:w-16 ${disabled ? "cursor-not-allowed" : "hover:text-list-active-foreground cursor-pointer hover:brightness-125"}`}
-          data-testid={`tool-policy-item-${props.tool.function.name}`}
-          data-tooltip-id={disabled ? disabledTooltipId : undefined}
-          onClick={
-            disabled
-              ? undefined
-              : (e) => {
-                  dispatch(toggleToolSetting(props.tool.function.name));
-                  e.stopPropagation();
-                  e.preventDefault();
-                }
-          }
-        >
-          {disabled || policy === "disabled" ? (
-            <>
-              <span className="text-lightgray sm:hidden">Off</span>
-              <span className="text-lightgray hidden sm:inline-block">
-                Excluded
-              </span>
-            </>
-          ) : policy === "allowedWithoutPermission" ? (
-            <>
-              <span className="text-success sm:hidden">Auto</span>
-              <span className="text-success hidden sm:inline-block">
-                Automatic
-              </span>
-            </>
-          ) : (
-            // allowedWithPermission
-            <>
-              <span className="text-warning sm:hidden">Ask</span>
-              <span className="text-warning hidden sm:inline-block">
-                Ask First
-              </span>
-            </>
-          )}
+        <div className="flex w-20 justify-end sm:w-24">
+          <Listbox
+            value={disabled || policy === "disabled" ? "disabled" : policy}
+            onChange={(newPolicy) => {
+              if (!disabled && newPolicy !== policy) {
+                dispatch(toggleToolSetting(props.tool.function.name));
+              }
+            }}
+            disabled={disabled}
+          >
+            <div className="relative">
+              <ListboxButton
+                className={`h-7 w-full justify-between ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+                data-testid={`tool-policy-item-${props.tool.function.name}`}
+                data-tooltip-id={disabled ? disabledTooltipId : undefined}
+              >
+                <span className="text-xs">
+                  {disabled || policy === "disabled"
+                    ? "Excluded"
+                    : policy === "allowedWithoutPermission"
+                      ? "Automatic"
+                      : "Ask First"}
+                </span>
+                <ChevronDownIcon className="h-3 w-3" />
+              </ListboxButton>
+              {!disabled && (
+                <ListboxOptions>
+                  <ListboxOption value="allowedWithoutPermission">
+                    Automatic
+                  </ListboxOption>
+                  <ListboxOption value="allowedWithPermission">
+                    Ask First
+                  </ListboxOption>
+                  <ListboxOption value="disabled">
+                    Excluded
+                  </ListboxOption>
+                </ListboxOptions>
+              )}
+            </div>
+          </Listbox>
         </div>
         <Tooltip id={disabledTooltipId}>
           {mode === "chat"
@@ -193,6 +197,9 @@ export const ToolPoliciesSection = () => {
     (store) => store.ui.toolGroupSettings,
   );
   const dispatch = useAppDispatch();
+  const [expandedGroups, setExpandedGroups] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const toolsByGroup = useMemo(() => {
     const byGroup: Record<string, Tool[]> = {};
@@ -235,59 +242,90 @@ export const ToolPoliciesSection = () => {
 
   const message = getMessage(mode);
 
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupName]: !prev[groupName],
+    }));
+  };
+
   return (
     <div>
       <ConfigHeader title="Tool Policies" />
 
-      <Card>
-        {(mode === "chat" || mode === "plan") && (
-          <div className="bg-background sticky top-0 z-10 my-1 mb-3">
-            <Alert type="info" size="sm">
-              <span className="text-2xs italic">{message}</span>
-            </Alert>
-          </div>
-        )}
-        {toolsByGroup.length === 0 && (
+      {(mode === "chat" || mode === "plan") && (
+        <div className="mb-4">
+          <Alert type="info" size="sm">
+            <span className="text-2xs italic">{message}</span>
+          </Alert>
+        </div>
+      )}
+
+      {toolsByGroup.length === 0 ? (
+        <Card>
           <span className="text-description text-sm italic">
             No tools available
           </span>
-        )}
-        {toolsByGroup.map(([groupName, tools]) => {
-          const isGroupEnabled =
-            !allToolsOff && toolGroupSettings[groupName] !== "exclude";
-          return (
-            <div key={groupName} className="mt-2 flex flex-col pr-1">
-              <div className="flex flex-row items-center justify-between px-1">
-                <h3
-                  className="m-0 p-0 font-bold"
-                  style={{
-                    fontSize: fontSize(-2),
-                  }}
-                >
-                  {groupName}
-                </h3>
-                <ToggleSwitch
-                  isToggled={isGroupEnabled}
-                  onToggle={() => dispatch(toggleToolGroupSetting(groupName))}
-                  text=""
-                  size={10}
-                  disabled={allToolsOff}
-                />
-              </div>
-              <div className={`relative flex flex-col p-1`}>
-                {tools.map((tool) => (
-                  <ToolPolicyItem
-                    key={tool.uri + tool.function.name}
-                    tool={tool}
-                    duplicatesDetected={duplicateDetection[tool.function.name]}
-                    isGroupEnabled={isGroupEnabled}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </Card>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {toolsByGroup.map(([groupName, tools]) => {
+            const isGroupEnabled =
+              !allToolsOff && toolGroupSettings[groupName] !== "exclude";
+            const isExpanded = expandedGroups[groupName];
+
+            return (
+              <Card key={groupName}>
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="flex flex-1 cursor-pointer items-center gap-3 py-1"
+                      onClick={() => toggleGroup(groupName)}
+                    >
+                      <ChevronDownIcon
+                        className={`h-4 w-4 transition-transform ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                      <h3
+                        className="m-0 p-0 font-semibold"
+                        style={{
+                          fontSize: fontSize(-1),
+                        }}
+                      >
+                        {groupName}
+                      </h3>
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-600 text-xs font-medium text-white">
+                        {tools.length}
+                      </div>
+                    </div>
+                    <ToggleSwitch
+                      isToggled={isGroupEnabled}
+                      onToggle={() => dispatch(toggleToolGroupSetting(groupName))}
+                      text=""
+                      size={10}
+                      disabled={allToolsOff}
+                    />
+                  </div>
+
+                  {isExpanded && (
+                    <div className="mt-3 space-y-1">
+                      {tools.map((tool) => (
+                        <ToolPolicyItem
+                          key={tool.uri + tool.function.name}
+                          tool={tool}
+                          duplicatesDetected={duplicateDetection[tool.function.name]}
+                          isGroupEnabled={isGroupEnabled}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,9 +1,9 @@
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { ModelRole } from "@continuedev/config-yaml";
 import { ModelDescription } from "core";
 import { useContext } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
-import { Card } from "../../../components/ui";
+import { Button, Card } from "../../../components/ui";
 import { Divider } from "../../../components/ui/Divider";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -12,7 +12,6 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../../redux/thunks/updateSelectedModelByRole";
 import { isJetBrains } from "../../../util";
-import { ConfigHeader } from "../ConfigHeader";
 import ModelRoleSelector from "../components/ModelRoleSelector";
 
 export function ModelsSection() {
@@ -49,27 +48,42 @@ export function ModelsSection() {
   }
 
   function handleAddModel() {
-    dispatch(setShowDialog(true));
-    dispatch(
-      setDialogMessage(
-        <AddModelForm
-          onDone={() => {
-            dispatch(setShowDialog(false));
-          }}
-        />,
-      ),
-    );
+    const isLocal = selectedProfile?.profileType === "local";
+    
+    if (isLocal) {
+      dispatch(setShowDialog(true));
+      dispatch(
+        setDialogMessage(
+          <AddModelForm
+            onDone={() => {
+              dispatch(setShowDialog(false));
+            }}
+          />,
+        ),
+      );
+    } else {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "?type=models",
+        orgSlug: undefined,
+      });
+    }
   }
 
   return (
-    <div>
-      <ConfigHeader
-        title="Models"
-        onAddClick={
-          selectedProfile?.profileType === "local" ? handleAddModel : undefined
-        }
-        addButtonTooltip="Add a model"
-      />
+    <>
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex flex-col">
+          <h2 className="mb-0 text-xl font-semibold">Models</h2>
+        </div>
+        <Button
+          onClick={handleAddModel}
+          variant="ghost"
+          size="sm"
+          className="my-0 h-8 w-8 p-0"
+        >
+          <PlusCircleIcon className="text-description h-5 w-5" />
+        </Button>
+      </div>
 
       <Card>
         <div className="pb-6">
@@ -269,6 +283,6 @@ export function ModelsSection() {
           </div>
         </div>
       </Card>
-    </div>
+    </>
   );
 }

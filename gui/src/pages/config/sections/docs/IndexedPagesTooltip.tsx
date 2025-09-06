@@ -1,12 +1,12 @@
 import { EyeIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useDispatch } from "react-redux";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import {
   setDialogMessage,
   setShowDialog,
-} from "../../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../../util";
+} from "../../../../redux/slices/uiSlice";
+import { fontSize } from "../../../../util";
 import DocsDetailsDialog from "./DocsDetailsDialog";
 
 interface IndexedPagesTooltipProps {

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import {
   setDialogMessage,
   setShowDialog,
-} from "../../../../../redux/slices/uiSlice";
+} from "../../../../redux/slices/uiSlice";
 
 export interface DocsIndexingPeekProps {
   status: IndexingStatus;

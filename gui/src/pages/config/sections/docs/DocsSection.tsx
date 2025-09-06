@@ -1,9 +1,9 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
-import { useAuth } from "../../../../../context/Auth";
-import { useAppSelector } from "../../../../../redux/hooks";
-import { ExploreBlocksButton } from "../ExploreBlocksButton";
+import { useAuth } from "../../../../context/Auth";
+import { useAppSelector } from "../../../../redux/hooks";
+import { EmptyState } from "../../../../components/ui";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
 function DocsIndexingStatuses() {
@@ -48,6 +48,12 @@ function DocsIndexingStatuses() {
     return docs;
   }, [mergedDocs, indexingStatuses]);
 
+  if (sortedConfigDocs.length === 0) {
+    return (
+      <EmptyState message="No documentation sources configured. Click the + button to add your first docs." />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-col overflow-y-auto overflow-x-hidden pr-2">
@@ -67,7 +73,6 @@ function DocsIndexingStatuses() {
           );
         })}
       </div>
-      <ExploreBlocksButton blockType="docs" />
     </div>
   );
 }

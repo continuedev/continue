@@ -2,19 +2,19 @@ import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   BookmarkIcon as BookmarkOutline,
   PencilIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { SlashCommandDescWithSource } from "core";
 import { useContext, useMemo } from "react";
-import { useLump } from "../../../components/mainInput/Lump/LumpContext";
-import { ExploreBlocksButton } from "../../../components/mainInput/Lump/sections/ExploreBlocksButton";
 import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
+import { ToolTip } from "../../../components/gui/Tooltip";
+import { Button, Card, EmptyState } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
 import { useAppSelector } from "../../../redux/hooks";
 import { fontSize } from "../../../util";
-import { ConfigHeader } from "../ConfigHeader";
 
 interface PromptCommandWithSlug extends SlashCommandDescWithSource {
   slug?: string;
@@ -37,7 +37,6 @@ function PromptRow({
   onEdit,
 }: PromptRowProps) {
   const { mainEditor } = useMainEditor();
-  const { hideLump } = useLump();
 
   const handlePromptClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,7 +45,6 @@ function PromptRow({
       description: prompt.description,
       content: prompt.prompt,
     });
-    hideLump();
   };
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
@@ -108,6 +106,7 @@ export function PromptsSection() {
   const { selectedProfile } = useAuth();
   const { isCommandBookmarked, toggleBookmark } = useBookmarkedSlashCommands();
   const ideMessenger = useContext(IdeMessengerContext);
+  const isLocal = selectedProfile?.profileType === "local";
 
   const slashCommands = useAppSelector(
     (state) => state.config.config.slashCommands ?? [],
@@ -127,6 +126,19 @@ export function PromptsSection() {
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
         element: { sourceFile: (prompt as any).sourceFile },
+      });
+    }
+  };
+
+  const handleAddPrompt = () => {
+    if (isLocal) {
+      void ideMessenger.request("config/addLocalWorkspaceBlock", {
+        blockType: "prompts",
+      });
+    } else {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "new?type=block&blockType=prompts",
+        orgSlug: undefined,
       });
     }
   };
@@ -166,17 +178,37 @@ export function PromptsSection() {
 
   return (
     <div className="flex flex-col">
-      <ConfigHeader title="Prompts" />
-      {sortedCommands.map((prompt) => (
-        <PromptRow
-          key={prompt.name}
-          prompt={prompt}
-          isBookmarked={isCommandBookmarked(prompt.name)}
-          setIsBookmarked={() => toggleBookmark(prompt)}
-          onEdit={() => handleEdit(prompt)}
-        />
-      ))}
-      <ExploreBlocksButton blockType="prompts" />
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex flex-col">
+          <h2 className="mb-0 text-xl font-semibold">Prompts</h2>
+        </div>
+        <Button
+          onClick={handleAddPrompt}
+          variant="ghost"
+          size="sm"
+          className="my-0 h-8 w-8 p-0"
+        >
+          <PlusCircleIcon className="text-description h-5 w-5" />
+        </Button>
+      </div>
+      
+      {sortedCommands.length > 0 ? (
+        <div>
+          {sortedCommands.map((prompt) => (
+            <PromptRow
+              key={prompt.name}
+              prompt={prompt}
+              isBookmarked={isCommandBookmarked(prompt.name)}
+              setIsBookmarked={() => toggleBookmark(prompt)}
+              onEdit={() => handleEdit(prompt)}
+            />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState message="No prompts configured. Click the + button to add your first prompt." />
+        </Card>
+      )}
     </div>
   );
 }

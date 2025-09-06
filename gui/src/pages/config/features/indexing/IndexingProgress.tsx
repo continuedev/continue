@@ -6,7 +6,10 @@ import { useDispatch } from "react-redux";
 import ConfirmationDialog from "../../../../components/dialogs/ConfirmationDialog";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../../hooks/useWebviewListener";
-import { setDialogMessage, setShowDialog } from "../../../../redux/slices/uiSlice";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../../../redux/slices/uiSlice";
 import { isJetBrains } from "../../../../util";
 import IndexingProgressBar from "./IndexingProgressBar";
 import IndexingProgressErrorText from "./IndexingProgressErrorText";
@@ -108,7 +111,7 @@ function IndexingProgress() {
   }
 
   return (
-    <div className="mt-4 flex flex-col">
+    <div className="flex flex-col">
       <div className="mb-0 flex justify-between text-sm">
         <IndexingProgressTitleText update={update} />
         {!["loading", "waiting"].includes(update.status) && (

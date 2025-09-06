@@ -5,8 +5,8 @@ import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox"
 import { Divider } from "../../components/ui/Divider";
 import { useAuth } from "../../context/Auth";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
 import { TabGroup } from "./components/ui/TabGroup";
+import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
 import { AccountDropdown } from "./features/account/AccountDropdown";
 
 function ConfigPage() {
@@ -56,7 +56,7 @@ function ConfigPage() {
               {index === 0 && shouldRenderOrgInfo && (
                 <>
                   <Divider />
-                  <AssistantAndOrgListbox variant="large" />
+                  <AssistantAndOrgListbox variant="sidebar" />
                 </>
               )}
             </>

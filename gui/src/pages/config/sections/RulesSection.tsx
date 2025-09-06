@@ -1,18 +1,26 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
+  BookmarkIcon as BookmarkOutline,
   EyeIcon,
   PencilIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
-import { RuleWithSource } from "core";
+import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
+import { RuleWithSource, SlashCommandDescWithSource } from "core";
 import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
 import { useContext, useMemo } from "react";
+import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
+import Switch from "../../../components/gui/Switch";
+import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
+import { Button, Card, EmptyState, useFontSize } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   DEFAULT_RULE_SETTING,
@@ -20,11 +28,90 @@ import {
   setShowDialog,
   toggleRuleSetting,
 } from "../../../redux/slices/uiSlice";
-import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
-import Switch from "../../../components/gui/Switch";
-import { Card, useFontSize } from "../../../components/ui";
-import { ExploreBlocksButton } from "../../../components/mainInput/Lump/sections/ExploreBlocksButton";
-import { ConfigHeader } from "../ConfigHeader";
+import { fontSize } from "../../../util";
+
+interface PromptCommandWithSlug extends SlashCommandDescWithSource {
+  slug?: string;
+}
+
+interface PromptRowProps {
+  prompt: PromptCommandWithSlug;
+  isBookmarked: boolean;
+  setIsBookmarked: (isBookmarked: boolean) => void;
+  onEdit?: () => void;
+}
+
+/**
+ * Displays a single prompt row with bookmark and edit controls
+ */
+function PromptRow({
+  prompt,
+  isBookmarked,
+  setIsBookmarked,
+  onEdit,
+}: PromptRowProps) {
+  const { mainEditor } = useMainEditor();
+
+  const handlePromptClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    mainEditor?.commands.insertPrompt({
+      title: prompt.name,
+      description: prompt.description,
+      content: prompt.prompt,
+    });
+  };
+
+  const handleBookmarkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsBookmarked(!isBookmarked);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit();
+    }
+  };
+
+  const canEdit =
+    prompt.promptFile && !prompt.promptFile.startsWith("builtin:");
+
+  return (
+    <div
+      className="hover:bg-list-active hover:text-list-active-foreground flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:cursor-pointer"
+      onClick={handlePromptClick}
+      style={{
+        fontSize: fontSize(-3),
+      }}
+    >
+      <div className="flex min-w-0 flex-col">
+        <span className="text-vscForeground shrink-0 font-medium">
+          {prompt.name}
+        </span>
+        <span className="line-clamp-2 text-[11px] text-gray-400">
+          {prompt.description}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <PencilIcon
+          className={`h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125 ${!canEdit ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
+          onClick={canEdit ? handleEditClick : undefined}
+          aria-disabled={!canEdit}
+        />
+        <div
+          onClick={handleBookmarkClick}
+          className="cursor-pointer pt-0.5 text-gray-400 hover:brightness-125"
+        >
+          {isBookmarked ? (
+            <BookmarkSolid className="h-3 w-3" />
+          ) : (
+            <BookmarkOutline className="h-3 w-3" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface RuleCardProps {
   rule: RuleWithSource;
@@ -181,10 +268,140 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   );
 };
 
-export function RulesSection() {
+/**
+ * Section that displays all available prompts with bookmarking functionality
+ */
+function PromptsSubSection() {
+  const { selectedProfile } = useAuth();
+  const { isCommandBookmarked, toggleBookmark } = useBookmarkedSlashCommands();
+  const ideMessenger = useContext(IdeMessengerContext);
+  const isLocal = selectedProfile?.profileType === "local";
+
+  const slashCommands = useAppSelector(
+    (state) => state.config.config.slashCommands ?? [],
+  );
+
+  const handleEdit = (prompt: PromptCommandWithSlug) => {
+    if (prompt.promptFile) {
+      ideMessenger.post("openFile", {
+        path: prompt.promptFile,
+      });
+    } else if (prompt.slug) {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: `${prompt.slug}/new-version`,
+        orgSlug: undefined,
+      });
+    } else {
+      ideMessenger.post("config/openProfile", {
+        profileId: undefined,
+        element: { sourceFile: (prompt as any).sourceFile },
+      });
+    }
+  };
+
+  const handleAddPrompt = () => {
+    if (isLocal) {
+      void ideMessenger.request("config/addLocalWorkspaceBlock", {
+        blockType: "prompts",
+      });
+    } else {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "?type=prompts",
+        orgSlug: undefined,
+      });
+    }
+  };
+
+  const sortedCommands = useMemo(() => {
+    const promptsWithSlug: PromptCommandWithSlug[] =
+      structuredClone(slashCommands);
+    // get the slugs from rawYaml
+    if (selectedProfile?.rawYaml) {
+      const parsed = parseConfigYaml(selectedProfile.rawYaml);
+      const parsedPrompts = parsed.prompts ?? [];
+
+      let index = 0;
+      for (const commandWithSlug of promptsWithSlug) {
+        // skip for local prompt files
+        if (commandWithSlug.promptFile) continue;
+
+        const yamlPrompt = parsedPrompts[index];
+        if (yamlPrompt) {
+          if ("uses" in yamlPrompt) {
+            commandWithSlug.slug = yamlPrompt.uses;
+          } else {
+            commandWithSlug.slug = `${selectedProfile?.fullSlug.ownerSlug}/${selectedProfile?.fullSlug.packageSlug}`;
+          }
+        }
+        index = index + 1;
+      }
+    }
+    return promptsWithSlug.sort((a, b) => {
+      const aBookmarked = isCommandBookmarked(a.name);
+      const bBookmarked = isCommandBookmarked(b.name);
+      if (aBookmarked && !bBookmarked) return -1;
+      if (!aBookmarked && bBookmarked) return 1;
+      return 0;
+    });
+  }, [slashCommands, isCommandBookmarked, selectedProfile]);
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="mb-0 text-sm font-semibold">Prompts</h3>
+        <Button
+          onClick={handleAddPrompt}
+          variant="ghost"
+          size="sm"
+          className="my-0 h-8 w-8 p-0"
+        >
+          <PlusCircleIcon className="text-description h-5 w-5" />
+        </Button>
+      </div>
+
+      {sortedCommands.length > 0 ? (
+        <Card>
+          <div>
+            {sortedCommands.map((prompt) => (
+              <PromptRow
+                key={prompt.name}
+                prompt={prompt}
+                isBookmarked={isCommandBookmarked(prompt.name)}
+                setIsBookmarked={() => toggleBookmark(prompt)}
+                onEdit={() => handleEdit(prompt)}
+              />
+            ))}
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <EmptyState message="No prompts configured. Click the + button to add your first prompt." />
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function RulesSubSection() {
   const { selectedProfile } = useAuth();
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
+  const ideMessenger = useContext(IdeMessengerContext);
+  const isLocal = selectedProfile?.profileType === "local";
+
+  const handleAddRule = () => {
+    if (isLocal) {
+      void ideMessenger.request("config/addLocalWorkspaceBlock", {
+        blockType: "rules",
+      });
+    } else {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "?type=rules",
+        orgSlug: undefined,
+      });
+    }
+  };
+
   const sortedRules: RuleWithSource[] = useMemo(() => {
     const rules = [...config.rules.map((rule) => ({ ...rule }))];
 
@@ -265,16 +482,46 @@ export function RulesSection() {
 
   return (
     <div>
-      <ConfigHeader title="Rules" />
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="mb-0 text-sm font-semibold">Rules</h3>
+        <Button
+          onClick={handleAddRule}
+          variant="ghost"
+          size="sm"
+          className="my-0 h-8 w-8 p-0"
+        >
+          <PlusCircleIcon className="text-description h-5 w-5" />
+        </Button>
+      </div>
 
       <Card>
-        <div className="flex flex-col gap-3">
-          {sortedRules.map((rule, index) => (
-            <RuleCard key={index} rule={rule} />
-          ))}
-          <ExploreBlocksButton blockType="rules" />
-        </div>
+        {sortedRules.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {sortedRules.map((rule, index) => (
+              <RuleCard key={index} rule={rule} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState message="No rules configured. Click the + button to add your first rule." />
+        )}
       </Card>
     </div>
+  );
+}
+
+export function RulesSection() {
+  return (
+    <>
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex flex-col">
+          <h2 className="mb-0 text-xl font-semibold">Rules</h2>
+        </div>
+      </div>
+
+      <div className="space-y-10">
+        <RulesSubSection />
+        <PromptsSubSection />
+      </div>
+    </>
   );
 }

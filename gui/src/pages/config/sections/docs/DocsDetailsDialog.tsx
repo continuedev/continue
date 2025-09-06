@@ -2,12 +2,12 @@ import { DocsIndexingDetails } from "core";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Tooltip } from "react-tooltip";
-import { SecondaryButton } from "../../../..";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { SecondaryButton } from "../../../../components";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import {
   setDialogMessage,
   setShowDialog,
-} from "../../../../../redux/slices/uiSlice";
+} from "../../../../redux/slices/uiSlice";
 
 interface DocsDetailsDialogProps {
   startUrl: string;

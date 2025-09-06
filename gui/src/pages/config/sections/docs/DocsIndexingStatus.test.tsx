@@ -8,9 +8,9 @@ import {
 import { SiteIndexingConfig } from "core";
 import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider } from "../../../../../context/Auth";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { createMockStore } from "../../../../../util/test/mockStore";
+import { AuthProvider } from "../../../../context/Auth";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { createMockStore } from "../../../../util/test/mockStore";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
 const mockLumpContext = {

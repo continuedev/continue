@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { createMockStore } from "../../../../../util/test/mockStore";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { createMockStore } from "../../../../util/test/mockStore";
 import { IndexedPagesTooltip } from "./IndexedPagesTooltip";
 
 describe("IndexedPagesTooltip", () => {

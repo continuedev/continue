@@ -1,5 +1,5 @@
 import { IndexingStatus } from "core";
-import { ToolTip } from "../../../../gui/Tooltip";
+import { ToolTip } from "../../../../components/gui/Tooltip";
 
 interface StatusIndicatorProps {
   status?: IndexingStatus["status"];

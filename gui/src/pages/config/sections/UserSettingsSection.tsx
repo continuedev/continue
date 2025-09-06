@@ -125,9 +125,8 @@ export function UserSettingsSection() {
   return (
     <div>
       {hubEnabled ? (
-        <div className="flex flex-col py-4">
+        <div className="flex flex-col">
           <ConfigHeader title="User Settings" />
-
           <div className="space-y-6">
             {/* Chat Interface Settings */}
             <div>
