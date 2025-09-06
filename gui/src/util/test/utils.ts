@@ -10,7 +10,7 @@ function logDomText() {
   const doc = parser.parseFromString(bodyText, "text/html");
   let cleaned = doc.body.textContent ?? "";
   cleaned = cleaned?.replace(
-    "No resultsAaModelsRulesDocsPromptsToolsMCPCreate your first assistant",
+    "No resultsAaModelsRulesDocsPromptsToolsMCPCreate your first agent",
     "",
   );
   cleaned = cleaned?.replace(

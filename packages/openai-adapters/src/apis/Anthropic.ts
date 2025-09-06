@@ -10,7 +10,7 @@ import {
   CompletionCreateParamsStreaming,
   CompletionUsage,
 } from "openai/resources/index";
-import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
+import { ChatCompletionCreateParams } from "openai/resources/index.js";
 import { AnthropicConfig } from "../types.js";
 import {
   chatChunk,
@@ -93,18 +93,27 @@ export class AnthropicApi implements BaseLlmApi {
       model: oaiBody.model,
       stop_sequences: stop,
       stream: oaiBody.stream,
-      tools: oaiBody.tools?.map((tool) => ({
-        name: tool.function.name,
-        description: tool.function.description,
-        input_schema: tool.function.parameters,
-      })),
+      tools: oaiBody.tools?.map((tool) => {
+        // Type guard for function tools
+        if (tool.type === "function" && "function" in tool) {
+          return {
+            name: tool.function.name,
+            description: tool.function.description,
+            input_schema: tool.function.parameters,
+          };
+        } else {
+          throw new Error(`Unsupported tool type in Anthropic: ${tool.type}`);
+        }
+      }),
       tool_choice: oaiBody.tool_choice
         ? {
             type: "tool",
             name:
               typeof oaiBody.tool_choice === "string"
                 ? oaiBody.tool_choice
-                : oaiBody.tool_choice?.function.name,
+                : oaiBody.tool_choice && "function" in oaiBody.tool_choice
+                  ? oaiBody.tool_choice.function.name
+                  : undefined,
           }
         : undefined,
     };
@@ -133,15 +142,22 @@ export class AnthropicApi implements BaseLlmApi {
       } else if (message.role === "assistant" && message.tool_calls) {
         return {
           role: "assistant",
-          content: message.tool_calls.map((toolCall) => ({
-            type: "tool_use",
-            id: toolCall.id,
-            name: toolCall.function?.name,
-            input: safeParseArgs(
-              toolCall.function?.arguments,
-              `${toolCall.function?.name} ${toolCall.id}`,
-            ),
-          })),
+          content: message.tool_calls.map((toolCall) => {
+            // Type guard for function tool calls
+            if (toolCall.type === "function" && "function" in toolCall) {
+              return {
+                type: "tool_use",
+                id: toolCall.id,
+                name: toolCall.function?.name,
+                input: safeParseArgs(
+                  toolCall.function?.arguments,
+                  `${toolCall.function?.name} ${toolCall.id}`,
+                ),
+              };
+            } else {
+              throw new Error(`Unsupported tool call type: ${toolCall.type}`);
+            }
+          }),
         };
       }
 

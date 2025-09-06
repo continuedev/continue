@@ -9,7 +9,6 @@ import {
 import Handlebars from "handlebars";
 
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
-import { Logger } from "../util/Logger.js";
 import { DataLogger } from "../data/log.js";
 import {
   CacheBehavior,
@@ -31,10 +30,11 @@ import {
   TemplateType,
   Usage,
 } from "../index.js";
+import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
-import { Telemetry } from "../util/posthog.js";
+import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
 import {
@@ -191,6 +191,8 @@ export abstract class BaseLLM implements ILLM {
   //URI to local block defining this LLM
   sourceFile?: string;
 
+  isFromAutoDetect?: boolean;
+
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
@@ -294,6 +296,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.autocompleteOptions = options.autocompleteOptions;
     this.sourceFile = options.sourceFile;
+    this.isFromAutoDetect = options.isFromAutoDetect;
   }
 
   get contextLength() {
@@ -343,15 +346,11 @@ export abstract class BaseLLM implements ILLM {
     let generatedTokens = this.countTokens(completion);
     let thinkingTokens = thinking ? this.countTokens(thinking) : 0;
 
-    void Telemetry.capture(
-      "tokens_generated",
-      {
-        model: model,
-        provider: this.providerName,
-        promptTokens: promptTokens,
-        generatedTokens: generatedTokens,
-      },
-      true,
+    TokensBatchingService.getInstance().addTokens(
+      model,
+      this.providerName,
+      promptTokens,
+      generatedTokens,
     );
 
     void DevDataSqliteDb.logTokensGenerated(
@@ -371,8 +370,17 @@ export abstract class BaseLLM implements ILLM {
       },
     });
 
-    if (error !== undefined) {
-      if (error === "cancel" || error.name === "AbortError") {
+    if (typeof error === "undefined") {
+      interaction?.logItem({
+        kind: "success",
+        promptTokens,
+        generatedTokens,
+        thinkingTokens,
+        usage,
+      });
+      return "success";
+    } else {
+      if (error === "cancel" || error?.name?.includes("AbortError")) {
         interaction?.logItem({
           kind: "cancel",
           promptTokens,
@@ -394,15 +402,6 @@ export abstract class BaseLLM implements ILLM {
         });
         return "error";
       }
-    } else {
-      interaction?.logItem({
-        kind: "success",
-        promptTokens,
-        generatedTokens,
-        thinkingTokens,
-        usage,
-      });
-      return "success";
     }
   }
 
@@ -616,6 +615,7 @@ export abstract class BaseLLM implements ILLM {
               kind: "chunk",
               chunk: formattedContent,
             });
+
             completion += formattedContent;
             yield content;
           }
@@ -631,6 +631,7 @@ export abstract class BaseLLM implements ILLM {
             kind: "chunk",
             chunk,
           });
+
           completion += chunk;
           yield chunk;
         }
@@ -1143,7 +1144,6 @@ export abstract class BaseLLM implements ILLM {
       modelProvider: this.underlyingProviderName,
       prompt,
       completion,
-      completionOptions,
     };
   }
 

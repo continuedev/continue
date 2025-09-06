@@ -86,6 +86,7 @@ module.exports = {
         error: varWithFallback("error"),
         link: varWithFallback("link"),
         accent: varWithFallback("accent"),
+        terminal: varWithFallback("terminal"),
         findMatch: {
           DEFAULT: THEME_COLORS["find-match"].default,
           selected: varWithFallback("find-match-selected"),

@@ -1,0 +1,132 @@
+---
+title: "How to Configure OpenRouter with Continue"
+sidebarTitle: "OpenRouter"
+---
+
+<Tip>
+  **Discover Inception models [here](https://hub.continue.dev/inceptionlabs)**
+</Tip>
+
+<Info>
+  Get an API key from [OpenRouter](https://openrouter.ai/keys)
+</Info>
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: <MODEL_NAME>
+      provider: openrouter
+      model: <MODEL_ID>
+      apiBase: https://openrouter.ai/api/v1
+      apiKey: <YOUR_OPEN_ROUTER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "openrouter",
+        "model": "<MODEL_ID>",
+        "apiBase": "https://openrouter.ai/api/v1",
+        "apiKey": "<YOUR_OPEN_ROUTER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/openrouter/qwen3-coder?view=config)**
+</Info>
+
+## Optional configuration
+
+OpenRouter allows you configure provider preferences, model routing configuration, and more. You can set these via `requestOptions`.
+
+For example, to prevent extra long prompts from being compressed, you can explicitly turn off [Transforms](https://openrouter.ai/docs/features/message-transforms):)
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: <MODEL_NAME>
+      provider: openrouter
+      model: <MODEL_ID>
+      requestOptions:
+        extraBodyProperties:
+          transforms: []
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "openrouter",
+        "model": "<MODEL_ID>",
+        "requestOptions": {
+          "extraBodyProperties": {
+            "transforms": []
+          }
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Model Capabilities
+
+OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the function calling support of the original model. 
+
+<Info>
+  Continue automatically uses system message tools for models that don't support
+  native function calling, so Agent mode should work even without explicit
+  capability configuration. However, you can still override capabilities if
+  needed.
+</Info>
+
+If you're experiencing issues with Agent mode or tools not working, you can add the capabilities field:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: <MODEL_NAME>
+      provider: openrouter
+      model: <MODEL_ID>
+      apiBase: https://openrouter.ai/api/v1
+      apiKey: <YOUR_OPEN_ROUTER_API_KEY>
+      capabilities:
+        - tool_use      # Enable function calling for Agent mode
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "openrouter",
+        "model": "<MODEL_ID>",
+        "apiBase": "https://openrouter.ai/api/v1",
+        "apiKey": "<YOUR_OPEN_ROUTER_API_KEY>",
+        "capabilities": {
+          "tools": true, // Enable function calling for Agent mode
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Not all models support function calling. Check the [OpenRouter models page](https://openrouter.ai/models) for specific model capabilities.
+</Note>

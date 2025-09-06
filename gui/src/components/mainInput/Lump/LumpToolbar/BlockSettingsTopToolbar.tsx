@@ -1,5 +1,4 @@
 import {
-  BookOpenIcon,
   ChatBubbleLeftIcon,
   ChevronLeftIcon,
   CubeIcon,
@@ -47,7 +46,6 @@ interface Section {
 const sections: Section[] = [
   { id: "models", title: "Models", tooltip: "Models", icon: CubeIcon },
   { id: "rules", title: "Rules", tooltip: "Rules", icon: PencilIcon },
-  { id: "docs", title: "Docs", tooltip: "Docs", icon: BookOpenIcon },
   {
     id: "prompts",
     title: "Prompts",
@@ -83,13 +81,8 @@ function BlockSettingsToolbarIcon(
 
   const fontSize = useFontSize(-3);
   return (
-    <>
-      <HoverItem
-        px={0}
-        onClick={props.onClick}
-        data-testid={id}
-        data-tooltip-id={id}
-      >
+    <ToolTip delayShow={700} content={props.tooltip}>
+      <HoverItem px={0} onClick={props.onClick} data-testid={id}>
         <div
           role="button"
           tabIndex={0}
@@ -131,10 +124,7 @@ function BlockSettingsToolbarIcon(
           </div>
         </div>
       </HoverItem>
-      <ToolTip delayShow={700} id={id}>
-        {props.tooltip}
-      </ToolTip>
-    </>
+    </ToolTip>
   );
 }
 
@@ -231,19 +221,21 @@ export function BlockSettingsTopToolbar() {
         </div>
       </div>
       <div className="flex gap-0.5">
-        <HoverItem
-          data-tooltip-id="assistant-select-tooltip"
-          className="!m-0 !p-0"
+        <ToolTip
+          place="top"
+          content={isUsingFreeTrial ? "View free trial usage" : "Select Agent"}
         >
-          {isUsingFreeTrial ? (
-            <FreeTrialButton freeTrialStatus={freeTrialStatus} />
-          ) : (
-            <AssistantAndOrgListbox />
-          )}
-          <ToolTip id="assistant-select-tooltip" place="top">
-            {isUsingFreeTrial ? "View free trial usage" : "Select Assistant"}
-          </ToolTip>
-        </HoverItem>
+          <HoverItem
+            data-tooltip-id="assistant-select-tooltip"
+            className="!m-0 !p-0"
+          >
+            {isUsingFreeTrial ? (
+              <FreeTrialButton freeTrialStatus={freeTrialStatus} />
+            ) : (
+              <AssistantAndOrgListbox />
+            )}
+          </HoverItem>
+        </ToolTip>
       </div>
     </div>
   );
