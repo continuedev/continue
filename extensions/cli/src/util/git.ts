@@ -19,6 +19,23 @@ export function getGitRemoteUrl(remote: string = "origin"): string | null {
 }
 
 /**
+ * Get the current git branch name
+ * @returns The current branch name or null if not found
+ */
+export function getGitBranch(): string | null {
+  try {
+    const result = execSync("git branch --show-current", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      stdio: "pipe",
+    });
+    return result.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Check if current directory is a git repository
  */
 export function isGitRepo(): boolean {

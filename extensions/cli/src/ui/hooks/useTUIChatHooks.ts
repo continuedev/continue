@@ -2,31 +2,107 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { PermissionMode } from "../../permissions/types.js";
 import { modeService } from "../../services/ModeService.js";
-import { getGitRemoteUrl, isGitRepo } from "../../util/git.js";
+import { getGitBranch, getGitRemoteUrl, isGitRepo } from "../../util/git.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 
 import { useConfigSelector } from "./useConfigSelector.js";
 import { useModelSelector } from "./useModelSelector.js";
 
-// Helper function to get repo URL text
-export function getRepoUrlText(remoteUrl?: string): string {
+// Helper function to get repo info for responsive display
+export function getRepoInfo(remoteUrl?: string): {
+  repoName: string;
+  branchName: string | null;
+  fullPath: string;
+  isGitRepo: boolean;
+} {
   let url = remoteUrl ?? "";
-  if (!url) {
-    const isGit = isGitRepo();
-    if (isGit) {
-      const gitUrl = getGitRemoteUrl();
-      if (gitUrl) {
-        url = gitUrl;
-      }
+  const isGit = isGitRepo();
+  let branchName: string | null = null;
+
+  if (!url && isGit) {
+    const gitUrl = getGitRemoteUrl();
+    if (gitUrl) {
+      url = gitUrl;
     }
   }
+
   if (!url) {
     url = process.cwd();
   }
 
-  url = url.replace(/\.git$/, "");
-  url = url.replace(/^(https|http):\/\/.*?\//, "");
-  return url;
+  // Get branch info if we're in a git repo
+  if (isGit) {
+    branchName = getGitBranch();
+  }
+
+  // Clean up the URL
+  const cleanUrl = url
+    .replace(/\.git$/, "")
+    .replace(/^(https|http):\/\/.*?\//, "");
+
+  return {
+    repoName: cleanUrl,
+    branchName,
+    fullPath: url,
+    isGitRepo: isGit,
+  };
+}
+
+// Helper function to get responsive repo URL text based on available width
+export function getResponsiveRepoText(
+  remoteUrl?: string,
+  availableWidth: number = 0,
+): string {
+  const repoInfo = getRepoInfo(remoteUrl);
+
+  // If no available width provided, show nothing
+  if (availableWidth <= 0) {
+    return "";
+  }
+
+  // Calculate the minimum space needed for different display options
+  const branchSeparator = " ⊦";
+  const branchText = repoInfo.branchName || "";
+  const repoText = repoInfo.repoName;
+
+  // Priority order for display:
+  // 1. repo + branch (if everything fits)
+  // 2. branch only (preferred when both fit individually)
+  // 3. repo only (fallback when branch doesn't fit)
+  // 4. nothing if neither fit
+
+  if (repoInfo.isGitRepo && repoInfo.branchName) {
+    const fullText = `${repoText}${branchSeparator}${branchText}`;
+    const branchOnlyText = branchText;
+    const repoOnlyText = repoText;
+
+    // If full text fits, use it
+    if (fullText.length <= availableWidth) {
+      return fullText;
+    }
+
+    // Prefer branch if it fits (more immediately useful)
+    if (branchOnlyText.length <= availableWidth) {
+      return branchOnlyText;
+    }
+
+    // If branch doesn't fit but repo does, use repo
+    if (repoOnlyText.length <= availableWidth) {
+      return repoOnlyText;
+    }
+  }
+
+  // No branch or not in git repo
+  if (repoText.length <= availableWidth) {
+    return repoText;
+  }
+
+  return "";
+}
+
+// Helper function to get repo URL text (legacy compatibility)
+export function getRepoUrlText(remoteUrl?: string): string {
+  return getResponsiveRepoText(remoteUrl);
 }
 
 // Custom hook for intro message

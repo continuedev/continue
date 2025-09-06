@@ -66,7 +66,11 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
     if (isRemoteMode) {
       return <Text color="cyan">◉ Remote Mode</Text>;
     }
-    return <Text color="gray">● Continue CLI</Text>;
+    return (
+      <Text wrap="truncate-end" color="gray">
+        ● Continue CLI
+      </Text>
+    );
   }
 
   return <Text color="dim">{text}</Text>;
