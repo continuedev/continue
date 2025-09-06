@@ -11,6 +11,7 @@ import {
   removeTab,
   setActiveTab,
   setTabs,
+  setTabMode,
   setTabModel,
 } from "../../redux/slices/tabsSlice";
 import { AppDispatch, RootState } from "../../redux/store";
@@ -19,6 +20,7 @@ import { varWithFallback } from "../../styles/theme";
 import { useAuth } from "../../context/Auth";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
+import { setMode } from "../../redux/slices/sessionSlice";
 
 // Haven't set up theme colors for tabs yet
 // Will keep it simple and choose from existing ones. Comments show vars we could use
@@ -144,9 +146,9 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
   const tabs = useSelector((state: RootState) => state.tabs.tabs);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const { selectedProfile } = useAuth();
+  const mode = useAppSelector((state: RootState) => state.session.mode);
   const activeTab = tabs.find((tab) => tab.isActive);
   const activeTabId = activeTab?.id;
-  const activeTabModel = activeTab?.modelTitle;
 
   // Simple UUID generator for our needs
   const generateId = useCallback(() => {
@@ -172,7 +174,14 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
         setTabModel({ id: activeTabId, modelTitle: selectedModel.title }),
       );
     }
-  }, [activeTabId, selectedModel?.title, dispatch]);
+  }, [activeTabId, selectedModel?.title, mode, dispatch]);
+
+  // Persist the currently selected mode into the active tab
+  useEffect(() => {
+    if (activeTabId && mode) {
+      dispatch(setTabMode({ id: activeTabId, mode }));
+    }
+  }, [activeTabId, mode, dispatch]);
 
   const handleNewTab = async () => {
     // Save current session before creating new one
@@ -191,6 +200,7 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
         isActive: true,
         sessionId: undefined,
         modelTitle: selectedModel?.title,
+        mode,
       }),
     );
   };
@@ -216,6 +226,12 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
     }
 
     dispatch(setActiveTab(id));
+
+    // restore mode for this tab (if set)
+    if (targetTab.mode) {
+      dispatch(setMode(targetTab.mode));
+    }
+
     // restore model for this tab
     if (targetTab.modelTitle && selectedProfile) {
       void dispatch(

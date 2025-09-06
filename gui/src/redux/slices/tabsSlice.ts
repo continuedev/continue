@@ -1,4 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { MessageModes } from "core";
 
 export interface Tab {
   id: string;
@@ -6,6 +7,7 @@ export interface Tab {
   isActive: boolean;
   sessionId?: string;
   modelTitle?: string; // store per-tab model
+  mode?: MessageModes; // store per-tab mode ('chat' | 'plan' | 'agent')
 }
 
 interface TabsState {
@@ -19,6 +21,7 @@ const initialState: TabsState = {
       title: "Chat 1",
       isActive: true,
       modelTitle: undefined,
+      mode: "chat",
     },
   ],
 };
@@ -47,6 +50,16 @@ export const tabsSlice = createSlice({
       const { id, modelTitle } = action.payload;
       state.tabs = state.tabs.map((tab) =>
         tab.id === id ? { ...tab, modelTitle } : tab,
+      );
+    },
+    // Set the mode for a specific tab
+    setTabMode: (
+      state,
+      action: PayloadAction<{ id: string; mode: MessageModes }>,
+    ) => {
+      const { id, mode } = action.payload;
+      state.tabs = state.tabs.map((tab) =>
+        tab.id === id ? { ...tab, mode } : tab,
       );
     },
     addTab: (state, action: PayloadAction<Tab>) => {
@@ -145,6 +158,7 @@ export const {
   setTabs,
   updateTab,
   setTabModel,
+  setTabMode,
   addTab,
   removeTab,
   setActiveTab,
