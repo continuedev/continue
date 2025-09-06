@@ -176,37 +176,6 @@ export function createEditorConfig(options: {
                     }
                   }
                 },
-                drop(view, event) {
-                  // Handle VS Code resource URLs in drop events at the TipTap level
-                  const html = event.dataTransfer?.getData("text/html");
-                  if (
-                    html &&
-                    html.includes("file+.vscode-resource.vscode-cdn.net")
-                  ) {
-                    // Prevent TipTap's default image handling for VS Code resource URLs
-                    event.preventDefault();
-                    event.stopPropagation();
-                    console.log(
-                      "TipTap Image extension: Prevented VS Code resource URL processing",
-                    );
-                    return true; // Indicate we handled the event
-                  }
-                  return false; // Let other handlers process
-                },
-              },
-              transformPastedHTML(html) {
-                // Filter out VS Code resource URLs from pasted HTML to prevent browser from loading them
-                if (html.includes("file+.vscode-resource.vscode-cdn.net")) {
-                  console.log(
-                    "TipTap Image extension: Filtering VS Code resource URLs from HTML",
-                  );
-                  // Replace VS Code resource URLs with placeholder to prevent browser loading
-                  return html.replace(
-                    /src="https:\/\/file\+\.vscode-resource\.vscode-cdn\.net\/[^"]*"/g,
-                    'src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"',
-                  );
-                }
-                return html;
               },
             },
           });

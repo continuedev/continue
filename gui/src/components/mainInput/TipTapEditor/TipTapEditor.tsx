@@ -199,7 +199,9 @@ export function TipTapEditor(props: TipTapEditorProps) {
           if (e.shiftKey) {
             setShowDragOverMsg(false);
           } else {
-            setTimeout(() => setShowDragOverMsg(false), 2000);
+            setTimeout(() => {
+              setShowDragOverMsg(false);
+            }, 2000);
           }
         }
         setShowDragOverMsg(false);
@@ -207,7 +209,11 @@ export function TipTapEditor(props: TipTapEditorProps) {
       onDragEnter={() => {
         setShowDragOverMsg(true);
       }}
+      onDragEnd={() => {
+        setShowDragOverMsg(false);
+      }}
       onDrop={(event) => {
+        setShowDragOverMsg(false);
         event.preventDefault();
 
         if (
@@ -221,7 +227,6 @@ export function TipTapEditor(props: TipTapEditorProps) {
         ) {
           return;
         }
-        setShowDragOverMsg(false);
 
         // Handle file drop first
         if (event.dataTransfer.files.length > 0) {
