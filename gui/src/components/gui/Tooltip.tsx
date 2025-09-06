@@ -9,7 +9,7 @@ import { fontSize } from "../../util";
 const TooltipStyles: CSSProperties = {
   fontSize: fontSize(-4),
   backgroundColor: vscBackground,
-  outline: `0.5px solid ${varWithFallback("badge-background")}`,
+  outline: `0.5px solid ${varWithFallback("description")}`,
   color: vscForeground,
   padding: "4px 8px",
   zIndex: 1000,

@@ -15,7 +15,7 @@ const buttonVariants = {
   secondary:
     "border-none text-foreground bg-border hover:enabled:brightness-125",
   outline:
-    "border border-solid border-badge border-border text-foreground bg-transparent hover:enabled:bg-input",
+    "border border-solid border-description text-foreground bg-transparent hover:enabled:bg-input",
   ghost:
     "border-none text-foreground bg-inherit hover:enabled:brightness-125 hover:enabled:bg-input",
 };

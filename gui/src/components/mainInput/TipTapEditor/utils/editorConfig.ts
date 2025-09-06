@@ -208,10 +208,13 @@ export function createEditorConfig(options: {
             },
 
             "Mod-Enter": () => {
+              posthog.capture("gui_use_active_file_enter");
+
               onEnterRef.current({
-                useCodebase: true,
-                noContext: !useActiveFile,
+                useCodebase: false,
+                noContext: !!useActiveFile,
               });
+
               return true;
             },
             "Alt-Enter": () => {

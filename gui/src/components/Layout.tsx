@@ -18,7 +18,6 @@ import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
-import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { useMainEditor } from "./mainInput/TipTapEditor";
 import {
   isNewUserOnboarding,
@@ -258,35 +257,33 @@ const Layout = () => {
                 }}
               />
             )}
-            <LumpProvider>
-              <OSRContextMenu />
-              <div
-                style={{
-                  scrollbarGutter: "stable both-edges",
-                  minHeight: "100%",
-                  display: "grid",
-                  gridTemplateRows: "1fr auto",
+            <OSRContextMenu />
+            <div
+              style={{
+                scrollbarGutter: "stable both-edges",
+                minHeight: "100%",
+                display: "grid",
+                gridTemplateRows: "1fr auto",
+              }}
+            >
+              <TextDialog
+                showDialog={showDialog}
+                onEnter={() => {
+                  dispatch(setShowDialog(false));
                 }}
-              >
-                <TextDialog
-                  showDialog={showDialog}
-                  onEnter={() => {
-                    dispatch(setShowDialog(false));
-                  }}
-                  onClose={() => {
-                    dispatch(setShowDialog(false));
-                  }}
-                  message={dialogMessage}
-                />
+                onClose={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                message={dialogMessage}
+              />
 
-                <GridDiv>
-                  <PostHogPageView />
-                  <Outlet />
-                  <FatalErrorIndicator />
-                </GridDiv>
-              </div>
-              <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-            </LumpProvider>
+              <GridDiv>
+                <PostHogPageView />
+                <Outlet />
+                <FatalErrorIndicator />
+              </GridDiv>
+            </div>
+            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
           </LayoutTopDiv>
         </TelemetryProviders>
       </AuthProvider>
