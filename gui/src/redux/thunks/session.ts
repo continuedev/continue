@@ -119,34 +119,35 @@ export const copySession = createAsyncThunk<
         copiedHistory = copiedHistory.slice(0, upToMessageIndex + 1);
       }
 
-      // Generate numbered title with prefix
+      // Generate numbered title with prefix, scoped to this base title chain
       const state = getState();
       const existingSessions = state.session.allSessionMetadata;
+      const existingTitles = existingSessions.map((s) => s.title);
 
-      // Find the next available number for this prefix
-      const prefixPattern = new RegExp(`^${titlePrefix}(\\d+) of `);
-      let maxNumber = 0;
+      // Extract base title by removing any existing numbered prefix
+      const baseTitle = sourceSession.title.replace(/^.*?\d+ of /, "");
 
-      existingSessions.forEach((session) => {
-        const match = session.title.match(prefixPattern);
-        if (match) {
-          const number = parseInt(match[1], 10);
-          if (number > maxNumber) {
-            maxNumber = number;
-          }
+      // Find first unused numbered title
+      let newTitle: string;
+      for (let i = 1; ; i++) {
+        let title = `${titlePrefix}${i} of ${baseTitle}`;
+
+        // Truncate if too long
+        if (title.length > MAX_TITLE_LENGTH) {
+          const prefix = `${titlePrefix}${i} of `;
+          const maxBase = MAX_TITLE_LENGTH - prefix.length;
+          const truncated =
+            maxBase > 3
+              ? baseTitle.slice(0, maxBase - 3) + "..."
+              : baseTitle.slice(0, Math.max(0, maxBase));
+          title = prefix + truncated;
         }
-      });
 
-      const nextNumber = maxNumber + 1;
-      let newTitle = `${titlePrefix}${nextNumber} of ${sourceSession.title}`;
-
-      // Ensure title doesn't exceed MAX_TITLE_LENGTH
-      if (newTitle.length > MAX_TITLE_LENGTH) {
-        const prefixWithNumber = `${titlePrefix}${nextNumber} of `;
-        const availableLength = MAX_TITLE_LENGTH - prefixWithNumber.length;
-        const truncatedOriginal =
-          sourceSession.title.slice(0, availableLength - 3) + "...";
-        newTitle = `${prefixWithNumber}${truncatedOriginal}`;
+        // Use first unused title
+        if (!existingTitles.includes(title)) {
+          newTitle = title;
+          break;
+        }
       }
 
       // Create new session with copied data
