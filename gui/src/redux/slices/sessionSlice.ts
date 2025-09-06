@@ -452,6 +452,20 @@ export const sessionSlice = createSlice({
         };
       }
     },
+    setConversationSummary: (
+      state,
+      action: PayloadAction<{ index: number; summary: string }>,
+    ) => {
+      // Adds or updates the conversation summary for the specified message
+      const { index, summary } = action.payload;
+      const historyItem = state.history[index];
+      if (historyItem) {
+        state.history[index] = {
+          ...historyItem,
+          conversationSummary: summary,
+        };
+      }
+    },
     updateHistoryItemAtIndex: (
       state,
       {
@@ -1026,6 +1040,7 @@ export const {
   setMainEditorContentTrigger,
   deleteMessage,
   deleteCompaction,
+  setConversationSummary,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,

@@ -2,8 +2,8 @@ import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
-  setCompactionLoading,
   deleteCompaction,
+  setCompactionLoading,
 } from "../redux/slices/sessionSlice";
 import { loadSession, saveCurrentSession } from "../redux/thunks/session";
 
