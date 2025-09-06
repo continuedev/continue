@@ -136,9 +136,12 @@ models:
         execSync("git commit -m 'Second commit'", { stdio: "ignore" });
 
         // Get first commit hash and checkout to detached HEAD
-        const firstCommit = execSync("git rev-list --max-count=1 --reverse HEAD", { 
-          encoding: "utf-8",
-        }).trim();
+        const firstCommit = execSync(
+          "git rev-list --max-count=1 --reverse HEAD",
+          {
+            encoding: "utf-8",
+          },
+        ).trim();
         execSync(`git checkout ${firstCommit}`, { stdio: "ignore" });
 
         // Test git functions in detached HEAD state
@@ -249,7 +252,7 @@ models:
       const repoText = getRepoUrlText();
 
       // Should not contain branch separator
-      expect(repoText).toEqual("")
+      expect(repoText).toEqual("");
     });
   });
 });
