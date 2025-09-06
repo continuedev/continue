@@ -6,14 +6,15 @@ import {
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { SlashCommandDescWithSource } from "core";
 import { useContext, useMemo } from "react";
-import { useAuth } from "../../../../context/Auth";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useBookmarkedSlashCommands } from "../../../../hooks/useBookmarkedSlashCommands";
-import { useAppSelector } from "../../../../redux/hooks";
-import { fontSize } from "../../../../util";
-import { useMainEditor } from "../../TipTapEditor";
-import { useLump } from "../LumpContext";
-import { ExploreBlocksButton } from "./ExploreBlocksButton";
+import { useAuth } from "../../../context/Auth";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
+import { useAppSelector } from "../../../redux/hooks";
+import { fontSize } from "../../../util";
+import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
+import { useLump } from "../../../components/mainInput/Lump/LumpContext";
+import { ExploreBlocksButton } from "../../../components/mainInput/Lump/sections/ExploreBlocksButton";
+import { ConfigHeader } from "../ConfigHeader";
 
 interface PromptCommandWithSlug extends SlashCommandDescWithSource {
   slug?: string;
@@ -165,6 +166,10 @@ export function PromptsSection() {
 
   return (
     <div className="flex flex-col">
+      <ConfigHeader
+        title="Prompts"
+        subtext="Reusable prompt templates for your conversations"
+      />
       {sortedCommands.map((prompt) => (
         <PromptRow
           key={prompt.name}

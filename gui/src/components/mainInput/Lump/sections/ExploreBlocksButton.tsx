@@ -28,7 +28,7 @@ export function ExploreBlocksButton(props: { blockType: string }) {
     props.blockType,
     isLocal,
     handleLocalAdd,
-    handleExplore
+    handleExplore,
   );
 
   return (

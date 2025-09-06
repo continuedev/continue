@@ -3,11 +3,11 @@ import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import ConfirmationDialog from "../../../components/dialogs/ConfirmationDialog";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
-import { isJetBrains } from "../../../util";
+import ConfirmationDialog from "../../../../components/dialogs/ConfirmationDialog";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { useWebviewListener } from "../../../../hooks/useWebviewListener";
+import { setDialogMessage, setShowDialog } from "../../../../redux/slices/uiSlice";
+import { isJetBrains } from "../../../../util";
 import IndexingProgressBar from "./IndexingProgressBar";
 import IndexingProgressErrorText from "./IndexingProgressErrorText";
 import IndexingProgressIndicator from "./IndexingProgressIndicator";

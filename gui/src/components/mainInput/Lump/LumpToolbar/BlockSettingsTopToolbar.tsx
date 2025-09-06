@@ -1,7 +1,6 @@
 import {
   ChatBubbleLeftIcon,
   ChevronLeftIcon,
-  CubeIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
   PencilIcon,
@@ -42,7 +41,6 @@ interface Section {
 }
 
 const sections: Section[] = [
-  { id: "models", title: "Models", tooltip: "Models", icon: CubeIcon },
   { id: "rules", title: "Rules", tooltip: "Rules", icon: PencilIcon },
   {
     id: "prompts",
@@ -59,7 +57,7 @@ const sections: Section[] = [
   {
     id: "mcp",
     title: "MCP",
-    tooltip: "MCP",
+    tooltip: "MCP Servers",
     icon: Squares2X2Icon,
   },
   {
@@ -80,46 +78,35 @@ function BlockSettingsToolbarIcon(
   const fontSize = useFontSize(-3);
   return (
     <ToolTip delayShow={700} content={props.tooltip}>
-      <HoverItem px={0} onClick={props.onClick} data-testid={id}>
-        <div
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              props.onClick();
-            }
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={props.onClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            props.onClick();
+          }
+        }}
+        data-testid={id}
+        className={`${
+          props.isSelected
+            ? isErrorSection
+              ? "bg-error"
+              : "bg-badge"
+            : undefined
+        } relative flex cursor-pointer select-none items-center rounded-full px-1.5 py-1 sm:px-1.5 ${props.className || ""}`}
+      >
+        <props.icon
+          className={`h-[13px] w-[13px] flex-shrink-0 ${
+            isErrorSection ? "text-error" : ""
+          }`}
+          style={{
+            color: props.isSelected ? vscBadgeForeground : undefined,
           }}
-          className={`${
-            props.isSelected
-              ? isErrorSection
-                ? "bg-error"
-                : "bg-badge"
-              : undefined
-          } relative flex select-none items-center rounded-full px-[3px] py-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 sm:px-1 ${props.className || ""}`}
-        >
-          <props.icon
-            className={`h-[13px] w-[13px] flex-shrink-0 hover:brightness-125 ${
-              isErrorSection ? "text-error" : ""
-            }`}
-            style={{
-              color: props.isSelected ? vscBadgeForeground : undefined,
-            }}
-            aria-hidden="true"
-          />
-          <div
-            style={{ fontSize }}
-            className="ml-1 w-auto opacity-100"
-          >
-            <span
-              className="whitespace-nowrap"
-              style={{ color: vscBadgeForeground }}
-            >
-              {props.title}
-            </span>
-          </div>
-        </div>
-      </HoverItem>
+          aria-hidden="true"
+        />
+      </div>
     </ToolTip>
   );
 }

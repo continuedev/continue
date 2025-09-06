@@ -1,10 +1,5 @@
-import {
-  ArrowPathIcon,
-  ArrowRightEndOnRectangleIcon,
-  ArrowRightStartOnRectangleIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
-import { AuthType, isOnPremSession } from "core/control-plane/AuthTypes";
+import { ArrowPathIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -15,7 +10,6 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
-import { ToolTip } from "../gui/Tooltip";
 import {
   Listbox,
   ListboxOption,
@@ -23,6 +17,7 @@ import {
   Transition,
   useFontSize,
 } from "../ui";
+import { Divider } from "../ui/Divider";
 import { AssistantOptions } from "./AssistantOptions";
 import { ScopeSelect } from "./ScopeSelect";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
@@ -119,36 +114,10 @@ export function AssistantAndOrgListbox() {
             className="-translate-x-1.5 pb-0"
             style={{ zIndex: 200 }}
           >
-            <div className="border-border border-x-0 border-t-0 border-solid px-2 py-2">
-              <div className="flex flex-col gap-2 pl-1">
-                {session ? (
-                  <span className="text-description-muted flex items-center justify-between gap-x-1">
-                    {session?.AUTH_TYPE !== AuthType.OnPrem &&
-                      session?.account.id}
-                    <ToolTip content="Logout">
-                      <ArrowRightStartOnRectangleIcon
-                        className="h-3 w-3 cursor-pointer hover:brightness-125"
-                        onClick={onLogout}
-                      />
-                    </ToolTip>
-                  </span>
-                ) : (
-                  <span
-                    className="text-description-muted flex cursor-pointer items-center justify-end gap-x-1 hover:brightness-125"
-                    onClick={() => login(false)}
-                  >
-                    Log In <ArrowRightEndOnRectangleIcon className="h-3 w-3" />
-                  </span>
-                )}
-                {shouldRenderOrgInfo && (
-                  <>
-                    <label className="text-vsc-foreground font-semibold">
-                      Organization
-                    </label>
-                    <ScopeSelect />
-                  </>
-                )}
-              </div>
+            <div className="flex items-center justify-between p-2">
+              <span className="text-description text-xs font-medium">
+                Agents
+              </span>
             </div>
 
             <AssistantOptions
@@ -156,38 +125,44 @@ export function AssistantAndOrgListbox() {
               onClose={close}
             />
 
+            {shouldRenderOrgInfo && (
+              <>
+                <Divider className="!mb-0.5" />
+                <div className="mx-0.5">
+                  {" "}
+                  <ScopeSelect />
+                </div>
+
+                <Divider className="!mb-0 mt-0.5" />
+              </>
+            )}
+
             {/* Bottom Actions */}
-            <div className="border-border border-x-0 border-b-0 border-t border-solid">
+            <div>
               <ListboxOption
                 value="new-assistant"
                 fontSizeModifier={-2}
-                className="border-border border-b px-2 py-1.5"
+                className="border-border border-b px-2 py-2"
                 onClick={onNewAssistant}
               >
-                <span
-                  className="text-description flex flex-row items-center"
-                  style={{ fontSize: tinyFont }}
-                >
-                  <PlusIcon className="mr-1 h-3 w-3" /> New Agent
+                <span className="text-description text-2xs flex flex-row items-center">
+                  <PlusIcon className="mr-1.5 h-3.5 w-3.5" /> New Agent
                 </span>
               </ListboxOption>
 
               <ListboxOption
                 value="reload-assistant"
                 fontSizeModifier={-2}
-                className="border-border border-b px-2 py-1.5"
+                className="border-border border-b px-2 py-2"
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   refreshProfiles("Manual refresh from assistant list");
                 }}
               >
-                <span
-                  className="text-description flex flex-row items-center"
-                  style={{ fontSize: tinyFont }}
-                >
+                <span className="text-description text-2xs flex flex-row items-center">
                   <ArrowPathIcon
                     className={cn(
-                      "mr-1 h-3 w-3",
+                      "mr-1.5 h-3.5 w-3.5",
                       configLoading && "animate-spin-slow",
                     )}
                   />
@@ -195,11 +170,10 @@ export function AssistantAndOrgListbox() {
                 </span>
               </ListboxOption>
 
-              <div
-                className="text-description border-border flex items-center justify-between gap-1.5 border-x-0 border-b-0 border-t border-solid px-2 py-2"
-                style={{ fontSize: tinyFont }}
-              >
-                <span className="block" style={{ fontSize: tinyFont - 1 }}>
+              <Divider className="!my-0" />
+
+              <div className="text-description flex items-center justify-between gap-1.5 px-2 py-2">
+                <span className="block" style={{ fontSize: tinyFont }}>
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle agent
                 </span>
               </div>

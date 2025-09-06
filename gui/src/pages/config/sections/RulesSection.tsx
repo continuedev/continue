@@ -11,19 +11,20 @@ import {
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
 import { useContext, useMemo } from "react";
-import { useAuth } from "../../../../context/Auth";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { useAuth } from "../../../context/Auth";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   DEFAULT_RULE_SETTING,
   setDialogMessage,
   setShowDialog,
   toggleRuleSetting,
-} from "../../../../redux/slices/uiSlice";
-import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
-import Switch from "../../../gui/Switch";
-import { useFontSize } from "../../../ui/font";
-import { ExploreBlocksButton } from "./ExploreBlocksButton";
+} from "../../../redux/slices/uiSlice";
+import HeaderButtonWithToolTip from "../../../components/gui/HeaderButtonWithToolTip";
+import Switch from "../../../components/gui/Switch";
+import { Card, useFontSize } from "../../../components/ui";
+import { ExploreBlocksButton } from "../../../components/mainInput/Lump/sections/ExploreBlocksButton";
+import { ConfigHeader } from "../ConfigHeader";
 
 interface RuleCardProps {
   rule: RuleWithSource;
@@ -263,11 +264,17 @@ export function RulesSection() {
   }, [config, selectedProfile, mode]);
 
   return (
-    <div className="flex flex-col gap-3">
-      {sortedRules.map((rule, index) => (
-        <RuleCard key={index} rule={rule} />
-      ))}
-      <ExploreBlocksButton blockType="rules" />
+    <div>
+      <ConfigHeader title="Rules" />
+
+      <Card>
+        <div className="flex flex-col gap-3">
+          {sortedRules.map((rule, index) => (
+            <RuleCard key={index} rule={rule} />
+          ))}
+          <ExploreBlocksButton blockType="rules" />
+        </div>
+      </Card>
     </div>
   );
 }

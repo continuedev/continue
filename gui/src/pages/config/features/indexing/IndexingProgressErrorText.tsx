@@ -6,9 +6,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
 import { useContext, useState } from "react";
-import { GhostButton } from "../../../components";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useAppSelector } from "../../../redux/hooks";
+import { GhostButton } from "../../../../components";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { useAppSelector } from "../../../../redux/hooks";
 
 export interface IndexingProgressErrorTextProps {
   update: IndexingProgressUpdate;

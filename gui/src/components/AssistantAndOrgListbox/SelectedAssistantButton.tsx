@@ -40,7 +40,7 @@ export function SelectedAssistantButton({
         ) : (
           <>
             <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon size={3} assistant={selectedProfile} />
+              <AssistantIcon assistant={selectedProfile} />
             </div>
             <span
               className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}

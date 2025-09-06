@@ -1,4 +1,4 @@
-import ToggleSwitch from "../../components/gui/Switch";
+import ToggleSwitch from "../../../components/gui/Switch";
 interface ContinueFeaturesMenuProps {
   enableStaticContextualization: boolean;
   handleEnableStaticContextualizationToggle: (value: boolean) => void;

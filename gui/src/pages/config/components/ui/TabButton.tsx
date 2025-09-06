@@ -1,5 +1,4 @@
-import { ToolTip } from "../../components/gui/Tooltip";
-import { fontSize } from "../../util";
+import { ToolTip } from "../../../../components/gui/Tooltip";
 
 interface TabButtonProps {
   id: string;
@@ -9,18 +8,16 @@ interface TabButtonProps {
   onClick: () => void;
 }
 
-export function TabButton({ id, label, icon, isActive, onClick }: TabButtonProps) {
+export function TabButton({
+  id,
+  label,
+  icon,
+  isActive,
+  onClick,
+}: TabButtonProps) {
   return (
-    <ToolTip
-      content={label}
-      place="right"
-      className="md:!hidden"
-      style={{ fontSize: fontSize(-2) }}
-    >
+    <ToolTip content={label} place="right" className="text-xs md:!hidden">
       <div
-        style={{
-          fontSize: fontSize(-2),
-        }}
         className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-md hover:brightness-125 md:justify-start ${
           isActive
             ? "bg-vsc-input-background px-2 py-2"
@@ -29,7 +26,7 @@ export function TabButton({ id, label, icon, isActive, onClick }: TabButtonProps
         onClick={onClick}
       >
         {icon}
-        <span className="hidden md:inline">{label}</span>
+        <span className="text-description hidden md:inline">{label}</span>
       </div>
     </ToolTip>
   );

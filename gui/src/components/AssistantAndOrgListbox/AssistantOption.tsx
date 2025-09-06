@@ -1,5 +1,4 @@
 import {
-  ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
@@ -69,10 +68,10 @@ export function AssistantOption({
       fontSizeModifier={-2}
       className={selected ? "bg-list-active text-list-active-foreground" : ""}
     >
-      <div className="flex w-full items-center justify-between gap-2">
-        <div className="flex w-full items-center gap-2">
-          <div className="flex h-4 w-4 flex-shrink-0">
-            <AssistantIcon size={3.5} assistant={profile} />
+      <div className="flex w-full items-center justify-between gap-10 py-0.5">
+        <div className="flex w-full items-center gap-3">
+          <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center">
+            <AssistantIcon assistant={profile} />
           </div>
           <span
             className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
@@ -80,11 +79,11 @@ export function AssistantOption({
             {profile.title}
           </span>
         </div>
-        <div className="flex flex-row items-center gap-1">
+        <div className="flex flex-row items-center gap-1.5">
           {profile.errors && profile.errors?.length > 0 && (
             <ExclamationTriangleIcon
               data-tooltip-id={`${profile.id}-errors-tooltip`}
-              className="text-error h-3 w-3 flex-shrink-0 cursor-pointer"
+              className="text-error h-3.5 w-3.5 flex-shrink-0 cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -94,7 +93,7 @@ export function AssistantOption({
           )}
           {isLocalProfile(profile) ? (
             <Cog6ToothIcon
-              className="text-description h-3 w-3 flex-shrink-0 cursor-pointer"
+              className="text-description h-3.5 w-3.5 flex-shrink-0 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -102,8 +101,8 @@ export function AssistantOption({
               }}
             />
           ) : (
-            <ArrowTopRightOnSquareIcon
-              className="text-description h-3 w-3 flex-shrink-0 cursor-pointer"
+            <Cog6ToothIcon
+              className="text-description h-3.5 w-3.5 flex-shrink-0 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();

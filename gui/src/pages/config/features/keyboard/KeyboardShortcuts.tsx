@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import Shortcut from "../../components/gui/Shortcut";
-import { isJetBrains } from "../../util";
+import Shortcut from "../../../../components/gui/Shortcut";
+import { isJetBrains } from "../../../../util";
 
 interface KeyboardShortcutProps {
   shortcut: string;

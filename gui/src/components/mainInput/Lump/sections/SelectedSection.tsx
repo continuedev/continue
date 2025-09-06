@@ -1,31 +1,38 @@
+import { useNavigate } from "react-router-dom";
 import { useLump } from "../LumpContext";
 import { ContextSection } from "./ContextSection";
 import { ErrorSection } from "./errors/ErrorSection";
-import MCPSection from "./mcp/MCPSection";
-import { ModelsSection } from "./ModelsSection";
-import { PromptsSection } from "./PromptsSection";
-import { RulesSection } from "./RulesSection";
-import { ToolPoliciesSection } from "./tool-policies/ToolPoliciesSection";
 
 /**
  * Renders the appropriate section based on the selected section in the Lump context
  */
 export function SelectedSection() {
-  const { displayedSection } = useLump();
+  const { displayedSection, hideLump } = useLump();
+  const navigate = useNavigate();
+
+  const handleConfigRedirect = (tabId: string) => {
+    hideLump();
+    navigate(`/config?tab=${tabId}`);
+  };
 
   switch (displayedSection) {
     case "models":
-      return <ModelsSection />;
+      handleConfigRedirect("models");
+      return null;
     case "rules":
-      return <RulesSection />;
+      handleConfigRedirect("rules");
+      return null;
     case "prompts":
-      return <PromptsSection />;
+      handleConfigRedirect("prompts");
+      return null;
+    case "tools":
+      handleConfigRedirect("tools");
+      return null;
+    case "mcp":
+      handleConfigRedirect("mcp");
+      return null;
     case "context":
       return <ContextSection />;
-    case "tools":
-      return <ToolPoliciesSection />;
-    case "mcp":
-      return <MCPSection />;
     case "error":
       return <ErrorSection />;
     default:

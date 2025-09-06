@@ -1,23 +1,22 @@
 import {
   CheckIcon,
   ChevronUpDownIcon,
-  Cog6ToothIcon,
   CubeIcon,
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
 import { LLMConfigurationStatuses } from "core/llm/constants";
 import { MouseEvent, useContext, useState } from "react";
-import { defaultBorderRadius } from "../../components";
-import InfoHover from "../../components/InfoHover";
+import { defaultBorderRadius } from "../../../components";
+import InfoHover from "../../../components/InfoHover";
 import {
   Listbox,
   ListboxButton,
   ListboxOption,
   ListboxOptions,
   Transition,
-} from "../../components/ui";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { fontSize } from "../../util";
+} from "../../../components/ui";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { fontSize } from "../../../util";
 
 interface ModelRoleSelectorProps {
   models: ModelDescription[];
@@ -26,6 +25,7 @@ interface ModelRoleSelectorProps {
   displayName: string;
   description: string;
   setupURL: string;
+  hideTitle?: boolean;
 }
 
 const ModelRoleSelector = ({
@@ -35,9 +35,9 @@ const ModelRoleSelector = ({
   displayName,
   description,
   setupURL,
+  hideTitle = false,
 }: ModelRoleSelectorProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const noConfiguredModels = models.every(
     (model) => model.configurationStatus !== LLMConfigurationStatuses.VALID,
@@ -47,14 +47,6 @@ const ModelRoleSelector = ({
     onSelect(models.find((m) => m.title === title) ?? null);
   }
 
-  function onClickGear(e: MouseEvent<SVGSVGElement>, model: ModelDescription) {
-    e.stopPropagation();
-    e.preventDefault();
-    ideMessenger.post("config/openProfile", {
-      profileId: undefined,
-      element: model,
-    });
-  }
 
   function handleOptionClick(
     showMissingApiKeyMsg: boolean,
@@ -68,19 +60,21 @@ const ModelRoleSelector = ({
 
   return (
     <>
-      <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
-        <span style={{ fontSize: fontSize(-3) }}>{displayName}</span>
-        <InfoHover size="3" id={displayName} msg={description} />
-      </div>
+      {!hideTitle && (
+        <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
+          <span style={{ fontSize: fontSize(-1) }}>{displayName}</span>
+          <InfoHover size="3" id={displayName} msg={description} />
+        </div>
+      )}
 
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
         <div className="relative">
           {models.length === 0 ? (
             <ListboxButton
               onClick={() => ideMessenger.post("openUrl", setupURL)}
-              className="bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between px-2 py-1 underline hover:underline"
+              className="bg-input border-input-border hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between rounded border px-3 py-2 underline hover:underline"
             >
-              <span className="line-clamp-1" style={{ fontSize: fontSize(-3) }}>
+              <span className="line-clamp-1" style={{ fontSize: fontSize(-1) }}>
                 Setup {displayName} model
               </span>
             </ListboxButton>
@@ -88,7 +82,7 @@ const ModelRoleSelector = ({
             <>
               <ListboxButton
                 disabled={models.length === 0}
-                className="bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between px-2 py-1"
+                className="bg-input border-input-border hover:bg-list-active hover:text-list-active-foreground w-full justify-between rounded border px-3 py-2"
               >
                 {models.length === 0 || noConfiguredModels ? (
                   <span className="text-lightgray line-clamp-1 italic">
@@ -99,7 +93,10 @@ const ModelRoleSelector = ({
                     }`}
                   </span>
                 ) : (
-                  <span className="line-clamp-1">
+                  <span
+                    className="line-clamp-1"
+                    style={{ fontSize: fontSize(-1) }}
+                  >
                     {selectedModel?.title ?? `Select ${displayName} model`}
                   </span>
                 )}
@@ -140,43 +137,31 @@ const ModelRoleSelector = ({
                           key={idx}
                           value={option.title}
                           disabled={isConfigInvalid}
-                          onMouseEnter={() => setHoveredIdx(idx)}
-                          onMouseLeave={() => setHoveredIdx(null)}
                           onClick={(e: any) =>
                             handleOptionClick(isConfigInvalid, e)
                           }
                           className=""
                         >
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex flex-1 flex-row items-center justify-between gap-2">
-                              <div className="flex flex-1 flex-row items-center gap-2">
-                                <CubeIcon className="h-3 w-3 flex-shrink-0" />
-                                <span
-                                  className="line-clamp-1 flex-1"
-                                  style={{ fontSize: fontSize(-3) }}
-                                >
-                                  {option.title}
-                                  {isConfigInvalid && (
-                                    <span className="ml-2 text-[10px] italic">
-                                      {invalidMessage}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
+                          <div className="flex w-full items-center justify-between gap-2">
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                              <CubeIcon className="h-3 w-3 flex-shrink-0" />
+                              <span
+                                className="line-clamp-1 truncate"
+                                style={{ fontSize: fontSize(-1) }}
+                              >
+                                {option.title}
+                                {isConfigInvalid && (
+                                  <span className="ml-2 text-[10px] italic">
+                                    {invalidMessage}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
 
-                              <div className="flex flex-shrink-0 flex-row items-center gap-1">
-                                {hoveredIdx === idx && (
-                                  <Cog6ToothIcon
-                                    className="h-3 w-3 flex-shrink-0"
-                                    onClick={(e: MouseEvent<SVGSVGElement>) =>
-                                      onClickGear(e, option)
-                                    }
-                                  />
-                                )}
-                                {option.title === selectedModel?.title && (
-                                  <CheckIcon className="h-3 w-3 flex-shrink-0" />
-                                )}
-                              </div>
+                            <div className="flex-shrink-0">
+                              {option.title === selectedModel?.title && (
+                                <CheckIcon className="h-3 w-3" />
+                              )}
                             </div>
                           </div>
                         </ListboxOption>

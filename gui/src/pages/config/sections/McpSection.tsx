@@ -11,16 +11,17 @@ import {
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
 import { Fragment, useContext, useMemo } from "react";
-import { useAuth } from "../../../../../context/Auth";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
-import { updateConfig } from "../../../../../redux/slices/configSlice";
-import { selectCurrentOrg } from "../../../../../redux/slices/profilesSlice";
-import { fontSize } from "../../../../../util";
-import { ToolTip } from "../../../../gui/Tooltip";
-import { Button } from "../../../../ui";
-import EditBlockButton from "../../EditBlockButton";
-import { ExploreBlocksButton } from "../ExploreBlocksButton";
+import { useAuth } from "../../../context/Auth";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { updateConfig } from "../../../redux/slices/configSlice";
+import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
+import { fontSize } from "../../../util";
+import { ToolTip } from "../../../components/gui/Tooltip";
+import { Button, Card } from "../../../components/ui";
+import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
+import { ExploreBlocksButton } from "../../../components/mainInput/Lump/sections/ExploreBlocksButton";
+import { ConfigHeader } from "../ConfigHeader";
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
@@ -226,7 +227,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   );
 }
 
-function MCPSection() {
+function McpSection() {
   const currentOrg = useAppSelector(selectCurrentOrg);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
@@ -255,20 +256,23 @@ function MCPSection() {
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <h3 className="mb-4 mt-0 text-xl">MCP Servers</h3>
-      <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
-        {mergedBlocks.map(({ block, blockFromYaml }, idx) => (
-          <MCPServerPreview
-            key={idx}
-            server={block}
-            serverFromYaml={blockFromYaml}
-          />
-        ))}
-      </div>
-      <ExploreBlocksButton blockType="mcpServers" />
+    <div className="mt-4">
+      <ConfigHeader title="MCP Servers" />
+
+      <Card>
+        <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
+          {mergedBlocks.map(({ block, blockFromYaml }, idx) => (
+            <MCPServerPreview
+              key={idx}
+              server={block}
+              serverFromYaml={blockFromYaml}
+            />
+          ))}
+        </div>
+        <ExploreBlocksButton blockType="mcpServers" />
+      </Card>
     </div>
   );
 }
 
-export default MCPSection;
+export { McpSection };

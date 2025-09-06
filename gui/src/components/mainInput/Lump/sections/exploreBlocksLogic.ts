@@ -15,10 +15,10 @@ export function getExploreBlocksConfig(
   blockType: string,
   isLocal: boolean,
   onLocalAdd: (blockType: BlockType) => void,
-  onExplore: (blockType: string) => void
+  onExplore: (blockType: string) => void,
 ): ExploreBlocksConfig {
   const Icon = isLocal ? PlusIcon : ArrowTopRightOnSquareIcon;
-  
+
   const text = `${isLocal ? "Add" : "Explore"} ${
     blockType === "mcpServers"
       ? "MCP Servers"

@@ -1,5 +1,6 @@
 import {
   ArrowLeftIcon,
+  ChatBubbleLeftRightIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
@@ -8,15 +9,14 @@ import {
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { UserCircleIcon } from "@heroicons/react/24/solid";
-import MCPSection from "../../components/mainInput/Lump/sections/mcp/MCPSection";
-import { ModelsSection } from "../../components/mainInput/Lump/sections/ModelsSection";
-import { RulesSection } from "../../components/mainInput/Lump/sections/RulesSection";
-import { ToolPoliciesSection } from "../../components/mainInput/Lump/sections/tool-policies/ToolPoliciesSection";
-import { AccountSection } from "./AccountSection";
-import { HelpCenterSection } from "./HelpCenterSection";
-import { IndexingSettingsSection } from "./IndexingSettingsSection";
-import { UserSettingsForm } from "./UserSettingsForm";
+import { HelpSection } from "./sections/HelpSection";
+import { IndexingSettingsSection } from "./sections/IndexingSettingsSection";
+import { McpSection } from "./sections/McpSection";
+import { ModelsSection } from "./sections/ModelsSection";
+import { PromptsSection } from "./sections/PromptsSection";
+import { RulesSection } from "./sections/RulesSection";
+import { ToolPoliciesSection } from "./sections/ToolPoliciesSection";
+import { UserSettingsSection } from "./sections/UserSettingsSection";
 
 interface TabOption {
   id: string;
@@ -44,14 +44,6 @@ export const topTabSections: TabSection[] = [
         component: <div />,
         icon: <ArrowLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
-      {
-        id: "account",
-        label: "Account",
-        component: <AccountSection />,
-        icon: (
-          <UserCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-        ),
-      },
     ],
   },
   {
@@ -64,7 +56,6 @@ export const topTabSections: TabSection[] = [
         label: "Models",
         component: (
           <div className="mt-4">
-            <h3 className="mb-4 mt-0 text-xl">Models</h3>
             <ModelsSection />
           </div>
         ),
@@ -75,16 +66,27 @@ export const topTabSections: TabSection[] = [
         label: "Rules",
         component: (
           <div className="mt-4">
-            <h3 className="mb-4 mt-0 text-xl">Rules</h3>
             <RulesSection />
           </div>
         ),
         icon: <PencilIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
       {
+        id: "prompts",
+        label: "Prompts",
+        component: (
+          <div className="mt-4">
+            <PromptsSection />
+          </div>
+        ),
+        icon: (
+          <ChatBubbleLeftRightIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+        ),
+      },
+      {
         id: "mcp",
         label: "MCP",
-        component: <MCPSection />,
+        component: <McpSection />,
         icon: (
           <Squares2X2Icon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
         ),
@@ -94,7 +96,6 @@ export const topTabSections: TabSection[] = [
         label: "Tools",
         component: (
           <div className="mt-4">
-            <h3 className="mb-4 mt-0 text-xl">Tool Policies</h3>
             <ToolPoliciesSection />
           </div>
         ),
@@ -127,13 +128,17 @@ export const bottomTabSections: TabSection[] = [
       {
         id: "settings",
         label: "Settings",
-        component: <UserSettingsForm />,
+        component: <UserSettingsSection />,
         icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
       {
         id: "help",
         label: "Help",
-        component: <HelpCenterSection />,
+        component: (
+          <div className="mt-4">
+            <HelpSection />
+          </div>
+        ),
         icon: (
           <QuestionMarkCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
         ),

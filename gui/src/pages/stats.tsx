@@ -65,11 +65,7 @@ function Stats() {
         backgroundColor: vscBackground,
       }}
     >
-      <PageHeader
-        title="More"
-        onTitleClick={() => navigate(-1)}
-        showBorder
-      />
+      <PageHeader title="More" onTitleClick={() => navigate(-1)} showBorder />
 
       <div className="p-2">
         <div className="flex items-center gap-2">
