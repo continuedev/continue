@@ -13,7 +13,7 @@ export function AssistantOptions({
   const { profiles } = useAuth();
 
   return (
-    <div className="thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto">
+    <div className="thin-scrollbar flex max-h-32 flex-col overflow-y-auto">
       {profiles?.length === 0 ? (
         <div className="text-vsc-foreground px-3 py-2 opacity-70">
           No agents found

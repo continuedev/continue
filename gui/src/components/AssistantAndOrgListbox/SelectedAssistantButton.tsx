@@ -4,56 +4,61 @@ import type { ProfileDescription } from "core/config/ConfigHandler";
 import { useAppSelector } from "../../redux/hooks";
 import { fontSize } from "../../util";
 import { cn } from "../../util/cn";
-import { useLump } from "../mainInput/Lump/LumpContext";
 import { ListboxButton } from "../ui";
 import { AssistantIcon } from "./AssistantIcon";
 
 interface SelectedAssistantButtonProps {
   selectedProfile: ProfileDescription | null;
+  variant?: "small" | "large";
 }
 
 export function SelectedAssistantButton({
   selectedProfile,
+  variant = "small",
 }: SelectedAssistantButtonProps) {
-  const { isToolbarExpanded } = useLump();
   const configLoading = useAppSelector((store) => store.config.loading);
+
+  const isLarge = variant === "large";
+  const iconSize = isLarge ? "h-4 w-4" : "h-3 w-3";
+  const buttonPadding = isLarge ? "px-2 py-2" : "px-0 py-0";
+  const buttonStyle = isLarge ? {} : { fontSize: fontSize(-3) };
 
   return (
     <ListboxButton
       data-testid="assistant-select-button"
-      className="text-description border-none bg-transparent hover:brightness-125"
-      style={{ fontSize: fontSize(-3) }}
+      className={`text-description border-none bg-transparent hover:brightness-125 ${isLarge ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
+      style={buttonStyle}
     >
-      <div className="flex flex-row items-center gap-1.5">
-        {selectedProfile === null ? (
-          "Create your first agent"
-        ) : configLoading ? (
-          <span className="text-description flex flex-row items-center">
-            <ArrowPathIcon
-              className={cn(
-                "text-description mr-1.5 h-3 w-3",
-                configLoading && "animate-spin-slow",
-              )}
-            />
-            Loading
-          </span>
-        ) : (
-          <>
-            <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon assistant={selectedProfile} />
-            </div>
-            <span
-              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-            >
-              {selectedProfile.title}
+      <div className={`flex flex-row items-center ${isLarge ? "justify-between w-full" : "gap-1.5"}`}>
+        <div className="flex flex-row items-center gap-1.5">
+          {selectedProfile === null ? (
+            "Create your first agent"
+          ) : configLoading ? (
+            <span className="text-description flex flex-row items-center">
+              <ArrowPathIcon
+                className={cn(
+                  `text-description mr-1.5 ${iconSize}`,
+                  configLoading && "animate-spin-slow",
+                )}
+              />
+              Loading
             </span>
-          </>
-        )}
+          ) : (
+            <>
+              <div className={`${iconSize} flex-shrink-0 select-none`}>
+                <AssistantIcon assistant={selectedProfile} />
+              </div>
+              <span className={`${isLarge ? "hidden md:block" : "hidden md:block"} line-clamp-1 select-none break-all`}>
+                {selectedProfile.title}
+              </span>
+            </>
+          )}
+        </div>
+        <ChevronDownIcon
+          className={`${isLarge ? "h-3.5 w-3.5" : "h-2 w-2"} flex-shrink-0 select-none`}
+          aria-hidden="true"
+        />
       </div>
-      <ChevronDownIcon
-        className="h-2 w-2 flex-shrink-0 select-none"
-        aria-hidden="true"
-      />
     </ListboxButton>
   );
 }

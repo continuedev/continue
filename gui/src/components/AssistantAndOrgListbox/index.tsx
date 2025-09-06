@@ -19,10 +19,14 @@ import {
 } from "../ui";
 import { Divider } from "../ui/Divider";
 import { AssistantOptions } from "./AssistantOptions";
-import { ScopeSelect } from "./ScopeSelect";
+import { OrganizationOptions } from "./OrganizationOptions";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
 
-export function AssistantAndOrgListbox() {
+interface AssistantAndOrgListboxProps {
+  variant?: "small" | "large";
+}
+
+export function AssistantAndOrgListbox({ variant = "small" }: AssistantAndOrgListboxProps = {}) {
   const dispatch = useAppDispatch();
   const listboxRef = useRef<HTMLDivElement>(null);
   const currentOrg = useAppSelector(selectCurrentOrg);
@@ -108,10 +112,10 @@ export function AssistantAndOrgListbox() {
   return (
     <Listbox>
       <div className="relative" ref={listboxRef}>
-        <SelectedAssistantButton selectedProfile={selectedProfile} />
+        <SelectedAssistantButton selectedProfile={selectedProfile} variant={variant} />
         <Transition>
           <ListboxOptions
-            className="-translate-x-1.5 pb-0"
+            className="-translate-x-1.5 pb-0 max-h-32 overflow-y-auto"
             style={{ zIndex: 200 }}
           >
             <div className="flex items-center justify-between p-2">
@@ -128,10 +132,13 @@ export function AssistantAndOrgListbox() {
             {shouldRenderOrgInfo && (
               <>
                 <Divider className="!mb-0.5" />
-                <div className="mx-0.5">
-                  {" "}
-                  <ScopeSelect />
+                <div className="flex items-center justify-between p-2">
+                  <span className="text-description text-xs font-medium">
+                    Organizations
+                  </span>
                 </div>
+
+                <OrganizationOptions onClose={close} />
 
                 <Divider className="!mb-0 mt-0.5" />
               </>

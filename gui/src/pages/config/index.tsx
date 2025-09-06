@@ -1,7 +1,7 @@
 import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ScopeSelect } from "../../components/AssistantAndOrgListbox/ScopeSelect";
+import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import { Divider } from "../../components/ui/Divider";
 import { useAuth } from "../../context/Auth";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
@@ -56,7 +56,7 @@ function ConfigPage() {
               {index === 0 && shouldRenderOrgInfo && (
                 <>
                   <Divider />
-                  <ScopeSelect allowCompact />
+                  <AssistantAndOrgListbox variant="large" />
                 </>
               )}
             </>
