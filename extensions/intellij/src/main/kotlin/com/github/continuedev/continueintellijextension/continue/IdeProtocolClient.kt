@@ -357,7 +357,7 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             GetSearchResultsParams::class.java
                         )
-                        val results = ide.getSearchResults(params.query, params.maxResults)
+                        val results = ide.getSearchResults(params.rgArgs, params.maxResults)
                         respond(results)
                     }
 
