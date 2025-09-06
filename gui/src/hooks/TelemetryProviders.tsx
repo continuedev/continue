@@ -29,7 +29,8 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
   );
 
   useEffect(() => {
-    if (allowAnonymousTelemetry && hasContinueEmail) {
+    // PostHog depends only on allowAnonymousTelemetry
+    if (allowAnonymousTelemetry) {
       // Initialize PostHog (existing logic)
       posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
         api_host: "https://app.posthog.com",
@@ -41,7 +42,13 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
       });
       posthog.identify(window.vscMachineId);
       posthog.opt_in_capturing();
+    } else {
+      // Disable PostHog
+      posthog.opt_out_capturing();
+    }
 
+    // Sentry depends on both allowAnonymousTelemetry and hasContinueEmail
+    if (allowAnonymousTelemetry && hasContinueEmail) {
       // Initialize Sentry (new for GUI - enhanced React setup)
       Sentry.init({
         dsn: SENTRY_DSN,
@@ -59,7 +66,7 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
         sendDefaultPii: false,
 
         // Strip sensitive data and add basic properties
-        beforeSend(event) {
+        beforeSend(event: Sentry.Event) {
           // Apply comprehensive anonymization using shared logic
           const anonymizedEvent = anonymizeSentryEvent(event);
           if (!anonymizedEvent) return null;
@@ -95,9 +102,6 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
       });
       Sentry.setUser(anonymizedUser);
     } else {
-      // Disable PostHog
-      posthog.opt_out_capturing();
-
       // Disable Sentry properly - close the client to stop all network requests
       try {
         const client = Sentry.getClient();

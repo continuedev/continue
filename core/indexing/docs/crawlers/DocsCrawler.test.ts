@@ -155,9 +155,27 @@ describe("DocsCrawler", () => {
       test(
         `Default crawler common site: ${url}`,
         async () => {
-          const { pages, crawler } = await runCrawl(url);
-          expect(pages.length).toBeGreaterThanOrEqual(1);
-          expect(crawler).toEqual("default");
+          // Retry logic to handle flaky network requests to TRIAL_PROXY_URL
+          let lastError;
+          const maxRetries = 3;
+
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              const { pages, crawler } = await runCrawl(url);
+              expect(pages.length).toBeGreaterThanOrEqual(1);
+              expect(crawler).toEqual("default");
+              return; // Test passed, exit retry loop
+            } catch (error) {
+              lastError = error;
+              if (attempt === maxRetries) {
+                throw error; // Final attempt failed, throw the error
+              }
+              // Wait before retrying (exponential backoff)
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * attempt),
+              );
+            }
+          }
         },
         TIMEOUT_MS,
       );

@@ -1,14 +1,14 @@
-import { describe, it, expect } from "vitest";
 import {
-  validateConfigYaml,
   AssistantUnrolledNonNullable,
+  validateConfigYaml,
 } from "@continuedev/config-yaml";
+import { describe, expect, it } from "vitest";
 
 describe("MCP Server cwd configuration", () => {
   describe("YAML schema validation", () => {
     it("should accept valid MCP server with cwd", () => {
       const config: AssistantUnrolledNonNullable = {
-        name: "test-assistant",
+        name: "test-agent",
         version: "1.0.0",
         mcpServers: [
           {
@@ -28,7 +28,7 @@ describe("MCP Server cwd configuration", () => {
 
     it("should accept MCP server without cwd", () => {
       const config: AssistantUnrolledNonNullable = {
-        name: "test-assistant",
+        name: "test-agent",
         version: "1.0.0",
         mcpServers: [
           {
@@ -45,7 +45,7 @@ describe("MCP Server cwd configuration", () => {
 
     it("should accept relative paths in cwd", () => {
       const config: AssistantUnrolledNonNullable = {
-        name: "test-assistant",
+        name: "test-agent",
         version: "1.0.0",
         mcpServers: [
           {
@@ -63,7 +63,7 @@ describe("MCP Server cwd configuration", () => {
 
     it("should accept empty string cwd", () => {
       const config: AssistantUnrolledNonNullable = {
-        name: "test-assistant",
+        name: "test-agent",
         version: "1.0.0",
         mcpServers: [
           {
@@ -115,7 +115,7 @@ describe("MCP Server cwd configuration", () => {
 
       configs.forEach(({ name, server }) => {
         const config: AssistantUnrolledNonNullable = {
-          name: "test-assistant",
+          name: "test-agent",
           version: "1.0.0",
           mcpServers: [server],
         };

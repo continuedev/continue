@@ -5,7 +5,9 @@ import {
   RangeInFile,
   TabAutocompleteOptions,
 } from "../";
+import { SnippetPayload } from "../autocomplete/snippets";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
+import { HelperVars } from "../autocomplete/util/HelperVars";
 
 export type RecentlyEditedRange = RangeInFile & {
   timestamp: number;
@@ -61,6 +63,7 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   cursorPosition: { line: number; character: number };
   finalCursorPosition: { line: number; character: number };
   accepted?: boolean;
+  aborted?: boolean;
   editableRegionStartLine: number;
   editableRegionEndLine: number;
   diffLines: DiffLine[];
@@ -103,4 +106,37 @@ export interface MercuryTemplateVars extends TemplateVars {
   currentFileContent: string;
   editDiffHistory: string; // could be a singe large unified diff
   currentFilePath: string;
+}
+
+/**
+ * Context object containing all necessary information for model-specific operations.
+ */
+export interface ModelSpecificContext {
+  helper: HelperVars;
+  snippetPayload: SnippetPayload;
+  editableRegionStartLine: number;
+  editableRegionEndLine: number;
+  diffContext: string[];
+  autocompleteContext: string;
+  historyDiff?: string;
+  workspaceDirs?: string[];
+}
+
+/**
+ * Configuration for editable region calculation.
+ */
+export interface EditableRegionConfig {
+  usingFullFileDiff?: boolean;
+  maxTokens?: number;
+  topMargin?: number;
+  bottomMargin?: number;
+}
+
+/**
+ * Configuration for prompt generation.
+ */
+export interface PromptConfig {
+  includeHistory?: boolean;
+  includeRecentEdits?: boolean;
+  maxContextSnippets?: number;
 }

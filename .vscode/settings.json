@@ -42,7 +42,8 @@
     "extensions/vscode/e2e/_output": true,
     "extensions/vscode/e2e/storage": true,
     "extensions/vscode/e2e/vsix": true,
-    "extensions/.continue-debug": true
+    "extensions/.continue-debug": true,
+    "extensions/cli/dist/**": true
     // "sync/**": true
   },
   "editor.formatOnSave": true,

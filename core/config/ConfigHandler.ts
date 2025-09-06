@@ -21,7 +21,6 @@ import { PolicySingleton } from "../control-plane/PolicySingleton.js";
 import { Logger } from "../util/Logger.js";
 import { Telemetry } from "../util/posthog.js";
 import {
-  ASSISTANTS,
   getAllDotContinueDefinitionFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
@@ -203,6 +202,8 @@ export class ConfigHandler {
           message: `Error loading Continue Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
         });
       }
+    } else {
+      PolicySingleton.getInstance().policy = null;
     }
     // Load local org if not signed in or hub orgs fail
     try {
@@ -339,7 +340,7 @@ export class ConfigHandler {
 
   async getLocalProfiles(options: LoadAssistantFilesOptions) {
     /**
-     * Users can define as many local assistants as they want in a `.continue/assistants` folder
+     * Users can define as many local agents as they want in a `.continue/agents` (or previous .continue/assistants) folder
      */
 
     // Local customization disabled for on-premise deployments
@@ -358,9 +359,14 @@ export class ConfigHandler {
       const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
         options,
-        ASSISTANTS,
+        "assistants",
       );
-      const profiles = assistantFiles.map((assistant) => {
+      const agentFiles = await getAllDotContinueDefinitionFiles(
+        this.ide,
+        options,
+        "agents",
+      );
+      const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
           this.ideSettingsPromise,
