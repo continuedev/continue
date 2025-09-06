@@ -23,6 +23,7 @@ import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/Thinkin
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
+import UserMessageActions from "../../components/StepContainer/UserMessageActions";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
@@ -300,6 +301,9 @@ export function Chat() {
               appliedRules={appliedRules}
               inputId={message.id}
             />
+            <div className="mt-2 h-7 transition-opacity duration-300 ease-in-out">
+              <UserMessageActions index={index} item={item} />
+            </div>
           </div>
         );
       }

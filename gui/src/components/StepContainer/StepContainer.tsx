@@ -10,6 +10,7 @@ import ConversationSummary from "./ConversationSummary";
 import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
+import UserMessageActions from "./UserMessageActions";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -40,15 +41,26 @@ export default function StepContainer(props: StepContainerProps) {
     historyItemAfterThis?.message.role === "tool";
 
   const shouldRenderResponseAction = () => {
-    if (isNextMsgAssistantOrThinking) {
-      return false;
+    // Always show actions for assistant messages if conditions are met
+    if (props.item.message.role === "assistant") {
+      if (isNextMsgAssistantOrThinking) {
+        return false;
+      }
+
+      if (!historyItemAfterThis) {
+        return !props.item.toolCallStates;
+      }
+
+      return true;
     }
 
-    if (!historyItemAfterThis) {
-      return !props.item.toolCallStates;
-    }
+    return false;
+  };
 
-    return true;
+  const shouldRenderUserMessageActions = () => {
+    // Show actions for user messages when not streaming
+    console.log("last item role: ", props.item.message.role);
+    return props.item.message.role === "user";
   };
 
   useEffect(() => {
@@ -110,7 +122,7 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </div>
 
-      {shouldRenderResponseAction() && !isStreaming && (
+      {shouldRenderResponseAction() && (
         <div
           className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
         >
@@ -122,6 +134,14 @@ export default function StepContainer(props: StepContainerProps) {
             item={props.item}
             isLast={props.isLast}
           />
+        </div>
+      )}
+
+      {shouldRenderUserMessageActions() && (
+        <div
+          className={`mt-2 h-7 transition-opacity duration-300 ease-in-out ${isBeforeLatestSummary ? "opacity-35" : ""}`}
+        >
+          <UserMessageActions index={props.index} item={props.item} />
         </div>
       )}
 
