@@ -20,13 +20,17 @@ export const readFileTool: Tool = {
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {
-    throwIfFileIsSecurityConcern(args.filepath);
+    let { filepath } = args;
+    if (filepath.startsWith("./")) {
+      filepath = filepath.slice(2);
+    }
+    throwIfFileIsSecurityConcern(filepath);
     return {
       args,
       preview: [
         {
           type: "text",
-          content: `Will read ${formatToolArgument(args.filepath)}`,
+          content: `Will read ${formatToolArgument(filepath)}`,
         },
       ],
     };
