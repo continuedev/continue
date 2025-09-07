@@ -117,6 +117,7 @@
                       "customize/model-providers/top-level/ollama",
                       "customize/model-providers/top-level/openrouter",
                       "customize/model-providers/top-level/openai",
+                      "customize/model-providers/top-level/tetrate_agent_router_service",
                       "customize/model-providers/top-level/vertexai"
                     ]
                   },
