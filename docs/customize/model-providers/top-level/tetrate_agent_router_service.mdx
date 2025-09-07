@@ -10,25 +10,25 @@ This gateway acts as an intelligent router that can distribute requests across m
 
 ## Getting Started
 
-1. Obtain an API key from the [Tetrate Agent Router Service portal](https://api.router.tetrate.ai/)
-2. Configure Continue to use Tetrate Agent Router Service as your model provider
+1. Obtain an API key from the [Agent Router Service portal](https://api.router.tetrate.ai/)
+2. Configure Continue to use Agent Router Service as your model provider
 
 ## Configuring Models
 
 You can also quickly use models from Tetrate on the Cotninue Hub by visiting Tetrate on the Continue Hub [here](https://hub.continue.dev/tetrate). The easiest way if you don't see the model you want to use is to remix one of the models on the Tetrate page and change the model to the one you want to use.
 
-![Tetrate on Continue Hub](../assets/tetrate-remix.png)
+![Rremix a model from Tetrate on Continue Hub](../assets/tetrate-remix.png)
 
 ### Available Models
 
-Tetrate Agent Router Service supports routing to various models.
-Go to the [Tetrate Agent Router Service model catalog](https://router.tetrate.ai/models) for a full list of supported models.
+Agent Router Service supports routing to various models.
+Go to the [Agent Router Service model catalog](https://router.tetrate.ai/models) for a full list of supported models.
 
 ## Configuration Options
 
-As Tetrate Agent Router Service is an OpenAI API compatible provider, you can configure it like any other OpenAI API compatible provider. Therefore you will be setting `provider: openai` and `apiBase: https://api.router.tetrate.ai/v1`.
+As Agent Router Service is an OpenAI API compatible provider, you can configure it like any other OpenAI API compatible provider. Therefore you will be setting `provider: openai` and `apiBase: https://api.router.tetrate.ai/v1`.
 
-Update your Continue configuration file (`~/.continue/config.yaml`) with your Tetrate Agent Router Service API key:
+Update your Continue configuration file (`~/.continue/config.yaml`) with your Agent Router Service API key:
 
 ### On your local machine
 
@@ -43,12 +43,11 @@ models:
     apiBase: https://api.router.tetrate.ai/v1
 ```
 
-#### As a model block
+#### As a local model block
 
-Review the configuration reference for [model blocks](/reference#models). Ensure you look at the roles and capabilities section and review the [model capabilities guide](/customize/deep-dives/model-capabilities).
-Learn how to use model blocks on your local machine by following the [create a block](/hub/blocks/create-a-block) guide and then putting the models in a `models` directory in your local machine's `.continue` folder.
+Review the configuration reference for [model blocks](/reference#models) and using [local blocks](/reference#local-blocks). Ensure you look at the roles and capabilities section and review the [model capabilities guide](/customize/deep-dives/model-capabilities).
 
-```yaml
+```yaml title="model_name.yaml"
     name: <MODEL_NAME>
     models:
       - name: <MODEL_NAME>
@@ -64,10 +63,10 @@ Learn how to use model blocks on your local machine by following the [create a b
           - tool_use
 ```
 
-### On Continue Hub
+### On Model Block on Continue Hub
 Learn how to use model blocks on Continue Hub [here](/hub/blocks/create-a-block).
 
-```yaml
+```yaml title="model_name.yaml"
     name: <MODEL_NAME>
     models:
       - name: <MODEL_NAME>
