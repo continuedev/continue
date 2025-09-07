@@ -8,6 +8,7 @@ import {
   getLanguageFromFilePath,
 } from "../telemetry/utils.js";
 
+import { readFilesSet, readFileTool } from "./readFile.js";
 import { Tool } from "./types.js";
 import { generateDiff } from "./writeFile.js";
 
@@ -18,40 +19,23 @@ export interface EditArgs {
   replace_all?: boolean;
 }
 
-// Track files that have been read in the current session
-export const readFilesSet = new Set<string>();
-
 export const editTool: Tool = {
   name: "Edit",
   displayName: "Edit",
   readonly: false,
   isBuiltIn: true,
-  description: `Performs exact string replacements in files.
+  description: `Performs exact string replacements in a file.
 
+USAGE: 
+- ALWAYS use the \`${readFileTool.name}\` tool just before making edits, to understand the file's up-to-date contents and context.
+- When editing text from ${readFileTool.name} tool output, ensure you preserve exact whitespace/indentation.
+- Always prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
+- Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
+- Use \`replace_all\` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable, for instance.
 
-Usage:
-
-- You must use your \`Read\` tool at least once in the conversation before
-editing. This tool will error if you attempt an edit without reading the file.
-
-- When editing text from Read tool output, ensure you preserve the exact
-indentation (tabs/spaces) as it appears AFTER the line number prefix. The line
-number prefix format is: spaces + line number + tab. Everything after that tab
-is the actual file content to match. Never include any part of the line number
-prefix in the old_string or new_string.
-
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files
-unless explicitly required.
-
-- Only use emojis if the user explicitly requests it. Avoid adding emojis to
-files unless asked.
-
-- The edit will FAIL if \`old_string\` is not unique in the file. Either provide
-a larger string with more surrounding context to make it unique or use
-\`replace_all\` to change every instance of \`old_string\`.
-
-- Use \`replace_all\` for replacing and renaming strings across the file. This
-parameter is useful if you want to rename a variable for instance.`,
+WARNINGS:
+- When not using \`replace_all\`, the edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.
+- The edit will FAIL if you have not recently used the \`${readFileTool.name}\` tool to view up-to-date file contents.`,
   parameters: {
     file_path: {
       type: "string",
@@ -60,13 +44,14 @@ parameter is useful if you want to rename a variable for instance.`,
     },
     old_string: {
       type: "string",
-      description: "The text to replace",
+      description:
+        "The text to replace - must be exact including whitespace/indentation",
       required: true,
     },
     new_string: {
       type: "string",
       description:
-        "The text to replace it with (must be different from old_string)",
+        "The text to replace it with (MUST be different from old_string)",
       required: true,
     },
     replace_all: {
@@ -86,7 +71,7 @@ parameter is useful if you want to rename a variable for instance.`,
     // Check if file has been read
     if (!readFilesSet.has(file_path)) {
       throw new Error(
-        `You must use the Read tool to read ${file_path} before editing it.`,
+        `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
       );
     }
 
@@ -197,8 +182,3 @@ parameter is useful if you want to rename a variable for instance.`,
     }
   },
 };
-
-// Function to mark a file as read (to be called from the read tool)
-export function markFileAsRead(filePath: string) {
-  readFilesSet.add(filePath);
-}

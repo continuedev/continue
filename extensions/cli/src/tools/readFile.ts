@@ -2,9 +2,14 @@ import * as fs from "fs";
 
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 
-import { markFileAsRead } from "./edit.js";
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
+
+// Track files that have been read in the current session
+export const readFilesSet = new Set<string>();
+export function markFileAsRead(filePath: string) {
+  readFilesSet.add(filePath);
+}
 
 export const readFileTool: Tool = {
   name: "Read",

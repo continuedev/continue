@@ -1,8 +1,9 @@
 import * as fs from "fs";
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { editTool, markFileAsRead, readFilesSet } from "./edit.js";
+import { editTool } from "./edit.js";
+import { markFileAsRead, readFilesSet } from "./readFile.js";
 
 // Mock the dependencies
 vi.mock("../telemetry/telemetryService.js");
