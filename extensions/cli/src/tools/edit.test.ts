@@ -22,6 +22,7 @@ vi.mock("fs", async () => {
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
     unlinkSync: vi.fn(),
+    realpathSync: vi.fn(),
   };
 });
 
@@ -35,6 +36,7 @@ describe("editTool", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
+    vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
   });
 
   afterEach(() => {
@@ -127,7 +129,7 @@ describe("editTool", () => {
       const result = await editTool.preprocess!(args);
 
       expect(result.args).toEqual({
-        file_path: testFilePath,
+        resolvedPath: testFilePath,
         newContent: "Hi there\nThis is a test file\nGoodbye world",
         oldContent: originalContent,
       });
@@ -164,7 +166,7 @@ describe("editTool", () => {
     it("should successfully write file and return success message", async () => {
       const newContent = "Hi there\nThis is a test file\nGoodbye world";
       const args = {
-        file_path: testFilePath,
+        resolvedPath: testFilePath,
         newContent,
         oldContent: originalContent,
       };
@@ -187,7 +189,7 @@ describe("editTool", () => {
       });
 
       const args = {
-        file_path: testFilePath,
+        resolvedPath: testFilePath,
         newContent: "new content",
         oldContent: originalContent,
       };

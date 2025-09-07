@@ -23,6 +23,7 @@ vi.mock("fs", async () => {
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
     unlinkSync: vi.fn(),
+    realpathSync: vi.fn(),
   };
 });
 
@@ -36,6 +37,7 @@ describe("multiEditTool", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(originalContent);
     vi.mocked(fs.writeFileSync).mockImplementation(() => {});
+    vi.mocked(fs.realpathSync).mockImplementation((path) => path.toString());
   });
 
   afterEach(() => {

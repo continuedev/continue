@@ -67,18 +67,12 @@ WARNINGS:
       new_string,
       replace_all = false,
     } = args as EditArgs;
-    throwIfFileIsSecurityConcern(file_path);
-    // Check if file has been read
-    if (!readFilesSet.has(file_path)) {
-      throw new Error(
-        `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
-      );
-    }
 
     // Validate arguments
     if (!file_path) {
       throw new Error("file_path is required");
     }
+
     if (!old_string) {
       throw new Error("old_string is required");
     }
@@ -89,13 +83,24 @@ WARNINGS:
       throw new Error("old_string and new_string must be different");
     }
 
+    const resolvedPath = fs.realpathSync(file_path);
+
+    // Check if file has been read
+    if (!readFilesSet.has(resolvedPath)) {
+      throw new Error(
+        `You must use the ${readFileTool.name} tool to read ${file_path} before editing it.`,
+      );
+    }
+
+    throwIfFileIsSecurityConcern(resolvedPath);
+
     // Check if file exists
-    if (!fs.existsSync(file_path)) {
+    if (!fs.existsSync(resolvedPath)) {
       throw new Error(`File ${file_path} does not exist`);
     }
 
     // Read current file content
-    const oldContent = fs.readFileSync(file_path, "utf-8");
+    const oldContent = fs.readFileSync(resolvedPath, "utf-8");
 
     // Check if old_string exists in the file
     if (!oldContent.includes(old_string)) {
@@ -119,11 +124,11 @@ WARNINGS:
     }
 
     // Generate diff for preview
-    const diff = generateDiff(oldContent, newContent, file_path);
+    const diff = generateDiff(oldContent, newContent, resolvedPath);
 
     return {
       args: {
-        file_path,
+        resolvedPath,
         newContent,
         oldContent,
       },
@@ -140,19 +145,19 @@ WARNINGS:
     };
   },
   run: async (args: {
-    file_path: string;
+    resolvedPath: string;
     newContent: string;
     oldContent: string;
   }) => {
     try {
-      fs.writeFileSync(args.file_path, args.newContent, "utf-8");
+      fs.writeFileSync(args.resolvedPath, args.newContent, "utf-8");
 
       // Get lines for telemetry
       const { added, removed } = calculateLinesOfCodeDiff(
         args.oldContent,
         args.newContent,
       );
-      const language = getLanguageFromFilePath(args.file_path);
+      const language = getLanguageFromFilePath(args.resolvedPath);
 
       if (added > 0) {
         telemetryService.recordLinesOfCodeModified("added", added, language);
@@ -169,13 +174,13 @@ WARNINGS:
       const diff = generateDiff(
         args.oldContent,
         args.newContent,
-        args.file_path,
+        args.resolvedPath,
       );
 
-      return `Successfully edited ${args.file_path}\nDiff:\n${diff}`;
+      return `Successfully edited ${args.resolvedPath}\nDiff:\n${diff}`;
     } catch (error) {
       throw new Error(
-        `Error: failed to edit ${args.file_path}: ${
+        `Error: failed to edit ${args.resolvedPath}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

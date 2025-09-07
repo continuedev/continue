@@ -46,9 +46,10 @@ export const readFileTool: Tool = {
       if (!fs.existsSync(filepath)) {
         return `Error: File does not exist: ${filepath}`;
       }
-      const content = fs.readFileSync(filepath, "utf-8");
+      const realPath = fs.realpathSync(filepath);
+      const content = fs.readFileSync(realPath, "utf-8");
       // Mark this file as read for the edit tool
-      markFileAsRead(filepath);
+      markFileAsRead(realPath);
 
       const lines = content.split("\n");
       if (lines.length > 5000) {

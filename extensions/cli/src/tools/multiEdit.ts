@@ -25,15 +25,10 @@ export interface MultiEditArgs {
   edits: EditOperation[];
 }
 
-// Function to check if file has been read (shared with edit tool)
-function hasFileBeenRead(filePath: string): boolean {
-  return readFilesSet.has(filePath);
-}
-
 // Helper functions for multiEdit validation
 function validateMultiEditArgs(args: any): {
   original_path: string;
-  file_path: string;
+  resolved_path: string;
   edits: EditOperation[];
 } {
   const { file_path, edits } = args as MultiEditArgs;
@@ -52,7 +47,9 @@ function validateMultiEditArgs(args: any): {
     ? file_path
     : path.resolve(process.cwd(), file_path);
 
-  return { original_path: file_path, file_path: absolutePath, edits };
+  const resolvedPath = fs.realpathSync(absolutePath);
+
+  return { original_path: file_path, resolved_path: resolvedPath, edits };
 }
 
 function validateEdits(edits: EditOperation[]): void {
@@ -73,26 +70,25 @@ function validateEdits(edits: EditOperation[]): void {
 }
 
 function validateFileAccess(
-  original_path: string,
-  file_path: string,
+  resolvedPath: string,
   isCreatingNewFile: boolean,
 ): void {
   if (isCreatingNewFile) {
     // For new file creation, check if parent directory exists
-    const parentDir = path.dirname(file_path);
+    const parentDir = path.dirname(resolvedPath);
     if (parentDir && !fs.existsSync(parentDir)) {
       throw new Error(`Parent directory does not exist: ${parentDir}`);
     }
   } else {
     // For existing files, check if file has been read
     // Check with the original path first, then with absolute path
-    if (!hasFileBeenRead(original_path) && !hasFileBeenRead(file_path)) {
+    if (!readFilesSet.has(resolvedPath)) {
       throw new Error(
-        `You must use the ${readFileTool.name} tool to read ${original_path} before editing it.`,
+        `You must use the ${readFileTool.name} tool to read ${resolvedPath} before editing it.`,
       );
     }
-    if (!fs.existsSync(file_path)) {
-      throw new Error(`File ${file_path} does not exist`);
+    if (!fs.existsSync(resolvedPath)) {
+      throw new Error(`File ${resolvedPath} does not exist`);
     }
   }
 }
@@ -165,14 +161,14 @@ CRITICAL REQUIREMENTS:
 If you want to create a new file, use:
 - A new file path, including new directory if needed
 - First edit: empty old_string and the new file's contents as new_string
-- Subsequent edits are not allowed - there is no need since you are creating
+- Subsequent edits: normal edit operations on the created content
 - ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required
 
 WARNINGS:
 - If earlier edits affect the text that later edits are trying to find, files can become mangled
 - The tool will fail if edits.old_string doesn't match the file contents exactly (including whitespace)
 - The tool will fail if edits.old_string and edits.new_string are the same - they MUST be different
-- The tool will fail if you have not used the ${readFileTool.name} to read the file recently in the conversation`,
+- The tool will fail if you have not used the ${readFileTool.name} tool to read the file in this session`,
   parameters: {
     file_path: {
       type: "string",
@@ -191,9 +187,9 @@ WARNINGS:
   },
   preprocess: async (args) => {
     // Validate and extract arguments
-    const { original_path, file_path, edits } = validateMultiEditArgs(args);
+    const { resolved_path, edits } = validateMultiEditArgs(args);
 
-    throwIfFileIsSecurityConcern(file_path);
+    throwIfFileIsSecurityConcern(resolved_path);
 
     // Validate each edit operation
     validateEdits(edits);
@@ -202,12 +198,12 @@ WARNINGS:
     const isCreatingNewFile = edits[0].old_string === "";
 
     // Validate file access
-    validateFileAccess(original_path, file_path, isCreatingNewFile);
+    validateFileAccess(resolved_path, isCreatingNewFile);
 
     // Read current file content (or start with empty for new files)
     let currentContent = "";
     if (!isCreatingNewFile) {
-      currentContent = fs.readFileSync(file_path, "utf-8");
+      currentContent = fs.readFileSync(resolved_path, "utf-8");
     }
 
     const originalContent = currentContent;
@@ -220,11 +216,11 @@ WARNINGS:
     }
 
     // Generate diff for preview
-    const diff = generateDiff(originalContent, newContent, file_path);
+    const diff = generateDiff(originalContent, newContent, resolved_path);
 
     return {
       args: {
-        file_path,
+        file_path: resolved_path,
         newContent,
         originalContent,
         isCreatingNewFile,
@@ -233,7 +229,7 @@ WARNINGS:
       preview: [
         {
           type: "text",
-          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${isCreatingNewFile ? "create" : "modify"} ${file_path}:`,
+          content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${isCreatingNewFile ? "create" : "modify"} ${resolved_path}:`,
         },
         {
           type: "diff",
