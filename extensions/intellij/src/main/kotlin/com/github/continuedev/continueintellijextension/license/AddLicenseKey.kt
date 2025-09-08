@@ -5,22 +5,27 @@ import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 
 class AddLicenseKey : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val dialog = AddLicenseKeyDialog(e.project)
+        performAddLicenseKey(e.project)
+    }
+
+    private fun performAddLicenseKey(project: Project?) {
+        if (project == null)
+            return
+        val dialog = AddLicenseKeyDialog(project)
         dialog.show()
         if (dialog.exitCode != DialogWrapper.OK_EXIT_CODE)
             return
-        val messenger = e.project?.service<ContinuePluginService>()?.coreMessenger
+        val messenger = project.service<ContinuePluginService>().coreMessenger
             ?: return
         messenger.request("mdm/setLicenseKey", mapOf("licenseKey" to dialog.licenseKey), null) { response ->
             val isValid = response.castNestedOrNull<Boolean>("content") ?: false
@@ -28,7 +33,7 @@ class AddLicenseKey : AnAction() {
                 createSuccessAction()
             else
                 createErrorAction()
-            notification.notify(e.project)
+            notification.notify(project)
         }
     }
 
@@ -37,7 +42,7 @@ class AddLicenseKey : AnAction() {
             "License key is valid. A restart is required for it to take effect.",
             NotificationType.INFORMATION
         ).addAction(
-            NotificationAction.create("Restart IDE") { event, notification ->
+            NotificationAction.create("Restart IDE") { _, _ ->
                 ApplicationManager.getApplication().restart()
             }
         )
@@ -49,17 +54,7 @@ class AddLicenseKey : AnAction() {
         ).addAction(
             NotificationAction.create("Try again") { event, notification ->
                 notification.expire()
-                val action = this@AddLicenseKey
-                action.actionPerformed(
-                    AnActionEvent(
-                        null,
-                        event.dataContext,
-                        ActionPlaces.UNKNOWN,
-                        action.templatePresentation.clone(),
-                        ActionManager.getInstance(),
-                        0
-                    )
-                )
+                performAddLicenseKey(event.project)
             }
         )
 
