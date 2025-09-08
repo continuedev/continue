@@ -194,7 +194,7 @@ export class Core {
             selectedOrgId: this.configHandler.currentOrg?.id ?? null,
           });
 
-          if (await this.codeBaseIndexer.wasIndexesChanged()) {
+          if (await this.codeBaseIndexer.wasAnyOneIndexAdded()) {
             await this.codeBaseIndexer.refreshCodebaseIndex(
               await this.ide.getWorkspaceDirs(),
             );

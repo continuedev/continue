@@ -770,7 +770,7 @@ describe("CodebaseIndexer", () => {
     });
   });
 
-  describe("wasIndexesChanged", () => {
+  describe("wasAnyOneIndexAdded", () => {
     let testIndexer: TestCodebaseIndexer;
     let mockGetIndexesToBuild: jest.MockedFunction<any>;
 
@@ -798,7 +798,7 @@ describe("CodebaseIndexer", () => {
       mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
       (testIndexer as any).builtIndexes = [mockIndex2];
 
-      const result = await testIndexer.wasIndexesChanged();
+      const result = await testIndexer.wasAnyOneIndexAdded();
       expect(result).toBe(true);
     });
 
@@ -808,7 +808,7 @@ describe("CodebaseIndexer", () => {
       mockGetIndexesToBuild.mockResolvedValue([mockIndex1, mockIndex2]);
       (testIndexer as any).builtIndexes = [mockIndex1];
 
-      const result = await testIndexer.wasIndexesChanged();
+      const result = await testIndexer.wasAnyOneIndexAdded();
       expect(result).toBe(true);
     });
 
@@ -818,7 +818,7 @@ describe("CodebaseIndexer", () => {
       mockGetIndexesToBuild.mockResolvedValue([mockIndex1]);
       (testIndexer as any).builtIndexes = [mockIndex1, mockIndex2];
 
-      const result = await testIndexer.wasIndexesChanged();
+      const result = await testIndexer.wasAnyOneIndexAdded();
       expect(result).toBe(false);
     });
   });
