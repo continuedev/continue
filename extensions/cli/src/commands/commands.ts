@@ -6,6 +6,7 @@ export { login } from "./login.js";
 export { logout } from "./logout.js";
 export { listSessionsCommand } from "./ls.js";
 export { remote } from "./remote.js";
+export { listAgentsCommand } from "./remote-ls.js";
 export { serve } from "./serve.js";
 
 export interface SlashCommand {

@@ -9,6 +9,7 @@ import { chat } from "./commands/chat.js";
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
+import { listAgentsCommand } from "./commands/remote-ls.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { canAccessAgents, remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
@@ -218,7 +219,7 @@ program
   });
 
 // Remote subcommand - gate access based on user permissions
-program
+const remoteCommand = program
   .command("remote [prompt]", { hidden: true })
   .description("Launch a remote instance of the cn agent")
   .option(
@@ -248,6 +249,17 @@ program
       process.exit(0);
     }
     await remote(prompt, options);
+  });
+
+// Remote list subcommand for listing and selecting agents
+remoteCommand
+  .command("ls")
+  .description("List available agents and select one to connect to")
+  .option("--json", "Output in JSON format")
+  .action(async (options) => {
+    await listAgentsCommand({
+      format: options.json ? "json" : undefined,
+    });
   });
 
 // Serve subcommand
