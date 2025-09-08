@@ -1,5 +1,6 @@
 export enum BuiltInToolNames {
   ReadFile = "read_file",
+  ReadFileRange = "read_file_range",
   EditExistingFile = "edit_existing_file",
   SingleFindAndReplace = "single_find_and_replace",
   MultiEdit = "multi_edit",

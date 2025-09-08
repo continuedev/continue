@@ -1,10 +1,11 @@
-import { format, isToday, isYesterday, isThisWeek, isThisYear } from "date-fns";
+import { format, isThisWeek, isThisYear, isToday, isYesterday } from "date-fns";
 import { Box, Text, useInput } from "ink";
 import React, { useMemo, useState } from "react";
 
 import { SessionMetadata } from "../session.js";
 
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
+import { defaultBoxStyles } from "./styles.js";
 
 interface SessionSelectorProps {
   sessions: SessionMetadata[];
@@ -70,33 +71,31 @@ export function SessionSelector({
 
   if (sessions.length === 0) {
     return (
-      <Box flexDirection="column" padding={1}>
+      <Box {...defaultBoxStyles("blue")}>
         <Text color="yellow">No previous sessions found.</Text>
         <Text color="gray">Start a new conversation with: cn</Text>
-        <Text color="gray">Press ESC or Ctrl+D to exit</Text>
+        <Text color="gray">Press Esc to exit</Text>
       </Box>
     );
   }
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box {...defaultBoxStyles("blue")}>
       <Text color="blue" bold>
         Recent Sessions
       </Text>
-      <Text color="gray">
-        Use ↑↓ arrows to navigate, Enter to select, ESC or Ctrl+D to exit
-      </Text>
+      <Text color="gray">↑/↓ to navigate, Enter to select, Esc to exit</Text>
       <Text> </Text>
 
       {displaySessions.map((session, index) => {
         const isSelected = index === selectedIndex;
-        const indicator = isSelected ? "► " : "  ";
-        const color = isSelected ? "cyan" : "white";
+        const indicator = isSelected ? "➤ " : "  ";
+        const color = isSelected ? "blue" : "white";
 
         return (
           <Box key={session.sessionId} flexDirection="column">
             <Box paddingRight={3}>
-              <Text color={color} wrap="truncate-end">
+              <Text bold={isSelected} color={color} wrap="truncate-end">
                 {indicator}
                 {formatMessage(session.title)}
               </Text>

@@ -1075,11 +1075,6 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
-export type ToolPolicy =
-  | "allowedWithPermission"
-  | "allowedWithoutPermission"
-  | "disabled";
-
 export interface Tool {
   type: "function";
   function: {
@@ -1104,6 +1099,10 @@ export interface Tool {
     exampleArgs?: Array<[string, string | number]>;
   };
   defaultToolPolicy?: ToolPolicy;
+  evaluateToolCallPolicy?: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ) => ToolPolicy;
 }
 
 interface ToolChoice {

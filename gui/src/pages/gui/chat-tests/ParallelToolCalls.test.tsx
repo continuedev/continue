@@ -41,6 +41,11 @@ describe("Parallel Tool Calls", () => {
   test("should handle assistant message with multiple tool calls", async () => {
     const { ideMessenger, store } = await renderWithProviders(<Chat />);
 
+    // Mock the tools/evaluatePolicy response to allow tools without permission
+    ideMessenger.responses["tools/evaluatePolicy"] = {
+      policy: "allowedWithPermission",
+    };
+
     await act(async () => {
       addAndSelectMockLlm(store, ideMessenger);
     });
@@ -76,6 +81,11 @@ describe("Parallel Tool Calls", () => {
 
   test("should handle individual tool call actions without breaking other calls", async () => {
     const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+    // Mock the tools/evaluatePolicy response to allow tools without permission
+    ideMessenger.responses["tools/evaluatePolicy"] = {
+      policy: "allowedWithPermission",
+    };
 
     await act(async () => {
       addAndSelectMockLlm(store, ideMessenger);
@@ -132,6 +142,11 @@ describe("Parallel Tool Calls", () => {
 
   test("should handle streaming deltas for multiple tool calls", async () => {
     const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+    // Mock the tools/evaluatePolicy response to allow tools without permission
+    ideMessenger.responses["tools/evaluatePolicy"] = {
+      policy: "allowedWithPermission",
+    };
 
     await act(async () => {
       addAndSelectMockLlm(store, ideMessenger);

@@ -41,7 +41,7 @@ jobs:
 
       - name: Add PR title guidance comment
         if: always() && steps.pr-title-check.outputs.valid == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: comments } = await github.rest.issues.listComments({
