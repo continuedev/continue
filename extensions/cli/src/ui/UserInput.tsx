@@ -801,7 +801,7 @@ const UserInput: React.FC<UserInputProps> = ({
           color={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "blue"}
           bold
         >
-          {showBashMode ? "$" : isRemoteMode ? "◉" : "●"}
+          {showBashMode ? "$ " : isRemoteMode ? "◉ " : "● "}
         </Text>
         {renderInputText()}
       </Box>
