@@ -11,6 +11,7 @@ import {
   updateSessionHistory,
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
+import { messageQueue } from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
@@ -306,6 +307,16 @@ export function useChat({
       setIsWaitingForResponse(false);
       setResponseStartTime(null);
       setInputMode(true);
+
+      // Check if there are queued messages and process them after a microtask delay
+      // This ensures the GUI state has been updated before processing the next message
+      const latestQueuedMessage = messageQueue.getLatestMessage()?.message;
+      if (latestQueuedMessage) {
+        logger.debug("processing queued message", { latestQueuedMessage });
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Note: InputHistory entry was already added when the message was first submitted
+        await handleUserMessage(latestQueuedMessage);
+      }
     }
   };
 
@@ -483,6 +494,8 @@ export function useChat({
     // Add the formatted user message to history
     const newHistory = [...currentChatHistory, newUserMessage];
     setChatHistory(newHistory);
+
+    logger.debug("debug1 streaming started again");
 
     // Execute the streaming response
     await executeStreamingResponse(newHistory, currentCompactionIndex);
