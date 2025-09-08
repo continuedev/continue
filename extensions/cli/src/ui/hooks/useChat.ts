@@ -313,8 +313,7 @@ export function useChat({
       const latestQueuedMessage = messageQueue.getLatestMessage()?.message;
       if (latestQueuedMessage) {
         logger.debug("processing queued message", { latestQueuedMessage });
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        // Note: InputHistory entry was already added when the message was first submitted
+        await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
         await handleUserMessage(latestQueuedMessage);
       }
     }
