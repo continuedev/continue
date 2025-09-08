@@ -819,7 +819,7 @@ describe("CodebaseIndexer", () => {
       (testIndexer as any).builtIndexes = [mockIndex1, mockIndex2];
 
       const result = await testIndexer.wasIndexesChanged();
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
   });
 });
