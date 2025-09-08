@@ -1,12 +1,37 @@
 import chalk from "chalk";
 
-import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
+import {
+  getAccessToken,
+  isAuthenticatedConfig,
+  loadAuthConfig,
+} from "../auth/workos.js";
 import { env } from "../env.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startRemoteTUIChat } from "../ui/index.js";
 import { getRepoUrl } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
+
+/**
+ * Check if the user has access to the agents feature (remote command).
+ * Only users with @continue.dev email addresses can access this feature.
+ */
+export async function canAccessAgents(): Promise<boolean> {
+  const authConfig = loadAuthConfig();
+
+  // No authentication config means no access
+  if (!authConfig) {
+    return false;
+  }
+
+  // Environment auth (CONTINUE_API_KEY) doesn't have email info, so allow access
+  if (!isAuthenticatedConfig(authConfig)) {
+    return true;
+  }
+
+  // Check if email ends with @continue.dev
+  return authConfig.userEmail?.endsWith("@continue.dev") === true;
+}
 
 export async function remote(
   prompt: string | undefined,
@@ -91,7 +116,7 @@ export async function remote(
       requestBody.branchName = options.branch;
     }
 
-    const response = await fetch(new URL("agents/devboxes", env.apiBase), {
+    const response = await fetch(new URL("agents", env.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

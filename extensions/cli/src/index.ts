@@ -10,7 +10,7 @@ import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
 import { remoteTest } from "./commands/remote-test.js";
-import { remote } from "./commands/remote.js";
+import { canAccessAgents, remote } from "./commands/remote.js";
 import { serve } from "./commands/serve.js";
 import {
   handleValidationErrors,
@@ -217,7 +217,7 @@ program
     });
   });
 
-// Remote subcommand
+// Remote subcommand - gate access based on user permissions
 program
   .command("remote [prompt]", { hidden: true })
   .description("Launch a remote instance of the cn agent")
@@ -242,6 +242,11 @@ program
     "Specify the repository URL to use in the remote environment",
   )
   .action(async (prompt: string | undefined, options) => {
+    // Check if user has access to agents feature
+    if (!(await canAccessAgents())) {
+      // Silently exit - make it appear as if command doesn't exist
+      process.exit(0);
+    }
     await remote(prompt, options);
   });
 
