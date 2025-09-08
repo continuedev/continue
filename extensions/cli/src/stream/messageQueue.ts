@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 import { InputHistory } from "../util/inputHistory.js";
 import { logger } from "../util/logger.js";
 
@@ -14,9 +15,13 @@ export interface MessageProcessor {
 /**
  * A queue to store messages that need to be processed later
  */
-class MessageQueue {
+class MessageQueue extends EventEmitter {
   private queue: QueuedMessage[] = [];
   private inputHistory: InputHistory | undefined;
+
+  constructor() {
+    super();
+  }
 
   async enqueueMessage(
     message: string,
@@ -36,17 +41,48 @@ class MessageQueue {
       queueLength: this.queue.length,
     });
 
+    // Emit event for UI to show the queued message
+    this.emit("messageQueued", queuedMessage);
+
     return true;
   }
 
-  public getLatestMessage() {
+  public getAllQueuedMessages() {
     if (this.queue.length === 0) return undefined;
-    const latestMessage = this.queue.shift();
-    logger.debug("MessageQueue: Message dequeued", {
+
+    // Combine all queued messages into one
+    const combinedMessage = this.queue.map((msg) => msg.message).join("\n");
+    const combinedImageMap = new Map<string, Buffer>();
+
+    // Merge all image maps
+    for (const queuedMsg of this.queue) {
+      if (queuedMsg.imageMap) {
+        for (const [key, value] of queuedMsg.imageMap) {
+          combinedImageMap.set(key, value);
+        }
+      }
+    }
+
+    const result = {
+      message: combinedMessage,
+      imageMap: combinedImageMap.size > 0 ? combinedImageMap : undefined,
+      timestamp: Date.now(),
+    };
+
+    // Add to input history and clear the queue
+    this.inputHistory?.addEntry(combinedMessage);
+    this.queue = [];
+
+    logger.debug("MessageQueue: All messages dequeued and combined", {
+      combinedLength: combinedMessage.length,
       queueLength: this.queue.length,
     });
-    this.inputHistory?.addEntry(latestMessage!.message);
-    return latestMessage;
+
+    return result;
+  }
+
+  public getLatestMessage() {
+    return this.getAllQueuedMessages();
   }
 
   getQueueLength(): number {

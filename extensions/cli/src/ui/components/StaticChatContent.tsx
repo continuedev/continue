@@ -1,9 +1,10 @@
 import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { Box, Static, useStdout } from "ink";
+import { Box, Static, Text, useStdout } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChatHistoryItem } from "../../../../../core/index.js";
 import type { MCPService } from "../../services/MCPService.js";
+import type { QueuedMessage } from "../../stream/messageQueue.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
 
@@ -13,6 +14,7 @@ interface StaticChatContentProps {
   model?: ModelConfig;
   mcpService?: MCPService;
   chatHistory: ChatHistoryItem[];
+  queuedMessages?: QueuedMessage[];
   renderMessage: (item: ChatHistoryItem, index: number) => React.ReactElement;
   refreshTrigger?: number; // Add a prop to trigger refresh from parent
 }
@@ -23,6 +25,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   model,
   mcpService,
   chatHistory,
+  queuedMessages = [],
   renderMessage,
   refreshTrigger,
 }) => {
@@ -140,6 +143,15 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
           <React.Fragment key={`pending-${index}`}>{item}</React.Fragment>
         ))}
       </Box>
+
+      {/* Queued messages - show at bottom with queue indicators */}
+      {queuedMessages.length > 0 && (
+        <Box paddingLeft={2} paddingBottom={1}>
+          <Text color="gray" italic>
+            {queuedMessages.map((msg) => msg.message).join("\n")}
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 };

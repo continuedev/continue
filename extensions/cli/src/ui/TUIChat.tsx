@@ -188,6 +188,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     inputMode,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -282,6 +283,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
           chatHistory={chatHistory}
+          queuedMessages={queuedMessages}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
