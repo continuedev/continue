@@ -215,7 +215,6 @@ function DocsIndexingStatus({
 
       {indexedPages && (
         <ToolTip
-          id={`docs-tooltip-${startUrlSlug}`}
           isOpen={showTooltip}
           setIsOpen={setShowTooltip}
           clickable
@@ -229,12 +228,15 @@ function DocsIndexingStatus({
             mouseleave: false,
             click: true,
           }}
+          content={
+            <IndexedPagesTooltip
+              pages={indexedPages}
+              siteTitle={docConfig.title ?? docConfig.startUrl}
+              baseUrl={docConfig.startUrl}
+            />
+          }
         >
-          <IndexedPagesTooltip
-            pages={indexedPages}
-            siteTitle={docConfig.title ?? docConfig.startUrl}
-            baseUrl={docConfig.startUrl}
-          />
+          <div data-tooltip-id={`docs-tooltip-${startUrlSlug}`} />
         </ToolTip>
       )}
     </div>

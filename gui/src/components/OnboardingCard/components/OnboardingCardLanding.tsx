@@ -72,20 +72,20 @@ export function OnboardingCardLanding({
           <p className="mb-5 mt-0 w-full text-sm">
             Log in to access a free trial of the
             <br />
-            <span
-              className="cursor-pointer underline hover:brightness-125"
-              data-tooltip-id="models-addon-tooltip"
-              onClick={() =>
-                ideMessenger.post("controlPlane/openUrl", {
-                  path: "pricing",
-                })
-              }
+            <ToolTip
+              place="bottom"
+              content="Free trial includes 50 Chat requests and 2,000 autocomplete requests"
             >
-              Models Add-On
-            </span>
-            <ToolTip id="models-addon-tooltip" place="bottom">
-              Free trial includes 50 Chat requests and 2,000 autocomplete
-              requests
+              <span
+                className="cursor-pointer underline hover:brightness-125"
+                onClick={() =>
+                  ideMessenger.post("controlPlane/openUrl", {
+                    path: "pricing",
+                  })
+                }
+              >
+                Models Add-On
+              </span>
             </ToolTip>
           </p>
 

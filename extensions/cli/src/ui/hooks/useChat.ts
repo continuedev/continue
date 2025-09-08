@@ -30,6 +30,7 @@ import {
   handleRemoteMessage,
   setupRemotePolling,
 } from "./useChat.remote.helpers.js";
+import { handleBashModeProcessing } from "./useChat.shellMode.js";
 import {
   createStreamCallbacks,
   executeStreaming,
@@ -424,6 +425,13 @@ export function useChat({
     });
 
     if (handled) return;
+
+    // Handle shell mode commands (before slash commands)
+    const bashProcessedMessage = await handleBashModeProcessing(message);
+    if (bashProcessedMessage === null) {
+      return; // Bash command was handled and no further processing needed
+    }
+    message = bashProcessedMessage;
 
     // Handle slash commands
     const processedMessage = await handleSlashCommandProcessing(message);
