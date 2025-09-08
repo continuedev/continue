@@ -10,6 +10,7 @@ import {
 import { services } from "./services/index.js";
 import { getCurrentSession, getSessionFilePath } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import { logger } from "./util/logger.js";
 import { getVersion } from "./version.js";
 
 export async function handleInfoSlashCommand() {
@@ -114,7 +115,7 @@ export async function handleInfoSlashCommand() {
     }).trim();
   } catch (error) {
     // If npm command fails, fallback to "unknown"
-    console.warn("Failed to get npm version:", error);
+    logger.warn("Failed to get npm version:", error);
   }
 
   // Diagnostic info
