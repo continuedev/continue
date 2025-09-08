@@ -33,6 +33,7 @@ import {
 import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
+import { isLemonadeInstalled } from "../util/lemonadeHelper.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
@@ -501,6 +502,15 @@ export abstract class BaseLLM implements ILLM {
             const message = (await isOllamaInstalled())
               ? "Unable to connect to local Ollama instance. Ollama may not be running."
               : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
+            throw new Error(message);
+          }
+          if (
+            e.code === "ECONNREFUSED" &&
+            e.message.includes("http://localhost:8000")
+          ) {
+            const message = (await isLemonadeInstalled())
+              ? "Unable to connect to local Lemonade instance. Lemonade server may not be running."
+              : "Unable to connect to local Lemonade instance. Lemonade SDK may not be installed or may not be running.";
             throw new Error(message);
           }
         }

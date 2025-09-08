@@ -33,6 +33,7 @@ import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import LlamaStack from "./LlamaStack";
+import Lemonade from "./Lemonade";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
 import MockLLM from "./Mock";
@@ -82,6 +83,7 @@ export const LLMClasses = [
   LlamaCpp,
   OpenAI,
   OVHcloud,
+  Lemonade,
   LMStudio,
   Mistral,
   Bedrock,
