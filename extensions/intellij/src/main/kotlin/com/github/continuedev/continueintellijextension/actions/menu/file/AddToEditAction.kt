@@ -6,7 +6,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
-class AddFilesOrFoldersToChatAction : AnAction() {
+class AddToEditAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val browser = e.project?.getBrowser() ?: return
         val selectedFiles = e.getSelectedFiles()
@@ -24,7 +24,7 @@ class AddFilesOrFoldersToChatAction : AnAction() {
             "data" to requestData
         )
 
-        browser.sendToWebview("addChatMention", requestParams)
+        browser.sendToWebview("addToEdit", requestParams)
     }
 
     override fun update(e: AnActionEvent) {
