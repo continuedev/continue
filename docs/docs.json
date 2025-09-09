@@ -349,10 +349,6 @@
       "destination": "/hub/secrets/secret-types"
     },
     {
-      "source": "/hub/assistants",
-      "destination": "/hub/agents/intro"
-    },
-    {
       "source": "/hub/blocks",
       "destination": "/hub/blocks/intro"
     },
