@@ -5,21 +5,20 @@ import {
   CircleStackIcon,
   CommandLineIcon,
   GlobeAltIcon,
-  PlusCircleIcon,
   UserCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { Fragment, useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
+import { ToolTip } from "../../../components/gui/Tooltip";
+import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
+import { Button, Card } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
-import { fontSize } from "../../../util";
-import { ToolTip } from "../../../components/gui/Tooltip";
-import { Button, Card, Divider } from "../../../components/ui";
-import EditBlockButton from "../../../components/mainInput/Lump/EditBlockButton";
+import { ConfigHeader } from "../components/ConfigHeader";
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
@@ -67,7 +66,7 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
 
   const handleToggleExpanded = (e: React.MouseEvent) => {
     // Don't expand if clicking on buttons
-    if ((e.target as HTMLElement).closest('button')) {
+    if ((e.target as HTMLElement).closest("button")) {
       return;
     }
     setIsExpanded(!isExpanded);
@@ -75,63 +74,75 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
 
   return (
     <div>
-      <div 
-        className="flex items-center justify-between py-1 cursor-pointer"
+      <div
+        className="hover:bg-input/50 -mx-2 flex cursor-pointer items-center justify-between rounded px-2 py-1"
         onClick={handleToggleExpanded}
       >
         <div className="flex items-center gap-3">
-          <ChevronDownIcon 
-            className={`h-4 w-4 text-description transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          <ChevronDownIcon
+            className={`text-description h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
           />
           <div className="flex-1">
-            <h3 
+            <h3
               className={`text-sm font-medium ${server.errors && server.errors.length > 0 ? "text-error" : ""}`}
             >
               {server.name}
             </h3>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {server.isProtectedResource && (
             <ToolTip
-              content={server.status === "error" ? "Authenticate" : server.status === "authenticating" ? "Authenticating..." : "Remove authentication"}
+              content={
+                server.status === "error"
+                  ? "Authenticate"
+                  : server.status === "authenticating"
+                    ? "Authenticating..."
+                    : "Remove authentication"
+              }
             >
               <Button
-                onClick={server.status === "error" ? onAuthenticate : server.status === "authenticating" ? undefined : onRemoveAuth}
+                onClick={
+                  server.status === "error"
+                    ? onAuthenticate
+                    : server.status === "authenticating"
+                      ? undefined
+                      : onRemoveAuth
+                }
                 variant="ghost"
                 size="sm"
-                className="my-0 h-8 w-8 p-0"
+                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
                 disabled={server.status === "authenticating"}
               >
                 {server.status === "authenticating" ? (
-                  <GlobeAltIcon className="animate-spin-slow h-4 w-4 text-description" />
+                  <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
                 ) : (
-                  <UserCircleIcon className="h-4 w-4 text-description" />
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
                 )}
               </Button>
             </ToolTip>
           )}
-          
+
           <EditBlockButton
             blockType={"mcpServers"}
             block={serverFromYaml}
             sourceFile={server.sourceFile}
           />
-          
+
           <ToolTip content="Refresh server">
             <Button
               onClick={onRefresh}
               variant="ghost"
               size="sm"
-              className="my-0 h-8 w-8 p-0"
+              className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
             >
-              <ArrowPathIcon className="h-4 w-4 text-description" />
+              <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
             </Button>
           </ToolTip>
 
           <div
-            className="h-2 w-2 rounded-full flex-shrink-0"
+            className="h-2 w-2 flex-shrink-0 rounded-full"
             style={{
               backgroundColor:
                 server.status === "connected"
@@ -149,13 +160,52 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
       {isExpanded && (
         <div className="mt-3 pl-7">
           {/* Tools, Prompts, Resources with counts */}
-          <div className="flex flex-row items-center gap-6 mb-3">
+          <div className="mb-3 flex flex-row items-center gap-6">
             <ToolTip
               className="flex flex-col gap-0.5"
               content={
                 <>
                   {server.tools.map((tool, idx) => (
-                    <code key={idx}>{tool.name}</code>
+                    <div key={idx} className="flex flex-col gap-1">
+                      <div className="flex flex-col">
+                        <code className="font-semibold">{tool.name}</code>
+                        {tool.description && (
+                          <span className="mt-0.5 text-xs text-gray-400">
+                            {tool.description}
+                          </span>
+                        )}
+                        {tool.inputSchema?.properties &&
+                          Object.keys(tool.inputSchema.properties).length >
+                            0 && (
+                            <div className="mt-1">
+                              <span className="text-xs text-gray-500">
+                                Args:
+                              </span>
+                              <div className="ml-2">
+                                {Object.entries(
+                                  tool.inputSchema.properties,
+                                ).map(([paramName, paramSchema], paramIdx) => (
+                                  <div key={paramIdx} className="text-xs">
+                                    <code className="text-blue-400">
+                                      {paramName}
+                                    </code>
+                                    {paramSchema &&
+                                      typeof paramSchema === "object" &&
+                                      "type" in paramSchema && (
+                                        <span className="ml-1 text-gray-500">
+                                          ({paramSchema.type})
+                                        </span>
+                                      )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                      {idx < server.tools.length - 1 && (
+                        <div className="my-1 border-b border-gray-600"></div>
+                      )}
+                    </div>
                   ))}
                   {server.tools.length === 0 && (
                     <span className="text-lightgray">No tools</span>
@@ -164,7 +214,7 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
               }
             >
               <div className="flex cursor-zoom-in items-center gap-2 hover:opacity-80">
-                <WrenchScrewdriverIcon className="h-4 w-4" />
+                <WrenchScrewdriverIcon className="h-4 w-4 flex-shrink-0" />
                 <span className="text-sm">Tools: {server.tools.length}</span>
               </div>
             </ToolTip>
@@ -183,8 +233,10 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
               }
             >
               <div className="flex cursor-zoom-in items-center gap-2 hover:opacity-80">
-                <CommandLineIcon className="h-4 w-4" />
-                <span className="text-sm">Prompts: {server.prompts.length}</span>
+                <CommandLineIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">
+                  Prompts: {server.prompts.length}
+                </span>
               </div>
             </ToolTip>
 
@@ -204,8 +256,11 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
               }
             >
               <div className="flex cursor-zoom-in items-center gap-2 hover:opacity-80">
-                <CircleStackIcon className="h-4 w-4" />
-                <span className="text-sm">Resources: {server.resources.length + server.resourceTemplates.length}</span>
+                <CircleStackIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">
+                  Resources:{" "}
+                  {server.resources.length + server.resourceTemplates.length}
+                </span>
               </div>
             </ToolTip>
           </div>
@@ -216,7 +271,10 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
       {server.errors && server.errors.length > 0 && (
         <div className="mt-2 space-y-1">
           {server.errors.map((error, errorIndex) => (
-            <div key={errorIndex} className="text-error bg-error/10 rounded px-2 py-1 text-xs">
+            <div
+              key={errorIndex}
+              className="text-error bg-error/10 rounded px-2 py-1 text-xs"
+            >
               <div className="flex items-start justify-between gap-2">
                 <span className="flex-1">
                   {error.length > 150 ? error.substring(0, 150) + "..." : error}
@@ -287,41 +345,33 @@ function McpSection() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex flex-col">
-          <h2 className="mb-0 text-xl font-semibold">MCP Servers</h2>
-        </div>
-        <Button
-          onClick={handleAddMcpServer}
-          variant="ghost"
-          size="sm"
-          className="my-0 h-8 w-8 p-0"
-        >
-          <PlusCircleIcon className="text-description h-5 w-5" />
-        </Button>
-      </div>
+      <ConfigHeader
+        title="MCP Servers"
+        onAddClick={handleAddMcpServer}
+        addButtonTooltip="Add MCP server"
+      />
 
-      {mergedBlocks && mergedBlocks.length > 0 ? (
-        mergedBlocks.map(({ block, blockFromYaml }, index) => (
-          <div key={block.id}>
-            <Card>
-              <MCPServerCard
-                server={block}
-                serverFromYaml={blockFromYaml}
-              />
-            </Card>
-            {index < mergedBlocks.length - 1 && <div className="mb-4" />}
-          </div>
-        ))
-      ) : (
-        <Card>
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="text-description">
-              No MCP servers configured. Click the + button to add your first server.
-            </span>
-          </div>
-        </Card>
-      )}
+      <div className="mt-6">
+        {mergedBlocks && mergedBlocks.length > 0 ? (
+          mergedBlocks.map(({ block, blockFromYaml }, index) => (
+            <div key={block.id}>
+              <Card>
+                <MCPServerCard server={block} serverFromYaml={blockFromYaml} />
+              </Card>
+              {index < mergedBlocks.length - 1 && <div className="mb-4" />}
+            </div>
+          ))
+        ) : (
+          <Card>
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <span className="text-description">
+                No MCP servers configured. Click the + button to add your first
+                server.
+              </span>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

@@ -97,9 +97,7 @@ export function AccountDropdown() {
           <>
             <ListboxButton
               className={`text-description w-full justify-start gap-1 border-none px-2 py-1.5 ${
-                open
-                  ? "bg-vsc-input-background"
-                  : "hover:bg-vsc-input-background bg-inherit"
+                open ? "bg-input" : "hover:bg-input bg-inherit"
               }`}
             >
               <UserCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />

@@ -15,6 +15,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { CONFIG_ROUTES } from "../../util/navigation";
 import {
   Listbox,
   ListboxButton,
@@ -211,7 +212,7 @@ function ModelSelect() {
       buttonRef.current.click();
     }
 
-    navigate("/config?tab=models");
+    navigate(CONFIG_ROUTES.MODELS);
   }
 
   const hasNoModels = allModels?.length === 0;

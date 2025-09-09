@@ -6,7 +6,6 @@ import {
   CubeIcon,
   PencilIcon,
   QuestionMarkCircleIcon,
-  Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { BotIcon } from "../../components/svg/BotIcon";
@@ -30,7 +29,6 @@ interface TabOption {
 interface TabSection {
   id: string;
   tabs: TabOption[];
-  label?: string;
   showTopDivider?: boolean;
   showBottomDivider?: boolean;
   className?: string;
@@ -50,7 +48,6 @@ export const topTabSections: TabSection[] = [
   },
   {
     id: "blocks",
-    label: "Blocks",
     showTopDivider: true,
     tabs: [
       {

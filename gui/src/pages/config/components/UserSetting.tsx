@@ -2,12 +2,21 @@ import React from "react";
 import NumberInput from "../../../components/gui/NumberInput";
 import ToggleSwitch from "../../../components/gui/Switch";
 import { Input } from "../../../components";
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../../../components/ui/Listbox";
-import { ChevronDownIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../../../components/ui/Listbox";
+import {
+  ChevronDownIcon,
+  CheckIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 interface BaseUserSettingProps {
   title: string;
-  description: string;
+  description: React.ReactNode;
   disabled?: boolean;
 }
 
@@ -43,7 +52,11 @@ interface InputUserSettingProps extends BaseUserSettingProps {
   isValid?: boolean;
 }
 
-type UserSettingProps = ToggleUserSettingProps | NumberUserSettingProps | SelectUserSettingProps | InputUserSettingProps;
+type UserSettingProps =
+  | ToggleUserSettingProps
+  | NumberUserSettingProps
+  | SelectUserSettingProps
+  | InputUserSettingProps;
 
 export function UserSetting(props: UserSettingProps) {
   const { title, description, disabled = false } = props;
@@ -67,6 +80,7 @@ export function UserSetting(props: UserSettingProps) {
             onChange={props.onChange}
             min={props.min ?? 0}
             max={props.max ?? 100}
+            disabled={disabled}
           />
         );
 
@@ -77,12 +91,13 @@ export function UserSetting(props: UserSettingProps) {
             onChange={props.onChange}
             disabled={disabled}
           >
-            <ListboxButton className="px-3 py-2 justify-between">
-              {props.options.find(opt => opt.value === props.value)?.label || props.value}
+            <ListboxButton className="justify-between px-3 py-2">
+              {props.options.find((opt) => opt.value === props.value)?.label ||
+                props.value}
               <ChevronDownIcon className="h-4 w-4" />
             </ListboxButton>
             <ListboxOptions className="min-w-0">
-              {props.options.map(option => (
+              {props.options.map((option) => (
                 <ListboxOption key={option.value} value={option.value}>
                   {option.label}
                 </ListboxOption>
@@ -106,8 +121,8 @@ export function UserSetting(props: UserSettingProps) {
                   className={`max-w-[200px] ${
                     props.isDirty
                       ? !props.isValid
-                        ? "border-red-500"
-                        : "border-green-500"
+                        ? "outline-red-500"
+                        : "outline-green-500"
                       : ""
                   }`}
                   onChange={(e) => props.onChange(e.target.value)}
@@ -116,16 +131,10 @@ export function UserSetting(props: UserSettingProps) {
                 <div className="flex h-full flex-col">
                   {props.isDirty ? (
                     <>
-                      <div
-                        onClick={props.onSubmit}
-                        className="cursor-pointer"
-                      >
+                      <div onClick={props.onSubmit} className="cursor-pointer">
                         <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
                       </div>
-                      <div
-                        onClick={props.onCancel}
-                        className="cursor-pointer"
-                      >
+                      <div onClick={props.onCancel} className="cursor-pointer">
                         <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
                       </div>
                     </>
@@ -154,10 +163,10 @@ export function UserSetting(props: UserSettingProps) {
   };
 
   return (
-    <div className="flex justify-between items-start">
+    <div className="flex items-start justify-between">
       <div className="flex flex-col">
         <span className="text-sm font-medium">{title}</span>
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <div className="mt-0.5 text-xs text-gray-500">{description}</div>
       </div>
       {renderControl()}
     </div>

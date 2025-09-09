@@ -5,17 +5,24 @@ import { BotIcon } from "../svg/BotIcon";
 
 export interface AssistantIconProps {
   assistant: ProfileDescription;
-  size?: number;
+  size?: string;
 }
 
-export function AssistantIcon({ assistant }: AssistantIconProps) {
+export function AssistantIcon({
+  assistant,
+  size = "h-4 w-4",
+}: AssistantIconProps) {
   if (isLocalProfile(assistant)) {
-    return <BotIcon className="text-foreground h-4 w-4" />;
+    return <BotIcon className={`text-foreground ${size} flex-shrink-0`} />;
   } else if (assistant.iconUrl) {
     return (
-      <img src={assistant.iconUrl} className="h-4 w-4 rounded-full" alt="" />
+      <img
+        src={assistant.iconUrl}
+        className={`${size} flex-shrink-0 rounded-full`}
+        alt=""
+      />
     );
   } else {
-    return <SparklesIcon className="h-4 w-4" />;
+    return <SparklesIcon className={`${size} flex-shrink-0`} />;
   }
 }

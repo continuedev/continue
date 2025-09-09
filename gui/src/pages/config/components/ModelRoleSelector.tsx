@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
 import { LLMConfigurationStatuses } from "core/llm/constants";
-import { MouseEvent, useContext, useState } from "react";
+import { MouseEvent, useContext } from "react";
 import { defaultBorderRadius } from "../../../components";
 import InfoHover from "../../../components/InfoHover";
 import {
@@ -47,7 +47,6 @@ const ModelRoleSelector = ({
     onSelect(models.find((m) => m.title === title) ?? null);
   }
 
-
   function handleOptionClick(
     showMissingApiKeyMsg: boolean,
     e: MouseEvent<HTMLLIElement>,
@@ -72,7 +71,7 @@ const ModelRoleSelector = ({
           {models.length === 0 ? (
             <ListboxButton
               onClick={() => ideMessenger.post("openUrl", setupURL)}
-              className="bg-input border-input-border hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between rounded border px-3 py-2 underline hover:underline"
+              className="bg-input border-description-muted hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between rounded border px-3 py-2 underline hover:underline"
             >
               <span className="line-clamp-1" style={{ fontSize: fontSize(-1) }}>
                 Setup {displayName} model
@@ -82,7 +81,7 @@ const ModelRoleSelector = ({
             <>
               <ListboxButton
                 disabled={models.length === 0}
-                className="bg-input border-input-border hover:bg-list-active hover:text-list-active-foreground w-full justify-between rounded border px-3 py-2"
+                className="bg-input border-description-muted hover:bg-list-active hover:text-list-active-foreground w-full justify-between rounded border px-3 py-2"
               >
                 {models.length === 0 || noConfiguredModels ? (
                   <span className="text-lightgray line-clamp-1 italic">

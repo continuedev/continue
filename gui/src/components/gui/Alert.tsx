@@ -70,7 +70,13 @@ const spacingSizes = {
   lg: "ml-2",
 };
 
-function Alert({ type = "info", size = "lg", className, children, ...props }: AlertProps) {
+function Alert({
+  type = "info",
+  size = "lg",
+  className,
+  children,
+  ...props
+}: AlertProps) {
   const { Icon, background, border, text, iconColor } = ALERT_CONFIGS[type];
 
   return (

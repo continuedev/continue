@@ -1,16 +1,13 @@
-import {
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ToolTip } from "../gui/Tooltip";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch } from "../../redux/hooks";
 import { setSelectedProfile } from "../../redux/slices/profilesSlice";
-import { isLocalProfile } from "../../util";
-import { ROUTES } from "../../util/navigation";
-import { ListboxOption, useFontSize } from "../ui";
+import { CONFIG_ROUTES } from "../../util/navigation";
+import { ToolTip } from "../gui/Tooltip";
+import { Button, ListboxOption, useFontSize } from "../ui";
 import { AssistantIcon } from "./AssistantIcon";
 
 interface AssistantOptionProps {
@@ -42,15 +39,8 @@ export function AssistantOption({
       id: profile.id,
     });
 
-    // If the agent has errors, navigate to the agents config page
-    if (profile.errors && profile.errors.length > 0) {
-      navigate("/config?tab=agents");
-    }
-    
     onClick();
   }
-
-
 
   return (
     <ListboxOption
@@ -74,9 +64,17 @@ export function AssistantOption({
         <div className="flex flex-row items-center gap-1.5">
           {profile.errors && profile.errors?.length > 0 && (
             <ToolTip content="View errors">
-              <ExclamationTriangleIcon
-                className="text-error h-3.5 w-3.5 flex-shrink-0"
-              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-error hover:enabled:text-error my-0 h-4 w-4 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(CONFIG_ROUTES.AGENTS);
+                }}
+              >
+                <ExclamationTriangleIcon className="h-3.5 w-3.5" />
+              </Button>
             </ToolTip>
           )}
         </div>

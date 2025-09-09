@@ -1,4 +1,4 @@
-import { Divider } from "../../../../components/ui/Divider";
+import { Divider } from "./Divider";
 import { TabButton } from "./TabButton";
 
 interface TabOption {

@@ -17,6 +17,7 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
+import { CONFIG_ROUTES } from "../../util/navigation";
 import {
   Button,
   Listbox,
@@ -80,27 +81,22 @@ export function AssistantAndOrgListbox({
   }
 
   function onAgentsConfig() {
-    navigate("/config?tab=agents");
+    navigate(CONFIG_ROUTES.AGENTS);
     close();
   }
 
   function onOrganizationsConfig() {
-    navigate("/config?tab=organizations");
+    navigate(CONFIG_ROUTES.ORGANIZATIONS);
     close();
   }
 
   function onRulesConfig() {
-    navigate("/config?tab=rules");
+    navigate(CONFIG_ROUTES.RULES);
     close();
   }
 
   function onToolsConfig() {
-    navigate("/config?tab=tools");
-    close();
-  }
-
-  function onLogout() {
-    logout();
+    navigate(CONFIG_ROUTES.TOOLS);
     close();
   }
 
@@ -241,7 +237,7 @@ export function AssistantAndOrgListbox({
                   }}
                   variant="ghost"
                   size="sm"
-                  className="text-description hover:bg-input my-0 w-full justify-start py-2 pl-1 text-left"
+                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
                 >
                   <div className="flex w-full items-center">
                     <PencilIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
@@ -255,11 +251,30 @@ export function AssistantAndOrgListbox({
                   }}
                   variant="ghost"
                   size="sm"
-                  className="text-description hover:bg-input my-0 w-full justify-start py-2 pl-1 text-left"
+                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
                 >
                   <div className="flex w-full items-center">
                     <WrenchScrewdriverIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
                     <span className="text-2xs">Tools</span>
+                  </div>
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void refreshProfiles("Manual refresh from assistant list");
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                >
+                  <div className="flex w-full items-center">
+                    <ArrowPathIcon
+                      className={cn(
+                        "ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0",
+                        configLoading && "animate-spin-slow",
+                      )}
+                    />
+                    <span className="text-2xs">Reload config</span>
                   </div>
                 </Button>
 
@@ -269,26 +284,10 @@ export function AssistantAndOrgListbox({
 
             {/* Bottom Actions */}
             <div>
-              <div className="text-description flex items-center justify-between gap-1.5 px-2 py-2">
+              <div className="text-description flex items-center justify-start px-2 py-1">
                 <span className="block" style={{ fontSize: tinyFont }}>
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle agent
                 </span>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    refreshProfiles("Manual refresh from assistant list");
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="my-0 h-5 w-5 p-0"
-                >
-                  <ArrowPathIcon
-                    className={cn(
-                      "text-description h-3.5 w-3.5",
-                      configLoading && "animate-spin-slow",
-                    )}
-                  />
-                </Button>
               </div>
             </div>
           </ListboxOptions>

@@ -122,7 +122,7 @@ export const Input = styled.input`
   box-sizing: border-box;
   margin: 4px 0px;
   border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${vscCommandCenterInactiveBorder};
+  outline: 1px solid ${lightGray};
   border: none;
   background-color: ${vscBackground};
   color: ${vscForeground};

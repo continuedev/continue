@@ -15,7 +15,7 @@ import { setOnboardingCard } from "../../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../../redux/thunks/session";
 import { isJetBrains } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
-import { ConfigHeader } from "../ConfigHeader";
+import { ConfigHeader } from "../components/ConfigHeader";
 import { ConfigRow } from "../components/ConfigRow";
 
 interface KeyboardShortcutProps {
@@ -38,7 +38,6 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
     </div>
   );
 }
-
 
 // Shortcut strings will be rendered correctly based on the platform by the Shortcut component
 const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
@@ -178,8 +177,8 @@ export function HelpSection() {
         {/* Resources */}
         <div>
           <h3 className="mb-3 text-base font-medium">Resources</h3>
-          <Card>
-            <div className="flex flex-col gap-4">
+          <Card className="!p-0">
+            <div className="flex flex-col">
               <ConfigRow
                 title="Continue Hub"
                 description="Visit hub.continue.dev to explore custom agents and blocks"
@@ -225,13 +224,13 @@ export function HelpSection() {
         {/* Tools */}
         <div>
           <h3 className="mb-3 text-base font-medium">Tools</h3>
-          <Card>
-            <div className="flex flex-col gap-4">
+          <Card className="!p-0">
+            <div className="flex flex-col">
               <ConfigRow
                 title="Token usage"
                 description="Daily token usage across models"
                 icon={TableCellsIcon}
-                onClick={() => navigate("/stats")}
+                onClick={() => navigate(ROUTES.STATS)}
               />
 
               {currentSession.history.length > 0 &&
@@ -284,7 +283,7 @@ export function HelpSection() {
         {/* Keyboard Shortcuts */}
         <div>
           <h3 className="mb-3 text-base font-medium">Keyboard Shortcuts</h3>
-          <Card>
+          <Card className="!p-0">
             <div className="overflow-hidden rounded-md border border-gray-600">
               {shortcuts.map((shortcut, i) => {
                 return (

@@ -1,5 +1,9 @@
 import { CheckIcon } from "@heroicons/react/24/outline";
-import { BuildingOfficeIcon, UserCircleIcon, UserIcon } from "@heroicons/react/24/solid";
+import {
+  BuildingOfficeIcon,
+  UserCircleIcon,
+  UserIcon,
+} from "@heroicons/react/24/solid";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -74,9 +78,7 @@ export function OrganizationOption({
           </span>
         </div>
         <div className="flex flex-row items-center gap-1.5">
-          {isSelected && (
-            <CheckIcon className="h-3.5 w-3.5 flex-shrink-0" />
-          )}
+          {isSelected && <CheckIcon className="h-3.5 w-3.5 flex-shrink-0" />}
         </div>
       </div>
     </ListboxOption>

@@ -18,19 +18,19 @@ export function SelectedAssistantButton({
 }: SelectedAssistantButtonProps) {
   const configLoading = useAppSelector((store) => store.config.loading);
 
-  const isLarge = variant === "sidebar";
-  const iconSize = isLarge ? "h-4 w-4" : "h-3 w-3";
-  const buttonPadding = isLarge ? "px-2 py-2" : "px-0 py-0";
-  const buttonStyle = isLarge ? {} : { fontSize: fontSize(-3) };
+  const isSidebar = variant === "sidebar";
+  const iconSize = isSidebar ? "h-4 w-4" : "h-3 w-3";
+  const buttonPadding = isSidebar ? "px-2 py-2" : "px-0 py-0";
+  const buttonStyle = isSidebar ? {} : { fontSize: fontSize(-3) };
 
   return (
     <ListboxButton
       data-testid="assistant-select-button"
-      className={`text-description border-none bg-transparent hover:brightness-125 ${isLarge ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
+      className={`text-description border-none bg-transparent !py-1.5 hover:brightness-125 ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
       style={buttonStyle}
     >
       <div
-        className={`flex flex-row items-center ${isLarge ? "w-full justify-between" : "gap-1.5"}`}
+        className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1.5"}`}
       >
         <div className="flex flex-row items-center gap-2">
           {selectedProfile === null ? (
@@ -47,11 +47,9 @@ export function SelectedAssistantButton({
             </span>
           ) : (
             <>
-              <div className={`${iconSize} flex-shrink-0 select-none`}>
-                <AssistantIcon assistant={selectedProfile} />
-              </div>
+              <AssistantIcon assistant={selectedProfile} size={iconSize} />
               <span
-                className={`${isLarge ? "hidden md:block" : "hidden md:block"} select-none break-words`}
+                className={`${isSidebar ? "hidden md:block" : "hidden md:block"} select-none break-words`}
               >
                 {selectedProfile.title}
               </span>
@@ -59,7 +57,7 @@ export function SelectedAssistantButton({
           )}
         </div>
         <ChevronDownIcon
-          className={`text-description ${isLarge ? "h-3.5 w-3.5" : "h-2 w-2"} ${isLarge ? "ml-1.5" : "ml-0.5"} flex-shrink-0 select-none`}
+          className={`text-description ml-0.5 h-3 w-3 flex-shrink-0 select-none ${isSidebar && "hidden md:block"}`}
           aria-hidden="true"
         />
       </div>

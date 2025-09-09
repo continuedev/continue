@@ -1,17 +1,18 @@
-import { Cog6ToothIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { AssistantIcon } from "../../../components/AssistantAndOrgListbox/AssistantIcon";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Button, Card, Divider, EmptyState } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { ConfigHeader } from "../components/ConfigHeader";
 
 export function AgentsSection() {
   const { profiles } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
   function handleAddAgent() {
-    ideMessenger.request("config/newAssistantFile", undefined);
+    void ideMessenger.request("config/newAssistantFile", undefined);
   }
 
   function handleConfigureAgent(profileId: string) {
@@ -20,19 +21,11 @@ export function AgentsSection() {
 
   return (
     <>
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex flex-col">
-          <h2 className="mb-0 text-xl font-semibold">Agents</h2>
-        </div>
-        <Button
-          onClick={handleAddAgent}
-          variant="ghost"
-          size="sm"
-          className="my-0 h-8 w-8 p-0"
-        >
-          <PlusCircleIcon className="text-description h-5 w-5" />
-        </Button>
-      </div>
+      <ConfigHeader
+        title="Agents"
+        onAddClick={handleAddAgent}
+        addButtonTooltip="Add agent"
+      />
 
       <Card>
         {profiles && profiles.length > 0 ? (
@@ -54,7 +47,7 @@ export function AgentsSection() {
                         {profile.errors.map((error, errorIndex) => (
                           <div
                             key={errorIndex}
-                            className="text-error bg-error/10 rounded px-2 py-1 text-xs"
+                            className="text-error bg-error/10 rounded py-1 pr-2 text-xs"
                           >
                             {error.message}
                           </div>
@@ -68,9 +61,9 @@ export function AgentsSection() {
                     onClick={() => handleConfigureAgent(profile.id)}
                     variant="ghost"
                     size="sm"
-                    className="my-0 h-8 w-8 p-0"
+                    className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
                   >
-                    <Cog6ToothIcon className="text-description h-4 w-4" />
+                    <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
                   </Button>
                 </ToolTip>
               </div>

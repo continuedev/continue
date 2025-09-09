@@ -1,12 +1,12 @@
-interface CardProps {
+interface CardProps extends React.ComponentProps<"div"> {
   children: React.ReactNode;
-  className?: string;
 }
 
-export function Card({ children, className = "" }: CardProps) {
+export function Card({ children, className = "", ...props }: CardProps) {
   return (
     <div
-      className={`bg-vsc-editor-background space-y-0 rounded-lg p-4 ${className}`}
+      className={`bg-editor rounded-default space-y-0 px-4 py-3 ${className}`}
+      {...props}
     >
       {children}
     </div>

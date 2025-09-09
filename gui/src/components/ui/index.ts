@@ -10,4 +10,5 @@ export {
   ListboxOptions,
 } from "./Listbox";
 export { Popover, PopoverButton, PopoverPanel } from "./Popover";
+export { Toggle } from "./Toggle";
 export { Transition } from "./Transition";

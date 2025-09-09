@@ -2,7 +2,7 @@ import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   BookmarkIcon as BookmarkOutline,
   PencilIcon,
-  PlusCircleIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { SlashCommandDescWithSource } from "core";
@@ -15,6 +15,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useBookmarkedSlashCommands } from "../../../hooks/useBookmarkedSlashCommands";
 import { useAppSelector } from "../../../redux/hooks";
 import { fontSize } from "../../../util";
+import { ConfigHeader } from "../components/ConfigHeader";
 
 interface PromptCommandWithSlug extends SlashCommandDescWithSource {
   slug?: string;
@@ -178,20 +179,12 @@ export function PromptsSection() {
 
   return (
     <div className="flex flex-col">
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex flex-col">
-          <h2 className="mb-0 text-xl font-semibold">Prompts</h2>
-        </div>
-        <Button
-          onClick={handleAddPrompt}
-          variant="ghost"
-          size="sm"
-          className="my-0 h-8 w-8 p-0"
-        >
-          <PlusCircleIcon className="text-description h-5 w-5" />
-        </Button>
-      </div>
-      
+      <ConfigHeader
+        title="Prompts"
+        onAddClick={handleAddPrompt}
+        addButtonTooltip="Add prompt"
+      />
+
       {sortedCommands.length > 0 ? (
         <div>
           {sortedCommands.map((prompt) => (

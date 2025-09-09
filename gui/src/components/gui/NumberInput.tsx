@@ -5,6 +5,7 @@ interface NumberInputProps {
   onChange: (value: number) => void;
   max: number;
   min: number;
+  disabled?: boolean;
 }
 
 const NumberInput: React.FC<NumberInputProps> = ({
@@ -12,26 +13,26 @@ const NumberInput: React.FC<NumberInputProps> = ({
   onChange,
   max,
   min,
+  disabled = false,
 }) => {
   const [inputValue, setInputValue] = useState(value.toString());
 
   const handleIncrement = () => {
-    if (value < max) {
-      const newValue = value + 1;
-      onChange(newValue);
-      setInputValue(newValue.toString());
-    }
+    if (disabled || value >= max) return;
+    const newValue = value + 1;
+    onChange(newValue);
+    setInputValue(newValue.toString());
   };
 
   const handleDecrement = () => {
-    if (value > min) {
-      const newValue = value - 1;
-      onChange(newValue);
-      setInputValue(newValue.toString());
-    }
+    if (disabled || value <= min) return;
+    const newValue = value - 1;
+    onChange(newValue);
+    setInputValue(newValue.toString());
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const newInputValue = e.target.value;
     setInputValue(newInputValue);
 
@@ -51,13 +52,16 @@ const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   return (
-    <div className="border-command-border bg-vsc-input-background flex flex-row overflow-hidden rounded-md border border-solid">
+    <div
+      className={`border-command-border bg-vsc-input-background flex flex-row overflow-hidden rounded-md border border-solid ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+    >
       <input
         type="text"
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleBlur}
-        className="text-vsc-foreground max-w-9 border-none bg-inherit pr-1.5 text-right outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
+        disabled={disabled}
+        className="text-vsc-foreground max-w-9 border-none bg-inherit pr-1.5 text-right outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
         style={{
           appearance: "none",
           WebkitAppearance: "none",
@@ -70,16 +74,16 @@ const NumberInput: React.FC<NumberInputProps> = ({
         <button
           style={{ fontSize: "9px" }}
           onClick={handleIncrement}
-          disabled={value >= max}
-          className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80"
+          disabled={disabled || value >= max}
+          className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
         >
           ▲
         </button>
         <button
           style={{ fontSize: "9px" }}
-          className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80"
+          className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={handleDecrement}
-          disabled={value <= min}
+          disabled={disabled || value <= min}
         >
           ▼
         </button>

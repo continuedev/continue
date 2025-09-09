@@ -4,13 +4,19 @@ import {
   BookmarkIcon as BookmarkOutline,
   EyeIcon,
   PencilIcon,
-  PlusCircleIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
-import { RuleWithSource, SlashCommandDescWithSource } from "core";
+import {
+  BrowserSerializedContinueConfig,
+  RuleSource,
+  RuleWithSource,
+  SlashCommandDescWithSource,
+} from "core";
 import {
   DEFAULT_AGENT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
+  DEFAULT_PLAN_SYSTEM_MESSAGE,
   DEFAULT_SYSTEM_MESSAGES_URL,
 } from "core/llm/defaultSystemMessages";
 import { useContext, useMemo } from "react";
@@ -29,6 +35,7 @@ import {
   toggleRuleSetting,
 } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
+import { ConfigHeader } from "../components/ConfigHeader";
 
 interface PromptCommandWithSlug extends SlashCommandDescWithSource {
   slug?: string;
@@ -347,17 +354,12 @@ function PromptsSubSection() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="mb-0 text-sm font-semibold">Prompts</h3>
-        <Button
-          onClick={handleAddPrompt}
-          variant="ghost"
-          size="sm"
-          className="my-0 h-8 w-8 p-0"
-        >
-          <PlusCircleIcon className="text-description h-5 w-5" />
-        </Button>
-      </div>
+      <ConfigHeader
+        title="Prompts"
+        variant="sm"
+        onAddClick={handleAddPrompt}
+        addButtonTooltip="Add prompt"
+      />
 
       {sortedCommands.length > 0 ? (
         <Card>
@@ -380,6 +382,49 @@ function PromptsSubSection() {
       )}
     </div>
   );
+}
+
+/**
+ * Helper function to add the appropriate default system message based on mode
+ */
+function addDefaultSystemMessage(
+  rules: RuleWithSource[],
+  mode: string,
+  config: BrowserSerializedContinueConfig,
+) {
+  const modeConfig = {
+    chat: {
+      customMessage: config.selectedModelByRole.chat?.baseChatSystemMessage,
+      defaultMessage: DEFAULT_CHAT_SYSTEM_MESSAGE,
+      customSource: "model-options-chat" as RuleSource,
+      defaultSource: "default-chat" as RuleSource,
+    },
+    agent: {
+      customMessage: config.selectedModelByRole.chat?.baseAgentSystemMessage,
+      defaultMessage: DEFAULT_AGENT_SYSTEM_MESSAGE,
+      customSource: "model-options-agent" as RuleSource,
+      defaultSource: "default-agent" as RuleSource,
+    },
+    plan: {
+      customMessage: config.selectedModelByRole.chat?.basePlanSystemMessage,
+      defaultMessage: DEFAULT_PLAN_SYSTEM_MESSAGE,
+      customSource: "model-options-plan" as RuleSource,
+      defaultSource: "default-plan" as RuleSource,
+    },
+  };
+
+  const currentMode = modeConfig[mode as keyof typeof modeConfig];
+  if (currentMode) {
+    const message = currentMode.customMessage || currentMode.defaultMessage;
+    const source = currentMode.customMessage
+      ? currentMode.customSource
+      : currentMode.defaultSource;
+
+    rules.unshift({
+      rule: message,
+      source,
+    });
+  }
 }
 
 function RulesSubSection() {
@@ -437,62 +482,19 @@ function RulesSubSection() {
       }
     }
 
-    if (mode === "chat") {
-      if (config.selectedModelByRole.chat?.baseChatSystemMessage) {
-        rules.unshift({
-          rule: config.selectedModelByRole.chat?.baseChatSystemMessage,
-          source: "model-options-chat",
-        });
-      } else {
-        rules.unshift({
-          rule: DEFAULT_CHAT_SYSTEM_MESSAGE,
-          source: "default-chat",
-        });
-      }
-    } else if (mode === "agent") {
-      // agent
-      if (config.selectedModelByRole.chat?.baseAgentSystemMessage) {
-        rules.unshift({
-          rule: config.selectedModelByRole.chat?.baseAgentSystemMessage,
-          source: "model-options-agent",
-        });
-      } else {
-        rules.unshift({
-          rule: DEFAULT_AGENT_SYSTEM_MESSAGE,
-          source: "default-agent",
-        });
-      }
-    } else {
-      // plan
-      if (config.selectedModelByRole.chat?.basePlanSystemMessage) {
-        rules.unshift({
-          rule: config.selectedModelByRole.chat?.basePlanSystemMessage,
-          source: "model-options-plan",
-        });
-      } else {
-        rules.unshift({
-          rule: DEFAULT_AGENT_SYSTEM_MESSAGE,
-          source: "default-agent",
-        });
-      }
-    }
+    addDefaultSystemMessage(rules, mode, config);
 
     return rules;
   }, [config, selectedProfile, mode]);
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="mb-0 text-sm font-semibold">Rules</h3>
-        <Button
-          onClick={handleAddRule}
-          variant="ghost"
-          size="sm"
-          className="my-0 h-8 w-8 p-0"
-        >
-          <PlusCircleIcon className="text-description h-5 w-5" />
-        </Button>
-      </div>
+      <ConfigHeader
+        title="Rules"
+        variant="sm"
+        onAddClick={handleAddRule}
+        addButtonTooltip="Add rule"
+      />
 
       <Card>
         {sortedRules.length > 0 ? (
@@ -512,13 +514,9 @@ function RulesSubSection() {
 export function RulesSection() {
   return (
     <>
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex flex-col">
-          <h2 className="mb-0 text-xl font-semibold">Rules</h2>
-        </div>
-      </div>
+      <ConfigHeader title="Rules" />
 
-      <div className="space-y-10">
+      <div className="space-y-6">
         <RulesSubSection />
         <PromptsSubSection />
       </div>

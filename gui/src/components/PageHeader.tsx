@@ -6,9 +6,15 @@ export interface PageHeaderProps {
   showBorder?: boolean;
 }
 
-export function PageHeader({ onTitleClick, title }: PageHeaderProps) {
+export function PageHeader({
+  onTitleClick,
+  title,
+  showBorder = true,
+}: PageHeaderProps) {
   return (
-    <div className="border-border sticky top-0 z-20 m-0 flex items-center justify-between border border-x-0 border-b-2 border-t-0 border-solid bg-inherit py-3.5">
+    <div
+      className={`border-description-muted sticky top-0 z-20 m-0 flex items-center justify-between border border-x-0 ${showBorder ? "border-b" : "border-b-0"} border-t-0 border-solid bg-inherit py-3.5`}
+    >
       <div
         className="flex cursor-pointer items-center transition-colors duration-200 hover:brightness-125"
         onClick={onTitleClick}

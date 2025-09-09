@@ -12,6 +12,7 @@ import HoverItem from "../../InputToolbar/HoverItem";
 import { usesFreeTrialApiKey } from "core/config/usesFreeTrialApiKey";
 import type { FreeTrialStatus } from "core/control-plane/client";
 import { getLocalStorage } from "../../../../util/localStorage";
+import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
 interface BlockSettingsToolbarIcon {
@@ -134,7 +135,7 @@ export function BlockSettingsTopToolbar() {
           tooltip={errorSection.tooltip}
           title={errorSection.title}
           isSelected={false}
-          onClick={() => navigate("/config?tab=agents")}
+          onClick={() => navigate(CONFIG_ROUTES.AGENTS)}
         />
       )}
       <ToolTip

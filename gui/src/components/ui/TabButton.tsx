@@ -1,4 +1,4 @@
-import { ToolTip } from "../../../../components/gui/Tooltip";
+import { ToolTip } from "../gui/Tooltip";
 
 interface TabButtonProps {
   id: string;

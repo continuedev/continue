@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
-import { ROUTES } from "../../util/navigation";
+import { CONFIG_ROUTES } from "../../util/navigation";
 import Alert from "../gui/Alert";
 
 export const FatalErrorIndicator = () => {
@@ -20,7 +20,7 @@ export const FatalErrorIndicator = () => {
   const configLoading = useAppSelector((state) => state.config.loading);
 
   const showConfigPage = () => {
-    navigate("/config?tab=agents");
+    navigate(CONFIG_ROUTES.AGENTS);
   };
 
   const { selectedProfile } = useAuth();
@@ -64,10 +64,7 @@ export const FatalErrorIndicator = () => {
             Reload
           </div>
         )}
-        <div
-          onClick={showConfigPage}
-          className="cursor-pointer underline"
-        >
+        <div onClick={showConfigPage} className="cursor-pointer underline">
           View
         </div>
       </div>

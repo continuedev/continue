@@ -163,9 +163,7 @@ function InputToolbar(props: InputToolbarProps) {
         >
           {!isInEdit && <ContextStatus />}
           {!props.toolbarOptions?.hideUseCodebase && !isInEdit && (
-            <div
-              className={`hover:underline" hidden transition-colors duration-200 md:flex`}
-            >
+            <div className="hidden transition-colors duration-200 hover:underline hover:brightness-125 md:flex">
               <HoverItem
                 className={
                   props.activeKey === "Meta" ||
