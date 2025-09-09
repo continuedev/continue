@@ -1094,7 +1094,6 @@ export interface Tool {
     exampleArgs?: Array<[string, string | number]>;
   };
   defaultToolPolicy?: ToolPolicy;
-  isExecutionResultSearchable?: boolean;
   toolCallIcon?: string;
   evaluateToolCallPolicy?: (
     basePolicy: ToolPolicy,

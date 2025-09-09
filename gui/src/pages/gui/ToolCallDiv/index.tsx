@@ -41,11 +41,10 @@ export function ToolCallDiv({
     );
     const functionName = toolCallState.toolCall.function?.name;
     const icon =
-      functionName && tool?.isExecutionResultSearchable
-        ? tool?.toolCallIcon
+      functionName &&
+          tool?.toolCallIcon
           ? getIconByName(tool.toolCallIcon)
-          : MagnifyingGlassIcon
-        : undefined;
+          : undefined;
 
     if (icon) {
       return (

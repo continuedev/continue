@@ -48,4 +48,5 @@ export const readFileRangeTool: Tool = {
     ],
   },
   defaultToolPolicy: "allowedWithoutPermission",
+  toolCallIcon: "DocumentIcon",
 };
