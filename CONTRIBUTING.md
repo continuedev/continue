@@ -60,7 +60,6 @@ Continue is quickly adding features, and we'd love to hear which are the most im
 an enhancement are:
 
 - Create an issue
-
   - First, check whether a similar proposal has already been made
   - If not, [create an issue](https://github.com/continuedev/continue/issues)
   - Please describe the enhancement in as much detail as you can, and why it would be useful
@@ -146,7 +145,6 @@ npm i -g vite
    `install-all-dependencies`
 
 2. Start debugging:
-
    1. Switch to Run and Debug view
    2. Select `Launch extension` from drop down
    3. Hit play button
