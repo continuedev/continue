@@ -332,11 +332,13 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  if (
-    PolicySingleton.getInstance().policy?.policy?.allowAnonymousTelemetry ===
-    false
-  ) {
+  // Org policies
+  const policy = PolicySingleton.getInstance().policy?.policy;
+  if (policy?.allowAnonymousTelemetry === false) {
     newConfig.allowAnonymousTelemetry = false;
+  }
+  if (policy?.allowCodebaseIndexing === false) {
+    newConfig.disableIndexing = true;
   }
 
   // Setup telemetry only after (and if) we know it is enabled

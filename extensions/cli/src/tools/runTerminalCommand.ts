@@ -1,5 +1,10 @@
 import { spawn } from "child_process";
 
+import {
+  evaluateTerminalCommandSecurity,
+  type ToolPolicy,
+} from "@continuedev/terminal-security";
+
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
@@ -28,7 +33,7 @@ export const runTerminalCommandTool: Tool = {
   displayName: "Bash",
   description: `Executes a terminal command and returns the output
 
-The command will be executed from the current working directory: ${process.cwd()}
+Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 `,
   parameters: {
     command: {
@@ -39,6 +44,15 @@ The command will be executed from the current working directory: ${process.cwd()
   },
   readonly: false,
   isBuiltIn: true,
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    return evaluateTerminalCommandSecurity(
+      basePolicy,
+      parsedArgs.command as string,
+    );
+  },
   preprocess: async (args) => {
     const command = args.command;
     if (!command || typeof command !== "string") {

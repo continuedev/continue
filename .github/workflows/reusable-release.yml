@@ -55,7 +55,7 @@ jobs:
         uses: ./.github/actions/setup-packages
 
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 

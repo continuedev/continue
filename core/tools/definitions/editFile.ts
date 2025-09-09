@@ -8,7 +8,7 @@ export interface EditToolArgs {
 }
 
 export const NO_PARALLEL_TOOL_CALLING_INTSRUCTION =
-  "Note this tool CANNOT be called in parallel with other tools.";
+  "This tool CANNOT be called in parallel with other tools.";
 
 const CHANGES_DESCRIPTION =
   "Any modifications to the file, showing only needed changes. Do NOT wrap this in a codeblock or write anything besides the code changes. In larger files, use brief language-appropriate placeholders for large unmodified sections, e.g. '// ... existing code ...'";

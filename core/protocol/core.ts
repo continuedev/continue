@@ -4,6 +4,7 @@ import {
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
+import { ToolPolicy } from "@continuedev/terminal-security";
 
 import {
   AutocompleteInput,
@@ -292,6 +293,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "tools/call": [
     { toolCall: ToolCall },
     { contextItems: ContextItem[]; errorMessage?: string },
+  ];
+  "tools/evaluatePolicy": [
+    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    { policy: ToolPolicy; displayValue?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];

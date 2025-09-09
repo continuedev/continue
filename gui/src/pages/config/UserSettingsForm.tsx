@@ -2,6 +2,7 @@ import {
   CheckIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
+  InformationCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -141,6 +142,8 @@ export function UserSettingsForm() {
 
   const disableTelemetryToggle =
     currentOrg?.policy?.allowAnonymousTelemetry === false;
+  const disableIndexingToggle =
+    currentOrg?.policy?.allowCodebaseIndexing === false;
 
   return (
     <div className="flex flex-col">
@@ -175,6 +178,7 @@ export function UserSettingsForm() {
                 })
               }
               text="Show Session Tabs"
+              tooltip="If on, displays tabs above the chat as an alternative way to organize and access your sessions."
             />
             <ToggleSwitch
               isToggled={codeWrap}
@@ -184,6 +188,7 @@ export function UserSettingsForm() {
                 })
               }
               text="Wrap Codeblocks"
+              tooltip="If on, displays tabs above the chat as an alternative way to organize and access your sessions."
             />
 
             <ToggleSwitch
@@ -194,6 +199,7 @@ export function UserSettingsForm() {
                 })
               }
               text="Show Chat Scrollbar"
+              tooltip="If on, enables a scrollbar in the chat window."
             />
             <ToggleSwitch
               isToggled={readResponseTTS}
@@ -203,6 +209,7 @@ export function UserSettingsForm() {
                 })
               }
               text="Text-to-Speech Output"
+              tooltip="If on, reads LLM responses aloud with TTS."
             />
             {/* <ToggleSwitch
                     isToggled={useChromiumForDocsCrawling}
@@ -221,6 +228,7 @@ export function UserSettingsForm() {
                 })
               }
               text="Enable Session Titles"
+              tooltip="If on, generates summary titles for each chat session after the first message, using the current Chat model."
             />
             <ToggleSwitch
               isToggled={!displayRawMarkdown}
@@ -230,6 +238,7 @@ export function UserSettingsForm() {
                 })
               }
               text="Format Markdown"
+              tooltip="If off, shows responses as raw text."
             />
 
             <ToggleSwitch
@@ -241,10 +250,12 @@ export function UserSettingsForm() {
                 })
               }
               text="Allow Anonymous Telemetry"
+              tooltip="If on, allows Continue to send anonymous telemetry."
             />
 
             <ToggleSwitch
               isToggled={!disableIndexing}
+              disabled={disableIndexingToggle}
               onToggle={() =>
                 handleUpdate({
                   disableIndexing: !disableIndexing,
@@ -264,7 +275,12 @@ export function UserSettingsForm() {
                   /> */}
 
             <label className="flex items-center justify-between gap-3">
-              <span className="text-left">Font Size</span>
+              <span className="flex items-center gap-x-1 text-left">
+                Font Size{" "}
+                <ToolTip content="Specifies base font size for UI elements">
+                  <InformationCircleIcon className="h-3 w-3" />
+                </ToolTip>
+              </span>
               <NumberInput
                 value={fontSize}
                 onChange={(val) => {
@@ -278,8 +294,11 @@ export function UserSettingsForm() {
               />
             </label>
             <label className="flex items-center justify-between gap-3">
-              <span className="lines lines-1 text-left">
+              <span className="lines lines-1 flex items-center gap-x-1 text-left">
                 Multiline Autocompletions
+                <ToolTip content="Controls multiline completions for autocomplete.">
+                  <InformationCircleIcon className="h-3 w-3" />
+                </ToolTip>
               </span>
               <Select
                 value={useAutocompleteMultilineCompletions}
@@ -298,7 +317,12 @@ export function UserSettingsForm() {
               </Select>
             </label>
             <label className="flex items-center justify-between gap-3">
-              <span className="text-left">Autocomplete Timeout (ms)</span>
+              <span className="flex items-center gap-x-1 text-left">
+                Autocomplete Timeout (ms)
+                <ToolTip content="Maximum time in milliseconds for autocomplete request/retrieval.">
+                  <InformationCircleIcon className="h-3 w-3" />
+                </ToolTip>
+              </span>
               <NumberInput
                 value={modelTimeout}
                 onChange={(val) =>
@@ -311,7 +335,12 @@ export function UserSettingsForm() {
               />
             </label>
             <label className="flex items-center justify-between gap-3">
-              <span className="text-left">Autocomplete Debounce (ms)</span>
+              <span className="flex items-center gap-x-1 text-left">
+                Autocomplete Debounce (ms)
+                <ToolTip content="Minimum time in milliseconds to trigger an autocomplete request after a change.">
+                  <InformationCircleIcon className="h-3 w-3" />
+                </ToolTip>
+              </span>
               <NumberInput
                 value={debounceDelay}
                 onChange={(val) =>
@@ -331,7 +360,12 @@ export function UserSettingsForm() {
               }}
             >
               <div className="flex items-center justify-between">
-                <span>Disable autocomplete in files</span>
+                <span className="flex items-center gap-x-1">
+                  Disable autocomplete in files
+                  <ToolTip content="List of comma-separated glob pattern to disable autocomplete in matching files. E.g., **/*.{txt,md}">
+                    <InformationCircleIcon className="h-3 w-3" />
+                  </ToolTip>
+                </span>
                 <div className="flex items-center gap-2">
                   <Input
                     value={formDisableAutocomplete}
@@ -398,14 +432,14 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Auto-Accept Agent Edits"
+                  tooltip="If on, diffs generated by the edit tool are
+  automatically accepted and Agent proceeds with the next conversational turn."
                   showIfToggled={
                     <>
-                      <ExclamationTriangleIcon
-                        data-tooltip-id={`auto-accept-diffs-warning-tooltip`}
-                        className="h-3 w-3 text-yellow-500"
-                      />
-                      <ToolTip id={`auto-accept-diffs-warning-tooltip`}>
-                        {`Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point`}
+                      <ToolTip
+                        content={`Be very careful with this setting. When turned on, Agent mode's edit tool can make changes to files with no manual review or guaranteed stopping point`}
+                      >
+                        <ExclamationTriangleIcon className="h-3 w-3 text-yellow-500" />
                       </ToolTip>
                     </>
                   }
@@ -419,6 +453,7 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Add Current File by Default"
+                  tooltip="If on, the currently open file is added as context in every new conversation."
                 />
 
                 <ToggleSwitch
@@ -438,6 +473,7 @@ export function UserSettingsForm() {
                       onlyUseSystemMessageTools: !onlyUseSystemMessageTools,
                     })
                   }
+                  tooltip="If on, Continue will not attempt to use native tool calling and will only use system message tools."
                   text="Only use system message tools"
                 />
 
@@ -459,6 +495,7 @@ export function UserSettingsForm() {
                     })
                   }
                   text="Stream after tool rejection"
+                  tooltip="If on, streaming will continue after the tool call is rejected."
                 />
 
                 {hasContinueEmail && (
