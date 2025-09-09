@@ -1,6 +1,5 @@
-package com.github.continuedev.continueintellijextension.actions.menu.file
+package com.github.continuedev.continueintellijextension.actions
 
-import com.github.continuedev.continueintellijextension.actions.getSelectedFiles
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction

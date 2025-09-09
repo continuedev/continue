@@ -183,7 +183,7 @@
         </action>
         <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue" icon="/icons/continue.svg">
             <action id="com.github.continuedev.continueintellijextension.actions.menu.file.AddFilesOrFoldersToChatAction"
-                    class="com.github.continuedev.continueintellijextension.actions.menu.file.AddToEditAction"
+                    class="com.github.continuedev.continueintellijextension.actions.AddToEditAction"
                     text="Add to the Chat">
             </action>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
