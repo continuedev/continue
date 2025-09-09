@@ -13,14 +13,6 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { createMockStore } from "../../../../util/test/mockStore";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
-const mockLumpContext = {
-  hideLump: vi.fn(),
-  showLump: vi.fn(),
-};
-
-vi.mock("../../LumpContext", () => ({
-  useLump: () => mockLumpContext,
-}));
 
 describe("DocsIndexingStatus", () => {
   const mockDocConfig: SiteIndexingConfig = {
@@ -211,7 +203,6 @@ describe("DocsIndexingStatus", () => {
       "openUrl",
       "https://example.com/docs",
     );
-    expect(mockLumpContext.hideLump).toHaveBeenCalled();
   });
 
   it("fetches indexed pages when status becomes complete", async () => {

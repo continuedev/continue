@@ -146,7 +146,7 @@ export function History() {
   return (
     <div
       style={{ fontSize: getFontSize() }}
-      className="flex flex-1 flex-col overflow-auto px-1"
+      className="flex flex-1 flex-col overflow-auto px-1 overflow-x-hidden"
     >
       <div className="relative my-2 mt-4 flex justify-center space-x-2">
         <input
@@ -170,7 +170,7 @@ export function History() {
         )}
       </div>
 
-      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto">
+      <div className="thin-scrollbar flex flex-1 flex-col overflow-y-auto w-full">
         {filteredAndSortedSessions.length === 0 && (
           <div className="m-3 text-center">
             {isSessionMetadataLoading ? (
@@ -185,7 +185,7 @@ export function History() {
           </div>
         )}
 
-        <table className="flex flex-1 flex-col">
+        <table className="flex flex-1 flex-col w-full">
           <tbody className="">
             {sessionGroups.map((group, groupIndex) => (
               <Fragment key={group.label}>

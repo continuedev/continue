@@ -18,7 +18,7 @@ const buttonVariants = {
     "border border-solid border-description text-foreground bg-transparent hover:enabled:bg-input",
   ghost:
     "border-none text-foreground bg-inherit hover:enabled:brightness-125 hover:enabled:bg-input",
-  icon: "border border-solid border-description text-description bg-transparent hover:enabled:text-foreground hover:enabled:bg-input hover:enabled:border-description rounded-full p-0",
+  icon: "border border-solid border-description text-description bg-transparent hover:enabled:text-foreground hover:enabled:bg-input hover:enabled:border-description rounded-full p-0 flex items-center justify-center",
 };
 
 const buttonSizes = {
@@ -27,8 +27,8 @@ const buttonSizes = {
 };
 
 const iconButtonSizes = {
-  sm: "h-4 w-4",
-  lg: "h-6 w-6",
+  sm: "h-3.5 w-3.5",
+  lg: "h-5 w-5",
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(

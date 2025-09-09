@@ -34,12 +34,8 @@ export function ConfigHeader({
       </div>
       {onAddClick && (
         <ToolTip content={addButtonTooltip}>
-          <Button
-            onClick={onAddClick}
-            variant="icon"
-            size={isSmall ? "sm" : undefined}
-          >
-            <PlusIcon className="h-3.5 w-3.5" />
+          <Button onClick={onAddClick} variant="icon">
+            <PlusIcon className="h-3 w-3" />
           </Button>
         </ToolTip>
       )}

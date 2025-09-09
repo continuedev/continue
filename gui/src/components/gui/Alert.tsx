@@ -82,7 +82,7 @@ function Alert({
   return (
     <div
       className={cn(
-        `flex flex-row items-center ${background} border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
+        `flex flex-row items-start ${background} border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
         className,
       )}
       {...props}

@@ -26,14 +26,8 @@ function CodebaseSubSection() {
       <Card>
         <div className="py-2">
           {config.disableIndexing ? (
-            <div className="pb-2 pt-2">
-              <p className="py-1 text-center font-semibold">
-                Indexing is disabled
-              </p>
-              <p className="text-lightgray cursor-pointer text-center text-xs">
-                Open settings and toggle <code>Enable Indexing</code> to
-                re-enable
-              </p>
+            <div className="p-1">
+              <p className="text-center font-semibold">Indexing is disabled</p>
             </div>
           ) : (
             <IndexingProgress />
@@ -61,27 +55,25 @@ function EnableIndexingSetting() {
     currentOrg?.policy?.allowCodebaseIndexing === false;
 
   return (
-    <Card>
-      <div className="flex flex-col gap-4">
-        <UserSetting
-          title="Enable indexing"
-          type="toggle"
-          description={
-            <>
-              Allows indexing of your codebase for search and context
-              understanding.
-              <br />
-              <br />
-              Note that indexing can consume significant system resources,
-              especially on larger codebases.
-            </>
-          }
-          value={!disableIndexing}
-          disabled={disableIndexingToggle}
-          onChange={(value) => handleUpdate({ disableIndexing: !value })}
-        />
-      </div>
-    </Card>
+    <div className="flex flex-col gap-4">
+      <UserSetting
+        title="Enable indexing"
+        type="toggle"
+        description={
+          <div className="text-foreground">
+            Allows indexing of your codebase for search and context
+            understanding.
+            <br />
+            <br />
+            Note that indexing can consume significant system resources,
+            especially on larger codebases.
+          </div>
+        }
+        value={!disableIndexing}
+        disabled={disableIndexingToggle}
+        onChange={(value) => handleUpdate({ disableIndexing: !value })}
+      />
+    </div>
   );
 }
 
@@ -94,32 +86,33 @@ export function IndexingSettingsSection() {
       <ConfigHeader title="Indexing" />
 
       <Alert type="warning" className="mb-6">
-        <div>
-          <div className="text-sm font-medium">
-            Indexing has been deprecated
+        <div className="space-y-4">
+          <div>
+            <div className="text-sm font-medium">
+              Indexing has been deprecated
+            </div>
+            <div className="mt-1">
+              Learn how to{" "}
+              <a
+                href="https://docs.continue.dev/guides/codebase-documentation-awareness"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-inherit underline hover:brightness-125"
+              >
+                make your agent aware of your codebase and documentation
+              </a>
+            </div>
           </div>
-          <div className="mt-1">
-            Learn more about{" "}
-            <a
-              href="https://docs.continue.dev/guides/codebase-documentation-awareness"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-inherit underline hover:brightness-125"
-            >
-              making your agent aware of your codebase and documentation
-            </a>
-          </div>
+          <EnableIndexingSetting />
         </div>
       </Alert>
 
-      <div className="mb-6">
-        <EnableIndexingSetting />
-      </div>
-
-      <div className={`space-y-8 ${disableIndexing ? "opacity-50" : ""}`}>
-        <CodebaseSubSection />
-        <DocsSection />
-      </div>
+      {!disableIndexing && (
+        <div className="space-y-8">
+          <CodebaseSubSection />
+          <DocsSection />
+        </div>
+      )}
     </>
   );
 }
