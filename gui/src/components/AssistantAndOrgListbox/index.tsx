@@ -190,7 +190,7 @@ export function AssistantAndOrgListbox({
 
             {shouldRenderOrgInfo && (
               <>
-                <Divider className="!mb-0.5" />
+                <Divider className="!mb-0.5 !mt-0" />
                 <div className="flex items-center justify-between p-2">
                   <span className="text-description text-xs font-medium">
                     Organizations

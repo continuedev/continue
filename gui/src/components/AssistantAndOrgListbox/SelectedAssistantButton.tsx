@@ -49,7 +49,7 @@ export function SelectedAssistantButton({
             <>
               <AssistantIcon assistant={selectedProfile} size={iconSize} />
               <span
-                className={`${isSidebar ? "hidden md:block" : "hidden md:block"} select-none break-words`}
+                className={`select-none truncate ${isSidebar ? "hidden lg:block" : ""}`}
               >
                 {selectedProfile.title}
               </span>
