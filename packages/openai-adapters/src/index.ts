@@ -46,16 +46,16 @@ function isHuggingFaceOpenAICompatible(url: string): boolean {
 
   // Check for common OpenAI-compatible patterns
   const openAIPatterns = [
-    '/v1/', // Standard OpenAI v1 API pattern
-    '/openai/', // Explicit OpenAI compatibility path
-    '/v1/chat/completions', // Specific OpenAI chat completions endpoint
-    '/v1/completions', // OpenAI completions endpoint
-    '/v1/embeddings', // OpenAI embeddings endpoint
-    '/v1/models', // OpenAI models endpoint
+    "/v1/", // Standard OpenAI v1 API pattern
+    "/openai/", // Explicit OpenAI compatibility path
+    "/v1/chat/completions", // Specific OpenAI chat completions endpoint
+    "/v1/completions", // OpenAI completions endpoint
+    "/v1/embeddings", // OpenAI embeddings endpoint
+    "/v1/models", // OpenAI models endpoint
   ];
 
   // Check if the URL contains any of the OpenAI-compatible patterns
-  return openAIPatterns.some(pattern => normalizedUrl.includes(pattern));
+  return openAIPatterns.some((pattern) => normalizedUrl.includes(pattern));
 }
 
 export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
@@ -105,7 +105,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":
-      return openAICompatible("http://127.0.0.1:5000/v1/", config);
+      return openAICompatible("http://*********:5000/v1/", config);
     case "openrouter":
       return openAICompatible("https://openrouter.ai/api/v1/", config);
     case "cerebras":
