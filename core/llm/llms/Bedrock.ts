@@ -13,7 +13,7 @@ import {
   ReasoningContentBlockDelta,
   ToolConfiguration,
   ToolUseBlock,
-  ToolUseBlockDelta
+  ToolUseBlockDelta,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
@@ -145,7 +145,8 @@ class Bedrock extends BaseLLM {
           console.log(`${JSON.stringify(chunk.metadata.usage)}`);
         }
 
-        const contentBlockDelta: ContentBlockDelta | undefined = chunk.contentBlockDelta?.delta;
+        const contentBlockDelta: ContentBlockDelta | undefined =
+          chunk.contentBlockDelta?.delta;
         if (contentBlockDelta) {
           // Handle text content
           if (contentBlockDelta.text) {
@@ -159,7 +160,7 @@ class Bedrock extends BaseLLM {
             yield {
               role: "thinking",
               content: contentBlockDelta.reasoningContent.text,
-            }
+            };
             continue;
           }
           if (contentBlockDelta.reasoningContent?.signature) {
@@ -172,43 +173,49 @@ class Bedrock extends BaseLLM {
           }
         }
 
-        const reasoningDelta: ReasoningContentBlockDelta | undefined  = chunk.contentBlockDelta?.delta as ReasoningContentBlockDelta;
+        const reasoningDelta: ReasoningContentBlockDelta | undefined = chunk
+          .contentBlockDelta?.delta as ReasoningContentBlockDelta;
         if (reasoningDelta) {
           if (reasoningDelta.redactedContent) {
             yield {
               role: "thinking",
               content: "",
               redactedThinking: reasoningDelta.text,
-            }
+            };
             continue;
           }
         }
 
-        const toolUseBlockDelta: ToolUseBlockDelta | undefined = chunk.contentBlockDelta?.delta?.toolUse as ToolUseBlockDelta;
-        const toolUseBlock: ToolUseBlock | undefined = chunk.contentBlockDelta?.delta?.toolUse as ToolUseBlock;
+        const toolUseBlockDelta: ToolUseBlockDelta | undefined = chunk
+          .contentBlockDelta?.delta?.toolUse as ToolUseBlockDelta;
+        const toolUseBlock: ToolUseBlock | undefined = chunk.contentBlockDelta
+          ?.delta?.toolUse as ToolUseBlock;
         if (toolUseBlockDelta && toolUseBlock) {
-            yield {
-              role: "assistant",
-              content: "",
-              toolCalls: [
-                {
-                  id: toolUseBlock.toolUseId,
-                  type: "function",
-                  function: {
-                    name: toolUseBlock.name,
-                    arguments: toolUseBlockDelta.input,
-                  },
+          yield {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: toolUseBlock.toolUseId,
+                type: "function",
+                function: {
+                  name: toolUseBlock.name,
+                  arguments: toolUseBlockDelta.input,
                 },
-              ],
-            }
-            continue;
+              },
+            ],
+          };
+          continue;
         }
 
-        const contentBlockStart: ContentBlockStartEvent | undefined = chunk.contentBlockStart as ContentBlockStartEvent;
+        const contentBlockStart: ContentBlockStartEvent | undefined =
+          chunk.contentBlockStart as ContentBlockStartEvent;
         if (contentBlockStart) {
-          const start: ContentBlockStart | undefined = chunk.contentBlockStart?.start as ContentBlockStart;
+          const start: ContentBlockStart | undefined = chunk.contentBlockStart
+            ?.start as ContentBlockStart;
           if (start) {
-            const toolUseBlock: ToolUseBlock | undefined = start.toolUse as ToolUseBlock;
+            const toolUseBlock: ToolUseBlock | undefined =
+              start.toolUse as ToolUseBlock;
             if (toolUseBlock?.toolUseId && toolUseBlock?.name) {
               yield {
                 role: "assistant",
@@ -223,7 +230,7 @@ class Bedrock extends BaseLLM {
                     },
                   },
                 ],
-              }
+              };
               continue;
             }
           }
@@ -328,7 +335,7 @@ class Bedrock extends BaseLLM {
               budget_tokens: options.reasoningBudgetTokens,
             }
           : undefined,
-        anthropic_beta: [ "fine-grained-tool-streaming-2025-05-14", "interleaved-thinking-2025-05-14" ],
+        anthropic_beta: ["fine-grained-tool-streaming-2025-05-14"],
       },
     };
   }
