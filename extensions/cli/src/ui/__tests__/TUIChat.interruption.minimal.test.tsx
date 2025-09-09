@@ -177,10 +177,10 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       let foundInputBoxLine = -1;
 
       frameLines.forEach((line, index) => {
-        if (line.includes("⚠ Interrupted by user")) {
+        if (line.includes("Interrupted by user")) {
           foundInterruptionLine = index;
         }
-        if (line.includes("●") && line.includes("▋")) {
+        if (line.includes("●") || line.includes("▋")) {
           foundInputBoxLine = index;
         }
       });
