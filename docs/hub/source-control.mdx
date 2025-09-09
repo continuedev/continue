@@ -1,6 +1,6 @@
 ---
 title: "Source Control"
-description: "When managing your custom assistants within an organization, you might want to take advantage of your usual source control workflows. Continue makes this easy with a  that automatically syncs your YAML files with hub.continue.dev. We are also planning on adding automations for GitLab, BitBucket, Gitee, and others. If you are interested, please reach out to us on ."
+description: "When managing your custom agents within an organization, you might want to take advantage of your usual source control workflows. Continue makes this easy with a  that automatically syncs your YAML files with hub.continue.dev. We are also planning on adding automations for GitLab, BitBucket, Gitee, and others. If you are interested, please reach out to us on ."
 ---
 
 ## Quickstart
@@ -34,11 +34,11 @@ This is the only configuration necessary, but you can view the full list of opti
 
 ### 4. Commit and push
 
-Add the [YAML for your assistants and blocks](/reference) to the appropriate directories. The name of the file will be the slug of the assistant/block.
+Add the [YAML for your agents and blocks](/reference) to the appropriate directories. The name of the file will be the slug of the agent/block.
 
-- `assistants/public` for public assistants
-- `assistants/private` for private (visible only within your organization) assistants
+- `assistants/public` for public agents
+- `assistants/private` for private (visible only within your organization) agents
 - `blocks/public` for public blocks
 - `blocks/private` for private blocks
 
-Then, commit and push your changes. Once the GitHub Action has completed running, you should be able to view the assistants within your organization on hub.continue.dev. For subsequent changes, make sure to increment the `version` property of your updated YAML file(s).
+Then, commit and push your changes. Once the GitHub Action has completed running, you should be able to view the agents within your organization on hub.continue.dev. For subsequent changes, make sure to increment the `version` property of your updated YAML file(s).

@@ -2,9 +2,14 @@ import * as fs from "fs";
 
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 
-import { markFileAsRead } from "./edit.js";
 import { formatToolArgument } from "./formatters.js";
 import { Tool } from "./types.js";
+
+// Track files that have been read in the current session
+export const readFilesSet = new Set<string>();
+export function markFileAsRead(filePath: string) {
+  readFilesSet.add(filePath);
+}
 
 export const readFileTool: Tool = {
   name: "Read",
@@ -20,13 +25,17 @@ export const readFileTool: Tool = {
   readonly: true,
   isBuiltIn: true,
   preprocess: async (args) => {
-    throwIfFileIsSecurityConcern(args.filepath);
+    let { filepath } = args;
+    if (filepath.startsWith("./")) {
+      filepath = filepath.slice(2);
+    }
+    throwIfFileIsSecurityConcern(filepath);
     return {
       args,
       preview: [
         {
           type: "text",
-          content: `Will read ${formatToolArgument(args.filepath)}`,
+          content: `Will read ${formatToolArgument(filepath)}`,
         },
       ],
     };
@@ -41,9 +50,10 @@ export const readFileTool: Tool = {
       if (!fs.existsSync(filepath)) {
         return `Error: File does not exist: ${filepath}`;
       }
-      const content = fs.readFileSync(filepath, "utf-8");
+      const realPath = fs.realpathSync(filepath);
+      const content = fs.readFileSync(realPath, "utf-8");
       // Mark this file as read for the edit tool
-      markFileAsRead(filepath);
+      markFileAsRead(realPath);
 
       const lines = content.split("\n");
       if (lines.length > 5000) {
