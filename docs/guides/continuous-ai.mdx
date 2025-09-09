@@ -1,0 +1,207 @@
+---
+title: "Continuous AI: A Developer's Guide"
+description: "Learn how to integrate intelligent automation into development workflows, making AI assistance as natural as syntax highlighting. Implement systematic AI workflows that compound productivity gains over time."
+---
+
+Continuous AI is the integration of intelligent automation directly into development workflows, making AI assistance as natural and reliable as syntax highlighting or code completion. Its purpose is to amplify developer intent at every stage of the coding process.
+
+Think of it this way: DevOps automated the mechanical aspects of software delivery—building, testing, deploying. Continuous AI automates the intelligence aspects—understanding context, making suggestions, adapting to patterns, and learning from developer feedback.
+
+## Why Continuous AI Matters Now
+
+The same market forces that made DevOps inevitable are now driving Continuous AI adoption:
+
+<CardGroup>
+  <Card title="Developer Behavior is Shifting" icon="chart-line">
+    Engineering teams are rapidly adopting AI tools, with many seeing
+    significant productivity improvements in their workflows.
+  </Card>
+
+<Card title="Economic Pressure" icon="dollar-sign">
+  AI-assisted coding is contributing measurable increases in developer output,
+  creating competitive advantages for early adopters.
+</Card>
+
+  <Card title="Tooling Maturity" icon="wrench">
+    Unlike DevOps, Continuous AI can be implemented incrementally on existing
+    development stacks without major infrastructure changes.
+  </Card>
+</CardGroup>
+
+The teams that implement systematic AI workflows first create advantages that compound over time.
+
+## The Continuous AI Maturity Model
+
+Teams typically progress through three stages when adopting Continuous AI:
+
+<Accordion title="Level 1: Manual AI Assistance">
+You prompt the AI when you remember, and it completes the task. This is great for quick productivity boosts but remains highly manual and inconsistent.
+
+**Example**: Using AI to draft a function or suggest a test case only when you think to ask for it.
+
+**Continue Implementation**: Using [Chat](/features/chat/quick-start) or [Edit](/features/edit/quick-start) mode for one-off coding tasks.
+
+</Accordion>
+
+<Accordion title="Level 2: Workflow Automation">
+AI handles routine tasks with human oversight. This is where teams start seeing compounding gains.
+
+**Examples**:
+
+- AI adds missing documentation during PR review
+- Automatic code formatting and style corrections
+- Generated unit tests for new functions
+- Updated issue tracking when branches are merged
+
+**Continue Implementation**: Using [Continue CLI](/guides/cli) with custom rules and integrations into CI/CD pipelines.
+
+</Accordion>
+
+<Accordion title="Level 3: Zero-Intervention Workflows">
+AI autonomously completes processes end-to-end without human input, but only for very specific, low-risk workflows.
+
+**Examples**:
+
+- AI merges safe dependency updates after automated tests pass
+- Automatic documentation updates when code changes
+- Self-healing test suites that fix themselves based on failure patterns
+
+**Continue Implementation**: Fully automated [agents](/features/agent/quick-start) with strict permissions and safety guardrails.
+
+</Accordion>
+
+## Building Your Continuous AI Workflow
+
+### Start with Level 1 → Level 2: Pick One Workflow
+
+Don't try to automate everything at once. Choose a specific daily friction point:
+
+```bash
+# Example: Automated code review comments
+git diff | cn -p "review this diff and suggest improvements following our team standards"
+
+# Example: Generate missing tests
+cn -p "create unit tests for the functions in src/auth.js"
+
+# Example: Update documentation
+cn -p "update the README with the new API endpoints from the recent changes"
+```
+
+### Configure Team-Wide Intelligence
+
+The most effective Continuous AI is tuned to your codebase, standards, and practices:
+
+```yaml config.yaml
+rules:
+  - name: code-review
+    description: "Review code following team standards"
+    rule: "Review following our TypeScript style guide and security practices"
+    context:
+      - "docs/style-guide.md"
+      - "security-checklist.md"
+```
+
+### Implement Progressive Permissions
+
+Use Continue CLI's permission system to gradually expand AI capabilities:
+
+```yaml ~/.continue/permissions.yaml
+permissions:
+  - allow: "Bash(git*)" # Git commands are safe
+  - ask: "Write(**/*.ts)" # Ask before modifying TypeScript files
+  - deny: "Bash(rm*)" # Never allow deletions
+```
+
+### Measure What Matters: Intervention Rate
+
+Track how often you need to correct AI output. Lower intervention rates mean higher trust and compounding productivity gains.
+
+## Real-World Implementation Patterns
+
+<AccordionGroup>
+  <Accordion title="Pattern 1: The Async Triage Bot">
+    Imagine setting up an AI agent that checks new GitHub issues every morning and leaves the first helpful response. This lightens the load for maintainers and ensures community members feel heard quickly.
+  </Accordion>
+
+    <Accordion title="Pattern 2: The PR Review Agent">
+    AI can automatically review new pull requests for security, performance, and style issues. The reviewer still has the final say, but the agent highlights common problems and speeds up the feedback loop.
+
+  </Accordion>
+    <Accordion title="Pattern 3: The Documentation Guardian">
+    Whenever code changes, AI can scan for mismatches in documentation and suggest updates. This keeps docs current without relying on developers to remember every detail.
+  </Accordion>
+</AccordionGroup>
+## Best Practices for Sustainable Continuous AI
+
+<CardGroup>
+  <Card title="Human-AI Collaboration" icon="handshake">
+    AI should amplify human intelligence, not replace it. Always validate AI
+    suggestions rather than blindly accepting them.
+  </Card>
+
+<Card title="Start Small, Scale Thoughtfully" icon="seedling">
+  Begin with low-risk, high-value automations. Gradually expand as you build
+  trust and understanding.
+</Card>
+
+<Card title="Customize for Your Context" icon="cog">
+  Generic AI suggestions are often wrong or irrelevant. Configure AI to
+  understand your specific patterns and requirements.
+</Card>
+
+  <Card title="Build Safety Guardrails" icon="shield">
+    Use permission systems, code review processes, and testing to ensure AI
+    actions are safe and reversible.
+  </Card>
+</CardGroup>
+
+## Common Pitfalls to Avoid
+
+<Warning>
+  **Over-automation**: Don't automate processes you don't fully understand
+</Warning>
+
+<Warning>
+  **Ignoring Context**: AI works best when it understands your codebase and team
+  practices
+</Warning>
+
+<Warning>
+  **Skipping Safety**: Always implement proper permissions and review processes
+</Warning>
+
+<Warning>
+  **Vanity Metrics**: Focus on intervention rate and actual time saved, not "AI
+  suggestions generated"
+</Warning>
+
+## Getting Started Today
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash npm i -g @continuedev/cli ```
+  </Step>
+
+<Step title="Pick One Workflow">Choose a daily friction point to automate</Step>
+
+<Step title="Set Permissions">Configure safe boundaries for AI actions</Step>
+
+<Step title="Measure Impact">Track intervention rates and time saved</Step>
+
+  <Step title="Iterate and Expand">Gradually add more automated workflows</Step>
+</Steps>
+
+## The Competitive Advantage
+
+Teams implementing Continuous AI are coding faster and building institutional intelligence that scales with their organization. While others manually perform routine tasks, your AI handles the repetitive work so your team can focus on innovation and complex problem-solving.
+
+## What's Next?
+
+As AI capabilities continue to improve and tooling matures, we're moving toward a world where intelligent assistance is as fundamental to development as version control or IDEs. The teams that start building these capabilities now will have refined systems, cultural readiness, and institutional knowledge when Continuous AI becomes the industry standard.
+
+Ready to amplify your development workflow with Continuous AI? Start with one simple automation and build from there.
+
+<Card title="Want to dive deeper?" icon="rocket">
+  Check out our guides on [Continue CLI](/guides/cli) and [Understanding
+  Agents](/guides/understanding-agents).
+</Card>

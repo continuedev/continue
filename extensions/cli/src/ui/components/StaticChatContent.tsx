@@ -1,19 +1,19 @@
 import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { Static, useStdout } from "ink";
+import { Box, Static, useStdout } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import type { ChatHistoryItem } from "../../../../../core/index.js";
 import type { MCPService } from "../../services/MCPService.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
-import type { DisplayMessage } from "../types.js";
 
 interface StaticChatContentProps {
   showIntroMessage: boolean;
   config?: AssistantUnrolled;
   model?: ModelConfig;
   mcpService?: MCPService;
-  messages: DisplayMessage[];
-  renderMessage: (message: DisplayMessage, index: number) => React.ReactElement;
+  chatHistory: ChatHistoryItem[];
+  renderMessage: (item: ChatHistoryItem, index: number) => React.ReactElement;
   refreshTrigger?: number; // Add a prop to trigger refresh from parent
 }
 
@@ -22,7 +22,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   config,
   model,
   mcpService,
-  messages,
+  chatHistory,
   renderMessage,
   refreshTrigger,
 }) => {
@@ -35,9 +35,10 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
 
   // Refresh function that clears terminal and remounts Static component
   const refreshStatic = useCallback(() => {
-    // Clear terminal completely before remounting
+    // Clear terminal completely including scrollback buffer (3J)
     stdout.write("\x1b[2J\x1b[H");
     setStaticKey((prev) => prev + 1);
+    stdout.write("\x1b[3J");
   }, [stdout]);
 
   // Debounced terminal resize handler (300ms like gemini-cli)
@@ -65,13 +66,20 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     }
   }, [refreshTrigger, refreshStatic]);
 
-  // Create static items array (similar to gemini-cli's approach)
-  const staticItems = React.useMemo(() => {
-    const items: React.ReactElement[] = [];
+  // Filter out system messages without content
+  const filteredChatHistory = React.useMemo(() => {
+    return chatHistory.filter(
+      (item) => item.message.role !== "system" || item.message.content,
+    );
+  }, [chatHistory]);
 
+  // Split chat history into stable and pending items
+  // The last two items may have pending tool calls
+  const { staticItems, pendingItems } = React.useMemo(() => {
     // Add intro message as first item if it should be shown
-    if (showIntroMessage && config && model && mcpService) {
-      items.push(
+    const staticItems: React.ReactElement[] = [];
+    if (showIntroMessage) {
+      staticItems.push(
         <IntroMessage
           key="intro"
           config={config}
@@ -81,24 +89,57 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       );
     }
 
-    // Add all chat messages
-    messages.forEach((message, index) => {
-      items.push(renderMessage(message, index));
+    const PENDING_ITEMS_COUNT = 2;
+    const stableCount = Math.max(
+      0,
+      filteredChatHistory.length - PENDING_ITEMS_COUNT,
+    );
+    const stableHistory = filteredChatHistory.slice(0, stableCount);
+    const pendingHistory = filteredChatHistory.slice(stableCount);
+
+    // Add stable messages to static items
+    stableHistory.forEach((item, index) => {
+      staticItems.push(renderMessage(item, index));
     });
 
-    return items;
-  }, [showIntroMessage, config, model, mcpService, messages, renderMessage]);
+    // Pending items will be rendered dynamically outside Static
+    const pendingItems = pendingHistory.map((item, index) =>
+      renderMessage(item, stableCount + index),
+    );
+
+    return {
+      staticItems,
+      pendingItems,
+    };
+  }, [
+    showIntroMessage,
+    config,
+    model,
+    mcpService,
+    filteredChatHistory,
+    renderMessage,
+  ]);
 
   return (
-    <Static
-      key={staticKey}
-      items={staticItems}
-      style={{
-        width: columns - 1,
-        textWrap: "wrap",
-      }}
-    >
-      {(item) => item}
-    </Static>
+    <Box flexDirection="column">
+      {/* Static content - items that won't change */}
+      <Static
+        key={staticKey}
+        items={staticItems}
+        style={{
+          width: columns - 1,
+          textWrap: "wrap",
+        }}
+      >
+        {(item) => item}
+      </Static>
+
+      {/* Pending area - dynamically rendered items that can update */}
+      <Box flexDirection="column">
+        {pendingItems.map((item, index) => (
+          <React.Fragment key={`pending-${index}`}>{item}</React.Fragment>
+        ))}
+      </Box>
+    </Box>
   );
 };

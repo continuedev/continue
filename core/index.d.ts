@@ -456,7 +456,6 @@ export type FileSymbolMap = Record<string, SymbolWithRange[]>;
 export interface PromptLog {
   modelTitle: string;
   modelProvider: string;
-  completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
 }
@@ -666,6 +665,7 @@ export interface LLMOptions {
   env?: Record<string, string | number | boolean>;
 
   sourceFile?: string;
+  isFromAutoDetect?: boolean;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -1070,11 +1070,6 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
-export type ToolPolicy =
-  | "allowedWithPermission"
-  | "allowedWithoutPermission"
-  | "disabled";
-
 export interface Tool {
   type: "function";
   function: {
@@ -1099,6 +1094,10 @@ export interface Tool {
     exampleArgs?: Array<[string, string | number]>;
   };
   defaultToolPolicy?: ToolPolicy;
+  evaluateToolCallPolicy?: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ) => ToolPolicy;
 }
 
 interface ToolChoice {
@@ -1112,6 +1111,8 @@ export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
   enableExperimentalTools: boolean;
   isSignedIn: boolean;
+  isRemote: boolean;
+  modelName: string | undefined;
 }
 
 export type GetTool = (params: ConfigDependentToolParams) => Tool;
@@ -1175,6 +1176,7 @@ export interface ModelDescription {
   configurationStatus?: LLMConfigurationStatuses;
 
   sourceFile?: string;
+  isFromAutoDetect?: boolean;
 }
 
 export interface JSONEmbedOptions {
@@ -1343,6 +1345,7 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   autoAcceptEditToolDiffs?: boolean;
+  continueAfterToolRejection?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1605,6 +1608,7 @@ export interface JSONModelDescription {
   aiGatewaySlug?: string;
   useLegacyCompletionsEndpoint?: boolean;
   deploymentId?: string;
+  isFromAutoDetect?: boolean;
 }
 
 // config.json

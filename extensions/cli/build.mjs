@@ -68,6 +68,10 @@ try {
         __dirname,
         "../../packages/llm-info/dist/index.js",
       ),
+      "@continuedev/terminal-security": resolve(
+        __dirname,
+        "../../packages/terminal-security/dist/index.js",
+      ),
     },
 
     // Add banner to create require for CommonJS packages

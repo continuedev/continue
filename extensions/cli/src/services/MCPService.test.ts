@@ -1,5 +1,5 @@
 import { AssistantConfig } from "@continuedev/sdk";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MCPService } from "./MCPService.js";
 
@@ -19,6 +19,14 @@ vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
 
 vi.mock("@modelcontextprotocol/sdk/client/stdio.js", () => ({
   StdioClientTransport: vi.fn(),
+}));
+
+vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
+  SSEClientTransport: vi.fn(),
+}));
+
+vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
+  StreamableHTTPClientTransport: vi.fn(),
 }));
 
 describe("MCPService", () => {
@@ -150,6 +158,58 @@ describe("MCPService", () => {
       await mcpService.initialize(mockAssistant);
       await mcpService.cleanup();
       await expect(mcpService.cleanup()).resolves.not.toThrow();
+    });
+  });
+
+  describe("transport types", () => {
+    it("should support SSE transport", async () => {
+      const sseAssistant: AssistantConfig = {
+        name: "sse-assistant",
+        version: "1.0.0",
+        mcpServers: [
+          {
+            name: "sse-server",
+            type: "sse",
+            url: "https://example.com/sse",
+          },
+        ],
+      } as AssistantConfig;
+
+      await expect(mcpService.initialize(sseAssistant)).resolves.not.toThrow();
+    });
+
+    it("should support streamable-http transport", async () => {
+      const httpAssistant: AssistantConfig = {
+        name: "http-assistant",
+        version: "1.0.0",
+        mcpServers: [
+          {
+            name: "http-server",
+            type: "streamable-http",
+            url: "https://example.com/http",
+          },
+        ],
+      } as AssistantConfig;
+
+      await expect(mcpService.initialize(httpAssistant)).resolves.not.toThrow();
+    });
+
+    it("should default to stdio transport when type is not specified", async () => {
+      const defaultAssistant: AssistantConfig = {
+        name: "default-assistant",
+        version: "1.0.0",
+        mcpServers: [
+          {
+            name: "default-server",
+            command: "npx",
+            args: ["-v"],
+          },
+        ],
+      } as AssistantConfig;
+
+      await expect(
+        mcpService.initialize(defaultAssistant),
+      ).resolves.not.toThrow();
     });
   });
 });

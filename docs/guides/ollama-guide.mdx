@@ -34,15 +34,15 @@ curl -fsSL https://ollama.ai/install.sh | sh
 After installation, start the Ollama service:
 
 ```bash
+# Check Ollama version - verify it's installed
+ollama --version
+
 # Start Ollama (runs in background)
 ollama serve
 
 # Verify it's running
 curl http://localhost:11434
 # Should return "Ollama is running"
-
-# Check Ollama version
-ollama --version
 ```
 
 ### Step 3: Download Models
@@ -86,8 +86,8 @@ There are multiple ways to configure Ollama models in Continue:
 
 The easiest way is to use [pre-configured model blocks](/reference#local-blocks) from the Continue Hub in your local configuration:
 
-```yaml title="~/.continue/assistants/My Local Assistant.yaml"
-name: My Local Assistant
+```yaml title="~/.continue/agents/My Local Agent.yaml"
+name: My Local Agent
 version: 0.0.1
 schema: v1
 models:
@@ -100,10 +100,13 @@ models:
   **Important**: Hub blocks only provide configuration - you still need to pull
   the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue
   to use `model: deepseek-r1:32b`, but the actual model must be installed:
-  ```bash # Check what the hub block expects (view on hub.continue.dev) # Then
-  pull that exact model tag locally ollama pull deepseek-r1:32b # Required for
-  ollama/deepseek-r1-32b hub block ``` If the model isn't installed, Ollama will
-  return: `404 model "deepseek-r1:32b" not found, try pulling it first`
+  ```bash
+  # Check what the hub block expects (view on hub.continue.dev)
+  # Then pull that exact model tag locally
+  ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
+  ```
+  If the model isn't installed, Ollama will return:
+  `404 model "deepseek-r1:32b" not found, try pulling it first`
 </Warning>
 
 ### Method 2: Using Autodetect
@@ -306,11 +309,11 @@ ollama pull deepseek-r1:32b
 #### Using Hub Blocks in Local Config
 
 **Problem**: Unclear how to use hub models locally
-**Solution**: Create a local assistant file:
+**Solution**: Create a local agent file:
 
 ```yaml
-# ~/.continue/assistants/Local.yaml
-name: Local Assistant
+# ~/.continue/agents/Local.yaml
+name: Local Agent
 version: 0.0.1
 schema: v1
 models:

@@ -138,7 +138,7 @@ export class Core {
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-      const sessionInfoPromise = messenger.request(
+      const initialSessionInfoPromise = messenger.request(
         "getControlPlaneSessionInfo",
         {
           silent: true,
@@ -148,9 +148,8 @@ export class Core {
 
       this.configHandler = new ConfigHandler(
         this.ide,
-        ideSettingsPromise,
         this.llmLogger,
-        sessionInfoPromise,
+        initialSessionInfoPromise,
       );
 
       this.docsService = DocsService.createSingleton(
@@ -668,6 +667,8 @@ export class Core {
       return queue.dequeueProcessed() || null;
     });
 
+    // NOTE: This is not used unless prefetch is used.
+    // At this point this is not used because I opted to rely on the model to return multiple diffs than to use prefetching.
     on("nextEdit/queue/processOne", async (msg) => {
       console.log("nextEdit/queue/processOne");
       const { ctx, recentlyVisitedRanges, recentlyEditedRanges } = msg.data;
@@ -966,6 +967,10 @@ export class Core {
     on("docs/getDetails", async (msg) => {
       return await this.docsService.getDetails(msg.data.startUrl);
     });
+    on("docs/getIndexedPages", async (msg) => {
+      const pages = await this.docsService.getIndexedPages(msg.data.startUrl);
+      return Array.from(pages);
+    });
 
     on("didChangeSelectedProfile", async (msg) => {
       if (msg.data.id) {
@@ -1001,6 +1006,37 @@ export class Core {
 
     on("tools/call", async ({ data: { toolCall } }) =>
       this.handleToolCall(toolCall),
+    );
+
+    on(
+      "tools/evaluatePolicy",
+      async ({ data: { toolName, basePolicy, args } }) => {
+        const { config } = await this.configHandler.loadConfig();
+        if (!config) {
+          throw new Error("Config not loaded");
+        }
+
+        const tool = config.tools.find((t) => t.function.name === toolName);
+        if (!tool) {
+          // Tool not found, return base policy
+          return { policy: basePolicy };
+        }
+
+        // Extract display value for specific tools
+        let displayValue: string | undefined;
+        if (toolName === "runTerminalCommand" && args.command) {
+          displayValue = args.command as string;
+        }
+
+        // If tool has evaluateToolCallPolicy function, use it
+        if (tool.evaluateToolCallPolicy) {
+          const evaluatedPolicy = tool.evaluateToolCallPolicy(basePolicy, args);
+          return { policy: evaluatedPolicy, displayValue };
+        }
+
+        // Otherwise return base policy unchanged
+        return { policy: basePolicy, displayValue };
+      },
     );
 
     on("isItemTooBig", async ({ data: { item } }) => {
