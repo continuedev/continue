@@ -1,4 +1,4 @@
-import { Cog6ToothIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { BuildingOfficeIcon, UserIcon } from "@heroicons/react/24/solid";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext } from "react";
@@ -70,13 +70,15 @@ export function OrganizationsSection() {
       <Card>
         {organizations.map((organization, index) => (
           <div key={organization.id}>
-            <div className="flex items-center justify-between py-1">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
                   {getOrgIcon(organization)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium">{organization.name}</h3>
+                  <h3 className="my-2 text-sm font-medium">
+                    {organization.name}
+                  </h3>
                 </div>
               </div>
               <Button

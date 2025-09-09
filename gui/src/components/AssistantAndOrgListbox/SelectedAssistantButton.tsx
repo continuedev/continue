@@ -26,13 +26,13 @@ export function SelectedAssistantButton({
   return (
     <ListboxButton
       data-testid="assistant-select-button"
-      className={`text-description border-none bg-transparent !py-1.5 hover:brightness-110 overflow-hidden ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
+      className={`text-description overflow-hidden border-none bg-transparent !py-1.5 hover:brightness-110 ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
       style={buttonStyle}
     >
       <div
         className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1.5"}`}
       >
-        <div className="flex flex-row items-center gap-2 min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
           {selectedProfile === null ? (
             "Create your first agent"
           ) : configLoading ? (
@@ -49,7 +49,7 @@ export function SelectedAssistantButton({
             <>
               <AssistantIcon assistant={selectedProfile} size={iconSize} />
               <span
-                className={`select-none truncate ${isSidebar && "hidden md:block"}`}
+                className={`select-none truncate text-xs ${isSidebar && "hidden md:block"}`}
               >
                 {selectedProfile.title}
               </span>

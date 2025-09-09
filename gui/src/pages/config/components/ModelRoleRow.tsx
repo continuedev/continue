@@ -36,7 +36,7 @@ export function ModelRoleRow({
           <span className="text-base font-medium">{displayName}</span>
           {shortcut && shortcut}
         </div>
-        <p className="text-description-muted mt-1 text-xs">{description}</p>
+        <p className="text-description mt-1 text-xs">{description}</p>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1">
@@ -56,7 +56,7 @@ export function ModelRoleRow({
               variant="ghost"
               size="sm"
               onClick={() => onConfigure(selectedModel)}
-              className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
+              className="text-description hover:enabled:text-foreground my-0 h-6 w-6 p-0"
             >
               <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
             </Button>

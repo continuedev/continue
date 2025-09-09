@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "../../../components/ui/Button";
+import { cn } from "../../../util/cn";
 
 export interface ConfigRowProps {
   title: string;
@@ -20,7 +21,8 @@ export function ConfigRow({
   children,
   className = "",
 }: ConfigRowProps) {
-  const baseClasses = `flex items-start justify-between rounded-md transition-colors px-4 py-3 ${className}`;
+  const baseClasses =
+    "flex items-start justify-between rounded-md transition-colors px-4 py-3";
   const interactiveClasses = onClick
     ? "hover:bg-list-hover cursor-pointer"
     : "";
@@ -46,7 +48,13 @@ export function ConfigRow({
     return (
       <Button
         variant="ghost"
-        className={`${baseClasses} ${interactiveClasses} ${disabledClasses} !my-0 text-left`.trim()}
+        className={cn(
+          baseClasses,
+          interactiveClasses,
+          disabledClasses,
+          "!my-0 text-left",
+          className,
+        )}
         onClick={handleClick}
         disabled={disabled}
         data-config-row
@@ -64,7 +72,10 @@ export function ConfigRow({
   }
 
   return (
-    <div className={`${baseClasses} ${disabledClasses}`.trim()} data-config-row>
+    <div
+      className={cn(baseClasses, disabledClasses, className)}
+      data-config-row
+    >
       <div className="flex flex-col">
         <span className="text-sm font-medium">{title}</span>
         <p className="mt-0.5 text-xs text-gray-500">{description}</p>

@@ -1,4 +1,5 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { ReactNode } from "react";
 import { ToolTip } from "./gui/Tooltip";
 
 const DEFAULT_SIZE = "5";
@@ -17,7 +18,7 @@ const InfoHover = ({
   id,
 }: {
   id: string;
-  msg: string;
+  msg: ReactNode;
   size?: string;
 }) => {
   const sizeClasses =

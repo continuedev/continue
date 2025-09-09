@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import AddDocsDialog from "../../../components/dialogs/AddDocsDialog";
-import { Card } from "../../../components/ui";
+import { Card, Divider } from "../../../components/ui";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
 import DocsIndexingStatuses from "./docs/DocsSection";
@@ -23,7 +23,7 @@ export function DocsSection() {
       />
 
       <Card>
-        <div className="py-6">
+        <div className="py-2">
           <DocsIndexingStatuses />
         </div>
       </Card>

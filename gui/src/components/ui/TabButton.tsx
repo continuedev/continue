@@ -1,20 +1,13 @@
 import { ToolTip } from "../gui/Tooltip";
 
 interface TabButtonProps {
-  id: string;
   label: string;
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
 }
 
-export function TabButton({
-  id,
-  label,
-  icon,
-  isActive,
-  onClick,
-}: TabButtonProps) {
+export function TabButton({ label, icon, isActive, onClick }: TabButtonProps) {
   return (
     <ToolTip content={label} place="right" className="text-xs md:!hidden">
       <div

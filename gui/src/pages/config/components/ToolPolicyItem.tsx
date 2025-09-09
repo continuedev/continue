@@ -134,7 +134,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
             >
               <div className="relative">
                 <ListboxButton
-                  className={`border-description-muted h-7 w-full justify-between px-3 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+                  className={`border-command-border h-7 w-full justify-between px-3 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
                   data-testid={`tool-policy-item-${props.tool.function.name}`}
                   data-tooltip-id={disabled ? disabledTooltipId : undefined}
                 >

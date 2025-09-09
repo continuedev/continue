@@ -31,14 +31,14 @@ export function AgentsSection() {
         {profiles && profiles.length > 0 ? (
           profiles.map((profile, index) => (
             <div key={profile.id}>
-              <div className="flex items-center justify-between py-1">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-3">
                   <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center">
                     <AssistantIcon assistant={profile} />
                   </div>
                   <div className="flex-1">
                     <h3
-                      className={`text-sm font-medium ${profile.errors && profile.errors.length > 0 ? "text-error" : ""}`}
+                      className={`my-2 text-sm font-medium ${profile.errors && profile.errors.length > 0 ? "text-error" : ""}`}
                     >
                       {profile.title}
                     </h3>

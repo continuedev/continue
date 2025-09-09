@@ -157,7 +157,7 @@ function MCPServerCard({ server, serverFromYaml }: MCPServerStatusProps) {
         </div>
       </div>
 
-      {isExpanded && (
+      {isExpanded && server.status === "connected" && (
         <div className="mt-3 pl-7">
           {/* Tools, Prompts, Resources with counts */}
           <div className="mb-3 flex flex-row items-center gap-6">

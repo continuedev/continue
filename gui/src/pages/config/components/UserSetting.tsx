@@ -1,18 +1,17 @@
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import React from "react";
-import NumberInput from "../../../components/gui/NumberInput";
 import ToggleSwitch from "../../../components/gui/Switch";
-import { Input } from "../../../components";
+import { ToolTip } from "../../../components/gui/Tooltip";
 import {
   Listbox,
   ListboxButton,
   ListboxOption,
   ListboxOptions,
-} from "../../../components/ui/Listbox";
-import {
-  ChevronDownIcon,
-  CheckIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+} from "../../../components/ui";
 
 interface BaseUserSettingProps {
   title: string;
@@ -46,6 +45,7 @@ interface InputUserSettingProps extends BaseUserSettingProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  placeholder?: string;
   onSubmit?: () => void;
   onCancel?: () => void;
   isDirty?: boolean;
@@ -75,13 +75,17 @@ export function UserSetting(props: UserSettingProps) {
 
       case "number":
         return (
-          <NumberInput
-            value={props.value}
-            onChange={props.onChange}
-            min={props.min ?? 0}
-            max={props.max ?? 100}
-            disabled={disabled}
-          />
+          <div className="border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus flex w-20 items-center rounded-md border border-solid">
+            <input
+              type="number"
+              value={props.value}
+              onChange={(e) => props.onChange(Number(e.target.value))}
+              min={props.min ?? 0}
+              max={props.max ?? 100}
+              disabled={disabled}
+              className="text-vsc-foreground flex-1 border-none bg-transparent px-2 py-1 text-right outline-none focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
         );
 
       case "select":
@@ -91,12 +95,12 @@ export function UserSetting(props: UserSettingProps) {
             onChange={props.onChange}
             disabled={disabled}
           >
-            <ListboxButton className="justify-between px-3 py-2">
+            <ListboxButton className="border-command-border w-20 !w-20 !flex-none justify-between px-2 py-1 !rounded-md">
               {props.options.find((opt) => opt.value === props.value)?.label ||
                 props.value}
-              <ChevronDownIcon className="h-4 w-4" />
+              <ChevronDownIcon className="h-3 w-3" />
             </ListboxButton>
-            <ListboxOptions className="min-w-0">
+            <ListboxOptions className="!w-20 !min-w-0">
               {props.options.map((option) => (
                 <ListboxOption key={option.value} value={option.value}>
                   {option.label}
@@ -116,45 +120,54 @@ export function UserSetting(props: UserSettingProps) {
               }}
             >
               <div className="flex items-center gap-2">
-                <Input
-                  value={props.value}
-                  className={`max-w-[200px] ${
+                <div
+                  className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid ${
                     props.isDirty
                       ? !props.isValid
-                        ? "outline-red-500"
-                        : "outline-green-500"
+                        ? "outline outline-red-500"
+                        : "outline outline-green-500"
                       : ""
-                  }`}
-                  onChange={(e) => props.onChange(e.target.value)}
-                  disabled={disabled}
-                />
-                <div className="flex h-full flex-col">
-                  {props.isDirty ? (
-                    <>
+                  } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+                >
+                  <input
+                    type="text"
+                    value={props.value}
+                    onChange={(e) => props.onChange(e.target.value)}
+                    placeholder={props.placeholder}
+                    disabled={disabled}
+                    className="text-vsc-foreground flex-1 border-none bg-inherit px-1.5 py-1 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+                  />
+                </div>
+                {props.isDirty && (
+                  <div className="flex flex-row items-center gap-1">
+                    <ToolTip content="Save">
                       <div onClick={props.onSubmit} className="cursor-pointer">
                         <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
                       </div>
+                    </ToolTip>
+                    <ToolTip content="Cancel">
                       <div onClick={props.onCancel} className="cursor-pointer">
                         <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
                       </div>
-                    </>
-                  ) : (
-                    <div>
-                      <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                    </div>
-                  )}
-                </div>
+                    </ToolTip>
+                  </div>
+                )}
               </div>
             </form>
           );
         }
         return (
-          <Input
-            value={props.value}
-            onChange={(e) => props.onChange(e.target.value)}
-            className={props.className}
-            disabled={disabled}
-          />
+          <div
+            className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+          >
+            <input
+              type="text"
+              value={props.value}
+              onChange={(e) => props.onChange(e.target.value)}
+              disabled={disabled}
+              className="text-vsc-foreground flex-1 border-none bg-inherit px-1.5 py-1 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+            />
+          </div>
         );
 
       default:
@@ -162,9 +175,24 @@ export function UserSetting(props: UserSettingProps) {
     }
   };
 
+  // Use vertical layout for input types, horizontal for others
+  const isInputType = props.type === "input";
+
+  if (isInputType) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">{title}</span>
+          <div className="mt-0.5 text-xs text-gray-500">{description}</div>
+        </div>
+        {renderControl()}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-start justify-between">
-      <div className="flex flex-col">
+    <div className="flex items-start justify-start gap-4">
+      <div className="flex flex-col flex-1">
         <span className="text-sm font-medium">{title}</span>
         <div className="mt-0.5 text-xs text-gray-500">{description}</div>
       </div>

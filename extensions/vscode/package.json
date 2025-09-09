@@ -211,13 +211,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.toggleFullScreen",
-        "category": "Continue",
-        "title": "Open in new window",
-        "icon": "$(link-external)",
-        "group": "Continue"
-      },
-      {
         "command": "continue.openConfigPage",
         "category": "Continue",
         "title": "Open Settings",
@@ -445,12 +438,6 @@
         "key": "ctrl+shift+r"
       },
       {
-        "command": "continue.toggleFullScreen",
-        "mac": "cmd+k cmd+m",
-        "key": "ctrl+k ctrl+m",
-        "when": "!terminalFocus"
-      },
-      {
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
@@ -512,9 +499,6 @@
           "command": "continue.debugTerminal"
         },
         {
-          "command": "continue.toggleFullScreen"
-        },
-        {
           "command": "continue.newSession"
         },
         {
@@ -564,11 +548,6 @@
         {
           "command": "continue.viewHistory",
           "group": "navigation@2",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@3",
           "when": "view == continue.continueGUIView"
         },
         {

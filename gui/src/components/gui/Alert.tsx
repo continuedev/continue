@@ -5,6 +5,7 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/16/solid";
 import { cn } from "../../util/cn";
+import { varWithFallback } from "../../styles/theme";
 
 type AlertTypes = "info" | "success" | "warning" | "error";
 type AlertSize = "sm" | "lg";
@@ -18,7 +19,6 @@ type AlertConfig = {
   [key in AlertTypes]: {
     Icon: any;
     iconColor: string;
-    background: string;
     border: string;
     text: string;
   };
@@ -27,28 +27,24 @@ type AlertConfig = {
 const ALERT_CONFIGS: AlertConfig = {
   info: {
     Icon: InformationCircleIcon,
-    background: "bg-blue-600/20",
-    border: "border-blue-500",
-    iconColor: "text-blue-500",
+    border: "border-info",
+    iconColor: "text-info",
     text: "text-foreground",
   },
   success: {
     Icon: CheckCircleIcon,
-    background: "bg-green-600/20",
     border: "border-success",
     iconColor: "text-success",
     text: "text-foreground",
   },
   warning: {
     Icon: ExclamationTriangleIcon,
-    background: "bg-yellow-600/20",
     border: "border-warning",
     iconColor: "text-warning",
     text: "text-foreground",
   },
   error: {
     Icon: ExclamationCircleIcon,
-    background: "bg-red-600/20",
     border: "border-error",
     iconColor: "text-error",
     text: "text-foreground",
@@ -77,14 +73,24 @@ function Alert({
   children,
   ...props
 }: AlertProps) {
-  const { Icon, background, border, text, iconColor } = ALERT_CONFIGS[type];
+  const { Icon, border, text, iconColor } = ALERT_CONFIGS[type];
+  
+  const colorMap = {
+    info: varWithFallback("info"),
+    success: varWithFallback("success"),
+    warning: varWithFallback("warning"),
+    error: varWithFallback("error"),
+  };
 
   return (
     <div
       className={cn(
-        `flex flex-row items-start ${background} border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
+        `flex flex-row items-start border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
         className,
       )}
+      style={{
+        backgroundColor: `color-mix(in srgb, ${colorMap[type]} 20%, transparent)`,
+      }}
       {...props}
     >
       <Icon className={`flex-shrink-0 ${iconColor} ${iconSizes[size]}`} />
