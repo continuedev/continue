@@ -346,9 +346,13 @@ chmod +x create-github-issues.sh
 
 <Tip>
   **Smart Label Assignment**: The script automatically assigns labels based on
-  issue priority: - **High Priority** → `bug`, `high-priority`,
-  `user-experience` - **Medium Priority** → `enhancement`, `medium-priority`,
-  `user-experience` - **Low Priority** → `low-priority`, `user-experience`
+  issue priority: 
+  - **High Priority** → `bug`, `high-priority`,
+  `user-experience` 
+  - **Medium Priority** → `enhancement`, `medium-priority`,
+  `user-experience`
+   - **Low Priority** → `low-priority`, `user-experience`
+
 </Tip>
 
 ## Step 4: Complete Automated Workflow
@@ -385,8 +389,6 @@ chmod +x daily-analysis.sh
     Perfect for teams already using GitHub workflows:
 
     Create `.github/workflows/daily-analysis.yml`:
-
-Create a file at `.github/workflows/daily-analysis.yml`:
 
 ```yaml
 name: Daily Session Analysis
