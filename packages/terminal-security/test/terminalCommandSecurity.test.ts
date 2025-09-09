@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { evaluateTerminalCommandSecurity } from "../security/terminalCommandSecurity";
-import { ToolPolicy } from "../..";
+import { evaluateTerminalCommandSecurity, ToolPolicy } from "../src/index.js";
 
 describe("evaluateTerminalCommandSecurity", () => {
   describe("Critical Risk - Always Disabled", () => {
@@ -728,6 +727,22 @@ describe("evaluateTerminalCommandSecurity", () => {
         "echo 'Hello World'",
       );
       expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should allow simple echo with quoted string without permission", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        'echo "hello"',
+      );
+      expect(result).toBe("allowedWithoutPermission");
+    });
+
+    it("should allow echo without quotes without permission", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "echo hello",
+      );
+      expect(result).toBe("allowedWithoutPermission");
     });
 
     it("should allow echo with dangerous-looking but quoted strings", () => {

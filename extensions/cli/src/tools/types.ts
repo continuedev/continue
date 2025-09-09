@@ -1,3 +1,5 @@
+import type { ToolPolicy } from "@continuedev/terminal-security";
+
 export type ToolParameters = Record<
   string,
   {
@@ -31,6 +33,10 @@ export interface Tool {
   run: (args: any) => Promise<string>;
   readonly?: boolean; // Indicates if the tool is readonly
   isBuiltIn: boolean;
+  evaluateToolCallPolicy?: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ) => ToolPolicy;
 }
 
 export interface ToolCall {

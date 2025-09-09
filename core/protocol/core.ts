@@ -4,6 +4,7 @@ import {
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
+import { ToolPolicy } from "@continuedev/terminal-security";
 
 import {
   AutocompleteInput,
@@ -39,7 +40,6 @@ import {
   SlashCommandDescWithSource,
   StreamDiffLinesPayload,
   ToolCall,
-  ToolPolicy,
 } from "../";
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../autocomplete/types";
