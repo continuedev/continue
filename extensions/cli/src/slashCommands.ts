@@ -28,6 +28,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  ${chalk.cyan("Enter")}      Submit message`,
     `  ${chalk.cyan("Shift+Enter")} New line`,
     `  ${chalk.cyan("\\")}          Line continuation (at end of line)`,
+    `  ${chalk.cyan("!")}          Shell mode - run shell commands`,
     "",
     chalk.white("Controls:"),
     `  ${chalk.cyan("Ctrl+C")}     Clear input`,
@@ -39,9 +40,11 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     chalk.white("Special Characters:"),
     `  ${chalk.cyan("@")}          Search and attach files for context`,
     `  ${chalk.cyan("/")}          Access slash commands`,
+    `  ${chalk.cyan("!")}          Execute bash commands directly`,
     "",
     chalk.white("Available Commands:"),
     `  Type ${chalk.cyan("/")} to see available slash commands`,
+    `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
   posthogService.capture("useSlashCommand", { name: "help" });
   return { output: helpMessage };
