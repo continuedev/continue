@@ -1,7 +1,9 @@
 import { Core } from "core/core";
 import { DataLogger } from "core/data/log";
+
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { editOutcomeTracker } from "../extension/EditOutcomeTracker";
+import { createPrettyPatch, normalizeContent } from "../util/diffUtils";
 import { VsCodeIde } from "../VsCodeIde";
 import { VerticalDiffManager } from "./vertical/manager";
 
@@ -42,7 +44,8 @@ export async function processDiff(
   }
 
   if (streamId) {
-    const fileContent = await ide.readFile(newOrCurrentUri);
+    // Capture file content before save to detect autoformatting
+    const preSaveContent = await ide.readFile(newOrCurrentUri);
 
     // Record the edit outcome before updating the apply state
     await editOutcomeTracker.recordEditOutcome(
@@ -51,16 +54,37 @@ export async function processDiff(
       DataLogger.getInstance(),
     );
 
+    // Save the file
+    await ide.saveFile(newOrCurrentUri);
+
+    // Capture file content after save to detect autoformatting
+    const postSaveContent = await ide.readFile(newOrCurrentUri);
+
+    // Detect autoformatting by comparing normalized content
+    let autoFormattingDiff: string | undefined;
+    const normalizedPreSave = normalizeContent(preSaveContent);
+    const normalizedPostSave = normalizeContent(postSaveContent);
+
+    if (normalizedPreSave !== normalizedPostSave) {
+      // Auto-formatting was applied by the editor
+      autoFormattingDiff = createPrettyPatch(
+        newOrCurrentUri,
+        preSaveContent,
+        postSaveContent,
+      );
+    }
+
     await sidebar.webviewProtocol.request("updateApplyState", {
-      fileContent,
+      fileContent: postSaveContent, // Use post-save content
       filepath: newOrCurrentUri,
       streamId,
       status: "closed",
       numDiffs: 0,
       toolCallId,
+      autoFormattingDiff, // Include autoformatting diff
     });
+  } else {
+    // Save the file even if no streamId
+    await ide.saveFile(newOrCurrentUri);
   }
-
-  // Save the file
-  await ide.saveFile(newOrCurrentUri);
 }

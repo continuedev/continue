@@ -1382,6 +1382,7 @@ export interface ApplyState {
   fileContent?: string;
   originalFileContent?: string;
   toolCallId?: string;
+  autoFormattingDiff?: string;
 }
 
 export interface StreamDiffLinesPayload {
