@@ -572,12 +572,12 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     apiKeyUrl: "https://console.x.ai/",
   },
   lemonade: {
-    title: "Lemonade SDK",
+    title: "Lemonade",
     provider: "lemonade",
     description:
       "High-performance local LLM inference with AMD hardware optimization",
     longDescription:
-      "Lemonade SDK provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. To get started:\n1. Install Lemonade SDK: `pip install lemonade-sdk`\n2. Start the server: `lemonade-server run [model-name]`\n3. The server will be available at http://localhost:8000/api/v1\n4. Once the server is running, you can begin using Continue with your local models.",
+      "Lemonade provides optimized local LLM inference with support for AMD NPU, GPU, and CPU acceleration. To get started:\n1. Install Lemonade: `pip install lemonade-sdk`\n2. Start the server: `lemonade-server run [model-name]`\n3. The server will be available at http://localhost:8000/api/v1\n4. Once the server is running, you can begin using Continue with your local models.",
     icon: "lemonade.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     params: {
@@ -588,7 +588,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         ...models.AUTODETECT,
         params: {
           ...models.AUTODETECT.params,
-          title: "Lemonade SDK",
+          title: "Lemonade",
         },
       },
       ...openSourceModels,
