@@ -10,7 +10,6 @@ import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import { CodeBlock, PromptBlock } from "./extensions";
 import { insertCurrentFileContextMention } from "./utils/insertCurrentFileContextMention";
-import { Mention } from "@tiptap/extension-mention";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -206,15 +205,18 @@ export function useMainEditorWebviewListeners({
       if (!editor) return;
       let chain = editor.chain();
 
-      for (let payload of data.data) {
-        const node = editor.schema.nodes[Mention.name].create({
-          name: payload.name,
-          id: payload.fullPath,
-          label: payload.name,
-          itemType: payload.type,
-        });
-
-        chain.insertContent([node.toJSON(), { type: "text", text: " " }]);
+      for (let mention of data.data) {
+        chain
+          .insertContent({
+            type: "mention",
+            attrs: {
+              id: mention.fullPath,
+              query: mention.fullPath,
+              itemType: mention.type,
+              label: mention.name,
+            },
+          })
+          .insertContent(" ");
       }
 
       chain.run();
