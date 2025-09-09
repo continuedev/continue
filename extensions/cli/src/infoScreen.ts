@@ -33,12 +33,12 @@ export async function handleInfoSlashCommand() {
     const config = loadAuthConfig();
     if (config && isAuthenticatedConfig(config)) {
       const email = config.userEmail || config.userId;
-      const org = "(no org)"; // Organization info not available in AuthenticatedConfig
+      const orgId = config.organizationId;
       infoLines.push(
         "",
         chalk.white("Authentication:"),
         `  Email: ${chalk.green(email)}`,
-        `  Organization: ${chalk.cyan(org)}`,
+        `  Org ID: ${chalk.cyan(orgId)}`,
       );
     } else {
       infoLines.push(
