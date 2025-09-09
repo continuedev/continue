@@ -10,6 +10,7 @@ import { getAllSlashCommands } from "./commands/commands.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, getSessionFilePath } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
+import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 import { getVersion } from "./version.js";
 
@@ -284,6 +285,9 @@ export async function handleSlashCommands(
   }
 
   const [command, ...args] = input.slice(1).split(" ");
+
+  telemetryService.recordSlashCommand(command);
+  posthogService.capture("useSlashCommand", { name: command });
 
   const handler = commandHandlers[command];
   if (handler) {

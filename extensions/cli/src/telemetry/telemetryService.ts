@@ -54,6 +54,7 @@ class TelemetryService {
   private mcpConnectionsGauge: any = null;
   private startupTimeHistogram: any = null;
   private responseTimeHistogram: any = null;
+  private slashCommandCounter: any = null;
 
   constructor() {
     this.config = this.loadConfig();
@@ -283,6 +284,14 @@ class TelemetryService {
       {
         description: "LLM response time metrics",
         unit: "ms",
+      },
+    );
+
+    this.slashCommandCounter = this.meter.createCounter(
+      "continue_cli_slash_command_usage",
+      {
+        description: "Count of slash commands used",
+        unit: "count",
       },
     );
   }
@@ -569,6 +578,16 @@ class TelemetryService {
 
   public getSessionId(): string {
     return this.config.sessionId;
+  }
+
+  public recordSlashCommand(commandName: string) {
+    if (!this.isEnabled()) return;
+
+    console.log("ADD: ", commandName);
+    this.slashCommandCounter.add(
+      1,
+      this.getStandardAttributes({ command: commandName }),
+    );
   }
 
   /**
