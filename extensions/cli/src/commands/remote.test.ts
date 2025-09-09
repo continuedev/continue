@@ -78,7 +78,7 @@ describe("remote command", () => {
     await remote("test prompt", { idempotencyKey: testIdempotencyKey });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -96,7 +96,7 @@ describe("remote command", () => {
     await remote("test prompt", {});
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -190,7 +190,7 @@ describe("remote command", () => {
     await remote("test prompt", { branch: testBranch });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -206,7 +206,7 @@ describe("remote command", () => {
     await remote("test prompt", {});
 
     expect(mockFetch).toHaveBeenCalledWith(
-      new URL("agents/devboxes", mockEnv.env.apiBase),
+      new URL("agents", mockEnv.env.apiBase),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -267,7 +267,7 @@ describe("remote command", () => {
 
       // Should make POST request to create environment
       expect(mockFetch).toHaveBeenCalledWith(
-        new URL("agents/devboxes", mockEnv.env.apiBase),
+        new URL("agents", mockEnv.env.apiBase),
         expect.objectContaining({
           method: "POST",
           headers: {
