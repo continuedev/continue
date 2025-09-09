@@ -111,9 +111,7 @@ interface ServiceWithDependencies {
 /**
  * Helper to check if a service has dependencies
  */
-function hasDependencies(
-  service: any,
-): service is ServiceWithDependencies {
+function hasDependencies(service: any): service is ServiceWithDependencies {
   return !!service && typeof service.getDependencies === "function";
 }
 
