@@ -87,7 +87,7 @@ type MockMessengerType = {
 
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
-describe.skip("CodebaseIndexer", () => {
+describe("CodebaseIndexer", () => {
   // Replace mockProgressReporter with mockMessenger
   const mockMessenger: MockMessengerType = {
     send: jest.fn(),
@@ -677,7 +677,7 @@ describe.skip("CodebaseIndexer", () => {
       });
     });
 
-    describe("getIndexesToBuild", () => {
+    describe.skip("getIndexesToBuild", () => {
       let indexer: CodebaseIndexer;
       let mockConfig: any;
       let mockEmbeddingsModel: any;
@@ -770,7 +770,7 @@ describe.skip("CodebaseIndexer", () => {
     });
   });
 
-  describe("wasAnyOneIndexAdded", () => {
+  describe.skip("wasAnyOneIndexAdded", () => {
     let testIndexer: TestCodebaseIndexer;
     let mockGetIndexesToBuild: jest.MockedFunction<any>;
 
