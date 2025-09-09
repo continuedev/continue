@@ -1,6 +1,6 @@
 import { render } from "ink-testing-library";
 import React from "react";
-import { vi, expect, describe, it, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserInput } from "../UserInput.js";
 
@@ -32,7 +32,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       // Initial render - no interruption message
       let frame = lastFrame();
       expect(frame).toBeDefined();
-      expect(frame).not.toContain("⚠ Interrupted by user");
+      expect(frame).not.toContain("Interrupted by user");
       expect(frame).not.toContain("Press enter to continue");
 
       // Re-render with wasInterrupted: true
@@ -49,7 +49,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       // Should show interruption message
       frame = lastFrame();
       expect(frame).toBeDefined();
-      expect(frame).toContain("⚠ Interrupted by user");
+      expect(frame).toContain("Interrupted by user");
       expect(frame).toContain("Press enter to continue");
     } finally {
       unmount();
@@ -74,7 +74,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       // Initial render - should show interruption message
       let frame = lastFrame();
       expect(frame).toBeDefined();
-      expect(frame).toContain("⚠ Interrupted by user");
+      expect(frame).toContain("Interrupted by user");
       expect(frame).toContain("Press enter to continue");
 
       // Re-render with wasInterrupted: false
@@ -91,7 +91,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       // Should not show interruption message
       frame = lastFrame();
       expect(frame).toBeDefined();
-      expect(frame).not.toContain("⚠ Interrupted by user");
+      expect(frame).not.toContain("Interrupted by user");
       expect(frame).not.toContain("Press enter to continue");
     } finally {
       unmount();
