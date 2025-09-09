@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Get workflow run details
         id: workflow-details
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const workflowRun = context.payload.workflow_run;
@@ -52,7 +52,7 @@ jobs:
       - name: Get job logs for failed tests
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
         id: get-logs
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const workflowRunId = ${{ github.event.workflow_run.id }};
@@ -89,7 +89,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
