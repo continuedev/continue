@@ -416,7 +416,11 @@ jobs:
         run: ./daily-analysis.sh
 ```
 
-**Required GitHub Secrets:** - `POSTHOG_API_KEY`: Your PostHog Personal API Key - `POSTHOG_PROJECT_ID`: Your PostHog Project ID - `GH_PAT`: Your GitHub Personal Access Token
+**Required GitHub Secrets:**
+
+    - `POSTHOG_API_KEY`: Your PostHog Personal API Key
+    - `POSTHOG_PROJECT_ID`: Your PostHog Project ID
+    - `GH_PAT`: Your GitHub Personal Access Token
 
     Add these in: Repository Settings → Secrets and variables → Actions
 
@@ -425,33 +429,34 @@ jobs:
   <Tab title="Cron Job (Server)">
     For running on your own server or VPS:
 
-    ```bash
-    # Add to crontab (run 'crontab -e')
-    0 6 * * * cd /path/to/your/project && ./daily-analysis.sh >> ~/logs/analysis.log 2>&1
-    ```
+      ```bash
+      # Add to crontab (run 'crontab -e')
+      0 6 * * * cd /path/to/your/project && ./daily-analysis.sh >> ~/logs/analysis.log 2>&1
+      ```
 
-    **Benefits:**
-    - Full control over execution environment
-    - No GitHub Actions usage limits
-    - Can run more frequently if needed
+      **Benefits:**
+      - Full control over execution environment
+      - No GitHub Actions usage limits
+      - Can run more frequently if needed
 
-  </Tab>
-  
+    </Tab>
+
   <Tab title="Local Development">
     For testing and development:
 
-    ```bash
-    # Run manually
-    ./daily-analysis.sh
-
-    # Or set up a simple loop for testing
-    while true; do
+      ```bash
+      # Run manually
       ./daily-analysis.sh
-      sleep 3600  # Run every hour
-    done
-    ```
 
-  </Tab>
+      # Or set up a simple loop for testing
+      while true; do
+        ./daily-analysis.sh
+        sleep 3600  # Run every hour
+      done
+      ```
+
+    </Tab>
+
 </Tabs>
 
 ## Step 6: Testing Your Workflow
@@ -484,10 +489,12 @@ jobs:
 </Steps>
 
 <Check>
-  **Success Indicators:** - PostHog API returns session data (not empty) -
-  Continue CLI generates analysis with identified issues - GitHub issues are
-  created with proper labels and formatting - No error messages in the console
-  output
+  **Success Indicators:** 
+  - PostHog API returns session data (not empty) 
+  - Continue CLI generates analysis with identified issues 
+  - GitHub issues are created with proper labels and formatting 
+  - No error messages in the console output
+
 </Check>
 
 ## What You've Built
@@ -500,7 +507,7 @@ After completing this guide, you have a complete **Continuous AI system** that:
 ✅ **Runs autonomously** - Operates daily without manual intervention  
 ✅ **Scales with your team** - Handles growing amounts of session data automatically
 
-<Card title="This is True Continuous AI" icon="rocket">
+<Card title="Continuous AI" icon="rocket">
   Your system now operates at **Level 2 Continuous AI** - AI handles routine
   analysis tasks with human oversight through GitHub issue review and
   prioritization.
@@ -509,10 +516,16 @@ After completing this guide, you have a complete **Continuous AI system** that:
 ## Security Best Practices
 
 <Warning>
-  **Protect Your API Keys:** - Never commit `.env` files or secrets to version
-  control - Use GitHub Secrets for automation workflows - Limit token scopes to
-  minimum required permissions - Rotate API keys regularly (every 90 days
-  recommended) - Monitor token usage for unusual activity
+  **Protect Your API Keys:** 
+  - Never commit `.env` files or secrets to version
+  control 
+  - Use GitHub Secrets for automation workflows 
+  - Limit token scopes to
+  minimum required permissions 
+  - Rotate API keys regularly (every 90 days
+  recommended) 
+  - Monitor token usage for unusual activity
+
 </Warning>
 
 ## Advanced Extensions
