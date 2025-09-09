@@ -16,6 +16,10 @@ export interface ValidationOptions {
   auto?: boolean;
   config?: string;
 
+  // Session flags
+  resume?: boolean;
+  fork?: string;
+
   // Permission flags
   allow?: string[];
   ask?: string[];
@@ -102,6 +106,29 @@ function validateModeFlags(options: ValidationOptions): ValidationError[] {
 }
 
 /**
+ * Validate session flags
+ */
+function validateSessionFlags(options: ValidationOptions): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  if (options.resume && options.fork) {
+    errors.push({
+      code: "CONFLICTING_SESSION_FLAGS",
+      message: "Error: Cannot use both --resume and --fork flags together",
+    });
+  }
+
+  if (options.fork !== undefined && (!options.fork || !options.fork.trim())) {
+    errors.push({
+      code: "FORK_REQUIRES_SESSION_ID",
+      message: "Error: --fork requires a session ID (e.g., --fork abc123)",
+    });
+  }
+
+  return errors;
+}
+
+/**
  * Validate config path exists (basic check)
  */
 function validateConfigPath(options: ValidationOptions): ValidationError[] {
@@ -164,6 +191,7 @@ export function validateFlags(options: ValidationOptions): ValidationResult {
     validateSilentFlag,
     validateFormatValue,
     validateModeFlags,
+    validateSessionFlags,
     validateConfigPath,
     validatePermissionFlags,
   ];

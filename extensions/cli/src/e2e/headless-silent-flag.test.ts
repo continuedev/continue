@@ -39,7 +39,13 @@ echo "Hello World"`;
     });
 
     const result = await runCLI(context, {
-      args: ["-p", "--silent", "--config", context.configPath, "Write a shell script"],
+      args: [
+        "-p",
+        "--silent",
+        "--config",
+        context.configPath,
+        "Write a shell script",
+      ],
       timeout: 15000,
     });
 
@@ -47,7 +53,7 @@ echo "Hello World"`;
     expect(result.stdout).not.toContain("<think>");
     expect(result.stdout).not.toContain("</think>");
     expect(result.stdout).not.toContain("I need to write a shell script");
-    
+
     // Verify the actual content remains
     expect(result.stdout).toContain("#!/bin/bash");
     expect(result.stdout).toContain('echo "Hello World"');
@@ -84,7 +90,7 @@ Final content`;
     expect(result.stdout).not.toContain("First thought block");
     expect(result.stdout).not.toContain("Second thought block");
     expect(result.stdout).not.toContain("More thinking...");
-    
+
     // Verify the actual content remains
     expect(result.stdout).toContain("Some content here");
     expect(result.stdout).toContain("Final content");
@@ -119,7 +125,7 @@ More content`;
     expect(result.stdout).not.toContain("This will be removed");
     expect(result.stdout).toContain("Content with lots of whitespace");
     expect(result.stdout).toContain("More content");
-    
+
     // Verify no triple newlines exist (excess whitespace reduced)
     expect(result.stdout).not.toMatch(/\n\s*\n\s*\n/);
     expect(result.exitCode).toBe(0);
@@ -164,7 +170,13 @@ This is a simple script.`;
     });
 
     const result = await runCLI(context, {
-      args: ["-p", "--silent", "--config", context.configPath, "Write a shell script"],
+      args: [
+        "-p",
+        "--silent",
+        "--config",
+        context.configPath,
+        "Write a shell script",
+      ],
       timeout: 15000,
     });
 
@@ -182,7 +194,9 @@ This is a simple script.`;
       expectError: true,
     });
 
-    expect(result.stderr).toContain("--silent flag can only be used with -p/--print flag");
+    expect(result.stderr).toContain(
+      "--silent flag can only be used with -p/--print flag",
+    );
     expect(result.exitCode).toBe(1);
   }, 10000);
 
@@ -199,14 +213,22 @@ I should respond with JSON
     });
 
     const result = await runCLI(context, {
-      args: ["-p", "--silent", "--format", "json", "--config", context.configPath, "Test prompt"],
+      args: [
+        "-p",
+        "--silent",
+        "--format",
+        "json",
+        "--config",
+        context.configPath,
+        "Test prompt",
+      ],
       timeout: 15000,
     });
 
     // Verify think tags are stripped and JSON is valid
     expect(result.stdout).not.toContain("<think>");
     expect(result.stdout).not.toContain("I should respond with JSON");
-    
+
     // Verify the output is valid JSON
     expect(() => JSON.parse(result.stdout.trim())).not.toThrow();
     const parsedOutput = JSON.parse(result.stdout.trim());

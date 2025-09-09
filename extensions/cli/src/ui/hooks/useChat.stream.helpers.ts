@@ -1,11 +1,18 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
-import { formatToolCall } from "../../tools/index.js";
-import { DisplayMessage } from "../types.js";
+import { getAllBuiltinTools } from "src/tools/index.js";
+import { logger } from "src/util/logger.js";
+
+import { services } from "../../services/index.js";
+import { getCurrentSession, updateSessionTitle } from "../../session.js";
+
+import { generateSessionTitle } from "./useChat.helpers.js";
 
 interface CreateStreamCallbacksOptions {
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setActivePermissionRequest: React.Dispatch<React.SetStateAction<any>>;
+  llmApi?: any;
+  model?: any;
 }
 
 /**
@@ -13,111 +20,218 @@ interface CreateStreamCallbacksOptions {
  */
 export function createStreamCallbacks(
   options: CreateStreamCallbacksOptions,
-  currentStreamingMessageRef: { current: any },
 ): any {
-  const { setMessages, setActivePermissionRequest } = options;
+  const { setChatHistory, setActivePermissionRequest, llmApi, model } = options;
 
   return {
-    onContent: (content: string) => {
-      if (!currentStreamingMessageRef.current) {
-        currentStreamingMessageRef.current = {
-          role: "assistant",
-          content: "",
-          isStreaming: true,
-        };
-      }
-      currentStreamingMessageRef.current.content += content;
-    },
-    onContentComplete: (content: string) => {
-      if (currentStreamingMessageRef.current) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: content,
-            isStreaming: false,
-          },
-        ]);
-        currentStreamingMessageRef.current = null;
-      }
-    },
-    onToolStart: (toolName: string, toolArgs?: any) => {
-      if (
-        currentStreamingMessageRef.current &&
-        currentStreamingMessageRef.current.content
-      ) {
-        const messageContent = currentStreamingMessageRef.current.content;
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: messageContent,
-            isStreaming: false,
-          },
-        ]);
-        currentStreamingMessageRef.current = null;
-      }
+    onContent: (_: string) => {},
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: formatToolCall(toolName, toolArgs),
-          messageType: "tool-start",
-          toolName,
-        },
-      ]);
-    },
-    onToolResult: (result: string, toolName: string) => {
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        for (let i = newMessages.length - 1; i >= 0; i--) {
-          if (
-            newMessages[i].messageType === "tool-start" &&
-            newMessages[i].toolName === toolName
-          ) {
-            newMessages[i] = {
-              ...newMessages[i],
-              messageType: "tool-result",
-              toolResult: result,
-            };
-            break;
-          }
+    onContentComplete: async (content: string) => {
+      // Do not add assistant messages via service; handleToolCalls is the single writer
+      // For environments where the service isn't ready (unit tests), update local state only
+      try {
+        const svc = services.chatHistory;
+        const useService = typeof svc?.isReady === "function" && svc.isReady();
+        if (!useService && content) {
+          setChatHistory((prev) => [
+            ...prev,
+            {
+              contextItems: [],
+              message: {
+                role: "assistant",
+                content: content,
+                isStreaming: false,
+              },
+            },
+          ]);
         }
-        return newMessages;
+      } catch (error) {
+        logger.error("Failed to update chat history", { error });
+      }
+      // Generate session title after first assistant response
+      if (content && llmApi && model) {
+        const currentSession = getCurrentSession();
+        const generatedTitle = await generateSessionTitle(
+          content,
+          llmApi,
+          model,
+          currentSession.title,
+        );
+
+        if (generatedTitle) {
+          updateSessionTitle(generatedTitle);
+        }
+      }
+    },
+
+    onToolStart: (toolName: string, toolArgs?: any) => {
+      // When ChatHistoryService is ready, let handleToolCalls add entries
+      const svc = services.chatHistory;
+      const useService = typeof svc?.isReady === "function" && svc.isReady();
+      if (useService) return;
+
+      // Fallback (service not ready): create a local assistant message representing the tool call
+      setChatHistory((prev) => {
+        const newHistory = [...prev];
+
+        const toolCallId = `tool_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        const toolCallState: ToolCallState = {
+          toolCallId: toolCallId,
+          toolCall: {
+            id: toolCallId,
+            type: "function",
+            function: {
+              name: toolName,
+              arguments: JSON.stringify(toolArgs || {}),
+            },
+          },
+          status: "calling",
+          parsedArgs: toolArgs,
+        };
+
+        newHistory.push({
+          message: {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: toolCallId,
+                type: "function",
+                function: {
+                  name: toolName,
+                  arguments: JSON.stringify(toolArgs || {}),
+                },
+              },
+            ],
+          },
+          contextItems: [],
+          toolCallStates: [toolCallState],
+        });
+
+        return newHistory;
       });
     },
-    onToolError: (error: string, toolName?: string) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: error,
-          messageType: "tool-error",
-          toolName,
-        },
-      ]);
+
+    onToolResult: (result: string, toolName: string, status: ToolStatus) => {
+      // When service is ready, it updates tool results; avoid duplicate local updates
+      const svc = services.chatHistory;
+      const useService = typeof svc?.isReady === "function" && svc.isReady();
+      if (useService) return;
+
+      // Fallback (service not ready): update local UI-only state
+      setChatHistory((prev) => {
+        const newHistory = [...prev];
+
+        for (let i = newHistory.length - 1; i >= 0; i--) {
+          const item = newHistory[i];
+          if (item.toolCallStates) {
+            const toolState = item.toolCallStates.find(
+              (ts) =>
+                ts.toolCall.function.name === toolName &&
+                (ts.status === "calling" || ts.status === "generated"),
+            );
+
+            if (toolState) {
+              toolState.status = status;
+              toolState.output = [
+                {
+                  content: result,
+                  name: `Tool Result: ${toolName}`,
+                  description: "Tool execution result",
+                },
+              ];
+              break;
+            }
+          }
+        }
+
+        return newHistory;
+      });
     },
+
+    onToolError: (error: string, toolName?: string) => {
+      // When service is ready, handleToolCalls adds error entries; avoid duplicate local updates
+      const svc = services.chatHistory;
+      const useService = typeof svc?.isReady === "function" && svc.isReady();
+      if (useService) return;
+
+      setChatHistory((prev) => {
+        const newHistory = [...prev];
+
+        if (toolName) {
+          for (let i = newHistory.length - 1; i >= 0; i--) {
+            const item = newHistory[i];
+            if (item.toolCallStates) {
+              const toolState = item.toolCallStates.find(
+                (ts) =>
+                  ts.toolCall.function.name === toolName &&
+                  (ts.status === "calling" || ts.status === "generated"),
+              );
+
+              if (toolState) {
+                toolState.status = "errored";
+                toolState.output = [
+                  {
+                    content: error,
+                    name: `Tool Error: ${toolName}`,
+                    description: "Tool execution error",
+                  },
+                ];
+                break;
+              }
+            }
+          }
+        } else {
+          // General error message
+          newHistory.push({
+            message: {
+              role: "system",
+              content: error,
+            },
+            contextItems: [],
+          });
+        }
+
+        return newHistory;
+      });
+    },
+
     onToolPermissionRequest: (
       toolName: string,
       toolArgs: any,
       requestId: string,
       toolCallPreview?: any[],
     ) => {
+      // Check if this tool has dynamic evaluation
+      const tool = getAllBuiltinTools().find((t: any) => t.name === toolName);
+      const hasDynamicEvaluation = !!tool?.evaluateToolCallPolicy;
+
       setActivePermissionRequest({
         toolName,
         toolArgs,
         requestId,
         toolCallPreview,
+        hasDynamicEvaluation,
       });
     },
+
     onSystemMessage: (message: string) => {
-      setMessages((prev) => [
+      try {
+        const svc = services.chatHistory;
+        if (typeof svc?.isReady === "function" && svc.isReady()) {
+          svc.addSystemMessage(message);
+          return;
+        }
+      } catch {}
+      // Fallback to local state if service unavailable
+      setChatHistory((prev) => [
         ...prev,
         {
-          role: "system",
-          content: message,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: message,
+          },
+          contextItems: [],
         },
       ]);
     },
@@ -125,7 +239,7 @@ export function createStreamCallbacks(
 }
 
 interface ExecuteStreamingOptions {
-  newHistory: ChatCompletionMessageParam[];
+  chatHistory: ChatHistoryItem[];
   model: any;
   llmApi: any;
   controller: AbortController;
@@ -137,7 +251,7 @@ interface ExecuteStreamingOptions {
  * Execute streaming chat response
  */
 export async function executeStreaming({
-  newHistory,
+  chatHistory,
   model,
   llmApi,
   controller,
@@ -145,7 +259,9 @@ export async function executeStreaming({
   currentCompactionIndex,
 }: ExecuteStreamingOptions): Promise<void> {
   const { getHistoryForLLM } = await import("../../compaction.js");
-  const { streamChatResponse } = await import("../../streamChatResponse.js");
+  const { streamChatResponse } = await import(
+    "../../stream/streamChatResponse.js"
+  );
 
   if (model && llmApi) {
     if (
@@ -153,10 +269,9 @@ export async function executeStreaming({
       currentCompactionIndex !== undefined
     ) {
       const historyForLLM = getHistoryForLLM(
-        newHistory,
+        chatHistory,
         currentCompactionIndex,
       );
-      const originalLength = historyForLLM.length;
 
       await streamChatResponse(
         historyForLLM,
@@ -166,11 +281,10 @@ export async function executeStreaming({
         streamCallbacks,
       );
 
-      const newMessages = historyForLLM.slice(originalLength);
-      newHistory.push(...newMessages);
+      // Service-driven streaming; history updates occur via ChatHistoryService
     } else {
       await streamChatResponse(
-        newHistory,
+        chatHistory,
         model,
         llmApi,
         controller,

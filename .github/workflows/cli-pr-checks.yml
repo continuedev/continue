@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.run_attempt > 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Track workflow rerun
         uses: ./.github/actions/track-rerun
 
@@ -39,6 +39,11 @@ jobs:
           component: core
           include-root: true
 
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Install dependencies
         run: |
           cd extensions/cli
@@ -54,6 +59,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [18, 20, 22, 24]
+      fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -81,6 +87,11 @@ jobs:
           component: core
           include-root: true
 
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
       - name: Install dependencies
         run: |
           cd extensions/cli
@@ -107,7 +118,6 @@ jobs:
         run: |
           cd extensions/cli
           npm run test:e2e
-
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control

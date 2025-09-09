@@ -63,7 +63,7 @@ models:
     const result = await runCLI(context, {
       args: ["-p", "--config", context.configPath, "Hi there"],
       env: {
-        ANTHROPIC_API_KEY: "test-api-key-from-env"
+        ANTHROPIC_API_KEY: "test-api-key-from-env",
       },
       timeout: 15000,
     });
@@ -75,7 +75,7 @@ models:
 
     // Find the user message in the request
     const userMessage = mockServer.requests[0].body.messages.find(
-      (m: any) => m.role === "user"
+      (m: any) => m.role === "user",
     );
     expect(userMessage.content).toBe("Hi there");
   }, 20000);
@@ -83,12 +83,12 @@ models:
   it("should create config and work with ANTHROPIC_API_KEY when no config exists", async () => {
     // This test verifies that CLI automatically creates config from ANTHROPIC_API_KEY
     // when no config file exists in headless mode
-    
+
     const result = await runCLI(context, {
       args: ["-p", "test prompt"],
       env: {
         ANTHROPIC_API_KEY: "TEST-test-invalid-key-format",
-        CONTINUE_GLOBAL_DIR: context.testDir + "/.continue"
+        CONTINUE_GLOBAL_DIR: context.testDir + "/.continue",
       },
       expectError: false, // Config creation succeeds even with invalid key
       timeout: 15000,
@@ -97,19 +97,24 @@ models:
     // The CLI should create config and exit successfully in headless mode
     // (it doesn't actually make API calls unless there's a valid provider setup)
     expect(result.exitCode).toBe(0);
-    
+
     // Should NOT contain the old error about service initialization
     expect(result.stderr).not.toContain("Failed to initialize ConfigService");
 
     // Verify config.yaml was automatically created
     const configPath = path.join(context.testDir, ".continue", "config.yaml");
-    const configExists = await fs.stat(configPath).then(() => true).catch(() => false);
+    const configExists = await fs
+      .stat(configPath)
+      .then(() => true)
+      .catch(() => false);
     expect(configExists).toBe(true);
 
     if (configExists) {
       const configContent = await fs.readFile(configPath, "utf-8");
       expect(configContent).toContain("anthropic/claude-4-sonnet");
-      expect(configContent).toContain("ANTHROPIC_API_KEY: TEST-test-invalid-key-format");
+      expect(configContent).toContain(
+        "ANTHROPIC_API_KEY: TEST-test-invalid-key-format",
+      );
     }
   }, 20000);
 });

@@ -10,6 +10,7 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
+  CompletionUsage,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
   Model,
@@ -22,6 +23,7 @@ import {
   chatChunkFromDelta,
   customFetch,
   embedding,
+  usageChatChunk,
 } from "../util.js";
 import {
   convertOpenAIToolToGeminiFunction,
@@ -36,6 +38,11 @@ import {
   FimCreateParamsStreaming,
   RerankCreateParams,
 } from "./base.js";
+
+type UsageInfo = Pick<
+  CompletionUsage,
+  "total_tokens" | "completion_tokens" | "prompt_tokens"
+>;
 
 export class GeminiApi implements BaseLlmApi {
   apiBase: string = "https://generativelanguage.googleapis.com/v1beta/";
@@ -240,6 +247,7 @@ export class GeminiApi implements BaseLlmApi {
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
     let completion = "";
+    let usage: UsageInfo | undefined = undefined;
     for await (const chunk of this.chatCompletionStream(
       {
         ...body,
@@ -247,7 +255,12 @@ export class GeminiApi implements BaseLlmApi {
       },
       signal,
     )) {
-      completion += chunk.choices[0].delta.content;
+      if (chunk.choices.length > 0) {
+        completion += chunk.choices[0].delta.content || "";
+      }
+      if (chunk.usage) {
+        usage = chunk.usage;
+      }
     }
     return {
       id: "",
@@ -266,12 +279,13 @@ export class GeminiApi implements BaseLlmApi {
           },
         },
       ],
-      usage: undefined,
+      usage,
     };
   }
 
   async *handleStreamResponse(response: any, model: string) {
     let buffer = "";
+    let usage: UsageInfo | undefined = undefined;
     for await (const chunk of streamResponse(response as any)) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
@@ -298,6 +312,15 @@ export class GeminiApi implements BaseLlmApi {
         }
         if (data.error) {
           throw new Error(data.error.message);
+        }
+
+        // Check for usage metadata
+        if (data.usageMetadata) {
+          usage = {
+            prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+            completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
+            total_tokens: data.usageMetadata.totalTokenCount || 0,
+          };
         }
 
         // In case of max tokens reached, gemini will sometimes return content with no parts, even though that doesn't match the API spec
@@ -337,6 +360,14 @@ export class GeminiApi implements BaseLlmApi {
       } else {
         buffer = "";
       }
+    }
+
+    // Emit usage at the end if we have it
+    if (usage) {
+      yield usageChatChunk({
+        model,
+        usage,
+      });
     }
   }
 

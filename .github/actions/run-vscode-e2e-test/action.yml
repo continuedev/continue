@@ -1,25 +1,25 @@
-name: 'Run VS Code E2E Test'
-description: 'Run a single VS Code E2E test with all required setup'
+name: "Run VS Code E2E Test"
+description: "Run a single VS Code E2E test with all required setup"
 inputs:
   test_file:
-    description: 'E2E test file to run'
+    description: "E2E test file to run"
     required: true
   command:
-    description: 'Command to run (e2e:ci:run or e2e:ci:run-yaml)'
+    description: "Command to run (e2e:ci:run or e2e:ci:run-yaml)"
     required: true
   ssh_key:
-    description: 'SSH private key for testing'
+    description: "SSH private key for testing"
     required: false
   ssh_host:
-    description: 'SSH host for testing' 
+    description: "SSH host for testing"
     required: false
   is_fork:
-    description: 'Whether this is a fork (affects SSH tests)'
+    description: "Whether this is a fork (affects SSH tests)"
     required: false
-    default: 'false'
+    default: "false"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: actions/setup-node@v4
       with:
@@ -58,6 +58,7 @@ runs:
           cd core
           npm ci
           cd ../extensions/vscode
+          npm ci
           npm run e2e:ci:download
         else
           cd core

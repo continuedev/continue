@@ -5,16 +5,16 @@ keywords: [chat, model, role]
 sidebar_position: 1
 ---
 
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
+
+
 A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
 
-In Continue, these models are used for normal [Chat](../../features/chat/quick-start) and [VS Code actions](../deep-dives/vscode-actions). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply) if no `edit` or `apply` models are specified, respectively.
+In Continue, these models are used for normal [Chat](../../features/chat/quick-start). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
 
 ## Recommended Chat models
 
-<Info>
-  For the latest and most comprehensive model recommendations, see our [model recommendations table](/customization/models#recommended-models).
-</Info>
-
+<ModelRecommendations role="chat_edit" />
 ## Best overall experience
 
 For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
@@ -156,7 +156,7 @@ If you prefer to use a model from [OpenAI](../model-providers/top-level/openai),
 
 ### Grok-2 from xAI
 
-If you prefer to use a model from [xAI](../model-providers/top-level/xAI), then we recommend Grok-2.
+If you prefer to use a model from [xAI](../model-providers/more/xAI), then we recommend Grok-2.
 
 <Tabs>
     <Tab title="Hub">
@@ -226,7 +226,7 @@ For the best local, offline Chat experience, you will want to use a model that i
 
 ### Llama 3.1 8B
 
-If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/more/lmstudio)).
+If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/top-level/lmstudio)).
 
 <Tabs>
   <Tab title="Hub">
@@ -315,7 +315,7 @@ If your local machine can run an 8B parameter model, then we recommend running L
 
 ### DeepSeek Coder 2 16B
 
-If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
+If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/top-level/lmstudio)).
 
 <Tabs>
   {/* HUB_TODO nonexistent blocks */}
