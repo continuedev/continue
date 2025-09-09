@@ -41,10 +41,9 @@ export function ToolCallDiv({
     );
     const functionName = toolCallState.toolCall.function?.name;
     const icon =
-      functionName &&
-          tool?.toolCallIcon
-          ? getIconByName(tool.toolCallIcon)
-          : undefined;
+      functionName && tool?.toolCallIcon
+        ? getIconByName(tool.toolCallIcon)
+        : undefined;
 
     if (icon) {
       return (
