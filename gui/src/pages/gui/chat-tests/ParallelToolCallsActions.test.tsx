@@ -51,30 +51,32 @@ describe("Parallel Tool Calls - Actions", () => {
 
     // Setup mock model with direct Redux dispatch
     const currentConfig = store.getState().config.config;
-    store.dispatch(updateConfig({
-      ...currentConfig,
-      selectedModelByRole: {
-        ...currentConfig.selectedModelByRole,
-        chat: {
-          model: "mock",
-          provider: "mock",
-          title: "Mock LLM",
-          underlyingProviderName: "mock",
-        }
-      },
-      modelsByRole: {
-        ...currentConfig.modelsByRole,
-        chat: [
-          ...(currentConfig.modelsByRole.chat || []),
-          {
+    store.dispatch(
+      updateConfig({
+        ...currentConfig,
+        selectedModelByRole: {
+          ...currentConfig.selectedModelByRole,
+          chat: {
             model: "mock",
             provider: "mock",
             title: "Mock LLM",
             underlyingProviderName: "mock",
-          }
-        ]
-      }
-    }));
+          },
+        },
+        modelsByRole: {
+          ...currentConfig.modelsByRole,
+          chat: [
+            ...(currentConfig.modelsByRole.chat || []),
+            {
+              model: "mock",
+              provider: "mock",
+              title: "Mock LLM",
+              underlyingProviderName: "mock",
+            },
+          ],
+        },
+      }),
+    );
 
     await sendInputWithMockedResponse(
       ideMessenger,

@@ -54,9 +54,9 @@ beforeEach(async () => {
   // Clear any persisted state to ensure test isolation
   localStorage.clear();
   sessionStorage.clear();
-  
+
   // Add a small delay to ensure cleanup is complete
-  await new Promise(resolve => setTimeout(resolve, 50));
+  await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
 test(
@@ -65,10 +65,10 @@ test(
   async () => {
     // Setup
     const { ideMessenger, store, user } = await renderWithProviders(<Chat />);
-    
+
     // Reset mocks to ensure clean state
     ideMessenger.resetMocks();
-    
+
     // Reset streaming state to prevent test interference
     store.dispatch(setInactive());
 
@@ -76,40 +76,42 @@ test(
     ideMessenger.responses["tools/evaluatePolicy"] = {
       policy: "allowedWithPermission",
     };
-    
+
     // Mock context/getSymbolsForFiles to prevent errors during streaming
     ideMessenger.responses["context/getSymbolsForFiles"] = {};
-    
+
     const messengerPostSpy = vi.spyOn(ideMessenger, "post");
     const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
 
     // Instead of using addAndSelectMockLlm (which relies on events that might be failing),
     // directly dispatch the config update to set the selected model
     const currentConfig = store.getState().config.config;
-    store.dispatch(updateConfig({
-      ...currentConfig,
-      selectedModelByRole: {
-        ...currentConfig.selectedModelByRole,
-        chat: {
-          model: "mock",
-          provider: "mock", 
-          title: "Mock LLM",
-          underlyingProviderName: "mock",
-        }
-      },
-      modelsByRole: {
-        ...currentConfig.modelsByRole,
-        chat: [
-          ...(currentConfig.modelsByRole.chat || []),
-          {
+    store.dispatch(
+      updateConfig({
+        ...currentConfig,
+        selectedModelByRole: {
+          ...currentConfig.selectedModelByRole,
+          chat: {
             model: "mock",
             provider: "mock",
-            title: "Mock LLM", 
+            title: "Mock LLM",
             underlyingProviderName: "mock",
-          }
-        ]
-      }
-    }));
+          },
+        },
+        modelsByRole: {
+          ...currentConfig.modelsByRole,
+          chat: [
+            ...(currentConfig.modelsByRole.chat || []),
+            {
+              model: "mock",
+              provider: "mock",
+              title: "Mock LLM",
+              underlyingProviderName: "mock",
+            },
+          ],
+        },
+      }),
+    );
 
     // Send the input that will respond with an edit tool call
     await sendInputWithMockedResponse(
@@ -210,4 +212,3 @@ test(
     // });
   },
 );
-

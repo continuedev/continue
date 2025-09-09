@@ -1,8 +1,6 @@
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { generateToolCallButtonTestId } from "../../../components/mainInput/Lump/LumpToolbar/PendingToolCallToolbar";
-import {
-  triggerConfigUpdate,
-} from "../../../util/test/config";
+import { triggerConfigUpdate } from "../../../util/test/config";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { renderWithProviders } from "../../../util/test/render";
 import { Chat } from "../Chat";
@@ -53,67 +51,69 @@ beforeEach(async () => {
   // Clear any persisted state to ensure test isolation
   localStorage.clear();
   sessionStorage.clear();
-  
+
   // Add a small delay to ensure cleanup is complete
-  await new Promise(resolve => setTimeout(resolve, 50));
+  await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
 test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   // Additional cleanup before test starts
   localStorage.clear();
   sessionStorage.clear();
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   // Setup
   const { ideMessenger, store, user } = await renderWithProviders(<Chat />);
-  
+
   // Reset mocks to ensure clean state
   ideMessenger.resetMocks();
-  
-  // Reset streaming state to prevent test interference  
+
+  // Reset streaming state to prevent test interference
   store.dispatch(setInactive());
-  
+
   // Additional delay to ensure state is fully reset
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   ideMessenger.responses["getWorkspaceDirs"] = [EDIT_WORKSPACE_DIR];
   ideMessenger.responses["tools/evaluatePolicy"] = {
     policy: "allowedWithoutPermission",
   };
-  
+
   // Mock context/getSymbolsForFiles to prevent errors during streaming
   ideMessenger.responses["context/getSymbolsForFiles"] = {};
-  
+
   const messengerPostSpy = vi.spyOn(ideMessenger, "post");
   const messengerRequestSpy = vi.spyOn(ideMessenger, "request");
 
   // Instead of using addAndSelectMockLlm (which relies on events that might be failing),
   // directly dispatch the config update to set the selected model
   const currentConfig = store.getState().config.config;
-  store.dispatch(updateConfig({
-    ...currentConfig,
-    selectedModelByRole: {
-      ...currentConfig.selectedModelByRole,
-      chat: {
-        model: "mock",
-        provider: "mock", 
-        title: "Mock LLM",
-        underlyingProviderName: "mock",
-      }
-    },
-    modelsByRole: {
-      ...currentConfig.modelsByRole,
-      chat: [
-        ...(currentConfig.modelsByRole.chat || []),
-        {
+  store.dispatch(
+    updateConfig({
+      ...currentConfig,
+      selectedModelByRole: {
+        ...currentConfig.selectedModelByRole,
+        chat: {
           model: "mock",
           provider: "mock",
-          title: "Mock LLM", 
+          title: "Mock LLM",
           underlyingProviderName: "mock",
-        }
-      ]
-    }
-  }));
+        },
+      },
+      modelsByRole: {
+        ...currentConfig.modelsByRole,
+        chat: [
+          ...(currentConfig.modelsByRole.chat || []),
+          {
+            model: "mock",
+            provider: "mock",
+            title: "Mock LLM",
+            underlyingProviderName: "mock",
+          },
+        ],
+      },
+    }),
+  );
 
   // Enable automatic edit and yolo mode
   store.dispatch(
@@ -146,7 +146,6 @@ test("Edit run with no policy and yolo mode", { timeout: 15000 }, async () => {
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   });
-
 
   // Toggle the codeblock and make sure the changes show
   const toggleCodeblockChevron = await getElementByTestId("toggle-codeblock");
