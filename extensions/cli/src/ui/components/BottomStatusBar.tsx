@@ -11,7 +11,7 @@ import { ContextPercentageDisplay } from "./ContextPercentageDisplay.js";
 import { ModeIndicator } from "./ModeIndicator.js";
 import { ResponsiveRepoDisplay } from "./ResponsiveRepoDisplay.js";
 
-interface BottomStatusBarProps {
+export interface BottomStatusBarProps {
   currentMode: PermissionMode;
   remoteUrl?: string;
   isRemoteMode: boolean;
