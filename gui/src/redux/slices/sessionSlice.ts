@@ -500,7 +500,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         index: number;
-        appliedRules: RuleWithSource[];
+        appliedRules: Omit<RuleWithSource, "rule">[];
       }>,
     ) => {
       if (state.history[payload.index]) {
