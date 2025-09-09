@@ -184,7 +184,7 @@ export function UserSettingsSection() {
                 <UserSetting
                   type="toggle"
                   title="Allow Anonymous Telemetry"
-                  description=" allows Continue to send anonymous telemetry."
+                  description="Allows Continue to send anonymous telemetry."
                   value={allowAnonymousTelemetry}
                   disabled={disableTelemetryToggle}
                   onChange={(value) =>
