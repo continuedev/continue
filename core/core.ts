@@ -138,7 +138,7 @@ export class Core {
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-      const sessionInfoPromise = messenger.request(
+      const initialSessionInfoPromise = messenger.request(
         "getControlPlaneSessionInfo",
         {
           silent: true,
@@ -148,9 +148,8 @@ export class Core {
 
       this.configHandler = new ConfigHandler(
         this.ide,
-        ideSettingsPromise,
         this.llmLogger,
-        sessionInfoPromise,
+        initialSessionInfoPromise,
       );
 
       this.docsService = DocsService.createSingleton(
