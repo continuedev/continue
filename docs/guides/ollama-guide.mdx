@@ -86,8 +86,8 @@ There are multiple ways to configure Ollama models in Continue:
 
 The easiest way is to use [pre-configured model blocks](/reference#local-blocks) from the Continue Hub in your local configuration:
 
-```yaml title="~/.continue/assistants/My Local Assistant.yaml"
-name: My Local Assistant
+```yaml title="~/.continue/agents/My Local Agent.yaml"
+name: My Local Agent
 version: 0.0.1
 schema: v1
 models:
@@ -309,11 +309,11 @@ ollama pull deepseek-r1:32b
 #### Using Hub Blocks in Local Config
 
 **Problem**: Unclear how to use hub models locally
-**Solution**: Create a local assistant file:
+**Solution**: Create a local agent file:
 
 ```yaml
-# ~/.continue/assistants/Local.yaml
-name: Local Assistant
+# ~/.continue/agents/Local.yaml
+name: Local Agent
 version: 0.0.1
 schema: v1
 models:
