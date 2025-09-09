@@ -1,10 +1,11 @@
 import { Core } from "core/core";
 import { DataLogger } from "core/data/log";
+import { myersDiff } from "core/diff/myers";
 
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { editOutcomeTracker } from "../extension/EditOutcomeTracker";
-import { createPrettyPatch, normalizeContent } from "../util/diffUtils";
 import { VsCodeIde } from "../VsCodeIde";
+
 import { VerticalDiffManager } from "./vertical/manager";
 
 export async function processDiff(
@@ -62,16 +63,24 @@ export async function processDiff(
 
     // Detect autoformatting by comparing normalized content
     let autoFormattingDiff: string | undefined;
-    const normalizedPreSave = normalizeContent(preSaveContent);
-    const normalizedPostSave = normalizeContent(postSaveContent);
+    const normalizedPreSave = preSaveContent.trim();
+    const normalizedPostSave = postSaveContent.trim();
 
     if (normalizedPreSave !== normalizedPostSave) {
       // Auto-formatting was applied by the editor
-      autoFormattingDiff = createPrettyPatch(
-        newOrCurrentUri,
-        preSaveContent,
-        postSaveContent,
-      );
+      const diffLines = myersDiff(preSaveContent, postSaveContent);
+      autoFormattingDiff = diffLines
+        .map(line => {
+          switch (line.type) {
+            case "old":
+              return `-${line.line}`;
+            case "new":
+              return `+${line.line}`;
+            case "same":
+              return ` ${line.line}`;
+          }
+        })
+        .join("\n");
     }
 
     await sidebar.webviewProtocol.request("updateApplyState", {
