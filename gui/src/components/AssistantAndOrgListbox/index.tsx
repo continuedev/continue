@@ -125,12 +125,12 @@ export function AssistantAndOrgListbox() {
                   <span className="text-description-muted flex items-center justify-between gap-x-1">
                     {session?.AUTH_TYPE !== AuthType.OnPrem &&
                       session?.account.id}
-                    <ArrowRightStartOnRectangleIcon
-                      className="h-3 w-3 cursor-pointer hover:brightness-125"
-                      onClick={onLogout}
-                      data-tooltip-id="logout-tooltip"
-                    />
-                    <ToolTip id="logout-tooltip">Logout</ToolTip>
+                    <ToolTip content="Logout">
+                      <ArrowRightStartOnRectangleIcon
+                        className="h-3 w-3 cursor-pointer hover:brightness-125"
+                        onClick={onLogout}
+                      />
+                    </ToolTip>
                   </span>
                 ) : (
                   <span
@@ -176,9 +176,10 @@ export function AssistantAndOrgListbox() {
                 value="reload-assistant"
                 fontSizeModifier={-2}
                 className="border-border border-b px-2 py-1.5"
-                onClick={() =>
-                  refreshProfiles("Manual refresh from assistant list")
-                }
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  refreshProfiles("Manual refresh from assistant list");
+                }}
               >
                 <span
                   className="text-description flex flex-row items-center"

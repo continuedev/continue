@@ -8,7 +8,9 @@ interface AppRootProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
+  additionalPrompts?: string[];
 }
 
 /**

@@ -38,7 +38,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
 
         const modelOptions: ModelOption[] = availableModels.map((model) => ({
           id: `${model.provider}-${model.name}-${model.index}`,
-          name: `${model.provider}/${model.name}`,
+          name: model.name,
           index: model.index,
           provider: model.provider,
         }));

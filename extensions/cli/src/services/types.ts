@@ -5,6 +5,7 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
+import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { PermissionMode, ToolPermissions } from "../permissions/types.js";
 
 import { MCPService } from "./MCPService.js";
@@ -51,6 +52,8 @@ export interface ConfigServiceState {
 export interface ModelServiceState {
   llmApi: BaseLlmApi | null;
   model: ModelConfig | null;
+  assistant: AssistantUnrolled | null;
+  authConfig: AuthConfig | null;
 }
 
 export type MCPServerStatus = "idle" | "connecting" | "connected" | "error";
@@ -90,6 +93,7 @@ export interface ToolPermissionServiceState {
 }
 
 export type { FileIndexServiceState } from "./FileIndexService.js";
+export type { ChatHistoryState } from "./ChatHistoryService.js";
 
 /**
  * Service names as constants to prevent typos
@@ -102,15 +106,16 @@ export const SERVICE_NAMES = {
   API_CLIENT: "apiClient",
   TOOL_PERMISSIONS: "toolPermissions",
   FILE_INDEX: "fileIndex",
+  RESOURCE_MONITORING: "resourceMonitoring",
+  SYSTEM_MESSAGE: "systemMessage",
+  CHAT_HISTORY: "chatHistory",
 } as const;
 
 /**
  * Service initialization options
  */
 export interface ServiceInitOptions {
-  configPath?: string;
-  organizationSlug?: string; // Organization slug to use for this session
-  rules?: string[];
+  options?: BaseCommandOptions; // Command-line options
   headless?: boolean;
   skipOnboarding?: boolean; // Skip onboarding check even in TUI mode
   toolPermissionOverrides?: {

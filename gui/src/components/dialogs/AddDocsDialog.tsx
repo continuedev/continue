@@ -94,13 +94,11 @@ function AddDocsDialog() {
                 <div className="flex flex-row items-center gap-1">
                   <span>Title</span>
                   <div>
-                    <InformationCircleIcon
-                      data-tooltip-id={"add-docs-form-title"}
-                      className="text-lightgray h-3.5 w-3.5 select-none"
-                    />
-                    <ToolTip id={"add-docs-form-title"} place="top">
-                      The title that will be displayed to users in the `@docs`
-                      submenu
+                    <ToolTip
+                      place="top"
+                      content="The title that will be displayed to users in the `@docs` submenu"
+                    >
+                      <InformationCircleIcon className="text-lightgray h-3.5 w-3.5 select-none" />
                     </ToolTip>
                   </div>
                 </div>
@@ -120,13 +118,11 @@ function AddDocsDialog() {
                     Start URL
                   </span>
                   <div>
-                    <InformationCircleIcon
-                      data-tooltip-id={"add-docs-form-url"}
-                      className="text-lightgray h-3.5 w-3.5 select-none"
-                    />
-                    <ToolTip id={"add-docs-form-url"} place="top">
-                      The starting location to begin crawling the documentation
-                      site
+                    <ToolTip
+                      place="top"
+                      content="The starting location to begin crawling the documentation site"
+                    >
+                      <InformationCircleIcon className="text-lightgray h-3.5 w-3.5 select-none" />
                     </ToolTip>
                   </div>
                 </div>

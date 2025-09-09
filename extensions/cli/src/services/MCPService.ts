@@ -1,6 +1,9 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
@@ -9,9 +12,9 @@ import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import {
   MCPConnectionInfo,
+  MCPServerConfig,
   MCPServiceState,
   SERVICE_NAMES,
-  MCPServerConfig,
 } from "./types.js";
 
 interface ServerConnection extends MCPConnectionInfo {
@@ -214,31 +217,12 @@ export class MCPService
     this.updateState();
 
     try {
-      if (serverConfig.type && serverConfig.type !== "stdio") {
-        throw new Error(
-          `${serverConfig.type} MCP servers are not yet supported in the Continue CLI`,
-        );
-      }
-      if (!serverConfig.command) {
-        throw new Error("MCP server command is not specified");
-      }
-
       const client = new Client(
         { name: "continue-cli-client", version: "1.0.0" },
         { capabilities: {} },
       );
 
-      const env: Record<string, string> = serverConfig.env || {};
-      if (process.env.PATH !== undefined) {
-        env.PATH = process.env.PATH;
-      }
-
-      const transport = new StdioClientTransport({
-        command: serverConfig.command,
-        args: serverConfig.args,
-        env,
-        stderr: "ignore",
-      });
+      const transport = await this.constructTransport(serverConfig);
 
       logger.debug("Connecting to MCP server", {
         name: serverName,
@@ -362,5 +346,69 @@ export class MCPService
     this.removeAllListeners();
     logger.debug("Shutting down MCPService");
     await this.shutdownConnections();
+  }
+
+  /**
+   * Construct transport based on server configuration
+   */
+  private async constructTransport(
+    serverConfig: MCPServerConfig,
+  ): Promise<Transport> {
+    const transportType = serverConfig.type || "stdio";
+
+    switch (transportType) {
+      case "stdio":
+        if (!serverConfig.command) {
+          throw new Error(
+            "MCP server command is not specified for stdio transport",
+          );
+        }
+
+        const env: Record<string, string> = serverConfig.env || {};
+        if (process.env.PATH !== undefined) {
+          env.PATH = process.env.PATH;
+        }
+
+        return new StdioClientTransport({
+          command: serverConfig.command,
+          args: serverConfig.args || [],
+          env,
+          cwd: serverConfig.cwd,
+          stderr: "ignore",
+        });
+
+      case "sse":
+        if (!serverConfig.url) {
+          throw new Error("MCP server URL is not specified for SSE transport");
+        }
+        return new SSEClientTransport(new URL(serverConfig.url), {
+          eventSourceInit: {
+            fetch: (input, init) =>
+              fetch(input, {
+                ...init,
+                headers: {
+                  ...init?.headers,
+                  ...(serverConfig.requestOptions?.headers as
+                    | Record<string, string>
+                    | undefined),
+                },
+              }),
+          },
+          requestInit: { headers: serverConfig.requestOptions?.headers },
+        });
+
+      case "streamable-http":
+        if (!serverConfig.url) {
+          throw new Error(
+            "MCP server URL is not specified for streamable-http transport",
+          );
+        }
+        return new StreamableHTTPClientTransport(new URL(serverConfig.url), {
+          requestInit: { headers: serverConfig.requestOptions?.headers },
+        });
+
+      default:
+        throw new Error(`Unsupported transport type: ${transportType}`);
+    }
   }
 }

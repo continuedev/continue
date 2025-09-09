@@ -73,7 +73,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
               {"  "}
               {paddedCommandName}
               <Text color={isSelected ? "blue" : "gray"}>
-                {"   "}
+                {"    "}
                 {command.description}
               </Text>
             </Text>

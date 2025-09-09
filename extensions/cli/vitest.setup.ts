@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { resetConsoleOverrides } from "./src/util/consoleOverride.js";
+import { resetConsoleOverrides } from "./src/init.js";
 
 // Disable telemetry for tests
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
@@ -18,6 +18,9 @@ vi.mock("./src/systemMessage.js", () => ({
       "You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.",
     ),
 }));
+
+// Mock environment for tests
+process.env.CONTINUE_GLOBAL_DIR = "/tmp/continue-test";
 
 // Set up global afterEach hook to clear all timers and reset console
 afterEach(() => {

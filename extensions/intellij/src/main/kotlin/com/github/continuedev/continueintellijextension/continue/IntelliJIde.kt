@@ -199,7 +199,9 @@ class IntelliJIDE(
     }
 
     override suspend fun openFile(path: String) =
-        fileUtils.openFile(path)
+        withContext(Dispatchers.EDT) {
+            fileUtils.openFile(path)
+        }
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {

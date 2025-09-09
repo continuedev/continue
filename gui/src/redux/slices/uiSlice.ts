@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RuleWithSource, Tool, ToolPolicy } from "core";
+import { RuleWithSource, Tool } from "core";
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,

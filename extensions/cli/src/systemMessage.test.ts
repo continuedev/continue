@@ -11,12 +11,14 @@ vi.mock("./services/ServiceContainer.js", () => ({
   },
 }));
 
-// Mock processRule to avoid file system operations in tests
+// Mock processPromptOrRule to avoid file system operations in tests
 vi.mock("./args.js", () => ({
-  processRule: vi
+  processPromptOrRule: vi
     .fn()
-    .mockImplementation((rule: string) => Promise.resolve(rule)),
+    .mockImplementation((spec: string) => Promise.resolve(spec)),
 }));
+
+const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
 
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
@@ -145,5 +147,106 @@ Rule 3: Third rule`;
     expect(result).toContain("You are an agent in the Continue CLI");
     expect(result).not.toContain("IMPORTANT: You are running in headless mode");
     expect(result).not.toContain("Provide ONLY your final answer");
+  });
+
+  it("should add JSON format instructions when format is json", async () => {
+    const result = await constructSystemMessage(undefined, "json");
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).toContain(
+      "IMPORTANT: You are operating in JSON output mode",
+    );
+    expect(result).toContain("Your final response MUST be valid JSON");
+    expect(result).toContain("JSON.parse()");
+  });
+
+  it("should add plan mode instructions when mode is plan", async () => {
+    const result = await constructSystemMessage(
+      undefined,
+      undefined,
+      false,
+      "plan",
+    );
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).toContain(PLAN_MODE_STRING);
+    expect(result).toContain(
+      "which means that your goal is to help the user investigate their ideas",
+    );
+    expect(result).toContain("develop a plan before taking action");
+    expect(result).toContain("read-only tools");
+    expect(result).toContain(
+      "should not attempt to circumvent them to write / delete / create files",
+    );
+  });
+
+  it("should not add plan mode instructions when mode is not plan", async () => {
+    const result = await constructSystemMessage(
+      undefined,
+      undefined,
+      false,
+      "normal",
+    );
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).not.toContain(PLAN_MODE_STRING);
+    expect(result).not.toContain(
+      "which means that your goal is to help the user investigate their ideas",
+    );
+  });
+
+  it("should not add plan mode instructions when mode is undefined", async () => {
+    const result = await constructSystemMessage();
+
+    expect(result).toContain("You are an agent in the Continue CLI");
+    expect(result).not.toContain(PLAN_MODE_STRING);
+    expect(result).not.toContain(
+      "which means that your goal is to help the user investigate their ideas",
+    );
+  });
+
+  it("should include basic plan mode description", async () => {
+    const result = await constructSystemMessage(
+      undefined,
+      undefined,
+      false,
+      "plan",
+    );
+
+    expect(result).toContain(PLAN_MODE_STRING);
+    expect(result).toContain("read-only tools");
+    expect(result).toContain("write / delete / create files");
+  });
+
+  it("should combine plan mode with headless mode instructions", async () => {
+    const result = await constructSystemMessage(
+      undefined,
+      undefined,
+      true,
+      "plan",
+    );
+
+    expect(result).toContain("IMPORTANT: You are running in headless mode");
+    expect(result).toContain(PLAN_MODE_STRING);
+    expect(result).toContain(
+      "which means that your goal is to help the user investigate their ideas",
+    );
+  });
+
+  it("should combine plan mode with JSON format instructions", async () => {
+    const result = await constructSystemMessage(
+      undefined,
+      "json",
+      false,
+      "plan",
+    );
+
+    expect(result).toContain(
+      "IMPORTANT: You are operating in JSON output mode",
+    );
+    expect(result).toContain(PLAN_MODE_STRING);
+    expect(result).toContain(
+      "which means that your goal is to help the user investigate their ideas",
+    );
   });
 });

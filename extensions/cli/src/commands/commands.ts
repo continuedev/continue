@@ -4,9 +4,9 @@ import { type AssistantConfig } from "@continuedev/sdk";
 export { chat } from "./chat.js";
 export { login } from "./login.js";
 export { logout } from "./logout.js";
+export { listSessionsCommand } from "./ls.js";
 export { remote } from "./remote.js";
 export { serve } from "./serve.js";
-export { listSessionsCommand } from "./ls.js";
 
 export interface SlashCommand {
   name: string;
@@ -46,6 +46,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "info",
+    description: "Show session information",
+    category: "system",
+  },
+  {
     name: "model",
     description: "Switch between available chat models",
     category: "system",
@@ -69,6 +74,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   {
     name: "resume",
     description: "Resume a previous chat session",
+    category: "system",
+  },
+  {
+    name: "fork",
+    description: "Start a forked chat session from the current history",
     category: "system",
   },
   {

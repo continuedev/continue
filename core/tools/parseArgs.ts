@@ -20,11 +20,11 @@ export function getStringArg(
 ): string {
   if (!args || !(argName in args) || typeof args[argName] !== "string") {
     throw new Error(
-      `\`${argName}\` argument is required${allowEmpty ? "" : " and must not be empty"}. (type string)`,
+      `\`${argName}\` argument is required${allowEmpty ? "" : " and must not be empty or whitespace-only"}. (type string)`,
     );
   }
   if (!allowEmpty && !args[argName].trim()) {
-    throw new Error(`Argument ${argName} must not be empty`);
+    throw new Error(`Argument ${argName} must not be empty or whitespace-only`);
   }
   return args[argName];
 }
@@ -38,6 +38,24 @@ export function getOptionalStringArg(
     return undefined;
   }
   return getStringArg(args, argName, allowEmpty);
+}
+
+export function getNumberArg(args: any, argName: string): number {
+  if (!args || !(argName in args)) {
+    throw new Error(`Argument \`${argName}\` is required (type number)`);
+  }
+  const value = args[argName];
+  if (typeof value === "string") {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) {
+      throw new Error(`Argument \`${argName}\` must be a valid number`);
+    }
+    return parsed;
+  }
+  if (typeof value !== "number" || isNaN(value)) {
+    throw new Error(`Argument \`${argName}\` must be a valid number`);
+  }
+  return Math.floor(value); // Ensure integer for line numbers (supports negative numbers)
 }
 
 export function getBooleanArg(args: any, argName: string, required = false) {

@@ -14,7 +14,7 @@ Before getting started, ensure your system meets these requirements:
 
 ## How to Install Ollama - Step-by-Step
 
-### Step 1: How to Install Ollama
+### Step 1: Install Ollama
 
 Choose the installation method for your operating system:
 
@@ -29,11 +29,14 @@ curl -fsSL https://ollama.ai/install.sh | sh
 # Download from ollama.ai
 ```
 
-### Step 2: How to Start Ollama
+### Step 2: Start Ollama Service
 
 After installation, start the Ollama service:
 
 ```bash
+# Check Ollama version - verify it's installed
+ollama --version
+
 # Start Ollama (runs in background)
 ollama serve
 
@@ -42,10 +45,12 @@ curl http://localhost:11434
 # Should return "Ollama is running"
 ```
 
-### Step 3: How to Download Models
+### Step 3: Download Models
 
 <Warning>
-**Important**: Always use `ollama pull` instead of `ollama run` to download models. The `run` command starts an interactive session which isn't needed for Continue.
+  **Important**: Always use `ollama pull` instead of `ollama run` to download
+  models. The `run` command starts an interactive session which isn't needed for
+  Continue.
 </Warning>
 
 Download models using the exact tag specified:
@@ -62,12 +67,15 @@ ollama list
 ```
 
 **Common Model Tags:**
+
 - `:latest` - Default version (used if no tag specified)
 - `:32b`, `:7b`, `:1.5b` - Parameter count versions
 - `:instruct`, `:base` - Model variants
 
 <Note>
-If a model page shows `deepseek-r1:32b` on Ollama's website, you must pull it with that exact tag. Using just `deepseek-r1` will pull `:latest` which may be a different size.
+  If a model page shows `deepseek-r1:32b` on Ollama's website, you must pull it
+  with that exact tag. Using just `deepseek-r1` will pull `:latest` which may be
+  a different size.
 </Note>
 
 ## How to Configure Ollama with Continue
@@ -76,11 +84,10 @@ There are multiple ways to configure Ollama models in Continue:
 
 ### Method 1: Using Hub Model Blocks in Local config.yaml
 
-The easiest way is to use pre-configured model blocks from the Continue Hub in your local configuration:
+The easiest way is to use [pre-configured model blocks](/reference#local-blocks) from the Continue Hub in your local configuration:
 
-```yaml
-# ~/.continue/assistants/My Local Assistant.yaml
-name: My Local Assistant
+```yaml title="~/.continue/agents/My Local Agent.yaml"
+name: My Local Agent
 version: 0.0.1
 schema: v1
 models:
@@ -90,20 +97,23 @@ models:
 ```
 
 <Warning>
-**Important**: Hub blocks only provide configuration - you still need to pull the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue to use `model: deepseek-r1:32b`, but the actual model must be installed:
-```bash
-# Check what the hub block expects (view on hub.continue.dev)
-# Then pull that exact model tag locally
-ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
-```
-If the model isn't installed, Ollama will return: `404 model "deepseek-r1:32b" not found, try pulling it first`
+  **Important**: Hub blocks only provide configuration - you still need to pull
+  the model locally. The hub block `ollama/deepseek-r1-32b` configures Continue
+  to use `model: deepseek-r1:32b`, but the actual model must be installed:
+  ```bash
+  # Check what the hub block expects (view on hub.continue.dev)
+  # Then pull that exact model tag locally
+  ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
+  ```
+  If the model isn't installed, Ollama will return:
+  `404 model "deepseek-r1:32b" not found, try pulling it first`
 </Warning>
 
 ### Method 2: Using Autodetect
 
 Continue can automatically detect available Ollama models. You can configure this in your YAML:
 
-```yaml
+```yaml title="~/.continue/config.yaml"
 models:
   - name: Autodetect
     provider: ollama
@@ -112,6 +122,8 @@ models:
       - chat
       - edit
       - apply
+      - rerank
+      - autocomplete
 ```
 
 Or use it through the GUI:
@@ -122,7 +134,12 @@ Or use it through the GUI:
 4. Select your desired model from the detected list
 
 <Note>
-The Autodetect feature scans your local Ollama installation and lists all available models. When set to `AUTODETECT`, Continue will dynamically populate the model list based on what's installed locally via `ollama list`. This is useful for quickly switching between models without manual configuration.
+  The Autodetect feature scans your local Ollama installation and lists all
+  available models. When set to `AUTODETECT`, Continue will dynamically populate
+  the model list based on what's installed locally via `ollama list`. This is
+  useful for quickly switching between models without manual configuration. For
+  any roles not covered by the detected models, you may need to manually
+  configure them.
 </Note>
 
 You can update `apiBase` with the IP address of a remote machine serving Ollama.
@@ -135,12 +152,12 @@ For custom configurations or models not on the hub:
 models:
   - name: DeepSeek R1 32B
     provider: ollama
-    model: deepseek-r1:32b  # Must match exactly what `ollama list` shows
+    model: deepseek-r1:32b # Must match exactly what `ollama list` shows
     apiBase: http://localhost:11434
     roles:
       - chat
       - edit
-    capabilities:  # Add if not auto-detected
+    capabilities: # Add if not auto-detected
       - tool_use
   - name: Qwen2.5-Coder 1.5B
     provider: ollama
@@ -161,13 +178,15 @@ models:
     provider: ollama
     model: deepseek-r1:latest
     capabilities:
-      - tool_use  # Add this to enable tools
+      - tool_use # Add this to enable tools
 ```
 
 <Warning>
-**Known Issue**: Some models like DeepSeek R1 may show "Agent mode is not supported" or "does not support tools" even with capabilities configured. This is a known limitation where the model's actual tool support differs from its advertised capabilities.
+  **Known Issue**: Some models like DeepSeek R1 may show "Agent mode is not
+  supported" or "does not support tools" even with capabilities configured. This
+  is a known limitation where the model's actual tool support differs from its
+  advertised capabilities.
 </Warning>
-
 
 #### If Agent Mode Shows "Not Supported"
 
@@ -181,29 +200,70 @@ See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for
 
 For optimal performance, consider these advanced configuration options:
 
-- Memory optimization: Adjust `num_ctx` for context window size
-- GPU acceleration: Use `num_gpu` to control GPU layers
-- Custom model parameters: Temperature, top_p, top_k settings
-- Performance tuning: Batch size and threading options
+```yaml
+models:
+  - name: Optimized DeepSeek
+    provider: ollama
+    model: deepseek-r1:32b
+    contextLength: 8192 # Adjust context window (default varies by model)
+    completionOptions:
+      temperature: 0.7 # Controls randomness (0.0-1.0)
+      top_p: 0.9 # Nucleus sampling threshold
+      top_k: 40 # Top-k sampling
+      num_predict: 2048 # Max tokens to generate
+    # Ollama-specific options (set via environment or modelfile)
+    # num_gpu: 35        # Number of GPU layers to offload
+    # num_thread: 8      # CPU threads to use
+```
+
+For GPU acceleration and memory tuning, create an Ollama Modelfile:
+
+```
+# Create custom model with optimizations
+FROM deepseek-r1:32b
+PARAMETER num_gpu 35
+PARAMETER num_thread 8
+PARAMETER num_ctx 4096
+```
 
 ## What Are the Best Practices for Ollama
 
 ### How to Choose the Right Model
 
-Choose models based on your specific needs:
+Choose models based on your specific needs (see [recommended models](/customization/models#recommended-models) for more options):
 
-1. **Code Generation**: Use CodeLlama or Mistral
-2. **Chat**: Llama2 or Mistral
-3. **Specialized Tasks**: Domain-specific models
+1. **Code Generation**:
+
+   - `qwen2.5-coder:7b` - Excellent for code completion
+   - `codellama:13b` - Strong general coding support
+   - `deepseek-coder:6.7b` - Fast and efficient
+
+2. **Chat & Reasoning**:
+
+   - `llama3.1:8b` - Latest Llama with tool support
+   - `mistral:7b` - Fast and versatile
+   - `deepseek-r1:32b` - Advanced reasoning capabilities
+
+3. **Autocomplete**:
+
+   - `qwen2.5-coder:1.5b` - Lightweight and fast
+   - `starcoder2:3b` - Optimized for code completion
+
+4. **Memory Requirements**:
+   - 1.5B-3B models: ~4GB RAM
+   - 7B models: ~8GB RAM
+   - 13B models: ~16GB RAM
+   - 32B models: ~32GB RAM
 
 ### How to Optimize Performance
 
 To get the best performance from Ollama:
 
-- Monitor system resources
-- Adjust context window size
-- Use appropriate model sizes
-- Enable GPU acceleration when available
+- Monitor system resources with `ollama ps` to see memory usage
+- Adjust context window size based on available RAM
+- Use appropriate model sizes for your hardware
+- Enable GPU acceleration when available (NVIDIA CUDA or AMD ROCm)
+- Use `ollama logs` to debug performance issues
 
 ## How to Troubleshoot Ollama Issues
 
@@ -214,7 +274,8 @@ To get the best performance from Ollama:
 This error occurs when the model isn't installed locally:
 
 **Problem**: Using a hub block or config that references a model not yet pulled
-**Solution**: 
+**Solution**:
+
 ```bash
 # Check what models you have
 ollama list
@@ -227,6 +288,7 @@ ollama pull model-name:tag  # e.g., deepseek-r1:32b
 
 **Problem**: `ollama pull deepseek-r1` installs `:latest` but hub block expects `:32b`
 **Solution**: Always pull with the exact tag:
+
 ```bash
 # Wrong - pulls :latest
 ollama pull deepseek-r1
@@ -239,6 +301,7 @@ ollama pull deepseek-r1:32b
 
 **Problem**: Model doesn't support tools/function calling
 **Solutions**:
+
 1. Add `capabilities: [tool_use]` to your model config
 2. If still not working, the model may not actually support tools
 3. Switch to a model with confirmed tool support (Llama 3.1, Mistral)
@@ -246,10 +309,11 @@ ollama pull deepseek-r1:32b
 #### Using Hub Blocks in Local Config
 
 **Problem**: Unclear how to use hub models locally
-**Solution**: Create a local assistant file:
+**Solution**: Create a local agent file:
+
 ```yaml
-# ~/.continue/assistants/Local.yaml
-name: Local Assistant
+# ~/.continue/agents/Local.yaml
+name: Local Agent
 version: 0.0.1
 schema: v1
 models:
@@ -269,13 +333,29 @@ models:
 - Model too large: Check available memory with `ollama ps`
 - GPU issues: Verify CUDA/ROCm installation for GPU acceleration
 - Slow generation: Adjust `num_gpu` layers in model configuration
+- Check system diagnostics: `ollama ps` for active models and memory usage
 
 ## What Are Example Workflows with Ollama
 
 ### How to Use Ollama for Code Generation
 
-```
-# Example: Generate a FastAPI endpointdef create_user_endpoint():    # Continue will help generate the implementation    pass
+```python
+# Example: Generate a FastAPI endpoint
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class User(BaseModel):
+    name: str
+    email: str
+    age: int
+
+@app.post("/users/")
+async def create_user(user: User):
+    # Continue will help complete this implementation
+    # Use Cmd+I (Mac) or Ctrl+I (Windows/Linux) to generate code
+    pass
 ```
 
 ### How to Use Ollama for Code Review
@@ -293,4 +373,4 @@ Ollama with Continue provides a powerful local development environment for AI-as
 
 ---
 
-_This guide is based on Ollama v0.1.x and Continue v0.8.x. Please check for updates regularly._
+_This guide is based on Ollama v0.11.x and Continue v1.1.x. Please check for updates regularly._

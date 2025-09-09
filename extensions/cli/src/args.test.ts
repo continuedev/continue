@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { parseArgs, processRule } from "./args.js";
+import { parseArgs, processPromptOrRule } from "./args.js";
 
 describe("parseArgs", () => {
   const originalArgv = process.argv;
@@ -217,7 +217,7 @@ describe("parseArgs", () => {
   });
 });
 
-describe("processRule (loadRuleFromHub integration)", () => {
+describe("processPromptOrRule (loadRuleFromHub integration)", () => {
   // Mock fetch for hub tests
   const originalFetch = global.fetch;
   const mockFetch = vi.fn() as any;
@@ -251,7 +251,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      const result = await processRule("continuedev/sentry-nextjs");
+      const result = await processPromptOrRule("continuedev/sentry-nextjs");
 
       expect(result).toBe(ruleContent);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -269,7 +269,9 @@ describe("processRule (loadRuleFromHub integration)", () => {
         statusText: "Not Found",
       } as Response);
 
-      await expect(processRule("continuedev/nonexistent-rule")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/nonexistent-rule"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/nonexistent-rule": HTTP 404: Not Found',
       );
     });
@@ -277,7 +279,9 @@ describe("processRule (loadRuleFromHub integration)", () => {
     it("should handle network errors when loading from hub", async () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 
-      await expect(processRule("continuedev/sentry-nextjs")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/sentry-nextjs"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/sentry-nextjs": Network error',
       );
     });
@@ -285,7 +289,9 @@ describe("processRule (loadRuleFromHub integration)", () => {
     it("should handle invalid slug format", async () => {
       // "invalid-slug" doesn't contain "/" so it's treated as direct content, not a hub slug
       // Let's test with a slug that has wrong format but contains "/"
-      await expect(processRule("invalid/slug/too/many/parts")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("invalid/slug/too/many/parts"),
+      ).rejects.toThrow(
         'Invalid hub slug format. Expected "owner/package", got: invalid/slug/too/many/parts',
       );
     });
@@ -300,7 +306,9 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      await expect(processRule("continuedev/empty-rule")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/empty-rule"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/empty-rule": No rule content found in downloaded zip file',
       );
     });
@@ -316,7 +324,9 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      await expect(processRule("continuedev/directory-only")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/directory-only"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/directory-only": No rule content found in downloaded zip file',
       );
     });
@@ -338,7 +348,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      const result = await processRule("continuedev/mixed-files");
+      const result = await processPromptOrRule("continuedev/mixed-files");
 
       expect(result).toBe(mdContent);
     });
@@ -359,7 +369,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      const result = await processRule("continuedev/multiple-rules");
+      const result = await processPromptOrRule("continuedev/multiple-rules");
 
       // Should use the first markdown file found (alphabetically)
       expect(result).toBe(rule1Content);
@@ -373,13 +383,15 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(invalidZipBuffer),
       } as Response);
 
-      await expect(processRule("continuedev/corrupted-zip")).rejects.toThrow(
+      await expect(
+        processPromptOrRule("continuedev/corrupted-zip"),
+      ).rejects.toThrow(
         'Failed to load rule from hub "continuedev/corrupted-zip"',
       );
     });
   });
 
-  describe("processRule logic", () => {
+  describe("processPromptOrRule logic", () => {
     it("should identify hub slugs correctly", async () => {
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
@@ -391,14 +403,14 @@ describe("processRule (loadRuleFromHub integration)", () => {
         arrayBuffer: () => Promise.resolve(zipBuffer),
       } as Response);
 
-      const result = await processRule("owner/package");
+      const result = await processPromptOrRule("owner/package");
       expect(result).toBe("# Hub Rule");
       expect(mockFetch).toHaveBeenCalled();
     });
 
     it("should treat direct strings as content", async () => {
       const directContent = "This is direct rule content";
-      const result = await processRule(directContent);
+      const result = await processPromptOrRule(directContent);
       expect(result).toBe(directContent);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -406,7 +418,7 @@ describe("processRule (loadRuleFromHub integration)", () => {
     it("should distinguish between hub slugs and file paths", async () => {
       // This would be treated as a file path, not a hub slug
       // since it starts with "."
-      await expect(processRule("./owner/package")).rejects.toThrow(
+      await expect(processPromptOrRule("./owner/package")).rejects.toThrow(
         'Failed to read rule file "./owner/package": Rule file not found',
       );
       expect(mockFetch).not.toHaveBeenCalled();

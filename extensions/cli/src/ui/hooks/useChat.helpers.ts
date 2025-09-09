@@ -1,36 +1,35 @@
-import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import * as path from "node:path";
 
-import { initializeChatHistory } from "../../commands/chat.js";
-import { compactChatHistory } from "../../compaction.js";
-import { loadSession, saveSession } from "../../session.js";
+import type { ChatHistoryItem } from "core/index.js";
+import { getLastNPathParts } from "core/util/uri.js";
+import { v4 as uuidv4 } from "uuid";
+
+import { logger } from "src/util/logger.js";
+
+import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
+import { loadSession, startNewSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
-import { formatError } from "../../util/formatError.js";
-import { logger } from "../../util/logger.js";
-import { shouldAutoCompact } from "../../util/tokenizer.js";
-import { DisplayMessage } from "../types.js";
 
+import { processImagePlaceholder } from "./useChat.imageProcessing.js";
 import { SlashCommandResult } from "./useChat.types.js";
 
 /**
- * Initialize chat history with proper system message
+ * Initialize chat history
  */
 export async function initChatHistory(
   resume?: boolean,
-  additionalRules?: string[],
-): Promise<ChatCompletionMessageParam[]> {
+  _additionalRules?: string[],
+): Promise<ChatHistoryItem[]> {
   if (resume) {
-    const savedHistory = loadSession();
-    if (savedHistory) {
-      return savedHistory;
+    const savedSession = loadSession();
+    if (savedSession) {
+      return savedSession.history;
     }
   }
 
-  const history = await initializeChatHistory({
-    resume,
-    rule: additionalRules,
-  });
-  return history;
+  // Start with empty history - system message will be injected when needed
+  return [];
 }
 
 /**
@@ -43,76 +42,10 @@ export function handleConfigCommand(onShowConfigSelector: () => void): void {
   onShowConfigSelector();
 }
 
-interface HandleCompactCommandOptions {
-  chatHistory: ChatCompletionMessageParam[];
-  model: any;
-  llmApi: any;
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
-  >;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
-  setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
-}
-
-/**
- * Handle compaction command
- */
-export async function handleCompactCommand({
-  chatHistory,
-  model,
-  llmApi,
-  setChatHistory,
-  setMessages,
-  setCompactionIndex,
-}: HandleCompactCommandOptions): Promise<void> {
-  setMessages((prev) => [
-    ...prev,
-    {
-      role: "system",
-      content: "Compacting chat history...",
-      messageType: "system" as const,
-    },
-  ]);
-
-  try {
-    const result = await compactChatHistory(chatHistory, model, llmApi);
-
-    // Replace chat history with compacted version
-    setChatHistory(result.compactedHistory);
-    setCompactionIndex(result.compactionIndex);
-
-    // Save the compacted session
-    saveSession(result.compactedHistory);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: "Chat history compacted successfully.",
-        messageType: "system" as const,
-      },
-    ]);
-  } catch (error) {
-    logger.error("Compaction failed:", error);
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: `Compaction failed: ${formatError(error)}`,
-        messageType: "system" as const,
-      },
-    ]);
-  }
-}
-
 interface ProcessSlashCommandResultOptions {
   result: SlashCommandResult;
-  chatHistory: ChatCompletionMessageParam[];
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
-  >;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
-  exit: () => void;
+  chatHistory: ChatHistoryItem[];
+  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
   onShowMCPSelector?: () => void;
@@ -127,8 +60,6 @@ export function processSlashCommandResult({
   result,
   chatHistory,
   setChatHistory,
-  setMessages,
-  exit,
   onShowConfigSelector,
   onShowModelSelector,
   onShowMCPSelector,
@@ -136,8 +67,7 @@ export function processSlashCommandResult({
   onClear,
 }: ProcessSlashCommandResultOptions): string | null {
   if (result.exit) {
-    exit();
-    return null;
+    process.exit(0);
   }
 
   if (result.openMcpSelector) {
@@ -161,10 +91,15 @@ export function processSlashCommandResult({
   }
 
   if (result.clear) {
-    const systemMessage = chatHistory.find((msg) => msg.role === "system");
+    const systemMessage = chatHistory.find(
+      (item) => item.message.role === "system",
+    );
     const newHistory = systemMessage ? [systemMessage] : [];
+
+    // Start a new session with a new sessionId
+    startNewSession(newHistory);
+
     setChatHistory(newHistory);
-    setMessages([]);
 
     // Reset intro message state to show it again after clearing
     if (onClear) {
@@ -172,11 +107,13 @@ export function processSlashCommandResult({
     }
 
     if (result.output) {
-      setMessages([
+      setChatHistory([
         {
-          role: "system",
-          content: result.output,
-          messageType: "system" as const,
+          message: {
+            role: "system",
+            content: result.output,
+          },
+          contextItems: [],
         },
       ]);
     }
@@ -184,13 +121,15 @@ export function processSlashCommandResult({
   }
 
   if (result.output) {
-    setMessages((prev) => [
+    setChatHistory((prev) => [
       ...prev,
       {
-        role: "system" as const,
-        content: result.output || "",
-        messageType: "system" as const,
-      } as DisplayMessage,
+        message: {
+          role: "system",
+          content: result.output || "",
+        },
+        contextItems: [],
+      },
     ]);
   }
 
@@ -198,21 +137,67 @@ export function processSlashCommandResult({
 }
 
 /**
- * Format message with attached files
+ * Format message with attached files and images - returns a complete ChatHistoryItem
  */
-export function formatMessageWithFiles(
+export async function formatMessageWithFiles(
   message: string,
   attachedFiles: Array<{ path: string; content: string }>,
-): string {
-  if (attachedFiles.length === 0) {
-    return message;
+  imageMap?: Map<string, Buffer>,
+): Promise<import("core/index.js").ChatHistoryItem> {
+  // Convert attached files to context items
+  const contextItems = attachedFiles.map((file) => ({
+    id: {
+      providerTitle: "file",
+      itemId: uuidv4(),
+    },
+    content: file.content,
+    name: path.basename(file.path),
+    description: getLastNPathParts(file.path, 2),
+    uri: {
+      type: "file" as const,
+      value: `file://${file.path}`,
+    },
+  }));
+
+  // Process message content for images
+  let messageContent: import("core/index.js").MessageContent = message;
+
+  if (imageMap && imageMap.size > 0) {
+    const messageParts: import("core/index.js").MessagePart[] = [];
+    let textContent = message;
+
+    // Replace image placeholders with image parts
+    for (const [placeholder, originalImageBuffer] of imageMap.entries()) {
+      const result = await processImagePlaceholder(
+        placeholder,
+        originalImageBuffer,
+        textContent,
+        messageParts,
+      );
+      textContent = result.textContent;
+    }
+
+    // Add any remaining text
+    if (textContent) {
+      messageParts.push({
+        type: "text",
+        text: textContent,
+      });
+    }
+
+    // Use message parts if we have images, otherwise keep as string
+    if (messageParts.length > 0) {
+      messageContent = messageParts;
+    }
   }
 
-  const fileContents = attachedFiles
-    .map((file) => `\n\n<file path="${file.path}">\n${file.content}\n</file>`)
-    .join("");
-
-  return message + fileContents;
+  return {
+    message: {
+      role: "user",
+      content: messageContent,
+    },
+    contextItems,
+  };
 }
 
 /**
@@ -233,7 +218,6 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
 }
 
 /**
@@ -245,7 +229,6 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
-  setMessages,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -258,103 +241,47 @@ export async function handleSpecialCommands({
   // Handle /exit command in remote mode
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
-    await handleRemoteExit(remoteUrl, setMessages, exit);
+    await handleRemoteExit(remoteUrl, exit);
     return true;
   }
 
   return false;
 }
 
-interface HandleAutoCompactionOptions {
-  chatHistory: ChatCompletionMessageParam[];
-  model: any;
-  llmApi: any;
-  compactionIndex: number | null;
-  setMessages: React.Dispatch<React.SetStateAction<DisplayMessage[]>>;
-  setChatHistory: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
-  >;
-  setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
-}
-
 /**
- * Handle auto-compaction when approaching context limit
+ * Generate a title for the session based on the first assistant response
  */
-export async function handleAutoCompaction({
-  chatHistory,
-  model,
-  llmApi,
-  compactionIndex,
-  setMessages,
-  setChatHistory,
-  setCompactionIndex,
-}: HandleAutoCompactionOptions): Promise<{
-  currentChatHistory: ChatCompletionMessageParam[];
-  currentCompactionIndex: number | null;
-}> {
-  if (!model || !shouldAutoCompact(chatHistory, model)) {
-    return {
-      currentChatHistory: chatHistory,
-      currentCompactionIndex: compactionIndex,
-    };
+export async function generateSessionTitle(
+  assistantResponse: string,
+  llmApi: any,
+  model: any,
+  currentSessionTitle?: string,
+): Promise<string | undefined> {
+  // Only generate title for untitled sessions
+  if (currentSessionTitle && currentSessionTitle !== DEFAULT_SESSION_TITLE) {
+    return undefined;
   }
 
-  logger.info("Auto-compacting triggered in TUI mode");
-
-  setMessages((prev) => [
-    ...prev,
-    {
-      role: "system",
-      content: "Approaching context limit. Auto-compacting chat history...",
-      messageType: "system" as const,
-    },
-  ]);
+  if (!assistantResponse || !llmApi || !model) {
+    return undefined;
+  }
 
   try {
-    if (!llmApi) {
-      throw new Error("LLM API is not available for auto-compaction");
-    }
+    const { ChatDescriber } = await import("core/util/chatDescriber.js");
+    const generatedTitle = await ChatDescriber.describeWithBaseLlmApi(
+      llmApi,
+      model,
+      assistantResponse,
+    );
 
-    // Compact the history WITHOUT the current user message
-    const result = await compactChatHistory(chatHistory, model, llmApi);
+    logger.debug("Generated session title", {
+      original: currentSessionTitle,
+      generated: generatedTitle,
+    });
 
-    // Update state
-    setChatHistory(result.compactedHistory);
-    setCompactionIndex(result.compactionIndex);
-
-    // Save the compacted session
-    saveSession(result.compactedHistory);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: "✓ Chat history auto-compacted successfully.",
-        messageType: "system" as const,
-      },
-    ]);
-
-    return {
-      currentChatHistory: result.compactedHistory,
-      currentCompactionIndex: result.compactionIndex,
-    };
-  } catch (error: any) {
-    const errorMessage = `Auto-compaction error: ${formatError(error)}`;
-    logger.error(errorMessage);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "system",
-        content: `Warning: ${errorMessage}. Continuing without compaction...`,
-        messageType: "system" as const,
-      },
-    ]);
-
-    // Continue without compaction on error
-    return {
-      currentChatHistory: chatHistory,
-      currentCompactionIndex: compactionIndex,
-    };
+    return generatedTitle;
+  } catch (error) {
+    logger.error("Failed to generate session title:", error);
+    return undefined;
   }
 }
