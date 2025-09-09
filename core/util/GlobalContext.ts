@@ -54,6 +54,7 @@ export type GlobalContextType = {
       codeVerifier?: string;
     };
   };
+  maxNumberOfConcurrentIndexing: number;
 };
 
 /**

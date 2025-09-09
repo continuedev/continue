@@ -135,6 +135,8 @@ class MessageTypes {
             "docs/initStatuses",
             "docs/getDetails",
             "docs/getIndexedPages",
+            "docs/getMaxNumberOfConcurrentIndexing",
+            "docs/updateMaxNumberOfConcurrentIndexing",
             //
             "onboarding/complete",
             "addAutocompleteModel",
