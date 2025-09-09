@@ -9,10 +9,11 @@ import { UpdateNotification } from "../UpdateNotification.js";
 
 import { ContextPercentageDisplay } from "./ContextPercentageDisplay.js";
 import { ModeIndicator } from "./ModeIndicator.js";
+import { ResponsiveRepoDisplay } from "./ResponsiveRepoDisplay.js";
 
-interface BottomStatusBarProps {
+export interface BottomStatusBarProps {
   currentMode: PermissionMode;
-  repoURLText: string;
+  remoteUrl?: string;
   isRemoteMode: boolean;
   services: any;
   navState: any;
@@ -24,7 +25,7 @@ interface BottomStatusBarProps {
 
 export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   currentMode,
-  repoURLText,
+  remoteUrl,
   isRemoteMode,
   services,
   navState,
@@ -52,10 +53,12 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
               <Text key="image-paste-hint" color="cyan" wrap="truncate-start">
                 Press Ctrl+V to paste image
               </Text>
-            ) : (
+            ) : showingExitMessage ? (
               <Text key="repo-url" color="dim" wrap="truncate-start">
-                {showingExitMessage ? "ctrl+c to exit" : repoURLText}
+                {"ctrl+c to exit"}
               </Text>
+            ) : (
+              <ResponsiveRepoDisplay remoteUrl={remoteUrl} />
             )}
             <Text key="repo-separator"> </Text>
           </React.Fragment>

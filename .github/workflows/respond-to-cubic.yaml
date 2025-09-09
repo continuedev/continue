@@ -69,7 +69,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -164,7 +164,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -175,7 +175,7 @@ jobs:
       - name: Get review context
         if: steps.check-mention.outputs.contains_mention == 'true'
         id: review-context
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             let reviewContext = '';
