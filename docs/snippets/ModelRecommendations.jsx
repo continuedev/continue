@@ -50,8 +50,8 @@ export const ModelRecommendations = ({ role = "all" }) => {
         "[Kimi K2 (1T)](https://hub.continue.dev/openrouter/kimi-k2)",
         "[gpt-oss (120B)](https://hub.continue.dev/openrouter/gpt-oss-120b)",
         "[gpt-oss (20B)](https://hub.continue.dev/ollama/gpt-oss-20b)",
-        "GLM 4.5 (355B)",
-        "GLM 4.5 Air (106B)",
+        "[GLM 4.5 (355B)](https://hub.continue.dev/openrouter/glm-4-5)",
+        "[GLM 4.5 Air (106B)](https://hub.continue.dev/openrouter/glm-4-5-air)",
       ],
       closed: [
         "[Claude Opus 4.1](https://hub.continue.dev/anthropic/claude-4-1-opus)",
@@ -83,7 +83,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
       ],
       closed: [
         "[Codestral](https://hub.continue.dev/mistral/codestral)",
-        "[Mercury Coder](https://hub.continue.dev/inceptionlabs/mercury-coder)",
+        "[Mercury Coder](https://hub.continue.dev/inception/mercury-coder)",
       ],
       notes: "Closed models are slightly better than open models",
     },
@@ -119,7 +119,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
     next_edit: {
       open: ["[Instinct](https://hub.continue.dev/continuedev/instinct)"],
       closed: [
-        "[Mercury Coder](https://hub.continue.dev/inceptionlabs/mercury-coder)",
+        "[Mercury Coder](https://hub.continue.dev/inception/mercury-coder)",
       ],
       notes: "Closed models are better than open models",
     },

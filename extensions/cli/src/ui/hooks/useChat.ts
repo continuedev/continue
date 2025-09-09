@@ -370,7 +370,6 @@ export function useChat({
       result: commandResult,
       chatHistory,
       setChatHistory,
-      exit,
       onShowConfigSelector,
       onShowModelSelector,
       onShowMCPSelector,

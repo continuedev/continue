@@ -15,7 +15,6 @@ vi.mock("../../session.js", () => ({
 
 describe("useChat clear command", () => {
   let mockSetChatHistory: ReturnType<typeof vi.fn>;
-  let mockExit: ReturnType<typeof vi.fn>;
   let mockOnClear: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -23,7 +22,6 @@ describe("useChat clear command", () => {
     vi.clearAllMocks();
 
     mockSetChatHistory = vi.fn();
-    mockExit = vi.fn();
     mockOnClear = vi.fn();
   });
 
@@ -44,7 +42,6 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });
@@ -91,7 +88,6 @@ describe("useChat clear command", () => {
         result,
         chatHistory,
         setChatHistory: mockSetChatHistory,
-        exit: mockExit,
         onShowConfigSelector: vi.fn(),
         // onClear is not provided
       });
@@ -127,7 +123,6 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });
@@ -149,7 +144,6 @@ describe("useChat clear command", () => {
       result,
       chatHistory,
       setChatHistory: mockSetChatHistory,
-      exit: mockExit,
       onShowConfigSelector: vi.fn(),
       onClear: mockOnClear,
     });

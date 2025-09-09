@@ -74,14 +74,12 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   }, [chatHistory]);
 
   // Split chat history into stable and pending items
-  // Only put items in pending if they contain tool calls with "calling" status
-  // Everything else goes into static content
+  // The last two items may have pending tool calls
   const { staticItems, pendingItems } = React.useMemo(() => {
-    const items: React.ReactElement[] = [];
-
     // Add intro message as first item if it should be shown
+    const staticItems: React.ReactElement[] = [];
     if (showIntroMessage) {
-      items.push(
+      staticItems.push(
         <IntroMessage
           key="intro"
           config={config}
@@ -91,48 +89,27 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
       );
     }
 
-    // Helper function to check if an item has pending tool calls
-    const hasPendingToolCalls = (item: ChatHistoryItem): boolean => {
-      return !!(
-        item.toolCallStates &&
-        item.toolCallStates.some(
-          (toolState) =>
-            toolState.status === "calling" ||
-            toolState.status === "generating" ||
-            toolState.status === "generated",
-        )
-      );
-    };
-
-    // Find the first message with pending tool calls from the end
-    let pendingStartIndex = filteredChatHistory.length;
-    for (let i = filteredChatHistory.length - 1; i >= 0; i--) {
-      if (hasPendingToolCalls(filteredChatHistory[i])) {
-        pendingStartIndex = i;
-        // If there's a message after this one, include it too as it might be related
-        if (i + 1 < filteredChatHistory.length) {
-          // Keep the pending start index as is, so we include the next message
-        }
-        break;
-      }
-    }
-
-    const stableHistory = filteredChatHistory.slice(0, pendingStartIndex);
-    const pendingHistory = filteredChatHistory.slice(pendingStartIndex);
+    const PENDING_ITEMS_COUNT = 2;
+    const stableCount = Math.max(
+      0,
+      filteredChatHistory.length - PENDING_ITEMS_COUNT,
+    );
+    const stableHistory = filteredChatHistory.slice(0, stableCount);
+    const pendingHistory = filteredChatHistory.slice(stableCount);
 
     // Add stable messages to static items
     stableHistory.forEach((item, index) => {
-      items.push(renderMessage(item, index));
+      staticItems.push(renderMessage(item, index));
     });
 
     // Pending items will be rendered dynamically outside Static
-    const pendingElements = pendingHistory.map((item, index) =>
-      renderMessage(item, pendingStartIndex + index),
+    const pendingItems = pendingHistory.map((item, index) =>
+      renderMessage(item, stableCount + index),
     );
 
     return {
-      staticItems: items,
-      pendingItems: pendingElements,
+      staticItems,
+      pendingItems,
     };
   }, [
     showIntroMessage,
