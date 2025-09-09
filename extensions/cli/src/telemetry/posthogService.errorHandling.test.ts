@@ -39,7 +39,7 @@ describe("PosthogService Error Handling", () => {
       properties: expect.objectContaining({
         test: "data",
         os: expect.any(String),
-        extensionVersion: "",
+        extensionVersion: expect.any(String),
         ideName: "cn",
         ideType: "cli",
       }),

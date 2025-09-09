@@ -33,7 +33,7 @@ export const runTerminalCommandTool: Tool = {
   displayName: "Bash",
   description: `Executes a terminal command and returns the output
 
-The command will be executed from the current working directory: ${process.cwd()}
+Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 `,
   parameters: {
     command: {

@@ -37,7 +37,6 @@ class MessageTypes {
             "applyToFile",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
