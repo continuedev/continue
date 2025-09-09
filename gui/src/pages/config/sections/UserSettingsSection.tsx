@@ -176,9 +176,9 @@ export function UserSettingsSection() {
             </Card>
           </div>
 
-          {/* Privacy Settings */}
+          {/* Telemetry Settings */}
           <div>
-            <ConfigHeader title="Privacy" variant="sm" />
+            <ConfigHeader title="Telemetry" variant="sm" />
             <Card>
               <div className="flex flex-col gap-4">
                 <UserSetting

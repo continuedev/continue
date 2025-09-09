@@ -65,7 +65,7 @@ export function HistoryTableRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       data-testid={`history-row-${index}`}
-      className="relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3 hover:bg-input"
+      className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
         await dispatch(exitEdit({}));
         if (sessionMetadata.sessionId !== currentSessionId) {

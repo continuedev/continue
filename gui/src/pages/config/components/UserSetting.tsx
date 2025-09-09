@@ -75,7 +75,7 @@ export function UserSetting(props: UserSettingProps) {
 
       case "number":
         return (
-          <div className="border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus flex w-20 items-center rounded-md border border-solid">
+          <div className="border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-20 items-center rounded-md border border-solid focus-within:ring-1">
             <input
               type="number"
               value={props.value}
@@ -95,7 +95,7 @@ export function UserSetting(props: UserSettingProps) {
             onChange={props.onChange}
             disabled={disabled}
           >
-            <ListboxButton className="border-command-border w-20 !w-20 !flex-none justify-between px-2 py-1 !rounded-md">
+            <ListboxButton className="border-command-border !w-20 w-20 !flex-none justify-between !rounded-md px-2 py-1">
               {props.options.find((opt) => opt.value === props.value)?.label ||
                 props.value}
               <ChevronDownIcon className="h-3 w-3" />
@@ -121,7 +121,7 @@ export function UserSetting(props: UserSettingProps) {
             >
               <div className="flex items-center gap-2">
                 <div
-                  className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid ${
+                  className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid focus-within:ring-1 ${
                     props.isDirty
                       ? !props.isValid
                         ? "outline outline-red-500"
@@ -158,7 +158,7 @@ export function UserSetting(props: UserSettingProps) {
         }
         return (
           <div
-            className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+            className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid focus-within:ring-1 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
           >
             <input
               type="text"
@@ -192,7 +192,7 @@ export function UserSetting(props: UserSettingProps) {
 
   return (
     <div className="flex items-start justify-start gap-4">
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-1 flex-col">
         <span className="text-sm font-medium">{title}</span>
         <div className="mt-0.5 text-xs text-gray-500">{description}</div>
       </div>

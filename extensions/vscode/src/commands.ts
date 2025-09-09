@@ -45,7 +45,6 @@ import { getMetaKeyLabel } from "./util/util";
 import { openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeIde } from "./VsCodeIde";
 
-
 type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
 
 /**

@@ -4,8 +4,8 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/16/solid";
-import { cn } from "../../util/cn";
 import { varWithFallback } from "../../styles/theme";
+import { cn } from "../../util/cn";
 
 type AlertTypes = "info" | "success" | "warning" | "error";
 type AlertSize = "sm" | "lg";
@@ -74,7 +74,7 @@ function Alert({
   ...props
 }: AlertProps) {
   const { Icon, border, text, iconColor } = ALERT_CONFIGS[type];
-  
+
   const colorMap = {
     info: varWithFallback("info"),
     success: varWithFallback("success"),

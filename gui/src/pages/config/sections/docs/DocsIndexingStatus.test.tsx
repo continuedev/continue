@@ -13,7 +13,6 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { createMockStore } from "../../../../util/test/mockStore";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
-
 describe("DocsIndexingStatus", () => {
   const mockDocConfig: SiteIndexingConfig = {
     startUrl: "https://example.com",
