@@ -62,23 +62,29 @@ models:
   - name: Llama 3.1 8B
     provider: ollama
     model: llama3.1:8b
+    contextLength: 8192
     roles:
       - chat
       - edit
       - apply
-    defaultCompletionOptions:
-      temperature: 0.7
 
   # Lightweight autocomplete model
   - name: Qwen2.5 Coder
     provider: ollama
     model: qwen2.5-coder:1.5b
+    contextLength: 2048
     roles:
       - autocomplete
     defaultCompletionOptions:
-      temperature: 0.3
-# Disable telemetry for offline use
+      temperature: 0
 ```
+
+<Info>
+  Setting `contextLength` limits how much code the model can see at once. Lower
+  values (2048-4096) improve speed significantly on local machines, while higher
+  values (8192+) provide more context but may be slower. Adjust based on your
+  hardware capabilities.
+</Info>
 
 ### Resource-constrained setup
 
@@ -93,19 +99,18 @@ models:
   - name: Gemma 2B
     provider: ollama
     model: gemma2:2b
+    contextLength: 4096
     roles:
       - chat
       - edit
       - apply
     defaultCompletionOptions:
-      temperature: 0.5
       maxTokens: 2048
-# Disable features that require internet
 ```
 
 ## Recommended models for offline use
 
-Based on our [model recommendations](/customization/models), here are the best local models for offline development:
+Based on our [model recommendations](/customization/models#recommended-models), here are the best local models for offline development:
 
 ### High-Performance (16GB+ VRAM)
 
@@ -129,38 +134,14 @@ See our complete [local models guide](/customization/models) for more options.
 
 ## Preparing for offline work
 
-### Pre-flight checklist
-
-Before disconnecting from the internet:
-
-1. **Pull all required models** - Ensure all models in your config are downloaded locally
-2. **Test your setup** - Verify everything works by running a few prompts offline
-3. **Download dependencies** - Run your package manager to ensure all dependencies are cached
-
-### Setting up context providers
-
-Configure local context providers that don't require internet:
-
-```yaml
-context:
-  - provider: diff
-  - provider: currentFile
-  - provider: codebase
-  - provider: folder
-  - provider: docs
-  - provider: tree
-  - provider: terminal
-  - provider: url
-```
-
 ## Optimizing for offline performance
 
 ### Model selection guidelines
 
 | Use Case        | Recommended Model                                                        | RAM Required | See Guide                                          |
 | --------------- | ------------------------------------------------------------------------ | ------------ | -------------------------------------------------- |
-| General coding  | [llama3.1:8b](https://ollama.com/library/llama3.1:8b)                    | 8GB+         | [Ollama Guide](/guides/ollama-guide)               |
-| Light editing   | [gemma2:2b](https://ollama.com/library/gemma2:2b)                        | 4GB+         | [Ollama Guide](/guides/ollama-guide)               |
+| General coding  | [llama3.1:8b](https://hub.continue.dev/ollama/llama3.1-8b)               | 8GB+         | [Ollama Guide](/guides/ollama-guide)               |
+| Light editing   | [gemma2:2b](hhttps://hub.continue.dev/ollama/gemma2-2b)                  | 4GB+         | [Ollama Guide](/guides/ollama-guide)               |
 | Code completion | [qwen2.5-coder:1.5b](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b) | 2GB+         | [Model Roles](/customize/model-roles/autocomplete) |
 | Complex tasks   | [gpt-oss-20b](https://hub.continue.dev/ollama/gpt-oss-20b)               | 20GB+        | [Models Guide](/customization/models)              |
 
@@ -179,15 +160,15 @@ Agent mode works excellently offline for multi-file operations:
 
 ```yaml
 models:
-  - name: Local Agent
+  - name: Local Model
     provider: ollama
     model: llama3.1:8b
+    contextLength: 8192
     roles:
       - chat
       - edit
       - apply
     defaultCompletionOptions:
-      temperature: 0.7
       maxTokens: 4096
 ```
 
@@ -198,7 +179,6 @@ Note: Some local models have limited tool calling capabilities. Check our [model
 1. **Write clear task descriptions** - Be specific about what you want to accomplish
 2. **Break down complex tasks** - Smaller, focused requests work better with local models
 3. **Use project rules** - Define coding standards in [rules](/customize/deep-dives/rules) to guide the agent
-4. **Leverage context providers** - Use @file and @folder to provide relevant context
 
 ## Troubleshooting
 
@@ -242,15 +222,15 @@ models:
   - name: Quick Edit
     provider: ollama
     model: gemma2:2b
+    contextLength: 4096
     roles:
       - edit
-   defaultCompletionOptions:
-      contextLength: 8192
 
   # More capable model for complex tasks
   - name: Deep Think
     provider: ollama
     model: llama3.1:8b
+    contextLength: 8192
     roles:
       - chat
       - apply
@@ -259,23 +239,9 @@ models:
   - name: Autocomplete
     provider: ollama
     model: qwen2.5-coder:1.5b
+    contextLength: 2048
     roles:
       - autocomplete
-```
-
-### Custom embeddings for codebase search
-
-For better codebase search without internet:
-
-```yaml
-provider: ollama
-model: nomic-embed-text
-```
-
-Remember to pull the embeddings model:
-
-```bash
-ollama pull nomic-embed-text
 ```
 
 ## Next steps
