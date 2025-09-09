@@ -27,7 +27,7 @@ const InterruptedBanner: React.FC<{ wasInterrupted: boolean }> = ({
   if (!wasInterrupted) return null;
   return (
     <Box paddingX={1} marginBottom={0}>
-      <Text color="yellow">⚠ Interrupted by user - Press enter to resume</Text>
+      <Text color="yellow">Interrupted by user - Press enter to continue</Text>
     </Box>
   );
 };
