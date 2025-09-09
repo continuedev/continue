@@ -47,6 +47,42 @@ export function setExitMessageCallback(callback: () => void) {
   exitMessageCallback = callback;
 }
 
+// Sets up SIGINT handler that requires double Ctrl+C within 1 second to exit
+export function enableSigintHandler() {
+  // Remove all existing SIGINT listeners first
+  process.removeAllListeners("SIGINT");
+
+  process.on("SIGINT", async () => {
+    const now = Date.now();
+    const timeSinceLastCtrlC = now - lastCtrlCTime;
+
+    if (timeSinceLastCtrlC <= 1000 && lastCtrlCTime !== 0) {
+      // Second Ctrl+C within 1 second - exit
+      showExitMessage = false;
+      if (tuiUnmount) {
+        tuiUnmount();
+      }
+      await sentryService.flush();
+      process.exit(0);
+    } else {
+      // First Ctrl+C or too much time elapsed - show exit message
+      lastCtrlCTime = now;
+      showExitMessage = true;
+      if (exitMessageCallback) {
+        exitMessageCallback();
+      }
+
+      // Hide message after 1 second
+      setTimeout(() => {
+        showExitMessage = false;
+        if (exitMessageCallback) {
+          exitMessageCallback();
+        }
+      }, 1000);
+    }
+  });
+}
+
 // Check if "ctrl+c to exit" message should be displayed
 export function shouldShowExitMessage(): boolean {
   return showExitMessage;
@@ -293,41 +329,6 @@ try {
   );
   process.exit(1);
 }
-
-// Graceful shutdown with two-stage Ctrl+C exit
-
-// Remove all existing SIGINT listeners first
-process.removeAllListeners("SIGINT");
-
-process.on("SIGINT", async () => {
-  const now = Date.now();
-  const timeSinceLastCtrlC = now - lastCtrlCTime;
-
-  if (timeSinceLastCtrlC <= 1000 && lastCtrlCTime !== 0) {
-    // Second Ctrl+C within 1 second - exit
-    showExitMessage = false;
-    if (tuiUnmount) {
-      tuiUnmount();
-    }
-    await sentryService.flush();
-    process.exit(0);
-  } else {
-    // First Ctrl+C or too much time elapsed - show exit message
-    lastCtrlCTime = now;
-    showExitMessage = true;
-    if (exitMessageCallback) {
-      exitMessageCallback();
-    }
-
-    // Hide message after 1 second
-    setTimeout(() => {
-      showExitMessage = false;
-      if (exitMessageCallback) {
-        exitMessageCallback();
-      }
-    }, 1000);
-  }
-});
 
 process.on("SIGTERM", async () => {
   await sentryService.flush();

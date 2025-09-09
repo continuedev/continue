@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 // Array of helpful tips for Continue CLI users
 const CONTINUE_CLI_TIPS = [
   "Use `/help` to learn keyboard shortcuts",
-  "Press escape to pause cn, and press enter to resume",
+  "Press escape to pause cn, and press enter to continue",
   "Use arrow keys (↑/↓) to navigate through your input history",
   'Multi-line input is supported by typing "\\" and pressing enter',
   "Use `cn ls` or `/resume` to resume a previous conversation",
