@@ -60,7 +60,7 @@ export async function getLatestVersion(
         // Request was aborted, don't log
         return null;
       }
-      logger.debug(
+      logger?.debug(
         "Warning: Could not fetch latest version from api.continue.dev",
       );
       return null;
@@ -73,11 +73,11 @@ export async function getLatestVersion(
 getLatestVersion()
   .then((version) => {
     if (version) {
-      logger.info(`Latest version: ${version}`);
+      logger?.info(`Latest version: ${version}`);
     }
   })
   .catch((error) => {
-    logger.debug(
+    logger?.debug(
       `Warning: Could not fetch latest version from api.continue.dev: ${error}`,
     );
   });
