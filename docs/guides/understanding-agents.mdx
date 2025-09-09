@@ -1,63 +1,63 @@
 ---
-title: "How to Understand Assistants: Hub vs Local Configuration"
-description: "Learn how to choose between cloud-managed Hub assistants and local configuration for AI development assistance in Continue, including setup, management, and best practices for each approach"
+title: "How to Understand Agents: Hub vs Local Configuration"
+description: "Learn how to choose between cloud-managed Hub agents and local configuration for AI development assistance in Continue, including setup, management, and best practices for each approach"
 ---
 
 Every developer has unique needs when it comes to AI assistance. Some prefer the convenience of cloud-managed configurations, while others need the control and privacy of local setups. Continue offers both paths, and this guide will help you choose the right one for your workflow.
 
 ## What Are the Two Paths to AI Assistance?
 
-Continue provides two distinct ways to configure your AI assistant:
+Continue provides two distinct ways to configure your AI agent:
 
 Think of Continue's configuration options like choosing between a managed service and self-hosting. Both get you to the same destination—powerful AI assistance in your IDE—but the journey and control level differ significantly.
 
-### How to Access Your Assistant Configuration
+### How to Access Your Agent Configuration
 
 Before we dive into the specifics, let's understand how to access your configuration:
 
 1. Open the Continue Chat sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)
-2. Click the Assistant selector above the main chat input
-3. Hover over an assistant and click:
-   - `new window` icon for Hub assistants
-   - `gear` icon for Local assistants
+2. Click the Agent selector above the main chat input
+3. Hover over an agent and click:
+   - `new window` icon for Hub agents
+   - `gear` icon for Local agents
 
-![configure an assistant](/images/configure-continue.png)
+![configure an agent](/images/configure-continue.png)
 
-## What Are Hub Assistants: The Managed Experience
+## What Are Hub Agents: The Managed Experience
 
-Hub Assistants represent the "it just works" philosophy. When you [sign in to Continue Hub](https://auth.continue.dev/), you gain access to a curated ecosystem of pre-configured assistants that sync seamlessly across all your development environments.
+Hub Agents represent the "it just works" philosophy. When you [sign in to Continue Hub](https://auth.continue.dev/), you gain access to a curated ecosystem of pre-configured agents that sync seamlessly across all your development environments.
 
-### Why Should You Choose Hub Assistants?
+### Why Should You Choose Hub Agents?
 
 **The Power of Simplicity**
 
-- **Instant Setup**: Browse the [assistant marketplace](https://hub.continue.dev/explore/assistants) and add any assistant to your account with a single click
+- **Instant Setup**: Browse the [agent marketplace](https://hub.continue.dev) and add any agent to your account with a single click
 - **Web-Based Management**: Configure models, add secrets, and customize settings through an intuitive web interface—no JSON editing required
 - **Automatic Synchronization**: Make a change on the hub, and it reflects immediately across all your IDE instances
-- **Team Collaboration**: Share custom assistants with your team, ensuring everyone uses the same optimized configurations
+- **Team Collaboration**: Share custom agents with your team, ensuring everyone uses the same optimized configurations
 
-![nextjs assistant](/images/nextjs-assistant.png)
+![nextjs agent](/images/nextjs-assistant.png)
 
-### How to Get Started with Hub Assistants
+### How to Get Started with Hub Agents
 
 The journey from zero to AI-powered coding takes just four steps:
 
-1. **Select Your Assistant**: Click the assistant selector in your IDE's Continue panel
-2. **Explore or Create**: Browse community assistants or craft your own specialized helper
+1. **Select Your Agent**: Click the agent selector in your IDE's Continue panel
+2. **Explore or Create**: Browse community agents or craft your own specialized helper
 3. **Secure Your Keys**: Add API keys as [User Secrets](https://hub.continue.dev/settings/secrets) in the hub—they're encrypted and never exposed
 4. **Sync and Code**: Click "Reload config" to pull your latest settings
 
-Pro tip: Hub Assistants are perfect for teams. Create a custom assistant with your team's coding standards, preferred models, and context sources, then share it with a simple link.
+Pro tip: Hub Agents are perfect for teams. Create a custom agent with your team's coding standards, preferred models, and context sources, then share it with a simple link.
 
-### How to Manage Hub Assistants
+### How to Manage Hub Agents
 
-All Hub Assistant management happens through [the Hub](https://hub.continue.dev). For detailed customization, see our guide on [Editing an Assistant](/hub/assistants/edit-an-assistant).
+All Hub Agent management happens through [the Hub](https://hub.continue.dev). For detailed customization, see our guide on [Editing an Agent](/hub/agents/edit-an-agent).
 
-## What Are Local Assistants: The Power User's Choice
+## What Are Local Agents: The Power User's Choice
 
-Local Assistants put you in the driver's seat. Using a `config.yaml` file, you have complete control over every aspect of your AI assistant's behavior, with all configuration stored directly on your machine.
+Local Agents put you in the driver's seat. Using a `config.yaml` file, you have complete control over every aspect of your AI agent's behavior, with all configuration stored directly on your machine.
 
-### Why Should You Choose Local Assistants?
+### Why Should You Choose Local Agents?
 
 **Complete Control and Privacy**
 
@@ -66,7 +66,7 @@ Local Assistants put you in the driver's seat. Using a `config.yaml` file, you h
 - **Offline Capability**: Once configured, no internet connection needed (assuming you're using local models)
 - **Unlimited Customization**: Access every configuration option, experimental feature, and advanced setting
 
-### How to Set Up Local Assistants
+### How to Set Up Local Agents
 
 Local configuration lives in a single YAML file in your home directory:
 
@@ -77,13 +77,13 @@ Local configuration lives in a single YAML file in your home directory:
 
 **Quick Access Method:**
 
-1. Open the assistants dropdown in your IDE
-2. Click the gear icon next to "Local Assistant"
+1. Open the agents dropdown in your IDE
+2. Click the gear icon next to "Local Agent"
 3. The `config.yaml` file opens in your editor
 
 ![local-config-open-steps](/images/local-config-open-steps.png)
 
-### The Local Assistant Experience
+### The Local Agent Experience
 
 When you edit your `config.yaml`, Continue provides intelligent autocomplete for all available options. Save the file, and Continue automatically reloads your configuration—no restart required.
 
@@ -93,9 +93,9 @@ For the complete configuration reference, see our [config.yaml documentation](/r
 
 ## How to Make the Right Choice
 
-The decision between Hub and Local assistants often comes down to your specific needs and constraints. Here's a framework to help you decide:
+The decision between Hub and Local agents often comes down to your specific needs and constraints. Here's a framework to help you decide:
 
-### Choose Hub Assistants When You:
+### Choose Hub Agents When You:
 
 **Value Convenience Over Control**
 
@@ -106,7 +106,7 @@ The decision between Hub and Local assistants often comes down to your specific 
 
 **Need Advanced Collaboration**
 
-- Want to share custom assistants with teammates
+- Want to share custom agents with teammates
 - Need centralized API key management
 - Require quick updates across your entire organization
 
@@ -116,7 +116,7 @@ The decision between Hub and Local assistants often comes down to your specific 
 - Want to experiment with different models and configurations
 - Prefer guided setup experiences
 
-### Choose Local Assistants When You:
+### Choose Local Agents When You:
 
 **Require Maximum Control**
 
@@ -140,21 +140,21 @@ The decision between Hub and Local assistants often comes down to your specific 
 
 Here's a secret: you don't have to choose just one. Many developers use both approaches:
 
-- **Hub Assistants** for general development and experimentation
-- **Local Assistants** for production work or client projects with specific requirements
+- **Hub Agents** for general development and experimentation
+- **Local Agents** for production work or client projects with specific requirements
 
-You can switch between them seamlessly using the assistant selector in your IDE.
+You can switch between them seamlessly using the agent selector in your IDE.
 
 ## Common Patterns and Best Practices
 
-### For Hub Assistant Users
+### For Hub Agent Users
 
-1. **Start with Community Assistants**: Before creating your own, explore what others have built
+1. **Start with Community Agents**: Before creating your own, explore what others have built
 2. **Use Secrets Properly**: Never hardcode API keys—always use the User Secrets feature
-3. **Create Specialized Assistants**: Make different assistants for different contexts (frontend, backend, DevOps)
+3. **Create Specialized Agents**: Make different agents for different contexts (frontend, backend, DevOps)
 4. **Share Liberally**: If you create something useful, share it with the community
 
-### For Local Assistant Users
+### For Local Agent Users
 
 1. **Version Control Your Config**: Treat your `config.yaml` like code—commit it, review changes, and maintain history
 2. **Use Environment Variables**: For sensitive data, reference environment variables instead of hardcoding values
@@ -163,7 +163,7 @@ You can switch between them seamlessly using the assistant selector in your IDE.
 
 ## Troubleshooting and Tips
 
-### Hub Assistant Issues
+### Hub Agent Issues
 
 **Changes Not Reflecting?**
 
@@ -171,12 +171,12 @@ You can switch between them seamlessly using the assistant selector in your IDE.
 - Check your internet connection
 - Ensure you're signed in to the correct account
 
-**Assistant Not Available?**
+**Agent Not Available?**
 
 - Verify it's added to your account on the hub
 - Check if it requires specific API keys
 
-### Local Assistant Issues
+### Local Agent Issues
 
 **Config Not Loading?**
 
@@ -193,7 +193,7 @@ You can switch between them seamlessly using the assistant selector in your IDE.
 
 Now that you understand both configuration approaches, you're ready to dive deeper:
 
-- **For Hub Users**: [Create Your First Assistant](/hub/assistants/create-an-assistant)
+- **For Hub Users**: [Create Your First Agent](/hub/agents/create-an-agent)
 - **For Local Users**: [Explore the Config Reference](/reference)
 - **For Everyone**: [Discover Available Models](/customize/model-providers/overview)
 
