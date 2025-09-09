@@ -677,7 +677,7 @@ describe("CodebaseIndexer", () => {
       });
     });
 
-    describe.skip("getIndexesToBuild", () => {
+    describe("getIndexesToBuild", () => {
       let indexer: CodebaseIndexer;
       let mockConfig: any;
       let mockEmbeddingsModel: any;
@@ -770,7 +770,7 @@ describe("CodebaseIndexer", () => {
     });
   });
 
-  describe.skip("wasAnyOneIndexAdded", () => {
+  describe("wasAnyOneIndexAdded", () => {
     let testIndexer: TestCodebaseIndexer;
     let mockGetIndexesToBuild: jest.MockedFunction<any>;
 
@@ -786,6 +786,10 @@ describe("CodebaseIndexer", () => {
       mockGetIndexesToBuild = jest
         .spyOn(testIndexer as any, "getIndexesToBuild")
         .mockResolvedValue([]);
+
+      jest
+        .spyOn(testIndexer, "refreshCodebaseIndex")
+        .mockImplementation(async () => {});
     });
 
     afterEach(() => {
