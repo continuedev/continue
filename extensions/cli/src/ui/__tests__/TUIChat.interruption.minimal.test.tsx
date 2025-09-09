@@ -33,7 +33,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       let frame = lastFrame();
       expect(frame).toBeDefined();
       expect(frame).not.toContain("⚠ Interrupted by user");
-      expect(frame).not.toContain("Press enter to resume");
+      expect(frame).not.toContain("Press enter to continue");
 
       // Re-render with wasInterrupted: true
       rerender(
@@ -50,7 +50,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       frame = lastFrame();
       expect(frame).toBeDefined();
       expect(frame).toContain("⚠ Interrupted by user");
-      expect(frame).toContain("Press enter to resume");
+      expect(frame).toContain("Press enter to continue");
     } finally {
       unmount();
     }
@@ -75,7 +75,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       let frame = lastFrame();
       expect(frame).toBeDefined();
       expect(frame).toContain("⚠ Interrupted by user");
-      expect(frame).toContain("Press enter to resume");
+      expect(frame).toContain("Press enter to continue");
 
       // Re-render with wasInterrupted: false
       rerender(
@@ -92,7 +92,7 @@ describe("TUIChat - Interruption UI (Minimal Test)", () => {
       frame = lastFrame();
       expect(frame).toBeDefined();
       expect(frame).not.toContain("⚠ Interrupted by user");
-      expect(frame).not.toContain("Press enter to resume");
+      expect(frame).not.toContain("Press enter to continue");
     } finally {
       unmount();
     }
