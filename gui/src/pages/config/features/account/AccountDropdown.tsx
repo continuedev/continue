@@ -1,11 +1,14 @@
 import {
   ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
+  UserCircleIcon as UserCircleIconOutline,
 } from "@heroicons/react/24/outline";
-import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
+import { ToolTip } from "../../../../components/gui/Tooltip";
 import {
+  Button,
   Listbox,
   ListboxButton,
   ListboxOption,
@@ -24,10 +27,8 @@ interface FreeTrialStatus {
 }
 
 export function AccountDropdown() {
-  const { session, logout } = useAuth();
+  const { session, logout, login } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
-  const [freeTrialStatus, setFreeTrialStatus] =
-    useState<FreeTrialStatus | null>(null);
 
   useEffect(() => {
     const fetchFreeTrialStatus = async () => {
@@ -51,43 +52,25 @@ export function AccountDropdown() {
     void fetchFreeTrialStatus();
   }, [session, ideMessenger]);
 
-  const getUpgradeInfo = () => {
-    if (!freeTrialStatus) {
-      return {
-        title: "Upgrade to Pro",
-        description:
-          "Get everything in Hobby, plus unlimited completions, MAX Mode, and more",
-      };
-    }
-
-    if (freeTrialStatus.optedInToFreeTrial) {
-      const chatUsed = freeTrialStatus.chatCount ?? 0;
-      const chatLimit = freeTrialStatus.chatLimit;
-      const isNearLimit = chatUsed / chatLimit > 0.8;
-
-      if (isNearLimit) {
-        return {
-          title: "Upgrade to Models Add-On",
-          description: `You've used ${chatUsed}/${chatLimit} free trial requests. Upgrade for unlimited usage`,
-        };
-      } else {
-        return {
-          title: "Upgrade to Models Add-On",
-          description:
-            "Get unlimited chat requests and autocomplete suggestions",
-        };
-      }
-    }
-
-    return {
-      title: "Upgrade to Pro",
-      description:
-        "Get everything in Hobby, plus unlimited completions, MAX Mode, and more",
-    };
-  };
-
-  if (!session || isOnPremSession(session)) {
+  if (isOnPremSession(session)) {
     return null;
+  }
+
+  if (!session) {
+    return (
+      <ToolTip content="Log in" className="text-xs md:!hidden">
+        <Button
+          variant="ghost"
+          className="text-description flex w-full flex-row items-center gap-2 px-2 py-1.5"
+          onClick={() => login(false)}
+        >
+          <UserCircleIconOutline className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+          <span className="text-description hidden text-xs md:block">
+            Log in
+          </span>
+        </Button>
+      </ToolTip>
+    );
   }
 
   return (
@@ -100,7 +83,7 @@ export function AccountDropdown() {
                 open ? "bg-input" : "hover:bg-input bg-inherit"
               }`}
             >
-              <UserCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
+              <UserCircleIconSolid className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
               <div className="ml-1 flex min-w-0 flex-1 flex-col items-start overflow-hidden">
                 <span className="w-full truncate text-xs font-medium hover:brightness-110">
                   {session.account.label}
@@ -114,7 +97,7 @@ export function AccountDropdown() {
               {/* Account info section for small screens */}
               <div className="md:hidden">
                 <div className="flex items-center gap-2 px-2 py-1">
-                  <UserCircleIcon className="h-5 w-5 flex-shrink-0" />
+                  <UserCircleIconSolid className="h-5 w-5 flex-shrink-0" />
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate text-xs font-medium">
                       {session.account.label}
@@ -145,7 +128,7 @@ export function AccountDropdown() {
               <ListboxOption onClick={logout} value="logout">
                 <div className="flex items-center gap-2 py-0.5">
                   <ArrowRightStartOnRectangleIcon className="h-3.5 w-3.5" />
-                  <span>Logout</span>
+                  <span>Log out</span>
                 </div>
               </ListboxOption>
             </ListboxOptions>

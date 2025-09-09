@@ -48,6 +48,7 @@ export function AssistantAndOrgListbox({
     selectedProfile,
     session,
     logout,
+    login,
     organizations,
     refreshProfiles,
   } = useAuth();
@@ -275,10 +276,10 @@ export function AssistantAndOrgListbox({
                         configLoading && "animate-spin-slow",
                       )}
                     />
-                    <span className="text-2xs">Reload config</span>
+                    <span className="text-2xs">Reload</span>
                   </div>
                 </Button>
-                {session && (
+                {session ? (
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -292,6 +293,22 @@ export function AssistantAndOrgListbox({
                     <div className="flex w-full items-center">
                       <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
                       <span className="text-2xs">Log out</span>
+                    </div>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      login(false);
+                      close();
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                  >
+                    <div className="flex w-full items-center">
+                      <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0 rotate-180" />
+                      <span className="text-2xs">Log in</span>
                     </div>
                   </Button>
                 )}
