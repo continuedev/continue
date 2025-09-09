@@ -532,7 +532,7 @@ describe("Bedrock", () => {
       );
     });
 
-    it("should add cache points for prompt caching when needed", () => {
+    it("should add cache points when cacheBehavior.cacheConversation is enabled", () => {
       // Create a test instance with caching behavior enabled
       const bedrockWithCaching = new TestBedrock({
         apiKey: "test-key",
@@ -575,6 +575,96 @@ describe("Bedrock", () => {
       // Verify that text content includes a cache ID suffix
       const userMessageText = converted[0].content?.[0].text;
       expect(userMessageText).toMatch(/First message.+/);
+    });
+
+    it("should add cache points when completionOptions.promptCaching is enabled", () => {
+      // Create a test instance with prompt caching enabled via completionOptions
+      const bedrockWithPromptCaching = new TestBedrock({
+        apiKey: "test-key",
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        region: "us-east-1",
+      });
+
+      // Set completionOptions.promptCaching (without cacheBehavior)
+      bedrockWithPromptCaching.completionOptions = {
+        ...bedrockWithPromptCaching.completionOptions,
+        promptCaching: true,
+      };
+
+      const messages: ChatMessage[] = [
+        { role: "user", content: "First message" } as UserChatMessage,
+        { role: "assistant", content: "First response" },
+        { role: "user", content: "Second message" } as UserChatMessage,
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrockWithPromptCaching["_convertMessages"](
+        messages,
+        availableTools,
+      );
+
+      // The last two user messages should have cache points
+      expect(converted.length).toBe(3);
+      expect(converted[0].role).toBe("user");
+      expect(converted[0].content?.some((block) => block.cachePoint)).toBe(
+        true,
+      );
+      expect(converted[1].role).toBe("assistant");
+      expect(converted[2].role).toBe("user");
+      expect(converted[2].content?.some((block) => block.cachePoint)).toBe(
+        true,
+      );
+
+      // Verify that text content includes a cache ID suffix
+      const userMessageText = converted[0].content?.[0].text;
+      expect(userMessageText).toMatch(/First message.+/);
+    });
+
+    it("should not add cache points when both caching options are disabled", () => {
+      // Create a test instance with no caching enabled
+      const bedrockNoCaching = new TestBedrock({
+        apiKey: "test-key",
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
+        region: "us-east-1",
+      });
+
+      // Explicitly set no caching
+      bedrockNoCaching.cacheBehavior = {
+        cacheConversation: false,
+        cacheSystemMessage: false,
+      };
+      bedrockNoCaching.completionOptions = {
+        ...bedrockNoCaching.completionOptions,
+        promptCaching: false,
+      };
+
+      const messages: ChatMessage[] = [
+        { role: "user", content: "First message" } as UserChatMessage,
+        { role: "assistant", content: "First response" },
+        { role: "user", content: "Second message" } as UserChatMessage,
+      ];
+
+      const availableTools = new Set<string>();
+      const converted = bedrockNoCaching["_convertMessages"](
+        messages,
+        availableTools,
+      );
+
+      // No cache points should be added
+      expect(converted.length).toBe(3);
+      expect(converted[0].role).toBe("user");
+      expect(converted[0].content?.some((block) => block.cachePoint)).toBe(
+        false,
+      );
+      expect(converted[1].role).toBe("assistant");
+      expect(converted[2].role).toBe("user");
+      expect(converted[2].content?.some((block) => block.cachePoint)).toBe(
+        false,
+      );
+
+      // Verify that text content doesn't include a cache ID suffix
+      const userMessageText = converted[0].content?.[0].text;
+      expect(userMessageText).toBe("First message");
     });
   });
 });
