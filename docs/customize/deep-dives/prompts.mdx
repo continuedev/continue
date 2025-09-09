@@ -1,28 +1,26 @@
 ---
-title: "Creating Custom Prompts in Continue"
-description: "Learn how to create reusable prompt files in Continue to streamline repetitive tasks, including examples for code reviews, security checks, and entity generation"
+title: "How to Create and Manage Prompts in Continue"
+description: "Prompts are used to kick off workflows for Agent, Plan, and Chat requests"
+keywords: [prompts, context, slash]
+sidebarTitle: "Prompts"
 ---
 
-Prompts are reusable instructions that can be referenced at any time during chat. They are especially useful as context for repetitive and/or complex tasks.
+Prompts are used to kick off workflows for Agent, Plan, and Chat requests. They are included as user messages.
 
-<Info>
-  Prompts were previously defined in a `.prompt` file format, but for
-  consistency we now recommend using the same Markdown format as
-  [rules](./rules) and adding `alwaysApply: false` to the frontmatter so
-  that they are manually triggered.
-</Info>
+They are especially useful as context for repetitive and/or complex tasks.
 
 ## Quick Start: How to Create Your First Prompt File
 
 Below is a quick example of setting up a prompt file:
 
-1. Create a folder called `.continue/rules` at the top level of your workspace
-2. Add a file called `review-prompt.md` to this folder.
-3. Write the following contents to `review-prompt.md` and save.
+1. Create a folder called `.continue/prompts` at the top level of your workspace
+2. Add a file called `redux-review-prompt.md` to this folder.
+3. Write the following contents to `redux-review-prompt.md` and save.
 
 ```md title="review-prompt.md"
 ---
 name: Redux best practices review
+isPrompt: true
 alwaysApply: false
 ---
 
@@ -50,13 +48,8 @@ Review the changes in the current git diff for these security best practices:
 - Is sensitive data handled appropriately throughout the lifecycle?
 ```
 
-### How to Create a Prompt That References Existing Files
+### Agent Prompt Blocks
 
-```md title="typeorm-entity-generator.md"
----
-name: Generate a new TypeORM entity
-alwaysApply: false
----
+The easiest way to add a slash command is by adding [`prompt`](../../hub/blocks/block-types#prompts) to your agent, which show up as slash commands in Agent, Plan, and Chad mode.
 
-Referencing `src/db/dataSource.ts` and `src/db/entity/SampleEntity.ts`, generate a new TypeORM entity based on the following requirements:
-```
+These slash commands can be combined with additional instructions, including highlighted code.

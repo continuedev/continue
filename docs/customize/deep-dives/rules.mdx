@@ -1,7 +1,7 @@
 ---
 title: "How to Create and Manage Rules in Continue"
-description: "Rules are used to provide instructions to the model for Agent, Chat, and Edit requests."
-keywords: [rules, .continuerules, system, prompt, message]
+description: "Rules are used to provide system message instructions to the model for Agent, Chat, and Edit requests"
+keywords: [rules, system, prompt, message]
 sidebarTitle: "Rules"
 ---
 
@@ -157,12 +157,3 @@ Continue includes a simple default system message for [Agent](../../features/age
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
-
-### Legacy: .continuerules File (Deprecated)
-
-<Warning>
-  `.continuerules` will be deprecated in a future release. Please use the
-  `.continue/rules` folder instead.
-</Warning>
-
-You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
