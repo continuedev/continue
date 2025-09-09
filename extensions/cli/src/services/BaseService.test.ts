@@ -1,7 +1,6 @@
-import { describe, expect, test, beforeEach, vi } from "vitest";
-
-// Import the actual BaseService implementation directly
 import { EventEmitter } from "events";
+
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { logger } from "../util/logger.js";
 
