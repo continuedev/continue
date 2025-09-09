@@ -583,7 +583,6 @@ class TelemetryService {
   public recordSlashCommand(commandName: string) {
     if (!this.isEnabled()) return;
 
-    console.log("ADD: ", commandName);
     this.slashCommandCounter.add(
       1,
       this.getStandardAttributes({ command: commandName }),
