@@ -10,8 +10,10 @@ import {
 } from "@opentelemetry/sdk-metrics";
 import {
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+  SEMRESATTRS_HOST_NAME,
   SEMRESATTRS_OS_TYPE,
   SEMRESATTRS_PROCESS_PID,
+  SEMRESATTRS_SERVICE_INSTANCE_ID,
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
@@ -88,6 +90,8 @@ class TelemetryService {
       const resource = resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: "continue-cli",
         [SEMRESATTRS_SERVICE_VERSION]: getVersion(),
+        [SEMRESATTRS_SERVICE_INSTANCE_ID]: uuidv4(),
+        [SEMRESATTRS_HOST_NAME]: os.hostname(),
         [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
           process.env.NODE_ENV || "development",
         [SEMRESATTRS_OS_TYPE]: os.type(),
