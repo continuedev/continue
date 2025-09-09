@@ -1,0 +1,547 @@
+---
+title: "PostHog Session Recording Analysis with Continue CLI"
+description: "Automatically analyze PostHog session recordings to identify UX issues and generate code optimization suggestions using Continue CLI"
+---
+
+# Building a Continuous AI Workflow with PostHog and GitHub
+
+This guide shows you how to build an automated system that continuously monitors PostHog session recordings, analyzes user experience issues using AI, and automatically creates GitHub issues for your development team to address.
+
+<Card title="What You'll Build" icon="robot">
+  A fully automated workflow that fetches PostHog session data, uses Continue
+  CLI to identify UX problems, and creates GitHub issues with specific technical
+  recommendations
+</Card>
+
+## Prerequisites
+
+<Warning>
+  **Session Recordings Required**: This workflow requires PostHog session
+  recordings to be enabled. If you haven't set this up yet, follow [PostHog's
+  session recording installation
+  guide](https://posthog.com/docs/session-replay/installation) first.
+</Warning>
+
+Before starting, ensure you have:
+
+- GitHub repository where you want to create issues
+- PostHog account with **session recordings enabled and collecting data**
+- Node.js 18+ installed locally
+- Basic familiarity with [Continue CLI](/guides/cli)
+
+<Steps>
+  <Step title="Install Continue CLI">
+    ```bash npm i -g @continuedev/cli ```
+  </Step>
+  <Step title="Install & Setup GitHub CLI">
+    ```bash # macOS brew install gh # Ubuntu/Debian sudo apt install gh #
+    Windows winget install --id GitHub.cli 
+    ```
+
+      Then authenticate: `gh auth login`
+
+  </Step>
+  <Step title="Set up PostHog API access">
+    Get your Personal API Key from PostHog settings
+  </Step>
+  <Step title="Test the workflow">Run your first automated analysis</Step>
+</Steps>
+
+## Step 1: Environment Setup
+
+### Get Your PostHog API Credentials
+
+You need a **Personal API Key** (not a Project API key) to access session recordings:
+
+1. Go to [Personal API Keys](https://app.posthog.com/settings/user-api-keys) in PostHog
+2. Click **+ Create a personal API Key**
+3. Name it "Continue CLI Session Analysis"
+4. Select these scopes:
+   - `session_recording:read` - **Required** for accessing session data
+   - `insight:read` - Optional, for additional analytics
+5. Copy the key immediately (you won't see it again!)
+
+### Set Up Your Environment Variables
+
+<CodeGroup>
+
+```bash Environment Setup
+# Create working directory
+mkdir posthog-continuous-ai
+cd posthog-continuous-ai
+
+# Create environment file
+cat > .env << EOF
+# PostHog Configuration
+POSTHOG_API_KEY=your_personal_api_key_here
+POSTHOG_PROJECT_ID=your_project_id_here
+POSTHOG_HOST=https://us.posthog.com
+
+# GitHub Configuration
+GITHUB_OWNER=YourUsername
+GITHUB_REPO=your-repository-name
+EOF
+
+# Load environment
+source .env
+```
+
+```bash Security Setup
+# Protect sensitive files
+cat > .gitignore << EOF
+# Environment variables - contains API keys
+.env
+
+# Generated data files
+*.json
+analysis-results.txt
+daily-analysis.log
+
+# Temporary files
+*.tmp
+EOF
+```
+
+</CodeGroup>
+
+<Tip>
+  **Find Your Project Details**: Your Project ID is in your PostHog URL:
+  `https://app.posthog.com/project/YOUR_PROJECT_ID`
+</Tip>
+
+### GitHub CLI Setup
+
+The workflow uses GitHub CLI instead of API tokens for better security and easier authentication:
+
+<Card title="Why GitHub CLI?" icon="github">
+  GitHub CLI provides secure authentication without needing to manage Personal
+  Access Tokens in your environment files.
+</Card>
+
+**Verify GitHub CLI is ready:**
+
+```bash
+# Check if GitHub CLI is installed
+gh --version
+
+# Check authentication status
+gh auth status
+
+# If not authenticated, login
+gh auth login
+```
+
+<Tip>
+  **Authentication**: GitHub CLI handles authentication automatically once you
+  run `gh auth login`. No need to manage tokens in `.env` files!
+</Tip>
+
+## Step 2: Session Analysis Script
+
+Create an intelligent analysis script that fetches and analyzes session recordings:
+
+```bash
+#!/bin/bash
+# analyze-sessions.sh
+set -e
+source .env
+
+echo "🎬 Fetching session recordings from PostHog..."
+
+# Fetch recent session recordings with potential issues
+curl -s -H "Authorization: Bearer $POSTHOG_API_KEY" \
+  "$POSTHOG_HOST/api/projects/$POSTHOG_PROJECT_ID/session_recordings/?limit=20" \
+  | jq '.results[] | {
+      id: .id,
+      duration: .recording_duration,
+      start_url: .start_url,
+      click_count: .click_count,
+      console_error_count: .console_error_count,
+      person_distinct_id: .person.distinct_ids[0],
+      start_time: .start_time
+    }' > sessions.json
+
+echo "📊 Found $(cat sessions.json | jq -s length) sessions"
+
+# Filter for problematic sessions (errors or long durations)
+cat sessions.json | jq -s 'map(select(.console_error_count > 0 or .recording_duration > 300))' > problem-sessions.json
+
+echo "🚨 Found $(cat problem-sessions.json | jq length) problematic sessions"
+
+# Analyze with Continue CLI
+cat problem-sessions.json | cn -p "
+Analyze these PostHog session recordings to identify user experience issues.
+
+Each session contains:
+- duration: how long the session lasted (in seconds)
+- start_url: the page where the user started
+- click_count: total number of clicks
+- console_error_count: JavaScript errors encountered
+
+Look for patterns that suggest code issues:
+
+1. **High Error Sessions**: Sessions with console_error_count > 0
+   - What pages/URLs are generating errors?
+   - Are users abandoning after errors occur?
+
+2. **Long Duration Sessions**: Sessions over 300 seconds (5+ minutes)
+   - Are users struggling to complete tasks?
+   - Low click count + high duration = user confusion
+
+3. **Abandonment Patterns**:
+   - Users starting on key pages but not progressing
+   - Short sessions on important conversion pages
+
+For each issue pattern you identify:
+- Describe the user behavior problem
+- Suggest likely technical causes (JS errors, slow loading, UI confusion)
+- Recommend specific code areas to investigate
+- Provide example fixes or improvements
+- Priority: High (blocks user goals), Medium (hurts UX), Low (minor issue)
+
+Focus on actionable technical improvements that will measurably improve user experience.
+"
+
+echo "✅ Analysis complete! Check the output above for optimization opportunities."
+```
+
+<Info>
+  **What This Script Does:** 1. **Fetches** recent session recordings from
+  PostHog API 2. **Filters** for problematic sessions (errors or long durations)
+  3. **Analyzes** with Continue CLI to identify specific UX issues 4.
+  **Provides** actionable technical recommendations
+</Info>
+
+Make the script executable:
+
+```bash
+chmod +x analyze-sessions.sh
+```
+
+## Step 3: Automated GitHub Issue Creation
+
+Create a smart script that parses the AI analysis and automatically creates GitHub issues:
+
+<Card title="Intelligent Issue Creation" icon="github">
+  This script automatically extracts issues from Continue CLI analysis,
+  determines priority levels, assigns appropriate labels, and creates
+  well-formatted GitHub issues
+</Card>
+
+```bash
+#!/bin/bash
+# create-github-issues.sh - Creates GitHub issues from Continue CLI analysis output
+set -e
+source .env
+
+# Input file containing Continue CLI analysis output
+ANALYSIS_FILE="analysis-results.txt"
+
+# Check if analysis file exists
+if [ ! -f "$ANALYSIS_FILE" ]; then
+  echo "❌ Analysis file not found: $ANALYSIS_FILE"
+  exit 1
+fi
+
+# Function to create a GitHub issue
+create_github_issue() {
+  local title="$1"
+  local body="$2"
+  local labels="$3"
+
+  echo "Creating issue: $title"
+
+  response=$(curl -s -X POST \
+    -H "Authorization: token $GITHUB_PERSONAL_ACCESS_TOKEN" \
+    -H "Accept: application/vnd.github.v3+json" \
+    -d "{\"title\":\"$title\", \"body\":\"$body\", \"labels\":$labels}" \
+    "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/issues")
+
+  issue_number=$(echo "$response" | grep -o '"number": [0-9]*' | head -1 | cut -d' ' -f2)
+
+  if [ -n "$issue_number" ]; then
+    echo "✅ Created issue #$issue_number"
+  else
+    echo "❌ Failed to create issue: $response"
+  fi
+}
+
+# Extract and parse issues from analysis output
+echo "🔍 Parsing analysis results for issues..."
+
+# Count the issues in the file by looking for ## Issue pattern
+issue_count=$(grep -c "^## Issue" "$ANALYSIS_FILE" || echo 0)
+
+if [ "$issue_count" -eq 0 ]; then
+  echo "ℹ️ No issues found in analysis output."
+  exit 0
+fi
+
+echo "📊 Found $issue_count potential issues to process"
+
+# Process each issue section
+while IFS= read -r line || [[ -n "$line" ]]; do
+  if [[ $line =~ ^## ]]; then
+    # If we have a previous issue, create it
+    if [ -n "${issue_title:-}" ] && [ -n "${issue_body:-}" ]; then
+      # Determine appropriate labels based on priority in the issue body
+      if [[ "$issue_body" =~ "High Priority" ]]; then
+        labels="[\"bug\", \"high-priority\", \"user-experience\"]"
+      elif [[ "$issue_body" =~ "Medium Priority" ]]; then
+        labels="[\"enhancement\", \"medium-priority\", \"user-experience\"]"
+      else
+        labels="[\"low-priority\", \"user-experience\"]"
+      fi
+
+      # Create the issue
+      create_github_issue "$issue_title" "$issue_body" "$labels"
+    fi
+
+    # Start a new issue
+    issue_title="UX Issue: ${line#\#\# Issue }"
+    issue_body=""
+  elif [ -n "${issue_title:-}" ]; then
+    # Add line to current issue body
+    if [ -n "$issue_body" ]; then
+      issue_body="$issue_body\n$line"
+    else
+      issue_body="$line"
+    fi
+  fi
+done < <(sed -n '/^## Issue/,/^## Issue\|^$/p' "$ANALYSIS_FILE")
+
+# Create the last issue if there is one
+if [ -n "${issue_title:-}" ] && [ -n "${issue_body:-}" ]; then
+  # Determine appropriate labels based on priority in the issue body
+  if [[ "$issue_body" =~ "High Priority" ]]; then
+    labels="[\"bug\", \"high-priority\", \"user-experience\"]"
+  elif [[ "$issue_body" =~ "Medium Priority" ]]; then
+    labels="[\"enhancement\", \"medium-priority\", \"user-experience\"]"
+  else
+    labels="[\"low-priority\", \"user-experience\"]"
+  fi
+
+  # Create the issue
+  create_github_issue "$issue_title" "$issue_body" "$labels"
+fi
+
+echo "✅ GitHub issues creation process completed!"
+```
+
+Make it executable:
+
+```bash
+chmod +x create-github-issues.sh
+```
+
+<Tip>
+  **Smart Label Assignment**: The script automatically assigns labels based on
+  issue priority: - **High Priority** → `bug`, `high-priority`,
+  `user-experience` - **Medium Priority** → `enhancement`, `medium-priority`,
+  `user-experience` - **Low Priority** → `low-priority`, `user-experience`
+</Tip>
+
+## Step 4: Complete Automated Workflow
+
+Create the main orchestration script that runs the entire process:
+
+```bash
+#!/bin/bash
+# daily-analysis.sh
+set -e
+
+echo "🔍 Starting daily PostHog session analysis..."
+
+# Run the session analysis
+./analyze-sessions.sh > analysis-results.txt
+
+# Create GitHub issues based on the analysis
+./create-github-issues.sh
+
+echo "✅ Daily analysis complete!"
+```
+
+Make it executable and test:
+
+```bash
+chmod +x daily-analysis.sh
+./daily-analysis.sh
+```
+
+## Step 5: Automation Options
+
+<Tabs>
+  <Tab title="GitHub Actions (Recommended)">
+    Perfect for teams already using GitHub workflows:
+
+    Create `.github/workflows/daily-analysis.yml`:
+
+Create a file at `.github/workflows/daily-analysis.yml`:
+
+```yaml
+name: Daily Session Analysis
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # Run at 6 AM UTC daily
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up environment
+        run: |
+          echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
+          echo "POSTHOG_PROJECT_ID=${{ secrets.POSTHOG_PROJECT_ID }}" >> .env
+          echo "POSTHOG_HOST=https://us.posthog.com" >> .env
+          echo "GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.GH_PAT }}" >> .env
+          echo "GITHUB_OWNER=${{ github.repository_owner }}" >> .env
+          echo "GITHUB_REPO=$(echo ${{ github.repository }} | cut -d'/' -f2)" >> .env
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+          npm install -g @continuedev/cli
+
+      - name: Run analysis
+        run: ./daily-analysis.sh
+```
+
+**Required GitHub Secrets:** - `POSTHOG_API_KEY`: Your PostHog Personal API Key - `POSTHOG_PROJECT_ID`: Your PostHog Project ID - `GH_PAT`: Your GitHub Personal Access Token
+
+    Add these in: Repository Settings → Secrets and variables → Actions
+
+  </Tab>
+  
+  <Tab title="Cron Job (Server)">
+    For running on your own server or VPS:
+
+    ```bash
+    # Add to crontab (run 'crontab -e')
+    0 6 * * * cd /path/to/your/project && ./daily-analysis.sh >> ~/logs/analysis.log 2>&1
+    ```
+
+    **Benefits:**
+    - Full control over execution environment
+    - No GitHub Actions usage limits
+    - Can run more frequently if needed
+
+  </Tab>
+  
+  <Tab title="Local Development">
+    For testing and development:
+
+    ```bash
+    # Run manually
+    ./daily-analysis.sh
+
+    # Or set up a simple loop for testing
+    while true; do
+      ./daily-analysis.sh
+      sleep 3600  # Run every hour
+    done
+    ```
+
+  </Tab>
+</Tabs>
+
+## Step 6: Testing Your Workflow
+
+<Steps>
+  <Step title="Test API Connections">
+    ```bash # Test PostHog API curl -H "Authorization: Bearer $POSTHOG_API_KEY"
+    \
+    "$POSTHOG_HOST/api/projects/$POSTHOG_PROJECT_ID/session_recordings/?limit=1"
+    # Test GitHub API curl -H "Authorization: token
+    $GITHUB_PERSONAL_ACCESS_TOKEN" \
+    "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO" 
+    ```
+  </Step>
+
+<Step title="Run Session Analysis">
+  ```bash ./analyze-sessions.sh ``` Expected: JSON files with session data and
+  AI analysis output
+</Step>
+
+<Step title="Test Issue Creation">
+  ```bash ./create-github-issues.sh ``` Expected: New issues created in your
+  GitHub repository
+</Step>
+
+  <Step title="Full Workflow Test">
+    ```bash ./daily-analysis.sh ``` Expected: Complete end-to-end execution with
+    GitHub issues created
+  </Step>
+</Steps>
+
+<Check>
+  **Success Indicators:** - PostHog API returns session data (not empty) -
+  Continue CLI generates analysis with identified issues - GitHub issues are
+  created with proper labels and formatting - No error messages in the console
+  output
+</Check>
+
+## What You've Built
+
+After completing this guide, you have a complete **Continuous AI system** that:
+
+✅ **Monitors user experience** - Automatically fetches and analyzes PostHog session data  
+✅ **Identifies problems intelligently** - Uses AI to spot patterns and technical issues  
+✅ **Creates actionable tasks** - Generates GitHub issues with specific recommendations  
+✅ **Runs autonomously** - Operates daily without manual intervention  
+✅ **Scales with your team** - Handles growing amounts of session data automatically
+
+<Card title="This is True Continuous AI" icon="rocket">
+  Your system now operates at **Level 2 Continuous AI** - AI handles routine
+  analysis tasks with human oversight through GitHub issue review and
+  prioritization.
+</Card>
+
+## Security Best Practices
+
+<Warning>
+  **Protect Your API Keys:** - Never commit `.env` files or secrets to version
+  control - Use GitHub Secrets for automation workflows - Limit token scopes to
+  minimum required permissions - Rotate API keys regularly (every 90 days
+  recommended) - Monitor token usage for unusual activity
+</Warning>
+
+## Advanced Extensions
+
+Ready to enhance your workflow? Consider these additions:
+
+<CardGroup cols={2}>
+  <Card
+    title="MCP Integration"
+    icon="plug"
+    href="/guides/posthog-session-analysis#enhanced-workflow-with-mcp-tools"
+  >
+    Add PostHog and GitHub MCP servers for more sophisticated analysis
+  </Card>
+  <Card title="Custom Analysis Rules" icon="rules">
+    Train the AI on your specific codebase patterns and conventions
+  </Card>
+  <Card title="Slack Integration" icon="slack">
+    Get notifications when critical issues are detected
+  </Card>
+  <Card title="Performance Monitoring" icon="chart-line">
+    Track how fixes improve user experience metrics over time
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+1. **Monitor your first issues** - Review the GitHub issues created and implement fixes
+2. **Measure impact** - Track how resolved issues improve PostHog metrics
+3. **Refine analysis** - Adjust the Continue CLI prompts based on issue quality
+4. **Scale the system** - Add more data sources or create specialized analysis workflows
+
+<Card title="Want More Advanced Features?" icon="star">
+  Check out the [Enhanced MCP
+  Integration](/guides/posthog-session-analysis#enhanced-workflow-with-mcp-tools)
+  section for direct PostHog and GitHub API access through structured tools.
+</Card>
