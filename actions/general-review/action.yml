@@ -162,14 +162,14 @@ runs:
           echo "Warning: CONTINUE_API_KEY environment variable is not set"
           # Create fallback review and continue
           cat > code_review.md << 'EOF'
-## Code Review Summary
+          ## Code Review Summary
 
-⚠️ AI review skipped: CONTINUE_API_KEY not configured.
+          ⚠️ AI review skipped: CONTINUE_API_KEY not configured.
 
-### Configuration Required
-- Please set the CONTINUE_API_KEY secret in repository settings
-- Verify that the organization and config path are valid
-EOF
+          ### Configuration Required
+          - Please set the CONTINUE_API_KEY secret in repository settings
+          - Verify that the organization and config path are valid
+          EOF
           echo "SKIP_CLI=true" >> $GITHUB_ENV
         else
           echo "SKIP_CLI=false" >> $GITHUB_ENV
@@ -192,14 +192,14 @@ EOF
           if ! cn --version; then
             echo "Warning: Continue CLI not found or not working"
             cat > code_review.md << 'EOF'
-## Code Review Summary
+            ## Code Review Summary
 
-⚠️ AI review skipped: Continue CLI installation failed.
+            ⚠️ AI review skipped: Continue CLI installation failed.
 
-### Troubleshooting
-- Check that npm installation succeeded
-- Verify @continuedev/cli package is available
-EOF
+            ### Troubleshooting
+            - Check that npm installation succeeded
+            - Verify @continuedev/cli package is available
+            EOF
             echo "SKIP_CLI=true" >> $GITHUB_ENV
           else
             echo "Continue CLI version: $(cn --version)"
@@ -222,15 +222,15 @@ EOF
           
           # Create fallback review
           cat > code_review.md << 'EOF'
-## Code Review Summary
+          ## Code Review Summary
 
-⚠️ AI review failed due to service initialization issues. Please check the Continue API key and configuration.
+          ⚠️ AI review failed due to service initialization issues. Please check the Continue API key and configuration.
 
-### Troubleshooting
-- Verify the CONTINUE_API_KEY secret is set correctly
-- Check that the organization and config path are valid
-- Ensure the Continue service is accessible
-EOF
+          ### Troubleshooting
+          - Verify the CONTINUE_API_KEY secret is set correctly
+          - Check that the organization and config path are valid
+          - Ensure the Continue service is accessible
+          EOF
         else
           echo "Review generated successfully"
         fi
