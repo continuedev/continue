@@ -840,7 +840,7 @@ describe("constructMessages", () => {
       expect(toolMessage.content).toContain("[Status: warning]");
       // Should use renderContextItemsWithStatus format with double newlines between items
       expect(toolMessage.content).toMatch(
-        /file1\.txt[\s\S]*\[Status: completed\][\s\S]*\n\n[\s\S]*Warning.*\[Status: warning\]/,
+        /file1\.txt\nfile2\.txt\n\[Status: completed\]\n\nWarning: deprecated flag\n\[Status: warning\]/,
       );
     });
 
