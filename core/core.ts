@@ -29,6 +29,7 @@ import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import {
   isProcessBackgrounded,
+  killTerminalProcess,
   markProcessAsBackgrounded,
 } from "./util/processTerminalStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
@@ -1057,9 +1058,6 @@ export class Core {
     );
 
     on("process/killTerminalProcess", async ({ data: { toolCallId } }) => {
-      const { killTerminalProcess } = await import(
-        "./util/processTerminalStates.js"
-      );
       await killTerminalProcess(toolCallId);
     });
 

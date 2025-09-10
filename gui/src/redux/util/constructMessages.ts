@@ -10,6 +10,7 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
@@ -17,25 +18,16 @@ import {
 import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
 import { SystemMessageToolsFramework } from "core/tools/systemMessageTools/types";
 import { findLast, findLastIndex } from "core/util/findLast";
-import { normalizeToMessageParts } from "core/util/messageContent";
+import {
+  normalizeToMessageParts,
+  renderContextItems,
+  renderContextItemsWithStatus,
+} from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
 
 // Helper function to render context items and append status information
 // Helper function to render context items and append status information
-function renderContextItemsWithStatus(contextItems: any[]): string {
-  return contextItems
-    .map((item) => {
-      let result = item.content;
 
-      // If this item has a status, append it directly after the content
-      if (item.status) {
-        result += `\n[Status: ${item.status}]`;
-      }
-
-      return result;
-    })
-    .join("\n\n");
-}
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -146,8 +138,14 @@ export function constructMessages(
 
           if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
-          } else if (toolCallState?.output) {
+          } else if (
+            toolCallState?.output &&
+            toolCall.function?.name == BuiltInToolNames.RunTerminalCommand
+          ) {
+            // Add status for tools containing detailed status outcomes per context item
             content = renderContextItemsWithStatus(toolCallState.output);
+          } else if (toolCallState?.output) {
+            content = renderContextItems(toolCallState?.output);
           }
 
           msgs.push({

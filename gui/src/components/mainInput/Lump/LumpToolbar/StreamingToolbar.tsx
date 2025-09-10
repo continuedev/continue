@@ -12,15 +12,11 @@ export function StreamingToolbar({
 }: StreamingToolbarProps) {
   const jetbrains = isJetBrains();
 
-  const handleStop = () => {
-    onStop();
-  };
-
   return (
     <div className="flex w-full items-center justify-between">
       <GeneratingIndicator />
       <div
-        onClick={handleStop}
+        onClick={onStop}
         className="text-2xs cursor-pointer px-1.5 py-0.5 hover:brightness-125"
       >
         <span className="text-description">{displayText}</span>
