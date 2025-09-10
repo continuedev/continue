@@ -104,7 +104,8 @@ async function loadConfigYaml(options: {
       prompts?: any[];
       rules?: any[];
     };
-    const maybeHasUsesBlocks = (
+    /*** Checks if any of the assistant sections contain a "uses" block which starts with `file://`*/
+    const maybeHasLocalUsesBlocks = (
       assistant: MinimalAssistantSections | undefined,
     ): boolean => {
       if (!assistant) return false;
@@ -112,13 +113,19 @@ async function loadConfigYaml(options: {
       return sections.some(
         (section) =>
           Array.isArray(assistant[section]) &&
-          (assistant[section] as any[]).some(
-            (item: any) => item && typeof item === "object" && "uses" in item,
-          ),
+          (assistant[section] as any[]).some((item: any) => {
+            if (!item || typeof item !== "object" || !("uses" in item))
+              return false;
+            const uses = (item as any).uses;
+            if (typeof uses === "string") {
+              return uses.startsWith("file://");
+            }
+            return false;
+          }),
       );
     };
 
-    if (maybeHasUsesBlocks(config)) {
+    if (maybeHasLocalUsesBlocks(config)) {
       const registryClient = await getRegistryClient();
       const unrolled = await unrollBlocks(
         config as any,
