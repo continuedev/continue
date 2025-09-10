@@ -204,6 +204,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
         setShowDragOverMsg(true);
       }}
       onDrop={(event) => {
+        setShowDragOverMsg(false);
         if (
           !defaultModel ||
           !modelSupportsImages(
@@ -215,7 +216,6 @@ export function TipTapEditor(props: TipTapEditorProps) {
         ) {
           return;
         }
-        setShowDragOverMsg(false);
         let file = event.dataTransfer.files[0];
         void handleImageFile(ideMessenger, file).then((result) => {
           if (!editor) {

@@ -176,6 +176,13 @@ export async function constructSystemMessage(
   if (currentMode === "plan") {
     systemMessage +=
       '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
+  } else {
+    // TODO - make including this coauthor commit configurable
+    systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
+Generated with [Continue](https://continue.dev)
+
+Co-Authored-By: Continue <noreply@continue.dev>
+</context>\n`;
   }
 
   // In headless mode, add instructions to be concise and only provide final answers

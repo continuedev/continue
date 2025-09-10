@@ -20,33 +20,18 @@ export const singleFindAndReplaceTool: Tool = {
   isInstant: false,
   function: {
     name: BuiltInToolNames.SingleFindAndReplace,
-    description: `Performs exact string replacements in files.
+    description: `Performs exact string replacements in a file.
 
-Usage:
-
-- You must use your \`read_file\` tool at least once in the conversation before
-editing. This tool will error if you attempt an edit without reading the file.
-
-- When editing text from read_file tool output, ensure you preserve the exact
-indentation (tabs/spaces) as it appears AFTER the line number prefix. The line
-number prefix format is: spaces + line number + tab. Everything after that tab
-is the actual file content to match. Never include any part of the line number
-prefix in the old_string or new_string.
-
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files
-unless explicitly required.
-
-- Only use emojis if the user explicitly requests it. Avoid adding emojis to
-files unless asked.
-
+IMPORTANT:
+- ALWAYS use the \`${BuiltInToolNames.ReadFile}\` tool just before making edits, to understand the file's up-to-date contents and context. The user can also edit the file while you are working with it.
 - ${NO_PARALLEL_TOOL_CALLING_INTSRUCTION}
+- When editing text from \`${BuiltInToolNames.ReadFile}\` tool output, ensure you preserve exact whitespace/indentation.
+- Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
+- Use \`replace_all\` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable, for instance.
 
-- The edit will FAIL if \`old_string\` is not unique in the file. Either provide
-a larger string with more surrounding context to make it unique or use
-\`replace_all\` to change every instance of \`old_string\`.
-
-- Use \`replace_all\` for replacing and renaming strings across the file. This
-parameter is useful if you want to rename a variable for instance.`,
+WARNINGS:
+- When not using \`replace_all\`, the edit will FAIL if \`old_string\` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use \`replace_all\` to change every instance of \`old_string\`.
+- The edit will likely fail if you have not recently used the \`${BuiltInToolNames.ReadFile}\` tool to view up-to-date file contents.`,
     parameters: {
       type: "object",
       required: ["filepath", "old_string", "new_string"],
@@ -58,12 +43,13 @@ parameter is useful if you want to rename a variable for instance.`,
         },
         old_string: {
           type: "string",
-          description: "The text to replace",
+          description:
+            "The text to replace - must be exact including whitespace/indentation",
         },
         new_string: {
           type: "string",
           description:
-            "The text to replace it with (must be different from old_string)",
+            "The text to replace it with (MUST be different from old_string)",
         },
         replace_all: {
           type: "boolean",
