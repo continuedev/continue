@@ -14,10 +14,7 @@ import { InputBoxDiv } from "./components/StyledComponents";
 import { useMainEditor } from "./MainEditorProvider";
 import "./TipTapEditor.css";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
-import {
-  handleImageFile,
-  handleVSCodeResourceFromHtml,
-} from "./utils/imageUtils";
+import { handleImageFile } from "./utils/imageUtils";
 import { useEditorEventHandlers } from "./utils/keyHandlers";
 
 export interface TipTapEditorProps {
@@ -53,10 +50,13 @@ export function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
+  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+
   const { editor, onEnterRef } = createEditorConfig({
     props,
     ideMessenger,
     dispatch,
+    setShowDragOverMsg,
   });
 
   // Register the main editor with the provider
@@ -114,8 +114,6 @@ export function TipTapEditor(props: TipTapEditorProps) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, isStreaming, editor]);
-
-  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
@@ -213,76 +211,9 @@ export function TipTapEditor(props: TipTapEditorProps) {
         setShowDragOverMsg(false);
       }}
       onDrop={(event) => {
+        // Just hide the drag overlay - ProseMirror handles the actual drop
         setShowDragOverMsg(false);
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (
-          !defaultModel ||
-          !modelSupportsImages(
-            defaultModel.provider,
-            defaultModel.model,
-            defaultModel.title,
-            defaultModel.capabilities,
-          )
-        ) {
-          return;
-        }
-
-        // Handle file drop first
-        if (event.dataTransfer.files.length > 0) {
-          const file = event.dataTransfer.files[0];
-          void handleImageFile(ideMessenger, file).then((result) => {
-            if (!editor) {
-              return;
-            }
-            if (result) {
-              const [_, dataUrl] = result;
-              const { schema } = editor.state;
-              const node = schema.nodes.image.create({ src: dataUrl });
-              const tr = editor.state.tr.insert(0, node);
-              editor.view.dispatch(tr);
-            }
-          });
-          return;
-        }
-
-        // Handle drop of HTML content (including VS Code resource URLs)
-        const html = event.dataTransfer.getData("text/html");
-        if (html) {
-          // Check if HTML contains VS Code resource URL and handle it specially
-          if (html.includes("file+.vscode-resource.vscode-cdn.net")) {
-            void handleVSCodeResourceFromHtml(ideMessenger, html)
-              .then((dataUrl) => {
-                if (!editor || !dataUrl) {
-                  return;
-                }
-                const { schema } = editor.state;
-                const node = schema.nodes.image.create({ src: dataUrl });
-                const tr = editor.state.tr.insert(0, node);
-                editor.view.dispatch(tr);
-              })
-              .catch((err) =>
-                console.error("Failed Failed to handle VS Code resource:", err),
-              );
-            return;
-          }
-
-          // Handle other HTML content (like images from browsers)
-          void handleVSCodeResourceFromHtml(ideMessenger, html)
-            .then((dataUrl) => {
-              if (!editor || !dataUrl) {
-                return;
-              }
-              const { schema } = editor.state;
-              const node = schema.nodes.image.create({ src: dataUrl });
-              const tr = editor.state.tr.insert(0, node);
-              editor.view.dispatch(tr);
-            })
-            .catch((err) =>
-              console.error("Failed Failed to handle VS Code resource:", err),
-            );
-        }
+        // Let the event bubble to ProseMirror by not preventing default
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
