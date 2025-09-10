@@ -108,23 +108,24 @@ export async function* streamDiffLines({
 
   // Rules can be included with edit prompt
   // If any rules are present this will result in using chat instead of legacy completion
-  const systemMessage = rulesToInclude
-    ? getSystemMessageWithRules({
-        availableRules: rulesToInclude,
-        userMessage:
-          typeof prompt === "string"
-            ? ({
-                role: "user",
-                content: prompt,
-              } as UserChatMessage)
-            : (findLast(
-                prompt,
-                (msg) => msg.role === "user" || msg.role === "tool",
-              ) as UserChatMessage | ToolResultChatMessage | undefined),
-        baseSystemMessage: undefined,
-        contextItems: [],
-      }).systemMessage
-    : undefined;
+  const systemMessage =
+    rulesToInclude || llm.baseChatSystemMessage
+      ? getSystemMessageWithRules({
+          availableRules: rulesToInclude ?? [],
+          userMessage:
+            typeof prompt === "string"
+              ? ({
+                  role: "user",
+                  content: prompt,
+                } as UserChatMessage)
+              : (findLast(
+                  prompt,
+                  (msg) => msg.role === "user" || msg.role === "tool",
+                ) as UserChatMessage | ToolResultChatMessage | undefined),
+          baseSystemMessage: llm.baseChatSystemMessage,
+          contextItems: [],
+        }).systemMessage
+      : undefined;
 
   if (systemMessage) {
     if (typeof prompt === "string") {

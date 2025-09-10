@@ -7,6 +7,9 @@ import { ApplyToFilePayload } from "core";
 import { myersDiff } from "core/diff/myers";
 import { generateLines } from "core/diff/util";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
+import { streamDiffLines } from "core/edit/streamDiffLines";
+import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
+import { getMarkdownLanguageTagForFile } from "core/util";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -92,6 +95,10 @@ export class ApplyManager {
     await this.ide.openFile(filepath);
   }
 
+  private modelIsTooFastForStreaming(model: string): boolean {
+    return [/mercury/].some((r) => r.test(model));
+  }
+
   private async handleEmptyDocument(
     editor: vscode.TextEditor,
     text: string,
@@ -159,6 +166,7 @@ export class ApplyManager {
         streamId,
         this.verticalDiffManager,
         toolCallId,
+        !this.modelIsTooFastForStreaming(llm.model),
       );
     }
   }
@@ -170,6 +178,37 @@ export class ApplyManager {
     return `The following code was suggested as an edit:\n\`\`\`\n${text}\n\`\`\`\nPlease apply it to the previous code.`;
   }
 
+  /**
+   * Calculates prefix and suffix for a given range, shared between streaming and non-streaming modes
+   */
+  private calculatePrefixSuffix(
+    editor: vscode.TextEditor,
+    range: vscode.Range,
+    llm: any,
+  ): { prefix: string; suffix: string; rangeContent: string } {
+    const rangeContent = editor.document.getText(range);
+
+    const prefix = pruneLinesFromTop(
+      editor.document.getText(
+        new vscode.Range(new vscode.Position(0, 0), range.start),
+      ),
+      llm.contextLength / 4,
+      llm.model,
+    );
+    const suffix = pruneLinesFromBottom(
+      editor.document.getText(
+        new vscode.Range(
+          range.end,
+          new vscode.Position(editor.document.lineCount, 0),
+        ),
+      ),
+      llm.contextLength / 4,
+      llm.model,
+    );
+
+    return { prefix, suffix, rangeContent };
+  }
+
   private async handleNonInstantDiff(
     editor: vscode.TextEditor,
     text: string,
@@ -177,6 +216,7 @@ export class ApplyManager {
     streamId: string,
     verticalDiffManager: VerticalDiffManager,
     toolCallId?: string,
+    streaming: boolean = true,
   ) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
@@ -195,14 +235,93 @@ export class ApplyManager {
       ? fullEditorRange
       : editor.selection;
 
-    await verticalDiffManager.streamEdit({
-      input: prompt,
+    if (streaming) {
+      await verticalDiffManager.streamEdit({
+        input: prompt,
+        llm,
+        streamId,
+        range: rangeToApplyTo,
+        newCode: text,
+        toolCallId,
+        rulesToInclude: undefined, // No rules for apply
+      });
+    } else {
+      // Non-streaming: accumulate LLM output, then apply via Myers diff
+      const finalContent = await this.generateAppliedContent(
+        editor,
+        prompt,
+        llm,
+        rangeToApplyTo,
+        text,
+      );
+
+      if (finalContent) {
+        const diffLinesGenerator = generateLines(
+          myersDiff(editor.document.getText(), finalContent),
+        );
+
+        await verticalDiffManager.streamDiffLines(
+          diffLinesGenerator,
+          true, // Apply instantly since we accumulated all content
+          streamId,
+          toolCallId,
+        );
+      }
+    }
+  }
+
+  /**
+   * Generates the final applied content by accumulating all LLM output
+   * Similar to streamEdit but collects all output before applying
+   */
+  private async generateAppliedContent(
+    editor: vscode.TextEditor,
+    prompt: string,
+    llm: any,
+    range: vscode.Range,
+    newCode: string,
+  ): Promise<string | undefined> {
+    const fileUri = editor.document.uri.toString();
+    const { prefix, suffix, rangeContent } = this.calculatePrefixSuffix(
+      editor,
+      range,
       llm,
-      streamId,
-      range: rangeToApplyTo,
-      newCode: text,
-      toolCallId,
-      rulesToInclude: undefined, // No rules for apply
-    });
+    );
+
+    const abortManager = ApplyAbortManager.getInstance();
+    const abortController = abortManager.get(fileUri);
+
+    try {
+      const streamedLines: string[] = [];
+
+      // Use streamDiffLines to get the LLM output
+      const stream = streamDiffLines({
+        highlighted: rangeContent,
+        prefix,
+        suffix,
+        llm,
+        rulesToInclude: undefined, // No rules for apply
+        input: prompt,
+        language: getMarkdownLanguageTagForFile(fileUri),
+        overridePrompt: undefined,
+        abortController,
+      });
+
+      // Accumulate all the streamed content
+      for await (const line of stream) {
+        if (abortController.signal.aborted) {
+          return undefined;
+        }
+        if (line.type === "new" || line.type === "same") {
+          streamedLines.push(line.line);
+        }
+      }
+
+      // Return the complete file content
+      return `${prefix}${streamedLines.join("\n")}${suffix}`;
+    } catch (error) {
+      console.error("Error generating applied content:", error);
+      return undefined;
+    }
   }
 }
