@@ -12,10 +12,22 @@ export const editToolImpl: ClientToolImpl = async (
       "`filepath` and `changes` arguments are required to edit an existing file.",
     );
   }
-  const firstUriMatch = await resolveRelativePathInDir(
+
+  const openFiles = await extras.ideMessenger.ide.getOpenFiles();
+  let firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
     extras.ideMessenger.ide,
   );
+
+  if (!firstUriMatch) {
+    for (const uri of openFiles) {
+      if (uri.endsWith(args.filepath)) {
+        firstUriMatch = uri;
+        break;
+      }
+    }
+  }
+
   if (!firstUriMatch) {
     throw new Error(`${args.filepath} does not exist`);
   }
