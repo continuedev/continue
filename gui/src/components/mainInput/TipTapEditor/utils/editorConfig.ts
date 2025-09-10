@@ -147,6 +147,18 @@ export function createEditorConfig(options: {
           const plugin = new Plugin({
             props: {
               handleDOMEvents: {
+                drop(view, event) {
+                  console.log("Drop event intercepted:", event);
+                  console.log("DataTransfer:", event.dataTransfer);
+                  // Completely prevent default behavior
+                  event.preventDefault();
+                  event.stopPropagation();
+                  return true; // Return true to indicate we handled it
+                },
+                dragover(view, event) {
+                  event.preventDefault();
+                  return false;
+                },
                 paste(view, event) {
                   const model = defaultModelRef.current;
                   if (!model) return;

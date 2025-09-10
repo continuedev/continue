@@ -215,6 +215,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
       onDrop={(event) => {
         setShowDragOverMsg(false);
         event.preventDefault();
+        event.stopPropagation();
 
         if (
           !defaultModel ||
@@ -251,12 +252,8 @@ export function TipTapEditor(props: TipTapEditorProps) {
         if (html) {
           // Check if HTML contains VS Code resource URL and handle it specially
           if (html.includes("file+.vscode-resource.vscode-cdn.net")) {
-            // Prevent the default browser behavior and TipTap's HTML processing
-            event.preventDefault();
-            event.stopPropagation();
-
-            void handleVSCodeResourceFromHtml(ideMessenger, html).then(
-              (dataUrl) => {
+            void handleVSCodeResourceFromHtml(ideMessenger, html)
+              .then((dataUrl) => {
                 if (!editor || !dataUrl) {
                   return;
                 }
@@ -264,14 +261,16 @@ export function TipTapEditor(props: TipTapEditorProps) {
                 const node = schema.nodes.image.create({ src: dataUrl });
                 const tr = editor.state.tr.insert(0, node);
                 editor.view.dispatch(tr);
-              },
-            );
+              })
+              .catch((err) =>
+                console.error("Failed Failed to handle VS Code resource:", err),
+              );
             return;
           }
 
           // Handle other HTML content (like images from browsers)
-          void handleVSCodeResourceFromHtml(ideMessenger, html).then(
-            (dataUrl) => {
+          void handleVSCodeResourceFromHtml(ideMessenger, html)
+            .then((dataUrl) => {
               if (!editor || !dataUrl) {
                 return;
               }
@@ -279,8 +278,10 @@ export function TipTapEditor(props: TipTapEditorProps) {
               const node = schema.nodes.image.create({ src: dataUrl });
               const tr = editor.state.tr.insert(0, node);
               editor.view.dispatch(tr);
-            },
-          );
+            })
+            .catch((err) =>
+              console.error("Failed Failed to handle VS Code resource:", err),
+            );
         }
       }}
     >
