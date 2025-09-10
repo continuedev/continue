@@ -1,16 +1,15 @@
 import { Box, Text } from "ink";
 import React from "react";
 
-import { listSessions } from "../../session.js";
 import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
-import { SessionSelector } from "../SessionSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UserInput } from "../UserInput.js";
 
+import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
 
 interface ScreenContentProps {
@@ -116,10 +115,8 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 
   // Session selector
   if (isScreenActive("session")) {
-    const sessions = listSessions(20);
     return (
-      <SessionSelector
-        sessions={sessions}
+      <SessionSelectorWithLoading
         onSelect={handleSessionSelect}
         onExit={closeCurrentScreen}
       />

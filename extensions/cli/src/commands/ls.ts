@@ -1,11 +1,12 @@
 import { render } from "ink";
 import React from "react";
 
-import { loadSessionById, listSessions } from "../session.js";
+import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
 import { logger } from "../util/logger.js";
 
 import { chat } from "./chat.js";
+import { remote } from "./remote.js";
 
 interface ListSessionsOptions {
   format?: "json";
@@ -29,12 +30,9 @@ function setSessionId(sessionId: string): void {
 export async function listSessionsCommand(
   options: ListSessionsOptions = {},
 ): Promise<void> {
-  // Fetch more sessions than we might display so the UI can choose based on screen height
-  // But still limit for JSON output to keep it reasonable
-  const sessions = listSessions(options.format === "json" ? 10 : 20);
-
-  // Handle JSON format output
+  // Handle JSON format output first
   if (options.format === "json") {
+    const sessions = await listSessions(10);
     console.log(
       JSON.stringify(
         {
@@ -44,6 +42,8 @@ export async function listSessionsCommand(
             workspaceDirectory: session.workspaceDirectory,
             title: session.title,
             firstUserMessage: session.firstUserMessage,
+            isRemote: session.isRemote,
+            remoteId: session.remoteId,
           })),
         },
         null,
@@ -52,6 +52,9 @@ export async function listSessionsCommand(
     );
     return;
   }
+
+  // For TUI mode, fetch more sessions than we might display so the UI can choose based on screen height
+  const sessions = await listSessions(20);
 
   // Handle empty sessions case
   if (sessions.length === 0) {
@@ -67,24 +70,34 @@ export async function listSessionsCommand(
       try {
         app.unmount();
 
-        // Verify the session exists before trying to load it
-        const sessionHistory = loadSessionById(sessionId);
-        if (!sessionHistory) {
-          console.error(`Session ${sessionId} could not be loaded.`);
-          resolve();
-          return;
+        // Find the selected session to check if it's remote
+        const selectedSession = sessions.find(s => s.sessionId === sessionId);
+        
+        if (selectedSession?.isRemote && selectedSession.remoteId) {
+          // Handle remote session - use the remote command with the agent URL
+          logger.info(`Opening remote session: ${selectedSession.remoteId}`);
+          const agentUrl = `https://hub.continue.dev/agents/${selectedSession.remoteId}`;
+          await remote(undefined, { url: agentUrl });
+        } else {
+          // Handle local session
+          const sessionHistory = loadSessionById(sessionId);
+          if (!sessionHistory) {
+            console.error(`Session ${sessionId} could not be loaded.`);
+            resolve();
+            return;
+          }
+
+          logger.info(`Loading session: ${sessionId}`);
+
+          // Set the session ID so that when chat() runs, it will load this session
+          setSessionId(sessionId);
+
+          // Start chat with resume flag to load the selected session
+          await chat(undefined, {
+            resume: true,
+            headless: false,
+          });
         }
-
-        logger.info(`Loading session: ${sessionId}`);
-
-        // Set the session ID so that when chat() runs, it will load this session
-        setSessionId(sessionId);
-
-        // Start chat with resume flag to load the selected session
-        await chat(undefined, {
-          resume: true,
-          headless: false,
-        });
 
         resolve();
       } catch (error) {

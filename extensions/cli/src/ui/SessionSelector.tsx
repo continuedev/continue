@@ -2,13 +2,13 @@ import { format, isThisWeek, isThisYear, isToday, isYesterday } from "date-fns";
 import { Box, Text, useInput } from "ink";
 import React, { useMemo, useState } from "react";
 
-import { SessionMetadata } from "../session.js";
+import { ExtendedSessionMetadata } from "../session.js";
 
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
 import { defaultBoxStyles } from "./styles.js";
 
 interface SessionSelectorProps {
-  sessions: SessionMetadata[];
+  sessions: ExtendedSessionMetadata[];
   onSelect: (sessionId: string) => void;
   onExit: () => void;
 }
@@ -103,6 +103,7 @@ export function SessionSelector({
             <Box marginLeft={2}>
               <Text color="gray">
                 {formatTimestamp(new Date(session.dateCreated))}
+                {session.isRemote ? " (remote)" : " (local)"}
               </Text>
             </Box>
             {index < displaySessions.length - 1 && (
