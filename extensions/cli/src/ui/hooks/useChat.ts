@@ -484,7 +484,25 @@ export function useChat({
     }
 
     // For non-queued messages, format and add to chat history
-    if (!isQueuedMessage) {
+    if (isQueuedMessage) {
+      // For queued messages, chat history is already updated
+      // Check if auto-compacting is needed with current history
+      const { currentChatHistory, currentCompactionIndex } =
+        await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+        });
+
+      // Execute the streaming response with the current history (which already includes the queued message)
+      await executeStreamingResponse(
+        currentChatHistory,
+        currentCompactionIndex,
+      );
+    } else {
       // Format message with attached files and images
       logger.debug("Processing message with images", {
         hasImages: !!(imageMap && imageMap.size > 0),
@@ -516,28 +534,8 @@ export function useChat({
       const newHistory = [...currentChatHistory, newUserMessage];
       setChatHistory(newHistory);
 
-      logger.debug("debug1 streaming started again");
-
       // Execute the streaming response
       await executeStreamingResponse(newHistory, currentCompactionIndex);
-    } else {
-      // For queued messages, chat history is already updated
-      // Check if auto-compacting is needed with current history
-      const { currentChatHistory, currentCompactionIndex } =
-        await handleAutoCompaction({
-          chatHistory,
-          model,
-          llmApi,
-          compactionIndex,
-          setChatHistory: setChatHistory,
-          setCompactionIndex,
-        });
-
-      // Execute the streaming response with the current history (which already includes the queued message)
-      await executeStreamingResponse(
-        currentChatHistory,
-        currentCompactionIndex,
-      );
     }
   };
 
