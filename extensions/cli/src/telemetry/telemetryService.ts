@@ -20,7 +20,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 import { isHeadlessMode } from "../util/cli.js";
-import { isGitHubActions } from "../util/git.js";
+import { isContinueRemoteAgent, isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
 import { getVersion } from "../version.js";
 
@@ -354,9 +354,11 @@ class TelemetryService {
     logger.debug("Recording session start with telemetry");
 
     // Add extra metadata for session breakdown
+    const isGitHubActionsEnv = isGitHubActions();
     const sessionAttributes = this.getStandardAttributes({
       is_headless: isHeadlessMode().toString(),
-      is_github_actions: isGitHubActions().toString(),
+      is_github_actions: isGitHubActionsEnv.toString(),
+      is_continue_remote_agent: isContinueRemoteAgent().toString(),
     });
 
     this.sessionCounter.add(1, sessionAttributes);
