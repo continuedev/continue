@@ -12,12 +12,28 @@ export const editToolImpl: ClientToolImpl = async (
       "`filepath` and `changes` arguments are required to edit an existing file.",
     );
   }
-  const firstUriMatch = await resolveRelativePathInDir(
-    args.filepath,
+  let filepath = args.filepath;
+  if (filepath.startsWith("./")) {
+    filepath = filepath.slice(2);
+  }
+
+  const openFiles = await extras.ideMessenger.ide.getOpenFiles();
+  let firstUriMatch = await resolveRelativePathInDir(
+    filepath,
     extras.ideMessenger.ide,
   );
+
   if (!firstUriMatch) {
-    throw new Error(`${args.filepath} does not exist`);
+    for (const uri of openFiles) {
+      if (uri.endsWith(filepath)) {
+        firstUriMatch = uri;
+        break;
+      }
+    }
+  }
+
+  if (!firstUriMatch) {
+    throw new Error(`${filepath} does not exist`);
   }
   const streamId = uuid();
   void extras.dispatch(
@@ -30,7 +46,13 @@ export const editToolImpl: ClientToolImpl = async (
   );
 
   return {
-    respondImmediately: false,
-    output: undefined, // No immediate output.
+    respondImmediately: true,
+    output: [
+      {
+        name: "File edited successfully",
+        content: `Successfully initiated edit for ${firstUriMatch}`,
+        description: "File edit operation started",
+      },
+    ],
   };
 };

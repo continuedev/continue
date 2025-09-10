@@ -5,7 +5,12 @@
 //   background-color: ${vscBackground};
 //   color: ${vscForeground};
 
-import { vscBackground, vscForeground, vscInputBorder } from "..";
+import {
+  vscCommandCenterInactiveBorder,
+  vscForeground,
+  vscInputBackground,
+} from "..";
+import { cn } from "../../util/cn";
 
 //   appearance: none;
 //   -webkit-appearance: none;
@@ -19,9 +24,9 @@ import { vscBackground, vscForeground, vscInputBorder } from "..";
 // // gui/src/components/gui/Select.tsx
 // import React from 'react';
 
-export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = (
-  props,
-) => (
+export const Select: React.FC<
+  React.SelectHTMLAttributes<HTMLSelectElement>
+> = ({ className, ...props }) => (
   <div
     style={{
       color: vscForeground,
@@ -29,10 +34,10 @@ export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = (
   >
     <select
       {...props}
-      className="rounded border px-3 py-2"
+      className={cn("rounded-default border px-3 py-1.5", className)}
       style={{
-        borderColor: vscInputBorder,
-        backgroundColor: vscBackground,
+        borderColor: vscCommandCenterInactiveBorder,
+        backgroundColor: vscInputBackground,
         color: vscForeground,
         appearance: "none",
         WebkitAppearance: "none",

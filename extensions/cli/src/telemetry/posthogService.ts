@@ -1,10 +1,13 @@
+import dns from "dns/promises";
 import os from "node:os";
 
 import node_machine_id from "node-machine-id";
 import type { PostHog as PostHogType } from "posthog-node";
 
 import { isAuthenticatedConfig, loadAuthConfig } from "../auth/workos.js";
+import { isGitHubActions } from "../util/git.js";
 import { logger } from "../util/logger.js";
+import { getVersion } from "../version.js";
 
 export class PosthogService {
   private os: string | undefined;
@@ -15,13 +18,44 @@ export class PosthogService {
     this.uniqueId = this.getEventUserId();
   }
 
+  private _hasInternetConnection: boolean | undefined = undefined;
+  private async hasInternetConnection() {
+    const refetchConnection = async () => {
+      try {
+        await dns.lookup("app.posthog.com");
+        this._hasInternetConnection = true;
+      } catch {
+        this._hasInternetConnection = false;
+      }
+    };
+
+    if (typeof this._hasInternetConnection !== "undefined") {
+      void refetchConnection(); // check in background if connection became available
+      return this._hasInternetConnection;
+    }
+
+    await refetchConnection();
+    return this._hasInternetConnection;
+  }
+
+  /**
+   * Check if running in headless mode (-p/--print flags)
+   */
+  private isHeadlessMode(): boolean {
+    const args = process.argv.slice(2);
+    return args.includes("-p") || args.includes("--print");
+  }
+
   get isEnabled() {
     return process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0";
   }
 
   private _client: PostHogType | undefined;
   private async getClient() {
-    if (this.isEnabled) {
+    if (!(await this.hasInternetConnection())) {
+      this._client = undefined;
+      logger.warn("No internet connection, skipping telemetry");
+    } else if (this.isEnabled) {
       if (!this._client) {
         const { PostHog } = await import("posthog-node");
         this._client = new PostHog(
@@ -30,6 +64,7 @@ export class PosthogService {
             host: "https://app.posthog.com",
           },
         );
+        logger.debug("Initialized telemetry");
       }
     } else {
       this._client = undefined;
@@ -62,9 +97,11 @@ export class PosthogService {
       const augmentedProperties = {
         ...properties,
         os: this.os,
-        extensionVersion: "", // TODO cn version
+        extensionVersion: getVersion(),
         ideName: "cn",
         ideType: "cli",
+        isHeadless: this.isHeadlessMode(),
+        isGitHubCI: isGitHubActions(),
       };
       const payload = {
         distinctId: this.uniqueId,
@@ -83,7 +120,13 @@ export class PosthogService {
     try {
       const client = await this.getClient();
       if (client) {
-        await client.shutdown();
+        // Set a timeout for shutdown to prevent hanging
+        const shutdownPromise = client.shutdown();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Shutdown timeout")), 5000),
+        );
+
+        await Promise.race([shutdownPromise, timeoutPromise]);
       }
     } catch (e) {
       logger.debug(`Failed to shutdown PostHog client: ${e}`);
