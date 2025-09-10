@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { ToolTip } from "../../../../components/gui/Tooltip";
 import {
   Button,
@@ -18,39 +18,9 @@ import { Divider } from "../../../../components/ui/Divider";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 
-interface FreeTrialStatus {
-  optedInToFreeTrial: boolean;
-  chatCount?: number;
-  autocompleteCount?: number;
-  chatLimit: number;
-  autocompleteLimit: number;
-}
-
 export function AccountDropdown() {
   const { session, logout, login } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
-
-  useEffect(() => {
-    const fetchFreeTrialStatus = async () => {
-      if (session && !isOnPremSession(session)) {
-        try {
-          const response = await ideMessenger.request(
-            "controlPlane/getFreeTrialStatus",
-            undefined,
-          );
-          if (response.status === "success") {
-            setFreeTrialStatus(response.content);
-          } else {
-            console.error("Failed to fetch free trial status:", response.error);
-          }
-        } catch (error) {
-          console.error("Failed to fetch free trial status:", error);
-        }
-      }
-    };
-
-    void fetchFreeTrialStatus();
-  }, [session, ideMessenger]);
 
   if (isOnPremSession(session)) {
     return null;
