@@ -1,33 +1,28 @@
-import { ComputerDesktopIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { isLocalProfile } from "../../util";
+import { BotIcon } from "../svg/BotIcon";
 
 export interface AssistantIconProps {
   assistant: ProfileDescription;
-  size?: number;
+  size?: string;
 }
 
-export function AssistantIcon({ assistant, size }: AssistantIconProps) {
-  const sizeTw = size ?? 4;
+export function AssistantIcon({
+  assistant,
+  size = "h-4 w-4",
+}: AssistantIconProps) {
   if (isLocalProfile(assistant)) {
-    return (
-      <div
-        className={`h-${sizeTw} w-${sizeTw} bg-lightgray flex items-center justify-center rounded-full`}
-      >
-        <ComputerDesktopIcon
-          className={`h-${sizeTw - 1} w-${sizeTw - 1} font-bold text-black`}
-        />
-      </div>
-    );
+    return <BotIcon className={`text-foreground ${size} flex-shrink-0`} />;
   } else if (assistant.iconUrl) {
     return (
       <img
         src={assistant.iconUrl}
-        className={`h-${sizeTw} w-${sizeTw} rounded-full`}
+        className={`${size} flex-shrink-0 rounded-full`}
         alt=""
       />
     );
   } else {
-    return <SparklesIcon />;
+    return <SparklesIcon className={`${size} flex-shrink-0`} />;
   }
 }

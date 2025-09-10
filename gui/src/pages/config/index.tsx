@@ -1,94 +1,105 @@
-import {
-  BoltIcon,
-  CircleStackIcon,
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { PageHeader } from "../../components/PageHeader";
+import { isOnPremSession } from "core/control-plane/AuthTypes";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
+import Alert from "../../components/gui/Alert";
+import { Divider } from "../../components/ui/Divider";
+import { TabGroup } from "../../components/ui/TabGroup";
+import { useAuth } from "../../context/Auth";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { fontSize } from "../../util";
-import { AccountButton } from "./AccountButton";
-import { HelpCenterSection } from "./HelpCenterSection";
-import { IndexingSettingsSection } from "./IndexingSettingsSection";
-import KeyboardShortcuts from "./KeyboardShortcuts";
-import { UserSettingsForm } from "./UserSettingsForm";
-
-type TabOption = {
-  id: string;
-  label: string;
-  component: React.ReactNode;
-  icon: React.ReactNode;
-};
+import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
+import { AccountDropdown } from "./features/account/AccountDropdown";
 
 function ConfigPage() {
   useNavigationListener();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("settings");
+  const { session, organizations } = useAuth();
 
-  const tabs: TabOption[] = [
-    {
-      id: "settings",
-      label: "Settings",
-      component: <UserSettingsForm />,
-      icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-    },
-    {
-      id: "indexing",
-      label: "Indexing",
-      component: <IndexingSettingsSection />,
-      icon: <CircleStackIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-    },
-    {
-      id: "help",
-      label: "Help",
-      component: <HelpCenterSection />,
-      icon: (
-        <QuestionMarkCircleIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-      ),
-    },
-    {
-      id: "shortcuts",
-      label: "Shortcuts",
-      component: <KeyboardShortcuts />,
-      icon: <BoltIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-    },
-  ];
+  // Set initial tab from URL parameter
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const allTabs = getAllTabs();
+  const shouldRenderOrgInfo =
+    session && organizations.length > 1 && !isOnPremSession(session);
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "back") {
+      navigate("/");
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      <div className="bg-vsc-background sticky top-0 z-10">
-        <PageHeader
-          showBorder
-          onTitleClick={() => navigate("/")}
-          title="Chat"
-          rightContent={<AccountButton />}
-        />
-
-        {/* Tab Headers */}
-        <div className="bg-vsc-input-background grid cursor-pointer grid-cols-2 border-0 border-b-[1px] border-solid border-b-zinc-700 p-0.5 sm:flex sm:justify-center md:gap-x-2">
-          {tabs.map((tab) => (
-            <div
-              style={{
-                fontSize: fontSize(-2),
-              }}
-              key={tab.id}
-              className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 py-2 hover:brightness-125 ${
-                activeTab === tab.id ? "" : "text-gray-400"
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.icon}
-              {tab.label}
-            </div>
+    <div className="flex h-full flex-row overflow-hidden">
+      {/* Vertical Sidebar - full height */}
+      <div className="bg-vsc-background flex w-12 flex-shrink-0 flex-col border-0 md:w-40">
+        <div className="border-r-border flex flex-1 flex-col overflow-y-auto border-b-0 border-l-0 border-r-2 border-t-0 border-solid p-2 text-xs">
+          {topTabSections.map((section, index) => (
+            <React.Fragment key={section.id}>
+              <TabGroup
+                tabs={section.tabs}
+                activeTab={activeTab}
+                onTabClick={handleTabClick}
+                showTopDivider={section.showTopDivider}
+                showBottomDivider={section.showBottomDivider}
+                className={section.className}
+              />
+              {index === 0 && shouldRenderOrgInfo && (
+                <>
+                  <Divider />
+                  <AssistantAndOrgListbox variant="sidebar" />
+                </>
+              )}
+            </React.Fragment>
           ))}
+
+          <div className="flex-1" />
+
+          {bottomTabSections.map((section) => (
+            <TabGroup
+              key={section.id}
+              tabs={section.tabs}
+              activeTab={activeTab}
+              onTabClick={handleTabClick}
+              showTopDivider={section.showTopDivider}
+              showBottomDivider={section.showBottomDivider}
+              className={section.className}
+            />
+          ))}
+
+          <Divider />
+
+          <AccountDropdown />
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto px-4">
-        {tabs.find((tab) => tab.id === activeTab)?.component}
+      {/* Main content area */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Alert for small screens (sm and below) */}
+        <div className="block px-4 py-4 sm:hidden">
+          <Alert type="warning" className="max-w-md">
+            <div className="flex flex-col">
+              <div className="font-medium">Screen width too small</div>
+              <div className="text-description mt-1 text-sm">
+                To view settings, please expand the sidebar by dragging the
+                left/right border
+              </div>
+            </div>
+          </Alert>
+        </div>
+
+        {/* Tab Content for larger screens (md and above) */}
+        <div className="hidden flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:block">
+          {allTabs.find((tab) => tab.id === activeTab)?.component}
+        </div>
       </div>
     </div>
   );

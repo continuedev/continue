@@ -81,6 +81,7 @@ module.exports = {
           DEFAULT: varWithFallback("badge-background"),
           foreground: varWithFallback("badge-foreground"),
         },
+        info: varWithFallback("info"),
         success: varWithFallback("success"),
         warning: varWithFallback("warning"),
         error: varWithFallback("error"),
