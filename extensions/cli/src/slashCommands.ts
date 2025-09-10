@@ -9,7 +9,7 @@ import {
 import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
-import { getCurrentSession } from "./session.js";
+import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
@@ -144,6 +144,31 @@ async function handleFork() {
   }
 }
 
+function handleTitle(args: string[]) {
+  posthogService.capture("useSlashCommand", { name: "title" });
+  
+  const title = args.join(" ").trim();
+  if (!title) {
+    return {
+      exit: false,
+      output: chalk.yellow("Please provide a title. Usage: /title <your title>"),
+    };
+  }
+
+  try {
+    updateSessionTitle(title);
+    return {
+      exit: false,
+      output: chalk.green(`Session title updated to: "${title}"`),
+    };
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to update title: ${error.message}`),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -176,6 +201,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openSessionSelector: true };
   },
   fork: handleFork,
+  title: handleTitle,
 };
 
 export async function handleSlashCommands(
