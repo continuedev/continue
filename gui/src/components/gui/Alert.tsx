@@ -4,6 +4,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/16/solid";
+import { varWithFallback } from "../../styles/theme";
 import { cn } from "../../util/cn";
 
 type AlertTypes = "info" | "success" | "warning" | "error";
@@ -18,7 +19,6 @@ type AlertConfig = {
   [key in AlertTypes]: {
     Icon: any;
     iconColor: string;
-    background: string;
     border: string;
     text: string;
   };
@@ -27,28 +27,24 @@ type AlertConfig = {
 const ALERT_CONFIGS: AlertConfig = {
   info: {
     Icon: InformationCircleIcon,
-    background: "bg-background",
-    border: "border-foreground",
-    iconColor: "text-foreground",
+    border: "border-info",
+    iconColor: "text-info",
     text: "text-foreground",
   },
   success: {
     Icon: CheckCircleIcon,
-    background: "bg-green-600/20",
     border: "border-success",
     iconColor: "text-success",
     text: "text-foreground",
   },
   warning: {
     Icon: ExclamationTriangleIcon,
-    background: "bg-yellow-600/20",
     border: "border-warning",
     iconColor: "text-warning",
     text: "text-foreground",
   },
   error: {
     Icon: ExclamationCircleIcon,
-    background: "bg-red-600/20",
     border: "border-error",
     iconColor: "text-error",
     text: "text-foreground",
@@ -56,33 +52,50 @@ const ALERT_CONFIGS: AlertConfig = {
 };
 
 const alertSizes = {
-  sm: "px-3 py-1.5 rounded-md border",
-  lg: "px-4 py-3 rounded-md border",
+  sm: "px-3 py-2 rounded-md",
+  lg: "px-3 py-2.5 rounded-md",
 };
 
 const iconSizes = {
-  sm: "h-4 w-4 mt-1",
-  lg: "h-5 w-5 mt-0.5",
+  sm: "h-4 w-4",
+  lg: "h-4 w-4",
 };
 
 const spacingSizes = {
   sm: "ml-2",
-  lg: "ml-3",
+  lg: "ml-2",
 };
 
-function Alert({ type = "info", size = "lg", ...props }: AlertProps) {
-  const { Icon, background, border, text, iconColor } = ALERT_CONFIGS[type];
+function Alert({
+  type = "info",
+  size = "lg",
+  className,
+  children,
+  ...props
+}: AlertProps) {
+  const { Icon, border, text, iconColor } = ALERT_CONFIGS[type];
+
+  const colorMap = {
+    info: varWithFallback("info"),
+    success: varWithFallback("success"),
+    warning: varWithFallback("warning"),
+    error: varWithFallback("error"),
+  };
 
   return (
     <div
       className={cn(
-        `flex flex-row items-start ${background} border-[0.5px] border-solid ${border} shadow-sm ${alertSizes[size]}`,
-        props.className,
+        `flex flex-row items-start border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
+        className,
       )}
+      style={{
+        backgroundColor: `color-mix(in srgb, ${colorMap[type]} 20%, transparent)`,
+      }}
+      {...props}
     >
       <Icon className={`flex-shrink-0 ${iconColor} ${iconSizes[size]}`} />
       <div className="flex flex-1 flex-col">
-        <div className={`${spacingSizes[size]} ${text}`}>{props.children}</div>
+        <div className={`${spacingSizes[size]} ${text}`}>{children}</div>
       </div>
     </div>
   );

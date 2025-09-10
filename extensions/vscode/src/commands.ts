@@ -45,15 +45,6 @@ import { getMetaKeyLabel } from "./util/util";
 import { openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeIde } from "./VsCodeIde";
 
-let fullScreenPanel: vscode.WebviewPanel | undefined;
-
-function getFullScreenTab() {
-  const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
-  return tabs.find((tab) =>
-    (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
-  );
-}
-
 type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
 
 /**
@@ -67,27 +58,15 @@ function captureCommandTelemetry(
 }
 
 function focusGUI() {
-  const fullScreenTab = getFullScreenTab();
-  if (fullScreenTab) {
-    // focus fullscreen
-    fullScreenPanel?.reveal();
-  } else {
-    // focus sidebar
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-    // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
-  }
+  // focus sidebar
+  vscode.commands.executeCommand("continue.continueGUIView.focus");
+  // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
 }
 
 function hideGUI() {
-  const fullScreenTab = getFullScreenTab();
-  if (fullScreenTab) {
-    // focus fullscreen
-    fullScreenPanel?.dispose();
-  } else {
-    // focus sidebar
-    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
-  }
+  // focus sidebar
+  vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+  // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
 }
 
 function waitForSidebarReady(
@@ -436,74 +415,6 @@ const getCommandsMap: (
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": async () => {
-      focusGUI();
-
-      const sessionId = await sidebar.webviewProtocol.request(
-        "getCurrentSessionId",
-        undefined,
-      );
-      // Check if full screen is already open by checking open tabs
-      const fullScreenTab = getFullScreenTab();
-
-      if (fullScreenTab && fullScreenPanel) {
-        // Full screen open, but not focused - focus it
-        fullScreenPanel.reveal();
-        return;
-      }
-
-      // Clear the sidebar to prevent overwriting changes made in fullscreen
-      vscode.commands.executeCommand("continue.newSession");
-
-      // Full screen not open - open it
-      captureCommandTelemetry("openFullScreen");
-
-      // Create the full screen panel
-      let panel = vscode.window.createWebviewPanel(
-        "continue.continueGUIView",
-        "Continue",
-        vscode.ViewColumn.One,
-        {
-          retainContextWhenHidden: true,
-          enableScripts: true,
-        },
-      );
-      fullScreenPanel = panel;
-
-      // Add content to the panel
-      panel.webview.html = sidebar.getSidebarContent(
-        extensionContext,
-        panel,
-        undefined,
-        undefined,
-        true,
-      );
-
-      const sessionLoader = panel.onDidChangeViewState(() => {
-        vscode.commands.executeCommand("continue.newSession");
-        if (sessionId) {
-          vscode.commands.executeCommand(
-            "continue.focusContinueSessionId",
-            sessionId,
-          );
-        }
-        panel.reveal();
-        sessionLoader.dispose();
-      });
-
-      // When panel closes, reset the webview and focus
-      panel.onDidDispose(
-        () => {
-          sidebar.resetWebviewProtocolWebview();
-          vscode.commands.executeCommand("continue.focusContinueInput");
-        },
-        null,
-        extensionContext.subscriptions,
-      );
-
-      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
-      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    },
     "continue.openConfigPage": () => {
       vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
@@ -653,11 +564,6 @@ const getCommandsMap: (
           description: getMetaKeyLabel() + " + L",
         },
         {
-          label: "$(screen-full) Open full screen chat",
-          description:
-            getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + M",
-        },
-        {
           label: quickPickStatusText(targetStatus),
           description:
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
@@ -699,8 +605,6 @@ const getCommandsMap: (
           }
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
-        } else if (selectedOption === "$(screen-full) Open full screen chat") {
-          vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(gear) Open settings") {
           vscode.commands.executeCommand("continue.navigateTo", "/config");
         }
