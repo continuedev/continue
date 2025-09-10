@@ -9,7 +9,10 @@ import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { fontSize } from "../../../../util";
 
-export function ExploreBlocksButton(props: { blockType: string }) {
+export function ExploreBlocksButton(props: {
+  blockType: string;
+  isGlobalMode?: boolean;
+}) {
   const { selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -24,9 +27,13 @@ export function ExploreBlocksButton(props: { blockType: string }) {
 
   const handleClick = () => {
     if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: props.blockType as BlockType,
-      });
+      if (props.isGlobalMode && props.blockType === "rules") {
+        void ideMessenger.request("config/addGlobalRule", undefined);
+      } else {
+        void ideMessenger.request("config/addLocalWorkspaceBlock", {
+          blockType: props.blockType as BlockType,
+        });
+      }
     } else {
       void ideMessenger.request("controlPlane/openUrl", {
         path: `new?type=block&blockType=${props.blockType}`,
