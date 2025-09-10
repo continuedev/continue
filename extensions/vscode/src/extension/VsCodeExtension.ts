@@ -503,6 +503,14 @@ export class VsCodeExtension {
       });
     });
 
+    vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+      this.core.invoke("folders/changed", {
+        uris: event.added
+          .concat(event.removed)
+          .map((folder) => folder.uri.toString()),
+      });
+    });
+
     vscode.workspace.onDidOpenTextDocument(async (event) => {
       console.log("onDidOpenTextDocument");
       const ast = await getAst(event.fileName, event.getText());

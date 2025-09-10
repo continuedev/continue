@@ -814,6 +814,8 @@ export interface IDE {
 
   getWorkspaceDirs(): Promise<string[]>;
 
+  refreshWorkspaceDirs(): Promise<void>;
+
   fileExists(fileUri: string): Promise<boolean>;
 
   writeFile(path: string, contents: string): Promise<void>;

@@ -293,6 +293,10 @@ class VsCodeIde implements IDE {
     return this.ideUtils.getWorkspaceDirectories().map((uri) => uri.toString());
   }
 
+  async refreshWorkspaceDirs(): Promise<void> {
+    this.ideUtils.refreshWorkspaceDirectories();
+  }
+
   async writeFile(fileUri: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
       vscode.Uri.parse(fileUri),

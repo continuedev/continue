@@ -789,6 +789,17 @@ export class Core {
       }
     });
 
+    on("folders/changed", async ({ data }) => {
+      if (data?.uris?.length) {
+        walkDirCache.invalidate();
+        this.ide.refreshWorkspaceDirs();
+        const { config } = await this.configHandler.loadConfig();
+        if (config && !config.disableIndexing) {
+          await this.codeBaseIndexer.refreshCodebaseIndex(data.uris);
+        }
+      }
+    });
+
     // File changes - TODO - remove remaining logic for these from IDEs where possible
     on("files/changed", this.handleFilesChanged.bind(this));
     const refreshIfNotIgnored = async (uris: string[]) => {
