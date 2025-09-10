@@ -10,9 +10,11 @@ import {
   RegistryClient,
   TEMPLATE_VAR_REGEX,
   unrollAssistant,
+  unrollBlocks,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
+import { localPathOrUriToPath } from "../../util/pathToUri";
 
 import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
@@ -27,7 +29,6 @@ import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlash
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
-import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
@@ -79,7 +80,7 @@ async function loadConfigYaml(options: {
   const getRegistryClient = async () => {
     const rootPath =
       packageIdentifier.uriType === "file"
-        ? dirname(getCleanUriPath(packageIdentifier.fileUri))
+        ? dirname(localPathOrUriToPath(packageIdentifier.fileUri))
         : undefined;
     return new RegistryClient({
       accessToken: await controlPlaneClient.getAccessToken(),
@@ -95,6 +96,43 @@ async function loadConfigYaml(options: {
 
   if (overrideConfigYaml) {
     config = overrideConfigYaml;
+
+    // If overrideConfigYaml still contains any local uses blocks, unroll them here
+    type MinimalAssistantSections = {
+      models?: any[];
+      mcpServers?: any[];
+      prompts?: any[];
+      rules?: any[];
+    };
+    const maybeHasUsesBlocks = (
+      assistant: MinimalAssistantSections | undefined,
+    ): boolean => {
+      if (!assistant) return false;
+      const sections = ["models", "mcpServers", "prompts", "rules"] as const;
+      return sections.some(
+        (section) =>
+          Array.isArray(assistant[section]) &&
+          (assistant[section] as any[]).some(
+            (item: any) => item && typeof item === "object" && "uses" in item,
+          ),
+      );
+    };
+
+    if (maybeHasUsesBlocks(config)) {
+      const registryClient = await getRegistryClient();
+      const unrolled = await unrollBlocks(
+        config as any,
+        registryClient,
+        localPackageIdentifiers,
+      );
+      if (unrolled.errors) {
+        errors.push(...unrolled.errors);
+      }
+      if (unrolled.config) {
+        config = unrolled.config;
+      }
+    }
+
     if (localPackageIdentifiers.length > 0) {
       const unrolledLocal = await unrollLocalYamlBlocks(
         localPackageIdentifiers,
