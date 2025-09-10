@@ -5,9 +5,16 @@ interface TabButtonProps {
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
+  tabId?: string;
 }
 
-export function TabButton({ label, icon, isActive, onClick }: TabButtonProps) {
+export function TabButton({
+  label,
+  icon,
+  isActive,
+  onClick,
+  tabId,
+}: TabButtonProps) {
   return (
     <ToolTip content={label} place="right" className="text-xs md:!hidden">
       <div
@@ -17,6 +24,7 @@ export function TabButton({ label, icon, isActive, onClick }: TabButtonProps) {
             : "text-description px-2 py-2"
         }`}
         onClick={onClick}
+        data-testid={tabId ? `tab-${tabId}` : undefined}
       >
         {icon}
         <span className="text-description hidden md:inline">{label}</span>
