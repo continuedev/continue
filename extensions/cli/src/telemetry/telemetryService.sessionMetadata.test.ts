@@ -203,7 +203,6 @@ describe("TelemetryService - Session Metadata", () => {
         1,
         expect.objectContaining({
           is_continue_remote_agent: "true",
-          is_github_actions: "false",
         }),
       );
     });
