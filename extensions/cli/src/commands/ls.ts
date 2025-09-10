@@ -32,7 +32,7 @@ export async function listSessionsCommand(
 ): Promise<void> {
   // Handle JSON format output first
   if (options.format === "json") {
-    const sessions = await listSessions(10);
+    const sessions = await listSessions();
     console.log(
       JSON.stringify(
         {
@@ -54,7 +54,7 @@ export async function listSessionsCommand(
   }
 
   // For TUI mode, fetch more sessions than we might display so the UI can choose based on screen height
-  const sessions = await listSessions(20);
+  const sessions = await listSessions();
 
   // Handle empty sessions case
   if (sessions.length === 0) {

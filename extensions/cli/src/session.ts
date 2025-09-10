@@ -339,7 +339,7 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
  * List all available sessions with metadata (both local and remote)
  */
 export async function listSessions(
-  limit: number = 10,
+  limit: number = 100,
 ): Promise<ExtendedSessionMetadata[]> {
   try {
     // Get local sessions

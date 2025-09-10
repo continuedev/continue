@@ -20,7 +20,7 @@ export const SessionSelectorWithLoading: React.FC<SessionSelectorWithLoadingProp
     const loadSessions = async () => {
       try {
         setIsLoading(true);
-        const sessionList = await listSessions(20);
+        const sessionList = await listSessions();
         setSessions(sessionList);
       } catch (error) {
         console.error("Error loading sessions:", error);
