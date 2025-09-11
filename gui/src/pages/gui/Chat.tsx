@@ -111,9 +111,7 @@ export function Chat() {
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
-  const showChatScrollbar = useAppSelector(
-    (state) => state.config.config.ui?.showChatScrollbar,
-  );
+
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const mode = useAppSelector((store) => store.session.mode);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
@@ -381,7 +379,7 @@ export function Chat() {
     [sendInput, isLastUserInput, history, stepsOpen],
   );
 
-  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
+  const showScrollbar = true;
 
   return (
     <>
