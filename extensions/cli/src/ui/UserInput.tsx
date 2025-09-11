@@ -9,6 +9,7 @@ import type { PermissionMode } from "../permissions/types.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
@@ -517,7 +518,7 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       // Normal Enter behavior - submit if there's content
-      if ((textBuffer.text.trim() || wasInterrupted) && !isWaitingForResponse) {
+      if (textBuffer.text.trim() || wasInterrupted) {
         // Get images before expanding paste blocks
         const imageMap = textBuffer.getAllImages();
 
@@ -525,13 +526,18 @@ const UserInput: React.FC<UserInputProps> = ({
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
 
-        // Only add to history if there's actual text (not when resuming)
-        if (submittedText) {
+        if (isWaitingForResponse) {
+          // Process message later when LLM has responded
+          void messageQueue.enqueueMessage(
+            submittedText,
+            imageMap,
+            inputHistory,
+          );
+        } else {
+          // Submit with images
           inputHistory.addEntry(submittedText);
+          onSubmit(submittedText, imageMap);
         }
-
-        // Submit with images
-        onSubmit(submittedText, imageMap);
 
         textBuffer.clear();
         setInputText("");
@@ -653,15 +659,6 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle escape key variations
     if (handleEscapeKey(key)) {
       return;
-    }
-
-    // Allow typing during streaming, but block submission
-    if (!inputMode) {
-      // Block only Enter key submission during streaming
-      if (key.return && !key.shift) {
-        return;
-      }
-      // Allow all other input (typing, navigation, etc.)
     }
 
     // Handle slash command navigation

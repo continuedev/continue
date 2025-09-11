@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
 import { useEffect, useRef, useState } from "react";
@@ -13,6 +12,7 @@ import {
   updateSessionHistory,
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
+import { messageQueue, QueuedMessage } from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
@@ -174,6 +174,22 @@ export function useChat({
   // Track interrupted state for resume functionality
   const [wasInterrupted, setWasInterrupted] = useState(false);
 
+  // Track queued messages for immediate display
+  const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
+
+  // Set up message queue listeners
+  useEffect(() => {
+    const onMessageQueued = (queuedMessage: QueuedMessage) => {
+      setQueuedMessages((prev) => [...prev, queuedMessage]);
+    };
+
+    messageQueue.on("messageQueued", onMessageQueued);
+
+    return () => {
+      messageQueue.off("messageQueued", onMessageQueued);
+    };
+  }, []);
+
   // Clean up abort controller on unmount
   useEffect(() => {
     return () => {
@@ -314,6 +330,30 @@ export function useChat({
       setIsWaitingForResponse(false);
       setResponseStartTime(null);
       setInputMode(true);
+
+      // Check if there are queued messages and process them after a microtask delay
+      // This ensures the GUI state has been updated before processing the next message
+      const queuedMessageData = messageQueue.getLatestMessage();
+      if (queuedMessageData) {
+        const { message: latestQueuedMessage, imageMap } = queuedMessageData;
+        logger.debug("processing queued message", { latestQueuedMessage });
+
+        // Clear all queued messages from display since we're processing them all together
+        setQueuedMessages([]);
+
+        // Add the queued message to chat history so it shows in the GUI
+        const formattedQueuedMessage = await formatMessageWithFiles(
+          latestQueuedMessage,
+          [], // No attached files for queued messages
+          imageMap,
+        );
+        setChatHistory((prev) => [...prev, formattedQueuedMessage]);
+
+        await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
+
+        // Process the queued message using the internal processing logic without re-adding to history
+        await processQueuedMessage(latestQueuedMessage, imageMap);
+      }
     }
   };
 
@@ -409,20 +449,11 @@ export function useChat({
       .join("");
   };
 
-  const handleUserMessage = async (
+  const processMessage = async (
     message: string,
     imageMap?: Map<string, Buffer>,
+    isQueuedMessage: boolean = false,
   ) => {
-    // Check if this is a resume request (empty message after interruption)
-    if (await handleResumeRequest(message)) {
-      return;
-    }
-
-    // Clear interrupted state if user types a new message
-    if (wasInterrupted && message !== "") {
-      setWasInterrupted(false);
-    }
-
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -451,27 +482,9 @@ export function useChat({
     // Track telemetry
     trackUserMessage(message, model);
 
-    // Format message with attached files and images
-    logger.debug("Processing message with images", {
-      hasImages: !!(imageMap && imageMap.size > 0),
-      imageCount: imageMap?.size || 0,
-    });
-    const newUserMessage = await formatMessageWithFiles(
-      message,
-      attachedFiles,
-      imageMap,
-    );
-    logger.debug("Message formatted successfully");
-
-    if (attachedFiles.length > 0) {
-      setAttachedFiles([]);
-    }
-
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
-      const messageContentString = convertMessageContentToString(
-        newUserMessage.message.content,
-      );
+      const messageContentString = convertMessageContentToString(message);
 
       await handleRemoteMessage({
         remoteUrl,
@@ -480,38 +493,115 @@ export function useChat({
       return;
     }
 
-    // Check if auto-compacting is needed BEFORE adding user message
-    const compactionController = new AbortController();
-    setCompactionAbortController(compactionController);
-    setIsCompacting(true);
-    setCompactionStartTime(Date.now());
+    // For non-queued messages, format and add to chat history
+    if (isQueuedMessage) {
+      // For queued messages, chat history is already updated
+      // Check if auto-compacting is needed with current history
+      const compactionController = new AbortController();
+      setCompactionAbortController(compactionController);
+      setIsCompacting(true);
+      setCompactionStartTime(Date.now());
 
-    let currentChatHistory, currentCompactionIndex;
-    try {
-      const result = await handleAutoCompaction({
-        chatHistory,
-        model,
-        llmApi,
-        compactionIndex,
-        setChatHistory: setChatHistory,
-        setCompactionIndex,
-        abortController: compactionController,
+      let currentChatHistory, currentCompactionIndex;
+      try {
+        const result = await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+          abortController: compactionController,
+        });
+        currentChatHistory = result.currentChatHistory;
+        currentCompactionIndex = result.currentCompactionIndex;
+      } finally {
+        setIsCompacting(false);
+        setCompactionStartTime(null);
+        setCompactionAbortController(null);
+      }
+
+      // Execute the streaming response with the current history (which already includes the queued message)
+      await executeStreamingResponse(
+        currentChatHistory,
+        currentCompactionIndex,
+      );
+    } else {
+      // Format message with attached files and images
+      logger.debug("Processing message with images", {
+        hasImages: !!(imageMap && imageMap.size > 0),
+        imageCount: imageMap?.size || 0,
       });
+      const newUserMessage = await formatMessageWithFiles(
+        message,
+        attachedFiles,
+        imageMap,
+      );
+      logger.debug("Message formatted successfully");
 
-      currentChatHistory = result.currentChatHistory;
-      currentCompactionIndex = result.currentCompactionIndex;
-    } finally {
-      setIsCompacting(false);
-      setCompactionStartTime(null);
-      setCompactionAbortController(null);
+      if (attachedFiles.length > 0) {
+        setAttachedFiles([]);
+      }
+
+      // Check if auto-compacting is needed BEFORE adding user message
+      const compactionController = new AbortController();
+      setCompactionAbortController(compactionController);
+      setIsCompacting(true);
+      setCompactionStartTime(Date.now());
+
+      let currentChatHistory, currentCompactionIndex;
+      try {
+        const result = await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+          abortController: compactionController,
+        });
+        currentChatHistory = result.currentChatHistory;
+        currentCompactionIndex = result.currentCompactionIndex;
+      } finally {
+        setIsCompacting(false);
+        setCompactionStartTime(null);
+        setCompactionAbortController(null);
+      }
+
+      // Add the formatted user message to history
+      const newHistory = [...currentChatHistory, newUserMessage];
+      setChatHistory(newHistory);
+
+      // Execute the streaming response
+      await executeStreamingResponse(newHistory, currentCompactionIndex);
+    }
+  };
+
+  const processQueuedMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // For queued messages, we can reuse the core message processing logic
+    // by calling the internal processing function directly
+    await processMessage(message, imageMap, true);
+  };
+
+  const handleUserMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (await handleResumeRequest(message)) {
+      return;
     }
 
-    // Add the formatted user message to history
-    const newHistory = [...currentChatHistory, newUserMessage];
-    setChatHistory(newHistory);
+    // Clear interrupted state if user types a new message
+    if (wasInterrupted && message !== "") {
+      setWasInterrupted(false);
+    }
 
-    // Execute the streaming response
-    await executeStreamingResponse(newHistory, currentCompactionIndex);
+    // Use the common message processing logic
+    await processMessage(message, imageMap, false);
   };
 
   const handleInterrupt = () => {
@@ -575,6 +665,8 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
+    // Clear any queued messages when resetting chat
+    setQueuedMessages([]);
   };
 
   const handleToolPermissionResponse = async (
@@ -654,6 +746,7 @@ export function useChat({
     attachedFiles,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
