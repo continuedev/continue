@@ -278,7 +278,8 @@ class Ollama extends BaseLLM implements ModelInstaller {
       top_k: options.topK,
       num_predict: options.maxTokens,
       stop: options.stop,
-      num_ctx: this.contextLength,
+      // Ollama detects the context length from model's modelfile (or uses 2048/4096 length) when not specified. We do not want to specify a DEFAULT_CONTEXT_LENGTH to avoid memory issues.
+      num_ctx: this._contextLength,
       mirostat: options.mirostat,
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
