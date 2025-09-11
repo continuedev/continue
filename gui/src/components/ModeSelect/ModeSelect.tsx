@@ -7,7 +7,8 @@ import {
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
 import { capitalize } from "lodash";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
@@ -18,6 +19,8 @@ import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
 
 export function ModeSelect() {
+  const [listBoxOpen, setListBoxOpen] = useState(false);
+  const listBoxOptionsRef = useRef<HTMLUListElement>(null);
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
@@ -73,6 +76,8 @@ export function ModeSelect() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [cycleMode]);
 
+  useClickOutside(listBoxOptionsRef, () => setListBoxOpen(false));
+
   const notGreatAtAgent = (
     <>
       <ToolTip
@@ -93,6 +98,7 @@ export function ModeSelect() {
         <ListboxButton
           data-testid="mode-select-button"
           className="xs:px-2 text-description bg-lightgray/20 gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
+          onClick={() => setListBoxOpen(true)}
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
@@ -103,7 +109,11 @@ export function ModeSelect() {
             aria-hidden="true"
           />
         </ListboxButton>
-        <ListboxOptions className="min-w-32 max-w-48">
+        <ListboxOptions
+          className="min-w-32 max-w-48"
+          static={listBoxOpen}
+          ref={listBoxOptionsRef}
+        >
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="chat" />
