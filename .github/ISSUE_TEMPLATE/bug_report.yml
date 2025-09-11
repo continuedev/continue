@@ -29,7 +29,7 @@ body:
         - **Continue version**: v0.9.4
         - **IDE version**:  VSCode 1.85.1
         - Model: Claude Sonnet 3.5
-        - Assistant configuration
+        - Agent configuration
       value: |
         - OS:
         - Continue version:
@@ -39,7 +39,7 @@ body:
           ```yaml
 
           ```
-          OR link to assistant in Continue hub:
+          OR link to agent in Continue hub:
       render: Markdown
     validations:
       required: false

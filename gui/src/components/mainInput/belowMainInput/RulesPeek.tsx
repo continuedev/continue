@@ -78,7 +78,7 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
 
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
           <div className="max-w-[50%] flex-shrink-0 truncate font-medium">
-            {rule.name || "Assistant rule"}
+            {rule.name || "Agent rule"}
           </div>
 
           <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500">

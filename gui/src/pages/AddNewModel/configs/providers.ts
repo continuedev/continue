@@ -107,12 +107,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
         defaultValue: 100000,
       },
     ],
-    packages: [
-      models.claude35Sonnet,
-      models.claude3Opus,
-      models.claude3Sonnet,
-      models.claude35Haiku,
-    ],
+    packages: [models.claude4Sonnet, models.claude41Opus, models.claude35Haiku],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
   moonshot: {
@@ -997,5 +992,31 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://venice.ai/chat",
+  },
+  tars: {
+    title: "Tetrate Agent Router Service",
+    provider: "tars",
+    icon: "TetrateAgentRouterService.png",
+    description: "TARS API for fast inference with various models",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Tetrate Agent Router Service API key",
+        required: true,
+      },
+    ],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "TARS",
+        },
+      },
+    ],
+    apiKeyUrl: "https://api.router.tetrate.ai/",
   },
 };

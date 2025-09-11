@@ -116,6 +116,13 @@ export const THEME_COLORS = {
     vars: ["--vscode-badge-foreground"],
     default: "#ffffff", // white
   },
+  info: {
+    vars: [
+      "--vscode-charts-blue",
+      "--vscode-notebookStatusRunningIcon-foreground",
+    ],
+    default: "#2196f3", // blue
+  },
   success: {
     vars: [
       "--vscode-notebookStatusSuccessIcon-foreground",
@@ -139,6 +146,10 @@ export const THEME_COLORS = {
   link: {
     vars: ["--vscode-textLink-foreground"],
     default: "#5c9ce6", // medium blue
+  },
+  terminal: {
+    vars: ["--vscode-terminal-ansiGreen"],
+    default: "#0dbc79", // green
   },
   textCodeBlockBackground: {
     vars: ["--vscode-textCodeBlock-background"],

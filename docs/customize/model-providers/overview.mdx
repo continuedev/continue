@@ -15,9 +15,9 @@ These are the most commonly used model providers that offer a wide range of capa
 | [Amazon Bedrock](/customize/model-providers/top-level/bedrock) | AWS service offering access to various foundation models                        | Chat, Edit, Apply, Embeddings               |
 | [Ollama](/customize/model-providers/top-level/ollama)          | Run open-source models locally with a simple interface                          | Chat, Edit, Apply, Embeddings, Autocomplete |
 | [Google Gemini](/customize/model-providers/top-level/gemini)   | Google's multimodal AI models                                                   | Chat, Edit, Apply, Embeddings               |
-| [DeepSeek](/customize/model-providers/top-level/deepseek)      | Specialized code models with strong performance                                 | Chat, Edit, Apply                           |
-| [Mistral](/customize/model-providers/top-level/mistral)        | High-performance open models with commercial offerings                          | Chat, Edit, Apply, Embeddings               |
-| [xAI](/customize/model-providers/top-level/xAI)                | Grok models from xAI                                                            | Chat, Edit, Apply                           |
+| [DeepSeek](/customize/model-providers/more/deepseek)           | Specialized code models with strong performance                                 | Chat, Edit, Apply                           |
+| [Mistral](/customize/model-providers/more/mistral)             | High-performance open models with commercial offerings                          | Chat, Edit, Apply, Embeddings               |
+| [xAI](/customize/model-providers/more/xAI)                     | Grok models from xAI                                                            | Chat, Edit, Apply                           |
 | [Vertex AI](/customize/model-providers/top-level/vertexai)     | Google Cloud's machine learning platform                                        | Chat, Edit, Apply, Embeddings               |
 | [Inception](/customize/model-providers/top-level/inception)    | On-premises open-source model runners                                           | Chat, Edit, Apply                           |
 
@@ -32,7 +32,8 @@ Beyond the top-level providers, Continue supports many other options:
 | [Groq](/customize/model-providers/more/groq)                           | Ultra-fast inference for various open models               |
 | [Together AI](/customize/model-providers/more/together)                | Platform for running a variety of open models              |
 | [DeepInfra](/customize/model-providers/more/deepinfra)                 | Hosting for various open source models                     |
-| [OpenRouter](/customize/model-providers/more/openrouter)               | Gateway to multiple model providers                        |
+| [OpenRouter](/customize/model-providers/top-level/openrouter)          | Gateway to multiple model providers                        |
+| [Tetrate Agent Router Service](/customize/model-providers/top-level/tetrate_agent_router_service) | Gateway with intelligent routing across multiple model providers |
 | [Cohere](/customize/model-providers/more/cohere)                       | Models specialized for semantic search and text generation |
 | [NVIDIA](/customize/model-providers/more/nvidia)                       | GPU-accelerated model hosting                              |
 | [Cloudflare](/customize/model-providers/more/cloudflare)               | Edge-based AI inference services                           |
@@ -42,7 +43,7 @@ Beyond the top-level providers, Continue supports many other options:
 
 | Provider                                                 | Description                                   |
 | :------------------------------------------------------- | :-------------------------------------------- |
-| [LM Studio](/customize/model-providers/more/lmstudio)    | Desktop app for running models locally        |
+| [LM Studio](/customize/model-providers/top-level/lmstudio) | Desktop app for running models locally        |
 | [llama.cpp](/customize/model-providers/more/llamacpp)    | Optimized C++ implementation for running LLMs |
 | [LlamaStack](/customize/model-providers/more/llamastack) | Stack for running Llama models locally        |
 | [llamafile](/customize/model-providers/more/llamafile)   | Self-contained executable model files         |
@@ -72,9 +73,9 @@ You can add models to your `config.yaml` file like this:
 
 ```yaml
 models:
-  - name: My Model
-    provider: openai # Choose provider from the lists above
-    model: gpt-4o # Specific model name
+  - name: Claude 4 Sonnet
+    provider: anthropic # Choose provider from the lists above
+    model: claude-sonnet-4-20250514 # Specific model name
     apiKey: ${{ secrets.OPENAI_API_KEY }}
     roles:
       - chat

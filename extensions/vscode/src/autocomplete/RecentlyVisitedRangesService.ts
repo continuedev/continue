@@ -3,6 +3,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "core/autocomplete/snippets/types";
+import { isSecurityConcern } from "core/indexing/ignore";
 import { PosthogFeatureFlag, Telemetry } from "core/util/posthog";
 import { LRUCache } from "lru-cache";
 import * as vscode from "vscode";
@@ -51,6 +52,10 @@ export class RecentlyVisitedRangesService {
   private cacheCurrentSelectionContext = async (
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
+    const fsPath = event.textEditor.document.fileName;
+    if (isSecurityConcern(fsPath)) {
+      return;
+    }
     const filepath = event.textEditor.document.uri.toString();
     const line = event.selections[0].active.line;
     const startLine = Math.max(0, line - this.numSurroundingLines);

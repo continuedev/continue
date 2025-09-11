@@ -134,20 +134,71 @@ export class GUIActions {
   public static async toggleToolPolicy(
     view: WebView,
     toolName: string,
-    n: number,
+    desiredState: number | string,
   ) {
-    const toolButton = await TestUtils.waitForSuccess(() =>
-      GUISelectors.getToolButton(view),
+    // Navigate to config page
+
+    const settingsButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getSettingsNavButton(view),
     );
-    await toolButton.click();
+    await settingsButton.click();
+    await TestUtils.waitForTimeout(500);
+
+    // Click on tools tab
+    const toolsTab = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getToolsTab(view),
+    );
+    await toolsTab.click();
+    await TestUtils.waitForTimeout(500);
+
+    // Find and click the tool policy button
     const toolPolicyButton = await TestUtils.waitForSuccess(() =>
       GUISelectors.getToolPolicyButton(view, toolName),
     );
     await TestUtils.waitForTimeout(500);
 
-    // Enabled -> Excluded -> Ask first
-    for (let i = 0; i < n; i++) {
-      await TestUtils.waitForSuccess(() => toolPolicyButton.click());
+    // Map old number format to state names for backward compatibility
+    // 0 = Automatic/Auto, 1 = Excluded/Off, 2 = Ask First/Ask
+    let targetStates: string[];
+    if (typeof desiredState === "number") {
+      const stateMap = [
+        ["Automatic", "Auto"], // 0
+        ["Excluded", "Off"], // 1
+        ["Ask First", "Ask"], // 2
+      ];
+      targetStates = stateMap[desiredState] || ["Ask First", "Ask"];
+    } else {
+      targetStates = [desiredState];
     }
+
+    // Keep clicking until we reach the desired state
+    let maxAttempts = 5; // Safety limit to prevent infinite loops
+    while (maxAttempts > 0) {
+      const currentText = await toolPolicyButton.getText();
+
+      // Check if we've reached any of the target states
+      if (targetStates.some((state) => currentText.includes(state))) {
+        break;
+      }
+
+      // Click to move to next state
+      await toolPolicyButton.click();
+      await TestUtils.waitForTimeout(200); // Small delay for UI update
+
+      maxAttempts--;
+    }
+
+    if (maxAttempts === 0) {
+      throw new Error(
+        `Failed to set tool policy to ${targetStates.join(" or ")} after 5 attempts`,
+      );
+    }
+
+    // Navigate back to chat
+    const backButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getBackButton(view),
+    );
+    await backButton.click();
+    await TestUtils.waitForTimeout(500);
   }
 }

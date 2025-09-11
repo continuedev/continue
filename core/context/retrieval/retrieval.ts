@@ -37,7 +37,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const nFinal =
     options?.nFinal ??
     Math.min(DEFAULT_N_FINAL, contextLength / tokensPerSnippet / 2);
-  const useReranking = !!extras.reranker;
+  const useReranking = options?.useReranking ?? !!extras.reranker;
   const nRetrieve = useReranking ? options?.nRetrieve || 2 * nFinal : nFinal;
 
   const branches = (await Promise.race([
