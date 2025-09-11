@@ -78,14 +78,14 @@ describe("tokenizer", () => {
           role: "user",
           content: [
             { type: "text", text: "Hello" }, // 5 chars -> ~2 tokens
-            { type: "imageUrl", imageUrl: { url: "test.jpg" } }, // +85 tokens
+            { type: "imageUrl", imageUrl: { url: "test.jpg" } }, // +1024 tokens
           ],
         },
         contextItems: [],
       };
 
       const tokenCount = countChatHistoryItemTokens(historyItem);
-      expect(tokenCount).toBe(89); // 2 + 85 + 2 role tokens
+      expect(tokenCount).toBe(1028); // 2 + 1024 + 2 role tokens
     });
 
     it("should count tokens for tool calls", () => {

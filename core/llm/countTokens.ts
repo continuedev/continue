@@ -85,7 +85,7 @@ function encodingForModel(modelName: string): Encoding {
 
 function countImageTokens(content: MessagePart): number {
   if (content.type === "imageUrl") {
-    return 85;
+    return 1024;
   }
   throw new Error("Non-image content type");
 }

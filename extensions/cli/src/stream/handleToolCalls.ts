@@ -12,8 +12,10 @@ import {
   services,
 } from "../services/index.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+import { MAX_TOOL_RESULTS_WITHOUT_CHECK } from "../constants/tokenization.js";
 import { getAllBuiltinTools, ToolCall } from "../tools/index.js";
 import { logger } from "../util/logger.js";
+import { shouldCheckCompactionAfterToolResults } from "../util/tokenizer.js";
 
 import {
   executeStreamedToolCalls,
@@ -121,9 +123,14 @@ export async function handleToolCalls(
   }
 
   // Convert tool results and add them to the chat history with per-result status
+  const toolResultContents: string[] = [];
+  
   toolResults.forEach((toolResult) => {
     const resultContent =
       typeof toolResult.content === "string" ? toolResult.content : "";
+    
+    // Track content for compaction check
+    toolResultContents.push(resultContent);
 
     // Derive per-result status instead of applying batch-wide hasRejection
     let status: ToolStatus = "done";
@@ -172,6 +179,29 @@ export async function handleToolCalls(
       }
     }
   });
+
+  // Check if tool results warrant compaction consideration
+  if (toolResultContents.length > MAX_TOOL_RESULTS_WITHOUT_CHECK) { // Only check for multiple results
+    const { shouldCheck, totalTokens, largestResult } = 
+      shouldCheckCompactionAfterToolResults(toolResultContents);
+    
+    if (shouldCheck) {
+      logger.info("Large tool results detected", {
+        toolCount: toolResultContents.length,
+        totalResultTokens: totalTokens,
+        largestResultTokens: largestResult,
+        toolNames: preprocessedCalls.map(tc => tc.name),
+      });
+      
+      // Log recommendation for user awareness
+      if (callbacks?.onSystemMessage && !isHeadless) {
+        callbacks.onSystemMessage(
+          `ℹ️  Multiple tools returned ${totalTokens.toLocaleString()} tokens of results. ` +
+          `Consider using auto-compaction if context becomes full.`
+        );
+      }
+    }
+  }
   return false;
 }
 
