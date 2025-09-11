@@ -70,7 +70,7 @@ export async function processDiff(
       // Auto-formatting was applied by the editor
       const diffLines = myersDiff(preSaveContent, postSaveContent);
       autoFormattingDiff = diffLines
-        .map(line => {
+        .map((line) => {
           switch (line.type) {
             case "old":
               return `-${line.line}`;
