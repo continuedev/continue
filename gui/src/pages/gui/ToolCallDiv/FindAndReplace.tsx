@@ -258,10 +258,10 @@ export function FindAndReplaceDisplay({
   );
 
   if (diffResult?.error) {
-    return renderContainer(
-      <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong>
-      </div>,
+    return (
+      <div className="text-description mt-2 px-3">
+        The searched string was not found in the file
+      </div>
     );
   }
 
