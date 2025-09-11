@@ -21,7 +21,7 @@ export const editToolImpl: ClientToolImpl = async (
     filepath,
     extras.ideMessenger.ide,
   );
-  
+
   if (!firstUriMatch) {
     const openFiles = await extras.ideMessenger.ide.getOpenFiles();
     for (const uri of openFiles) {
