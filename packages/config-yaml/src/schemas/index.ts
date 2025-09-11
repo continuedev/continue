@@ -57,6 +57,7 @@ const ruleObjectSchema = z.object({
   globs: z.union([z.string(), z.array(z.string())]).optional(),
   regex: z.union([z.string(), z.array(z.string())]).optional(),
   alwaysApply: z.boolean().optional(),
+  invokable: z.boolean().optional(),
   sourceFile: z.string().optional(), //TODO refactor RuleWithSource.ruleFile to align with sourceFile
 });
 const ruleSchema = z.union([z.string(), ruleObjectSchema]);
