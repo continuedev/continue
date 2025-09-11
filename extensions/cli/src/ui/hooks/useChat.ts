@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+/* eslint-disable max-statements   */
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +13,7 @@ import {
   updateSessionHistory,
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
+import { messageQueue, QueuedMessage } from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
@@ -138,8 +141,14 @@ export function useChat({
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
     null,
   );
+  const [isCompacting, setIsCompacting] = useState(false);
+  const [compactionStartTime, setCompactionStartTime] = useState<number | null>(
+    null,
+  );
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
+  const [compactionAbortController, setCompactionAbortController] =
     useState<AbortController | null>(null);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
@@ -165,6 +174,22 @@ export function useChat({
 
   // Track interrupted state for resume functionality
   const [wasInterrupted, setWasInterrupted] = useState(false);
+
+  // Track queued messages for immediate display
+  const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
+
+  // Set up message queue listeners
+  useEffect(() => {
+    const onMessageQueued = (queuedMessage: QueuedMessage) => {
+      setQueuedMessages((prev) => [...prev, queuedMessage]);
+    };
+
+    messageQueue.on("messageQueued", onMessageQueued);
+
+    return () => {
+      messageQueue.off("messageQueued", onMessageQueued);
+    };
+  }, []);
 
   // Clean up abort controller on unmount
   useEffect(() => {
@@ -306,6 +331,23 @@ export function useChat({
       setIsWaitingForResponse(false);
       setResponseStartTime(null);
       setInputMode(true);
+
+      // Check if there are queued messages and process them after a microtask delay
+      // This ensures the GUI state has been updated before processing the next message
+      const queuedMessageData = messageQueue.getLatestMessage();
+      if (queuedMessageData) {
+        const { message: latestQueuedMessage, imageMap } = queuedMessageData;
+        logger.debug("processing queued message", { latestQueuedMessage });
+
+        // Clear queued messages from display since they're about to be processed
+        // Note: messageQueue.getLatestMessage() already cleared the actual queue
+        setQueuedMessages([]);
+
+        await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
+
+        // Process the queued message - it will handle adding to history and compaction display
+        await processQueuedMessage(latestQueuedMessage, imageMap);
+      }
     }
   };
 
@@ -362,6 +404,9 @@ export function useChat({
         setCompactionIndex,
         currentSession,
         setCurrentSession,
+        setIsCompacting,
+        setCompactionStartTime,
+        setCompactionAbortController,
       });
       return null;
     }
@@ -398,20 +443,11 @@ export function useChat({
       .join("");
   };
 
-  const handleUserMessage = async (
+  const processMessage = async (
     message: string,
     imageMap?: Map<string, Buffer>,
+    isQueuedMessage: boolean = false,
   ) => {
-    // Check if this is a resume request (empty message after interruption)
-    if (await handleResumeRequest(message)) {
-      return;
-    }
-
-    // Clear interrupted state if user types a new message
-    if (wasInterrupted && message !== "") {
-      setWasInterrupted(false);
-    }
-
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -440,27 +476,9 @@ export function useChat({
     // Track telemetry
     trackUserMessage(message, model);
 
-    // Format message with attached files and images
-    logger.debug("Processing message with images", {
-      hasImages: !!(imageMap && imageMap.size > 0),
-      imageCount: imageMap?.size || 0,
-    });
-    const newUserMessage = await formatMessageWithFiles(
-      message,
-      attachedFiles,
-      imageMap,
-    );
-    logger.debug("Message formatted successfully");
-
-    if (attachedFiles.length > 0) {
-      setAttachedFiles([]);
-    }
-
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
-      const messageContentString = convertMessageContentToString(
-        newUserMessage.message.content,
-      );
+      const messageContentString = convertMessageContentToString(message);
 
       await handleRemoteMessage({
         remoteUrl,
@@ -469,23 +487,161 @@ export function useChat({
       return;
     }
 
-    // Check if auto-compacting is needed BEFORE adding user message
-    const { currentChatHistory, currentCompactionIndex } =
-      await handleAutoCompaction({
-        chatHistory,
-        model,
-        llmApi,
-        compactionIndex,
-        setChatHistory: setChatHistory,
-        setCompactionIndex,
+    // For non-queued messages, format and add to chat history
+    if (isQueuedMessage) {
+      // For queued messages, we need to format and add to history after compaction
+      // First, format the message
+      const formattedQueuedMessage = await formatMessageWithFiles(
+        message,
+        [], // No attached files for queued messages
+        imageMap,
+      );
+
+      // Check if auto-compacting is needed with current history
+      const compactionController = new AbortController();
+      setCompactionAbortController(compactionController);
+      setIsCompacting(true);
+      setCompactionStartTime(Date.now());
+
+      // Add the queued message to queue display during compaction
+      const queuedMessageForDisplay: QueuedMessage = {
+        message,
+        imageMap,
+        timestamp: Date.now(),
+      };
+      setQueuedMessages((prev) => [...prev, queuedMessageForDisplay]);
+
+      let currentChatHistory, currentCompactionIndex;
+      try {
+        const result = await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+          abortController: compactionController,
+        });
+        currentChatHistory = result.currentChatHistory;
+        currentCompactionIndex = result.currentCompactionIndex;
+      } catch (error) {
+        // If compaction fails, remove the queued message from display
+        setQueuedMessages((prev) =>
+          prev.filter((msg) => msg !== queuedMessageForDisplay),
+        );
+        throw error; // Re-throw to maintain error handling
+      } finally {
+        setIsCompacting(false);
+        setCompactionStartTime(null);
+        setCompactionAbortController(null);
+      }
+
+      // Add the formatted queued message to history after compaction completes
+      const newHistory = [...currentChatHistory, formattedQueuedMessage];
+      setChatHistory(newHistory);
+
+      // Remove the queued message from display since it's now in chat history
+      setQueuedMessages((prev) =>
+        prev.filter((msg) => msg !== queuedMessageForDisplay),
+      );
+
+      // Execute the streaming response with the updated history
+      await executeStreamingResponse(newHistory, currentCompactionIndex);
+    } else {
+      // Format message with attached files and images
+      logger.debug("Processing message with images", {
+        hasImages: !!(imageMap && imageMap.size > 0),
+        imageCount: imageMap?.size || 0,
       });
+      const newUserMessage = await formatMessageWithFiles(
+        message,
+        attachedFiles,
+        imageMap,
+      );
+      logger.debug("Message formatted successfully");
 
-    // Add the formatted user message to history
-    const newHistory = [...currentChatHistory, newUserMessage];
-    setChatHistory(newHistory);
+      if (attachedFiles.length > 0) {
+        setAttachedFiles([]);
+      }
 
-    // Execute the streaming response
-    await executeStreamingResponse(newHistory, currentCompactionIndex);
+      // Check if auto-compacting is needed BEFORE adding user message
+      const compactionController = new AbortController();
+      setCompactionAbortController(compactionController);
+      setIsCompacting(true);
+      setCompactionStartTime(Date.now());
+
+      // Add the triggering message to queue display during compaction
+      const compactionQueuedMessage: QueuedMessage = {
+        message,
+        imageMap,
+        timestamp: Date.now(),
+      };
+      setQueuedMessages((prev) => [...prev, compactionQueuedMessage]);
+
+      let currentChatHistory, currentCompactionIndex;
+      try {
+        const result = await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+          abortController: compactionController,
+        });
+        currentChatHistory = result.currentChatHistory;
+        currentCompactionIndex = result.currentCompactionIndex;
+      } catch (error) {
+        // If compaction fails, remove the triggering message from queue display
+        setQueuedMessages((prev) =>
+          prev.filter((msg) => msg !== compactionQueuedMessage),
+        );
+        throw error; // Re-throw to maintain error handling
+      } finally {
+        setIsCompacting(false);
+        setCompactionStartTime(null);
+        setCompactionAbortController(null);
+      }
+
+      // Add the formatted user message to history
+      const newHistory = [...currentChatHistory, newUserMessage];
+      setChatHistory(newHistory);
+
+      // Remove the triggering message from queue display since it's now in chat history
+      setQueuedMessages((prev) =>
+        prev.filter((msg) => msg !== compactionQueuedMessage),
+      );
+
+      // Execute the streaming response
+      await executeStreamingResponse(newHistory, currentCompactionIndex);
+    }
+  };
+
+  const processQueuedMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // For queued messages, we can reuse the core message processing logic
+    // by calling the internal processing function directly
+    await processMessage(message, imageMap, true);
+  };
+
+  const handleUserMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (await handleResumeRequest(message)) {
+      return;
+    }
+
+    // Clear interrupted state if user types a new message
+    if (wasInterrupted && message !== "") {
+      setWasInterrupted(false);
+    }
+
+    // Use the common message processing logic
+    await processMessage(message, imageMap, false);
   };
 
   const handleInterrupt = () => {
@@ -504,7 +660,21 @@ export function useChat({
       return;
     }
 
-    // Local mode: abort the controller
+    // Local mode: abort the appropriate controller
+
+    // If compaction is running, abort compaction
+    if (compactionAbortController && isCompacting) {
+      compactionAbortController.abort();
+      setIsCompacting(false);
+      setCompactionStartTime(null);
+      setCompactionAbortController(null);
+      setInputMode(true);
+      // Clear any queued messages (including the triggering message) when compaction is interrupted
+      setQueuedMessages([]);
+      return;
+    }
+
+    // If response is running, abort response
     if (abortController && isWaitingForResponse) {
       abortController.abort();
 
@@ -537,6 +707,8 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
+    // Clear any queued messages when resetting chat
+    setQueuedMessages([]);
   };
 
   const handleToolPermissionResponse = async (
@@ -610,10 +782,13 @@ export function useChat({
     setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,
+    isCompacting,
+    compactionStartTime,
     inputMode,
     attachedFiles,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
