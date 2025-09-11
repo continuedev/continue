@@ -26,7 +26,6 @@ import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import {
-  getRepoUrlText,
   useCurrentMode,
   useIntroMessage,
   useLoginHandlers,
@@ -147,8 +146,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
   const { services, allServicesReady, isRemoteMode } =
     useTUIChatServices(remoteUrl);
 
-  const repoURlText = useMemo(() => getRepoUrlText(remoteUrl), [remoteUrl]);
-
   // Use navigation context
   const {
     state: navState,
@@ -191,6 +188,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     inputMode,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -285,6 +283,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
           chatHistory={chatHistory}
+          queuedMessages={queuedMessages}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
@@ -338,7 +337,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar
           currentMode={currentMode}
-          repoURLText={repoURlText}
+          remoteUrl={remoteUrl}
           isRemoteMode={isRemoteMode}
           services={services}
           navState={navState}

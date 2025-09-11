@@ -83,10 +83,55 @@ export const handleApplyStateUpdate = createAsyncThunk<
             }
 
             if (accepted) {
+              // Add autoformatting diff to tool output if present
+              if (applyState.autoFormattingDiff) {
+                dispatch(
+                  updateToolCallOutput({
+                    toolCallId: applyState.toolCallId,
+                    contextItems: [
+                      {
+                        icon: "info",
+                        name: "Auto-formatting Applied",
+                        description: "Editor auto-formatting changes",
+                        content: `Along with your edits, the editor applied the following auto-formatting:\n\n${applyState.autoFormattingDiff}\n\n(Note: Pay close attention to changes such as single quotes being converted to double quotes, semicolons being removed or added, long lines being broken into multiple lines, adjusting indentation style, adding/removing trailing commas, etc. This will help you ensure future SEARCH/REPLACE operations to this file are accurate.)`,
+                        hidden: false,
+                      },
+                    ],
+                  }),
+                );
+              }
+
               if (toolCallState.status !== "errored") {
                 dispatch(
                   acceptToolCall({
                     toolCallId: applyState.toolCallId,
+                  }),
+                );
+                dispatch(
+                  updateToolCallOutput({
+                    toolCallId: applyState.toolCallId,
+                    contextItems: [
+                      {
+                        name: "Edit Success",
+                        content: `Successfully edited ${applyState.filepath}`,
+                        description: "",
+                        hidden: true,
+                      },
+                    ],
+                  }),
+                );
+              } else {
+                dispatch(
+                  updateToolCallOutput({
+                    toolCallId: applyState.toolCallId,
+                    contextItems: [
+                      {
+                        name: "Edit Failed",
+                        content: `Failed to edit ${applyState.filepath}. To continue working with the file, read it again to see the most up-to-date contents`,
+                        description: "",
+                        hidden: true,
+                      },
+                    ],
                   }),
                 );
               }
@@ -98,7 +143,6 @@ export const handleApplyStateUpdate = createAsyncThunk<
               );
             }
           }
-          // TODO return output from edit tools so the model knows the result
         }
       }
     }

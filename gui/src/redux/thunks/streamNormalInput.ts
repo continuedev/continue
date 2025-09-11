@@ -4,8 +4,8 @@ import {
   LLMFullCompletionOptions,
   Tool,
   ToolCallState,
-  ToolPolicy,
 } from "core";
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { selectActiveTools } from "../selectors/selectActiveTools";

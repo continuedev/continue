@@ -25,11 +25,17 @@ export function handlePermissionDenied(
   toolCall: PreprocessedToolCall,
   chatHistoryEntries: ChatCompletionToolMessageParam[],
   callbacks?: StreamCallbacks,
+  reason: "user" | "policy" = "user",
 ): void {
-  const deniedMessage = `Permission denied by user`;
+  const deniedMessage =
+    reason === "policy"
+      ? `Command blocked by security policy`
+      : `Permission denied by user`;
+
   logger.info("Tool call denied", {
     name: toolCall.name,
     arguments: toolCall.arguments,
+    reason,
   });
 
   chatHistoryEntries.push({
@@ -39,7 +45,7 @@ export function handlePermissionDenied(
   });
 
   callbacks?.onToolResult?.(deniedMessage, toolCall.name, "canceled");
-  logger.debug("Tool call rejected - stopping stream");
+  logger.debug(`Tool call rejected (${reason}) - stopping stream`);
 }
 
 // Helper function to handle headless mode permission
@@ -114,22 +120,25 @@ export async function checkToolPermissionApproval(
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
-): Promise<boolean> {
+): Promise<{ approved: boolean; denialReason?: "user" | "policy" }> {
   const permissionCheck = checkToolPermission(toolCall);
 
   if (permissionCheck.permission === "allow") {
-    return true;
+    return { approved: true };
   } else if (permissionCheck.permission === "ask") {
     if (isHeadless) {
       handleHeadlessPermission(toolCall);
     }
-    return await requestUserPermission(toolCall, callbacks);
+    const userApproved = await requestUserPermission(toolCall, callbacks);
+    return userApproved
+      ? { approved: true }
+      : { approved: false, denialReason: "user" };
   } else if (permissionCheck.permission === "exclude") {
-    // This shouldn't happen as excluded tools are filtered out earlier
-    return false;
+    // Tool blocked by security policy
+    return { approved: false, denialReason: "policy" };
   }
 
-  return false;
+  return { approved: false, denialReason: "policy" };
 }
 
 // Helper function to track first token time
@@ -401,18 +410,25 @@ export async function executeStreamedToolCalls(
       // Notify tool start before permission check to display in UI fallbacks
       callbacks?.onToolStart?.(call.name, call.arguments);
 
-      const approved = await checkToolPermissionApproval(
+      // Check tool permissions using helper
+      const permissionResult = await checkToolPermissionApproval(
         call,
         callbacks,
         isHeadless,
       );
 
-      if (!approved) {
+      if (!permissionResult.approved) {
         // Permission denied: record and mark rejection
+        const denialReason = permissionResult.denialReason || "user";
+        const deniedMessage =
+          denialReason === "policy"
+            ? `Command blocked by security policy`
+            : `Permission denied by user`;
+
         const deniedEntry: ChatCompletionToolMessageParam = {
           role: "tool",
           tool_call_id: call.id,
-          content: `Permission denied by user`,
+          content: deniedMessage,
         };
         entriesByIndex.set(index, deniedEntry);
         callbacks?.onToolResult?.(

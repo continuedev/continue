@@ -1,8 +1,11 @@
 import { render } from "ink-testing-library";
 import React from "react";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { BottomStatusBar } from "../components/BottomStatusBar.js";
+import {
+  BottomStatusBar,
+  BottomStatusBarProps,
+} from "../components/BottomStatusBar.js";
 
 // Mock the index module functions
 vi.mock("../../index.js", () => ({
@@ -10,10 +13,17 @@ vi.mock("../../index.js", () => ({
   setExitMessageCallback: vi.fn(),
 }));
 
+// Mock git utility functions
+vi.mock("../../util/git.js", () => ({
+  isGitRepo: vi.fn(() => false),
+  getGitRemoteUrl: vi.fn(() => null),
+  getGitBranch: vi.fn(() => null),
+}));
+
 describe("BottomStatusBar Ctrl+C message", () => {
-  const defaultProps = {
+  const defaultProps: BottomStatusBarProps = {
     currentMode: "normal" as const,
-    repoURLText: "github.com/user/repo",
+    remoteUrl: "github.com/user/repo",
     isRemoteMode: false,
     services: { model: { model: null } },
     navState: { currentScreen: "chat" },

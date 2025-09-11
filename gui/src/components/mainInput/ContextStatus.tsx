@@ -1,3 +1,4 @@
+import { useMemo, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
 import { useCompactConversation } from "../../util/compactConversation";
@@ -8,12 +9,33 @@ const ContextStatus = () => {
   const contextPercentage = useAppSelector(
     (state) => state.session.contextPercentage,
   );
+  const selectedChatModel = useAppSelector(
+    (state) => state.config.config.selectedModelByRole.chat?.model,
+  );
+  const previousHistoryLength = useRef<number | null>(null);
+  const previousSelectedChatModel = useRef<string | null>(null);
   const history = useAppSelector((state) => state.session.history);
   const percent = Math.round((contextPercentage ?? 0) * 100);
   const isPruned = useAppSelector((state) => state.session.isPruned);
 
+  const isDifferentModelAndSameHistory = useMemo(() => {
+    if (!selectedChatModel) return false;
+    // only reset if history changes
+    if (previousHistoryLength.current !== history.length) {
+      previousHistoryLength.current = history.length;
+      previousSelectedChatModel.current = selectedChatModel;
+      return false;
+    }
+    return previousSelectedChatModel.current !== selectedChatModel;
+  }, [history.length, selectedChatModel]);
+
   const compactConversation = useCompactConversation();
   if (!isPruned && percent < 60) {
+    return null;
+  }
+
+  // if user changed to a different model, we shouldn't show the context status until the user sends a new message
+  if (isDifferentModelAndSameHistory) {
     return null;
   }
 
@@ -68,7 +90,7 @@ const ContextStatus = () => {
           </div>
         }
       >
-        <div className="border-description-muted relative h-[14px] w-[7px] rounded-[1px] border-[0.5px] border-solid md:h-[10px] md:w-[5px]">
+        <div className="border-command-border relative h-[14px] w-[7px] rounded-[1px] border-[0.5px] border-solid md:h-[10px] md:w-[5px]">
           <div
             className={`transition-height absolute bottom-0 left-0 w-full duration-300 ease-in-out ${barColorClass}`}
             style={{ height: `${percent}%` }}
