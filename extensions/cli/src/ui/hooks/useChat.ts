@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
 import { useEffect, useRef, useState } from "react";
@@ -368,6 +370,9 @@ export function useChat({
         setCompactionIndex,
         currentSession,
         setCurrentSession,
+        setIsCompacting,
+        setCompactionStartTime,
+        setCompactionAbortController,
       });
       return null;
     }
@@ -480,7 +485,7 @@ export function useChat({
     setCompactionAbortController(compactionController);
     setIsCompacting(true);
     setCompactionStartTime(Date.now());
-    
+
     let currentChatHistory, currentCompactionIndex;
     try {
       const result = await handleAutoCompaction({
@@ -492,7 +497,7 @@ export function useChat({
         setCompactionIndex,
         abortController: compactionController,
       });
-      
+
       currentChatHistory = result.currentChatHistory;
       currentCompactionIndex = result.currentCompactionIndex;
     } finally {
@@ -526,7 +531,7 @@ export function useChat({
     }
 
     // Local mode: abort the appropriate controller
-    
+
     // If compaction is running, abort compaction
     if (compactionAbortController && isCompacting) {
       compactionAbortController.abort();
@@ -536,7 +541,7 @@ export function useChat({
       setInputMode(true);
       return;
     }
-    
+
     // If response is running, abort response
     if (abortController && isWaitingForResponse) {
       abortController.abort();

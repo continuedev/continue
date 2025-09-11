@@ -33,7 +33,7 @@ describe("TUIChat - Compaction Cancellation", () => {
 
   it("calls handleInterrupt when ESC is pressed during compaction", () => {
     const compactionStartTime = Date.now();
-    
+
     mockUseChat.mockReturnValue({
       chatHistory: [],
       setChatHistory: vi.fn(),
@@ -52,16 +52,14 @@ describe("TUIChat - Compaction Cancellation", () => {
       handleToolPermissionResponse: vi.fn(),
     });
 
-    const { stdin, unmount } = render(
-      React.createElement(AppRoot, {})
-    );
+    const { stdin, unmount } = render(React.createElement(AppRoot, {}));
 
     try {
       // Give some time for the component to render and set up input handling
       setTimeout(() => {
         // Simulate ESC key press during compaction
         stdin.write("\x1b"); // ESC key
-        
+
         // The handleInterrupt should be called
         expect(mockHandleInterrupt).toHaveBeenCalledTimes(1);
       }, 100);
@@ -72,7 +70,7 @@ describe("TUIChat - Compaction Cancellation", () => {
 
   it("shows compaction status with esc to interrupt message", () => {
     const compactionStartTime = Date.now();
-    
+
     mockUseChat.mockReturnValue({
       chatHistory: [],
       setChatHistory: vi.fn(),
@@ -91,14 +89,12 @@ describe("TUIChat - Compaction Cancellation", () => {
       handleToolPermissionResponse: vi.fn(),
     });
 
-    const { lastFrame, unmount } = render(
-      React.createElement(AppRoot, {})
-    );
+    const { lastFrame, unmount } = render(React.createElement(AppRoot, {}));
 
     try {
       const frame = lastFrame();
       expect(frame).toBeDefined();
-      
+
       // Should show compaction message with interrupt option
       expect(frame).toContain("Compacting history");
       expect(frame).toContain("esc to interrupt");
@@ -111,7 +107,7 @@ describe("TUIChat - Compaction Cancellation", () => {
     // This tests the case where both might be true (theoretical edge case)
     const compactionStartTime = Date.now();
     const responseStartTime = Date.now();
-    
+
     mockUseChat.mockReturnValue({
       chatHistory: [],
       setChatHistory: vi.fn(),
@@ -130,9 +126,7 @@ describe("TUIChat - Compaction Cancellation", () => {
       handleToolPermissionResponse: vi.fn(),
     });
 
-    const { stdin, unmount } = render(
-      React.createElement(AppRoot, {})
-    );
+    const { stdin, unmount } = render(React.createElement(AppRoot, {}));
 
     try {
       // Simulate ESC key press when both states are active
