@@ -19,8 +19,8 @@ import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
 
 export function ModeSelect() {
-  const [listBoxOpen, setListBoxOpen] = useState(false);
-  const listBoxOptionsRef = useRef<HTMLUListElement>(null);
+  const [listboxOpen, setListboxOpen] = useState(false);
+  const listboxOptionsRef = useRef<HTMLUListElement>(null);
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
@@ -76,7 +76,7 @@ export function ModeSelect() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [cycleMode]);
 
-  useClickOutside(listBoxOptionsRef, () => setListBoxOpen(false));
+  useClickOutside(listboxOptionsRef, () => setListboxOpen(false));
 
   const notGreatAtAgent = (
     <>
@@ -98,7 +98,7 @@ export function ModeSelect() {
         <ListboxButton
           data-testid="mode-select-button"
           className="xs:px-2 text-description bg-lightgray/20 gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
-          onClick={() => setListBoxOpen(true)}
+          onClick={() => setListboxOpen(true)}
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
@@ -111,8 +111,8 @@ export function ModeSelect() {
         </ListboxButton>
         <ListboxOptions
           className="min-w-32 max-w-48"
-          static={listBoxOpen}
-          ref={listBoxOptionsRef}
+          static={listboxOpen}
+          ref={listboxOptionsRef}
         >
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">

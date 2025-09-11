@@ -33,10 +33,10 @@ export interface AssistantAndOrgListboxProps {
 export function AssistantAndOrgListbox({
   variant = "sidebar",
 }: AssistantAndOrgListboxProps) {
-  const [open, setOpen] = useState(false);
+  const [listboxOpen, setListboxOpen] = useState(false);
+  const listboxOptionsRef = useRef<HTMLUListElement>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const listBoxOptionsRef = useRef<HTMLUListElement>(null);
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const {
@@ -62,34 +62,34 @@ export function AssistantAndOrgListbox({
     } else {
       void ideMessenger.request("config/newAssistantFile", undefined);
     }
-    setOpen(false);
+    setListboxOpen(false);
   }
 
   function onNewOrganization() {
     void ideMessenger.request("controlPlane/openUrl", {
       path: "/organizations/new",
     });
-    setOpen(false);
+    setListboxOpen(false);
   }
 
   function onAgentsConfig() {
     navigate(CONFIG_ROUTES.AGENTS);
-    setOpen(false);
+    setListboxOpen(false);
   }
 
   function onOrganizationsConfig() {
     navigate(CONFIG_ROUTES.ORGANIZATIONS);
-    setOpen(false);
+    setListboxOpen(false);
   }
 
   function onRulesConfig() {
     navigate(CONFIG_ROUTES.RULES);
-    setOpen(false);
+    setListboxOpen(false);
   }
 
   function onToolsConfig() {
     navigate(CONFIG_ROUTES.TOOLS);
-    setOpen(false);
+    setListboxOpen(false);
   }
 
   useEffect(() => {
@@ -133,8 +133,8 @@ export function AssistantAndOrgListbox({
     };
   }, [currentOrg, selectedProfile]);
 
-  useClickOutside(listBoxOptionsRef, () => {
-    setOpen(false);
+  useClickOutside(listboxOptionsRef, () => {
+    setListboxOpen(false);
   });
 
   return (
@@ -143,13 +143,13 @@ export function AssistantAndOrgListbox({
         <SelectedAssistantButton
           selectedProfile={selectedProfile}
           variant={variant}
-          setOptionsOpen={(val) => setOpen(val)}
+          setOptionsOpen={(val) => setListboxOpen(val)}
         />
         <ListboxOptions
           className="max-h-32 -translate-x-1.5 overflow-y-auto pb-0"
           style={{ zIndex: 200 }}
-          static={open}
-          ref={listBoxOptionsRef}
+          static={listboxOpen}
+          ref={listboxOptionsRef}
         >
           <div className="flex items-center justify-between p-2">
             <span className="text-description text-xs font-medium">Agents</span>
