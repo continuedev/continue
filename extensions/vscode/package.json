@@ -524,13 +524,12 @@
       "continue.continueSubMenu": [
         {
           "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue",
-          "when": "editorHasSelection"
+          "group": "Continue"
         },
         {
           "command": "continue.focusEdit",
           "group": "Continue",
-          "when": "editorHasSelection && !editorReadonly"
+          "when": "!editorReadonly"
         }
       ],
       "explorer/context": [
