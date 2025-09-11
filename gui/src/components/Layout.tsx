@@ -54,6 +54,8 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const isHome =
+    location.pathname === "/" || location.pathname === "/index.html";
 
   useEffect(() => {
     (async () => {
@@ -89,8 +91,8 @@ const Layout = () => {
     async () => {
       return false;
     },
-    [location.pathname],
-    location.pathname === ROUTES.HOME,
+    [isHome],
+    isHome,
   );
 
   useWebviewListener(
@@ -112,8 +114,8 @@ const Layout = () => {
         );
       }
     },
-    [location.pathname, isInEdit],
-    location.pathname === ROUTES.HOME,
+    [isHome, isInEdit],
+    isHome,
   );
 
   useWebviewListener(
@@ -235,13 +237,10 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    if (
-      isNewUserOnboarding() &&
-      (location.pathname === "/" || location.pathname === "/index.html")
-    ) {
+    if (isNewUserOnboarding() && isHome) {
       onboardingCard.open();
     }
-  }, [location]);
+  }, [isHome]);
 
   return (
     <LocalStorageProvider>
@@ -281,7 +280,7 @@ const Layout = () => {
                 <PostHogPageView />
                 <Outlet />
                 {/* The fatal error for chat is shown below input */}
-                {location.pathname !== "/" && <FatalErrorIndicator />}
+                {!isHome && <FatalErrorIndicator />}
               </GridDiv>
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
