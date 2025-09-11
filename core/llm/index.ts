@@ -508,9 +508,17 @@ export abstract class BaseLLM implements ILLM {
             e.code === "ECONNREFUSED" &&
             e.message.includes("http://localhost:8000")
           ) {
-            const message = (await isLemonadeInstalled())
-              ? "Unable to connect to local Lemonade instance. Lemonade server may not be running."
-              : "Unable to connect to local Lemonade instance. Lemonade may not be installed or may not be running.";
+            const isInstalled = await isLemonadeInstalled();
+            let message: string;
+            if (process.platform === "linux") {
+              // On Linux, isLemonadeInstalled checks if it's running (via health endpoint)
+              message = "Unable to connect to local Lemonade instance. Please ensure Lemonade is running. Visit http://lemonade-server.ai for setup instructions.";
+            } else {
+              // On Windows, we can check if it's installed
+              message = isInstalled
+                ? "Unable to connect to local Lemonade instance. Lemonade server may not be running."
+                : "Unable to connect to local Lemonade instance. Lemonade may not be installed or may not be running.";
+            }
             throw new Error(message);
           }
         }
