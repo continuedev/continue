@@ -1,4 +1,4 @@
-import { Box, Text } from "ink";
+import { Box } from "ink";
 import React, {
   useCallback,
   useEffect,
@@ -17,6 +17,7 @@ import {
 } from "../services/types.js";
 import { logger } from "../util/logger.js";
 
+import { ActionStatus } from "./components/ActionStatus.js";
 import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ResourceDebugBar } from "./components/ResourceDebugBar.js";
 import { ScreenContent } from "./components/ScreenContent.js";
@@ -31,8 +32,6 @@ import {
   useLoginHandlers,
   useSelectors,
 } from "./hooks/useTUIChatHooks.js";
-import { LoadingAnimation } from "./LoadingAnimation.js";
-import { Timer } from "./Timer.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -185,9 +184,12 @@ const TUIChat: React.FC<TUIChatProps> = ({
     setChatHistory,
     isWaitingForResponse,
     responseStartTime,
+    isCompacting,
+    compactionStartTime,
     inputMode,
     activePermissionRequest,
     wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -282,6 +284,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
           chatHistory={chatHistory}
+          queuedMessages={queuedMessages}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
@@ -290,18 +293,21 @@ const TUIChat: React.FC<TUIChatProps> = ({
       {/* Fixed bottom section */}
       <Box flexDirection="column" flexShrink={0}>
         {/* Status */}
-        {isWaitingForResponse && responseStartTime && (
-          <Box paddingX={1} flexDirection="row" gap={1}>
-            <LoadingAnimation visible={isWaitingForResponse} />
-            <Text key="loading-start" color="gray">
-              (
-            </Text>
-            <Timer startTime={responseStartTime} />
-            <Text key="loading-end" color="gray">
-              • esc to interrupt )
-            </Text>
-          </Box>
-        )}
+        <ActionStatus
+          visible={isWaitingForResponse && !!responseStartTime}
+          startTime={responseStartTime || 0}
+          message=""
+          showSpinner={true}
+        />
+
+        {/* Compaction Status */}
+        <ActionStatus
+          visible={isCompacting && !!compactionStartTime}
+          startTime={compactionStartTime || 0}
+          message="Compacting history"
+          showSpinner={true}
+          loadingColor="grey"
+        />
 
         {/* All screen-specific content */}
         <ScreenContent
@@ -318,6 +324,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleToolPermissionResponse={handleToolPermissionResponse}
           handleUserMessage={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
+          isCompacting={isCompacting}
           inputMode={inputMode}
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}

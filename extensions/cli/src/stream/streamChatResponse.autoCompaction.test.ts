@@ -147,7 +147,7 @@ describe("handleAutoCompaction", () => {
       "Auto-compacting...",
     );
     expect(mockCallbacks.onSystemMessage).toHaveBeenCalledWith(
-      "✓ Chat history auto-compacted successfully.",
+      "Chat history auto-compacted successfully.",
     );
 
     expect(result).toEqual({
