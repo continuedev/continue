@@ -30,7 +30,7 @@ const MAX_SAME_LINES = 2;
 
 function EllipsisLine() {
   return (
-    <div className="text-description-muted px-3 py-1 text-center font-mono">
+    <div className="text-description-muted px-3 py-1 text-left font-mono">
       ⋯
     </div>
   );
