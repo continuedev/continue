@@ -1,43 +1,43 @@
 ---
 title: "config.yaml Reference"
-description: "Comprehensive guide to the config.yaml format used by Continue.dev for building custom coding assistants. Learn how to define models, context providers, rules, prompts, and more using reusable blocks and YAML configuration."
+description: "Comprehensive guide to the config.yaml format used by Continue.dev for building custom coding agents. Learn how to define models, context providers, rules, prompts, and more using reusable blocks and YAML configuration."
 ---
 
 ## Introduction
 
-Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
+Continue hub agents are defined using the `config.yaml` specification. Agents can be loaded from [the Hub](https://hub.continue.dev/explore/agents) or locally
 
-- [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
+- [Continue Hub](https://hub.continue.dev/explore/agents) - YAML is stored on the hub and automatically synced to the extension
 
 - Locally
-  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
-  - in your workspace in a `/.continue/assistants` folder, with the same naming convention
+  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/agents`. The name of the file will be used as the display name of the agent, e.g. `My Agent.yaml`
+  - in your workspace in a `/.continue/agents` folder, with the same naming convention
 
 <Info>
   Config YAML replaces `config.json`, which is deprecated. View the **[Migration
   Guide](/reference/yaml-migration)**.
 </Info>
 
-An assistant is made up of:
+An agent is made up of:
 
-1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the assistant
-2. **Block lists**, which are composable arrays of coding assistant building blocks available to the assistant, such as models, docs, and context providers.
+1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the agent
+2. **Block lists**, which are composable arrays of coding agent building blocks available to the agent, such as models, docs, and context providers.
 
-A block is a single standalone building block of a coding assistants, e.g., one model or one documentation source. In `config.yaml` syntax, a block consists of the same top-level properties as assistants (`name`, `version`, and `schema`), but only has **ONE** item under whichever block type it is.
+A block is a single standalone building block of a coding agents, e.g., one model or one documentation source. In `config.yaml` syntax, a block consists of the same top-level properties as agents (`name`, `version`, and `schema`), but only has **ONE** item under whichever block type it is.
 
-Examples of blocks and assistants can be found on the [Continue hub](https://hub.continue.dev/explore/assistants).
+Examples of blocks and agents can be found on the [Continue Hub](https://hub.continue.dev).
 
-Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
+Agents can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
 
 ### Using Blocks
 
-Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
+Hub blocks and agents are identified with a slug in the format `owner-slug/block-or-agent-slug`, where an owner can be a user or organization (For example, if you want to use the [OpenAI 4o Model block](https://hub.continue.dev/openai/gpt-4o), your slug would be `openai/gpt-4o`). These blocks are pulled from [https://hub.continue.dev](https://hub.continue.dev).
 
-Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
+Blocks can be imported into an agent by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
-For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
+For example, the following agent imports an Anthropic model and defines an Ollama DeepSeek one.
 
-Assistant models section
+Agent models section
 
 ```yaml
 name: Team Agent
@@ -52,13 +52,13 @@ models:
 
 ### Local Blocks
 
-It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
+It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all agents when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
 
 Place your YAML files in the following folders:
 
-Assistants:
+Agents:
 
-- `.continue/assistants` - for assistants
+- `.continue/agents` - for agents
 
 Blocks:
 
@@ -100,7 +100,7 @@ models:
 Which can then be imported like this:
 
 ```yaml title="config.yaml"
-name: myprofile/custom-assistant
+name: myprofile/custom-agent
 version: 1.0.0
 schema: v1
 
@@ -118,7 +118,7 @@ Note that hub secrets can be passed as inputs, using a similar mustache format: 
 Block properties can be also be directly overriden using `override`. For example:
 
 ```yaml title="config.yaml"
-name: myprofile/custom-assistant
+name: myprofile/custom-agent
 version: 1.0.0
 schema: v1
 

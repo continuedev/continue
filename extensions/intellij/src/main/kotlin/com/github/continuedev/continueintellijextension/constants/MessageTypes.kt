@@ -37,7 +37,6 @@ class MessageTypes {
             "applyToFile",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
@@ -147,6 +146,7 @@ class MessageTypes {
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+            "process/killTerminalProcess"
         )
     }
 }

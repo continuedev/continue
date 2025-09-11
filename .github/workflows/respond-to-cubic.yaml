@@ -69,7 +69,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -91,7 +91,7 @@ jobs:
           Please analyze the current PR, understand the request, implement the necessary changes, and commit them to this branch."
 
           # Start remote session and capture JSON output
-          SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --branch ${{ steps.pr-info.outputs.head_ref }})
+          SESSION_OUTPUT=$(echo "$PROMPT" | cn remote -s --config continuedev/address-code-review --branch ${{ steps.pr-info.outputs.head_ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output
@@ -164,7 +164,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check-mention.outputs.contains_mention == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -175,7 +175,7 @@ jobs:
       - name: Get review context
         if: steps.check-mention.outputs.contains_mention == 'true'
         id: review-context
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             let reviewContext = '';
@@ -233,7 +233,7 @@ jobs:
 
           # Start remote session and capture JSON output
           echo "Starting cn with prompt..."
-          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --branch ${{ github.event.pull_request.head.ref }})
+          SESSION_OUTPUT=$(cat /tmp/prompt.txt | cn remote -s --config continuedev/address-code-review --branch ${{ github.event.pull_request.head.ref }})
           echo "Raw session output: $SESSION_OUTPUT"
 
           # Extract URL from JSON output

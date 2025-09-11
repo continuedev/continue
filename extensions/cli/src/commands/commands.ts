@@ -65,7 +65,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "Manage MCP server connections",
     category: "system",
   },
-
+  {
+    name: "init",
+    description: "Create an AGENTS.md file",
+    category: "system",
+  },
   {
     name: "compact",
     description: "Summarize chat history into a compact form",
