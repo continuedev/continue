@@ -770,7 +770,6 @@ export class Core {
       if (data?.shouldClearIndexes) {
         await this.codeBaseIndexer.clearIndexes();
       }
-
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.codeBaseIndexer.refreshCodebaseIndex(dirs);
     });
@@ -786,17 +785,6 @@ export class Core {
 
       if (currentState.status !== "loading") {
         void this.messenger.request("indexProgress", currentState);
-      }
-    });
-
-    on("folders/changed", async ({ data }) => {
-      if (data?.uris?.length) {
-        walkDirCache.invalidate();
-        this.ide.refreshWorkspaceDirs();
-        const { config } = await this.configHandler.loadConfig();
-        if (config && !config.disableIndexing) {
-          await this.codeBaseIndexer.refreshCodebaseIndex(data.uris);
-        }
       }
     });
 

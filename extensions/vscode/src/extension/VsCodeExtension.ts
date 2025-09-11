@@ -504,10 +504,17 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
-      this.core.invoke("folders/changed", {
-        uris: event.added
-          .concat(event.removed)
-          .map((folder) => folder.uri.toString()),
+      const dirs = vscode.workspace.workspaceFolders?.map(
+        (folder) => folder.uri,
+      );
+
+      this.ideUtils.setWokspaceDirectories(dirs);
+
+      this.core.invoke("index/forceReIndex", {
+        dirs: [
+          ...event.added.map((folder) => folder.uri.toString()),
+          ...event.removed.map((folder) => folder.uri.toString()),
+        ],
       });
     });
 

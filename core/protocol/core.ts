@@ -262,9 +262,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "index/indexingProgressBarInitialized": [undefined, void];
   "onboarding/complete": [CompleteOnboardingPayload, void];
 
-  // Folder changes
-  "folders/changed": [{ uris?: string[] }, void];
-
   // File changes
   "files/changed": [{ uris?: string[] }, void];
   "files/opened": [{ uris?: string[] }, void];

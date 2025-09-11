@@ -24,7 +24,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
   getWorkspaceDirs: [undefined, string[]];
-  refreshWorkspaceDirs: [undefined, void];
   writeFile: [{ path: string; contents: string }, void];
   showVirtualFile: [{ name: string; content: string }, void];
   openFile: [{ path: string }, void];

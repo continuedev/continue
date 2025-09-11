@@ -152,10 +152,6 @@ export class MessageIde implements IDE {
     return await this.request("getWorkspaceDirs", undefined);
   }
 
-  async refreshWorkspaceDirs(): Promise<void> {
-    await this.request("refreshWorkspaceDirs", undefined);
-  }
-
   async showLines(
     fileUri: string,
     startLine: number,

@@ -192,10 +192,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve([this.workspaceDir]);
   }
 
-  refreshWorkspaceDirs(): Promise<void> {
-    return Promise.resolve();
-  }
-
   writeFile(fileUri: string, contents: string): Promise<void> {
     const filepath = fileURLToPath(fileUri);
     return new Promise((resolve, reject) => {

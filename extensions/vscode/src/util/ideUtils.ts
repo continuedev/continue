@@ -74,9 +74,8 @@ export class VsCodeIdeUtils {
     return this._workspaceDirectories;
   }
 
-  refreshWorkspaceDirectories(): void {
-    this._workspaceDirectories =
-      vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
+  public setWokspaceDirectories(dirs: vscode.Uri[] | undefined): void {
+    this._workspaceDirectories = dirs;
   }
 
   getUniqueId() {
