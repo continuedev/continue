@@ -38,6 +38,8 @@ const WINDOWS_BATCH_COMMANDS = [
   "bunx",
 ];
 
+const COMMONS_ENV_VARS = ["HOME", "USER", "USERPROFILE", "LOGNAME", "USERNAME"];
+
 function is401Error(error: unknown) {
   return (
     (error instanceof SseError && error.code === 401) ||
@@ -461,7 +463,16 @@ class MCPConnection {
   private async constructStdioTransport(
     options: InternalStdioMcpOptions,
   ): Promise<StdioClientTransport> {
-    const env: Record<string, string> = options.env ? { ...options.env } : {};
+    const commonEnvVars: Record<string, string> = Object.fromEntries(
+      COMMONS_ENV_VARS.filter((key) => process.env[key] !== undefined).map(
+        (key) => [key, process.env[key] as string],
+      ),
+    );
+
+    const env = {
+      ...commonEnvVars,
+      ...(options.env ?? {}),
+    };
 
     if (process.env.PATH !== undefined) {
       // Set the initial PATH from process.env
