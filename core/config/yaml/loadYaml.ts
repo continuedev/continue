@@ -211,7 +211,7 @@ async function configYamlToContinueConfig(options: {
   for (const rule of config.rules ?? []) {
     const convertedRule = convertYamlRuleToContinueRule(rule);
     continueConfig.rules.push(convertedRule);
-    
+
     // Convert invokable rules to slash commands
     if (convertedRule.invokable) {
       try {
