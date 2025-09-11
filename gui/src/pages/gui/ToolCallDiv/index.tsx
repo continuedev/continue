@@ -55,7 +55,6 @@ export function ToolCallDiv({
     // All the info from args is displayed here
     // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
     if (
-      functionName === BuiltInToolNames.SearchAndReplaceInFile ||
       functionName === BuiltInToolNames.SingleFindAndReplace ||
       functionName === BuiltInToolNames.MultiEdit
     ) {

@@ -7,7 +7,6 @@ import { diffLines } from "diff";
 import { useContext, useMemo, useState } from "react";
 import { ApplyActions } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ApplyActions";
 import { FileInfo } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/FileInfo";
-import { useFontSize } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import {
@@ -15,6 +14,7 @@ import {
   selectToolCallById,
 } from "../../../redux/selectors/selectToolCalls";
 import { performFindAndReplace } from "../../../util/clientTools/findAndReplaceUtils";
+import { cn } from "../../../util/cn";
 import { getStatusIcon } from "./utils";
 
 interface FindAndReplaceDisplayProps {
@@ -26,6 +26,48 @@ interface FindAndReplaceDisplayProps {
   historyIndex: number;
 }
 
+const MAX_SAME_LINES = 2;
+
+function EllipsisLine() {
+  return (
+    <div className="text-description-muted px-3 py-1 text-center font-mono">
+      ⋯
+    </div>
+  );
+}
+
+function DiffLines({
+  lines,
+  className = "",
+  diffChar = " ",
+  diffCharClass = "text-description-muted",
+}: {
+  lines: string[];
+  diffChar?: string;
+  diffCharClass?: string;
+  className?: string;
+}) {
+  return (
+    <>
+      {lines.map((line, lineIndex) => {
+        const isLastPartLine = lineIndex === lines.length - 1;
+        if (line === "" && isLastPartLine) return null;
+        return (
+          <div
+            key={lineIndex}
+            className={cn("text-foreground px-3 py-px font-mono", className)}
+          >
+            <span className={cn("mr-2 select-none", diffCharClass)}>
+              {diffChar}
+            </span>
+            {line}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export function FindAndReplaceDisplay({
   fileUri,
   relativeFilePath,
@@ -34,15 +76,16 @@ export function FindAndReplaceDisplay({
   toolCallId,
   historyIndex,
 }: FindAndReplaceDisplayProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
   const applyState: ApplyState | undefined = useAppSelector((state) =>
     selectApplyStateByToolCallId(state, toolCallId),
   );
-  const fontSize = useFontSize();
+
   const toolCallState = useAppSelector((state) =>
     selectToolCallById(state, toolCallId),
   );
+  const showContent = isExpanded ?? toolCallState?.status === "generated";
   const config = useAppSelector((state) => state.config.config);
 
   const displayName = useMemo(() => {
@@ -126,21 +169,21 @@ export function FindAndReplaceDisplay({
   const renderContainer = (content: React.ReactNode) => (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mx-2 my-1 flex min-w-0 flex-col outline outline-1">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
+        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 px-1.5 py-1 ${showContent ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
         onClick={() => {
-          setIsExpanded((prev) => !prev);
+          setIsExpanded(!showContent);
         }}
       >
         <div className="flex max-w-[50%] flex-row items-center text-xs">
           {statusIcon}
           <ChevronDownIcon
             data-testid="toggle-find-and-replace-diff"
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer transition-all hover:brightness-125 ${
-              isExpanded ? "rotate-0" : "-rotate-90"
+            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
+              showContent ? "rotate-0" : "-rotate-90"
             }`}
           />
           <FileInfo
-            filepath={displayName}
+            filepath={displayName || "..."}
             onClick={(e) => {
               if (!fileUri) {
                 return;
@@ -170,14 +213,14 @@ export function FindAndReplaceDisplay({
           />
         )}
       </div>
-      {toolCallState?.status === "generated" || isExpanded ? content : null}
+      {showContent ? content : null}
     </div>
   );
 
   if (diffResult?.error) {
     return renderContainer(
       <div className="text-error p-3 text-sm">
-        <strong>Error generating diff</strong> {diffResult.error}
+        <strong>Error generating diff</strong>
       </div>,
     );
   }
@@ -198,72 +241,54 @@ export function FindAndReplaceDisplay({
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
     >
       <pre
-        className={`bg-editor m-0 w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
+        className={`bg-editor m-0 w-fit min-w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
-        {diffResult.diff.map((part, index) => {
+        {diffResult.diff?.map((part, index) => {
           if (part.removed) {
             return (
-              <div
+              <DiffLines
                 key={index}
-                className="text-foreground border-l-4 border-red-900 bg-red-900/30"
-              >
-                {part.value.split("\n").map((line, lineIndex) => {
-                  if (
-                    line === "" &&
-                    lineIndex === part.value.split("\n").length - 1
-                  )
-                    return null;
-                  return (
-                    <div key={lineIndex} className="px-3 py-px font-mono">
-                      <span className="mr-2 select-none text-red-600">-</span>
-                      {line}
-                    </div>
-                  );
-                })}
-              </div>
+                lines={part.value.split("\n")}
+                className="border-l-4 border-red-900 bg-red-900/30"
+                diffCharClass="text-red-600"
+                diffChar="-"
+              />
             );
           } else if (part.added) {
             return (
-              <div
+              <DiffLines
                 key={index}
-                className="text-foreground border-l-4 border-green-600 bg-green-600/20"
-              >
-                {part.value.split("\n").map((line, lineIndex) => {
-                  if (
-                    line === "" &&
-                    lineIndex === part.value.split("\n").length - 1
-                  )
-                    return null;
-                  return (
-                    <div key={lineIndex} className="px-3 py-px font-mono">
-                      <span className="mr-2 select-none text-green-600">+</span>
-                      {line}
-                    </div>
-                  );
-                })}
-              </div>
+                lines={part.value.split("\n")}
+                diffCharClass="text-green-600"
+                className="border-l-4 border-green-600 bg-green-600/20"
+                diffChar="+"
+              />
             );
           } else {
+            const isFirst = index === 0;
+            const isLast = index === diffResult.diff.length - 1;
+            const lines = part.value.split("\n");
+            const showStartEllipsis = isFirst && lines.length > MAX_SAME_LINES;
+            const showEndEllipsis = isLast && lines.length > MAX_SAME_LINES;
+            const showMiddleEllipses =
+              !isFirst && !isLast && lines.length > MAX_SAME_LINES * 2 + 1;
+
+            const startLines = showStartEllipsis
+              ? lines.slice(-MAX_SAME_LINES)
+              : showMiddleEllipses || showEndEllipsis
+                ? lines.slice(0, MAX_SAME_LINES)
+                : lines;
+            const endLines = showMiddleEllipses
+              ? lines.slice(-MAX_SAME_LINES)
+              : [];
+
             return (
               <div key={index}>
-                {part.value.split("\n").map((line, lineIndex) => {
-                  if (
-                    line === "" &&
-                    lineIndex === part.value.split("\n").length - 1
-                  )
-                    return null;
-                  return (
-                    <div
-                      key={lineIndex}
-                      className="text-foreground px-3 py-px font-mono"
-                    >
-                      <span className="text-description-muted mr-2 select-none">
-                        {" "}
-                      </span>
-                      {line}
-                    </div>
-                  );
-                })}
+                {showStartEllipsis && <EllipsisLine />}
+                <DiffLines lines={startLines} />
+                {showMiddleEllipses && <EllipsisLine />}
+                <DiffLines lines={endLines} />
+                {showEndEllipsis && <EllipsisLine />}
               </div>
             );
           }

@@ -65,7 +65,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "Manage MCP server connections",
     category: "system",
   },
-
+  {
+    name: "init",
+    description: "Create an AGENTS.md file",
+    category: "system",
+  },
   {
     name: "compact",
     description: "Summarize chat history into a compact form",
@@ -74,6 +78,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   {
     name: "resume",
     description: "Resume a previous chat session",
+    category: "system",
+  },
+  {
+    name: "fork",
+    description: "Start a forked chat session from the current history",
     category: "system",
   },
   {

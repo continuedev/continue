@@ -26,7 +26,6 @@ import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
 import {
-  getRepoUrlText,
   useCurrentMode,
   useIntroMessage,
   useLoginHandlers,
@@ -43,6 +42,7 @@ interface TUIChatProps {
   configPath?: string;
   initialPrompt?: string;
   resume?: boolean;
+  fork?: string;
   additionalRules?: string[];
   additionalPrompts?: string[];
 }
@@ -138,14 +138,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
   configPath,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
 }) => {
   // Use custom hook for services
   const { services, allServicesReady, isRemoteMode } =
     useTUIChatServices(remoteUrl);
-
-  const repoURlText = useMemo(() => getRepoUrlText(remoteUrl), [remoteUrl]);
 
   // Use navigation context
   const {
@@ -188,6 +187,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     responseStartTime,
     inputMode,
     activePermissionRequest,
+    wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -199,6 +200,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     llmApi: services.model?.llmApi || undefined,
     initialPrompt,
     resume,
+    fork,
     additionalRules,
     additionalPrompts,
     onShowConfigSelector: () => navigateTo("config"),
@@ -255,6 +257,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Check if verbose mode is enabled for resource debugging
   const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
 
+  // State for image in clipboard status
+  const [hasImageInClipboard, setHasImageInClipboard] = useState(false);
+
   return (
     <Box flexDirection="column" height="100%">
       {/* Chat history - takes up all available space above input */}
@@ -278,6 +283,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           model={services.model?.model || undefined}
           mcpService={services.mcp?.mcpService || undefined}
           chatHistory={chatHistory}
+          queuedMessages={queuedMessages}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />
@@ -318,7 +324,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
           isInputDisabled={isInputDisabled}
+          wasInterrupted={wasInterrupted}
           isRemoteMode={isRemoteMode}
+          onImageInClipboardChange={setHasImageInClipboard}
         />
 
         {/* Resource debug bar - only in verbose mode */}
@@ -329,13 +337,14 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* Free trial status and Continue CLI info - always show */}
         <BottomStatusBar
           currentMode={currentMode}
-          repoURLText={repoURlText}
+          remoteUrl={remoteUrl}
           isRemoteMode={isRemoteMode}
           services={services}
           navState={navState}
           navigateTo={navigateTo}
           closeCurrentScreen={closeCurrentScreen}
           contextPercentage={contextData?.percentage}
+          hasImageInClipboard={hasImageInClipboard}
         />
       </Box>
     </Box>

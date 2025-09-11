@@ -25,6 +25,7 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
@@ -378,21 +379,26 @@ async function configYamlToContinueConfig(options: {
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.mcpServers ?? []).map((server) => ({
-      id: server.name,
-      name: server.name,
-      sourceFile: server.sourceFile,
-      transport: {
-        type: "stdio",
-        args: [],
-        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-      },
-      timeout: server.connectionTimeout,
-    })),
-    false,
-    { ide },
-  );
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    mcpManager.setConnections(
+      (config.mcpServers ?? []).map((server) => ({
+        id: server.name,
+        name: server.name,
+        sourceFile: server.sourceFile,
+        transport: {
+          type: "stdio",
+          args: [],
+          ...(server as any), // TODO: fix the types on mcpServers in config-yaml
+        },
+        timeout: server.connectionTimeout,
+      })),
+      false,
+      { ide },
+    );
+  }
 
   return { config: continueConfig, errors: localErrors };
 }

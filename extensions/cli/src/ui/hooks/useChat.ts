@@ -1,6 +1,7 @@
+/* eslint-disable max-lines */
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
@@ -11,14 +12,17 @@ import {
   updateSessionHistory,
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
+import { messageQueue, QueuedMessage } from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
 
 import {
-  formatMessageWithFiles,
   handleAutoCompaction,
   handleCompactCommand,
+} from "./useChat.compaction.js";
+import {
+  formatMessageWithFiles,
   handleSpecialCommands,
   initChatHistory,
   processSlashCommandResult,
@@ -28,6 +32,7 @@ import {
   handleRemoteMessage,
   setupRemotePolling,
 } from "./useChat.remote.helpers.js";
+import { handleBashModeProcessing } from "./useChat.shellMode.js";
 import {
   createStreamCallbacks,
   executeStreaming,
@@ -44,6 +49,7 @@ export function useChat({
   llmApi,
   initialPrompt,
   resume,
+  fork,
   additionalRules,
   additionalPrompts,
   onShowConfigSelector,
@@ -57,10 +63,24 @@ export function useChat({
 }: UseChatProps) {
   const { exit } = useApp();
 
+  // Track service subscription
+  const serviceListenerCleanupRef = useRef<null | (() => void)>(null);
+
   // Store the current session
   const [currentSession, setCurrentSession] = useState<Session>(() => {
     // In remote mode, start with empty session (will be populated by polling)
     if (isRemoteMode) {
+      return createSession([]);
+    }
+
+    // Fork from an existing session if fork flag is used
+    if (fork) {
+      const { loadSessionById, startNewSession } = require("../../session.js");
+      const sessionToFork = loadSessionById(fork);
+      if (sessionToFork) {
+        return startNewSession(sessionToFork.history);
+      }
+      // If session not found, create a new empty session
       return createSession([]);
     }
 
@@ -76,9 +96,45 @@ export function useChat({
     return createSession([]);
   });
 
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>(
-    () => currentSession.history,
+  // Local view of history driven solely by ChatHistoryService
+  const [chatHistory, setChatHistoryView] = useState<ChatHistoryItem[]>(() =>
+    services.chatHistory?.isReady()
+      ? services.chatHistory.getHistory()
+      : currentSession.history,
   );
+  // Proxy setter: apply changes to ChatHistoryService (single source of truth)
+  const setChatHistory: React.Dispatch<
+    React.SetStateAction<ChatHistoryItem[]>
+  > = (value) => {
+    const svc = services.chatHistory;
+    const current = svc.getHistory();
+    const next = typeof value === "function" ? (value as any)(current) : value;
+    svc.setHistory(next);
+  };
+
+  // Initialize ChatHistoryService and subscribe to updates
+  useEffect(() => {
+    const svc = services.chatHistory;
+    svc
+      .initialize(currentSession, isRemoteMode)
+      .then(() => {
+        setChatHistoryView(svc.getHistory());
+        const listener = () => {
+          setChatHistoryView(svc.getHistory());
+        };
+        svc.on("stateChanged", listener);
+        serviceListenerCleanupRef.current = () =>
+          svc.off("stateChanged", listener);
+      })
+      .catch((error) => {
+        logger.error("Failed to initialize ChatHistoryService", { error });
+      });
+
+    return () => {
+      serviceListenerCleanupRef.current?.();
+      serviceListenerCleanupRef.current = null;
+    };
+  }, []);
 
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
@@ -89,8 +145,11 @@ export function useChat({
     useState<AbortController | null>(null);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
+    // If we're forking and found a session to fork from, we're already initialized
     // If we're in remote mode, we're initialized (will be populated by polling)
-    isRemoteMode || (resume && currentSession.history.length > 0),
+    isRemoteMode ||
+      (resume && currentSession.history.length > 0) ||
+      (fork && currentSession.history.length > 0),
   );
 
   // Capture initial rules to prevent re-initialization when rules change
@@ -99,12 +158,31 @@ export function useChat({
   const [activePermissionRequest, setActivePermissionRequest] =
     useState<ActivePermissionRequest | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
-    // When resuming, check for compaction markers in the loaded history
-    if (resume && currentSession.history.length > 0) {
+    // When resuming or forking, check for compaction markers in the loaded history
+    if ((resume || fork) && currentSession.history.length > 0) {
       return findCompactionIndex(currentSession.history);
     }
     return null;
   });
+
+  // Track interrupted state for resume functionality
+  const [wasInterrupted, setWasInterrupted] = useState(false);
+
+  // Track queued messages for immediate display
+  const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
+
+  // Set up message queue listeners
+  useEffect(() => {
+    const onMessageQueued = (queuedMessage: QueuedMessage) => {
+      setQueuedMessages((prev) => [...prev, queuedMessage]);
+    };
+
+    messageQueue.on("messageQueued", onMessageQueued);
+
+    return () => {
+      messageQueue.off("messageQueued", onMessageQueued);
+    };
+  }, []);
 
   // Clean up abort controller on unmount
   useEffect(() => {
@@ -121,7 +199,6 @@ export function useChat({
 
     return setupRemotePolling({
       remoteUrl,
-      setChatHistory,
       setIsWaitingForResponse,
       responseStartTime,
       setResponseStartTime,
@@ -181,7 +258,6 @@ export function useChat({
   const executeStreamingResponse = async (
     newHistory: ChatHistoryItem[],
     currentCompactionIndex: number | null,
-    message: string,
   ) => {
     // Clean up previous abort controller if it exists
     if (abortController && !abortController.signal.aborted) {
@@ -195,13 +271,12 @@ export function useChat({
     setResponseStartTime(Date.now());
     setInputMode(false);
     logger.debug("Starting chat response stream", {
-      messageLength: message.length,
       historyLength: newHistory.length,
     });
 
     try {
       const streamCallbacks = createStreamCallbacks({
-        setChatHistory,
+        setChatHistory: setChatHistory,
         setActivePermissionRequest,
         llmApi,
         model,
@@ -220,9 +295,6 @@ export function useChat({
       // Save the updated session with the latest chat history that includes the assistant's reply
       // The streamCallbacks update setChatHistory during streaming, so we need to get the current state
       setChatHistory((currentHistory) => {
-        logger.debug("Saving session", {
-          historyLength: currentHistory.length,
-        });
         const updatedSession: Session = {
           ...currentSession,
           history: currentHistory,
@@ -252,10 +324,127 @@ export function useChat({
       setIsWaitingForResponse(false);
       setResponseStartTime(null);
       setInputMode(true);
+
+      // Check if there are queued messages and process them after a microtask delay
+      // This ensures the GUI state has been updated before processing the next message
+      const queuedMessageData = messageQueue.getLatestMessage();
+      if (queuedMessageData) {
+        const { message: latestQueuedMessage, imageMap } = queuedMessageData;
+        logger.debug("processing queued message", { latestQueuedMessage });
+
+        // Clear all queued messages from display since we're processing them all together
+        setQueuedMessages([]);
+
+        // Add the queued message to chat history so it shows in the GUI
+        const formattedQueuedMessage = await formatMessageWithFiles(
+          latestQueuedMessage,
+          [], // No attached files for queued messages
+          imageMap,
+        );
+        setChatHistory((prev) => [...prev, formattedQueuedMessage]);
+
+        await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
+
+        // Process the queued message using the internal processing logic without re-adding to history
+        await processQueuedMessage(latestQueuedMessage, imageMap);
+      }
     }
   };
 
-  const handleUserMessage = async (message: string) => {
+  const handleResumeRequest = async (message: string) => {
+    if (message !== "" || !wasInterrupted) return false;
+
+    // Find the index of the last user or tool message to resume from
+    let lastUserOrToolIndex = -1;
+    for (let i = chatHistory.length - 1; i >= 0; i--) {
+      if (
+        chatHistory[i].message.role === "user" ||
+        !!chatHistory[i].toolCallStates?.length
+      ) {
+        lastUserOrToolIndex = i;
+        break;
+      }
+    }
+
+    if (lastUserOrToolIndex >= 0) {
+      // Truncate history to include up to and including the user/tool message
+      const truncatedHistory = chatHistory.slice(0, lastUserOrToolIndex + 1);
+      setChatHistory(truncatedHistory);
+
+      // Clear the interrupted state and resume
+      setWasInterrupted(false);
+
+      // Re-execute streaming with the truncated history
+      await executeStreamingResponse(truncatedHistory, compactionIndex);
+      return true;
+    }
+
+    return false;
+  };
+
+  const handleSlashCommandProcessing = async (
+    message: string,
+  ): Promise<string | null> => {
+    // Handle slash commands (skip in remote mode except for /exit which we handled above)
+    if (isRemoteMode || !assistant) {
+      return message;
+    }
+
+    const commandResult = await handleSlashCommands(message, assistant);
+    if (!commandResult) {
+      return message;
+    }
+
+    if (commandResult.compact) {
+      await handleCompactCommand({
+        chatHistory,
+        model,
+        llmApi,
+        setChatHistory,
+        setCompactionIndex,
+        currentSession,
+        setCurrentSession,
+      });
+      return null;
+    }
+
+    const newInput = processSlashCommandResult({
+      result: commandResult,
+      chatHistory,
+      setChatHistory,
+      onShowConfigSelector,
+      onShowModelSelector,
+      onShowMCPSelector,
+      onShowSessionSelector,
+      onClear,
+    });
+
+    return newInput || null;
+  };
+
+  const convertMessageContentToString = (content: any): string => {
+    if (typeof content === "string") {
+      return content;
+    }
+
+    // Convert MessagePart[] to string (extracting text, noting images)
+    return content
+      .map((part: any) => {
+        if (part.type === "text") {
+          return part.text;
+        } else if (part.type === "imageUrl") {
+          return "[Image]";
+        }
+        return "";
+      })
+      .join("");
+  };
+
+  const processMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+    isQueuedMessage: boolean = false,
+  ) => {
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -263,94 +452,119 @@ export function useChat({
       remoteUrl,
       onShowConfigSelector,
       exit,
-      setChatHistory,
     });
 
     if (handled) return;
 
-    // Handle slash commands (skip in remote mode except for /exit which we handled above)
-    if (!isRemoteMode && assistant) {
-      const commandResult = await handleSlashCommands(message, assistant);
-      if (commandResult) {
-        if (commandResult.compact) {
-          await handleCompactCommand({
-            chatHistory,
-            model,
-            llmApi,
-            setChatHistory,
-            setCompactionIndex,
-            currentSession,
-            setCurrentSession,
-          });
-          return;
-        }
-
-        const newInput = processSlashCommandResult({
-          result: commandResult,
-          chatHistory,
-          setChatHistory,
-          exit,
-          onShowConfigSelector,
-          onShowModelSelector,
-          onShowMCPSelector,
-          onShowSessionSelector,
-          onClear,
-        });
-
-        if (newInput) {
-          message = newInput;
-        } else {
-          return;
-        }
-      }
+    // Handle shell mode commands (before slash commands)
+    const bashProcessedMessage = await handleBashModeProcessing(message);
+    if (bashProcessedMessage === null) {
+      return; // Bash command was handled and no further processing needed
     }
+    message = bashProcessedMessage;
+
+    // Handle slash commands
+    const processedMessage = await handleSlashCommandProcessing(message);
+    if (processedMessage === null) {
+      return; // Command was handled and no further processing needed
+    }
+    message = processedMessage;
 
     // Track telemetry
     trackUserMessage(message, model);
 
-    // Add user message to history and display
-    const { messageText, contextItems } = formatMessageWithFiles(
-      message,
-      attachedFiles,
-    );
-    if (attachedFiles.length > 0) {
-      setAttachedFiles([]);
-    }
-
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {
+      const messageContentString = convertMessageContentToString(message);
+
       await handleRemoteMessage({
         remoteUrl,
-        messageContent: messageText,
-        setChatHistory,
+        messageContent: messageContentString,
       });
       return;
     }
 
-    // Check if auto-compacting is needed BEFORE adding user message
-    const { currentChatHistory, currentCompactionIndex } =
-      await handleAutoCompaction({
-        chatHistory,
-        model,
-        llmApi,
-        compactionIndex,
-        setChatHistory,
-        setCompactionIndex,
+    // For non-queued messages, format and add to chat history
+    if (isQueuedMessage) {
+      // For queued messages, chat history is already updated
+      // Check if auto-compacting is needed with current history
+      const { currentChatHistory, currentCompactionIndex } =
+        await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+        });
+
+      // Execute the streaming response with the current history (which already includes the queued message)
+      await executeStreamingResponse(
+        currentChatHistory,
+        currentCompactionIndex,
+      );
+    } else {
+      // Format message with attached files and images
+      logger.debug("Processing message with images", {
+        hasImages: !!(imageMap && imageMap.size > 0),
+        imageCount: imageMap?.size || 0,
       });
+      const newUserMessage = await formatMessageWithFiles(
+        message,
+        attachedFiles,
+        imageMap,
+      );
+      logger.debug("Message formatted successfully");
 
-    // NOW add user message to history with context items
-    const newUserMessage: ChatHistoryItem = {
-      message: {
-        role: "user",
-        content: messageText,
-      },
-      contextItems,
-    };
-    const newHistory = [...currentChatHistory, newUserMessage];
-    setChatHistory(newHistory);
+      if (attachedFiles.length > 0) {
+        setAttachedFiles([]);
+      }
 
-    // Execute the streaming response
-    await executeStreamingResponse(newHistory, currentCompactionIndex, message);
+      // Check if auto-compacting is needed BEFORE adding user message
+      const { currentChatHistory, currentCompactionIndex } =
+        await handleAutoCompaction({
+          chatHistory,
+          model,
+          llmApi,
+          compactionIndex,
+          setChatHistory: setChatHistory,
+          setCompactionIndex,
+        });
+
+      // Add the formatted user message to history
+      const newHistory = [...currentChatHistory, newUserMessage];
+      setChatHistory(newHistory);
+
+      // Execute the streaming response
+      await executeStreamingResponse(newHistory, currentCompactionIndex);
+    }
+  };
+
+  const processQueuedMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // For queued messages, we can reuse the core message processing logic
+    // by calling the internal processing function directly
+    await processMessage(message, imageMap, true);
+  };
+
+  const handleUserMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+  ) => {
+    // Check if this is a resume request (empty message after interruption)
+    if (await handleResumeRequest(message)) {
+      return;
+    }
+
+    // Clear interrupted state if user types a new message
+    if (wasInterrupted && message !== "") {
+      setWasInterrupted(false);
+    }
+
+    // Use the common message processing logic
+    await processMessage(message, imageMap, false);
   };
 
   const handleInterrupt = () => {
@@ -372,16 +586,23 @@ export function useChat({
     // Local mode: abort the controller
     if (abortController && isWaitingForResponse) {
       abortController.abort();
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: "[Interrupted by user]",
-          },
-          contextItems: [],
-        },
-      ]);
+
+      // Remove the last message if it's from assistant (partial response)
+      setChatHistory((current) => {
+        const lastMessage = current[current.length - 1];
+        if (
+          lastMessage?.message.role === "assistant" &&
+          !lastMessage.toolCallStates?.length
+        ) {
+          return current.slice(0, -1);
+        }
+        return current;
+      });
+
+      setWasInterrupted(true);
+      setIsWaitingForResponse(false);
+      setResponseStartTime(null);
+      setInputMode(true);
     }
   };
 
@@ -395,6 +616,8 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
+    // Clear any queued messages when resetting chat
+    setQueuedMessages([]);
   };
 
   const handleToolPermissionResponse = async (
@@ -465,12 +688,14 @@ export function useChat({
 
   return {
     chatHistory,
-    setChatHistory,
+    setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,
     inputMode,
     attachedFiles,
     activePermissionRequest,
+    wasInterrupted,
+    queuedMessages,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,

@@ -18,7 +18,6 @@ function OllamaModelDownload({
 }: OllamaModelDownloadProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const command = `ollama pull ${modelName}`;
-  const id = `info-hover-${encodeURIComponent(command)}`;
 
   function onClick() {
     void ideMessenger.ide.runCommand(command);
@@ -31,20 +30,12 @@ function OllamaModelDownload({
       {hasDownloaded ? (
         <OllamaCompletedStep text={command} />
       ) : (
-        <>
-          <StyledActionButton
-            data-tooltip-id={id}
-            onClick={onClick}
-            className="gap-2"
-          >
+        <ToolTip place="top" content="Copy into terminal">
+          <StyledActionButton onClick={onClick} className="gap-2">
             <p className="lines m-0 px-0 py-2 font-mono text-xs">{command}</p>
             <CommandLineIcon width={16} height={16} />
           </StyledActionButton>
-
-          <ToolTip id={id} place="top">
-            Copy into terminal
-          </ToolTip>
-        </>
+        </ToolTip>
       )}
     </div>
   );

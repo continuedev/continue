@@ -1,22 +1,17 @@
 import * as path from "node:path";
 
-import type { ChatHistoryItem, Session } from "core/index.js";
+import type { ChatHistoryItem } from "core/index.js";
 import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
-import { compactChatHistory } from "../../compaction.js";
+import { logger } from "src/util/logger.js";
+
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
-import {
-  loadSession,
-  updateSessionHistory,
-  startNewSession,
-} from "../../session.js";
+import { loadSession, startNewSession } from "../../session.js";
 import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
-import { formatError } from "../../util/formatError.js";
-import { logger } from "../../util/logger.js";
-import { shouldAutoCompact } from "../../util/tokenizer.js";
 
+import { processImagePlaceholder } from "./useChat.imageProcessing.js";
 import { SlashCommandResult } from "./useChat.types.js";
 
 /**
@@ -47,86 +42,10 @@ export function handleConfigCommand(onShowConfigSelector: () => void): void {
   onShowConfigSelector();
 }
 
-interface HandleCompactCommandOptions {
-  chatHistory: ChatHistoryItem[];
-  model: any;
-  llmApi: any;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
-  setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
-  currentSession: Session;
-  setCurrentSession: React.Dispatch<React.SetStateAction<Session>>;
-}
-
-/**
- * Handle compaction command
- */
-export async function handleCompactCommand({
-  chatHistory,
-  model,
-  llmApi,
-  setChatHistory,
-  setCompactionIndex,
-  currentSession,
-  setCurrentSession,
-}: HandleCompactCommandOptions): Promise<void> {
-  // Add compacting message
-  setChatHistory((prev) => [
-    ...prev,
-    {
-      message: {
-        role: "system",
-        content: "Compacting chat history...",
-      },
-      contextItems: [],
-    },
-  ]);
-
-  try {
-    // Compact the chat history directly (already in unified format)
-    const result = await compactChatHistory(chatHistory, model, llmApi);
-
-    // Replace chat history with compacted version
-    setChatHistory(result.compactedHistory);
-    setCompactionIndex(result.compactionIndex);
-
-    // Save the compacted session
-    const updatedSession: Session = {
-      ...currentSession,
-      history: result.compactedHistory,
-    };
-    updateSessionHistory(result.compactedHistory);
-    setCurrentSession(updatedSession);
-
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "Chat history compacted successfully.",
-        },
-        contextItems: [],
-      },
-    ]);
-  } catch (error) {
-    logger.error("Compaction failed:", error);
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: `Compaction failed: ${formatError(error)}`,
-        },
-        contextItems: [],
-      },
-    ]);
-  }
-}
-
 interface ProcessSlashCommandResultOptions {
   result: SlashCommandResult;
   chatHistory: ChatHistoryItem[];
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
-  exit: () => void;
   onShowConfigSelector: () => void;
   onShowModelSelector?: () => void;
   onShowMCPSelector?: () => void;
@@ -141,7 +60,6 @@ export function processSlashCommandResult({
   result,
   chatHistory,
   setChatHistory,
-  exit,
   onShowConfigSelector,
   onShowModelSelector,
   onShowMCPSelector,
@@ -149,8 +67,7 @@ export function processSlashCommandResult({
   onClear,
 }: ProcessSlashCommandResultOptions): string | null {
   if (result.exit) {
-    exit();
-    return null;
+    process.exit(0);
   }
 
   if (result.openMcpSelector) {
@@ -220,19 +137,13 @@ export function processSlashCommandResult({
 }
 
 /**
- * Format message with attached files - returns message text and context items separately
+ * Format message with attached files and images - returns a complete ChatHistoryItem
  */
-export function formatMessageWithFiles(
+export async function formatMessageWithFiles(
   message: string,
   attachedFiles: Array<{ path: string; content: string }>,
-): {
-  messageText: string;
-  contextItems: import("core/index.js").ContextItemWithId[];
-} {
-  if (attachedFiles.length === 0) {
-    return { messageText: message, contextItems: [] };
-  }
-
+  imageMap?: Map<string, Buffer>,
+): Promise<import("core/index.js").ChatHistoryItem> {
   // Convert attached files to context items
   const contextItems = attachedFiles.map((file) => ({
     id: {
@@ -248,8 +159,45 @@ export function formatMessageWithFiles(
     },
   }));
 
-  // Keep the original message text unchanged (preserving @filename references)
-  return { messageText: message, contextItems };
+  // Process message content for images
+  let messageContent: import("core/index.js").MessageContent = message;
+
+  if (imageMap && imageMap.size > 0) {
+    const messageParts: import("core/index.js").MessagePart[] = [];
+    let textContent = message;
+
+    // Replace image placeholders with image parts
+    for (const [placeholder, originalImageBuffer] of imageMap.entries()) {
+      const result = await processImagePlaceholder(
+        placeholder,
+        originalImageBuffer,
+        textContent,
+        messageParts,
+      );
+      textContent = result.textContent;
+    }
+
+    // Add any remaining text
+    if (textContent) {
+      messageParts.push({
+        type: "text",
+        text: textContent,
+      });
+    }
+
+    // Use message parts if we have images, otherwise keep as string
+    if (messageParts.length > 0) {
+      messageContent = messageParts;
+    }
+  }
+
+  return {
+    message: {
+      role: "user",
+      content: messageContent,
+    },
+    contextItems,
+  };
 }
 
 /**
@@ -270,7 +218,6 @@ interface HandleSpecialCommandsOptions {
   remoteUrl?: string;
   onShowConfigSelector: () => void;
   exit: () => void;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
 }
 
 /**
@@ -282,7 +229,6 @@ export async function handleSpecialCommands({
   remoteUrl,
   onShowConfigSelector,
   exit,
-  setChatHistory,
 }: HandleSpecialCommandsOptions): Promise<boolean> {
   const trimmedMessage = message.trim();
 
@@ -295,122 +241,11 @@ export async function handleSpecialCommands({
   // Handle /exit command in remote mode
   if (isRemoteMode && remoteUrl && trimmedMessage === "/exit") {
     const { handleRemoteExit } = await import("./useChat.remote.helpers.js");
-    await handleRemoteExit(remoteUrl, setChatHistory, exit);
+    await handleRemoteExit(remoteUrl, exit);
     return true;
   }
 
   return false;
-}
-
-interface HandleAutoCompactionOptions {
-  chatHistory: ChatHistoryItem[];
-  model: any;
-  llmApi: any;
-  compactionIndex: number | null;
-  setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
-  setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
-}
-
-/**
- * Handle auto-compaction when approaching context limit - TUI wrapper
- */
-export async function handleAutoCompaction({
-  chatHistory,
-  model,
-  llmApi,
-  compactionIndex: _compactionIndex,
-  setChatHistory,
-  setCompactionIndex,
-}: HandleAutoCompactionOptions): Promise<{
-  currentChatHistory: ChatHistoryItem[];
-  currentCompactionIndex: number | null;
-}> {
-  try {
-    // Check if auto-compaction is needed
-    // Check if auto-compaction is needed using ChatHistoryItem directly
-    if (!model || !shouldAutoCompact(chatHistory, model)) {
-      return {
-        currentChatHistory: chatHistory,
-        currentCompactionIndex: _compactionIndex,
-      };
-    }
-
-    logger.info("Auto-compaction triggered for TUI mode");
-
-    // Add compacting message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "Auto-compacting chat history...",
-        },
-        contextItems: [],
-      },
-    ]);
-
-    // Compact the unified history
-    const result = await compactChatHistory(chatHistory, model, llmApi);
-
-    // Keep the system message and append the compaction summary
-    // This replaces the old messages with a summary to reduce context size
-    const systemMessage = chatHistory.find(
-      (item) => item.message.role === "system",
-    );
-
-    const compactedMessage: ChatHistoryItem = {
-      message: {
-        role: "assistant" as const,
-        content: result.compactionContent,
-      },
-      contextItems: [],
-      conversationSummary: result.compactionContent, // Mark this as a summary
-    };
-
-    // Create new history with system message (if exists) and compaction summary
-    const updatedHistory: ChatHistoryItem[] = systemMessage
-      ? [systemMessage, compactedMessage]
-      : [compactedMessage];
-
-    setChatHistory(updatedHistory);
-    setCompactionIndex(updatedHistory.length - 1);
-
-    // Add success message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "✓ Chat history auto-compacted successfully.",
-        },
-        contextItems: [],
-      },
-    ]);
-
-    return {
-      currentChatHistory: updatedHistory,
-      currentCompactionIndex: updatedHistory.length - 1,
-    };
-  } catch (error) {
-    logger.error("Auto-compaction failed:", error);
-
-    // Add error message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: `Auto-compaction failed: ${formatError(error)}. Continuing without compaction...`,
-        },
-        contextItems: [],
-      },
-    ]);
-
-    return {
-      currentChatHistory: chatHistory,
-      currentCompactionIndex: null,
-    };
-  }
 }
 
 /**

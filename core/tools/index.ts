@@ -4,6 +4,7 @@ import * as toolDefinitions from "./definitions";
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 export const getBaseToolDefinitions = () => [
   toolDefinitions.readFileTool,
+
   toolDefinitions.createNewFileTool,
   toolDefinitions.runTerminalCommandTool,
   toolDefinitions.globSearchTool,
@@ -33,11 +34,10 @@ export const getConfigDependentToolDefinitions = (
       toolDefinitions.viewRepoMapTool,
       toolDefinitions.viewSubdirectoryTool,
       toolDefinitions.codebaseTool,
+      toolDefinitions.readFileRangeTool,
     );
   }
 
-  // OLD SEARCH AND REPLACE IS CURRENTLY NOT USED
-  // toolDefinitions.searchAndReplaceInFileTool
   if (modelName?.includes("claude") || modelName?.includes("gpt-5")) {
     tools.push(toolDefinitions.multiEditTool);
   } else {

@@ -9,9 +9,11 @@ import type { PermissionMode } from "../permissions/types.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
 import { SERVICE_NAMES, serviceContainer } from "../services/index.js";
 import { modeService } from "../services/ModeService.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { InputHistory } from "../util/inputHistory.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
+import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
   handleControlKeys,
   updateTextBufferState,
@@ -19,17 +21,90 @@ import {
 import { SlashCommandUI } from "./SlashCommandUI.js";
 import { TextBuffer } from "./TextBuffer.js";
 
+// Small presentational helpers to reduce cyclomatic complexity in UserInput
+const InterruptedBanner: React.FC<{ wasInterrupted: boolean }> = ({
+  wasInterrupted,
+}) => {
+  if (!wasInterrupted) return null;
+  return (
+    <Box paddingX={1} marginBottom={0}>
+      <Text color="yellow">Interrupted by user - Press enter to continue</Text>
+    </Box>
+  );
+};
+
+const SlashCommandsMaybe: React.FC<{
+  show: boolean;
+  inputMode: boolean;
+  hideNormalUI: boolean;
+  isRemoteMode: boolean;
+  assistant?: AssistantConfig;
+  filter: string;
+  selectedIndex: number;
+}> = ({
+  show,
+  inputMode,
+  hideNormalUI,
+  isRemoteMode,
+  assistant,
+  filter,
+  selectedIndex,
+}) => {
+  if (!show || !inputMode || hideNormalUI || !(isRemoteMode || assistant))
+    return null;
+  return (
+    <SlashCommandUI
+      assistant={assistant}
+      filter={filter}
+      selectedIndex={selectedIndex}
+      isRemoteMode={isRemoteMode}
+    />
+  );
+};
+
+const FileSearchMaybe: React.FC<{
+  show: boolean;
+  inputMode: boolean;
+  hideNormalUI: boolean;
+  isRemoteMode: boolean;
+  filter: string;
+  selectedIndex: number;
+  onSelect: (path: string) => void | Promise<void>;
+  onFilesUpdated: (files: Array<{ path: string; displayName: string }>) => void;
+}> = ({
+  show,
+  inputMode,
+  hideNormalUI,
+  isRemoteMode,
+  filter,
+  selectedIndex,
+  onSelect,
+  onFilesUpdated,
+}) => {
+  if (!show || !inputMode || hideNormalUI || isRemoteMode) return null;
+  return (
+    <FileSearchUI
+      filter={filter}
+      selectedIndex={selectedIndex}
+      onSelect={onSelect}
+      onFilesUpdated={onFilesUpdated}
+    />
+  );
+};
+
 interface UserInputProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
+  wasInterrupted?: boolean;
   onFileAttached?: (filePath: string, content: string) => void;
   disabled?: boolean;
   placeholder?: string;
   hideNormalUI?: boolean;
   isRemoteMode?: boolean;
+  onImageInClipboardChange?: (hasImage: boolean) => void;
 }
 
 const UserInput: React.FC<UserInputProps> = ({
@@ -38,11 +113,13 @@ const UserInput: React.FC<UserInputProps> = ({
   inputMode,
   onInterrupt,
   assistant,
+  wasInterrupted = false,
   onFileAttached,
   disabled = false,
   placeholder,
   hideNormalUI = false,
   isRemoteMode = false,
+  onImageInClipboardChange,
 }) => {
   const [textBuffer] = useState(() => new TextBuffer());
   const [inputHistory] = useState(() => new InputHistory());
@@ -65,8 +142,21 @@ const UserInput: React.FC<UserInputProps> = ({
   const [inputText, setInputText] = useState("");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+
+  // Clear input function for Ctrl+C
+  const clearInput = useCallback(() => {
+    textBuffer.clear();
+    setInputText("");
+    setCursorPosition(0);
+    setShowSlashCommands(false);
+    setShowFileSearch(false);
+    setShowBashMode(false);
+    inputHistory.resetNavigation();
+  }, [textBuffer]);
+
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+  const [showBashMode, setShowBashMode] = useState(false);
   const [showFileSearch, setShowFileSearch] = useState(false);
   const [fileSearchFilter, setFileSearchFilter] = useState("");
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
@@ -116,6 +206,18 @@ const UserInput: React.FC<UserInputProps> = ({
     return nextMode;
   };
 
+  // Update shell mode state based on input
+  const updateBashModeState = (text: string) => {
+    const trimmed = text.trimStart();
+    const isBash = trimmed.startsWith("!");
+    setShowBashMode(isBash);
+    if (isBash) {
+      // Disable other helpers while in shell mode
+      setShowSlashCommands(false);
+      setShowFileSearch(false);
+    }
+  };
+
   // Update slash command UI state based on input
   const updateSlashCommandState = (text: string, cursor: number) => {
     // Only show slash commands if slash is the very first character
@@ -123,6 +225,9 @@ const UserInput: React.FC<UserInputProps> = ({
       setShowSlashCommands(false);
       return;
     }
+
+    // When using slash commands, disable file search
+    setShowFileSearch(false);
 
     const trimmedText = text.trimStart();
     const beforeCursor = trimmedText.slice(
@@ -136,13 +241,8 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
-    const afterSlash = beforeCursor.slice(1);
-
-    // Check if we have whitespace in the command
-    if (afterSlash.includes(" ") || afterSlash.includes("\n")) {
-      setShowSlashCommands(false);
-      return;
-    }
+    // Get the complete slash command, not just the part before cursor
+    const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
     const allCommands = getSlashCommands();
@@ -186,6 +286,13 @@ const UserInput: React.FC<UserInputProps> = ({
       return;
     }
 
+    // Disable file search if we're in shell mode or slash command mode
+    const trimmed = text.trimStart();
+    if (trimmed.startsWith("!") || trimmed.startsWith("/")) {
+      setShowFileSearch(false);
+      return;
+    }
+
     // Check if we're in a file search context
     const beforeCursor = text.slice(0, cursor);
     const lastAtIndex = beforeCursor.lastIndexOf("@");
@@ -224,6 +331,7 @@ const UserInput: React.FC<UserInputProps> = ({
         setFileSearchFilter(afterAt);
         setSelectedFileIndex(0);
         setShowSlashCommands(false);
+        setShowBashMode(false);
       }
     }
   };
@@ -268,6 +376,7 @@ const UserInput: React.FC<UserInputProps> = ({
       setInputText(newText);
       setCursorPosition(newCursorPos);
       setShowSlashCommands(false);
+      setShowBashMode(false);
     }
   };
 
@@ -407,16 +516,32 @@ const UserInput: React.FC<UserInputProps> = ({
       }
 
       // Normal Enter behavior - submit if there's content
-      if (textBuffer.text.trim() && !isWaitingForResponse) {
+      if (textBuffer.text.trim() || wasInterrupted) {
+        // Get images before expanding paste blocks
+        const imageMap = textBuffer.getAllImages();
+
         // Expand all paste blocks before submitting
         textBuffer.expandAllPasteBlocks();
         const submittedText = textBuffer.text.trim();
-        inputHistory.addEntry(submittedText);
-        onSubmit(submittedText);
+
+        if (isWaitingForResponse) {
+          // Process message later when LLM has responded
+          void messageQueue.enqueueMessage(
+            submittedText,
+            imageMap,
+            inputHistory,
+          );
+        } else {
+          // Submit with images
+          inputHistory.addEntry(submittedText);
+          onSubmit(submittedText, imageMap);
+        }
+
         textBuffer.clear();
         setInputText("");
         setCursorPosition(0);
         setShowSlashCommands(false);
+        setShowBashMode(false);
       }
       return true;
     }
@@ -442,6 +567,15 @@ const UserInput: React.FC<UserInputProps> = ({
   const handleEscapeKey = (key: any): boolean => {
     if (!key.escape) return false;
 
+    // If only "!" is present, clear shell mode
+    if (inputMode && showBashMode && inputText.trim() === "!") {
+      textBuffer.clear();
+      setInputText("");
+      setCursorPosition(0);
+      setShowBashMode(false);
+      return true;
+    }
+
     // Handle escape key to interrupt streaming
     if (isWaitingForResponse && onInterrupt) {
       onInterrupt();
@@ -463,15 +597,33 @@ const UserInput: React.FC<UserInputProps> = ({
     return false;
   };
 
-  // Clear input function
-  const clearInput = () => {
-    textBuffer.clear();
-    setInputText("");
-    setCursorPosition(0);
-    setShowSlashCommands(false);
-    setShowFileSearch(false);
+  // Handle text buffer updates for async operations like image pasting
+  const handleTextBufferUpdate = () => {
+    const newText = textBuffer.text;
+    const newCursor = textBuffer.cursor;
+    setInputText(newText);
+    setCursorPosition(newCursor);
+    updateSlashCommandState(newText, newCursor);
+    updateFileSearchState(newText, newCursor);
+    updateBashModeState(newText);
     inputHistory.resetNavigation();
   };
+
+  // State for showing image paste hint
+  const [_hasImageInClipboard, _setHasImageInClipboard] = useState(false);
+
+  // Monitor clipboard for images and show helpful hints
+  const { checkNow: _checkClipboardNow } = useClipboardMonitor({
+    onImageStatusChange: (hasImage) => {
+      _setHasImageInClipboard(hasImage);
+      // Also notify parent component
+      if (onImageInClipboardChange) {
+        onImageInClipboardChange(hasImage);
+      }
+    },
+    enabled: !disabled && inputMode,
+    pollInterval: 2000,
+  });
 
   useInput((input, key) => {
     // Don't handle any input when disabled
@@ -489,6 +641,8 @@ const UserInput: React.FC<UserInputProps> = ({
         showFileSearch,
         cycleModes,
         clearInput,
+        textBuffer,
+        onTextBufferUpdate: handleTextBufferUpdate,
       })
     ) {
       return;
@@ -497,15 +651,6 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle escape key variations
     if (handleEscapeKey(key)) {
       return;
-    }
-
-    // Allow typing during streaming, but block submission
-    if (!inputMode) {
-      // Block only Enter key submission during streaming
-      if (key.return && !key.shift) {
-        return;
-      }
-      // Allow all other input (typing, navigation, etc.)
     }
 
     // Handle slash command navigation
@@ -548,14 +693,16 @@ const UserInput: React.FC<UserInputProps> = ({
       setCursorPosition,
       updateSlashCommandState,
       updateFileSearchState,
+      updateBashModeState,
       inputHistory,
     });
   });
 
   const renderInputText = () => {
     const placeholderText = isRemoteMode
-      ? "Ask anything, / for slash commands"
-      : placeholder || "Ask anything, @ for context, / for slash commands";
+      ? "Ask anything, / for slash commands, ! for shell mode"
+      : placeholder ||
+        "Ask anything, @ for context, / for slash commands, ! for shell mode";
     if (inputText.length === 0) {
       return (
         <>
@@ -638,41 +785,44 @@ const UserInput: React.FC<UserInputProps> = ({
 
   return (
     <Box flexDirection="column">
+      <InterruptedBanner wasInterrupted={!!wasInterrupted} />
+
       {/* Input box */}
       <Box
         borderStyle="round"
         borderTop={true}
         paddingX={1}
-        borderColor={isRemoteMode ? "cyan" : "gray"}
+        borderColor={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "gray"}
       >
-        <Text color={isRemoteMode ? "cyan" : "blue"} bold>
-          {isRemoteMode ? "◉" : "●"}{" "}
+        <Text
+          color={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "blue"}
+          bold
+        >
+          {showBashMode ? "$ " : isRemoteMode ? "◉ " : "● "}
         </Text>
         {renderInputText()}
       </Box>
 
-      {/* Slash command UI - show in remote mode OR when assistant is available */}
-      {showSlashCommands &&
-        inputMode &&
-        !hideNormalUI &&
-        (isRemoteMode || assistant) && (
-          <SlashCommandUI
-            assistant={assistant}
-            filter={slashCommandFilter}
-            selectedIndex={selectedCommandIndex}
-            isRemoteMode={isRemoteMode}
-          />
-        )}
+      <SlashCommandsMaybe
+        show={showSlashCommands}
+        inputMode={inputMode}
+        hideNormalUI={!!hideNormalUI}
+        isRemoteMode={!!isRemoteMode}
+        assistant={assistant}
+        filter={slashCommandFilter}
+        selectedIndex={selectedCommandIndex}
+      />
 
-      {/* File search UI - only show in local mode */}
-      {showFileSearch && inputMode && !hideNormalUI && !isRemoteMode && (
-        <FileSearchUI
-          filter={fileSearchFilter}
-          selectedIndex={selectedFileIndex}
-          onSelect={selectFile}
-          onFilesUpdated={setCurrentFiles}
-        />
-      )}
+      <FileSearchMaybe
+        show={showFileSearch}
+        inputMode={inputMode}
+        hideNormalUI={!!hideNormalUI}
+        isRemoteMode={!!isRemoteMode}
+        filter={fileSearchFilter}
+        selectedIndex={selectedFileIndex}
+        onSelect={selectFile}
+        onFilesUpdated={setCurrentFiles}
+      />
     </Box>
   );
 };

@@ -5,16 +5,16 @@ keywords: [chat, model, role]
 sidebar_position: 1
 ---
 
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
+
+
 A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
 
 In Continue, these models are used for normal [Chat](../../features/chat/quick-start). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
 
 ## Recommended Chat models
 
-<Info>
-  For the latest and most comprehensive model recommendations, see our [model recommendations table](/customization/models#recommended-models).
-</Info>
-
+<ModelRecommendations role="chat_edit" />
 ## Best overall experience
 
 For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.

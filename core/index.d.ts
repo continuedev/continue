@@ -173,6 +173,11 @@ export interface ModelInstaller {
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
+export type ContextIndexingType =
+  | "chunk"
+  | "embeddings"
+  | "fullTextSearch"
+  | "codeSnippets";
 
 export interface ContextProviderDescription {
   title: ContextProviderName;
@@ -180,7 +185,7 @@ export interface ContextProviderDescription {
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
-  dependsOnIndexing?: boolean;
+  dependsOnIndexing?: ContextIndexingType[];
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
@@ -1070,11 +1075,6 @@ export interface ToolExtras {
   codeBaseIndexer?: CodebaseIndexer;
 }
 
-export type ToolPolicy =
-  | "allowedWithPermission"
-  | "allowedWithoutPermission"
-  | "disabled";
-
 export interface Tool {
   type: "function";
   function: {
@@ -1099,6 +1099,10 @@ export interface Tool {
     exampleArgs?: Array<[string, string | number]>;
   };
   defaultToolPolicy?: ToolPolicy;
+  evaluateToolCallPolicy?: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ) => ToolPolicy;
 }
 
 interface ToolChoice {
@@ -1383,6 +1387,7 @@ export interface ApplyState {
   fileContent?: string;
   originalFileContent?: string;
   toolCallId?: string;
+  autoFormattingDiff?: string;
 }
 
 export interface StreamDiffLinesPayload {

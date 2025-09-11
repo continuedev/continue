@@ -83,6 +83,9 @@ vi.mock("./session.js", () => ({
     () => "/home/test/.continue/cli-sessions/continue-cli-pid-12345.json",
   ),
   hasSession: vi.fn(() => false),
+  getCurrentSession: vi.fn(() => {
+    throw new Error("Session not available");
+  }),
 }));
 
 describe("slashCommands", () => {
@@ -96,6 +99,28 @@ describe("slashCommands", () => {
   });
 
   describe("handleSlashCommands", () => {
+    it("should handle /help command", async () => {
+      const result = await handleSlashCommands("/help", mockAssistant);
+
+      expect(result).toBeDefined();
+      expect(result?.output).toContain("Keyboard Shortcuts:");
+      expect(result?.output).toContain("Navigation:");
+      expect(result?.output).toContain("↑/↓");
+      expect(result?.output).toContain("Tab");
+      expect(result?.output).toContain("Enter");
+      expect(result?.output).toContain("Shift+Enter");
+      expect(result?.output).toContain("Controls:");
+      expect(result?.output).toContain("Ctrl+C");
+      expect(result?.output).toContain("Ctrl+D");
+      expect(result?.output).toContain("Ctrl+L");
+      expect(result?.output).toContain("Shift+Tab");
+      expect(result?.output).toContain("Esc");
+      expect(result?.output).toContain("Special Characters:");
+      expect(result?.output).toContain("@");
+      expect(result?.output).toContain("/");
+      expect(result?.exit).toBeUndefined();
+    });
+
     it("should handle /info command when not authenticated", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
@@ -119,8 +144,8 @@ describe("slashCommands", () => {
       expect(result?.output).toContain("Not logged in");
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("/test/config.yaml");
-      expect(result?.output).toContain("Session History:");
-      expect(result?.output).toContain(".json");
+      expect(result?.output).toContain("Session:");
+      expect(result?.output).toContain("Session not available");
       expect(result?.exit).toBe(false);
     });
 
@@ -192,7 +217,7 @@ describe("slashCommands", () => {
       expect(result).toBeDefined();
       expect(result?.output).toContain("Authentication:");
       expect(result?.output).toContain("test@example.com");
-      expect(result?.output).toContain("(no org)");
+      expect(result?.output).toContain("test-org-id");
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("/custom/config.yaml");
       expect(result?.exit).toBe(false);
@@ -222,12 +247,18 @@ describe("slashCommands", () => {
     it("should use test session directory when in test mode", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
-      const { getSessionFilePath } = await import("./session.js");
+      const { getSessionFilePath, getCurrentSession } = await import(
+        "./session.js"
+      );
 
-      // Mock the session path for this specific test
+      // Mock the session functions for this specific test
       (getSessionFilePath as any).mockReturnValue(
         "/test-home/.continue/cli-sessions/continue-cli-test-123.json",
       );
+      (getCurrentSession as any).mockReturnValue({
+        sessionId: "test-123",
+        title: "Test Session",
+      });
 
       (
         isAuthenticated as MockedFunction<typeof isAuthenticated>
@@ -243,6 +274,8 @@ describe("slashCommands", () => {
 
       const result = await handleSlashCommands("/info", mockAssistant);
 
+      expect(result?.output).toContain("Session:");
+      expect(result?.output).toContain("Test Session");
       expect(result?.output).toContain("/test-home/.continue/cli-sessions/");
       expect(result?.output).toContain(".json");
     });

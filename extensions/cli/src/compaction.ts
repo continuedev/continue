@@ -80,7 +80,7 @@ export async function compactChatHistory(
     historyForCompaction = [...historyToUse, compactionPrompt];
   }
 
-  // Stream the compaction response
+  // Stream the compaction response (service drives updates; this collects content locally)
   const controller = new AbortController();
 
   let compactionContent = "";

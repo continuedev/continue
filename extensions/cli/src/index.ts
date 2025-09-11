@@ -23,6 +23,71 @@ import { logger } from "./util/logger.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
 
+// TUI lifecycle and two-stage exit state management
+let tuiUnmount: (() => void) | null;
+let showExitMessage: boolean;
+let exitMessageCallback: (() => void) | null;
+let lastCtrlCTime: number;
+
+// Initialize state immediately to avoid temporal dead zone issues with exported functions
+(function initializeTUIState() {
+  tuiUnmount = null;
+  showExitMessage = false;
+  exitMessageCallback = null;
+  lastCtrlCTime = 0;
+})();
+
+// Register TUI cleanup function for graceful shutdown
+export function setTUIUnmount(unmount: () => void) {
+  tuiUnmount = unmount;
+}
+
+// Register callback to trigger UI updates when exit message state changes
+export function setExitMessageCallback(callback: () => void) {
+  exitMessageCallback = callback;
+}
+
+// Sets up SIGINT handler that requires double Ctrl+C within 1 second to exit
+export function enableSigintHandler() {
+  // Remove all existing SIGINT listeners first
+  process.removeAllListeners("SIGINT");
+
+  process.on("SIGINT", async () => {
+    const now = Date.now();
+    const timeSinceLastCtrlC = now - lastCtrlCTime;
+
+    if (timeSinceLastCtrlC <= 1000 && lastCtrlCTime !== 0) {
+      // Second Ctrl+C within 1 second - exit
+      showExitMessage = false;
+      if (tuiUnmount) {
+        tuiUnmount();
+      }
+      await sentryService.flush();
+      process.exit(0);
+    } else {
+      // First Ctrl+C or too much time elapsed - show exit message
+      lastCtrlCTime = now;
+      showExitMessage = true;
+      if (exitMessageCallback) {
+        exitMessageCallback();
+      }
+
+      // Hide message after 1 second
+      setTimeout(() => {
+        showExitMessage = false;
+        if (exitMessageCallback) {
+          exitMessageCallback();
+        }
+      }, 1000);
+    }
+  });
+}
+
+// Check if "ctrl+c to exit" message should be displayed
+export function shouldShowExitMessage(): boolean {
+  return showExitMessage;
+}
+
 // Add global error handlers to prevent uncaught errors from crashing the process
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at:", { promise, reason });
@@ -48,7 +113,7 @@ program
   .description(
     "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
   )
-  .version(getVersion());
+  .version(getVersion(), "-v, --version", "Display version number");
 
 // Root command - chat functionality (default)
 // Add common options to the root command
@@ -64,6 +129,7 @@ addCommonOptions(program)
     "Strip <think></think> tags and excess whitespace from output. Only works with -p/--print flag.",
   )
   .option("--resume", "Resume from last session")
+  .option("--fork <sessionId>", "Fork from an existing session ID")
   .action(async (prompt, options) => {
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
@@ -100,6 +166,8 @@ addCommonOptions(program)
       readonly: options.readonly,
       auto: options.auto,
       config: options.config,
+      resume: options.resume,
+      fork: options.fork,
       allow: options.allow,
       ask: options.ask,
       exclude: options.exclude,
@@ -186,9 +254,11 @@ program
   });
 
 // Remote subcommand
-program
-  .command("remote [prompt]", { hidden: true })
-  .description("Launch a remote instance of the cn agent")
+addCommonOptions(
+  program
+    .command("remote [prompt]", { hidden: true })
+    .description("Launch a remote instance of the cn agent"),
+)
   .option(
     "--url <url>",
     "Connect directly to the specified URL instead of creating a new remote environment",
@@ -261,12 +331,6 @@ try {
   );
   process.exit(1);
 }
-
-// Graceful shutdown - flush Sentry data
-process.on("SIGINT", async () => {
-  await sentryService.flush();
-  process.exit(0);
-});
 
 process.on("SIGTERM", async () => {
   await sentryService.flush();

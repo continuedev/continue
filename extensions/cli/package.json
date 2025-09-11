@@ -15,7 +15,7 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:smoke": "node smoke-test.mjs",
     "build:tsc": "tsc -p tsconfig.build.json",
-    "build:local-deps": "cd ../../packages/config-types && npm i && npm run build && cd ../fetch && npm i && npm run build && cd ../llm-info && npm i && npm run build && cd ../config-yaml && npm i && npm run build && cd ../openai-adapters && npm i && npm run build && cd ../../core && npm i && npm run build && cd ../extensions/cli && npm i",
+    "build:local-deps": "cd ../../packages/config-types && npm i && npm run build && cd ../fetch && npm i && npm run build && cd ../llm-info && npm i && npm run build && cd ../terminal-security && npm i && npm run build && cd ../config-yaml && npm i && npm run build && cd ../openai-adapters && npm i && npm run build && cd ../../core && npm i && npm run build && cd ../extensions/cli && npm i",
     "build:validate": "node validate-aliases.mjs",
     "build:bundle": "node build.mjs",
     "build": "npm run build:validate && npm run build:bundle",
@@ -50,6 +50,7 @@
     "@continuedev/config-yaml": "file:../../packages/config-yaml",
     "@continuedev/openai-adapters": "file:../../packages/openai-adapters",
     "@continuedev/sdk": "^0.0.13",
+    "@continuedev/terminal-security": "file:../../packages/terminal-security",
     "@modelcontextprotocol/sdk": "^1.17.2",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-metrics-otlp-grpc": "^0.203.0",
@@ -97,6 +98,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "execa": "^9.6.0",
+    "clipboardy": "^4.0.0",
     "express": "^5.1.0",
     "glob": "^11.0.3",
     "gpt-tokenizer": "^3.0.1",
@@ -134,5 +136,13 @@
   },
   "engine": {
     "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@img/sharp-darwin-arm64": "^0.33.5",
+    "@img/sharp-darwin-x64": "^0.33.5",
+    "@img/sharp-linux-arm": "^0.33.5",
+    "@img/sharp-linux-arm64": "^0.33.5",
+    "@img/sharp-linux-x64": "^0.33.5",
+    "@img/sharp-win32-x64": "^0.33.5"
   }
 }

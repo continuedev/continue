@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.FimResult
 import com.github.continuedev.continueintellijextension.Position
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditService
+import com.github.continuedev.continueintellijextension.nextEdit.NextEditStatusService
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditUtils
 import com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManager
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
@@ -41,8 +42,7 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
         lastUuid = uuid()
         lastProject = project
 
-        // Check if Next Edit is supported
-        val isNextEditSupported = NextEditUtils.isNextEditSupported(project)
+        val isNextEditSupported = project.service<NextEditStatusService>().isNextEditEnabled()
 
         if (isNextEditSupported) {
             isUsingNextEdit = true

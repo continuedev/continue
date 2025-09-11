@@ -66,6 +66,12 @@ export interface CompletionDataForAfterJump {
   currentPosition: vscode.Position;
 }
 
+/**
+ * This is how we handle jumps and manage decoration object lifetime.
+ * There are mainly three states the user can be in: not jumping, jumping in progress, and just jumped.
+ * This can potentially be an enum for better readability, but there is logic here that relies on
+ * the _jumpAccepted flag to determine whether we should delete chains.
+ */
 export class JumpManager {
   private static _instance: JumpManager | undefined;
 
@@ -119,10 +125,6 @@ export class JumpManager {
   }
 
   private _createSvgJumpIcon() {
-    // if (!this._theme) {
-    //   return;
-    // }
-
     const baseTextConfig = {
       y: SVG_CONFIG.getTextY(),
       "font-family": SVG_CONFIG.getFontFamily(),
@@ -130,6 +132,9 @@ export class JumpManager {
     };
 
     try {
+      // NOTE: it's critical to use svgBuilder.newInstance.
+      // svgBuilder holds state of previously created SVGs,
+      // so you end up with SVGs stacking on top of each other and being interleaved.
       const builder = svgBuilder.newInstance
         ? svgBuilder.newInstance()
         : svgBuilder;
@@ -295,15 +300,6 @@ export class JumpManager {
     await this.clearJumpDecoration();
 
     // Create a decoration for jump.
-    // this._jumpDecoration = vscode.window.createTextEditorDecorationType({
-    //   before: {
-    //     contentText: "📍 Press Tab to jump, Esc to cancel",
-    //     color: new vscode.ThemeColor("editor.foreground"),
-    //     backgroundColor: new vscode.ThemeColor("editorHover.background"),
-    //     margin: `0 0 0 4px`,
-    //   },
-    // });
-
     if (!this._jumpDecoration) {
       this._createSvgJumpIcon(); // makes both the icon & decoration
     }
