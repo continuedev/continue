@@ -40,7 +40,9 @@ export function createLlmApi(
           env: {
             apiKeyLocation: (model as any).apiKeyLocation,
             orgScopeId: organizationId,
-            proxyUrl: (model as any).onPremProxyUrl ?? undefined,
+            proxyUrl:
+              (model as { onPremProxyUrl: string | undefined })
+                .onPremProxyUrl ?? undefined,
           },
         }
       : {
@@ -51,7 +53,7 @@ export function createLlmApi(
           env: model.env,
         };
 
-  return constructLlmApi(config);
+  return constructLlmApi(config) ?? null;
 }
 
 export function getLlmApi(
