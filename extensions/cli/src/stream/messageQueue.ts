@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+
 import { InputHistory } from "../util/inputHistory.js";
 import { logger } from "../util/logger.js";
 

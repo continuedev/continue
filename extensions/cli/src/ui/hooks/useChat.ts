@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
 import { useEffect, useRef, useState } from "react";
