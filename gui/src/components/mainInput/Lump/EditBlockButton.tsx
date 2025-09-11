@@ -6,7 +6,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 
 type SectionKey = Exclude<
   keyof ConfigYaml,
-  "name" | "version" | "schema" | "metadata"
+  "name" | "version" | "schema" | "metadata" | "env"
 >;
 
 interface EditBlockButtonProps<T extends SectionKey> {
@@ -42,10 +42,10 @@ export default function EditBlockButton<T extends SectionKey>({
         element: { sourceFile },
       });
     } else if (block && isUsesBlock(block)) {
-      openUrl(`${block.uses}/new-version`);
+      void openUrl(`${block.uses}/new-version`);
     } else if (selectedProfile?.fullSlug) {
       const slug = `${selectedProfile.fullSlug.ownerSlug}/${selectedProfile.fullSlug.packageSlug}`;
-      openUrl(`${slug}/new-version`);
+      void openUrl(`${slug}/new-version`);
     }
   };
 

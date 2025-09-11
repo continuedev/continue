@@ -1,15 +1,22 @@
 import Parser from "web-tree-sitter";
 import { Chunk, IDE, ILLM, Position, Range, RangeInFile } from "..";
 import { getAst } from "../autocomplete/util/ast";
+import { NEXT_EDIT_MODELS } from "../llm/constants";
 import { DocumentHistoryTracker } from "./DocumentHistoryTracker";
+import { MODEL_WINDOW_SIZES } from "./constants";
 
 export enum EditableRegionStrategy {
   Naive = "naive",
+  Sliding = "sliding",
   Rerank = "rerank",
   StaticRerank = "staticRerank",
   Static = "static",
 }
 
+/**
+ * This was an attempt to find next edit locations deterministically.
+ * I was intending to use this in tandem with the prefetching logic, but we are not using it anymore.
+ */
 export async function getNextEditableRegion(
   strategy: EditableRegionStrategy,
   ctx: any,
@@ -17,6 +24,8 @@ export async function getNextEditableRegion(
   switch (strategy) {
     case EditableRegionStrategy.Naive:
       return naiveJump(ctx);
+    case EditableRegionStrategy.Sliding:
+      return slidingJump(ctx);
     case EditableRegionStrategy.Rerank:
       return await rerankJump(ctx);
     case EditableRegionStrategy.StaticRerank:
@@ -49,6 +58,108 @@ function naiveJump(ctx: any): RangeInFile[] | null {
       },
     },
   ];
+}
+
+// Sliding splits the file using into sliding window.
+function slidingJump(ctx: any): RangeInFile[] | null {
+  const { fileLines, filepath, modelName, currentCursorPos } = ctx;
+  if (!fileLines || !filepath || !modelName || !currentCursorPos) {
+    console.warn("Missing required context for sliding jump");
+    return null;
+  }
+
+  const topMargin = MODEL_WINDOW_SIZES[modelName as NEXT_EDIT_MODELS].topMargin;
+  const bottomMargin =
+    MODEL_WINDOW_SIZES[modelName as NEXT_EDIT_MODELS].bottomMargin;
+  const windowSize = topMargin + bottomMargin + 1; // 1 for current line
+
+  if (fileLines.length <= windowSize) {
+    return [
+      {
+        filepath,
+        range: {
+          start: { line: 0, character: 0 },
+          end: {
+            line: fileLines.length - 1,
+            character: fileLines[fileLines.length - 1].length,
+          },
+        },
+      },
+    ];
+  }
+
+  const ranges: RangeInFile[] = [];
+  const cursorLine = currentCursorPos.line;
+
+  // Create the first window centered around the cursor position
+  const firstWindowStart = Math.max(0, cursorLine - topMargin);
+  const firstWindowEnd = Math.min(
+    fileLines.length - 1,
+    cursorLine + bottomMargin,
+  );
+
+  ranges.push({
+    filepath,
+    range: {
+      start: { line: firstWindowStart, character: 0 },
+      end: {
+        line: firstWindowEnd,
+        character: fileLines[firstWindowEnd].length,
+      },
+    },
+  });
+
+  // Alternating pattern: down once, up once, repeat
+  const slidingStep = Math.max(1, Math.floor(windowSize / 2));
+  let currentStartDown = firstWindowEnd + 1;
+  let currentStartUp = firstWindowStart - slidingStep;
+  while (currentStartDown < fileLines.length || currentStartUp >= 0) {
+    // Go down once
+    if (currentStartDown < fileLines.length) {
+      const windowStart = currentStartDown;
+      const windowEnd = Math.min(
+        windowStart + windowSize - 1,
+        fileLines.length - 1,
+      );
+
+      ranges.push({
+        filepath,
+        range: {
+          start: { line: windowStart, character: 0 },
+          end: {
+            line: windowEnd,
+            character: fileLines[windowEnd].length,
+          },
+        },
+      });
+
+      currentStartDown += slidingStep;
+    }
+
+    // Go up once
+    if (currentStartUp >= 0) {
+      const windowStart = Math.max(0, currentStartUp);
+      const windowEnd = Math.min(
+        windowStart + windowSize - 1,
+        fileLines.length - 1,
+      );
+
+      ranges.push({
+        filepath,
+        range: {
+          start: { line: windowStart, character: 0 },
+          end: {
+            line: windowEnd,
+            character: fileLines[windowEnd].length,
+          },
+        },
+      });
+
+      currentStartUp -= slidingStep;
+    }
+  }
+
+  return ranges;
 }
 
 // A rerank jump splits the current file into chunks.

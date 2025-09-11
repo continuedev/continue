@@ -54,12 +54,17 @@ export function ToolCallDiv({
     // Obviously missing the truncate and args buttons
     // All the info from args is displayed here
     // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
-    if (functionName === BuiltInToolNames.SearchAndReplaceInFile) {
+    if (
+      functionName === BuiltInToolNames.SingleFindAndReplace ||
+      functionName === BuiltInToolNames.MultiEdit
+    ) {
       return (
-        <FunctionSpecificToolCallDiv
-          toolCallState={toolCallState}
-          historyIndex={historyIndex}
-        />
+        <div className="flex flex-col px-1">
+          <FunctionSpecificToolCallDiv
+            toolCallState={toolCallState}
+            historyIndex={historyIndex}
+          />
+        </div>
       );
     }
 
@@ -80,7 +85,7 @@ export function ToolCallDiv({
 
   if (shouldShowGroupedUI) {
     return (
-      <div className="border-border rounded-lg border p-3">
+      <div className="border-border rounded-lg border px-4 py-3 pb-0">
         <GroupedToolCallHeader
           toolCallStates={toolCallStates}
           activeCalls={activeCalls}
@@ -103,7 +108,7 @@ export function ToolCallDiv({
   }
 
   return toolCallStates.map((toolCallState) => (
-    <div className="p-4 pb-1" key={toolCallState.toolCallId}>
+    <div className="py-1" key={toolCallState.toolCallId}>
       {renderToolCall(toolCallState)}
     </div>
   ));

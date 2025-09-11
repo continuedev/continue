@@ -4,7 +4,7 @@ import { IDE } from "../..";
 import {
   getGlobalContinueIgArray,
   getWorkspaceContinueIgArray,
-} from "../../indexing/ignore";
+} from "../../indexing/continueignore";
 import { getConfigJsonPath } from "../../util/paths";
 import { findUriInDirs } from "../../util/uri";
 import { HelperVars } from "../util/HelperVars";

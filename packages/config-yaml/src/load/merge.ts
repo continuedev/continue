@@ -13,6 +13,7 @@ export function mergePackages(
     rules: [...(current.rules ?? []), ...(incoming.rules ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
+    env: { ...current.env, ...incoming.env },
   };
 }
 
@@ -29,5 +30,6 @@ export function mergeUnrolledAssistants(
     data: [...(current.data ?? []), ...(incoming.data ?? [])],
     mcpServers: [...(current.mcpServers ?? []), ...(incoming.mcpServers ?? [])],
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
+    env: { ...current.env, ...incoming.env },
   };
 }

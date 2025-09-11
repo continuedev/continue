@@ -14,7 +14,7 @@ jobs:
         uses: pozil/auto-assign-issue@v2
         with:
           repo-token: ${{ secrets.CI_GITHUB_TOKEN }}
-          assignees: sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa
+          assignees: Patrick-Erichsen,tomasz-stefaniak,RomneyDa,tingwai,uinstinct
           numOfAssignee: 1
       # - name: "Add default labels"
       #   uses: actions-ecosystem/action-add-labels@v1

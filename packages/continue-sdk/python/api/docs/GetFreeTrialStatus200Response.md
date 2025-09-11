@@ -1,15 +1,14 @@
 # GetFreeTrialStatus200Response
 
-
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**opted_in_to_free_trial** | **bool** | Whether the user has opted into the free trial | 
-**chat_count** | **float** | Current number of chat messages used | [optional] 
-**autocomplete_count** | **float** | Current number of autocomplete requests used | [optional] 
-**chat_limit** | **float** | Maximum number of chat messages allowed in free trial | 
-**autocomplete_limit** | **float** | Maximum number of autocomplete requests allowed in free trial | 
+| Name                       | Type      | Description                                                   | Notes      |
+| -------------------------- | --------- | ------------------------------------------------------------- | ---------- |
+| **opted_in_to_free_trial** | **bool**  | Whether the user has opted into the free trial                |
+| **chat_count**             | **float** | Current number of chat messages used                          | [optional] |
+| **autocomplete_count**     | **float** | Current number of autocomplete requests used                  | [optional] |
+| **chat_limit**             | **float** | Maximum number of chat messages allowed in free trial         |
+| **autocomplete_limit**     | **float** | Maximum number of autocomplete requests allowed in free trial |
 
 ## Example
 
@@ -28,6 +27,5 @@ get_free_trial_status200_response_dict = get_free_trial_status200_response_insta
 # create an instance of GetFreeTrialStatus200Response from a dict
 get_free_trial_status200_response_from_dict = GetFreeTrialStatus200Response.from_dict(get_free_trial_status200_response_dict)
 ```
+
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

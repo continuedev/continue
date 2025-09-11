@@ -1,35 +1,37 @@
 ---
-title: Anthropic
+title: "How to Configure Anthropic Claude Models with Continue"
 slug: ../anthropic
+sidebarTitle: "Anthropic"
 ---
 
+<Tip>
+  **Discover Anthropic models [here](https://hub.continue.dev/anthropic)**
+</Tip>
+
 <Info>
-  You can get an API key from the [Anthropic
-  console](https://console.anthropic.com/account/keys).
+  Get an API key from the [Anthropic Console](https://console.anthropic.com/account/keys)
 </Info>
 
-## Chat model
-
-We recommend configuring **Claude 4 Sonnet** as your chat model.
+## Configuration
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 4 Sonnet
+    - name: <MODEL_NAME>
       provider: anthropic
-      model: claude-sonnet-4-20250514
+      model: <MODEL_ID>
       apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
       {
-        "title": "Claude 4 Sonnet",
+        "title": "<MODEL_NAME>",
         "provider": "anthropic",
-        "model": "claude-sonnet-4-latest",
+        "model": "<MODEL_ID>",
         "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
@@ -38,34 +40,13 @@ We recommend configuring **Claude 4 Sonnet** as your chat model.
   </Tab>
 </Tabs>
 
-## Autocomplete model
+<Info>
+  **Check out a more advanced configuration [here](https://hub.continue.dev/anthropic/claude-4-sonnet?view=config)**
+</Info>
 
-Anthropic currently does not offer any autocomplete models.
-
-[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
-
-## Embeddings model
-
-Anthropic currently does not offer any embeddings models.
-
-[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
-
-## Reranking model
-
-Anthropic currently does not offer any reranking models.
-
-[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
-
-## Prompt caching
+## How to Enable Prompt Caching with Claude
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
-
-Prompt caching is generally available for:
-
-- Claude 4 Sonnet
-- Claude 3.7 Sonnet
-- Claude 3.5 Sonnet
-- Claude 3.5 Haiku
 
 To enable caching of the system message and the turn-by-turn conversation, update your model configuration as follows:
 
@@ -73,9 +54,9 @@ To enable caching of the system message and the turn-by-turn conversation, updat
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Anthropic
+    - name: <MODEL_NAME>
       provider: anthropic
-      model: claude-sonnet-4-20250514
+      model: <MODEL_ID>
       apiKey: <YOUR_ANTHROPIC_API_KEY>
       roles:
         - chat
@@ -83,7 +64,7 @@ To enable caching of the system message and the turn-by-turn conversation, updat
         promptCaching: true
   ```
   </Tab>
-  <Tab title="JSON">
+  <Tab title="JSON (Deprecated)">
   ```json title="config.json"
   {
     "models": [
@@ -92,9 +73,9 @@ To enable caching of the system message and the turn-by-turn conversation, updat
           "cacheSystemMessage": true,
           "cacheConversation": true
         },
-        "title": "Anthropic",
+        "title": "<MODEL_NAME>",
         "provider": "anthropic",
-        "model": "claude-sonnet-4-latest",
+        "model": "<MODEL_ID>",
         "defaultCompletionOptions": {
           "promptCaching": true
         },

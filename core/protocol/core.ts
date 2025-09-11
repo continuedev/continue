@@ -4,6 +4,7 @@ import {
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
+import { ToolPolicy } from "@continuedev/terminal-security";
 
 import {
   AutocompleteInput,
@@ -26,6 +27,7 @@ import {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MCPServerStatus,
   MessageOption,
   ModelDescription,
   PromptLog,
@@ -48,6 +50,8 @@ import {
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
 import { FreeTrialStatus } from "../control-plane/client";
+import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
+import { NextEditOutcome } from "../nextEdit/types";
 
 export enum OnboardingModes {
   API_KEY = "API Key",
@@ -83,6 +87,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
+  "config/newAssistantFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
@@ -90,15 +95,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
-      selectedOrgId: string;
+      selectedOrgId: string | null;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, void];
   "config/refreshProfiles": [
     (
       | undefined
       | {
+          reason?: string;
           selectOrgId?: string;
           selectProfileId?: string;
         }
@@ -128,6 +133,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+
   "mcp/reloadServer": [
     {
       id: string;
@@ -145,6 +151,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       description: string | undefined;
     },
   ];
+  "mcp/startAuthentication": [MCPServerStatus, void];
+  "mcp/removeAuthentication": [MCPServerStatus, void];
+
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
@@ -153,9 +162,44 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
-  "nextEdit/predict": [AutocompleteInput, string[]];
+  "nextEdit/predict": [
+    {
+      input: AutocompleteInput;
+      options?: {
+        withChain?: boolean;
+        usingFullFileDiff?: boolean;
+      };
+    },
+    NextEditOutcome | undefined,
+  ];
   "nextEdit/reject": [{ completionId: string }, void];
   "nextEdit/accept": [{ completionId: string }, void];
+  "nextEdit/startChain": [undefined, void];
+  "nextEdit/deleteChain": [undefined, void];
+  "nextEdit/isChainAlive": [undefined, boolean];
+  "nextEdit/queue/getProcessedCount": [undefined, number];
+  "nextEdit/queue/dequeueProcessed": [undefined, ProcessedItem | null];
+  "nextEdit/queue/processOne": [
+    {
+      ctx: {
+        completionId: string;
+        manuallyPassFileContents?: string;
+        manuallyPassPrefix?: string;
+        selectedCompletionInfo?: {
+          text: string;
+          range: Range;
+        };
+        isUntitledFile: boolean;
+        recentlyVisitedRanges: AutocompleteCodeSnippet[];
+        recentlyEditedRanges: RecentlyEditedRange[];
+      };
+      recentlyVisitedRanges: AutocompleteCodeSnippet[];
+      recentlyEditedRanges: RecentlyEditedRange[];
+    },
+    void,
+  ];
+  "nextEdit/queue/clear": [undefined, void];
+  "nextEdit/queue/abort": [undefined, void];
   "llm/complete": [
     {
       prompt: string;
@@ -242,12 +286,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
+  "docs/getIndexedPages": [{ startUrl: string }, string[]];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall },
     { contextItems: ContextItem[]; errorMessage?: string },
+  ];
+  "tools/evaluatePolicy": [
+    { toolName: string; basePolicy: ToolPolicy; args: Record<string, unknown> },
+    { policy: ToolPolicy; displayValue?: string },
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
@@ -264,5 +313,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
+  "process/killTerminalProcess": [{ toolCallId: string }, void];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
 };

@@ -22,7 +22,22 @@ export async function* chunkDocumentWithoutId(
     return;
   }
   const extension = getUriFileExtension(fileUri);
-  if (extension in supportedLanguages) {
+  // Files that should use basicChunker despite having tree-sitter support
+  // These files don't have code structure (classes/functions) that codeChunker expects
+  const NON_CODE_EXTENSIONS = [
+    "css",
+    "html",
+    "htm",
+    "json",
+    "toml",
+    "yaml",
+    "yml",
+  ];
+
+  if (
+    extension in supportedLanguages &&
+    !NON_CODE_EXTENSIONS.includes(extension)
+  ) {
     try {
       for await (const chunk of codeChunker(fileUri, contents, maxChunkSize)) {
         yield chunk;

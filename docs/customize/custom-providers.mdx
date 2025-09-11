@@ -7,7 +7,7 @@ As an example, say you are working on solving a new GitHub Issue. You type '@Iss
 
 ![Context Items](/images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
 
-## Context blocks
+## How Do Context Blocks Work?
 
 You can add context providers to assistants using [`context` blocks](/hub/blocks/block-types#context). Explore available context blocks in [the hub](https://hub.continue.dev/explore/context).
 
@@ -15,7 +15,7 @@ You can add context providers to assistants using [`context` blocks](/hub/blocks
 
 You can add any built-in context-providers in your config file as shown below:
 
-### `@File`
+### @File Context Provider – Reference Files in Your Workspace
 
 Reference any file in your current workspace.
 
@@ -34,7 +34,7 @@ config.json
 { "contextProviders": [{ "name": "file" }] }
 ```
 
-### `@Code`
+### @Code Context Provider – Reference Functions and Classes
 
 Reference specific functions or classes from throughout your project.
 
@@ -53,7 +53,7 @@ config.json
 { "contextProviders": [{ "name": "code" }] }
 ```
 
-### `@Git Diff`
+### @Git Diff Context Provider – Reference Branch Changes
 
 Reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
@@ -72,7 +72,7 @@ config.json
 { "contextProviders": [{ "name": "diff" }] }
 ```
 
-### `@Current File`
+### @Current File Context Provider – Reference the Active File
 
 Reference the currently open file.
 
@@ -91,7 +91,7 @@ config.json
 { "contextProviders": [{ "name": "currentFile" }] }
 ```
 
-### `@Terminal`
+### @Terminal Context Provider – Reference Last Terminal Command and Output
 
 Reference the last command you ran in your IDE's terminal and its output.
 
@@ -110,7 +110,7 @@ config.json
 { "contextProviders": [{ "name": "terminal" }] }
 ```
 
-### `@Docs`
+### @Docs Context Provider – Reference Documentation Site Content
 
 Reference the contents from any documentation site.
 
@@ -131,9 +131,9 @@ config.json
 
 Note that this will only enable the `@Docs` context provider.
 
-To use it, you need to add a documentation site to your config file. See the [docs](/customization/overview#documentation-context) page for more information.
+To use it, you need to add a documentation site to your config file. See the [docs](/customize/overview#documentation-context) page for more information.
 
-### `@Open`
+### @Open Context Provider – Reference All Open Files or Pinned Files
 
 Reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
@@ -155,7 +155,7 @@ config.json
 { "contextProviders": [{ "name": "open", "params": { "onlyPinned": true } }] }
 ```
 
-### `@Web`
+### @Web Context Provider – Reference Relevant Web Pages
 
 Reference relevant pages from across the web, automatically determined from your input.
 
@@ -179,7 +179,7 @@ config.json
 { "contextProviders": [{ "name": "web", "params": { "n": 5 } }] }
 ```
 
-### `@Codebase`
+### @Codebase Context Provider – Reference Relevant Codebase Snippets
 
 Reference the most relevant snippets from your codebase.
 
@@ -199,9 +199,9 @@ config.json
 { "contextProviders": [{ "name": "codebase" }] }
 ```
 
-Read more about indexing and retrieval [here](/customization/overview#codebase-context).
+Read more about indexing and retrieval [here](/customize/overview#codebase-context).
 
-### `@Folder`
+### @Folder Context Provider – Reference Code from a Specific Folder
 
 Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
 
@@ -220,7 +220,7 @@ config.json
 { "contextProviders": [{ "name": "folder" }] }
 ```
 
-### `@Search`
+### @Search Context Provider – Reference Code Search Results
 
 Reference the results of codebase search, just like the results you would get from VS Code search.
 
@@ -244,7 +244,7 @@ config.json
 
 This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
-### `@Url`
+### @Url Context Provider – Reference Content from a URL
 
 Reference the markdown converted contents of a given URL.
 
@@ -264,7 +264,7 @@ config.json
 { "contextProviders": [{ "name": "url" }] }
 ```
 
-### `@Clipboard`
+### @Clipboard Context Provider – Reference Clipboard Items
 
 Reference recent clipboard items
 
@@ -284,7 +284,7 @@ config.json
 { "contextProviders": [{ "name": "clipboard" }] }
 ```
 
-### `@Tree`
+### @Tree Context Provider – Reference Workspace File Structure
 
 Reference the structure of your current workspace.
 
@@ -304,7 +304,7 @@ config.json
 { "contextProviders": [{ "name": "tree" }] }
 ```
 
-### `@Problems`
+### @Problems Context Provider – Reference Problems in the Current File
 
 Get Problems from the current file.
 
@@ -324,7 +324,7 @@ config.json
 { "contextProviders": [{ "name": "problems" }] }
 ```
 
-### `@Debugger`
+### @Debugger Context Provider – Reference Debugger Local Variables
 
 Reference the contents of the local variables in the debugger. Currently only available in VS Code.
 
@@ -348,7 +348,7 @@ config.json
 
 Uses the top _n_ levels (defaulting to 3) of the call stack for that thread.
 
-### `@Repository Map`
+### @Repository Map Context Provider – Reference Codebase Outline and Signatures
 
 Reference the outline of your codebase. By default, signatures are included along with file in the repo map.
 
@@ -374,11 +374,11 @@ config.json
 
 Provides a list of files and the call signatures of top-level classes, functions, and methods in those files. This helps the model better understand how a particular piece of code relates to the rest of the codebase.
 
-In the submenu that appears, you can select either `Entire codebase`, or specify a subfolder to generate the repostiory map from.
+In the submenu that appears, you can select either `Entire codebase`, or specify a subfolder to generate the repository map from.
 
-This context provider is inpsired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
+This context provider is inspired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
 
-### `@Operating System`
+### @Operating System Context Provider – Reference System Architecture and Platform
 
 Reference the architecture and platform of your current operating system.
 
@@ -398,7 +398,7 @@ config.json
 { "contextProviders": [{ "name": "os" }] }
 ```
 
-### Model Context Protocol
+### Using the Model Context Protocol (MCP) in Continue
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
@@ -437,481 +437,6 @@ config.json
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
-### `@Issue`
-
-Reference the conversation in a GitHub issue.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: issue
-    params:
-      repos:
-        - owner: continuedev
-          repo: continue
-      githubToken: ghp_xxx
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "issue",
-      "params": {
-        "repos": [{ "owner": "continuedev", "repo": "continue" }],
-        "githubToken": "ghp_xxx"
-      }
-    }
-  ]
-}
-```
-
-Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited.
-
-### `@Database`
-
-Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: database
-    params:
-      connections:
-        - name: examplePostgres
-          connection_type: postgres
-          connection:
-            user: username
-            host: localhost
-            database: exampleDB
-            password: yourPassword
-            port: 5432
-        - name: exampleMssql
-          connection_type: mssql
-          connection:
-            user: username
-            server: localhost
-            database: exampleDB
-            password: yourPassword
-        - name: exampleSqlite
-          connection_type: sqlite
-          connection:
-            filename: /path/to/your/sqlite/database.db
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "database",
-      "params": {
-        "connections": [
-          {
-            "name": "examplePostgres",
-            "connection_type": "postgres",
-            "connection": {
-              "user": "username",
-              "host": "localhost",
-              "database": "exampleDB",
-              "password": "yourPassword",
-              "port": 5432
-            }
-          },
-          {
-            "name": "exampleMssql",
-            "connection_type": "mssql",
-            "connection": {
-              "user": "username",
-              "server": "localhost",
-              "database": "exampleDB",
-              "password": "yourPassword"
-            }
-          },
-          {
-            "name": "exampleSqlite",
-            "connection_type": "sqlite",
-            "connection": { "filename": "/path/to/your/sqlite/database.db" }
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
-Each connection should include a unique name, the `connection_type`, and the necessary connection parameters specific to each database type.
-
-Available connection types:
-
-- `postgres`
-- `mysql`
-- `sqlite`
-
-### `@Postgres`
-
-Reference the schema of a table, and some sample rows
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: postgres
-    params:
-      host: localhost
-      port: 5436
-      user: myuser
-      password: catsarecool
-      database: animals
-      schema: public
-      sampleRows: 3
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "postgres",
-      "params": {
-        "host": "localhost",
-        "port": 5436,
-        "user": "myuser",
-        "password": "catsarecool",
-        "database": "animals",
-        "schema": "public",
-        "sampleRows": 3
-      }
-    }
-  ]
-}
-```
-
-The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
-
-By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
-
-[Here is a short demo.](https://github.com/continuedev/continue/pull/859)
-
-### `@Google`
-
-Reference the results of a Google search.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: google
-    params:
-      serperApiKey: <YOUR_SERPER.DEV_API_KEY>
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "google",
-      "params": { "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>" }
-    }
-  ]
-}
-```
-
-For example, type "@Google python tutorial" if you want to search and discuss ways of learning Python.
-
-Note: You can get an API key for free at [serper.dev](https://serper.dev).
-
-### `@Gitlab Merge Request`
-
-Reference an open MR for this branch on GitLab.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: gitlab-mr
-    params:
-      token: "..."
-```
-
-config.json
-
-```json
-{ "contextProviders": [{ "name": "gitlab-mr", "params": { "token": "..." } }] }
-```
-
-You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope.
-
-#### Using Self-Hosted GitLab
-
-You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: gitlab-mr
-    params:
-      token: "..."
-      domain: "gitlab.example.com"
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "gitlab-mr",
-      "params": { "token": "...", "domain": "gitlab.example.com" }
-    }
-  ]
-}
-```
-
-#### Filtering Comments
-
-If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
-
-### `@Jira`
-
-Reference the conversation in a Jira issue.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: jira
-    params:
-      domain: company.atlassian.net
-      token: ATATT...
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "jira",
-      "params": { "domain": "company.atlassian.net", "token": "ATATT..." }
-    }
-  ]
-}
-```
-
-Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens), or use your `email` and `token`, with token set to your password for basic authentication. If you use your own Atlassian API Token, don't configure your email.
-
-#### Jira Datacenter Support
-
-This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: jira
-    params:
-      apiVersion: "2"
-```
-
-config.json
-
-```json
-{ "contextProviders": [{ "name": "jira", "params": { "apiVersion": "2" } }] }
-```
-
-#### Issue Query
-
-By default, the following query will be used to find issues:
-
-```
-assignee = currentUser() AND resolution = Unresolved order by updated DESC
-```
-
-You can override this query by setting the `issueQuery` parameter.
-
-#### Max results
-
-You can set the `maxResults` parameter to limit the number of results returned. The default is `50`.
-
-### `@Discord`
-
-Reference the messages in a Discord channel.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: discord
-    params:
-      discordKey: "bot token"
-      guildId: "1234567890"
-      channels:
-        - id: "123456"
-          name: "example-channel"
-        - id: "678901"
-          name: "example-channel-2"
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "discord",
-      "params": {
-        "discordKey": "bot token",
-        "guildId": "1234567890",
-        "channels": [
-          { "id": "123456", "name": "example-channel" },
-          { "id": "678901", "name": "example-channel-2" }
-        ]
-      }
-    }
-  ]
-}
-```
-
-Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
-
-### `@HTTP`
-
-The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: http
-    params:
-      url: "https://api.example.com/v1/users"
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    { "name": "http", "params": { "url": "https://api.example.com/v1/users" } }
-  ]
-}
-```
-
-The receiving URL should expect to receive the following parameters:
-
-POST parameters
-
-```json
-{  query: string,  fullInput: string}
-```
-
-The response 200 OK should be a JSON object with the following structure:
-
-Response
-
-```
-[  {    "name": "",    "description": "",    "content": ""  }]// OR{  "name": "",  "description": "",  "content": ""}
-```
-
-### `@Commits`
-
-Reference specific git commit metadata and diff or all of the recent commits.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: commit
-    params:
-      Depth: 50
-      LastXCommitsDepth: 10
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    { "name": "commit", "params": { "Depth": 50, "LastXCommitsDepth": 10 } }
-  ]
-}
-```
-
-The depth is how many commits will be loaded into the submenu, defaults to 50. The LastXCommitsDepth is how many recent commits will be included, defaults to 10.
-
-### `@Greptile`
-
-Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: greptile
-    params:
-      greptileToken: "..."
-      githubToken: "..."
-```
-
-config.json
-
-```json
-{
-  "contextProviders": [
-    {
-      "name": "greptile",
-      "params": { "GreptileToken": "...", "GithubToken": "..." }
-    }
-  ]
-}
-```
-
-### Requesting Context Providers
+### How to Request a New Context Provider in Continue
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.

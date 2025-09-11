@@ -7,9 +7,13 @@ sidebar_position: 6
 
 A "reranking model" is trained to take two pieces of text (often a user question and a document) and return a relevancy score between 0 and 1, estimating how useful the document will be in answering the question. Rerankers are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, rerankers are designated using the `rerank` role and used by [@Codebase](../context/codebase.mdx) in order to select the most relevant code snippets after vector search.
+In Continue, rerankers are designated using the `rerank` role and used by [@Codebase](../context/codebase) in order to select the most relevant code snippets after vector search.
 
 ## Recommended reranking models
+
+<Info>
+  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](/customization/models#recommended-models).
+</Info>
 
 If you have the ability to use any model, we recommend `rerank-2` by Voyage AI, which is listed below along with the rest of the options for rerankers.
 
@@ -131,6 +135,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
     models:
       - name: Huggingface-tei Reranker
         provider: huggingface-tei
+        model: tei
         apiBase: http://localhost:8080
         apiKey: <YOUR_TEI_API_KEY>
         roles:

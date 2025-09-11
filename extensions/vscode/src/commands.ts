@@ -8,7 +8,6 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
-import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { startLocalOllama } from "core/util/ollamaHelper";
 import { getConfigJsonPath, getConfigYamlPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
@@ -17,21 +16,15 @@ import * as YAML from "yaml";
 
 import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
 
-import { myersDiff } from "core/diff/myers";
-import {
-  NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-  NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-} from "core/nextEdit/constants";
-import { checkFim } from "core/nextEdit/diff/diff";
 import { NextEditLoggingService } from "core/nextEdit/NextEditLoggingService";
-import { NextEditProvider } from "core/nextEdit/NextEditProvider";
-import { CompletionDataForAfterJump } from "./activation/JumpManager";
-import { NextEditWindowManager } from "./activation/NextEditWindowManager";
 import {
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
+  getNextEditMenuItems,
   getStatusBarStatus,
   getStatusBarStatusFromQuickPickItemLabel,
+  handleNextEditToggle,
+  isNextEditToggleLabel,
   quickPickStatusText,
   setupStatusBar,
   StatusBarStatus,
@@ -52,15 +45,6 @@ import { getMetaKeyLabel } from "./util/util";
 import { openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeIde } from "./VsCodeIde";
 
-let fullScreenPanel: vscode.WebviewPanel | undefined;
-
-function getFullScreenTab() {
-  const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
-  return tabs.find((tab) =>
-    (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
-  );
-}
-
 type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
 
 /**
@@ -74,27 +58,15 @@ function captureCommandTelemetry(
 }
 
 function focusGUI() {
-  const fullScreenTab = getFullScreenTab();
-  if (fullScreenTab) {
-    // focus fullscreen
-    fullScreenPanel?.reveal();
-  } else {
-    // focus sidebar
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-    // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
-  }
+  // focus sidebar
+  vscode.commands.executeCommand("continue.continueGUIView.focus");
+  // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
 }
 
 function hideGUI() {
-  const fullScreenTab = getFullScreenTab();
-  if (fullScreenTab) {
-    // focus fullscreen
-    fullScreenPanel?.dispose();
-  } else {
-    // focus sidebar
-    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
-  }
+  // focus sidebar
+  vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+  // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
 }
 
 function waitForSidebarReady(
@@ -443,74 +415,6 @@ const getCommandsMap: (
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": async () => {
-      focusGUI();
-
-      const sessionId = await sidebar.webviewProtocol.request(
-        "getCurrentSessionId",
-        undefined,
-      );
-      // Check if full screen is already open by checking open tabs
-      const fullScreenTab = getFullScreenTab();
-
-      if (fullScreenTab && fullScreenPanel) {
-        // Full screen open, but not focused - focus it
-        fullScreenPanel.reveal();
-        return;
-      }
-
-      // Clear the sidebar to prevent overwriting changes made in fullscreen
-      vscode.commands.executeCommand("continue.newSession");
-
-      // Full screen not open - open it
-      captureCommandTelemetry("openFullScreen");
-
-      // Create the full screen panel
-      let panel = vscode.window.createWebviewPanel(
-        "continue.continueGUIView",
-        "Continue",
-        vscode.ViewColumn.One,
-        {
-          retainContextWhenHidden: true,
-          enableScripts: true,
-        },
-      );
-      fullScreenPanel = panel;
-
-      // Add content to the panel
-      panel.webview.html = sidebar.getSidebarContent(
-        extensionContext,
-        panel,
-        undefined,
-        undefined,
-        true,
-      );
-
-      const sessionLoader = panel.onDidChangeViewState(() => {
-        vscode.commands.executeCommand("continue.newSession");
-        if (sessionId) {
-          vscode.commands.executeCommand(
-            "continue.focusContinueSessionId",
-            sessionId,
-          );
-        }
-        panel.reveal();
-        sessionLoader.dispose();
-      });
-
-      // When panel closes, reset the webview and focus
-      panel.onDidDispose(
-        () => {
-          sidebar.resetWebviewProtocolWebview();
-          vscode.commands.executeCommand("continue.focusContinueInput");
-        },
-        null,
-        extensionContext.subscriptions,
-      );
-
-      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
-      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    },
     "continue.openConfigPage": () => {
       vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
@@ -649,6 +553,8 @@ const getCommandsMap: (
             : StatusBarStatus.Disabled;
       }
 
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+
       quickPick.items = [
         {
           label: "$(gear) Open settings",
@@ -658,15 +564,11 @@ const getCommandsMap: (
           description: getMetaKeyLabel() + " + L",
         },
         {
-          label: "$(screen-full) Open full screen chat",
-          description:
-            getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + M",
-        },
-        {
           label: quickPickStatusText(targetStatus),
           description:
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
+        ...getNextEditMenuItems(currentStatus, nextEditEnabled),
         {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
@@ -688,6 +590,8 @@ const getCommandsMap: (
             targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );
+        } else if (isNextEditToggleLabel(selectedOption)) {
+          handleNextEditToggle(selectedOption, config);
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
@@ -701,8 +605,6 @@ const getCommandsMap: (
           }
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
-        } else if (selectedOption === "$(screen-full) Open full screen chat") {
-          vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(gear) Open settings") {
           vscode.commands.executeCommand("continue.navigateTo", "/config");
         }
@@ -802,6 +704,30 @@ const getCommandsMap: (
         );
       }
     },
+    "continue.toggleNextEditEnabled": async () => {
+      captureCommandTelemetry("toggleNextEditEnabled");
+
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
+      const tabAutocompleteEnabled = config.get<boolean>(
+        "enableTabAutocomplete",
+      );
+
+      if (!tabAutocompleteEnabled) {
+        vscode.window.showInformationMessage(
+          "Please enable tab autocomplete first to use Next Edit",
+        );
+        return;
+      }
+
+      const nextEditEnabled = config.get<boolean>("enableNextEdit") ?? false;
+
+      // updateNextEditState in VsCodeExtension.ts will handle the validation.
+      config.update(
+        "enableNextEdit",
+        !nextEditEnabled,
+        vscode.ConfigurationTarget.Global,
+      );
+    },
     "continue.forceNextEdit": async () => {
       captureCommandTelemetry("forceNextEdit");
 
@@ -814,164 +740,7 @@ const getCommandsMap: (
         "editor.action.inlineSuggest.trigger",
       );
     },
-    "continue.showNextEditAfterJump": async (
-      data: CompletionDataForAfterJump,
-    ) => {
-      // NOTE: This could use some cleanup or abstraction.
-      // The logic is largely similar to that of completionProvider.ts
-      // but we don't have access to the class.
-
-      const { completionId, outcome, currentPosition } = data;
-
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        console.log("No active editor when trying to show next edit");
-        return;
-      }
-
-      const documentContent = editor.document.getText();
-
-      // Calculate the editable region boundaries around the current cursor position/
-      const editableRegionStartLine = Math.max(
-        currentPosition.line - NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
-        0,
-      );
-      const editableRegionEndLine = Math.min(
-        currentPosition.line + NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
-        editor.document.lineCount - 1,
-      );
-
-      // Get the current text in the editable region.
-      const oldEditRangeSlice = documentContent
-        .split("\n")
-        .slice(editableRegionStartLine, editableRegionEndLine + 1)
-        .join("\n");
-
-      // Get the suggested new text from the completion outcome.
-      const newEditRangeSlice = outcome.completion;
-
-      // Skip showing edit if the suggestion is empty.
-      if (newEditRangeSlice === "") {
-        const loggingService = NextEditLoggingService.getInstance();
-        loggingService.cancelRejectionTimeout(completionId);
-        return;
-      }
-
-      // Skip showing edit if the suggestion is identical to current text.
-      if (oldEditRangeSlice === newEditRangeSlice) {
-        const loggingService = NextEditLoggingService.getInstance();
-        loggingService.cancelRejectionTimeout(completionId);
-        return;
-      }
-
-      // Create a cursor position relative to the edit range slice
-      const relativeCursorPos = {
-        line: currentPosition.line - editableRegionStartLine,
-        character: currentPosition.character,
-      };
-      const { isFim, fimText } = checkFim(
-        oldEditRangeSlice,
-        newEditRangeSlice,
-        relativeCursorPos,
-      );
-
-      if (isFim) {
-        if (!fimText) {
-          console.log("deleteChain from commands.ts: !fimText");
-          await NextEditProvider.getInstance().deleteChain();
-        }
-        // For FIM edits, create an inline completion item.
-        const nextEditCompletionItem = new vscode.InlineCompletionItem(
-          fimText,
-          new vscode.Range(
-            new vscode.Position(
-              currentPosition.line,
-              currentPosition.character,
-            ),
-            new vscode.Position(
-              currentPosition.line,
-              currentPosition.character,
-            ),
-          ),
-          {
-            title: "Log Next Edit Outcome",
-            command: "continue.logNextEditOutcomeAccept",
-            arguments: [completionId, NextEditLoggingService.getInstance()],
-          },
-        );
-
-        // Show the ghost text using VS Code's inline completion API.
-        // We need to trigger this manually since we're not in the completion provider.
-        await vscode.commands.executeCommand(
-          "editor.action.inlineSuggest.trigger",
-          {
-            completions: [nextEditCompletionItem],
-            position: currentPosition,
-          },
-        );
-      } else {
-        // For more complex edits, we display a diff inside a window.
-        const diffLines = myersDiff(oldEditRangeSlice, newEditRangeSlice);
-        if (diffLines.length === 0) {
-          console.log("deleteChain from commands.ts: diffLines.length === 0");
-          await NextEditProvider.getInstance().deleteChain();
-        }
-
-        if (NextEditWindowManager.isInstantiated()) {
-          const windowManager = NextEditWindowManager.getInstance();
-          windowManager.updateCurrentCompletionId(completionId);
-
-          await windowManager.showNextEditWindow(
-            editor,
-            currentPosition,
-            editableRegionStartLine,
-            editableRegionEndLine,
-            oldEditRangeSlice,
-            newEditRangeSlice,
-            diffLines,
-          );
-        }
-      }
-    },
   };
-};
-
-const registerCopyBufferService = (
-  context: vscode.ExtensionContext,
-  core: Core,
-) => {
-  const typeDisposable = vscode.commands.registerCommand(
-    "editor.action.clipboardCopyAction",
-    async (arg) => doCopy(typeDisposable),
-  );
-
-  async function doCopy(typeDisposable: any) {
-    typeDisposable.dispose(); // must dispose to avoid endless loops
-
-    await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
-
-    const clipboardText = await vscode.env.clipboard.readText();
-
-    if (clipboardText) {
-      core.invoke("clipboardCache/add", {
-        content: clipboardText,
-      });
-    }
-
-    await context.workspaceState.update("continue.copyBuffer", {
-      text: clipboardText,
-      copiedAt: new Date().toISOString(),
-    });
-
-    // re-register to continue intercepting copy commands
-    typeDisposable = vscode.commands.registerCommand(
-      "editor.action.clipboardCopyAction",
-      async () => doCopy(typeDisposable),
-    );
-    context.subscriptions.push(typeDisposable);
-  }
-
-  context.subscriptions.push(typeDisposable);
 };
 
 async function installModelWithProgress(
@@ -1042,22 +811,6 @@ export function registerAllCommands(
   )) {
     context.subscriptions.push(
       vscode.commands.registerCommand(command, callback),
-    );
-  }
-
-  try {
-    registerCopyBufferService(context, core);
-  } catch (e: any) {
-    //Non-critical error, it needs to be intercepted and not prevent the extension from starting
-    console.log("Error registering CopyBufferService: ", e);
-    Telemetry.capture(
-      "vscode_extension_copy_buffer_failure",
-      {
-        stack: extractMinimalStackTraceInfo(e.stack),
-        message: e.message,
-      },
-      false,
-      true,
     );
   }
 }

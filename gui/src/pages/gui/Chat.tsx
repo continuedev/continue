@@ -43,6 +43,7 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
+import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { EmptyChatBody } from "./EmptyChatBody";
@@ -287,19 +288,17 @@ export function Chat() {
 
       if (message.role === "user") {
         return (
-          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
-            <ContinueInputBox
-              onEnter={(editorState, modifiers) =>
-                sendInput(editorState, modifiers, index)
-              }
-              isLastUserInput={isLastUserInput(index)}
-              isMainInput={false}
-              editorState={editorState}
-              contextItems={contextItems}
-              appliedRules={appliedRules}
-              inputId={message.id}
-            />
-          </div>
+          <ContinueInputBox
+            onEnter={(editorState, modifiers) =>
+              sendInput(editorState, modifiers, index)
+            }
+            isLastUserInput={isLastUserInput(index)}
+            isMainInput={false}
+            editorState={editorState}
+            contextItems={contextItems}
+            appliedRules={appliedRules}
+            inputId={message.id}
+          />
         );
       }
 
@@ -447,6 +446,7 @@ export function Chat() {
               )}
             </div>
           </div>
+          <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
           {history.length === 0 && (
             <EmptyChatBody showOnboardingCard={onboardingCard.show} />

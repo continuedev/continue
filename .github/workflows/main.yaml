@@ -9,7 +9,7 @@ on:
       publish_build:
         description: "Whether or not to publish the built extension to the VS Code marketplace"
         required: true
-        default: false
+        default: "false"
 
 jobs:
   check_release_name:
@@ -20,7 +20,7 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v1.0.*-vscode ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v1.2.*-vscode ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
@@ -66,11 +66,11 @@ jobs:
             arch: arm64
             npm_config_arch: arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 
@@ -80,8 +80,7 @@ jobs:
           arch: ${{ matrix.arch }}
           npm_config_arch: ${{ matrix.npm_config_arch }}
           pre-release: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v4
@@ -93,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # This ensures all tags are fetched
 
@@ -113,7 +112,7 @@ jobs:
       - build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Git
         run: |
@@ -121,7 +120,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       # Download the .vsix artifacts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           pattern: "*-vsix"
           path: vsix-artifacts
@@ -146,7 +145,7 @@ jobs:
     steps:
       # 0. Setup git
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Git
         run: |
@@ -157,7 +156,7 @@ jobs:
         run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
 
       # 1. Download the artifacts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           pattern: "*-vsix"
           path: vsix-artifacts

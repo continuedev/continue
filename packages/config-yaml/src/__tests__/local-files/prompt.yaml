@@ -1,0 +1,7 @@
+name: Local prompt
+version: 0.0.1
+schema: v1
+prompts:
+  - name: duplication test
+    description: test purpose
+    prompt: Please check that this prompt should only appear once

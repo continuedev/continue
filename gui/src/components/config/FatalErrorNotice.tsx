@@ -1,11 +1,15 @@
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/Auth";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
-import { ROUTES } from "../../util/navigation";
-import { useLump } from "../mainInput/Lump/LumpContext";
+import { CONFIG_ROUTES } from "../../util/navigation";
+import Alert from "../gui/Alert";
 
 export const FatalErrorIndicator = () => {
+  const { refreshProfiles } = useAuth();
   const configError = useAppSelector((store) => store.config.configError);
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const navigate = useNavigate();
 
@@ -13,25 +17,57 @@ export const FatalErrorIndicator = () => {
     return configError?.some((error) => error.fatal);
   }, [configError]);
 
-  const { setSelectedSection } = useLump();
+  const configLoading = useAppSelector((state) => state.config.loading);
 
-  const showLumpErrorSection = () => {
-    navigate(ROUTES.HOME);
-    setSelectedSection("error");
+  const showConfigPage = () => {
+    navigate(CONFIG_ROUTES.AGENTS);
   };
+
+  const { selectedProfile } = useAuth();
 
   if (!hasFatalErrors) {
     return null;
   }
+
+  const displayName = selectedProfile
+    ? (selectedProfile.title ??
+      `${selectedProfile.fullSlug?.ownerSlug}/${selectedProfile.fullSlug?.packageSlug}`)
+    : "agent";
+
   return (
-    <div
-      className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-      role="alert"
-      onClick={showLumpErrorSection}
-    >
-      <strong className="font-bold">Error!</strong>{" "}
-      <span className="block sm:inline">Could not load config</span>
-      <div className="mt-2 underline">Learn More</div>
-    </div>
+    <Alert type="error" className="mx-2 my-1 px-2">
+      <span>{`Error loading`}</span>{" "}
+      <span className="italic">{displayName}</span>
+      {". "}
+      <span>{`Chat is disabled until a model is available.`}</span>
+      <div className="mt-2 flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5">
+        <div
+          onClick={() => {
+            ideMessenger.post(
+              "openUrl",
+              "https://docs.continue.dev/troubleshooting",
+            );
+          }}
+          className="cursor-pointer underline"
+        >
+          Help
+        </div>
+        {configLoading ? (
+          <div>Reloading...</div>
+        ) : (
+          <div
+            className={`cursor-pointer underline`}
+            onClick={() => {
+              refreshProfiles("Clicked reload in fatal indicator");
+            }}
+          >
+            Reload
+          </div>
+        )}
+        <div onClick={showConfigPage} className="cursor-pointer underline">
+          View
+        </div>
+      </div>
+    </Alert>
   );
 };

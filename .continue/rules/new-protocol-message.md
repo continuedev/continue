@@ -1,6 +1,7 @@
 ---
 name: New protocol message
 description: Create a new protocol message from core/gui/ide to core/gui/ide
+alwaysApply: false
 ---
 
 Create a new protocol message by taking the following steps:

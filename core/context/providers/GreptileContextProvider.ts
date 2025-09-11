@@ -17,6 +17,10 @@ class GreptileContextProvider extends BaseContextProvider {
     type: "query",
   };
 
+  get deprecationMessage() {
+    return "The Greptile context provider is now deprecated and will be removed in a later version. Please consider viewing their docs at greptile.com/docs/code-review-bot/auto-resolve-with-mcp for resolving greptile queries.";
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,

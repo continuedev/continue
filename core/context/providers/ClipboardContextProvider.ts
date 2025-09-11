@@ -18,6 +18,10 @@ class ClipboardContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  get deprecationMessage() {
+    return "The clipboard context provider is deprecated as it is not used. It will be removed in a future version.";
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,

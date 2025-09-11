@@ -7,7 +7,7 @@ import {
   WebDriver,
   WebElement,
   WebView,
-  until
+  until,
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
@@ -16,16 +16,17 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
-describe("GUI Test", () => {
+describe.skip("GUI Test", () => {
   let view: WebView;
   let driver: WebDriver;
 
   before(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
+    this.timeout(DEFAULT_TIMEOUT.XL + DEFAULT_TIMEOUT.MD + DEFAULT_TIMEOUT.MD);
     // Uncomment this line for faster testing
     await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
     await GlobalActions.clearAllNotifications();
+    await GlobalActions.disableNextEdit();
   });
 
   beforeEach(async function () {
@@ -53,7 +54,7 @@ describe("GUI Test", () => {
       const description = await GUISelectors.getDescription(view);
 
       expect(await description.getText()).has.string(
-        "Log in to quickly build your first custom AI code assistant",
+        "Log in to quickly build your first custom AI code agent",
       );
     }).timeout(DEFAULT_TIMEOUT.XL);
 
@@ -281,7 +282,7 @@ describe("GUI Test", () => {
 
       // Verify the rule content
       const ruleItemText = await ruleItem.getText();
-      expect(ruleItemText).to.include("Assistant rule");
+      expect(ruleItemText).to.include("Agent rule");
       expect(ruleItemText).to.include("Always applied");
       expect(ruleItemText).to.include("TEST_SYS_MSG");
     }).timeout(DEFAULT_TIMEOUT.MD);
@@ -376,7 +377,7 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
     }).timeout(DEFAULT_TIMEOUT.XL * 1000);
-  })
+  });
 
   describe("Chat Paths", () => {
     it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {

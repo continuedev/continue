@@ -5,30 +5,34 @@ keywords: [chat, model, role]
 sidebar_position: 1
 ---
 
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
+
+
 A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
 
-In Continue, these models are used for normal [Chat](../../features/chat/quick-start) and [VS Code actions](../deep-dives/vscode-actions.md). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
+In Continue, these models are used for normal [Chat](../../features/chat/quick-start). The selected chat model will also be used for [Edit](../../features/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
 
 ## Recommended Chat models
 
+<ModelRecommendations role="chat_edit" />
 ## Best overall experience
 
 For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
 
-### Claude Sonnet 3.7 from Anthropic
+### Claude Opus 4.1 and Claude Sonnet 4 from Anthropic
 
-Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-providers/top-level/anthropic.mdx).
+Our current top recommendations are Claude Opus 4.1 and Claude Sonnet 4 from [Anthropic](../model-providers/top-level/anthropic).
 
 <Tabs>
   <Tab title="Hub">
-  View the [Claude 3.7 Sonnet model block](https://hub.continue.dev/anthropic/claude-3-7-sonnet) on the hub.
+  View the [Claude Opus 4.1 model block](https://hub.continue.dev/anthropic/claude-4-1-opus) or [Claude Sonnet 4 model block](https://hub.continue.dev/anthropic/claude-4-sonnet) on the hub.
   </Tab>
   <Tab title="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Claude 3.7 Sonnet
+    - name: Claude Opus 4.1
       provider: anthropic
-      model: claude-3-7-sonnet-latest
+      model: claude-4-1-opus
       apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </Tab>
@@ -37,9 +41,9 @@ Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-pr
   {
     "models": [
       {
-        "title": "Claude 3.5 Sonnet",
+        "title": "Claude Opus 4.1",
         "provider": "anthropic",
-        "model": "claude-3-5-sonnet-latest",
+        "model": "claude-4-1-opus",
         "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
@@ -50,7 +54,7 @@ Our current top recommendation is Claude 3.7 Sonnet from [Anthropic](../model-pr
 
 ### Gemma from Google DeepMind
 
-If you prefer to use an open-weight model, then the Gemma family of Models from Google DeepMind is a good choice. You will need to decide if you use it through a SaaS model provider, e.g. [Together](../model-providers/more/together.mdx), or self-host it, e.g. [Ollama](../model-providers/top-level/ollama.mdx).
+If you prefer to use an open-weight model, then the Gemma family of Models from Google DeepMind is a good choice. You will need to decide if you use it through a SaaS model provider, e.g. [Together](../model-providers/more/together), or self-host it, e.g. [Ollama](../model-providers/top-level/ollama).
 
 <Tabs>
   <Tab title="Hub">
@@ -119,7 +123,7 @@ If you prefer to use an open-weight model, then the Gemma family of Models from 
 
 ### GPT-4o from OpenAI
 
-If you prefer to use a model from [OpenAI](../model-providers/top-level/openai.mdx), then we recommend GPT-4o.
+If you prefer to use a model from [OpenAI](../model-providers/top-level/openai), then we recommend GPT-4o.
 
 <Tabs>
     <Tab title="Hub">
@@ -152,7 +156,7 @@ If you prefer to use a model from [OpenAI](../model-providers/top-level/openai.m
 
 ### Grok-2 from xAI
 
-If you prefer to use a model from [xAI](../model-providers/top-level/xAI.mdx), then we recommend Grok-2.
+If you prefer to use a model from [xAI](../model-providers/more/xAI), then we recommend Grok-2.
 
 <Tabs>
     <Tab title="Hub">
@@ -185,7 +189,7 @@ If you prefer to use a model from [xAI](../model-providers/top-level/xAI.mdx), t
 
 ### Gemini 2.0 Flash from Google
 
-If you prefer to use a model from [Google](../model-providers/top-level/gemini.mdx), then we recommend Gemini 2.0 Flash.
+If you prefer to use a model from [Google](../model-providers/top-level/gemini), then we recommend Gemini 2.0 Flash.
 
 <Tabs>
     <Tab title="Hub">
@@ -222,7 +226,7 @@ For the best local, offline Chat experience, you will want to use a model that i
 
 ### Llama 3.1 8B
 
-If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
+If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/top-level/lmstudio)).
 
 <Tabs>
   <Tab title="Hub">
@@ -311,7 +315,7 @@ If your local machine can run an 8B parameter model, then we recommend running L
 
 ### DeepSeek Coder 2 16B
 
-If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama.mdx) or [LM Studio](../model-providers/more/lmstudio.mdx)).
+If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/top-level/lmstudio)).
 
 <Tabs>
   {/* HUB_TODO nonexistent blocks */}

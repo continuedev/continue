@@ -1,11 +1,10 @@
 # ListOrganizations200Response
 
-
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**organizations** | [**List[ListOrganizations200ResponseOrganizationsInner]**](ListOrganizations200ResponseOrganizationsInner.md) |  | 
+| Name              | Type                                                                                                          | Description | Notes |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | ----------- | ----- |
+| **organizations** | [**List[ListOrganizations200ResponseOrganizationsInner]**](ListOrganizations200ResponseOrganizationsInner.md) |             |
 
 ## Example
 
@@ -24,6 +23,5 @@ list_organizations200_response_dict = list_organizations200_response_instance.to
 # create an instance of ListOrganizations200Response from a dict
 list_organizations200_response_from_dict = ListOrganizations200Response.from_dict(list_organizations200_response_dict)
 ```
+
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

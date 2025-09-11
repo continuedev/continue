@@ -1,4 +1,8 @@
 {
   "label": "Model Providers",
-  "position": 4
+  "position": 1,
+  "link": {
+    "type": "doc",
+    "id": "customize/model-providers/overview"
+  }
 }

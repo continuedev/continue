@@ -53,6 +53,7 @@ import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
 import ContinueProxy from "./stubs/ContinueProxy";
+import TARS from "./TARS";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
@@ -116,6 +117,7 @@ export const LLMClasses = [
   Inception,
   Voyage,
   LlamaStack,
+  TARS,
 ];
 
 export async function llmFromDescription(

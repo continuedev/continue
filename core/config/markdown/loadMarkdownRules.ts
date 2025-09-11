@@ -3,6 +3,7 @@ import {
   markdownToRule,
 } from "@continuedev/config-yaml";
 import { IDE, RuleWithSource } from "../..";
+import { findUriInDirs } from "../../util/uri";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
 /**
@@ -29,9 +30,13 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     // Process each markdown file
     for (const file of mdFiles) {
       try {
+        const { relativePathOrBasename } = findUriInDirs(
+          file.path,
+          await ide.getWorkspaceDirs(),
+        );
         const rule = markdownToRule(file.content, {
           uriType: "file",
-          filePath: file.path,
+          fileUri: relativePathOrBasename,
         });
         rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
       } catch (e) {

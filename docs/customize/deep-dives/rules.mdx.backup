@@ -1,10 +1,10 @@
 ---
 title: "Rules"
-description: Rules are used to provide instructions to the model for Chat, Edit, and Agent requests.
+description: Rules are used to provide instructions to the model for Agent, Chat, and Edit requests.
 keywords: [rules, .continuerules, system, prompt, message]
 ---
 
-Rules provide instructions to the model for [Chat](../../features/chat/quick-start), [Edit](../../features/edit/quick-start), and [Agent](../../features/agent/quick-start) requests.
+Rules provide instructions to the model for [Agent](../../features/agent/quick-start), [Chat](../../features/chat/quick-start), and [Edit](../../features/edit/quick-start) requests.
 
 <Info> Rules are not included in [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
 </Info>
@@ -39,7 +39,7 @@ Now test your rules by asking a question about a file in chat.
 
 ## Creating `rules` blocks
 
-Rules can be added locally using the "Add Rules" button while viewing the Local Assistant's rules.
+Rules can be added locally using the "Add Rules" button while viewing the Local Agent's rules.
 
 ![add local rules button](/images/add-local-rules.png)
 
@@ -49,7 +49,7 @@ Automatically create local rule blocks: When in Agent mode, you can prompt the a
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 </Info>
 
-Rules can also be added to an Assistant on the Continue Hub.
+Rules can also be added to an Agent on the Continue Hub.
 
 Explore available rules [here](https://hub.continue.dev), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
 
@@ -84,7 +84,7 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
   # Continue Docs Standards
 
-  - Follow Docusaurus documentation standards
+  - Follow Mintlify documentation standards
   - Include YAML frontmatter with title, description, and keywords
   - Use consistent heading hierarchy starting with h2 (##)
   - Include relevant Admonition components for tips, warnings, and info
@@ -107,7 +107,7 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
       globs: docs/**/*.{md,mdx}
       alwaysApply: false
       rule: >
-        - Follow Docusaurus documentation standards
+        - Follow Mintlify documentation standards
         - Include YAML frontmatter with title, description, and keywords
         - Use consistent heading hierarchy starting with h2 (##)
         - Include relevant Admonition components for tips, warnings, and info
@@ -133,7 +133,7 @@ name: New rule
 Always give concise responses
 ```
 
-This is also done when selecting "Add Rule" in the Assistant settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.md`.
+This is also done when selecting "Add Rule" in the Agent settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.md`.
 
 ### Examples
 
@@ -166,7 +166,7 @@ Whenever you are writing React code, make sure to
 
 ### Chat System Message
 
-Continue includes a simple default system message for [Chat](../../features/chat/quick-start) and [Agent](../../features/agent/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Continue includes a simple default system message for [Agent](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 

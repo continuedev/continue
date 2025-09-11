@@ -1,7 +1,7 @@
 import { ConfigResult, parseConfigYaml } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { ContinueConfig, IDE, IdeSettings, ILLMLogger } from "../../index.js";
+import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
 import { getPrimaryConfigFilePath } from "../../util/paths.js";
@@ -15,7 +15,6 @@ export default class LocalProfileLoader implements IProfileLoader {
 
   constructor(
     private ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private controlPlaneClient: ControlPlaneClient,
     private llmLogger: ILLMLogger,
     private overrideAssistantFile?:
@@ -33,7 +32,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       iconUrl: "",
       title: overrideAssistantFile?.path
         ? getUriPathBasename(overrideAssistantFile.path)
-        : "Local Assistant",
+        : "Local Agent",
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??
@@ -48,7 +47,7 @@ export default class LocalProfileLoader implements IProfileLoader {
         );
         this.description.title = parsedAssistant.name;
       } catch (e) {
-        console.error("Failed to parse assistant file: ", e);
+        console.error("Failed to parse agent file: ", e);
       }
     }
   }
@@ -57,7 +56,6 @@ export default class LocalProfileLoader implements IProfileLoader {
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
     const result = await doLoadConfig({
       ide: this.ide,
-      ideSettingsPromise: this.ideSettingsPromise,
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
       profileId: this.description.id,
@@ -65,8 +63,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       orgScopeId: null,
       packageIdentifier: {
         uriType: "file",
-        filePath:
-          this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
+        fileUri: this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
       },
     });
 

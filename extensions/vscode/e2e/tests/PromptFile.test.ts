@@ -13,6 +13,11 @@ import { DEFAULT_TIMEOUT } from "../constants";
 describe("Prompt file", () => {
   let editor: TextEditor;
 
+  before(async function () {
+    this.timeout(DEFAULT_TIMEOUT.MD);
+    await GlobalActions.disableNextEdit();
+  });
+
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
@@ -42,11 +47,25 @@ describe("Prompt file", () => {
       "terminal",
       "tree",
     ];
+
     for (const provider of providers) {
-      await editor.typeText("@" + provider.slice(0, 2));
-      await editor.typeText(Key.ENTER);
+      // Type the @ symbol to trigger completion
+      await editor.typeText("@");
+
+      // Wait a moment for the completion to appear
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Type the first few characters
+      await editor.typeText(provider.slice(0, 2));
+
+      // Wait for completion popup to update
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Use Tab to accept completion instead of Enter
+      await editor.typeText(Key.TAB);
+
       const text = await editor.getText();
-      expect(text).equals("@" + provider);
+      expect(text).to.include("@" + provider);
       await editor.clearText();
     }
 

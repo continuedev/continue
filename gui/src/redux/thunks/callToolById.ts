@@ -14,6 +14,7 @@ import {
 import { ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
+import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 
 export const callToolById = createAsyncThunk<
   void,
@@ -31,6 +32,23 @@ export const callToolById = createAsyncThunk<
     return;
   }
 
+  // Track tool call acceptance and start timing
+  const startTime = Date.now();
+
+  // Check if this is an auto-approved tool
+  const toolSettings = state.ui.toolSettings;
+  const toolPolicy =
+    toolSettings[toolCallState.toolCall.function.name] ??
+    toolCallState.tool?.defaultToolPolicy ??
+    DEFAULT_TOOL_SETTING;
+  const isAutoApproved = toolPolicy === "allowedWithoutPermission";
+
+  posthog.capture("gui_tool_call_decision", {
+    decision: isAutoApproved ? "auto_accept" : "accept",
+    toolName: toolCallState.toolCall.function.name,
+    toolCallId: toolCallId,
+  });
+
   const selectedChatModel = selectSelectedChatModel(state);
 
   if (!selectedChatModel) {
@@ -46,9 +64,6 @@ export const callToolById = createAsyncThunk<
   let output: ContextItem[] | undefined = undefined;
   let errorMessage: string | undefined = undefined;
   let streamResponse: boolean;
-
-  // Check if telemetry is enabled
-  const allowAnonymousTelemetry = state.config.config.allowAnonymousTelemetry;
 
   // IMPORTANT:
   // Errors that occur while calling tool call implementations
@@ -111,16 +126,14 @@ export const callToolById = createAsyncThunk<
     );
   }
 
-  // Because we don't have access to use hooks, we check `allowAnonymousTelemetry`
-  // directly rather than using `CustomPostHogProvider`
-  if (allowAnonymousTelemetry) {
-    // Capture telemetry for tool calls
-    posthog.capture("gui_tool_call_outcome", {
-      succeeded: errorMessage === undefined,
-      toolName: toolCallState.toolCall.function.name,
-      errorMessage: errorMessage,
-    });
-  }
+  // Capture telemetry for tool call execution outcome with duration
+  const duration_ms = Date.now() - startTime;
+  posthog.capture("gui_tool_call_outcome", {
+    succeeded: errorMessage === undefined,
+    toolName: toolCallState.toolCall.function.name,
+    errorMessage: errorMessage,
+    duration_ms: duration_ms,
+  });
 
   if (streamResponse) {
     if (errorMessage) {

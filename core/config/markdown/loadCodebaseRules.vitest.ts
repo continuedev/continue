@@ -2,6 +2,7 @@ import { markdownToRule } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IDE } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
+import { findUriInDirs, getUriPathBasename } from "../../util/uri";
 import { loadCodebaseRules } from "./loadCodebaseRules";
 
 // Mock dependencies
@@ -13,10 +14,18 @@ vi.mock("@continuedev/config-yaml", () => ({
   markdownToRule: vi.fn(),
 }));
 
+vi.mock("../../util/uri", () => ({
+  findUriInDirs: vi.fn(),
+  getUriPathBasename: vi.fn(),
+}));
+
 describe("loadCodebaseRules", () => {
   // Mock IDE with properly typed mock functions
   const mockIde = {
     readFile: vi.fn() as unknown as IDE["readFile"] & {
+      mockImplementation: Function;
+    },
+    getWorkspaceDirs: vi.fn() as unknown as IDE["getWorkspaceDirs"] & {
       mockImplementation: Function;
     },
   } as unknown as IDE;
@@ -77,6 +86,19 @@ describe("loadCodebaseRules", () => {
     // Mock walkDirs to return our test files
     (walkDirs as any).mockResolvedValue(mockFiles);
 
+    // Mock getWorkspaceDirs to return a workspace directory
+    (mockIde.getWorkspaceDirs as any).mockResolvedValue(["/workspace"]);
+
+    // Mock getUriPathBasename to return just the filename
+    (getUriPathBasename as any).mockImplementation((path: string) => {
+      return path.split("/").pop() || "";
+    });
+
+    // Mock findUriInDirs to return relative path
+    (findUriInDirs as any).mockImplementation((uri: string) => {
+      return { relativePathOrBasename: uri };
+    });
+
     // Mock readFile to return content based on path
     (mockIde.readFile as any).mockImplementation((path: string) => {
       return Promise.resolve(mockRuleContent[path] || "");
@@ -85,7 +107,7 @@ describe("loadCodebaseRules", () => {
     // Mock markdownToRule to return converted rules
     (markdownToRule as any).mockImplementation(
       (content: string, options: any) => {
-        return mockConvertedRules[options.filePath];
+        return mockConvertedRules[options.fileUri];
       },
     );
   });

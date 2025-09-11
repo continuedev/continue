@@ -1,19 +1,20 @@
 ---
-title: "Custom code RAG"
-description: "While Continue comes with  out of the box, you might wish to set up your own vector database and build a custom retrieval-augmented generation (RAG) system. This can allow you to access code that is not available locally, to index code a single time across all users, or to include custom logic. In this guide, we'll walk you through the steps it takes to build this."
+title: "How to Build Custom Code RAG"
+description: "Build a custom retrieval-augmented generation (RAG) system for faster and more cost-efficient code search across large codebases. This guide is for advanced users who need to index code a single time across all users or include custom logic."
+keywords: [RAG, vector database, embeddings, code search, MCP]
 ---
 
-## Step 1: Choose an embeddings model
+## Step 1: How to Choose an Embeddings Model
 
 If possible, we recommend using [`voyage-code-3`](https://docs.voyageai.com/docs/embeddings), which will give the most accurate answers of any existing embeddings model for code. You can obtain an API key [here](https://dash.voyageai.com/api-keys). Because their API is [OpenAI-compatible](https://docs.voyageai.com/reference/embeddings-api), you can use any OpenAI client by swapping out the URL.
 
-## Step 2: Choose a vector database
+## Step 2: How to Choose a Vector Database
 
 There are a number of available vector databases, but because most vector databases will be able to performantly handle large codebases, we would recommend choosing one for ease of setup and experimentation.
 
 [LanceDB](https://lancedb.github.io/lancedb/basic/) is a good choice for this because it can run in-memory with libraries for both Python and Node.js. This means that in the beginning you can focus on writing code rather than setting up infrastructure. If you have already chosen a vector database, then using this instead of LanceDB is also a fine choice.
 
-## Step 3: Choose a "chunking" strategy
+## Step 3: How to Choose a "Chunking" Strategy
 
 Most embeddings models can only handle a limited amount of text at once. To get around this, we "chunk" our code into smaller pieces.
 
@@ -25,7 +26,7 @@ If you use `voyage-code-3`, it has a maximum context length of 16,000 tokens, wh
 
 As usual in this guide, we recommend starting with the strategy that gives 80% of the benefit with 20% of the effort.
 
-## Step 4: Put together an indexing script
+## Step 4: How to Put Together an Indexing Script
 
 Indexing, in which we will insert your code into the vector database in a retrievable format, happens in three steps:
 
@@ -48,7 +49,7 @@ from lancedb.pydantic import LanceModel, Vectorfrom lancedb.embeddings import ge
 
 Regardless of which database or model you have chosen, your script should iterate over all of the files that you wish to index, chunk them, generate embeddings for each chunk, and then insert all of the chunks into your vector database.
 
-## Step 5: Run your indexing script
+## Step 5: How to Run Your Indexing Script
 
 <Check>
   In a perfect production version, you would want to build "automatic, incremental indexing", so that you whenever a file changes, that file and nothing else is automatically re-indexed. This has the benefits of perfectly up-to-date embeddings and lower cost.
@@ -61,52 +62,101 @@ At this point, you've written your indexing script and tested that you can make 
 
 In the beginning, you should probably run it by hand. Once you are confident that your custom RAG is providing value and is ready for the long-term, then you can set up a cron job to run it periodically. Because codebases are largely unchanged in short time frames, you won't want to re-index more than once a day. Once per week or month is probably even sufficient.
 
-## Step 6: Set up your server
+## Step 6: How to set up an MCP server
 
-In order for the Continue extension to access your custom RAG system, you'll need to set up a server. This server is responsible for recieving a query from the extension, querying the vector database, and returning the results in the format expected by Continue.
+To integrate your custom RAG system with Continue, you'll create an MCP (Model Context Protocol) server. MCP provides a standardized way for AI tools to access external resources.
 
-Here is a reference implementation using FastAPI that is capable of handling requests from Continue's "http" context provider.
+### Create your MCP server
 
+Here's a reference implementation using Python that queries your vector database:
+
+```python
+"""Custom RAG MCP server for code retrieval"""
+import asyncio
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import Tool, TextContent
+import lancedb
+
+# Initialize your vector database connection
+db = lancedb.connect("/path/to/your/db")
+table = db.open_table("code_chunks")
+
+app = Server("custom-rag-server")
+
+@app.tool()
+async def search_codebase(query: str, limit: int = 10) -> list[TextContent]:
+    """
+    Search the codebase using vector similarity.
+    
+    Args:
+        query: The search query
+        limit: Maximum number of results to return
+    """
+    # Query your vector database
+    results = table.search(query).limit(limit).to_list()
+    
+    # Format results for Continue
+    formatted_results = []
+    for result in results:
+        formatted_results.append(TextContent(
+            type="text",
+            text=f"File: {result['filename']}\n\n{result['text']}"
+        ))
+    
+    return formatted_results
+
+@app.tool()
+async def get_file_context(filename: str) -> list[TextContent]:
+    """
+    Get all chunks from a specific file.
+    
+    Args:
+        filename: The name of the file to retrieve
+    """
+    results = table.where(f"filename = '{filename}'").to_list()
+    
+    return [TextContent(
+        type="text",
+        text="\n".join([r['text'] for r in results])
+    )]
+
+if __name__ == "__main__":
+    stdio_server(app).run()
 ```
-"""This is an example of a server that can be used with the "http" context provider."""from fastapi import FastAPIfrom pydantic import BaseModelclass ContextProviderInput(BaseModel):    query: str    fullInput: strapp = FastAPI()@app.post("/retrieve")async def create_item(item: ContextProviderInput):    results = [] # TODO: Query your vector database here.    # Construct the "context item" format expected by Continue    context_items = []    for result in results:        context_items.append({            "name": result.filename,            "description": result.filename,            "content": result.text,        })    return context_items
+
+### Configure Continue to use your MCP server
+
+Add your MCP server to Continue's configuration:
+
+**config.yaml:**
+```yaml
+mcpServers:
+  - name: custom-rag
+    command: python
+    args:
+      - /path/to/your/mcp_server.py
+    env:
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY}
 ```
 
-After you've set up your server, you can configure Continue to use it by adding the "http" context provider to your `contextProviders` array in your configuration:
-
-- YAML
-- JSON
-
-config.yaml
-
-```
-context:
-  - provider: http
-    params:
-      url: https://myserver.com/retrieve
-      name: http
-      description: Custom HTTP Context Provider
-      displayTitle: My Custom Context
-```
-
-config.json
-
+**config.json:**
 ```json
 {
-  "contextProviders": [
+  "mcpServers": [
     {
-      "name": "http",
-      "params": {
-        "url": "https://myserver.com/retrieve",
-        "title": "http",
-        "description": "Custom HTTP Context Provider",
-        "displayTitle": "My Custom Context"
+      "name": "custom-rag",
+      "command": "python",
+      "args": ["/path/to/your/mcp_server.py"],
+      "env": {
+        "VOYAGE_API_KEY": "${VOYAGE_API_KEY}"
       }
     }
   ]
 }
 ```
 
-## Step 7 (Bonus): Set up reranking
+## Step 7 (Bonus): How to Set Up Reranking
 
 If you'd like to improve the quality of your results, a great first step is to add reranking. This involves retrieving a larger initial pool of results from the vector database, and then using a reranking model to order them from most to least relevant. This works because the reranking model can perform a slightly more expensive calculation on the small set of top results, and so can give a more accurate ordering than similarity search, which has to search over all entries in the database.
 

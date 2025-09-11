@@ -2,16 +2,6 @@
 
 ![Continue logo](media/readme.png)
 
-</div>
-
-<h1 align="center">Continue</h1>
-
-<div align="center">
-
-**[Continue](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our open-source [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [hub of models, rules, prompts, docs, and other building blocks](https://hub.continue.dev)**
-
-</div>
-
 <div align="center">
 
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
@@ -26,31 +16,41 @@
 
 <p></p>
 
+</div>
+
+<h1 align="center">Continue</h1>
+
+<div align="center">
+
+**Ship faster with Continuous AI**
+
+**Build and run custom agents across your IDE, terminal, and CI**
+
+</div>
+
 ## Agent
 
-[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
+[Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
 
-![agent](./media/agent.gif)
+![agent](docs/images/agent.gif)
 
 ## Chat
 
-[Chat](https://continue.dev/docs/chat/how-to-use-it) makes it easy to ask for help from an LLM without needing to leave
-the IDE
+[Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
 
-![chat](./media/chat.gif)
-
-## Autocomplete
-
-[Autocomplete](https://continue.dev/docs/autocomplete/how-to-use-it) provides inline code suggestions as you type
-
-![autocomplete](./media/autocomplete.gif)
+![chat](docs/images/chat.gif)
 
 ## Edit
 
-[Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current
-file
+[Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
 
-![edit](./media/edit.gif)
+![edit](docs/images/edit.gif)
+
+## Autocomplete
+
+[Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
+
+![autocomplete](docs/images/autocomplete.gif)
 
 </div>
 

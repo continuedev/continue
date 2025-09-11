@@ -12,7 +12,7 @@ alwaysApply: false
 
 ### Conversational and Direct
 
-- Follow Docusaurus documentation standards
+- Follow Mintlify documentation standards
 - Use simple, conversational language that gets straight to the point
 - Avoid overly technical jargon when simpler terms work
 - Write as if speaking directly to the developer using the tool

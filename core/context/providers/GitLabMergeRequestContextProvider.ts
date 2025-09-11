@@ -76,6 +76,10 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     type: "normal",
   };
 
+  get deprecationMessage() {
+    return "The Gitlab Merge Request context provider is now deprecated and will be removed in a later version. Please consider using the GitLab MCP (https://hub.continue.dev/docker/mcp-gitlab) instead.";
+  }
+
   private async getApi(): Promise<AxiosInstance> {
     const { default: Axios } = await import("axios");
 

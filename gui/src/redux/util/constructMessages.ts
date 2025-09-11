@@ -10,17 +10,24 @@ import {
 import { chatMessageIsEmpty } from "core/llm/messages";
 import { getSystemMessageWithRules } from "core/llm/rules/getSystemMessageWithRules";
 import { RulePolicies } from "core/llm/rules/types";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
 } from "core/tools/constants";
 import { convertToolCallStatesToSystemCallsAndOutput } from "core/tools/systemMessageTools/convertSystemTools";
+import { SystemMessageToolsFramework } from "core/tools/systemMessageTools/types";
 import { findLast, findLastIndex } from "core/util/findLast";
 import {
   normalizeToMessageParts,
   renderContextItems,
+  renderContextItemsWithStatus,
 } from "core/util/messageContent";
 import { toolCallStateToContextItems } from "../../pages/gui/ToolCallDiv/utils";
+
+// Helper function to render context items and append status information
+// Helper function to render context items and append status information
+
 interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
@@ -30,7 +37,7 @@ export function constructMessages(
   baseSystemMessage: string | undefined,
   availableRules: RuleWithSource[],
   rulePolicies: RulePolicies,
-  useSystemMessageTools?: boolean,
+  useSystemToolsFramework?: SystemMessageToolsFramework,
 ): {
   messages: ChatMessage[];
   appliedRules: RuleWithSource[];
@@ -95,11 +102,12 @@ export function constructMessages(
       });
     } else if (item.message.role === "assistant") {
       // When using system message tools, convert tool calls/states to text content
-      if (item.toolCallStates?.length && useSystemMessageTools) {
+      if (item.toolCallStates?.length && useSystemToolsFramework) {
         const { userMessage, assistantMessage } =
           convertToolCallStatesToSystemCallsAndOutput(
             item.message,
             item.toolCallStates ?? [],
+            useSystemToolsFramework,
           );
         msgs.push({
           message: assistantMessage,
@@ -130,8 +138,14 @@ export function constructMessages(
 
           if (toolCallState?.status === "canceled") {
             content = CANCELLED_TOOL_CALL_MESSAGE;
+          } else if (
+            toolCallState?.output &&
+            toolCall.function?.name == BuiltInToolNames.RunTerminalCommand
+          ) {
+            // Add status for tools containing detailed status outcomes per context item
+            content = renderContextItemsWithStatus(toolCallState.output);
           } else if (toolCallState?.output) {
-            content = renderContextItems(toolCallState.output);
+            content = renderContextItems(toolCallState?.output);
           }
 
           msgs.push({

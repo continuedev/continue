@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Position } from "../..";
 import {
-  EDITABLE_REGION_END_TOKEN,
-  EDITABLE_REGION_START_TOKEN,
+  INSTINCT_EDITABLE_REGION_END_TOKEN,
+  INSTINCT_EDITABLE_REGION_START_TOKEN,
   NEXT_EDIT_EDITABLE_REGION_BOTTOM_MARGIN,
   NEXT_EDIT_EDITABLE_REGION_TOP_MARGIN,
 } from "../constants";
@@ -88,9 +88,9 @@ describe("insertEditableRegionTokensWithStaticRange", () => {
 
     const expected = [
       ...lines.slice(0, expectedStart),
-      EDITABLE_REGION_START_TOKEN,
+      INSTINCT_EDITABLE_REGION_START_TOKEN,
       ...lines.slice(expectedStart, expectedEnd + 1),
-      EDITABLE_REGION_END_TOKEN,
+      INSTINCT_EDITABLE_REGION_END_TOKEN,
       ...lines.slice(expectedEnd + 1),
     ];
 
@@ -112,11 +112,11 @@ describe("insertEditableRegionTokensWithStaticRange", () => {
 
     const expected = [
       "line 0",
-      EDITABLE_REGION_START_TOKEN,
+      INSTINCT_EDITABLE_REGION_START_TOKEN,
       "line 1",
       "line 2",
       "line 3",
-      EDITABLE_REGION_END_TOKEN,
+      INSTINCT_EDITABLE_REGION_END_TOKEN,
       "line 4",
     ];
 

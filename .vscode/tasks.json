@@ -12,24 +12,18 @@
         "isDefault": true
       },
       "presentation": {
-        "reveal": "always",
-        "panel": "new"
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "always"
       }
     },
-    // Compile and bundle the extension
     {
       "label": "vscode-extension:build",
       "dependsOn": [
-        // TSC type checking
         "tsc:watch",
-        // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
-        // // To bundle the code the same way we do for publishing
         "vscode-extension:esbuild",
-        // To ensure extension.js is regenerated even if
-        // vscode-extension:esbuild was already running in background
         "vscode-extension:esbuild-notify",
-        // Start the React app that is used in the extension
         "gui:dev"
       ],
       "group": {
@@ -42,7 +36,15 @@
       "dependsOn": ["vscode-extension:esbuild"],
       "type": "npm",
       "script": "esbuild-notify",
-      "path": "extensions/vscode"
+      "path": "extensions/vscode",
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "close": true,
+        "clear": true
+      }
     },
     {
       "label": "vscode-extension:esbuild",
@@ -51,6 +53,11 @@
       "script": "esbuild-watch",
       "path": "extensions/vscode",
       "isBackground": true,
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "silent"
+      },
       "problemMatcher": [
         {
           "pattern": [
@@ -77,6 +84,11 @@
       "type": "npm",
       "script": "package",
       "path": "extensions/vscode",
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "always"
+      },
       "problemMatcher": [
         {
           "pattern": [
@@ -99,7 +111,11 @@
       "args": ["${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
       "problemMatcher": ["$tsc"],
       "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
         "revealProblems": "onProblem",
+        "close": true,
         "clear": true
       },
       "options": {
@@ -109,16 +125,18 @@
         "cwd": "${workspaceFolder}/extensions/vscode"
       }
     },
-    // Install or update all dependencies for all projects in the monrepo
     {
       "label": "install-all-dependencies",
       "type": "shell",
       "windows": { "command": "./scripts/install-dependencies.ps1" },
       "command": "./scripts/install-dependencies.sh",
-      "problemMatcher": [] // Empty so users are not prompted to select progress reporting
+      "problemMatcher": [],
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "always"
+      }
     },
-    //
-    // Start the React App for debugging with Vite
     {
       "label": "gui:dev",
       "type": "shell",
@@ -128,6 +146,16 @@
       },
       "args": ["run", "dev"],
       "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "always",
+        "focus": false,
+        "showReuseMessage": false
+      },
       "problemMatcher": [
         {
           "pattern": [
@@ -146,14 +174,17 @@
         }
       ]
     },
-    //
-    // esbuild for the core binary
     {
       "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",
       "args": ["run", "esbuild"],
       "problemMatcher": [],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "always"
+      },
       "options": {
         "cwd": "binary"
       }
@@ -164,6 +195,11 @@
       "command": "npm",
       "args": ["run", "start", "--", "--no-open"],
       "problemMatcher": [],
+      "presentation": {
+        "group": "docs",
+        "panel": "dedicated",
+        "reveal": "always"
+      },
       "options": {
         "cwd": "docs"
       }
@@ -173,7 +209,12 @@
       "type": "shell",
       "command": "node",
       "args": ["${workspaceFolder}/scripts/uninstall.js"],
-      "problemMatcher": []
+      "problemMatcher": [],
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "always"
+      }
     },
     {
       "label": "refresh-dependencies:core",
@@ -185,6 +226,9 @@
         "cwd": "${workspaceFolder}/core"
       },
       "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "silent",
         "close": true
       }
     },
@@ -198,6 +242,9 @@
         "cwd": "${workspaceFolder}/extensions/vscode"
       },
       "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "silent",
         "close": true
       }
     },
@@ -211,6 +258,9 @@
         "cwd": "${workspaceFolder}/gui"
       },
       "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "silent",
         "close": true
       }
     },
@@ -222,35 +272,107 @@
         "refresh-dependencies:vscode"
       ],
       "type": "shell",
-      "problemMatcher": []
+      "problemMatcher": [],
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "always"
+      }
     },
     {
-      "label": "Build Continue packages",
+      "label": "continue-packages:build",
       "type": "shell",
       "command": "node ./scripts/build-packages.js",
-      "isBackground": true,
-      "problemMatcher": {
-        "pattern": {
-          "regexp": "__DUMMY_PATTERN_THAT_NEVER_MATCHES__",
-          "file": 1
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".",
-          "endsPattern": "."
-        }
-      },
+      "problemMatcher": [],
       "presentation": {
-        "reveal": "silent",
-        "panel": "shared"
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "always",
+        "close": true,
+        "revealProblems": "onProblem"
       }
     },
     {
       "label": "vscode-extension:build-with-packages",
-      // "dependsOn": ["vscode-extension:build"],
-      "dependsOn": ["Build Continue packages", "vscode-extension:build"],
+      "dependsOn": ["continue-packages:build", "vscode-extension:build"],
       "type": "shell",
-      "problemMatcher": []
+      "command": "echo",
+      "args": ["Build with packages completed"],
+      "problemMatcher": [],
+      "dependsOrder": "sequence",
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true,
+        "focus": false
+      }
+    },
+    {
+      "label": "cli:build",
+      "type": "npm",
+      "script": "build",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "cli:test",
+      "type": "npm",
+      "script": "test",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "watch-logs",
+      "type": "shell",
+      "command": "npm run watch:logs",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*$",
+          "endsPattern": "^.*$"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
     }
   ]
 }

@@ -1,39 +1,41 @@
-## Input
+---
+title: "Chat Mode Context Selection"
+sidebarTitle: "Context Selection"
+description: "Learn how Continue selects relevant context for your chat requests, including text input, highlighted code, active files."
+---
+
+## How to Use Text Input
 
 Typing a question or instructions into the input box is the only required context.
 
-## Highlighted Code
+## How to Include Highlighted Code
 
 The highlighted code you've selected by pressing cmd/ctrl + L (VS Code) or cmd/ctrl + J (JetBrains) will be included in your prompt.
 
-## Active File
+## How to Include the Active File
 
 You can include the currently open file as context by pressing opt/alt + enter when you send your request.
 
-## Specific File
+## How to Include a Specific File
 
 You can include a specific file in your current workspace by typing '@Files' and selecting the file.
 
-## Specific Folder
-
-You can include a folder in your current workspace by typing '@Folder' and selecting the directory.
-
 ## Codebase Search
 
-You can automatically include relevant files from your codebase by typing '@Codebase'.
+For better codebase awareness, see our [guide on making agents aware of codebases and documentation](/guides/codebase-documentation-awareness).
 
-## Documentation Site
+## How to Include Documentation Sites
 
-You can include a documentation site as context by typing '@Docs' and selecting the site.
+For better documentation awareness, see our [guide on making agents aware of codebases and documentation](/guides/codebase-documentation-awareness).
 
-## Terminal Contents
+## How to Include Terminal Contents
 
 You can include the contents of the terminal in your IDE by typing '@Terminal'.
 
-## Git Diff
+## How to Include Git Diff
 
 You can include all of the changes you've made to your current branch by typing '@Git Diff'.
 
-## Other Context
+## How to Use Other Context Providers
 
-You can see a full list of built-in context providers [here](/customize/custom-providers) and learn about how to create your own context provider [here](/guides/build-your-own-context-provider).
+You can see a full list of built-in context providers [here](/customize/deep-dives/custom-providers).

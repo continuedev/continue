@@ -7,7 +7,7 @@ const INFINITE_STREAM_SAFETY = 0.9;
 
 const DUD_PROMPT_LOG: PromptLog = {
   modelTitle: "",
-  completionOptions: { model: "" },
+  modelProvider: "",
   prompt: "",
   completion: "",
 };

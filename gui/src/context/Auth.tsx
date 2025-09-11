@@ -27,7 +27,7 @@ interface AuthContextType {
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
-  refreshProfiles: () => Promise<void>;
+  refreshProfiles: (reason?: string) => Promise<void>;
   organizations: SerializedOrgWithProfiles[];
 }
 
@@ -99,18 +99,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  const refreshProfiles = useCallback(async () => {
-    try {
-      dispatch(setConfigLoading(true));
-      await ideMessenger.request("config/refreshProfiles", undefined);
-      ideMessenger.post("showToast", ["info", "Config refreshed"]);
-    } catch (e) {
-      console.error("Failed to refresh profiles", e);
-      ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
-    } finally {
-      dispatch(setConfigLoading(false));
-    }
-  }, [ideMessenger]);
+  const refreshProfiles = useCallback(
+    async (reason?: string) => {
+      try {
+        dispatch(setConfigLoading(true));
+        await ideMessenger.request("config/refreshProfiles", {
+          reason,
+        });
+        ideMessenger.post("showToast", ["info", "Config refreshed"]);
+      } catch (e) {
+        console.error("Failed to refresh profiles", e);
+        ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
+      } finally {
+        dispatch(setConfigLoading(false));
+      }
+    },
+    [ideMessenger],
+  );
 
   return (
     <AuthContext.Provider

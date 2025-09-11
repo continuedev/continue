@@ -1,7 +1,10 @@
 import os from "os";
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
-import { createSystemMessageExampleCall } from "../systemMessageTools/buildToolsSystemMessage";
+import {
+  evaluateTerminalCommandSecurity,
+  ToolPolicy,
+} from "@continuedev/terminal-security";
 
 /**
  * Get the preferred shell for the current platform
@@ -56,12 +59,21 @@ export const runTerminalCommandTool: Tool = {
       },
     },
   },
-  systemMessageDescription: createSystemMessageExampleCall(
-    BuiltInToolNames.RunTerminalCommand,
-    `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
+  defaultToolPolicy: "allowedWithPermission",
+  evaluateToolCallPolicy: (
+    basePolicy: ToolPolicy,
+    parsedArgs: Record<string, unknown>,
+  ): ToolPolicy => {
+    return evaluateTerminalCommandSecurity(
+      basePolicy,
+      parsedArgs.command as string,
+    );
+  },
+  systemMessageDescription: {
+    prefix: `To run a terminal command, use the ${BuiltInToolNames.RunTerminalCommand} tool
 ${RUN_COMMAND_NOTES}
 You can also optionally include the waitForCompletion argument set to false to run the command in the background.      
 For example, to see the git log, you could respond with:`,
-    [["command", "git log"]],
-  ),
+    exampleArgs: [["command", "git log"]],
+  },
 };

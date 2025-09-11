@@ -12,22 +12,7 @@ import {
   CANCELLED_TOOL_CALL_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
 } from "../constants";
-function toolCallStateToSystemToolCall(state: ToolCallState): string {
-  let parts = ["```tool"];
-  parts.push(`TOOL_NAME: ${state.toolCall.function.name}`);
-  try {
-    for (const arg in state.parsedArgs) {
-      parts.push(`BEGIN_ARG: ${arg}`);
-      parts.push(JSON.stringify(state.parsedArgs[arg]));
-      parts.push(`END_ARG`);
-    }
-  } catch (e) {
-    console.log("Failed to stringify json args", state.parsedArgs);
-  }
-  // TODO - include tool call id for parallel. Confuses dumb models
-  parts.push("```");
-  return parts.join("\n");
-}
+import { SystemMessageToolsFramework } from "./types";
 
 function toolCallStateToSystemToolOutput(state: ToolCallState): string {
   let output = `Tool output for ${state.toolCall.function.name} tool call:\n\n`;
@@ -46,6 +31,7 @@ function toolCallStateToSystemToolOutput(state: ToolCallState): string {
 export function convertToolCallStatesToSystemCallsAndOutput(
   originalAssistantMessage: AssistantChatMessage,
   toolCallStates: ToolCallState[],
+  framework: SystemMessageToolsFramework,
 ): {
   assistantMessage: AssistantChatMessage;
   userMessage: UserChatMessage;
@@ -55,7 +41,7 @@ export function convertToolCallStatesToSystemCallsAndOutput(
     parts.push(
       ...toolCallStates.map((state) => ({
         type: "text" as const,
-        text: toolCallStateToSystemToolCall(state),
+        text: framework.toolCallStateToSystemToolCall(state),
       })),
     );
   }

@@ -1,5 +1,6 @@
 ---
 title: "Quick Start"
+description: "Get started with Continue's Plan mode to safely explore codebases, plan refactors, debug issues, and develop implementation strategies without modifying code before switching to execution"
 ---
 
 ## How to use it
@@ -10,21 +11,22 @@ Plan mode provides a safe environment for understanding and constructing plans w
 
 You can switch to `Plan` in the mode selector below the chat input box.
 
-![How to select plan mode](/images/mode-select-plan.png)
+![How to select plan mode](/images/plan-mode-selector.png)
 
 <Info>
   If Plan is disabled with a `Not Supported` message, the selected model or
-  provider doesn't support tools. See [Model Setup](/features/plan/model-setup) 
+  provider doesn't support tools. See [Model Setup](/features/agent/model-setup)
   for more information.
 </Info>
 
 ### Chat with Plan
 
-Plan mode lives within the same interface as [Chat](/features/chat/how-it-works) and [Agent](/features/agent/how-it-works), so the same [input](/features/chat/quick-start#1-start-a-conversation) is used to send messages and you can still use the same manual methods of providing context, such as [`@` context providers](/features/chat/quick-start#3-use--for-additional-context) or adding [highlighted code from the editor](/features/chat/quick-start#2-include-code-context).
+Plan mode lives within the same interface as [Chat](/features/chat/how-it-works) and [Agent](/features/agent/how-it-works), so the same [input](/features/chat/quick-start#how-to-start-a-conversation) is used to send messages and you can still use the same manual methods of providing context, such as [`@` context providers](/features/chat/quick-start#how-to-use--for-additional-context) or adding [highlighted code from the editor](/features/chat/quick-start#how-to-include-code-context).
 
 #### What makes Plan different
 
 Unlike Agent mode, Plan mode:
+
 - Only uses read-only tools (file reading, searching, analysis)
 - Cannot modify, create, or delete files
 - Focuses on understanding and planning rather than execution
@@ -33,6 +35,7 @@ Unlike Agent mode, Plan mode:
 ### Common use cases
 
 Plan mode is ideal for:
+
 - **Code exploration**: Understanding how a codebase works
 - **Planning refactors**: Analyzing impact before making changes
 - **Debugging**: Investigating issues without modifying code
@@ -56,5 +59,6 @@ Plan mode will analyze the existing code, understand the current implementation,
 When you're ready to implement your plan, simply switch to Agent mode using the mode selector or keyboard shortcut (`Cmd/Ctrl + .`). The conversation context carries over, so Agent mode can immediately start implementing the plan you developed.
 
 <Tip>
-  Use the keyboard shortcut `Cmd/Ctrl + .` to quickly cycle between Chat, Plan, and Agent modes.
+  Use the keyboard shortcut `Cmd/Ctrl + .` to quickly cycle between Agent, Chat,
+  and Plan modes.
 </Tip>

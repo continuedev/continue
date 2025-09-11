@@ -229,4 +229,185 @@ describe("LocalPlatformClient", () => {
       ).not.toContain(randomValueForWorkspaceDotEnv);
     });
   });
+
+  describe("should be able to get secrets from process.env", () => {
+    const ogProcessEnv = { ...process.env };
+
+    beforeEach(async () => {
+      // Ensure secrets are not found in ControlPlane initially for these tests
+      const mockResolveFQSNsNotFound = async (
+        fqsns: FQSN[],
+      ): Promise<(SecretResult | undefined)[]> =>
+        fqsns.map((fqsn) => ({
+          found: false,
+          fqsn,
+          secretLocation: {
+            secretName: fqsn.secretName,
+            secretType: SecretType.NotFound as SecretType.NotFound,
+          },
+        }));
+      testControlPlaneClient.resolveFQSNs = vi.fn(mockResolveFQSNsNotFound);
+
+      // Ensure secrets are not found in local .env files
+      const utilPaths = await import("../../util/paths");
+      utilPaths.getContinueDotEnv = vi.fn(() => ({}));
+
+      // Ensure secrets are not found in workspace .env files
+      testIde.fileExists = vi.fn(async () => false);
+      testIde.readFile = vi.fn(async () => "");
+
+      // Clear any potentially set process.env variables from previous tests in this block
+      delete process.env[testFQSN.secretName];
+      delete process.env[testFQSN2.secretName];
+    });
+
+    afterEach(() => {
+      // Restore original process.env
+      process.env = { ...ogProcessEnv };
+    });
+
+    test("should resolve secret from process.env if not found elsewhere", async () => {
+      const processEnvSecretValue = "secret-from-process-env";
+      process.env[testFQSN.secretName] = processEnvSecretValue;
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+      const result = resolvedFQSNs[0];
+      expect(result?.found).toBe(true);
+      expect((result as SecretResult & { value: unknown })?.value).toBe(
+        processEnvSecretValue,
+      );
+      expect(result?.secretLocation?.secretType).toBe(SecretType.ProcessEnv);
+      // Check if the specific ProcessEnvSecretLocation is correctly formed
+      expect(result?.secretLocation).toEqual(
+        expect.objectContaining({
+          secretName: testFQSN.secretName,
+          secretType: SecretType.ProcessEnv,
+        }),
+      );
+    });
+
+    test("should return not found if secret is not in process.env or other locations", async () => {
+      // Ensure it's not in process.env
+      expect(process.env[testFQSN.secretName]).toBeUndefined();
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+      expect(resolvedFQSNs[0]?.found).toBe(false);
+      expect(resolvedFQSNs[0]?.secretLocation?.secretType).toBe(
+        SecretType.NotFound,
+      );
+    });
+
+    test("should prioritize ControlPlane over process.env", async () => {
+      const controlPlaneValue = "secret-from-control-plane";
+
+      const mockResolveFQSNsControlPlaneFound = async (): Promise<
+        (SecretResult | undefined)[]
+      > => [
+        {
+          found: true,
+          fqsn: testFQSN,
+          value: controlPlaneValue,
+          secretLocation: {
+            secretType: SecretType.Organization as SecretType.Organization,
+            orgSlug: (testResolvedFQSN.secretLocation as any).orgSlug,
+            secretName: testFQSN.secretName,
+          },
+        },
+      ];
+      testControlPlaneClient.resolveFQSNs = vi.fn(
+        mockResolveFQSNsControlPlaneFound,
+      );
+
+      process.env[testFQSN.secretName] =
+        "secret-from-process-env-should-be-ignored";
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+      const result = resolvedFQSNs[0];
+      expect(result?.found).toBe(true);
+      expect((result as SecretResult & { value: unknown })?.value).toBe(
+        controlPlaneValue,
+      );
+      expect(result?.secretLocation?.secretType).toBe(SecretType.Organization);
+    });
+
+    test("should prioritize local ~/.continue/.env file over process.env", async () => {
+      const localEnvFileValue = "secret-from-local-dot-continue-env";
+      const utilPaths = await import("../../util/paths");
+      utilPaths.getContinueDotEnv = vi.fn(() => ({
+        [testFQSN.secretName]: localEnvFileValue,
+      }));
+
+      process.env[testFQSN.secretName] =
+        "secret-from-process-env-should-be-ignored";
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+      const result = resolvedFQSNs[0];
+      expect(result?.found).toBe(true);
+      expect((result as SecretResult & { value: unknown })?.value).toBe(
+        localEnvFileValue,
+      );
+      expect(result?.secretLocation?.secretType).toBe(SecretType.LocalEnv);
+    });
+
+    test("should prioritize workspace .env files over process.env", async () => {
+      const workspaceContinueEnvValue = "secret-from-workspace-continue-env";
+      testIde.fileExists = vi.fn(async (fileUri: string) =>
+        // Only mock existence for <workspace>/.continue/.env
+        fileUri.includes(".continue/.env"),
+      );
+      testIde.readFile = vi.fn(async (fileUri: string) => {
+        if (fileUri.includes(".continue/.env")) {
+          return `${testFQSN.secretName}=${workspaceContinueEnvValue}`;
+        }
+        return "";
+      });
+
+      process.env[testFQSN.secretName] =
+        "secret-from-process-env-should-be-ignored";
+
+      const localPlatformClient = new LocalPlatformClient(
+        null,
+        testControlPlaneClient,
+        testIde,
+      );
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+      const result = resolvedFQSNs[0];
+      expect(result?.found).toBe(true);
+      expect((result as SecretResult & { value: unknown })?.value).toBe(
+        workspaceContinueEnvValue,
+      );
+      // This should be LocalEnv because findSecretInEnvFiles returns LocalEnv for workspace files too
+      expect(result?.secretLocation?.secretType).toBe(SecretType.LocalEnv);
+    });
+  });
 });

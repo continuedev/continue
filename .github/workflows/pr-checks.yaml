@@ -11,11 +11,19 @@ on:
       - main
 
 jobs:
+  track-rerun:
+    runs-on: ubuntu-latest
+    if: github.run_attempt > 1
+    steps:
+      - uses: actions/checkout@v5
+      - name: Track workflow rerun
+        uses: ./.github/actions/track-rerun
+
   prettier-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 
@@ -35,7 +43,9 @@ jobs:
   core-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # Needed for git diff to work
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -43,6 +53,13 @@ jobs:
         with:
           component: core
           include-root: true
+
+      - name: Check if LLM-related files changed
+        id: llm-changes
+        uses: ./.github/actions/check-llm-changes
+        with:
+          is_fork: ${{ github.event.pull_request.head.repo.fork == true }}
+          is_dependabot: ${{ github.actor == 'dependabot[bot]' }}
 
       - name: Type check and lint
         run: |
@@ -58,7 +75,7 @@ jobs:
           npm test
           npm run vitest
         env:
-          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
+          IGNORE_API_KEY_TESTS: ${{ steps.llm-changes.outputs.ignore_api_tests }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -71,7 +88,7 @@ jobs:
   gui-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -101,7 +118,7 @@ jobs:
   binary-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -123,7 +140,7 @@ jobs:
   vscode-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -156,7 +173,7 @@ jobs:
     outputs:
       packages: ${{ steps.get-packages.outputs.packages }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Get package list
         id: get-packages
         run: |
@@ -171,9 +188,18 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.get-packages-matrix.outputs.packages) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # Needed for git diff to work
       - name: Setup packages
         uses: ./.github/actions/setup-packages
+
+      - name: Check if LLM-related files changed
+        id: llm-changes
+        uses: ./.github/actions/check-llm-changes
+        with:
+          is_fork: ${{ github.event.pull_request.head.repo.fork == true }}
+          is_dependabot: ${{ github.actor == 'dependabot[bot]' }}
 
       - name: Test and check ${{ matrix.package }}
         run: |
@@ -181,7 +207,7 @@ jobs:
           npm ci
           npm test
         env:
-          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
+          IGNORE_API_KEY_TESTS: ${{ steps.llm-changes.outputs.ignore_api_tests }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -197,8 +223,8 @@ jobs:
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
 
@@ -257,7 +283,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -269,8 +295,7 @@ jobs:
           npm_config_arch: x64
           pre-release: false
           commit-sha: ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -290,7 +315,7 @@ jobs:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run VS Code E2E test
         uses: ./.github/actions/run-vscode-e2e-test
         with:
@@ -304,7 +329,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run JetBrains tests
         uses: ./.github/actions/run-jetbrains-tests
         with:
@@ -313,6 +338,32 @@ jobs:
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
+  pr-review-action-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Cache PR review action node modules
+        uses: actions/cache@v4
+        id: pr-review-cache
+        with:
+          path: actions/detailed-review/node_modules
+          key: ${{ runner.os }}-pr-review-action-${{ hashFiles('actions/detailed-review/package.json') }}
+
+      - name: Install dependencies
+        if: steps.pr-review-cache.outputs.cache-hit != 'true'
+        run: |
+          cd actions/detailed-review
+          npm install
+
+      - name: Run tests
+        run: |
+          cd actions/detailed-review
+          npm test
+
   # so that creators of new jobs can add them to this list
   require-all-checks-to-pass:
     if: always()
@@ -329,6 +380,7 @@ jobs:
       - vscode-package-extension-linux
       - vscode-e2e-tests
       - jetbrains-tests
+      - pr-review-action-tests
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed

@@ -29,7 +29,7 @@ export class SelectorUtils {
 
   public static getElementByClassName(
     driver: WebDriver,
-    className: string
+    className: string,
   ): Promise<WebElement> {
     return driver.findElement(
       // By.xpath("//*[contains(@class, 'ced-') and matches(@class, 'ced-2-TextEditorDecorationType[0-9]+-4')]")

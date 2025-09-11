@@ -2,6 +2,11 @@
 
 [ What changed? Feel free to be brief. ]
 
+## AI Code Review
+
+- **Team members only**: AI review runs automatically when PR is opened or marked ready for review
+- Team members can also trigger a review by commenting `@continue-general-review` or `@continue-detailed-review`
+
 ## Checklist
 
 - [] I've read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md)

@@ -1,6 +1,64 @@
 import { NextEditProvider } from "core/nextEdit/NextEditProvider";
 import { NextEditOutcome } from "core/nextEdit/types";
+// @ts-ignore
+import svgBuilder from "svg-builder";
 import * as vscode from "vscode";
+import { getTheme } from "../util/getTheme";
+import {
+  HandlerPriority,
+  SelectionChangeManager,
+} from "./SelectionChangeManager";
+
+// Instead of getters that execute immediately, use methods or lazy properties
+const SVG_CONFIG = {
+  stroke: "#999998",
+  strokeWidth: 1,
+  shortcutColor: "#999998",
+  filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
+  radius: 3,
+  leftMargin: 40,
+  debounceDelay: 500,
+  label: "📍 Press Tab to jump, Esc to cancel",
+
+  // Convert getters to methods that are called when needed
+  getFontSize(): number {
+    return Math.ceil(
+      (vscode.workspace.getConfiguration("editor").get<number>("fontSize") ??
+        14) * 0.8,
+    );
+  },
+
+  getFontFamily(): string {
+    return (
+      vscode.workspace.getConfiguration("editor").get<string>("fontFamily") ||
+      "helvetica"
+    );
+  },
+
+  getPaddingX(): number {
+    return Math.ceil(this.getEstimatedTextWidth(" "));
+  },
+
+  getGap(): number {
+    return this.getFontSize() * 0.5;
+  },
+
+  getTipWidth(): number {
+    return this.getEstimatedTextWidth(this.label) + this.getPaddingX();
+  },
+
+  getTipHeight(): number {
+    return this.getFontSize();
+  },
+
+  getTextY(): number {
+    return (this.getTipHeight() + this.getFontSize()) / 2;
+  },
+
+  getEstimatedTextWidth(text: string): number {
+    return text.length * this.getFontSize() * 0.6;
+  },
+} as const;
 
 export interface CompletionDataForAfterJump {
   completionId: string;
@@ -8,20 +66,39 @@ export interface CompletionDataForAfterJump {
   currentPosition: vscode.Position;
 }
 
+/**
+ * This is how we handle jumps and manage decoration object lifetime.
+ * There are mainly three states the user can be in: not jumping, jumping in progress, and just jumped.
+ * This can potentially be an enum for better readability, but there is logic here that relies on
+ * the _jumpAccepted flag to determine whether we should delete chains.
+ */
 export class JumpManager {
   private static _instance: JumpManager | undefined;
 
   // Decoration state.
+  private _jumpIcon: vscode.Uri | undefined;
   private _jumpDecoration: vscode.TextEditorDecorationType | undefined;
   private _jumpDecorationVisible = false;
   private _disposables: vscode.Disposable[] = [];
+  private _theme = getTheme();
 
   private _jumpInProgress: boolean = false;
   private _jumpAccepted: boolean = false;
   private _completionAfterJump: CompletionDataForAfterJump | null = null;
   private _oldCursorPosition: vscode.Position | undefined;
 
-  private constructor() {}
+  private constructor() {
+    // Build the first SVG icon
+    this._createSvgJumpIcon();
+
+    // Re‑build when the colour theme changes
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("workbench.colorTheme")) {
+        this._theme = getTheme();
+        this._createSvgJumpIcon();
+      }
+    });
+  }
 
   initialize() {}
 
@@ -41,8 +118,68 @@ export class JumpManager {
 
   public dispose() {
     // Dispose current decoration.
-    this._disposables.forEach((d) => d.dispose());
+    this._disposables.forEach((d) => {
+      if (d) d.dispose();
+    });
     this._disposables = [];
+  }
+
+  private _createSvgJumpIcon() {
+    const baseTextConfig = {
+      y: SVG_CONFIG.getTextY(),
+      "font-family": SVG_CONFIG.getFontFamily(),
+      "font-size": SVG_CONFIG.getFontSize(),
+    };
+
+    try {
+      // NOTE: it's critical to use svgBuilder.newInstance.
+      // svgBuilder holds state of previously created SVGs,
+      // so you end up with SVGs stacking on top of each other and being interleaved.
+      const builder = svgBuilder.newInstance
+        ? svgBuilder.newInstance()
+        : svgBuilder;
+      const svgContent = builder
+        .width(SVG_CONFIG.getTipWidth())
+        .height(SVG_CONFIG.getTipHeight())
+        .text(
+          {
+            ...baseTextConfig,
+            x: 4,
+            fill: this._theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
+          },
+          SVG_CONFIG.label,
+        )
+        .render();
+
+      const dataUri = `data:image/svg+xml;base64,${Buffer.from(
+        svgContent,
+      ).toString("base64")}`;
+      this._jumpIcon = vscode.Uri.parse(dataUri);
+
+      // Dispose the old decoration (if any) and create a fresh one.
+      if (this._jumpDecoration) {
+        this._jumpDecoration.dispose();
+      }
+      this._jumpDecoration = this._createSvgJumpDecoration();
+    } catch (err) {
+      console.error("Error creating SVG jump tooltip:", err);
+    }
+  }
+
+  private _createSvgJumpDecoration(): vscode.TextEditorDecorationType {
+    const backgroundColour =
+      this._theme?.colors["editor.background"] ?? "#333333";
+
+    return vscode.window.createTextEditorDecorationType({
+      after: {
+        contentIconPath: this._jumpIcon,
+        border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${SVG_CONFIG.getTipHeight()}px ${backgroundColour};
+                  border-radius: ${SVG_CONFIG.radius}px;
+                  filter: ${SVG_CONFIG.filter}`,
+        margin: `0 0 0 ${SVG_CONFIG.leftMargin}px`,
+        width: `${SVG_CONFIG.getTipWidth()}px`,
+      },
+    });
   }
 
   public async suggestJump(
@@ -55,11 +192,13 @@ export class JumpManager {
     // identical to the completion content,
     // then we don't have to jump.
     if (completionContent !== undefined) {
+      console.log("completionContent is not null");
       const editor = vscode.window.activeTextEditor;
 
       if (editor) {
         try {
           const completionLines = completionContent.split("\n");
+          console.log("completionLines:", completionLines);
 
           // Get document content at jump location spanning multiple lines.
           const document = editor.document;
@@ -69,50 +208,31 @@ export class JumpManager {
             document.lineCount - 1,
           );
 
-          // Check if we have enough lines in the document to compare.
+          // First check if we have enough lines in the document
           if (endLine - startLine + 1 < completionLines.length) {
             // Not enough lines in document, so content can't be identical.
             // Proceed to jump!
-          } else {
-            // Check the first line first for early exit.
-            const firstLineText = document.lineAt(startLine).text;
-            const firstLineSubstring = firstLineText.substring(
-              nextJumpLocation.character,
+            console.log(
+              "Not enough lines in document to match completion content",
             );
-            const firstCompletionLine = completionLines[0];
+          } else {
+            let contentMatches = true;
 
-            if (!firstLineSubstring.startsWith(firstCompletionLine)) {
-              // First line doesn't match, so proceed to jump.
-            } else {
-              // Check remaining lines if there are any.
-              if (completionLines.length > 1) {
-                let fullMatch = true;
-
-                // Process remaining lines.
-                for (let i = 1; i < completionLines.length; i++) {
-                  const documentLine = startLine + i;
-                  if (documentLine <= endLine) {
-                    const lineText = document.lineAt(documentLine).text;
-                    if (lineText !== completionLines[i]) {
-                      fullMatch = false;
-                      break;
-                    }
-                  }
-                }
-
-                if (fullMatch) {
-                  console.log(
-                    "Skipping jump as content is identical at jump location",
-                  );
-                  return false; // Exit early, don't suggest jump.
-                }
-              } else {
-                // Only one line and it matches.
-                console.log(
-                  "Skipping jump as content is identical at jump location",
-                );
-                return false; // Exit early, don't suggest jump.
+            // Check all lines for match.
+            for (let i = 0; i < completionLines.length && contentMatches; i++) {
+              const documentLine = startLine + i;
+              const lineText = document.lineAt(documentLine).text;
+              if (lineText !== completionLines[i]) {
+                contentMatches = false;
+                console.log(`Line ${i + 1} doesn't match`);
               }
+            }
+
+            if (contentMatches) {
+              console.log(
+                "Skipping jump as content is identical at jump location",
+              );
+              return false; // Exit early, don't suggest jump.
             }
           }
         } catch (error) {
@@ -168,35 +288,6 @@ export class JumpManager {
       );
     }
 
-    // Scroll to show the jump location.
-    editor.revealRange(
-      new vscode.Range(decorationLine, 0, decorationLine, 0),
-      vscode.TextEditorRevealType.InCenter,
-    );
-
-    // Set up a way to detect when the jump is complete.
-    const disposable = vscode.window.onDidChangeTextEditorSelection(() => {
-      console.log("_jumpInProgress is false");
-      this._jumpInProgress = false;
-      disposable.dispose();
-
-      // If there's a completion waiting to be shown after the jump,
-      // execute the command to show it.
-      if (this._completionAfterJump) {
-        vscode.commands.executeCommand(
-          "continue.showNextEditAfterJump",
-          this._completionAfterJump,
-        );
-        this._completionAfterJump = null;
-      }
-    });
-
-    // Clean up after timeout if no jump has been made.
-    setTimeout(() => {
-      this._jumpInProgress = false;
-      disposable.dispose();
-    }, 10000);
-
     return true;
   }
 
@@ -209,18 +300,13 @@ export class JumpManager {
     await this.clearJumpDecoration();
 
     // Create a decoration for jump.
-    this._jumpDecoration = vscode.window.createTextEditorDecorationType({
-      before: {
-        contentText: "🦘 Press Tab to jump, Esc to cancel",
-        color: new vscode.ThemeColor("editorInfo.foreground"),
-        backgroundColor: new vscode.ThemeColor("editorInfo.background"),
-        margin: `0 0 0 4px`,
-      },
-    });
+    if (!this._jumpDecoration) {
+      this._createSvgJumpIcon(); // makes both the icon & decoration
+    }
 
     // Apply the decoration.
     const lastIndexOfLine = editor.document.lineAt(lineToRenderOn).text.length;
-    editor.setDecorations(this._jumpDecoration, [
+    editor.setDecorations(this._jumpDecoration!, [
       new vscode.Range(
         lineToRenderOn,
         lastIndexOfLine,
@@ -248,8 +334,7 @@ export class JumpManager {
     }
 
     // Dispose any active listeners.
-    this._disposables.forEach((d) => d.dispose());
-    this._disposables = [];
+    this.dispose();
 
     // Reset the context.
     await vscode.commands.executeCommand(
@@ -270,11 +355,18 @@ export class JumpManager {
         if (this._jumpDecorationVisible) {
           this._jumpAccepted = true;
 
+          // Scroll to show the jump location.
+          editor.revealRange(
+            new vscode.Range(jumpPosition.line, 0, jumpPosition.line, 0),
+            vscode.TextEditorRevealType.InCenter,
+          );
+
           // Move cursor to the jump position.
           editor.selection = new vscode.Selection(jumpPosition, jumpPosition);
           await this.clearJumpDecoration();
 
           this._jumpAccepted = false;
+          vscode.commands.executeCommand("editor.action.inlineSuggest.trigger");
         }
       },
     );
@@ -328,11 +420,42 @@ export class JumpManager {
     return this._jumpInProgress;
   }
 
+  setJumpInProgress(jumpInProgress: boolean) {
+    this._jumpInProgress = jumpInProgress;
+  }
+
   wasJumpJustAccepted(): boolean {
     return this._jumpAccepted;
   }
 
   setCompletionAfterJump(completionData: CompletionDataForAfterJump): void {
     this._completionAfterJump = completionData;
+  }
+
+  clearCompletionAfterJump(): void {
+    this._completionAfterJump = null;
+  }
+
+  get completionAfterJump() {
+    return this._completionAfterJump;
+  }
+
+  public registerSelectionChangeHandler(): void {
+    const manager = SelectionChangeManager.getInstance();
+
+    manager.registerListener(
+      "jumpManager",
+      async (e, state) => {
+        if (state.jumpInProgress || state.jumpJustAccepted) {
+          console.log(
+            "JumpManager: jump in progress or just accepted, preserving chain",
+          );
+          return true;
+        }
+
+        return false;
+      },
+      HandlerPriority.HIGH,
+    );
   }
 }

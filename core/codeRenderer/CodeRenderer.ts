@@ -20,7 +20,7 @@ import {
   Highlighter,
 } from "shiki";
 import { DiffLine } from "..";
-import { escapeForSVG, kebabOfStr } from "../util/text";
+import { escapeForSVG, kebabOfThemeStr } from "../util/text";
 
 interface CodeRendererOptions {
   themesDir?: string;
@@ -70,28 +70,29 @@ export class CodeRenderer {
 
   public async setTheme(themeName: string): Promise<void> {
     if (
-      this.themeExists(kebabOfStr(themeName)) ||
+      this.themeExists(kebabOfThemeStr(themeName)) ||
       themeName === "Default Dark Modern"
     ) {
       this.currentTheme =
         themeName === "Default Dark Modern"
           ? "dark-plus"
-          : kebabOfStr(themeName);
-
-      this.highlighter = await getSingletonHighlighter({
-        langs: ["typescript"],
-        themes: [this.currentTheme],
-      });
-
-      const th = this.highlighter.getTheme(this.currentTheme);
-
-      this.editorBackground = th.bg;
-      this.editorForeground = th.fg;
-      this.editorLineHighlight =
-        th.colors!["editor.lineHighlightBackground"] ?? "#000000";
+          : kebabOfThemeStr(themeName);
     } else {
+      // Fallback to default theme for unsupported themes.
       this.currentTheme = "dark-plus";
     }
+
+    // Always initialize the highlighter with the current theme.
+    this.highlighter = await getSingletonHighlighter({
+      langs: ["typescript"],
+      themes: [this.currentTheme],
+    });
+
+    const th = this.highlighter.getTheme(this.currentTheme);
+    this.editorBackground = th.bg;
+    this.editorForeground = th.fg;
+    this.editorLineHighlight =
+      th.colors!["editor.lineHighlightBackground"] ?? "#000000";
   }
 
   async init(): Promise<void> {}
@@ -243,7 +244,10 @@ export class CodeRenderer {
     );
     const backgroundColor = this.getBackgroundColor(highlightedCodeHtml);
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${options.dimensions.width}" height="${options.dimensions.height}" shape-rendering="crispEdges">
+    const lines = code.split("\n");
+    const actualHeight = lines.length * options.lineHeight;
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${options.dimensions.width}" height="${actualHeight}" shape-rendering="crispEdges">
     <style>
       :root {
         --purple: rgb(112, 114, 209);
@@ -252,7 +256,7 @@ export class CodeRenderer {
       }
     </style>
     <g>
-    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${options.dimensions.height}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
+    <rect x="0" y="0" rx="10" ry="10" width="${options.dimensions.width}" height="${actualHeight}" fill="${this.editorBackground}" shape-rendering="crispEdges" />
       ${lineBackgrounds}
       ${guts}
     </g>
@@ -317,29 +321,46 @@ export class CodeRenderer {
         const y = index * options.lineHeight;
         const isFirst = index === 0;
         const isLast = index === lines.length - 1;
+        const isSingleLine = isFirst && isLast;
         const radius = 10;
+
+        // Handle single line case (both first and last)
+        if (isSingleLine) {
+          return `<path d="M ${radius} ${y}
+         L ${options.dimensions.width - radius} ${y}
+         Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
+         L ${options.dimensions.width} ${y + options.lineHeight - radius}
+         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width - radius} ${y + options.lineHeight}
+         L ${radius} ${y + options.lineHeight}
+         Q ${0} ${y + options.lineHeight} ${0} ${y + options.lineHeight - radius}
+         L ${0} ${y + radius}
+         Q ${0} ${y} ${radius} ${y}
+         Z"
+      fill="${bgColor}" />`;
+        }
+
         // SVG notes:
         // By default SVGs have anti-aliasing on.
         // This is undesirable in our case because pixel-perfect alignment of these rectangles will introduce thin gaps.
         // Turning it off with 'shape-rendering="crispEdges"' solves the issue.
         return isFirst
           ? `<path d="M ${0} ${y + options.lineHeight}
-             L ${0} ${y + radius}
-             Q ${0} ${y} ${radius} ${y}
-             L ${options.dimensions.width - radius} ${y}
-             Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
-             L ${options.dimensions.width} ${y + options.lineHeight}
-             Z"
-          fill="${bgColor}" />`
+         L ${0} ${y + radius}
+         Q ${0} ${y} ${radius} ${y}
+         L ${options.dimensions.width - radius} ${y}
+         Q ${options.dimensions.width} ${y} ${options.dimensions.width} ${y + radius}
+         L ${options.dimensions.width} ${y + options.lineHeight}
+         Z"
+      fill="${bgColor}" />`
           : isLast
             ? `<path d="M ${0} ${y}
-             L ${0} ${y + options.lineHeight - radius}
-             Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
-             L ${options.dimensions.width - radius} ${y + options.lineHeight}
-             Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
-             L ${options.dimensions.width} ${y}
-             Z"
-          fill="${bgColor}" />`
+         L ${0} ${y + options.lineHeight - radius}
+         Q ${0} ${y + options.lineHeight} ${radius} ${y + options.lineHeight}
+         L ${options.dimensions.width - radius} ${y + options.lineHeight}
+         Q ${options.dimensions.width} ${y + options.lineHeight} ${options.dimensions.width} ${y + options.lineHeight - 10}
+         L ${options.dimensions.width} ${y}
+         Z"
+      fill="${bgColor}" />`
             : `<rect x="0" y="${y}" width="100%" height="${options.lineHeight}" fill="${bgColor}" shape-rendering="crispEdges" />`;
       })
       .join("\n");

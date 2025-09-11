@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { EventEmitter as NodeEventEmitter } from "node:events";
 
 import {
   AuthType,
@@ -7,8 +8,8 @@ import {
   isHubEnv,
 } from "core/control-plane/AuthTypes";
 import { getControlPlaneEnvSync } from "core/control-plane/env";
+import { Logger } from "core/util/Logger";
 import fetch from "node-fetch";
-import { EventEmitter as NodeEventEmitter } from "node:events";
 import { v4 as uuidv4 } from "uuid";
 import {
   authentication,
@@ -121,6 +122,13 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       );
       return decodedToken;
     } catch (e: any) {
+      // Capture JWT decoding failures to Sentry (could indicate token corruption)
+      Logger.error(e, {
+        context: "workOS_auth_jwt_decode",
+        jwtLength: jwt.length,
+        jwtPrefix: jwt.substring(0, 20) + "...", // Safe prefix for debugging
+      });
+
       console.warn(`Error decoding JWT: ${e}`);
       return null;
     }
@@ -162,6 +170,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       const value = JSON.parse(data) as ContinueAuthenticationSession[];
       return value;
     } catch (e: any) {
+      // Capture session file parsing errors to Sentry
+      Logger.error(e, {
+        context: "workOS_sessions_json_parse",
+        dataLength: data.length,
+      });
+
       console.warn(`Error parsing sessions.json: ${e}`);
       return [];
     }
@@ -200,6 +214,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       this._isRefreshing = true;
       await this._refreshSessions();
     } catch (e) {
+      // Capture session refresh failures to Sentry
+      Logger.error(e, {
+        context: "workOS_auth_session_refresh",
+        authType: controlPlaneEnv.AUTH_TYPE,
+      });
+
       console.error(`Error refreshing sessions: ${e}`);
     } finally {
       this._isRefreshing = false;
@@ -228,6 +248,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           expiresInMs: newSession.expiresInMs,
         });
       } catch (e: any) {
+        // Capture individual session refresh failures to Sentry
+        Logger.error(e, {
+          context: "workOS_individual_session_refresh",
+          sessionId: session.id,
+        });
+
         // If refresh fails (after retries for valid tokens), drop the session
         console.debug(`Error refreshing session token: ${e.message}`);
         this._sessionChangeEmitter.fire({
@@ -258,6 +284,16 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
+      // Capture token refresh retry errors to Sentry
+      Logger.error(error, {
+        attempt,
+        errorMessage: error.message,
+        isAuthError:
+          error.message?.includes("401") ||
+          error.message?.includes("Invalid refresh token") ||
+          error.message?.includes("Unauthorized"),
+      });
+
       this.attemptEmitter.emit("attempted");
       // Don't retry for auth errors
       if (
@@ -374,6 +410,13 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
       return session;
     } catch (e) {
+      // Capture authentication failures to Sentry
+      Logger.error(e, {
+        context: "workOS_auth_session_creation",
+        scopes: scopes.join(","),
+        authType: controlPlaneEnv.AUTH_TYPE,
+      });
+
       void window.showErrorMessage(`Sign in failed: ${e}`);
       throw e;
     }

@@ -9,7 +9,7 @@ import { markdownToRule } from "./markdownToRule.js";
 // Mock package identifier for testing
 const mockPackageId: PackageIdentifier = {
   uriType: "file",
-  filePath: "/path/to/folder",
+  fileUri: "/path/to/folder",
 };
 
 describe("sanitizeRuleName", () => {

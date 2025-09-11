@@ -12,6 +12,8 @@ export const chatFeedbackEventSchema_0_2_0 = chatFeedbackEventAllSchema.pick({
   // other
   prompt: true,
   completion: true,
+  modelProvider: true,
+  modelName: true,
   modelTitle: true,
   feedback: true,
   sessionId: true,

@@ -1,6 +1,14 @@
-import { ArrowPathIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { AuthType, isOnPremSession } from "core/control-plane/AuthTypes";
+import {
+  ArrowPathIcon,
+  ArrowRightStartOnRectangleIcon,
+  Cog6ToothIcon,
+  PencilIcon,
+  PlusIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/outline";
+import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -10,35 +18,41 @@ import {
 } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
-import { useLump } from "../mainInput/Lump/LumpContext";
+import { CONFIG_ROUTES } from "../../util/navigation";
 import {
+  Button,
   Listbox,
-  ListboxOption,
   ListboxOptions,
   Transition,
   useFontSize,
 } from "../ui";
+import { Divider } from "../ui/Divider";
 import { AssistantOptions } from "./AssistantOptions";
-import { ScopeSelect } from "./ScopeSelect";
+import { OrganizationOptions } from "./OrganizationOptions";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
 
-export function AssistantAndOrgListbox() {
+export interface AssistantAndOrgListboxProps {
+  variant: "lump" | "sidebar";
+}
+
+export function AssistantAndOrgListbox({
+  variant = "sidebar",
+}: AssistantAndOrgListboxProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const listboxRef = useRef<HTMLDivElement>(null);
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
-  const { isToolbarExpanded } = useLump();
   const {
     profiles,
     selectedProfile,
     session,
-    login,
     logout,
+    login,
     organizations,
     refreshProfiles,
   } = useAuth();
   const configLoading = useAppSelector((store) => store.config.loading);
-  const smallFont = useFontSize(-3);
   const tinyFont = useFontSize(-4);
   const shouldRenderOrgInfo =
     session && organizations.length > 1 && !isOnPremSession(session);
@@ -50,15 +64,41 @@ export function AssistantAndOrgListbox() {
   }
 
   function onNewAssistant() {
+    if (session) {
+      void ideMessenger.request("controlPlane/openUrl", {
+        path: "/new",
+        orgSlug: currentOrg?.slug,
+      });
+    } else {
+      void ideMessenger.request("config/newAssistantFile", undefined);
+    }
+    close();
+  }
+
+  function onNewOrganization() {
     void ideMessenger.request("controlPlane/openUrl", {
-      path: "/new",
-      orgSlug: currentOrg?.slug,
+      path: "/organizations/new",
     });
     close();
   }
 
-  function onLogout() {
-    logout();
+  function onAgentsConfig() {
+    navigate(CONFIG_ROUTES.AGENTS);
+    close();
+  }
+
+  function onOrganizationsConfig() {
+    navigate(CONFIG_ROUTES.ORGANIZATIONS);
+    close();
+  }
+
+  function onRulesConfig() {
+    navigate(CONFIG_ROUTES.RULES);
+    close();
+  }
+
+  function onToolsConfig() {
+    navigate(CONFIG_ROUTES.TOOLS);
     close();
   }
 
@@ -106,24 +146,42 @@ export function AssistantAndOrgListbox() {
   return (
     <Listbox>
       <div className="relative" ref={listboxRef}>
-        <SelectedAssistantButton selectedProfile={selectedProfile} />
+        <SelectedAssistantButton
+          selectedProfile={selectedProfile}
+          variant={variant}
+        />
         <Transition>
-          <ListboxOptions className="-translate-x-1.5 pb-0">
-            <div className="border-border border-x-0 border-t-0 border-solid px-2 py-3">
-              <div className="flex flex-col gap-2 pb-1 pl-1">
-                {session && session?.AUTH_TYPE !== AuthType.OnPrem && (
-                  <span className="text-description-muted flex items-center pb-1">
-                    {session?.account.id}
-                  </span>
-                )}
-                {shouldRenderOrgInfo && (
-                  <>
-                    <label className="text-vsc-foreground font-semibold">
-                      Organization
-                    </label>
-                    <ScopeSelect />
-                  </>
-                )}
+          <ListboxOptions
+            className="max-h-32 -translate-x-1.5 overflow-y-auto pb-0"
+            style={{ zIndex: 200 }}
+          >
+            <div className="flex items-center justify-between p-2">
+              <span className="text-description text-xs font-medium">
+                Agents
+              </span>
+              <div className="flex items-center gap-0.5">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNewAssistant();
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="my-0 h-5 w-5 p-0"
+                >
+                  <PlusIcon className="text-description h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAgentsConfig();
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="my-0 h-5 w-5 p-0"
+                >
+                  <Cog6ToothIcon className="text-description h-3.5 w-3.5" />
+                </Button>
               </div>
             </div>
 
@@ -132,64 +190,138 @@ export function AssistantAndOrgListbox() {
               onClose={close}
             />
 
-            {/* Bottom Actions */}
-            <div className="border-border border-x-0 border-b-0 border-t border-solid">
-              <ListboxOption
-                value="new-assistant"
-                fontSizeModifier={-2}
-                className="border-border border-b px-2 py-1.5"
-                onClick={session ? onNewAssistant : () => login(false)}
-              >
-                <span
-                  className="text-description flex flex-row items-center"
-                  style={{ fontSize: tinyFont }}
-                >
-                  <PlusIcon className="mr-1 h-3 w-3" /> New Assistant
-                </span>
-              </ListboxOption>
-
-              <ListboxOption
-                value="reload-assistant"
-                fontSizeModifier={-2}
-                className="border-border border-b px-2 py-1.5"
-                onClick={() => refreshProfiles()}
-              >
-                <span
-                  className="text-description flex flex-row items-center"
-                  style={{ fontSize: tinyFont }}
-                >
-                  <ArrowPathIcon
-                    className={cn(
-                      "mr-1 h-3 w-3",
-                      configLoading && "animate-spin-slow",
-                    )}
-                  />
-                  Reload assistants
-                </span>
-              </ListboxOption>
-
-              {session && (
-                <ListboxOption
-                  value="log-out"
-                  fontSizeModifier={-2}
-                  className="border-border border-b px-3 py-1.5"
-                  onClick={onLogout}
-                >
-                  <div
-                    className="text-description flex flex-row items-center"
-                    style={{ fontSize: tinyFont }}
-                  >
-                    Log out
+            {shouldRenderOrgInfo && (
+              <>
+                <Divider className="!mb-0.5 !mt-0" />
+                <div className="flex items-center justify-between p-2">
+                  <span className="text-description text-xs font-medium">
+                    Organizations
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNewOrganization();
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="my-0 h-5 w-5 p-0"
+                    >
+                      <PlusIcon className="text-description h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOrganizationsConfig();
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="my-0 h-5 w-5 p-0"
+                    >
+                      <Cog6ToothIcon className="text-description h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                </ListboxOption>
-              )}
+                </div>
 
-              <div
-                className="text-description border-border flex items-center justify-between gap-1.5 border-x-0 border-b-0 border-t border-solid px-2 py-2"
-                style={{ fontSize: tinyFont }}
-              >
-                <span className="block" style={{ fontSize: tinyFont - 1 }}>
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle assistant
+                <OrganizationOptions onClose={close} />
+
+                <Divider className="!mb-0 mt-0.5" />
+              </>
+            )}
+
+            {/* Settings Section */}
+            {variant !== "sidebar" && (
+              <div>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRulesConfig();
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                >
+                  <div className="flex w-full items-center">
+                    <PencilIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="text-2xs">Rules</span>
+                  </div>
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToolsConfig();
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                >
+                  <div className="flex w-full items-center">
+                    <WrenchScrewdriverIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
+                    <span className="text-2xs">Tools</span>
+                  </div>
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void refreshProfiles("Manual refresh from assistant list");
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                >
+                  <div className="flex w-full items-center">
+                    <ArrowPathIcon
+                      className={cn(
+                        "ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0",
+                        configLoading && "animate-spin-slow",
+                      )}
+                    />
+                    <span className="text-2xs">Reload</span>
+                  </div>
+                </Button>
+                {session ? (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      logout();
+                      close();
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                  >
+                    <div className="flex w-full items-center">
+                      <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="text-2xs">Log out</span>
+                    </div>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      login(false);
+                      close();
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                  >
+                    <div className="flex w-full items-center">
+                      <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0 rotate-180" />
+                      <span className="text-2xs">Log in</span>
+                    </div>
+                  </Button>
+                )}
+
+                <Divider className="!mt-0" />
+              </div>
+            )}
+
+            {/* Bottom Actions */}
+            <div>
+              <div className="text-description flex items-center justify-start px-2 py-1">
+                <span className="block" style={{ fontSize: tinyFont }}>
+                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle agent
                 </span>
               </div>
             </div>

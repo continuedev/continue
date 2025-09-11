@@ -30,6 +30,11 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       ).toBe(true);
     });
 
+    it("should return true for Gemma models", () => {
+      expect(supportsFn("ownerSlug/packageSlug/openai/gemma")).toBe(true);
+      expect(supportsFn("ownerSlug/packageSlug/openai/gemma3")).toBe(true);
+    });
+
     it("should return true for O3 models", () => {
       expect(supportsFn("ownerSlug/packageSlug/openai/o3-preview")).toBe(true);
     });
@@ -56,6 +61,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
         supportsFn("ownerSlug/packageSlug/anthropic/CLAUDE-3-5-sonnet"),
       ).toBe(true);
       expect(supportsFn("ownerSlug/packageSlug/openai/GPT-4-turbo")).toBe(true);
+      expect(supportsFn("ownerSlug/packageSlug/openai/Gemma3")).toBe(true);
       expect(supportsFn("ownerSlug/packageSlug/gemini/GEMINI-pro")).toBe(true);
     });
   });
@@ -98,6 +104,11 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("o3-preview")).toBe(true);
     });
 
+    it("should return true for Gemma models", () => {
+      expect(supportsFn("gemma")).toBe(true);
+      expect(supportsFn("gemma3")).toBe(true);
+    });
+
     it("should return undefined for unsupported models", () => {
       expect(supportsFn("gpt-3.5-turbo")).toBe(false);
       expect(supportsFn("davinci")).toBe(false);
@@ -106,6 +117,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     it("should handle case insensitivity", () => {
       expect(supportsFn("GPT-4-turbo")).toBe(true);
       expect(supportsFn("O3-preview")).toBe(true);
+      expect(supportsFn("Gemma3")).toBe(true);
     });
   });
 
@@ -268,6 +280,43 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("novita", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["novita"];
+
+    it("should return true for exact match models", () => {
+      expect(supportsFn("deepseek/deepseek-r1-0528")).toBe(true);
+      expect(supportsFn("deepseek/deepseek-r1-turbo")).toBe(true);
+      expect(supportsFn("deepseek/deepseek-v3-0324")).toBe(true);
+      expect(supportsFn("deepseek/deepseek-v3-turbo")).toBe(true);
+      expect(supportsFn("meta-llama/llama-3.3-70b-instruct")).toBe(true);
+      expect(supportsFn("qwen/qwen-2.5-72b-instruct")).toBe(true);
+      expect(supportsFn("zai-org/glm-4.5")).toBe(true);
+      expect(supportsFn("moonshotai/kimi-k2-instruct")).toBe(true);
+    });
+
+    it("should return true for prefix match models", () => {
+      expect(supportsFn("qwen/qwen3-235b-a22b-instruct-2507")).toBe(true);
+      expect(supportsFn("openai/gpt-oss-20b")).toBe(true);
+      expect(supportsFn("openai/gpt-oss-120b")).toBe(true);
+    });
+
+    it("should return false for unsupported models", () => {
+      expect(supportsFn("deepseek/deepseek-chat")).toBe(false);
+      expect(supportsFn("meta-llama/llama-2-7b")).toBe(false);
+      expect(supportsFn("qwen/qwen-2.0-7b")).toBe(false);
+      expect(supportsFn("openai/gpt-4")).toBe(false);
+    });
+  });
+
+  describe("openrouter", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["openrouter"];
+
+    it("should return false for moonshotai/kimi-k2:free model", () => {
+      // This fixes issue #6619
+      expect(supportsFn("moonshotai/kimi-k2:free")).toBe(false);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["continue-proxy"]("")).toBe(false);
@@ -276,6 +325,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(PROVIDER_TOOL_SUPPORT["gemini"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["bedrock"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["ollama"]("")).toBe(false);
+      expect(PROVIDER_TOOL_SUPPORT["novita"]("")).toBe(false);
     });
 
     it("should handle non-existent provider", () => {

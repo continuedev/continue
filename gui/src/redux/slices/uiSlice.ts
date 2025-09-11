@@ -1,16 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RuleWithSource, Tool } from "core";
+import { ToolPolicy } from "@continuedev/terminal-security";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
 } from "../../components/OnboardingCard";
 import { getLocalStorage, LocalStorageKey } from "../../util/localStorage";
-
-export type ToolPolicy =
-  | "allowedWithPermission"
-  | "allowedWithoutPermission"
-  | "disabled";
 
 export type RulePolicy = "on" | "off";
 
@@ -50,21 +46,7 @@ export const uiSlice = createSlice({
     ),
     shouldAddFileForEditing: false,
     ttsActive: false,
-    toolSettings: {
-      [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
-      [BuiltInToolNames.EditExistingFile]: "allowedWithPermission",
-      [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
-      [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
-      [BuiltInToolNames.GrepSearch]: "allowedWithoutPermission",
-      [BuiltInToolNames.FileGlobSearch]: "allowedWithoutPermission",
-      [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
-      [BuiltInToolNames.FetchUrlContent]: "allowedWithPermission",
-      [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
-      [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
-      [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
-      [BuiltInToolNames.RequestRule]: "disabled",
-      [BuiltInToolNames.SearchAndReplaceInFile]: "allowedWithPermission",
-    },
+    toolSettings: {},
     toolGroupSettings: {
       [BUILT_IN_GROUP_NAME]: "include",
     },
@@ -95,7 +77,7 @@ export const uiSlice = createSlice({
     // Tools
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
-        "allowedWithPermission";
+        action.payload.defaultToolPolicy ?? DEFAULT_TOOL_SETTING;
     },
     setToolPolicy: (
       state,

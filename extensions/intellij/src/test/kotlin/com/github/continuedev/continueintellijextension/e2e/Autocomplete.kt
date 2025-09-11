@@ -28,13 +28,11 @@ class Autocomplete {
 
     @BeforeEach
     fun waitForIde(remoteRobot: RemoteRobot) {
-        System.setProperty("continue.autocomplete.test.environment", "true")
         waitForIgnoringError(ofMinutes(3)) { remoteRobot.callJs("true") }
     }
 
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) {
-        System.clearProperty("continue.autocomplete.test.environment")
         CommonSteps(remoteRobot).closeProject()
     }
 
@@ -54,7 +52,7 @@ class Autocomplete {
         // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
         waitFor(ofSeconds(20)) {
             findAll<ComponentFixture>(
-                byXpath("//div[@accessiblename='Main.java' and @class='SingleHeightLabel']")
+                byXpath("//div[@visible_text='Main.java']")
             ).isNotEmpty()
         }
 

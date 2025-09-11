@@ -36,12 +36,12 @@ jobs:
           else
             echo "❌ PR title does not follow conventional commit format"
             echo "valid=false" >> $GITHUB_OUTPUT
-            exit 1
+            # Don't exit with failure - just mark as invalid for comment
           fi
 
       - name: Add PR title guidance comment
-        if: steps.pr-title-check.outputs.valid == 'false'
-        uses: actions/github-script@v7
+        if: always() && steps.pr-title-check.outputs.valid == 'false'
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: comments } = await github.rest.issues.listComments({
@@ -88,6 +88,9 @@ jobs:
                 ].join('\n')
               });
             }
+      - name: Ensure job always succeeds
+        if: always()
+        run: echo "✅ Conventional commits check completed (warning only)"
 
   security-audit:
     name: Security Audit
@@ -98,10 +101,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
@@ -131,7 +134,7 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check required files
         run: |

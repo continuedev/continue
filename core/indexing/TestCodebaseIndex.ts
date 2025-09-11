@@ -67,4 +67,10 @@ export class TestCodebaseIndex implements CodebaseIndex {
 
     return rows.map((row: any) => row.path);
   }
+
+  async clearDatabase(): Promise<void> {
+    const db = await SqliteDb.get();
+    await TestCodebaseIndex._createTables(db);
+    await db.run("DELETE FROM test_index");
+  }
 }

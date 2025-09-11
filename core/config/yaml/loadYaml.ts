@@ -14,18 +14,8 @@ import {
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
 
-import {
-  ContinueConfig,
-  IContextProvider,
-  IDE,
-  IdeInfo,
-  IdeSettings,
-  ILLMLogger,
-} from "../..";
+import { ContinueConfig, IDE, IdeInfo, IdeSettings, ILLMLogger } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import DocsContextProvider from "../../context/providers/DocsContextProvider";
-import FileContextProvider from "../../context/providers/FileContextProvider";
-import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
@@ -34,9 +24,12 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
+import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { getToolsForIde } from "../../tools";
+import { PolicySingleton } from "../../control-plane/PolicySingleton";
+import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
+import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -72,7 +65,7 @@ async function loadConfigYaml(options: {
     );
     return localBlocks.map((b) => ({
       uriType: "file" as const,
-      filePath: b.path,
+      fileUri: b.path,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -87,7 +80,7 @@ async function loadConfigYaml(options: {
   const getRegistryClient = async () => {
     const rootPath =
       packageIdentifier.uriType === "file"
-        ? dirname(getCleanUriPath(packageIdentifier.filePath))
+        ? dirname(getCleanUriPath(packageIdentifier.fileUri))
         : undefined;
     return new RegistryClient({
       accessToken: await controlPlaneClient.getAccessToken(),
@@ -177,7 +170,7 @@ async function configYamlToContinueConfig(options: {
 
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    tools: await getToolsForIde(ide),
+    tools: getBaseToolDefinitions(),
     mcpServerStatuses: [],
     contextProviders: [],
     modelsByRole: {
@@ -216,7 +209,21 @@ async function configYamlToContinueConfig(options: {
   }
 
   for (const rule of config.rules ?? []) {
-    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+    const convertedRule = convertYamlRuleToContinueRule(rule);
+    continueConfig.rules.push(convertedRule);
+
+    // Convert invokable rules to slash commands
+    if (convertedRule.invokable) {
+      try {
+        const slashCommand = convertRuleBlockToSlashCommand(convertedRule);
+        continueConfig.slashCommands?.push(slashCommand);
+      } catch (e) {
+        localErrors.push({
+          message: `Error converting invokable rule ${convertedRule.name} to slash command: ${e instanceof Error ? e.message : e}`,
+          fatal: false,
+        });
+      }
+    }
   }
 
   continueConfig.data = config.data;
@@ -376,59 +383,37 @@ async function configYamlToContinueConfig(options: {
     });
   }
 
-  // Context providers
-  const DEFAULT_CONTEXT_PROVIDERS = [new FileContextProvider({})];
-
-  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
-    ({ description: { title } }) => title,
+  const { providers, errors: contextErrors } = loadConfigContextProviders(
+    config.context,
+    !!config.docs?.length,
+    ideInfo.ideType,
   );
 
-  continueConfig.contextProviders = (config.context
-    ?.map((context) => {
-      const cls = contextProviderClassFromName(context.provider) as any;
-      if (!cls) {
-        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
-          localErrors.push({
-            fatal: false,
-            message: `Unknown context provider ${context.provider}`,
-          });
-        }
-        return undefined;
-      }
-      const instance: IContextProvider = new cls({
-        name: context.name,
-        ...context.params,
-      });
-      return instance;
-    })
-    .filter((p) => !!p) ?? []) as IContextProvider[];
-  continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
-
-  if (
-    continueConfig.docs?.length &&
-    !continueConfig.contextProviders?.some(
-      (cp) => cp.description.title === "docs",
-    )
-  ) {
-    continueConfig.contextProviders.push(new DocsContextProvider({}));
-  }
+  continueConfig.contextProviders = providers;
+  localErrors.push(...contextErrors);
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  mcpManager.setConnections(
-    (config.mcpServers ?? []).map((server) => ({
-      id: server.name,
-      name: server.name,
-      sourceFile: server.sourceFile,
-      transport: {
-        type: "stdio",
-        args: [],
-        ...(server as any), // TODO: fix the types on mcpServers in config-yaml
-      },
-      timeout: server.connectionTimeout,
-    })),
-    false,
-  );
+  const orgPolicy = PolicySingleton.getInstance().policy;
+  if (orgPolicy?.policy?.allowMcpServers === false) {
+    await mcpManager.shutdown();
+  } else {
+    mcpManager.setConnections(
+      (config.mcpServers ?? []).map((server) => ({
+        id: server.name,
+        name: server.name,
+        sourceFile: server.sourceFile,
+        transport: {
+          type: "stdio",
+          args: [],
+          ...(server as any), // TODO: fix the types on mcpServers in config-yaml
+        },
+        timeout: server.connectionTimeout,
+      })),
+      false,
+      { ide },
+    );
+  }
 
   return { config: continueConfig, errors: localErrors };
 }

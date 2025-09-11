@@ -89,7 +89,7 @@ ${parsedError}
   }, [parsedError, statusCode, selectedModel, requestId]);
 
   const handleRefreshProfiles = () => {
-    void refreshProfiles();
+    void refreshProfiles("Clicked reload config from stream error dialog");
     dispatch(setShowDialog(false));
     dispatch(setDialogMessage(undefined));
   };
@@ -109,9 +109,7 @@ ${parsedError}
   const checkKeysButton = apiKeyUrl ? (
     <GhostButton
       className="flex items-center"
-      onClick={() => {
-        ideMessenger.post("openUrl", apiKeyUrl);
-      }}
+      onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
       <span>View key</span>
@@ -248,9 +246,9 @@ ${parsedError}
       <div className="flex flex-col gap-2">
         {session && selectedProfile && !isLocalProfile(selectedProfile) && (
           <div className="flex flex-col gap-1">
-            <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+            <span>{`If your hub secret values may have changed, refresh your agents`}</span>
             <SecondaryButton onClick={handleRefreshProfiles}>
-              Refresh assistant secrets
+              Refresh agent secrets
             </SecondaryButton>
           </div>
         )}

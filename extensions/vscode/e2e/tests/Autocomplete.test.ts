@@ -9,8 +9,10 @@ describe("Autocomplete", () => {
   let editor: TextEditor;
 
   before(async function () {
+    this.timeout(DEFAULT_TIMEOUT.MD);
     process.env.NEXT_EDIT_TEST_ENABLED = "false";
-  })
+    await GlobalActions.disableNextEdit();
+  });
 
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);

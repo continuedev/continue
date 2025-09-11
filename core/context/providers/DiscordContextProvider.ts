@@ -3,8 +3,8 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
-  LoadSubmenuItemsArgs,
   FetchFunction,
+  LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -41,6 +41,10 @@ class DiscordContextProvider extends BaseContextProvider {
   // Helper function to get the full fetch URL
   private getUrl(path: string): string {
     return `${this.baseUrl}${path}`;
+  }
+
+  get deprecationMessage() {
+    return "The Discord context provider is now deprecated and may be removed in a later version. Please consider using the Discord MCP (hub.docker.com/r/mcp/mcp-discord) instead.";
   }
 
   async fetchMessages(

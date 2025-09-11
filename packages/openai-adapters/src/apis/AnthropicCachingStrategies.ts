@@ -1,3 +1,5 @@
+const MAX_CACHING_MESSAGES = 4;
+
 // Caching strategy type - transforms a clean Anthropic body by adding cache_control
 export type CachingStrategy = (anthropicBody: any) => any;
 
@@ -9,13 +11,20 @@ const noCachingStrategy: CachingStrategy = (body) => body;
 
 // Strategy 2: System Messages Only (Current Implementation)
 const systemOnlyStrategy: CachingStrategy = (body) => {
+  let availableCacheMessages = MAX_CACHING_MESSAGES;
   if (body.system && Array.isArray(body.system)) {
     return {
       ...body,
-      system: body.system.map((item: any) => ({
-        ...item,
-        cache_control: { type: "ephemeral" },
-      })),
+      system: body.system.map((item: any) => {
+        if (availableCacheMessages > 0) {
+          availableCacheMessages -= 1;
+          return {
+            ...item,
+            cache_control: { type: "ephemeral" },
+          };
+        }
+        return item;
+      }),
     };
   }
   return body;
@@ -24,19 +33,27 @@ const systemOnlyStrategy: CachingStrategy = (body) => {
 // Strategy 3: System and Tools (High Impact)
 const systemAndToolsStrategy: CachingStrategy = (body) => {
   const result = { ...body };
+  let availableCacheMessages = MAX_CACHING_MESSAGES;
 
   // Cache system messages
   if (result.system && Array.isArray(result.system)) {
-    result.system = result.system.map((item: any) => ({
-      ...item,
-      cache_control: { type: "ephemeral" },
-    }));
+    result.system = result.system.map((item: any) => {
+      if (availableCacheMessages > 0) {
+        availableCacheMessages -= 1;
+        return {
+          ...item,
+          cache_control: { type: "ephemeral" },
+        };
+      }
+      return item;
+    });
   }
 
   // Cache tool definitions
   if (result.tools && Array.isArray(result.tools) && result.tools.length > 0) {
     result.tools = result.tools.map((tool: any, index: number) => {
-      if (index === result.tools.length - 1) {
+      if (index === result.tools.length - 1 && availableCacheMessages > 0) {
+        availableCacheMessages -= 1;
         return {
           ...tool,
           cache_control: { type: "ephemeral" },
@@ -52,19 +69,27 @@ const systemAndToolsStrategy: CachingStrategy = (body) => {
 // Strategy 4: Optimized (Intelligent Caching)
 const optimizedStrategy: CachingStrategy = (body) => {
   const result = { ...body };
+  let availableCacheMessages = MAX_CACHING_MESSAGES;
 
   // Always cache system messages
   if (result.system && Array.isArray(result.system)) {
-    result.system = result.system.map((item: any) => ({
-      ...item,
-      cache_control: { type: "ephemeral" },
-    }));
+    result.system = result.system.map((item: any) => {
+      if (availableCacheMessages > 0) {
+        availableCacheMessages -= 1;
+        return {
+          ...item,
+          cache_control: { type: "ephemeral" },
+        };
+      }
+      return item;
+    });
   }
 
   // Cache tool definitions
   if (result.tools && Array.isArray(result.tools) && result.tools.length > 0) {
     result.tools = result.tools.map((tool: any, index: number) => {
-      if (index === result.tools.length - 1) {
+      if (index === result.tools.length - 1 && availableCacheMessages > 0) {
+        availableCacheMessages -= 1;
         return {
           ...tool,
           cache_control: { type: "ephemeral" },
@@ -79,7 +104,8 @@ const optimizedStrategy: CachingStrategy = (body) => {
     result.messages = result.messages.map((message: any) => {
       if (message.content && typeof message.content === "string") {
         const tokens = estimateTokenCount(message.content);
-        if (tokens > 500) {
+        if (tokens > 500 && availableCacheMessages > 0) {
+          availableCacheMessages -= 1;
           return {
             ...message,
             content: [
@@ -92,10 +118,18 @@ const optimizedStrategy: CachingStrategy = (body) => {
           };
         }
       } else if (message.content && Array.isArray(message.content)) {
+        // Only add one cache control per message with array content
+        let addedCacheControl = false;
         const updatedContent = message.content.map((item: any) => {
           if (item.type === "text" && item.text) {
             const tokens = estimateTokenCount(item.text);
-            if (tokens > 500) {
+            if (
+              tokens > 500 &&
+              availableCacheMessages > 0 &&
+              !addedCacheControl
+            ) {
+              availableCacheMessages -= 1;
+              addedCacheControl = true;
               return {
                 ...item,
                 cache_control: { type: "ephemeral" },

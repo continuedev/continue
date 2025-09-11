@@ -1,11 +1,10 @@
 # GetModelsAddOnCheckoutUrl500Response
 
-
 ## Properties
 
-Name | Type | Description | Notes
------------- | ------------- | ------------- | -------------
-**message** | **str** |  | [optional] 
+| Name        | Type    | Description | Notes      |
+| ----------- | ------- | ----------- | ---------- |
+| **message** | **str** |             | [optional] |
 
 ## Example
 
@@ -24,6 +23,5 @@ get_models_add_on_checkout_url500_response_dict = get_models_add_on_checkout_url
 # create an instance of GetModelsAddOnCheckoutUrl500Response from a dict
 get_models_add_on_checkout_url500_response_from_dict = GetModelsAddOnCheckoutUrl500Response.from_dict(get_models_add_on_checkout_url500_response_dict)
 ```
+
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

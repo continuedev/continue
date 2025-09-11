@@ -15,8 +15,6 @@
     </depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <editorFactoryListener
-                implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
         <toolWindow id="Continue" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
@@ -24,12 +22,21 @@
         <projectService
                 id="DiffStreamService"
                 serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
+
+        <projectService serviceInterface="com.github.continuedev.continueintellijextension.autocomplete.CompletionService"
+                        serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueCompletionService"/>
         <projectService
-                id="AutocompleteLookupListener"
-                serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteLookupListener"/>
-        <statusBarWidgetFactory
-                implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
-                id="AutocompleteSpinnerWidget"/>
+                serviceInterface="com.github.continuedev.continueintellijextension.nextEdit.NextEditService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.ContinueNextEditService"/>
+
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManager"/>
+
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager"/>
+
+        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
         <actionPromoter order="last"
@@ -106,6 +113,13 @@
             <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
         </action>
 
+        <action id="continue.addLicenseKey"
+                class="com.github.continuedev.continueintellijextension.license.AddLicenseKey"
+                text="Enter Enterprise License Key"
+                description="Enter Enterprise License Key">
+            <override-text place="GoToAction" text="Continue: Enter Enterprise License Key"/>
+        </action>
+
         <action id="continue.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
@@ -137,9 +151,9 @@
         <action id="continue.openConfigPage"
                 class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
                 icon="AllIcons.General.GearPlain"
-                text="Continue Config"
-                description="Continue Config">
-            <override-text place="GoToAction" text="Continue Config"/>
+                text="Settings"
+                description="Settings">
+            <override-text place="GoToAction" text="Settings"/>
         </action>
 
         <action id="continue.openLogs"
@@ -166,34 +180,6 @@
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
             <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
-                class="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
-                text="Accept Autocomplete Suggestion" description="Accept Autocomplete Suggestion">
-            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction"
-                class="com.github.continuedev.continueintellijextension.nextEdit.AcceptNextEditAction"
-                text="Accept Autocomplete Suggestion" description="Accept Next Edit Prediction">
-            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
-                class="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
-                text="Cancel Autocomplete Suggestion" description="Cancel Autocomplete Suggestion">
-            <keyboard-shortcut keymap="$default" first-keystroke="ESCAPE"/>
-        </action>
-
-        <action id="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
-                class="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
-                text="Partial Accept Autocomplete Suggestion"
-                description="Partial Accept Autocomplete Suggestion">
-            <keyboard-shortcut first-keystroke="control alt RIGHT" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="alt meta RIGHT" keymap="Mac OS X"/>
         </action>
     </actions>
 </idea-plugin>

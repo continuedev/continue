@@ -18,6 +18,9 @@ inputs:
     description: 'Commit SHA for version modification (optional, uses first 7 chars)'
     required: false
     default: ''
+  github-token:
+    description: 'GitHub token for downloading ripgrep'
+    required: true
 outputs:
   target:
     description: 'The target string used for the build'
@@ -83,7 +86,7 @@ runs:
         npm ci
       env:
         # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Install gui dependencies
       shell: bash
@@ -97,6 +100,14 @@ runs:
         cd core
         npm ci
         npm i vectordb
+
+    - name: Build GUI
+      shell: bash
+      run: |
+        cd gui
+        npm run build --max-old-space-size=4096
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
 
     - name: Prepackage the extension
       shell: bash

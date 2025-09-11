@@ -36,8 +36,12 @@ export type ModelRole = z.infer<typeof modelRolesSchema>;
 export const modelCapabilitySchema = z.union([
   z.literal("tool_use"),
   z.literal("image_input"),
+  z.literal("next_edit"),
+  z.string(), // Needed for forwards compatibility, see https://github.com/continuedev/continue/pull/7676
 ]);
-export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
+
+// not ideal but lose type suggestions if use z.infer because of the string fallback
+export type ModelCapability = "tool_use" | "image_input" | "next_edit";
 
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),
@@ -119,6 +123,16 @@ export const autocompleteOptionsSchema = z.object({
   prefixPercentage: z.number().optional(),
   template: z.string().optional(),
   onlyMyCode: z.boolean().optional(),
+  useCache: z.boolean().optional(),
+  useImports: z.boolean().optional(),
+  useRecentlyEdited: z.boolean().optional(),
+  useRecentlyOpened: z.boolean().optional(),
+  // Experimental options: true = enabled, false = disabled, number = enabled w priority
+  experimental_includeClipboard: z.boolean().optional(),
+  experimental_includeRecentlyVisitedRanges: z.boolean().optional(),
+  experimental_includeRecentlyEditedRanges: z.boolean().optional(),
+  experimental_includeDiff: z.boolean().optional(),
+  experimental_enableStaticContextualization: z.boolean().optional(),
 });
 
 /** Prompt templates use Handlebars syntax */

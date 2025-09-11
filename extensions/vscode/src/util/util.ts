@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
+import * as os from "node:os";
 
-const os = require("node:os");
+import * as vscode from "vscode";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
   if (index === 0) {
@@ -70,6 +70,7 @@ export function debounced(delay: number, fn: (...args: any[]) => void) {
 }
 
 type Platform = "mac" | "linux" | "windows" | "unknown";
+type Architecture = "x64" | "arm64" | "unknown";
 
 export function getPlatform(): Platform {
   const platform = os.platform();
@@ -82,6 +83,42 @@ export function getPlatform(): Platform {
   } else {
     return "unknown";
   }
+}
+
+export function getArchitecture(): Architecture {
+  const arch = os.arch();
+  if (arch === "x64" || arch === "ia32") {
+    return "x64";
+  } else if (arch === "arm64" || arch === "arm") {
+    return "arm64";
+  } else {
+    return "unknown";
+  }
+}
+
+export function isUnsupportedPlatform(): {
+  isUnsupported: boolean;
+  reason?: string;
+} {
+  const platform = getPlatform();
+  const arch = getArchitecture();
+
+  if (platform === "windows" && arch === "arm64") {
+    return {
+      isUnsupported: true,
+      reason:
+        "Windows ARM64 is not currently supported due to missing native dependencies (sqlite3, onnxruntime). Please use the extension on Windows x64, macOS, or Linux instead.",
+    };
+  }
+
+  // if (platform === "unknown" || arch === "unknown") {
+  //   return {
+  //     isUnsupported: true,
+  //     reason: `Unsupported platform combination: ${os.platform()}-${os.arch()}. Continue extension supports Windows x64, macOS (Intel/Apple Silicon), and Linux (x64/ARM64).`,
+  //   };
+  // }
+
+  return { isUnsupported: false };
 }
 
 export function getAltOrOption() {
