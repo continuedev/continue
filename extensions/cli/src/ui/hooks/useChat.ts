@@ -145,6 +145,8 @@ export function useChat({
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [compactionAbortController, setCompactionAbortController] =
+    useState<AbortController | null>(null);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
     // If we're forking and found a session to fork from, we're already initialized
@@ -474,6 +476,8 @@ export function useChat({
     }
 
     // Check if auto-compacting is needed BEFORE adding user message
+    const compactionController = new AbortController();
+    setCompactionAbortController(compactionController);
     setIsCompacting(true);
     setCompactionStartTime(Date.now());
     
@@ -486,6 +490,7 @@ export function useChat({
         compactionIndex,
         setChatHistory: setChatHistory,
         setCompactionIndex,
+        abortController: compactionController,
       });
       
       currentChatHistory = result.currentChatHistory;
@@ -493,6 +498,7 @@ export function useChat({
     } finally {
       setIsCompacting(false);
       setCompactionStartTime(null);
+      setCompactionAbortController(null);
     }
 
     // Add the formatted user message to history
@@ -519,7 +525,19 @@ export function useChat({
       return;
     }
 
-    // Local mode: abort the controller
+    // Local mode: abort the appropriate controller
+    
+    // If compaction is running, abort compaction
+    if (compactionAbortController && isCompacting) {
+      compactionAbortController.abort();
+      setIsCompacting(false);
+      setCompactionStartTime(null);
+      setCompactionAbortController(null);
+      setInputMode(true);
+      return;
+    }
+    
+    // If response is running, abort response
     if (abortController && isWaitingForResponse) {
       abortController.abort();
 

@@ -94,6 +94,7 @@ const FileSearchMaybe: React.FC<{
 interface UserInputProps {
   onSubmit: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
+  isCompacting?: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
   assistant?: AssistantConfig;
@@ -109,6 +110,7 @@ interface UserInputProps {
 const UserInput: React.FC<UserInputProps> = ({
   onSubmit,
   isWaitingForResponse,
+  isCompacting = false,
   inputMode,
   onInterrupt,
   assistant,
@@ -567,6 +569,12 @@ const UserInput: React.FC<UserInputProps> = ({
       setInputText("");
       setCursorPosition(0);
       setShowBashMode(false);
+      return true;
+    }
+
+    // Handle escape key to interrupt compaction (higher priority)
+    if (isCompacting && onInterrupt) {
+      onInterrupt();
       return true;
     }
 

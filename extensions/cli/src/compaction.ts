@@ -28,6 +28,7 @@ export interface CompactionCallbacks {
  * @param model The model configuration
  * @param llmApi The LLM API instance
  * @param callbacks Optional callbacks for streaming updates
+ * @param abortController Optional abort controller for cancellation
  * @returns The compacted history with compaction index
  */
 export async function compactChatHistory(
@@ -35,6 +36,7 @@ export async function compactChatHistory(
   model: ModelConfig,
   llmApi: BaseLlmApi,
   callbacks?: CompactionCallbacks,
+  abortController?: AbortController,
 ): Promise<CompactionResult> {
   // Create a prompt to summarize the conversation
   const compactionPrompt: ChatHistoryItem = {
@@ -81,7 +83,7 @@ export async function compactChatHistory(
   }
 
   // Stream the compaction response (service drives updates; this collects content locally)
-  const controller = new AbortController();
+  const controller = abortController || new AbortController();
 
   let compactionContent = "";
   const streamCallbacks: StreamCallbacks = {

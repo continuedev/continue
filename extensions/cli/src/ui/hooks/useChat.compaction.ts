@@ -88,6 +88,7 @@ interface HandleAutoCompactionOptions {
   compactionIndex: number | null;
   setChatHistory: React.Dispatch<React.SetStateAction<ChatHistoryItem[]>>;
   setCompactionIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  abortController?: AbortController;
 }
 
 /**
@@ -100,6 +101,7 @@ export async function handleAutoCompaction({
   compactionIndex: _compactionIndex,
   setChatHistory,
   setCompactionIndex,
+  abortController,
 }: HandleAutoCompactionOptions): Promise<{
   currentChatHistory: ChatHistoryItem[];
   currentCompactionIndex: number | null;
@@ -117,7 +119,7 @@ export async function handleAutoCompaction({
     logger.info("Auto-compaction triggered for TUI mode");
 
     // Compact the unified history
-    const result = await compactChatHistory(chatHistory, model, llmApi);
+    const result = await compactChatHistory(chatHistory, model, llmApi, undefined, abortController);
 
     // Keep the system message and append the compaction summary
     // This replaces the old messages with a summary to reduce context size

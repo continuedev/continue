@@ -322,6 +322,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleToolPermissionResponse={handleToolPermissionResponse}
           handleUserMessage={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
+          isCompacting={isCompacting}
           inputMode={inputMode}
           handleInterrupt={handleInterrupt}
           handleFileAttached={handleFileAttached}
