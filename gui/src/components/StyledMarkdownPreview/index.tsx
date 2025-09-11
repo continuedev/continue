@@ -36,6 +36,7 @@ const StyledMarkdown = styled.div<{
   fontSize?: number;
   whiteSpace: string;
   bgColor: string;
+  padding: number;
 }>`
   h1 {
     font-size: 1.25em;
@@ -103,8 +104,8 @@ const StyledMarkdown = styled.div<{
     "Helvetica Neue",
     sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: ${(props) => props.padding}px;
+  padding-right: ${(props) => props.padding}px;
   color: ${vscForeground};
 
   p,
@@ -135,6 +136,7 @@ interface StyledMarkdownPreviewProps {
   toolCallId?: string;
   expandCodeblocks?: boolean;
   collapsible?: boolean;
+  removePadding?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -366,6 +368,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       fontSize={getFontSize()}
       whiteSpace={codeWrapState}
       bgColor={props.useParentBackgroundColor ? "" : vscBackground}
+      padding={props.removePadding ? 0 : 8}
     >
       {reactContent}
     </StyledMarkdown>
