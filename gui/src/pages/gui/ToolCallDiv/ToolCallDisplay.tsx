@@ -22,8 +22,10 @@ export function ToolCallDisplay({
   const [argsExpanded, setArgsExpanded] = useState(false);
 
   const args: [string, any][] = useMemo(() => {
-    return Object.entries(toolCallState.parsedArgs);
-  }, [toolCallState.parsedArgs]);
+    return Object.entries(toolCallState.parsedArgs).filter(
+      ([argName]) => !tool?.skippedToolArgsDisplay?.includes(argName),
+    );
+  }, [toolCallState.parsedArgs, tool?.skippedToolArgsDisplay]);
 
   return (
     <div className="flex flex-col justify-center px-4">
