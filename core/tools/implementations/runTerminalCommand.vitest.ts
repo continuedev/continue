@@ -12,7 +12,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { IDE, ToolExtras } from "../..";
-import * as processBackgroundStates from "../../util/processTerminalBackgroundStates";
+import * as processTerminalStates from "../../util/processTerminalStates";
 import { runTerminalCommandImpl } from "./runTerminalCommand";
 import { runTerminalCommandTool } from "../definitions/runTerminalCommand";
 
@@ -39,12 +39,8 @@ describe("runTerminalCommandImpl", () => {
     vi.resetAllMocks();
 
     // Setup backgrounded processes handling - don't mock, just make sure it's empty
-    // Get any processes that might be already tracked and clear them
-    const processMap = (processBackgroundStates as any)
-      .processTerminalBackgroundStates;
-    if (processMap && typeof processMap.clear === "function") {
-      processMap.clear();
-    }
+    // Clear any processes that might be already tracked
+    processTerminalStates.clearAllBackgroundProcesses();
 
     // Setup IDE mocks
     mockGetIdeInfo.mockReturnValue(Promise.resolve({ remoteName: "local" }));

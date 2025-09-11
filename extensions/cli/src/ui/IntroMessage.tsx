@@ -1,12 +1,10 @@
-import * as os from "node:os";
-import * as path from "node:path";
-
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { Box, Text } from "ink";
 import React, { useMemo } from "react";
 
 import { getDisplayableAsciiArt } from "../asciiArt.js";
 import { MCPService } from "../services/MCPService.js";
+import { isInHomeDirectory } from "../util/isInHomeDirectory.js";
 import { isModelCapable } from "../utils/modelCapability.js";
 
 import { ModelCapabilityWarning } from "./ModelCapabilityWarning.js";
@@ -29,6 +27,8 @@ const extractRuleNames = (rules: any[] = []): string[] => {
   );
 };
 
+const userInHomeDirectory = isInHomeDirectory();
+
 const IntroMessage: React.FC<IntroMessageProps> = ({
   config,
   model,
@@ -39,18 +39,6 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
 
   // Determine if we should show a tip (1 in 5 chance) - computed once on mount
   const showTip = useMemo(() => shouldShowTip(), []);
-
-  // Check if current working directory is the home directory
-  const isInHomeDirectory = useMemo(() => {
-    const cwd = process.cwd();
-    const homedir = os.homedir();
-    const resolvedCwd = path.resolve(cwd);
-    const resolvedHome = path.resolve(homedir);
-    if (process.platform === "win32") {
-      return resolvedCwd.toLowerCase() === resolvedHome.toLowerCase();
-    }
-    return resolvedCwd === resolvedHome;
-  }, []);
 
   // Memoize expensive operations to avoid running on every resize
   const { allRules, modelCapable } = useMemo(() => {
@@ -153,7 +141,7 @@ const IntroMessage: React.FC<IntroMessageProps> = ({
       {renderMcpServers()}
 
       {/* Home directory warning */}
-      {isInHomeDirectory && (
+      {userInHomeDirectory && (
         <>
           <Text color="yellow">{HOME_DIRECTORY_WARNING}</Text>
           <Text> </Text>

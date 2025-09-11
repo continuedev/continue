@@ -2,10 +2,10 @@ import { Text } from "ink";
 import React from "react";
 
 import {
-  highlightCode,
-  detectLanguage,
-  SyntaxHighlighterTheme,
   defaultTheme,
+  detectLanguage,
+  highlightCode,
+  SyntaxHighlighterTheme,
 } from "./SyntaxHighlighter.js";
 
 interface MarkdownRendererProps {
@@ -27,6 +27,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
           // content here is the captured group, but we need to parse the full match
           return null; // This will be handled separately
         },
+      },
+      {
+        regex: /<think>([\s\S]*?)<\/think>/g,
+        render: (content, key) => (
+          <Text key={key} color="gray">
+            {content.trim()}
+          </Text>
+        ),
       },
       {
         regex: /^(#{1,6})\s+(.+)$/gm,
@@ -225,6 +233,5 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = React.memo(
 
 MarkdownRenderer.displayName = "MarkdownRenderer";
 
-export { MarkdownRenderer };
+export { defaultTheme, MarkdownRenderer };
 export type { SyntaxHighlighterTheme };
-export { defaultTheme };
