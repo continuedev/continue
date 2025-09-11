@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+/* eslint-disable max-statements   */
 import type { ChatHistoryItem, Session } from "core/index.js";
 import { useApp } from "ink";
 import { useEffect, useRef, useState } from "react";
@@ -526,7 +527,7 @@ export function useChat({
       } catch (error) {
         // If compaction fails, remove the queued message from display
         setQueuedMessages((prev) =>
-          prev.filter((msg) => msg !== queuedMessageForDisplay)
+          prev.filter((msg) => msg !== queuedMessageForDisplay),
         );
         throw error; // Re-throw to maintain error handling
       } finally {
@@ -541,14 +542,11 @@ export function useChat({
 
       // Remove the queued message from display since it's now in chat history
       setQueuedMessages((prev) =>
-        prev.filter((msg) => msg !== queuedMessageForDisplay)
+        prev.filter((msg) => msg !== queuedMessageForDisplay),
       );
 
       // Execute the streaming response with the updated history
-      await executeStreamingResponse(
-        newHistory,
-        currentCompactionIndex,
-      );
+      await executeStreamingResponse(newHistory, currentCompactionIndex);
     } else {
       // Format message with attached files and images
       logger.debug("Processing message with images", {
@@ -596,7 +594,7 @@ export function useChat({
       } catch (error) {
         // If compaction fails, remove the triggering message from queue display
         setQueuedMessages((prev) =>
-          prev.filter((msg) => msg !== compactionQueuedMessage)
+          prev.filter((msg) => msg !== compactionQueuedMessage),
         );
         throw error; // Re-throw to maintain error handling
       } finally {
@@ -611,7 +609,7 @@ export function useChat({
 
       // Remove the triggering message from queue display since it's now in chat history
       setQueuedMessages((prev) =>
-        prev.filter((msg) => msg !== compactionQueuedMessage)
+        prev.filter((msg) => msg !== compactionQueuedMessage),
       );
 
       // Execute the streaming response
