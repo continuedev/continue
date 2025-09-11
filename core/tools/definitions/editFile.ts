@@ -56,5 +56,5 @@ For example:`,
       ],
     ],
   },
-  skippedToolArgsDisplay: ["filepath"],
+  skipToolArgsDisplay: true,
 };
