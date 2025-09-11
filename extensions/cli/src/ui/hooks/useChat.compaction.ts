@@ -116,18 +116,6 @@ export async function handleAutoCompaction({
 
     logger.info("Auto-compaction triggered for TUI mode");
 
-    // Add compacting message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "Auto-compacting chat history...",
-        },
-        contextItems: [],
-      },
-    ]);
-
     // Compact the unified history
     const result = await compactChatHistory(chatHistory, model, llmApi);
 
@@ -151,23 +139,22 @@ export async function handleAutoCompaction({
       ? [systemMessage, compactedMessage]
       : [compactedMessage];
 
-    setChatHistory(updatedHistory);
+    // Add success message to the history that will be returned
+    const successMessage: ChatHistoryItem = {
+      message: {
+        role: "system",
+        content: "Chat history auto-compacted successfully.",
+      },
+      contextItems: [],
+    };
+
+    const finalHistory = [...updatedHistory, successMessage];
+
+    setChatHistory(finalHistory);
     setCompactionIndex(updatedHistory.length - 1);
 
-    // Add success message
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: "✓ Chat history auto-compacted successfully.",
-        },
-        contextItems: [],
-      },
-    ]);
-
     return {
-      currentChatHistory: updatedHistory,
+      currentChatHistory: finalHistory,
       currentCompactionIndex: updatedHistory.length - 1,
     };
   } catch (error) {

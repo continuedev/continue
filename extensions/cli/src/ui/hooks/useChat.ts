@@ -138,6 +138,10 @@ export function useChat({
   const [responseStartTime, setResponseStartTime] = useState<number | null>(
     null,
   );
+  const [isCompacting, setIsCompacting] = useState(false);
+  const [compactionStartTime, setCompactionStartTime] = useState<number | null>(
+    null,
+  );
   const [inputMode, setInputMode] = useState(true);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
@@ -470,8 +474,12 @@ export function useChat({
     }
 
     // Check if auto-compacting is needed BEFORE adding user message
-    const { currentChatHistory, currentCompactionIndex } =
-      await handleAutoCompaction({
+    setIsCompacting(true);
+    setCompactionStartTime(Date.now());
+    
+    let currentChatHistory, currentCompactionIndex;
+    try {
+      const result = await handleAutoCompaction({
         chatHistory,
         model,
         llmApi,
@@ -479,6 +487,13 @@ export function useChat({
         setChatHistory: setChatHistory,
         setCompactionIndex,
       });
+      
+      currentChatHistory = result.currentChatHistory;
+      currentCompactionIndex = result.currentCompactionIndex;
+    } finally {
+      setIsCompacting(false);
+      setCompactionStartTime(null);
+    }
 
     // Add the formatted user message to history
     const newHistory = [...currentChatHistory, newUserMessage];
@@ -610,6 +625,8 @@ export function useChat({
     setChatHistory: setChatHistory,
     isWaitingForResponse,
     responseStartTime,
+    isCompacting,
+    compactionStartTime,
     inputMode,
     attachedFiles,
     activePermissionRequest,
