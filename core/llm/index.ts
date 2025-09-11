@@ -370,8 +370,17 @@ export abstract class BaseLLM implements ILLM {
       },
     });
 
-    if (error !== undefined) {
-      if (error === "cancel" || error.name === "AbortError") {
+    if (typeof error === "undefined") {
+      interaction?.logItem({
+        kind: "success",
+        promptTokens,
+        generatedTokens,
+        thinkingTokens,
+        usage,
+      });
+      return "success";
+    } else {
+      if (error === "cancel" || error?.name?.includes("AbortError")) {
         interaction?.logItem({
           kind: "cancel",
           promptTokens,
@@ -393,15 +402,6 @@ export abstract class BaseLLM implements ILLM {
         });
         return "error";
       }
-    } else {
-      interaction?.logItem({
-        kind: "success",
-        promptTokens,
-        generatedTokens,
-        thinkingTokens,
-        usage,
-      });
-      return "success";
     }
   }
 
@@ -615,6 +615,7 @@ export abstract class BaseLLM implements ILLM {
               kind: "chunk",
               chunk: formattedContent,
             });
+
             completion += formattedContent;
             yield content;
           }
@@ -630,6 +631,7 @@ export abstract class BaseLLM implements ILLM {
             kind: "chunk",
             chunk,
           });
+
           completion += chunk;
           yield chunk;
         }

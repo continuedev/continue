@@ -34,6 +34,7 @@ function runCommand(command, cwd, packageName) {
       } else {
         console.error(`❌ ${packageName}: ${command} failed with code ${code}`);
         console.error(`stderr: ${stderr}`);
+        console.error(`stdout: ${stdout}`);
         reject(
           new Error(`${packageName} failed: ${command} (exit code ${code})`),
         );

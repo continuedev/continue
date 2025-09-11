@@ -288,19 +288,17 @@ export function Chat() {
 
       if (message.role === "user") {
         return (
-          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
-            <ContinueInputBox
-              onEnter={(editorState, modifiers) =>
-                sendInput(editorState, modifiers, index)
-              }
-              isLastUserInput={isLastUserInput(index)}
-              isMainInput={false}
-              editorState={editorState}
-              contextItems={contextItems}
-              appliedRules={appliedRules}
-              inputId={message.id}
-            />
-          </div>
+          <ContinueInputBox
+            onEnter={(editorState, modifiers) =>
+              sendInput(editorState, modifiers, index)
+            }
+            isLastUserInput={isLastUserInput(index)}
+            isMainInput={false}
+            editorState={editorState}
+            contextItems={contextItems}
+            appliedRules={appliedRules}
+            inputId={message.id}
+          />
         );
       }
 

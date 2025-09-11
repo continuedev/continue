@@ -35,6 +35,21 @@ export function renderContextItems(contextItems: ContextItem[]): string {
   return contextItems.map((item) => item.content).join("\n\n");
 }
 
+export function renderContextItemsWithStatus(contextItems: any[]): string {
+  return contextItems
+    .map((item) => {
+      let result = item.content;
+
+      // If this item has a status, append it directly after the content
+      if (item.status) {
+        result += `\n[Status: ${item.status}]`;
+      }
+
+      return result;
+    })
+    .join("\n\n");
+}
+
 export function normalizeToMessageParts(message: ChatMessage): MessagePart[] {
   switch (message.role) {
     case "user":

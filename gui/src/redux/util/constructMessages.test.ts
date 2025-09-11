@@ -8,6 +8,7 @@ import {
   ToolResultChatMessage,
   UserChatMessage,
 } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   CANCELLED_TOOL_CALL_MESSAGE,
   NO_TOOL_CALL_OUTPUT_MESSAGE,
@@ -711,5 +712,347 @@ describe("constructMessages", () => {
     expect(messages[0].role).toBe("system");
     expect(messages[0].content).toContain("Base System Message");
     expect(messages[0].content).not.toContain(LAST_MESSAGE_RULE.rule);
+  });
+
+  // Tests for the specific block in lines 135-142 handling toolCallState.output
+  describe("toolCallState.output handling (lines 135-142)", () => {
+    test("should use CANCELLED_TOOL_CALL_MESSAGE for cancelled tool calls", () => {
+      const assistantWithToolCall: AssistantChatMessage = {
+        role: "assistant",
+        content: "I'll run a command",
+        toolCalls: [
+          {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: "some_tool",
+              arguments: '{"command": "ls"}',
+            },
+          },
+        ],
+      };
+
+      mockHistory = [
+        {
+          message: assistantWithToolCall,
+          contextItems: [],
+          toolCallStates: [
+            {
+              toolCallId: "tool-call-1",
+              toolCall: {
+                id: "tool-call-1",
+                type: "function",
+                function: {
+                  name: "some_tool",
+                  arguments: '{"command": "ls"}',
+                },
+              },
+              status: "canceled",
+              parsedArgs: { command: "ls" },
+              output: [
+                createContextItem(
+                  "result",
+                  "This should be ignored due to cancelled status",
+                ),
+              ],
+            },
+          ],
+        },
+      ];
+
+      const { messages } = constructMessages(
+        mockHistory,
+        "Base System Message",
+        mockRules,
+        {},
+      );
+
+      const toolMessage = messages[2] as ToolResultChatMessage;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.content).toBe(CANCELLED_TOOL_CALL_MESSAGE);
+      expect(toolMessage.content).not.toContain("This should be ignored");
+    });
+
+    test("should use renderContextItemsWithStatus for RunTerminalCommand with output", () => {
+      const assistantWithTerminalCall: AssistantChatMessage = {
+        role: "assistant",
+        content: "I'll run a terminal command",
+        toolCalls: [
+          {
+            id: "terminal-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.RunTerminalCommand,
+              arguments: '{"command": "ls -la"}',
+            },
+          },
+        ],
+      };
+
+      const terminalOutputWithStatus = [
+        {
+          ...createContextItem("terminal-output", "file1.txt\nfile2.txt"),
+          status: "completed",
+        },
+        {
+          ...createContextItem("terminal-error", "Warning: deprecated flag"),
+          status: "warning",
+        },
+      ];
+
+      mockHistory = [
+        {
+          message: assistantWithTerminalCall,
+          contextItems: [],
+          toolCallStates: [
+            {
+              toolCallId: "terminal-call-1",
+              toolCall: {
+                id: "terminal-call-1",
+                type: "function",
+                function: {
+                  name: BuiltInToolNames.RunTerminalCommand,
+                  arguments: '{"command": "ls -la"}',
+                },
+              },
+              status: "done",
+              parsedArgs: { command: "ls -la" },
+              output: terminalOutputWithStatus,
+            },
+          ],
+        },
+      ];
+
+      const { messages } = constructMessages(
+        mockHistory,
+        "Base System Message",
+        mockRules,
+        {},
+      );
+
+      const toolMessage = messages[2] as ToolResultChatMessage;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.toolCallId).toBe("terminal-call-1");
+      // Should contain content with status appended
+      expect(toolMessage.content).toContain("file1.txt\nfile2.txt");
+      expect(toolMessage.content).toContain("[Status: completed]");
+      expect(toolMessage.content).toContain("Warning: deprecated flag");
+      expect(toolMessage.content).toContain("[Status: warning]");
+      // Should use renderContextItemsWithStatus format with double newlines between items
+      expect(toolMessage.content).toMatch(
+        /file1\.txt\nfile2\.txt\n\[Status: completed\]\n\nWarning: deprecated flag\n\[Status: warning\]/,
+      );
+    });
+
+    test("should use renderContextItems for non-RunTerminalCommand tools with output", () => {
+      const assistantWithSearchCall: AssistantChatMessage = {
+        role: "assistant",
+        content: "I'll search for that",
+        toolCalls: [
+          {
+            id: "search-call-1",
+            type: "function",
+            function: {
+              name: "search", // Not RunTerminalCommand
+              arguments: '{"query": "test"}',
+            },
+          },
+        ],
+      };
+
+      const searchOutput = [
+        createContextItem("result1", "First search result"),
+        createContextItem("result2", "Second search result"),
+      ];
+
+      mockHistory = [
+        {
+          message: assistantWithSearchCall,
+          contextItems: [],
+          toolCallStates: [
+            {
+              toolCallId: "search-call-1",
+              toolCall: {
+                id: "search-call-1",
+                type: "function",
+                function: {
+                  name: "search",
+                  arguments: '{"query": "test"}',
+                },
+              },
+              status: "done",
+              parsedArgs: { query: "test" },
+              output: searchOutput,
+            },
+          ],
+        },
+      ];
+
+      const { messages } = constructMessages(
+        mockHistory,
+        "Base System Message",
+        mockRules,
+        {},
+      );
+
+      const toolMessage = messages[2] as ToolResultChatMessage;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.toolCallId).toBe("search-call-1");
+      // Should use renderContextItems format (no status, double newlines between items)
+      expect(toolMessage.content).toBe(
+        "First search result\n\nSecond search result",
+      );
+      expect(toolMessage.content).not.toContain("[Status:");
+    });
+
+    test("should use NO_TOOL_CALL_OUTPUT_MESSAGE when no output exists", () => {
+      const assistantWithToolCall: AssistantChatMessage = {
+        role: "assistant",
+        content: "I'll search for that",
+        toolCalls: [
+          {
+            id: "search-call-1",
+            type: "function",
+            function: {
+              name: "search",
+              arguments: '{"query": "test"}',
+            },
+          },
+        ],
+      };
+
+      mockHistory = [
+        {
+          message: assistantWithToolCall,
+          contextItems: [],
+          toolCallStates: [
+            {
+              toolCallId: "search-call-1",
+              toolCall: {
+                id: "search-call-1",
+                type: "function",
+                function: {
+                  name: "search",
+                  arguments: '{"query": "test"}',
+                },
+              },
+              status: "generating",
+              parsedArgs: { query: "test" },
+              // No output field
+            },
+          ],
+        },
+      ];
+
+      const { messages } = constructMessages(
+        mockHistory,
+        "Base System Message",
+        mockRules,
+        {},
+      );
+
+      const toolMessage = messages[2] as ToolResultChatMessage;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.toolCallId).toBe("search-call-1");
+      expect(toolMessage.content).toBe(NO_TOOL_CALL_OUTPUT_MESSAGE);
+    });
+
+    test("should use NO_TOOL_CALL_OUTPUT_MESSAGE when toolCallState is undefined", () => {
+      const assistantWithToolCall: AssistantChatMessage = {
+        role: "assistant",
+        content: "I'll search for that",
+        toolCalls: [
+          {
+            id: "search-call-1",
+            type: "function",
+            function: {
+              name: "search",
+              arguments: '{"query": "test"}',
+            },
+          },
+        ],
+      };
+
+      mockHistory = [
+        {
+          message: assistantWithToolCall,
+          contextItems: [],
+          // No toolCallStates array
+        },
+      ];
+
+      const { messages } = constructMessages(
+        mockHistory,
+        "Base System Message",
+        mockRules,
+        {},
+      );
+
+      const toolMessage = messages[2] as ToolResultChatMessage;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.toolCallId).toBe("search-call-1");
+      expect(toolMessage.content).toBe(NO_TOOL_CALL_OUTPUT_MESSAGE);
+    });
+
+    test("should prioritize cancelled status over output content", () => {
+      const assistantWithTerminalCall: AssistantChatMessage = {
+        role: "assistant",
+        content: "I'll run a command",
+        toolCalls: [
+          {
+            id: "terminal-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.RunTerminalCommand,
+              arguments: '{"command": "ls"}',
+            },
+          },
+        ],
+      };
+
+      mockHistory = [
+        {
+          message: assistantWithTerminalCall,
+          contextItems: [],
+          toolCallStates: [
+            {
+              toolCallId: "terminal-call-1",
+              toolCall: {
+                id: "terminal-call-1",
+                type: "function",
+                function: {
+                  name: BuiltInToolNames.RunTerminalCommand,
+                  arguments: '{"command": "ls"}',
+                },
+              },
+              status: "canceled", // Cancelled status
+              parsedArgs: { command: "ls" },
+              output: [
+                createContextItem(
+                  "terminal-output",
+                  "This output should be ignored",
+                ),
+              ], // Has output but is cancelled
+            },
+          ],
+        },
+      ];
+
+      const { messages } = constructMessages(
+        mockHistory,
+        "Base System Message",
+        mockRules,
+        {},
+      );
+
+      const toolMessage = messages[2] as ToolResultChatMessage;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.toolCallId).toBe("terminal-call-1");
+      // Should use cancelled message, not the output content
+      expect(toolMessage.content).toBe(CANCELLED_TOOL_CALL_MESSAGE);
+      expect(toolMessage.content).not.toContain(
+        "This output should be ignored",
+      );
+    });
   });
 });
