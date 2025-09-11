@@ -53,12 +53,6 @@ export function AssistantAndOrgListbox({
   const shouldRenderOrgInfo =
     session && organizations.length > 1 && !isOnPremSession(session);
 
-  function close() {
-    // Close the listbox by clicking outside or programmatically
-    const event = new KeyboardEvent("keydown", { key: "Escape" });
-    document.dispatchEvent(event);
-  }
-
   function onNewAssistant() {
     if (session) {
       void ideMessenger.request("controlPlane/openUrl", {
@@ -68,34 +62,34 @@ export function AssistantAndOrgListbox({
     } else {
       void ideMessenger.request("config/newAssistantFile", undefined);
     }
-    close();
+    setOpen(false);
   }
 
   function onNewOrganization() {
     void ideMessenger.request("controlPlane/openUrl", {
       path: "/organizations/new",
     });
-    close();
+    setOpen(false);
   }
 
   function onAgentsConfig() {
     navigate(CONFIG_ROUTES.AGENTS);
-    close();
+    setOpen(false);
   }
 
   function onOrganizationsConfig() {
     navigate(CONFIG_ROUTES.ORGANIZATIONS);
-    close();
+    setOpen(false);
   }
 
   function onRulesConfig() {
     navigate(CONFIG_ROUTES.RULES);
-    close();
+    setOpen(false);
   }
 
   function onToolsConfig() {
     navigate(CONFIG_ROUTES.TOOLS);
-    close();
+    setOpen(false);
   }
 
   useEffect(() => {
@@ -185,10 +179,7 @@ export function AssistantAndOrgListbox({
             </div>
           </div>
 
-          <AssistantOptions
-            selectedProfileId={selectedProfile?.id}
-            onClose={close}
-          />
+          <AssistantOptions selectedProfileId={selectedProfile?.id} />
 
           {shouldRenderOrgInfo && (
             <>
@@ -223,7 +214,7 @@ export function AssistantAndOrgListbox({
                 </div>
               </div>
 
-              <OrganizationOptions onClose={close} />
+              <OrganizationOptions />
 
               <Divider className="!mb-0 mt-0.5" />
             </>
@@ -284,7 +275,6 @@ export function AssistantAndOrgListbox({
                   onClick={(e) => {
                     e.stopPropagation();
                     logout();
-                    close();
                   }}
                   variant="ghost"
                   size="sm"
@@ -300,7 +290,6 @@ export function AssistantAndOrgListbox({
                   onClick={(e) => {
                     e.stopPropagation();
                     void login(false);
-                    close();
                   }}
                   variant="ghost"
                   size="sm"

@@ -12,7 +12,6 @@ import { ListboxOption } from "../ui";
 
 interface OrganizationOptionProps {
   organization: { id: string; name: string; iconUrl?: string | null };
-  onClose: () => void;
 }
 
 function getOrgIcon(
@@ -40,10 +39,7 @@ function getOrgIcon(
   return <IconComponent className={`${sizeClasses} flex-shrink-0`} />;
 }
 
-export function OrganizationOption({
-  organization,
-  onClose,
-}: OrganizationOptionProps) {
+export function OrganizationOption({ organization }: OrganizationOptionProps) {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedOrgId = useAppSelector(
@@ -56,7 +52,6 @@ export function OrganizationOption({
     ideMessenger.post("didChangeSelectedOrg", {
       id: organization.id,
     });
-    onClose();
   }
 
   return (

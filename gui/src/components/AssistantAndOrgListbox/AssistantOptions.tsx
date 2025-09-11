@@ -3,13 +3,9 @@ import { AssistantOption } from "./AssistantOption";
 
 interface AssistantOptionsProps {
   selectedProfileId: string | undefined;
-  onClose: () => void;
 }
 
-export function AssistantOptions({
-  selectedProfileId,
-  onClose,
-}: AssistantOptionsProps) {
+export function AssistantOptions({ selectedProfileId }: AssistantOptionsProps) {
   const { profiles } = useAuth();
 
   return (
@@ -23,7 +19,6 @@ export function AssistantOptions({
           <AssistantOption
             key={idx}
             profile={profile}
-            onClick={onClose}
             selected={profile.id === selectedProfileId}
           />
         ))
