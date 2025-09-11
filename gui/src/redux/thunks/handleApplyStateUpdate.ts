@@ -109,7 +109,7 @@ export const handleApplyStateUpdate = createAsyncThunk<
                     contextItems: [
                       {
                         name: "Edit Failed",
-                        content: `Failed to edited ${applyState.filepath}. To continue working with the file, read it again to see the most up-to-date contents`,
+                        content: `Failed to edit ${applyState.filepath}. To continue working with the file, read it again to see the most up-to-date contents`,
                         description: "",
                         hidden: true,
                       },
